@@ -1,0 +1,2 @@
+1. Populate db with words as startpoint 
+2. Add parameter to getRandomWords to return any number of words
