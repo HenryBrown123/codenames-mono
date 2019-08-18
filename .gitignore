@@ -1,2 +1,5 @@
 client/node_modules
 express-server/node_modules
+client/package-lock.json
+express-server/package-lock.json
+package-lock.json
