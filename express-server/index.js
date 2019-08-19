@@ -3,7 +3,6 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 
 const db = require('./db')
-const movieRouter = require('./routes/movie-router')
 const wordRouter = require('./routes/word-router')
 const gameRouter = require('./routes/game-router')
 const app = express()

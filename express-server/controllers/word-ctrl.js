@@ -48,7 +48,7 @@ getRandomWords = async (req,res) => {
         if (!results) {
             return res
                 .status(404)
-                .json({ success: false, error: `none` })
+                .json({ success: false, error: `No words found` })
         }
 
         console.log(results);
