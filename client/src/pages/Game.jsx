@@ -2,8 +2,14 @@ import React, { Component } from 'react'
 import api from '../api'
 
 import styled from 'styled-components'
-import { Container, Column,Row, Button, } from 'styled-bootstrap-components'
+import { Container, Column,Row, Button} from 'styled-bootstrap-components'
 import ReactCountdownClock  from 'react-countdown-clock'
+
+import Radio from '@material-ui/core/Radio';
+import RadioGroup from '@material-ui/core/RadioGroup';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormControl from '@material-ui/core/FormControl';
+import FormLabel from '@material-ui/core/FormLabel';
 
 const AppContainer= styled.div.attrs({
     className: 'container',
@@ -11,7 +17,18 @@ const AppContainer= styled.div.attrs({
     padding-top:5px;
     margin-left: 0;
     margin-right:0; 
+    width:100%;
+    height:100%;
 `
+
+const redStyle = {
+    color:'red',
+  };
+
+const greenStyle = {
+color:'green',
+};
+
 
 
 const Tile= styled.div.attrs({
@@ -42,13 +59,6 @@ const Word = styled.div.attrs({
     
 })`font-size: 1.75rem;`
 
-
-
-const TileGrid = styled.div.attrs({
-    className : 'tile-grid',
-
-})
-
 const ClockContainer = styled.div.attrs({
     className : 'clock-container',
 })`
@@ -57,7 +67,6 @@ const ClockContainer = styled.div.attrs({
     position: relative;
 
 `
-
 
 
 
@@ -219,14 +228,12 @@ class Game extends Component{
                                 <Button variant="dark" onClick={this.startGame}>New Game</Button>
                             </Column>
                             <Column>
-                                <Button variant="dark" onClick={this.revealColors}>Show Colors</Button>
-                            </Column>
-                            <Column>
-                                <Button variant="dark" onClick={this.hideColors}>Hide Colors</Button>
+                                <Button variant="dark" onClick={this.revealColors}>Show</Button>
+                                <Button variant="dark" onClick={this.hideColors}>Hide</Button>
                             </Column>
                             <Column col xl="3" lg="3" md="3" sm="3">
-                                <h1>Red: {this.state.redScore}</h1>
-                                <h1>Green: {this.state.greenScore}</h1>
+                                <h1 style={redStyle}>{this.state.redScore}</h1>
+                                <h1 style={greenStyle}>{this.state.greenScore}</h1>
                             </Column>
                         </Row>
                     </Container>

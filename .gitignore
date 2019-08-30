@@ -3,3 +3,4 @@ express-server/node_modules
 client/package-lock.json
 express-server/package-lock.json
 package-lock.json
+node_modules
