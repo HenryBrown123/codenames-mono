@@ -1,5 +1,5 @@
 const Word = require('../models/word-model')
-const GameTile = require('../models/game-model')
+const Game = require('../models/game-model')
 
 getGame = async (req,res) => {
 
@@ -16,19 +16,21 @@ getGame = async (req,res) => {
                 .json({ success: false, error: `none` })
         }
 
-        var game = []
-        
+        var gameWords = []
         for( var i = 0; i < results.length; i++){
             randomIndex = Math.floor(Math.random() * colors.length)
             wordColor = colors[randomIndex];
             colors.splice(randomIndex,1)
-            const wordTile = new GameTile({"word":results[i].word,"color":wordColor})
-            wordTile.save()
-            game.push(wordTile)
-
+            const wordTile = {"word":results[i].word,"color":wordColor}
+            gameWords.push(wordTile)
         }
-        console.log(game)
-        return res.status(200).json({ success: true, newgame: game })       
+        var newGame = new Game(
+            {"words":gameWords}
+        )
+        newGame.save()
+
+        console.log(newGame)
+        return res.status(200).json({ success: true, newgame: newGame})       
        })
        .catch(err =>
            console.log(err)

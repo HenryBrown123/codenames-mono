@@ -2,15 +2,20 @@ const mongoose = require('mongoose')
 var AutoIncrement = require('mongoose-sequence')(mongoose)
 var Schema = mongoose.Schema
 
-var Game = new Schema(
-    {
+var Game = new Schema({
+    /* game states */
+    in_progress: {type : Boolean, required:true, default:true},
+    red_score: {type: Number, required: true, default: 0},
+    green_score: {type: Number, required: true, default: 0},
+
+    /* ----------- */
+
+    words : [{
         word: { type: String, required: true },
         color: {type: String, required: true},
-    },
-    { timestamps: false },
-)
-Game.plugin(AutoIncrement, {inc_field: 'gameid'});
-module.exports = mongoose.model('game',Game);
+    }]
 
+})
+module.exports = mongoose.model('game',Game);
 
 

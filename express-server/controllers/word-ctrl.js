@@ -48,7 +48,7 @@ getRandomWords = async (req,res) => {
         if (!results) {
             return res
                 .status(404)
-                .json({ success: false, error: `No words found` })
+                .json({ success: false, error: `No words found, populate db with start point (express-server/db/startpoint.json)` })
         }
 
         console.log(results);
@@ -113,5 +113,9 @@ createWord = (req, res) => {
     
 }
 
-
-module.exports={getRandomWords,getRandomWord,createWord,postWordArray}
+module.exports={
+    getRandomWords,
+    getRandomWord,
+    createWord,
+    postWordArray
+}
