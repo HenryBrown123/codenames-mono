@@ -2,7 +2,7 @@ import React from 'react'
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
 
 import { NavBar } from '../components'
-import { Game,HowTo} from '../pages'
+import { Game,HowTo, Game_2} from '../pages'
 
 import 'bootstrap/dist/css/bootstrap.min.css' 
 
@@ -13,6 +13,7 @@ function App() {
             <Switch>
                 <Route path = "/game" exact component={Game} />
                 <Route path = "/howto" exact component={HowTo} />
+                <Route path = "/game2" exact component={Game_2} />
             </Switch>
         </Router>
     )

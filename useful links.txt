@@ -1,0 +1,2 @@
+react data fetching patterns         https://blog.logrocket.com/patterns-for-data-fetching-in-react-981ced7e5c56/
+
