@@ -1,7 +1,7 @@
 const Word = require('../models/word-model')
 const Game = require('../models/game-model')
 
-getGame = async (req,res) => {
+getNewGame = async (req,res) => {
 
     var colors = ['red','red','red','red','red','green','green','green','green','green','green','blue']
 
@@ -37,5 +37,27 @@ getGame = async (req,res) => {
        )
 }
 
+getGame = async (req,res) => {
+    const id = req.params._id
+    await Game.findById(id,function(err,results){
+        if(err){
+            return res.status(400).json({ success: false, error: err })
+        }
 
-module.exports={getGame}
+        if (!results) {
+            return res
+                .status(404)
+                .json({ success: false, error: `game not found` })
+        }
+
+        console.log(results)
+        return res.status(200).json({ success: true, game: results})       
+       })
+       .catch(err =>
+           console.log(err)
+       )
+}
+
+
+
+module.exports={getNewGame,getGame}

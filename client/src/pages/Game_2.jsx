@@ -24,7 +24,11 @@ const greenStyle = {
 color:'green',
 };
 
-
+const newGameBtnStyle = {
+    width: "100%",
+    padding:"15px", 
+    borderRadius:"8px",
+}
 
 const Tile= styled.div.attrs({
     className: 'tile',
@@ -71,6 +75,7 @@ class Game extends Component{
         var emptyTile = {word:"",color:"",revealed:false}
         var emptyGame = {
             "in_progress": true,
+            "game_over" : false,
             "red_score": 0,
             "green_score": 0,
             "words":[]
@@ -80,12 +85,11 @@ class Game extends Component{
         }
         this.state = {
             name:"World",
-            tileColors:["grey","grey","grey","grey","grey","grey","grey","grey","grey","grey","grey","grey"], 
             game: emptyGame,
-            gameOver:false,
             clockTimes:[20,15,15,10,10,5,5,3,3,1,1],
             clockTime:20,
             turn:'green',
+            showTiles: false,
             paused: true,
             started: false,
             turnNumber: 0,
@@ -94,27 +98,14 @@ class Game extends Component{
     }
 
     hideColors = () => { 
-        var hiddenColors = []
-        for(var index in this.state.game){
-            if(!this.state.game[index].revealed){
-                hiddenColors.push("grey")
-            }else{
-                hiddenColors.push(this.state.game[index].color)
-            }
-        }
         this.setState({
-            tileColors : hiddenColors
+            showTiles : false,
         })
     }
 
     revealColors = () => {
-        var realColors = []
-        for(var index in this.state.game){
-            realColors.push(this.state.game[index].color)
-            console.log(realColors[index])
-        }
         this.setState({
-            tileColors: realColors,
+            showTiles: true,
         })
     }
 
@@ -153,6 +144,14 @@ class Game extends Component{
     updateGameTile = (index, element) => {
         let updatedGame = this.state.game
         updatedGame.words[index].revealed = true
+        let tile_color = updatedGame.words[index].color
+        if(tile_color==='green'){
+            updatedGame.green_score+=1
+        }else if(tile_color==='red'){
+            updatedGame.red_score+=1
+        }else if(tile_color==='blue'){
+            updatedGame.gameOver=true
+        }
         return updatedGame
 
     }
@@ -164,8 +163,12 @@ class Game extends Component{
                 <Column col xl="3" lg="3" md="3" sm="3">
                     <Tile 
                         revealed={word["selected"]} 
-                        style={word["revealed"] ? {background: word["color"]} : {background: "grey"}} 
-
+                        style={
+                            word["revealed"] || this.state.showTiles ? 
+                                {background: word["color"]} 
+                            : 
+                                {background: "grey"}
+                            } 
                         onClick={() => this.setState({ 
                             game : this.updateGameTile(index,"revealed")
                         })}>
@@ -203,15 +206,17 @@ class Game extends Component{
                                 </ClockContainer>
                             </Column>
                             <Column col xl="3" lg="3" md="3" sm="3">
-                                <Button variant="dark" onClick={this.startGame}>New Game</Button>
+                                <h1 style={redStyle}>{this.state.game.red_score}</h1>
+                                <h1 style={greenStyle}>{this.state.game.green_score}</h1>
                             </Column>
-                            <Column>
+                            <Column col xl="3" lg="3" md="3" sm="3">
                                 <Button variant="dark" onClick={this.revealColors}>Show</Button>
                                 <Button variant="dark" onClick={this.hideColors}>Hide</Button>
                             </Column>
-                            <Column col xl="3" lg="3" md="3" sm="3">
-                                <h1 style={redStyle}>{this.state.redScore}</h1>
-                                <h1 style={greenStyle}>{this.state.greenScore}</h1>
+                            <Column col xl="3" lg="3" md="3" sm="3" style={{padding:"15x"}}>
+                                <Button variant="dark" onClick={this.startGame} style ={newGameBtnStyle}> 
+                                    New Game
+                                </Button>
                             </Column>
                         </Row>
                     </Container>
