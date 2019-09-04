@@ -1,2 +1,3 @@
-react data fetching patterns         https://blog.logrocket.com/patterns-for-data-fetching-in-react-981ced7e5c56/
-
+react data fetching patterns        https://blog.logrocket.com/patterns-for-data-fetching-in-react-981ced7e5c56/
+font awsome doc                     https://github.com/FortAwesome/react-fontawesome
+styled-bootstrap-components docs    https://aichbauer.github.io/styled-bootstrap-components/?path=/story/input-groups--button-addons

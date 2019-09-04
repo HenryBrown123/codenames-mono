@@ -6,12 +6,14 @@ const api = axios.create({
 
 export const insertWord = payload => api.post(`/createWord`, payload)
 export const getRandomWords = () => api.get(`/randomWords`)
-export const getGame = () => api.get('/game/newGame')
+export const getNewGame = () => api.get('/game/newGame')
+export const getGame = (id) => api.get(`game/getGame/${id}`)
 
 const apis = {
     insertWord,
     getRandomWords,
-    getGame,
+    getNewGame,
+    getGame
 }
 
 export default apis
