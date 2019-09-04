@@ -1,15 +1,24 @@
-import React, { Component } from 'react'
+import React , { Component } from 'react'
 import api from '../api'
 
 import styled from 'styled-components'
-import { Container, Column,Row, Button} from 'styled-bootstrap-components'
-import ReactCountdownClock  from 'react-countdown-clock'
+import { 
+        Container, 
+        Column,
+        Row,
+        Button,
+        InputGroup, 
+        FormControl,
+        Form,
+        InputGroupAppend,
+        InputGroupPrepend,
+    } from 'styled-bootstrap-components'
 
-import Radio from '@material-ui/core/Radio';
-import RadioGroup from '@material-ui/core/RadioGroup';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import FormControl from '@material-ui/core/FormControl';
-import FormLabel from '@material-ui/core/FormLabel';
+import ReactCountdownClock  from 'react-countdown-clock'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faPaperPlane } from '@fortawesome/free-solid-svg-icons'
+
+
 
 const AppContainer= styled.div.attrs({
     className: 'container',
@@ -21,31 +30,55 @@ const AppContainer= styled.div.attrs({
     height:100%;
 `
 
+
 const redStyle = {
     color:'red',
+    fontSize: '5rem',
   };
 
 const greenStyle = {
 color:'green',
+fontSize:'5rem',
 };
 
+const sendBtnStyle = {
+    border:'none',
+}
 
+const newGameBtnStyle = {
+    width: "100%",
+    padding:"15px", 
+    borderRadius:"8px",
+}
 
 const Tile= styled.div.attrs({
     className: 'tile',
+    revealed:'revealed',
 
 })`
       width: 100%;
       display: inline-block;
       box-sizing: border-box;	
+      text-align:center;
       padding: 20px;
       margin-bottom: 10px;
-      text-align:center;
       border:2px;
       border-color: black;
       border-radius: 8px;
 
 `
+const Point = styled.div.attrs({
+    className:'red-point'
+})`
+    width: 1.6rem;
+    height: 1.6rem
+    display: inline-block;
+    box-sizing: border-box;
+    border-radius:50%;
+    text-align:center;
+    border-color: black;
+`
+
 
 const Panel = styled.div.attrs({
     className : 'panel',
@@ -69,27 +102,28 @@ const ClockContainer = styled.div.attrs({
 `
 
 
-
 class Game extends Component{
     constructor(props) {
         super(props)
-        var emptyTile = {word:"",color:"",revealed:"false"}
-        var emptyGame = []
+        var emptyTile = {word:" ",color:"",revealed:false}
+        var emptyGame = {
+            "in_progress": true,
+            "game_over" : false,
+            "red_score": 0,
+            "green_score": 0,
+            "words":[]
+        }
         for(var i=0; i<12; i++){
-            emptyGame.push(emptyTile)
+            emptyGame["words"].push(emptyTile)
         }
         this.state = {
             name:"World",
-            tileColors:["grey","grey","grey","grey","grey","grey","grey","grey","grey","grey","grey","grey"], 
-            words:[{word:""},{word:""},{word:""},{word:""},{word:""},{word:""},{word:""},{word:""},{word:""},{word:""},{word:""},{word:""}],
             game: emptyGame,
-            gameStarted: true,
-            redScore:0,
-            greenScore:0,
-            gameOver:false,
+            newGameId:" ",
             clockTimes:[20,15,15,10,10,5,5,3,3,1,1],
             clockTime:20,
             turn:'green',
+            showTiles: false,
             paused: true,
             started: false,
             turnNumber: 0,
@@ -97,28 +131,66 @@ class Game extends Component{
         }
     }
 
-    hideColors = () =>{
-        var hiddenColors = []
-        for(var index in this.state.game){
-            if(!this.state.game[index].revealed){
-                hiddenColors.push("grey")
-            }else{
-                hiddenColors.push(this.state.game[index].color)
-            }
-        }
+    changeGameId = event => {
         this.setState({
-            tileColors : hiddenColors
+            newGameId: event.target.value
+        })
+        console.log(this.state.newGameId)
+      }
+
+    handleSubmit = event => {
+        this.getGame(this.state.newGameId)
+        //this.setState({ game: newGame })
+    }
+
+    getGame  = async (id) => {
+        this.setState({isLoading:true})
+        console.log(id)
+        try{
+            await api.getGame(id).then(game => {
+                this.setState({
+                    game:game.data.game,
+                    isLoading:false,
+                })
+            })
+        }
+        catch(err) {
+            alert('Game not found')
+            this.setState({
+                newGameId: this.state.game._id
+            })
+        }
+    } 
+
+    getNewGame = async () => {
+        this.setState({ isLoading: true })
+        try{
+            await api.getNewGame().then(game => {
+                this.setState({
+                    game: game.data.newgame,
+                    newGameId: game.data.newgame._id,
+                    isLoading: false,
+                })
+            })
+        }
+        catch(err) {
+            alert('Game not found')
+            this.setState({
+                newGameId: this.state.game._id // change back to original id
+            })
+        }
+    }
+
+
+    hideColors = () => { 
+        this.setState({
+            showTiles : false,
         })
     }
 
     revealColors = () => {
-        var realColors = []
-        for(var index in this.state.game){
-            realColors.push(this.state.game[index].color)
-            console.log(realColors[index])
-        }
         this.setState({
-            tileColors: realColors
+            showTiles: true,
         })
     }
 
@@ -132,37 +204,9 @@ class Game extends Component{
         })
     }
 
-    revealColor = (tile) => {
-        var colorsToShow = this.state.tileColors
-        var tileColor = this.state.game[tile].color
-        colorsToShow[tile]= tileColor
-
-        var gameUpdate = this.state.game
-        gameUpdate[tile].revealed=true
-
-        var newRedScore = this.state.redScore
-        var newGreenScore = this.state.greenScore
-
-        var gameOver = this.state.gameOver
-        if(tileColor==="red"){
-            newRedScore+=1
-        }
-        else if(tileColor ==="green"){
-            newGreenScore+=1
-        }
-        else if(tileColor ==="blue"){
-            gameOver=true
-        }
-        
-        this.setState({ 
-            tileColors : colorsToShow, 
-            redScore : newRedScore, 
-            greenScore : newGreenScore, 
-            gameOver : gameOver
-        })
-    }
 
     startGame = () => {
+        this.getNewGame()
         this.setState({started : true, paused:false})
     }
 
@@ -174,41 +218,101 @@ class Game extends Component{
     componentDidMount = async () => {
         this.setState({ isLoading: true })
 
-        await api.getGame().then(game => {
+        await api.getNewGame().then(game => {
             this.setState({
-                //words: words.data.words,
                 game: game.data.newgame,
                 isLoading: false,
             })
+            this.setState({
+                newGameId: this.state.game._id,
+            })
         })
     }
+
+    updateGameTile = (index) => { 
+        let updatedGame = this.state.game
+        updatedGame.words[index].revealed = true
+        let tile_color = updatedGame.words[index].color
+        if(tile_color==='green'){
+            updatedGame.green_score+=1
+        }else if(tile_color==='red'){
+            updatedGame.red_score+=1
+        }else if(tile_color==='blue'){
+            updatedGame.gameOver=true
+        }
+        return updatedGame
+
+    }
+
     render(){
-        const { game, isLoading } = this.state
-        console.log('TCL: Game -> render -> game', game)
+        var wordTiles = this.state.game["words"].map((word,index) => (
+                <Column col xl="3" lg="3" md="3" sm="3">
+                    <Tile 
+                        revealed={word["selected"]} 
+                        style={
+                            word["revealed"] || this.state.showTiles ? 
+                                {background: word["color"]} 
+                            : 
+                                {background: "grey"}
+                            } 
+                        onClick={() => this.setState({ 
+                            game : this.updateGameTile(index)
+                        })}>
+                        <Word>
+                            {word["word"]}
+                        </Word>
+                    </Tile>
+                </Column>
+            )
+        )
+
+        var redScore = []
+        
+        for(let i =0; i<6; i++){
+            let score_color = "#dc354580"
+            if(i < this.state.game["red_score"]){
+                score_color = "red"
+            }
+            else if(i===5){
+                score_color="rgba(0,0,0,0)"
+            }
+            redScore.push(  
+                <Column col xl="2" lg="2" md="2" sm="2" style={{padding:0}}> 
+                    <Point  
+                        style={
+                            {background : score_color}
+                        } 
+                    />
+                </Column>
+            )
+        }
+
+        var greenScore = []
+        
+        for(let i =0; i<6; i++){
+            let score_color = "#28a74587"
+            if(i < this.state.game["green_score"]){
+                score_color = "green"
+            }
+            redScore.push(  
+                <Column col xl="2" lg="2" md="2" sm="2" style={{padding:0}}> 
+                    <Point  
+                        style={
+                            {background : score_color}
+                        } 
+                    />
+                </Column>
+            )
+        }
+    
+    
         return(
             <AppContainer>
                 <Panel>
                     <Container>
-                        <Column> 
-                            <Row> 
-                               <Column col xl="3" lg="3" md="3" sm="3"><Tile revealed={this.state.game[0]["revealed"]} style={{background: this.state.tileColors[0]}} onClick={() => this.revealColor(0)}><Word>{game[0]["word"]}</Word></Tile></Column> 
-                               <Column col xl="3" lg="3" md="3" sm="3"><Tile revealed={this.state.game[1]["revealed"]} style={{background: this.state.tileColors[1]}} onClick={() => this.revealColor(1)}><Word>{game[1]["word"]}</Word></Tile></Column> 
-                               <Column col xl="3" lg="3" md="3" sm="3"><Tile revealed={this.state.game[2]["revealed"]} style={{background: this.state.tileColors[2]}} onClick={() => this.revealColor(2)}><Word>{game[2]["word"]}</Word></Tile></Column> 
-                               <Column col xl="3" lg="3" md="3" sm="3"><Tile revealed={this.state.game[3]["revealed"]} style={{background: this.state.tileColors[3]}} onClick={() => this.revealColor(3)}><Word>{game[3]["word"]}</Word></Tile></Column> 
-                            </Row>
-                            <Row>
-                               <Column col xl="3" lg="3" md="3" sm="3"><Tile revealed={this.state.game[4]["revealed"]} style={{background: this.state.tileColors[4]}} onClick={() => this.revealColor(4)}><Word>{game[4]["word"]}</Word></Tile></Column> 
-                               <Column col xl="3" lg="3" md="3" sm="3"><Tile revealed={this.state.game[5]["revealed"]} style={{background: this.state.tileColors[5]}} onClick={() => this.revealColor(5)}><Word>{game[5]["word"]}</Word></Tile></Column> 
-                               <Column col xl="3" lg="3" md="3" sm="3"><Tile revealed={this.state.game[6]["revealed"]} style={{background: this.state.tileColors[6]}} onClick={() => this.revealColor(6)}><Word>{game[6]["word"]}</Word></Tile></Column> 
-                               <Column col xl="3" lg="3" md="3" sm="3"><Tile revealed={this.state.game[7]["revealed"]} style={{background: this.state.tileColors[7]}} onClick={() => this.revealColor(7)}><Word>{game[7]["word"]}</Word></Tile></Column> 
-                            </Row>
-                            <Row>
-                               <Column col xl="3" lg="3" md="3" sm="3"><Tile revealed={this.state.game[8]["revealed"]} style={{background: this.state.tileColors[8]}} onClick={() => this.revealColor(8)}><Word>{game[8]["word"]}</Word></Tile></Column> 
-                               <Column col xl="3" lg="3" md="3" sm="3"><Tile revealed={this.state.game[9]["revealed"]} style={{background: this.state.tileColors[9]}} onClick={() => this.revealColor(9)}><Word>{game[9]["word"]}</Word></Tile></Column> 
-                               <Column col xl="3" lg="3" md="3" sm="3"><Tile revealed={this.state.game[10]["revealed"]} style={{background: this.state.tileColors[10]}} onClick={() => this.revealColor(10)}><Word>{game[10]["word"]}</Word></Tile></Column> 
-                               <Column col xl="3" lg="3" md="3" sm="3"><Tile revealed={this.state.game[11]["revealed"]} style={{background: this.state.tileColors[11]}} onClick={() => this.revealColor(11)}><Word>{game[11]["word"]}</Word></Tile></Column> 
-                            </Row>
-                        </Column>
+                            <Row>{wordTiles.slice(0,4)}</Row>
+                            <Row>{wordTiles.slice(4,8)}</Row>
+                            <Row>{wordTiles.slice(8,12)}</Row> 
                     </Container>
                     <Container>
                         <Row>
@@ -224,16 +328,27 @@ class Game extends Component{
                                         />
                                 </ClockContainer>
                             </Column>
-                            <Column col xl="3" lg="3" md="3" sm="3">
-                                <Button variant="dark" onClick={this.startGame}>New Game</Button>
+                            <Column col xl="3" lg="3" md="3" sm="3" style={{paddingTop:"6rem"}}>
+                                <Row>{redScore}</Row>
+                                <Row>{greenScore}</Row> 
                             </Column>
-                            <Column>
+                            <Column col xl="3" lg="3" md="3" sm="3">
                                 <Button variant="dark" onClick={this.revealColors}>Show</Button>
                                 <Button variant="dark" onClick={this.hideColors}>Hide</Button>
                             </Column>
                             <Column col xl="3" lg="3" md="3" sm="3">
-                                <h1 style={redStyle}>{this.state.redScore}</h1>
-                                <h1 style={greenStyle}>{this.state.greenScore}</h1>
+                                <Container style={{paddingTop: "3.5em"}}>
+                                    <Button  onClick={this.getNewGame} style ={newGameBtnStyle}>NewGame</Button>  
+                                        <InputGroup style={{marginTop:"10px"}}>
+                                            <InputGroupPrepend>
+                                                <Button type="button" variant="dark" primary  onClick={this.handleSubmit}>Join</Button>
+                                            </InputGroupPrepend>
+                                            <FormControl type="text" placeholder={this.state.game._id} value={this.state.newGameId} onChange={this.changeGameId}/>
+                                            <InputGroupAppend style={{position:"absolute",right: "4px"}}>
+                                                <Button outline secondary style={sendBtnStyle} type = "button"><FontAwesomeIcon icon={faPaperPlane}/></Button>
+                                            </InputGroupAppend>
+                                        </InputGroup>
+                                </Container>
                             </Column>
                         </Row>
                     </Container>
@@ -242,5 +357,6 @@ class Game extends Component{
         )
     }
 }
+
 
 export default Game
