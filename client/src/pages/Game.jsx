@@ -14,11 +14,10 @@ import {
         InputGroupPrepend,
     } from 'styled-bootstrap-components'
 
+import { Modal } from 'react-bootstrap'    
+
 import ReactCountdownClock  from 'react-countdown-clock'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPaperPlane } from '@fortawesome/free-solid-svg-icons'
-
-
 
 const AppContainer= styled.div.attrs({
     className: 'container',
@@ -29,7 +28,12 @@ const AppContainer= styled.div.attrs({
     width:100%;
     height:100%;
 `
-
+const Wrapper = styled.div.attrs({
+    className: 'wrapper',
+})` @media (min-width: 1200px) {
+    max-width:100%;
+  }
+`
 
 const redStyle = {
     color:'red',
@@ -67,6 +71,14 @@ const Tile= styled.div.attrs({
       border-radius: 8px;
 
 `
+const showButtonStyle = {
+    width: "4rem",
+    height: "4rem",
+    boxSizing: "border-box",
+    borderRadius:"50%",
+    margin:"auto",
+}
+
 const Point = styled.div.attrs({
     className:'red-point'
 })`
@@ -101,6 +113,14 @@ const ClockContainer = styled.div.attrs({
 
 `
 
+// style for modal
+const display = {
+    display: 'block'
+  };
+
+const hide = {
+display: 'none'
+};
 
 class Game extends Component{
     constructor(props) {
@@ -120,13 +140,16 @@ class Game extends Component{
             name:"World",
             game: emptyGame,
             newGameId:" ",
-            clockTimes:[20,15,15,10,10,5,5,3,3,1,1],
-            clockTime:20,
-            turn:'green',
-            showTiles: false,
-            paused: true,
-            started: false,
+            clockTimes:[240,120,120,100,100,60,60,30,30,30,30], // clock timings for each go
+            clockTime:240, // initial clock time
+            turn:'green', // which teams turn
+            wrongColor: false,  // whether the team has picked the wrong colour or not
+            showTiles: false, // whether to show all the tile colors 
+            paused: true, // whether timer is paused 
+            started: false, // whether game has started or not
             turnNumber: 0,
+            timeUp: false, // whether timer has run out 
+            turnDone: false, // whether user has finished with their turn
 
         }
     }
@@ -179,6 +202,18 @@ class Game extends Component{
                 newGameId: this.state.game._id // change back to original id
             })
         }
+        this.setState({
+        clockTimes:[240,120,120,100,100,60,60,30,30,30,30], // clock timings for each go
+        clockTime:240, // initial clock time
+        turn:'green', // which teams turn
+        wrongColor: false,  // whether the team has picked the wrong colour or not
+        showTiles: false, // whether to show all the tile colors 
+        paused: true, // whether timer is paused 
+        started: false, // whether game has started or not
+        turnNumber: 0,
+        timeUp: false, // whether timer has run out 
+        turnDone: false, // whether user has finished with their turn
+        })
     }
 
 
@@ -188,9 +223,9 @@ class Game extends Component{
         })
     }
 
-    revealColors = () => {
+    showHide = () => {
         this.setState({
-            showTiles: true,
+            showTiles: !this.state.showTiles,
         })
     }
 
@@ -200,21 +235,20 @@ class Game extends Component{
         this.setState({
             turn:nextTurn,
             turnNumber:this.state.turnNumber+1,
-            clockTime:this.state.clockTimes[this.state.turnNumber]
+            clockTime:this.state.clockTimes[this.state.turnNumber],
+            paused:false,
+            wrongColor:false,
+            timeUp:false,
+            turnDone: false,
         })
     }
 
 
-    startGame = () => {
-        this.getNewGame()
-        this.setState({started : true, paused:false})
+    startStopGame = () => {
+        //this.getNewGame()
+        this.setState({paused:!this.state.paused})
     }
 
-    pauseGamme = () => {
-        this.setState({paused : true})
-    }
-
-    
     componentDidMount = async () => {
         this.setState({ isLoading: true })
 
@@ -233,6 +267,7 @@ class Game extends Component{
         let updatedGame = this.state.game
         updatedGame.words[index].revealed = true
         let tile_color = updatedGame.words[index].color
+        // update game scores
         if(tile_color==='green'){
             updatedGame.green_score+=1
         }else if(tile_color==='red'){
@@ -240,8 +275,27 @@ class Game extends Component{
         }else if(tile_color==='blue'){
             updatedGame.gameOver=true
         }
+        // check whether tile is the correct color for the team.. if not pause timer and show "FAILED" pop-up
+        // by setting wrongColor=true
+        console.log(this.state.turn)
+        if (this.state.turn !== tile_color) {
+            this.setState({paused:!this.state.paused})
+            this.setState({wrongColor:true})
+            console.log("Wrong colour!")
+        }
+
         return updatedGame
 
+    }
+
+    timeUp = () => {
+        this.setState({timeUp:true})
+        console.log("Time up!")
+    }
+
+    turnDone = () => {
+        this.setState({turnDone:true})
+        console.log("Time up!")
     }
 
     render(){
@@ -304,11 +358,44 @@ class Game extends Component{
                 </Column>
             )
         }
-    
+        
     
         return(
-            <AppContainer>
+            <Wrapper>
                 <Panel>
+                    <Modal show={this.state.wrongColor} >
+                        <Modal.Header>
+                        <Modal.Title>FAIL!</Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>Wrong tile selected...</Modal.Body>
+                        <Modal.Footer>
+                        <Button variant="primary" onClick={()=>this.nextTurn(this.state.turn)}>
+                            Next turn
+                        </Button>
+                        </Modal.Footer>
+                    </Modal>
+                    <Modal show={this.state.timeUp} >
+                        <Modal.Header>
+                        <Modal.Title>TIME UP!</Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>You've run out of time for this go... better luck next time.</Modal.Body>
+                        <Modal.Footer>
+                        <Button variant="primary" onClick={()=>this.nextTurn(this.state.turn)}>
+                            Next turn
+                        </Button>
+                        </Modal.Footer>
+                    </Modal>
+                    <Modal show={this.state.turnDone} >
+                        <Modal.Header>
+                        <Modal.Title>Turn over</Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>Hand over to the other team for their go</Modal.Body>
+                        <Modal.Footer>
+                        <Button variant="primary" onClick={()=>this.nextTurn(this.state.turn)}>
+                            Next turn
+                        </Button>
+                        </Modal.Footer>
+                    </Modal>
                     <Container>
                             <Row>{wordTiles.slice(0,4)}</Row>
                             <Row>{wordTiles.slice(4,8)}</Row>
@@ -318,23 +405,37 @@ class Game extends Component{
                         <Row>
                             <Column col xl="3" lg="3" md="3" sm="3">
                                 <ClockContainer>
-                                    <ReactCountdownClock seconds={this.state.clockTime}
+                                    <Row><ReactCountdownClock seconds={this.state.clockTime}
                                         key = {this.state.turnNumber}
                                         color={this.state.turn}
                                         alpha={0.9}
                                         size={150}
                                         paused={this.state.paused}
-                                        onComplete={()=>this.nextTurn(this.state.turn)}
+                                        onComplete={this.timeUp}
                                         />
+                                    </Row>
                                 </ClockContainer>
+                                <Container>
+                                    <Row>
+                                        <Button style = {showButtonStyle} onClick={this.startStopGame}>
+                                            {this.state.paused ? "Start" : "Pause"}
+                                        </Button>
+                                        <Button style = {showButtonStyle} onClick={this.turnDone}>
+                                        Next
+                                        </Button>
+                                    </Row>
+                                </Container>
                             </Column>
                             <Column col xl="3" lg="3" md="3" sm="3" style={{paddingTop:"6rem"}}>
                                 <Row>{redScore}</Row>
                                 <Row>{greenScore}</Row> 
                             </Column>
                             <Column col xl="3" lg="3" md="3" sm="3">
-                                <Button variant="dark" onClick={this.revealColors}>Show</Button>
-                                <Button variant="dark" onClick={this.hideColors}>Hide</Button>
+                                <Container style={{paddingTop:"5rem",paddingLeft:"5rem"}}>
+                                    <Button variant="dark" style = {showButtonStyle} onClick={this.showHide}>
+                                        {this.state.showTiles ? "Hide" : "Show"}
+                                    </Button>
+                                </Container>
                             </Column>
                             <Column col xl="3" lg="3" md="3" sm="3">
                                 <Container style={{paddingTop: "3.5em"}}>
@@ -345,7 +446,9 @@ class Game extends Component{
                                             </InputGroupPrepend>
                                             <FormControl type="text" placeholder={this.state.game._id} value={this.state.newGameId} onChange={this.changeGameId}/>
                                             <InputGroupAppend style={{position:"absolute",right: "4px"}}>
-                                                <Button outline secondary style={sendBtnStyle} type = "button"><FontAwesomeIcon icon={faPaperPlane}/></Button>
+                                                <Button outline secondary style={sendBtnStyle} type = "button">
+                                                    Go
+                                                </Button>
                                             </InputGroupAppend>
                                         </InputGroup>
                                 </Container>
@@ -353,7 +456,7 @@ class Game extends Component{
                         </Row>
                     </Container>
                 </Panel>
-            </AppContainer>
+            </Wrapper>
         )
     }
 }

@@ -1,10 +1,15 @@
+/*
+Game model object .. stores game states and words used within the game. 
+*/
+
 const mongoose = require('mongoose')
-var shortid = require('shortid')
-shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@');
 var Schema = mongoose.Schema
 
-var Game = new Schema({
+// this is the id used to join a game.. restricting to characters that are easy to read/type
+var shortid = require('shortid')
+shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@');
 
+var Game = new Schema({
     _id: {
         'type': String,
         'default': shortid.generate
@@ -20,8 +25,7 @@ var Game = new Schema({
     game_over: {type : Boolean, required:true, default:false},
     
 
-    /* ----------- */
-
+    /* json array of word objects */
     words : [{
         word: { type: String, required: true },
         color: {type: String, required: true},

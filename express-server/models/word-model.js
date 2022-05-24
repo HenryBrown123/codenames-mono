@@ -1,7 +1,12 @@
+/*
+Model object used for persisting a new word to the database
+*/
+
 const mongoose = require('mongoose')
+var Schema = mongoose.Schema
+
 var random = require('mongoose-simple-random'); // plugin
 var AutoIncrement = require('mongoose-sequence')(mongoose)
-var Schema = mongoose.Schema
 
 var Word = new Schema(
     {
