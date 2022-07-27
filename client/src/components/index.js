@@ -1,5 +1,4 @@
-import Links from './Links'
 import Logo from './Logo'
-import NavBar from './NavBar'
+import NavBar from './Nav/NavBar'
 
-export { Links, Logo, NavBar }
+export { Logo, NavBar }

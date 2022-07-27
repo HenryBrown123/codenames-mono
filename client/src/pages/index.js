@@ -1,4 +1,5 @@
-import Game from './Game'
+import { Game } from './Game'
 import HowTo from './HowTo'
+import Sandbox from './Sandbox'
 
-export {Game, HowTo}
+export {Game, HowTo, Sandbox}

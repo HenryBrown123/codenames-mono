@@ -1,5 +1,6 @@
 import React , { Component } from 'react'
-import api from '../api'
+import api from '../../api'
+import { Dashboard } from './Dashboard'
 
 import styled from 'styled-components'
 import { 
@@ -362,100 +363,7 @@ class Game extends Component{
     
         return(
             <Wrapper>
-                <Panel>
-                    <Modal show={this.state.wrongColor} >
-                        <Modal.Header>
-                        <Modal.Title>FAIL!</Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>Wrong tile selected...</Modal.Body>
-                        <Modal.Footer>
-                        <Button variant="primary" onClick={()=>this.nextTurn(this.state.turn)}>
-                            Next turn
-                        </Button>
-                        </Modal.Footer>
-                    </Modal>
-                    <Modal show={this.state.timeUp} >
-                        <Modal.Header>
-                        <Modal.Title>TIME UP!</Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>You've run out of time for this go... better luck next time.</Modal.Body>
-                        <Modal.Footer>
-                        <Button variant="primary" onClick={()=>this.nextTurn(this.state.turn)}>
-                            Next turn
-                        </Button>
-                        </Modal.Footer>
-                    </Modal>
-                    <Modal show={this.state.turnDone} >
-                        <Modal.Header>
-                        <Modal.Title>Turn over</Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>Hand over to the other team for their go</Modal.Body>
-                        <Modal.Footer>
-                        <Button variant="primary" onClick={()=>this.nextTurn(this.state.turn)}>
-                            Next turn
-                        </Button>
-                        </Modal.Footer>
-                    </Modal>
-                    <Container>
-                            <Row>{wordTiles.slice(0,4)}</Row>
-                            <Row>{wordTiles.slice(4,8)}</Row>
-                            <Row>{wordTiles.slice(8,12)}</Row> 
-                    </Container>
-                    <Container>
-                        <Row>
-                            <Column col xl="3" lg="3" md="3" sm="3">
-                                <ClockContainer>
-                                    <Row><ReactCountdownClock seconds={this.state.clockTime}
-                                        key = {this.state.turnNumber}
-                                        color={this.state.turn}
-                                        alpha={0.9}
-                                        size={150}
-                                        paused={this.state.paused}
-                                        onComplete={this.timeUp}
-                                        />
-                                    </Row>
-                                </ClockContainer>
-                                <Container>
-                                    <Row>
-                                        <Button style = {showButtonStyle} onClick={this.startStopGame}>
-                                            {this.state.paused ? "Start" : "Pause"}
-                                        </Button>
-                                        <Button style = {showButtonStyle} onClick={this.turnDone}>
-                                        Next
-                                        </Button>
-                                    </Row>
-                                </Container>
-                            </Column>
-                            <Column col xl="3" lg="3" md="3" sm="3" style={{paddingTop:"6rem"}}>
-                                <Row>{redScore}</Row>
-                                <Row>{greenScore}</Row> 
-                            </Column>
-                            <Column col xl="3" lg="3" md="3" sm="3">
-                                <Container style={{paddingTop:"5rem",paddingLeft:"5rem"}}>
-                                    <Button variant="dark" style = {showButtonStyle} onClick={this.showHide}>
-                                        {this.state.showTiles ? "Hide" : "Show"}
-                                    </Button>
-                                </Container>
-                            </Column>
-                            <Column col xl="3" lg="3" md="3" sm="3">
-                                <Container style={{paddingTop: "3.5em"}}>
-                                    <Button  onClick={this.getNewGame} style ={newGameBtnStyle}>NewGame</Button>  
-                                        <InputGroup style={{marginTop:"10px"}}>
-                                            <InputGroupPrepend>
-                                                <Button type="button" variant="dark" primary  onClick={this.handleSubmit}>Join</Button>
-                                            </InputGroupPrepend>
-                                            <FormControl type="text" placeholder={this.state.game._id} value={this.state.newGameId} onChange={this.changeGameId}/>
-                                            <InputGroupAppend style={{position:"absolute",right: "4px"}}>
-                                                <Button outline secondary style={sendBtnStyle} type = "button">
-                                                    Go
-                                                </Button>
-                                            </InputGroupAppend>
-                                        </InputGroup>
-                                </Container>
-                            </Column>
-                        </Row>
-                    </Container>
-                </Panel>
+                <Dashboard />
             </Wrapper>
         )
     }

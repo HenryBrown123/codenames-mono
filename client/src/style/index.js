@@ -1,1 +1,3 @@
-import 'bootstrap/dist/css/bootstrap.css';
+import GlobalStyle from './GlobalStyle'
+
+export { GlobalStyle }
