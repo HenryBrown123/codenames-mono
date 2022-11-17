@@ -1,5 +1,5 @@
-/*
-Game model object .. stores game states and words used within the game. 
+/** 
+* Game model object .. stores game states and words used within the game. 
 */
 
 const mongoose = require('mongoose')
