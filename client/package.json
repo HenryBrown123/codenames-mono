@@ -21,6 +21,7 @@
     "react-burger-menu": "^3.0.8",
     "react-countdown-clock": "^2.6.0",
     "react-dom": "^16.8.6",
+    "react-floating-button": "^1.1.1",
     "react-fontawesome": "^1.6.1",
     "react-native": "^0.69.3",
     "react-router-dom": "^5.0.1",

@@ -5,6 +5,10 @@ import { NavBar } from '../components'
 import { Game,HowTo,Sandbox} from '../pages'
 import { GlobalStyle } from '../style'
 
+import { FloatingButton, Item } from "react-floating-button";
+import newGameIcon from  "../assets/NewGame.svg"
+
+
 import styled from 'styled-components'
 
 const AppContainer = styled.div`
@@ -12,8 +16,7 @@ const AppContainer = styled.div`
     left:0;
     bottom:0;
     right:0;
-    //height: calc(100vh - 90px);
-    height:100vh
+    height:100vh;
 `;
 
 const SectionsContainer = styled.div`
@@ -27,6 +30,7 @@ const SectionsContainer = styled.div`
 const NavSection = styled.div`
     flex: 1;
     position: relative;
+
     @media (max-width: 768px) {
         flex:0;
       }
@@ -41,16 +45,28 @@ function App() {
     return (
         <AppContainer id="app-container">
             <SectionsContainer id="sections-container">
-                <NavSection id="nav-container">
+            {/* <NavSection id="nav-container">
                     <NavBar />
-                </NavSection>
+            </NavSection> */}
+           {/* <FloatingButton>
+                <Item
+                    imgSrc={newGameIcon}
+                    onClick={() => {
+                    console.log("callback function here");
+                    }}
+                />
+                <Item
+                    onClick={() => {
+                    console.log("callback function here");
+                    }}
+                />
+</FloatingButton>; */}
                     <Router>
                         <Switch>
-                        <PageSection id="page-container">
-                            <Route path = "/game" exact component={Game} />
-                            <Route path = "/howto" exact component={HowTo} />
-                            <Route path = "/sandbox" exact component={Sandbox} />
-                        </PageSection>
+                            <PageSection id="page-container">
+                                <Route path = "/game" exact component={Game} />
+                                <Route path = "/howto" exact component={HowTo} />
+                            </PageSection>
                         </Switch>
                     </Router>
                     <GlobalStyle />
