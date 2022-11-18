@@ -1,5 +1,4 @@
-import React , { Component } from 'react'
-
+import React from 'react'
 import styled from 'styled-components'
 
 
@@ -12,15 +11,15 @@ const Card = styled.div`
     }
 `
 
-const GameCard = (cardText, cardColor, cardSelected) => {
-    
+const GameCard = ({cardText, cardColor, cardSelected}) => {
+
     // if not selected then backgroundColor will use default set in global CSS file
     var selectedColor = null;
     if (cardSelected){
         selectedColor = cardColor;
     }
     return (
-            <Card id="card" selectedColor={selectedColor} >
+            <Card id="card" selectedColor={selectedColor}>
                 <p>{cardText}</p>
             </Card>
     )

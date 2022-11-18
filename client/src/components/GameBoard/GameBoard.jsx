@@ -1,6 +1,7 @@
-import React , { Component } from 'react'
+import React , { useState } from 'react'
 
 import styled from 'styled-components'
+import {ErrorMessage} from 'components'
 import GameCard from './GameCard'
 
 const Grid = styled.div`
@@ -35,34 +36,41 @@ const CardContainer = styled.div`
       }
 `
 
+/**
+ * Functional component that returns the full game board. The game board displays all words in the game
+ * as well as underlying color of that card if selected.
+ * 
+ * e.g. boardData = [{"word":"elephant", "color":"red", "selected":false}, 
+ *                   {"word":"tiger", "color":"red", "selected":false} 
+ *                   ... ]
+ * 
+ * @param {array} boardData - json array containing words, card colors and whether selected
+ */
 
-class GameBoard extends Component {
-    constructor(props) {
-        super(props)
-        this.state = {
-            cardData: null
+const GameBoard = ({boardData}) => {
+        
+        if (boardData == null || boardData.length === 0 ){
+            return (
+                <ErrorMessage messageText="Sorry something went wrong when trying to display the game board :( Please refresh to try again..." />
+            )
         }
-    }
-    render() {
+
+        console.log(boardData)
+        console.log(Object.prototype.toString.call(boardData))
+
+        const allCards = boardData.map(cardData => (
+            <CardContainer key={cardData._id} >
+                <GameCard cardText={cardData.word} cardColor={cardData.color} cardSelected={cardData.selected} />
+            </CardContainer>
+        ));
+
         return (
             <Grid id="gameboard-wrapper">
                 <CardsContainer id="gameboard-container">
-                    <CardContainer ><GameCard /></CardContainer>
-                    <CardContainer ><GameCard /></CardContainer>
-                    <CardContainer ><GameCard /></CardContainer>
-                    <CardContainer ><GameCard /></CardContainer>
-                    <CardContainer ><GameCard /></CardContainer>
-                    <CardContainer ><GameCard /></CardContainer>
-                    <CardContainer ><GameCard /></CardContainer>
-                    <CardContainer ><GameCard /></CardContainer>
-                    <CardContainer ><GameCard /></CardContainer>
-                    <CardContainer ><GameCard /></CardContainer>
-                    <CardContainer ><GameCard /></CardContainer>
-                    <CardContainer ><GameCard /></CardContainer>
+                    {allCards}
                 </CardsContainer>
             </Grid>
         )
-    }
-}
+};
 
 export default GameBoard
