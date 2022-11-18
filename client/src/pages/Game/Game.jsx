@@ -1,7 +1,6 @@
-import React, { Component } from 'react'
-import { Dashboard } from 'components/Dashboard'
-import { GameBoard } from 'components/GameBoard'
-import api from 'api'
+import React, { useState, useEffect } from 'react'
+import { Dashboard, GameBoard, LoadingSpinner } from 'components'
+import { useGameData } from 'hooks'
 
 import styled from 'styled-components';
 
@@ -26,49 +25,31 @@ const GameSection = styled.div`
     flex: ${(props) => props.size};
 `;
 
-class Game extends Component{
-    constructor(props) {
-        super(props)
-        this.state = {
-            game: null,
-            isLoading: false, 
-            newGameId: null
-        }
+/**
+ * Functional parent component containing all child components required by game.
+ * This component fetches data from db via api call and passes into child components to present to the user.
+ * 
+ */
+
+const Game = () => {
+
+    // this is game data returned by api call
+    const { gameData } = useGameData();
+    if (!gameData) {
+        return (<LoadingSpinner displayText={"Loading a new game :)"} />)
     }
-
-    
-    componentDidMount = async () => {
-        this.setState({ isLoading: true })
-
-        await api.getNewGame().then(game => {
-            this.setState({
-                game: game.data.newgame,
-                isLoading: false,
-            })
-            this.setState({
-                newGameId: this.state.game._id,
-            })
-        })
-    }
-
-
-    render(){
-        if (this.state.game == null || this.state.isLoading) {
-            return (<div><p>Loading game...</p></div>)
-        }
-        return(
-            <Grid type="grid">
-                <GameContainer type="game-container">
-                    <GameSection type="main-section" size={4} >
-                        <GameBoard />
-                    </GameSection>
-                    <GameSection type="dashboard" size={1}  >
-                        <Dashboard />  
-                    </GameSection>
-                </GameContainer>
-            </Grid>
-        )
-    }
-}
+    return(
+        <Grid type="grid">
+            <GameContainer type="game-container">
+                <GameSection type="main-section" size={4} >
+                    <GameBoard boardData={gameData.words}/>
+                </GameSection>
+                <GameSection type="dashboard" size={1}  >
+                    <Dashboard />  
+                </GameSection>
+            </GameContainer>
+        </Grid>
+    )
+};
 
 export default Game;
