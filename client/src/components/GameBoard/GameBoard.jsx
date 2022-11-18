@@ -55,9 +55,6 @@ const GameBoard = ({boardData}) => {
             )
         }
 
-        console.log(boardData)
-        console.log(Object.prototype.toString.call(boardData))
-
         const allCards = boardData.map(cardData => (
             <CardContainer key={cardData._id} >
                 <GameCard cardText={cardData.word} cardColor={cardData.color} cardSelected={cardData.selected} />
