@@ -16,7 +16,7 @@ var Game = new Schema({
       },
 
     /* game settings */
-    number_of_cards: {type: Number, required: true, default: 25} ,
+    number_of_cards: {type: Number, required: true, default: 24} ,
     starting_team: {type: String, required: true, default: 'green'},
     number_of_assasins: {type: Number, required: true, default: 1},
 

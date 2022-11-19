@@ -14,7 +14,7 @@ const Game = require('../models/game-model')
 getNewGame = async (req,res) => {
 
     const defaultGameSettings = {
-        numberOfCards: 25,
+        numberOfCards: 24,
         startingWithTeam: 'green',
         numberOfAssasins: 1
     }
