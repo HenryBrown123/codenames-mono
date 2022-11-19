@@ -34,6 +34,7 @@ getNewGame = async (req,res) => {
     var numberOfCardsStartingTeam = Math.ceil((gameSettings.numberOfCards-numberOfCardsNonTeam)/2)
     var numberOfCardsOtherTeam = Math.floor((gameSettings.numberOfCards-numberOfCardsNonTeam)/2)
     var numberOfCardsAssasins = gameSettings.numberOfAssasins
+    
     // total number - (other derived) so total always equals that requested
     var numberOfCardsBystander = (gameSettings.numberOfCards - 
                                  numberOfCardsStartingTeam - 
