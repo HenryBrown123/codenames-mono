@@ -9,30 +9,37 @@ const Grid = styled.div`
 `;
 
 const CardsContainer = styled.div`
-    display: flex;
-    flex-wrap: wrap;  
-    justify-content: space-between;
-    height: 100%;
+  display: grid;
+  color: white;
+  width: 100%;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: minmax(min-content, max-content);
+  grid-row-gap: .25em;
+  grid-column-gap: 0.5em;
 
-    // go into columns view
-    @media (max-width: 768px) {
-        flex-direction:column;
-       // align-items: stretch;
-      }
+  // 5x5 grid and some more spacing
+    @media (min-width: 768px) {
+            grid-template-columns: repeat(5, 1fr);
+            grid-row-gap: .5em;
+            grid-column-gap: 1em;
+        }
 `;
 
 const CardContainer = styled.div`
     text-align: center;
     color: white;
-    font-family: sans-serif;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    flex: 1 0 auto;                
+    font-family: sans-serif;    
+    grid-column: span 2;
 
-    // 4x3 grid for desktop
-    @media (min-width: 768px) {
-        flex: 1 0 20%;             
+    /* Dealing with single orphan
+    https://css-irl.info/controlling-leftover-grid-items/
+     */
+
+    :last-child:nth-child(2n - 1) {
+    grid-column-end: 3;
+    }
+
+    @media (min-width: 768px) {          
       }
 `
 
