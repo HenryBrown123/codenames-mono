@@ -44,11 +44,6 @@ class Dashboard extends Component {
         return (
             <Grid>
                 <DashboardContainer id="dashboard-container">
-                    <DashboardSection id="clock-section" size={1}>
-                    <CenterItemWrapper>
-                        <CountdownClock />
-                    </CenterItemWrapper>
-                    </DashboardSection>
                     <DashboardSection id="action-section" size={1}><ActionButton/></DashboardSection>
                 </DashboardContainer>
             </Grid>

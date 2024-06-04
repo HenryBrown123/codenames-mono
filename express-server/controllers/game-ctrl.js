@@ -34,7 +34,7 @@ getNewGame = async (req,res) => {
     var numberOfCardsStartingTeam = Math.ceil((gameSettings.numberOfCards-numberOfCardsNonTeam)/2)
     var numberOfCardsOtherTeam = Math.floor((gameSettings.numberOfCards-numberOfCardsNonTeam)/2)
     var numberOfCardsAssasins = gameSettings.numberOfAssasins
-    
+
     // total number - (other derived) so total always equals that requested
     var numberOfCardsBystander = (gameSettings.numberOfCards - 
                                  numberOfCardsStartingTeam - 
@@ -82,6 +82,17 @@ getNewGame = async (req,res) => {
            console.log(err)
        )
 }
+
+/**
+ * Asynchronous function for returning an existing game as a JSON object. 
+ * 
+ * @async 
+ * @param req {Object} Request object
+ * @param res {Object} New game JSON
+ * @param req.params._id {String} game id for requested game
+ * 
+ */
+
 
 getGame = async (req,res) => {
     const id = req.params._id

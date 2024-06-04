@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Dashboard, GameBoard, LoadingSpinner } from 'components'
 import { useGameData } from 'hooks'
-
 import styled from 'styled-components';
 
 const Grid = styled.div`
@@ -13,6 +12,24 @@ const Grid = styled.div`
     height:100%;
 `;
 
+const GameBoardContainer = styled.div`
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    size: 4;
+`;
+
+const DashboardContainer = styled.div`
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    size: 1;
+`;
+
 const GameContainer = styled.div`
     width: 100%;
     height: 100%;
@@ -21,9 +38,6 @@ const GameContainer = styled.div`
     flex-direction: column;
 `;
 
-const GameSection = styled.div`
-    flex: ${(props) => props.size};
-`;
 
 /**
  * Functional parent component containing all child components required by game.
@@ -32,21 +46,25 @@ const GameSection = styled.div`
  */
 
 const Game = () => {
+    const [openDashboard, setOpenDashboard] = useState(false)
+    // const sheetRef = useRef(BottomSheetRef)
 
     // this is game data returned by api call
     const { gameData } = useGameData();
     if (!gameData) {
         return (<LoadingSpinner displayText={"Loading a new game :)"} />)
     }
+
     return(
         <Grid type="grid">
             <GameContainer type="game-container">
-                <GameSection type="main-section" size={4} >
+                <GameBoardContainer type="main-section" >
                     <GameBoard boardData={gameData.words}/>
-                </GameSection>
-                <GameSection type="dashboard" size={1}  >
-                    <Dashboard />  
-                </GameSection>
+                </GameBoardContainer>
+  
+                <DashboardContainer type="dashboard"  >
+                            <Dashboard />  
+                </DashboardContainer>
             </GameContainer>
         </Grid>
     )

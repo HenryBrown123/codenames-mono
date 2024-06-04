@@ -6,16 +6,20 @@ import GameCard from './GameCard'
 
 const Grid = styled.div`
     height:100%;
+    flex:1;
 `;
 
 const CardsContainer = styled.div`
   display: grid;
   color: white;
   width: 100%;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   grid-auto-rows: minmax(min-content, max-content);
   grid-row-gap: .25em;
   grid-column-gap: 0.5em;
+  align-items: center;
+  justify-content: center;
+  font-family: sans-serif;    
 
   // 5x5 grid and some more spacing
     @media (min-width: 768px) {
@@ -25,23 +29,7 @@ const CardsContainer = styled.div`
         }
 `;
 
-const CardContainer = styled.div`
-    text-align: center;
-    color: white;
-    font-family: sans-serif;    
-    grid-column: span 2;
 
-    /* Dealing with single orphan
-    https://css-irl.info/controlling-leftover-grid-items/
-     */
-
-    :last-child:nth-child(2n - 1) {
-    grid-column-end: 3;
-    }
-
-    @media (min-width: 768px) {          
-      }
-`
 
 /**
  * Functional component that returns the full game board. The game board displays all words in the game
@@ -63,9 +51,7 @@ const GameBoard = ({boardData}) => {
         }
 
         const allCards = boardData.map(cardData => (
-            <CardContainer key={cardData._id} >
-                <GameCard cardText={cardData.word} cardColor={cardData.color} cardSelected={cardData.selected} />
-            </CardContainer>
+                <GameCard key={cardData._id} cardText={cardData.word} cardColor={cardData.color} cardSelected={cardData.selected} />
         ));
 
         return (
