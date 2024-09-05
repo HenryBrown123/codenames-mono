@@ -8,12 +8,14 @@ export const insertWord = payload => api.post(`/createWord`, payload)
 export const getRandomWords = () => api.get(`/randomWords`)
 export const getNewGame = () => api.get('/game/newGame')
 export const getGame = (id) => api.get(`game/getGame/${id}`)
+export const nextTurn = (id) => api.get(`game/getGame/${id}`)
 
 const apis = {
     insertWord,
     getRandomWords,
     getNewGame,
-    getGame
+    getGame, 
+    nextTurn
 }
 
 export default apis

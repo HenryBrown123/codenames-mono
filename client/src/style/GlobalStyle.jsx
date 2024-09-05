@@ -14,7 +14,7 @@ div {
 html {
     --color-text: black;
     --color-background: #c2bdbd;
-    --color-primary: #67b9c5;
+    --color-primary: #44a85a;
     --color-secondary: #a6eb25ba;
     --color-card: #00000096;
     --color-dashboard: black;
