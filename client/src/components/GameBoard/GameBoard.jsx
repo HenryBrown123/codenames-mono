@@ -1,8 +1,9 @@
-import React , { useState } from 'react'
+import React , { useState, useContext } from 'react'
 
 import styled from 'styled-components'
 import {ErrorMessage} from 'components'
 import GameCard from './GameCard'
+import { useGameContext } from 'hooks'
 
 const Grid = styled.div`
     height:100%;
@@ -10,23 +11,18 @@ const Grid = styled.div`
 `;
 
 const CardsContainer = styled.div`
-  display: grid;
-  color: white;
-  width: 100%;
-  grid-template-columns: repeat(2, 1fr);
-  grid-auto-rows: minmax(min-content, max-content);
-  grid-row-gap: .25em;
-  grid-column-gap: 0.5em;
-  align-items: center;
-  justify-content: center;
-  font-family: sans-serif;    
+    display: grid;
+    color: white;
+    width: 100%;
 
-  // 5x5 grid and some more spacing
-    @media (min-width: 768px) {
-            grid-template-columns: repeat(5, 1fr);
-            grid-row-gap: .5em;
-            grid-column-gap: 1em;
-        }
+    grid-auto-rows: minmax(min-content, max-content);
+    grid-template-columns: repeat(5, 1fr);
+    grid-row-gap: .5em;
+    grid-column-gap: 1em;
+
+    align-items: center;
+    justify-content: center;
+    font-family: sans-serif;    
 `;
 
 
@@ -42,8 +38,10 @@ const CardsContainer = styled.div`
  * @param {array} boardData - json array containing words, card colors and whether selected
  */
 
-const GameBoard = ({boardData}) => {
-        
+const GameBoard = () => {
+
+        const {boardData} = useGameContext();
+
         if (boardData == null || boardData.length === 0 ){
             return (
                 <ErrorMessage messageText="Sorry something went wrong when trying to display the game board :( Please refresh to try again..." />

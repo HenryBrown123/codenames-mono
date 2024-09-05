@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useReducer, useState, useEffect, useRef, createContext } from 'react'
 import { Dashboard, GameBoard, LoadingSpinner } from 'components'
-import { useGameData } from 'hooks'
+import { useGameData, GameContextProvider, gameReducer } from 'hooks'
 import styled from 'styled-components';
 
 const Grid = styled.div`
@@ -19,6 +19,7 @@ const GameBoardContainer = styled.div`
     justify-content: center;
     flex-direction: column;
     size: 4;
+    padding: 1rem;
 `;
 
 const DashboardContainer = styled.div`
@@ -36,6 +37,7 @@ const GameContainer = styled.div`
     display: flex;
     justify-content: center;
     flex-direction: column;
+
 `;
 
 
@@ -46,25 +48,24 @@ const GameContainer = styled.div`
  */
 
 const Game = () => {
-    const [openDashboard, setOpenDashboard] = useState(false)
-    // const sheetRef = useRef(BottomSheetRef)
-
     // this is game data returned by api call
-    const { gameData } = useGameData();
-    if (!gameData) {
-        return (<LoadingSpinner displayText={"Loading a new game :)"} />)
-    }
+    const { gameData } = useGameData(); 
 
+    if (!gameData) {
+        return (<LoadingSpinner displayText={"Loading a new game :)"}/>)
+    } 
+    
     return(
         <Grid type="grid">
             <GameContainer type="game-container">
-                <GameBoardContainer type="main-section" >
-                    <GameBoard boardData={gameData.words}/>
-                </GameBoardContainer>
-  
-                <DashboardContainer type="dashboard"  >
+                <GameContextProvider value = { gameData }>
+                    <GameBoardContainer type="main-section" >
+                        <GameBoard/>
+                    </GameBoardContainer>
+                    <DashboardContainer type="dashboard"  >
                             <Dashboard />  
-                </DashboardContainer>
+                    </DashboardContainer>                         
+                </GameContextProvider>
             </GameContainer>
         </Grid>
     )

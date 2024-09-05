@@ -1,7 +1,5 @@
-import React, { useState, useEffect, useReducer } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from 'api';
-import {gameReducer} from 'hooks';
-import Game from 'pages/Game/GameOld';
 
 /**
  * hook for retrieving game data via api.
@@ -11,8 +9,8 @@ import Game from 'pages/Game/GameOld';
  * 
  */
 
- export const useGameData = () => {
-    const [state, dispatch] = useReducer(gameReducer, {})
+ export const useNextTurn = () => {
+    const [nextTurn, setNextTurn] = useState(0);
   
     useEffect(() => {
       const getGameData = async () => {
@@ -27,21 +25,16 @@ import Game from 'pages/Game/GameOld';
         const gameData = await Promise.all(
           result
         );
-
+  
         // when the data is ready, save it to state
-        dispatch({
-          type: 'NEW_GAME',
-          game: gameData[0].data.newgame
-          })
+        setGameData(gameData[0].data.newgame);
+      };
+  
+      getGameData();
+      setTimeout(() => {  console.log("Waited 5 seconds"); }, 5000);
+    }, []);
 
-
-    }
-
-    getGameData();
-
-    },[]); // [] empty array added to prevent infinate api calls .... needs fixing properly...
-
-    console.log(state.game) 
-
-    return [state.game];
+    console.log(gameData)
+  
+    return { gameData };
   };

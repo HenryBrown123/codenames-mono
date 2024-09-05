@@ -3,6 +3,7 @@ import React , { Component } from 'react'
 import styled from 'styled-components'
 import CountdownClock  from './CountdownClock'
 import ActionButton from './ActionButton'
+import GameMessage from './GameMessage'
 
 const Grid = styled.div`
     height:100%;
@@ -21,18 +22,6 @@ const DashboardSection = styled.div`
     justify-content: center;
 `;
 
-const CenterItemWrapper = styled.div`
-`
-
-const CornerButtonContainer = styled.div`
-
-`
-
-const CornerButtonWrapper = styled.div`
-    //align-self: flex-start;
-`
-
-
 
 class Dashboard extends Component {
     constructor(props) {
@@ -44,8 +33,13 @@ class Dashboard extends Component {
         return (
             <Grid>
                 <DashboardContainer id="dashboard-container">
-                    <DashboardSection id="action-section" size={1}><ActionButton/></DashboardSection>
-                </DashboardContainer>
+                    <DashboardSection id="action-section" size={2}>
+                        <GameMessage messageText={'Very very long message............ even longer message that wraps....'} messageType = {'test'} />
+                    </DashboardSection>    
+                    <DashboardSection id="action-section" size={1}>
+                        <ActionButton/>
+                    </DashboardSection>                    
+                </DashboardContainer>     
             </Grid>
         )
     }

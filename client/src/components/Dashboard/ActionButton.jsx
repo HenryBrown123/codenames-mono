@@ -1,15 +1,16 @@
 import React , { Component } from 'react'
 import styled from 'styled-components'
+import {useGameContext} from 'hooks'
 
 
 const StyledButton = styled.button`
     font-family: 'Press Start 2p';
-    font-size: 2rem;
+    font-size: 5vh;
     text-align: center;
 	display: inline-block;
 	margin:5px;
     font-weight: bold;
-    padding: 10px 0 10px 10px ;
+    padding: 4vh 4vh 4vh 4vh ;
     background-color: lightgray;
     text-shadow: -1px -1px black, 1px 1px white;
     color: gray;
@@ -30,21 +31,18 @@ const StyledButton = styled.button`
 const ButtonWrapper = styled.div`
 
 `
+const ActionButton = () => {
+    const game = useGameContext();
+    let actionText = '' ;
 
+    if (game.game_paused) {
+        actionText = 'PLAY';
+    };
 
-class ActionButton extends Component {
-    constructor(props) {
-        super(props)
-        this.state = {
-        }
-    }
-    render() {
-        return (
-            <ButtonWrapper>
-                <StyledButton>PLAY</StyledButton>
-            </ButtonWrapper>
-        )
-    }
+    return (
+        <ButtonWrapper>
+            <StyledButton>{actionText}</StyledButton>
+        </ButtonWrapper>
+    )
 }
-
 export default ActionButton

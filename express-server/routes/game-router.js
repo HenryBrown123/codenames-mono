@@ -6,5 +6,7 @@ const router = express.Router()
 
 router.get('/newGame/:gameSettings?', GameCtrl.getNewGame)
 router.get('/getGame/:_id', GameCtrl.getGame)
+router.get('/nextTurn/:_id', GameCtrl.nextTurn)
+
 
 module.exports = router 

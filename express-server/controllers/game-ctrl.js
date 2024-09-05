@@ -115,6 +115,27 @@ getGame = async (req,res) => {
        )
 }
 
+/**
+ * Asynchronous function for returning an existing game as a JSON object. 
+ * 
+ * @async 
+ * @param req {Object} Request object
+ * @param res {Object} New game JSON
+ * @param req.params._id {String} game id for requested game
+ * 
+ */
+
+nextTurn = async (req,res) => {
+    try{
+        const game = await getGame(req, res);        
+        if(!game.res.success){
+            console.log('Unable to determine next turn')
+            return game;
+        }        
+    } catch (err) {
+        console.log(err);
+    }
+}
 
 
-module.exports={getNewGame,getGame}
+module.exports={getNewGame,getGame, nextTurn}
