@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useReducer } from 'react';
+import {useEffect, useReducer } from 'react';
 import api from 'api';
 import {gameReducer} from 'hooks';
-import Game from 'pages/Game/GameOld';
 
 /**
  * hook for retrieving game data via api.
