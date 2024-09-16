@@ -11,7 +11,10 @@ const Game = require('../models/game-model')
  * 
  */
 
-getNewGame = async (req,res) => {
+
+const getNewGame = async (req,res) => { 
+
+    console.log('New game request received')
 
     const defaultGameSettings = {
         numberOfCards: 25,
@@ -19,7 +22,7 @@ getNewGame = async (req,res) => {
         numberOfAssasins: 1
     }
 
-    gameSettings = req.params.gameSettings ? req.params.gameSettings: defaultGameSettings
+    var gameSettings = req.params.gameSettings ? req.params.gameSettings: defaultGameSettings
     const otherTeam = (gameSettings.startingWithTeam === 'green') ? 'red':'green'
 
 
@@ -54,15 +57,16 @@ getNewGame = async (req,res) => {
         }
 
         if (!results) {
+            console.log("No results returned from Word.findRandom")
             return res
                 .status(404)
-                .json({ success: false, error: `none` })
+                .json({ success: false, error: `error: No words found, populate db with start point (express-server/db/startpoint.json)`})
         }
 
         var gameWords = []
         for( var i = 0; i < results.length; i++){
-            randomIndex = Math.floor(Math.random() * colorsToAllocate.length)
-            wordColor = colorsToAllocate[randomIndex];
+            const randomIndex = Math.floor(Math.random() * colorsToAllocate.length)
+            const wordColor = colorsToAllocate[randomIndex];
             colorsToAllocate.splice(randomIndex,1)
             const wordTile = {"word":results[i].word,"color":wordColor}
             gameWords.push(wordTile)
@@ -94,7 +98,7 @@ getNewGame = async (req,res) => {
  */
 
 
-getGame = async (req,res) => {
+const getGame = async (req,res) => {
     const id = req.params._id
     await Game.findById(id,function(err,results){
         if(err){
@@ -125,7 +129,7 @@ getGame = async (req,res) => {
  * 
  */
 
-nextTurn = async (req,res) => {
+const nextTurn = async (req,res) => {
     try{
         const game = await getGame(req, res);        
         if(!game.res.success){
