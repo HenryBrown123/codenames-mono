@@ -1,6 +1,6 @@
-import React, { useReducer, useState, useEffect, useRef, createContext } from 'react'
+import React, {  } from 'react'
 import { Dashboard, GameBoard, LoadingSpinner } from 'components'
-import { useGameData, GameContextProvider, gameReducer } from 'hooks'
+import { useGameData, GameContextProvider } from 'hooks'
 import styled from 'styled-components';
 
 const Grid = styled.div`
