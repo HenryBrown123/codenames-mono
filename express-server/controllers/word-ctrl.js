@@ -68,7 +68,7 @@ getRandomWord = async (req, res) => {
         if (!word) {
             return res
                 .status(404)
-                .json({ success: false, error: `none` })
+                .json({ success: false, error: `error: No words found, populate db with start point (express-server/db/startpoint.json)` })
         }
 
          console.log(word);
