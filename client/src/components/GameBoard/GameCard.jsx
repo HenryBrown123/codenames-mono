@@ -1,9 +1,6 @@
 import React, {useState} from 'react'
 import styled from 'styled-components'
 import Flip from "react-card-flip"
-import { useGameDispatchContext} from 'hooks'
-
-
 
 const CardContainer = styled.div`
     margin: none;
@@ -32,7 +29,6 @@ const Flipper = styled(Flip)`
 const GameCard = ({cardText, cardColor, cardSelected}) => {
 
     const [flipped, setFlipped] = useState(cardSelected)
-    const dispatch = useGameDispatchContext();
 
     // if not selected then backgroundColor will use default set in global CSS file
     var selectedColor = null;
@@ -44,9 +40,6 @@ const GameCard = ({cardText, cardColor, cardSelected}) => {
             <Flip isFlipped={flipped} flipDirection="vertical">
                 <Card id="card" key="front" onClick={() => {
                     setFlipped(true);
-                    dispatch({
-                        type: 'flipped',
-                    })
                 }}>
                 <p>{cardText}</p>
                 </Card>
