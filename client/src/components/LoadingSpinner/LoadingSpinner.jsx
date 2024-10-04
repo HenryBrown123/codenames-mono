@@ -29,8 +29,6 @@ const Spinner = styled.div`
 
 const LoadingSpinner = ({displayText = "Loading..."}) => {
 
-    console.log(displayText);
-
     return (
         <LoadingContainer>
             <p>{displayText}</p>
