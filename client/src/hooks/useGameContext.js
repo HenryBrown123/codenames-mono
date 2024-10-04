@@ -1,4 +1,5 @@
 import React, { useState, useContext, createContext, useReducer } from 'react'
+import {useGameData} from 'hooks'
 
 
 /**
@@ -6,7 +7,6 @@ import React, { useState, useContext, createContext, useReducer } from 'react'
  */
 
 export const GameContext = createContext(null);
-export const GameDispatchContext = createContext(null);
 
 const initialGameState = {
   loading: true,
@@ -14,14 +14,13 @@ const initialGameState = {
   game: {}
 }
 
-export const GameContextProvider = ({ children }) => {
-  const [game, dispatch] = useReducer(gameReducer, initialGameState );
+export const GameContextProvider = ({ children}) => {
+
+  const { data: game, error, isLoading } = useGameData();
 
   return (
-    <GameContext.Provider value ={game}>
-      <GameDispatchContext.Provider value = {dispatch}>
+    <GameContext.Provider value ={game[0].data.newgame}>
             {children}
-      </GameDispatchContext.Provider>
     </GameContext.Provider>
   )
 };
@@ -34,25 +33,3 @@ export const GameContextProvider = ({ children }) => {
 export const useGameContext = () => {
   return useContext(GameContext)
 };
-
-export const useGameDispatchContext = () => {
-    return useContext(GameDispatchContext)
-  };
-
-/**
- * Reducer handling on screen game logic and updating the game context
- */
-
-export const gameReducer = (state, action) => {
-    switch(action.type){
-        case 'GET_GAME': {
-            return action.game;
-        }
-        case 'NEW_GAME': {
-            console.log(action)
-            return {...state, game: action.game}
-        }
-    default: 
-        return state;
-    }
-}
