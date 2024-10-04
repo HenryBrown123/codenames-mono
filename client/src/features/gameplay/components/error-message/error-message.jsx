@@ -16,7 +16,7 @@ const ErrorMessageText = styled.div`
     margin: 20px;
 `
 
-const ErrorMessage = ({messageText = "Sorry, something went wrong :("}) => {
+export const ErrorMessage = ({messageText = "Sorry, something went wrong :("}) => {
     return (
         <ErrorMessageContainer>
             <ErrorMessageText>
@@ -26,4 +26,4 @@ const ErrorMessage = ({messageText = "Sorry, something went wrong :("}) => {
     )
 }
 
-export default ErrorMessage
+

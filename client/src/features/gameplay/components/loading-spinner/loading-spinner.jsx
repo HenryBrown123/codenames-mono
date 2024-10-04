@@ -27,7 +27,7 @@ const Spinner = styled.div`
 `;
 
 
-const LoadingSpinner = ({displayText = "Loading..."}) => {
+export const LoadingSpinner = ({displayText = "Loading..."}) => {
 
     return (
         <LoadingContainer>
@@ -36,5 +36,3 @@ const LoadingSpinner = ({displayText = "Loading..."}) => {
         </LoadingContainer>
     )
 }
-
-export default LoadingSpinner

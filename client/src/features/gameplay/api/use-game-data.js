@@ -1,5 +1,5 @@
 import {useQuery} from '@tanstack/react-query'
-import apis from 'api';
+import apis from 'api'
 
 /**
  * hook for retrieving game data via api.

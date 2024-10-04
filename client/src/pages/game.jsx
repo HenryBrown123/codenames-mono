@@ -1,7 +1,6 @@
 import React, {  } from 'react'
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query'
-import { Dashboard, GameBoard, LoadingSpinner } from 'components'
-import { useGameData, GameContextProvider } from 'hooks'
+import { useGameData, GameContextProvider, Dashboard, GameBoard, LoadingSpinner  } from 'features/gameplay'
 import styled from 'styled-components';
 
 const Grid = styled.div`
@@ -44,7 +43,7 @@ const GameContainer = styled.div`
 
 const queryClient = new QueryClient();
 
-const Game = () => {
+export const Game = () => {
     return (
         // Provide the client to your App
        <QueryClientProvider client={queryClient}>
@@ -87,5 +86,3 @@ const CodeNamesGame = () => {
         </Grid>
     )
 };
-
-export default Game;

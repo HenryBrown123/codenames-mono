@@ -1,4 +1,2 @@
-import { Game } from './Game'
-import HowTo from './HowTo'
-
-export {Game, HowTo}
+export * from "./game"
+export * from "./how-to"
