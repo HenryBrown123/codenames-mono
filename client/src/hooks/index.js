@@ -1,2 +1,2 @@
-export * from './useGameData';
-export * from './useGameContext';
+export * from './query/useGameData';
+export * from './useGameContext'
