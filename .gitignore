@@ -5,10 +5,6 @@ express-server/package-lock.json
 package-lock.json
 node_modules
 useful links.md
-.vscode/settings.json
-.vscode/settings.json
-.gitignore
-.DS_Store
-.vscode/settings.json
+*/.gitignore
 client/.env
-.vscode/settings.json
+**/.vscode/
