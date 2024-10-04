@@ -1,12 +1,13 @@
 import React from 'react'
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
 
-import { NavBar } from '../components'
-import { Game,HowTo,Sandbox} from '../pages'
+import {
+    BrowserRouter as Router,
+    Routes,
+    Route
+  } from "react-router-dom";
+
+import { Game,HowTo} from '../pages'
 import { GlobalStyle } from '../style'
-
-import { FloatingButton, Item } from "react-floating-button";
-import newGameIcon from  "../assets/NewGame.svg"
 
 
 import styled from 'styled-components'
@@ -45,30 +46,14 @@ function App() {
     return (
         <AppContainer id="app-container">
             <SectionsContainer id="sections-container">
-            {/* <NavSection id="nav-container">
-                    <NavBar />
-            </NavSection> */}
-           {/* <FloatingButton>
-                <Item
-                    imgSrc={newGameIcon}
-                    onClick={() => {
-                    console.log("callback function here");
-                    }}
-                />
-                <Item
-                    onClick={() => {
-                    console.log("callback function here");
-                    }}
-                />
-</FloatingButton>; */}
+                <PageSection>
                     <Router>
-                        <Switch>
-                            <PageSection id="page-container">
-                                <Route path = "/game" exact component={Game} />
-                                <Route path = "/howto" exact component={HowTo} />
-                            </PageSection>
-                        </Switch>
+                        <Routes>
+                                <Route path = "/game"  element={<Game />} />
+                                <Route path = "/howto"  element={<HowTo />} />
+                        </Routes>
                     </Router>
+                    </PageSection>
                     <GlobalStyle />
             </SectionsContainer> 
         </AppContainer>
