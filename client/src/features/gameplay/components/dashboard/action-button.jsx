@@ -1,6 +1,6 @@
 import React , { Component } from 'react'
 import styled from 'styled-components'
-import {useGameContext} from 'hooks'
+import { useGameContext } from 'features/gameplay/context'
 
 
 const StyledButton = styled.button`
