@@ -40,25 +40,25 @@ const CardsContainer = styled.div`
 
 const GameBoard = () => {
 
-        const {boardData} = useGameContext();
+    const boardData  = useGameContext();
 
-        if (boardData == null || boardData.length === 0 ){
-            return (
-                <ErrorMessage messageText="Sorry something went wrong when trying to display the game board :( Please refresh to try again..." />
-            )
-        }
-
-        const allCards = boardData.map(cardData => (
-                <GameCard key={cardData._id} cardText={cardData.word} cardColor={cardData.color} cardSelected={cardData.selected} />
-        ));
-
+    if (boardData.words == null || boardData.words.length === 0 ){
         return (
-            <Grid id="gameboard-wrapper">
-                <CardsContainer id="gameboard-container">
-                    {allCards}
-                </CardsContainer>
-            </Grid>
+            <ErrorMessage messageText="Sorry something went wrong when trying to display the game board :( Please refresh to try again..." />
         )
+    }
+
+    const allCards = boardData.words.map(cardData => (
+            <GameCard key={cardData._id} cardText={cardData.word} cardColor={cardData.color} cardSelected={cardData.selected} />
+    ));
+
+    return (
+        <Grid id="gameboard-wrapper">
+            <CardsContainer id="gameboard-container">
+                {allCards}
+            </CardsContainer>
+        </Grid>
+    )
 };
 
 export default GameBoard
