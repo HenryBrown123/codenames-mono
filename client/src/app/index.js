@@ -1,15 +1,9 @@
 import React from 'react'
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 
-import {
-    BrowserRouter as Router,
-    Routes,
-    Route
-  } from "react-router-dom";
-
-import { Game,HowTo} from '../pages'
-import { GlobalStyle } from '../style'
-
-
+import {Game, HowTo} from "pages"
+import {GlobalStyle} from "style"
+ 
 import styled from 'styled-components'
 
 const AppContainer = styled.div`
@@ -46,15 +40,15 @@ function App() {
     return (
         <AppContainer id="app-container">
             <SectionsContainer id="sections-container">
-                <PageSection>
+                <PageSection id="page-container">
                     <Router>
                         <Routes>
-                                <Route path = "/game"  element={<Game />} />
-                                <Route path = "/howto"  element={<HowTo />} />
+                                <Route path = "/game" exact element={<Game />} />
+                                <Route path = "/howto" exact element={<HowTo />} />
                         </Routes>
                     </Router>
-                    </PageSection>
                     <GlobalStyle />
+            </PageSection>
             </SectionsContainer> 
         </AppContainer>
     )

@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import api from '../api'
+import api from 'api'
 
 import styled from 'styled-components'
 
@@ -48,13 +48,8 @@ const Panel = styled.div.attrs({
     background: #f59042;
 `
 
-class HowTo extends Component{
-    constructor(props) {
-        super(props)
-        this.state = {
-        }
-    }
-    render(){
+export const HowTo = () => {
+   
         return(
             <Container>
                 <Panel>
@@ -65,7 +60,4 @@ class HowTo extends Component{
                 </Panel>
             </Container>
         )
-    }
-}
-
-export default HowTo
+        }

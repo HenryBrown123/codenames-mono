@@ -24,7 +24,7 @@ const Message = styled.p`
  * @param {String} messageType - the type of message
  */
 
-const GameMessage = ({messageText, messageType}) => {
+const DashboardMessage = ({messageText, messageType}) => {
 
 
 
@@ -38,4 +38,4 @@ const GameMessage = ({messageText, messageType}) => {
     )
 }
 
-export default GameMessage
+export default DashboardMessage

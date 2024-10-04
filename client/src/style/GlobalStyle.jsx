@@ -1,7 +1,7 @@
 import { createGlobalStyle } from 'styled-components';
 
 // border can be used to toggle boarders around all divs... useful for debug
-const GlobalStyle = createGlobalStyle`
+export const GlobalStyle = createGlobalStyle`
 * {
   box-sizing: border-box;
   font-family: 'Courier New', monospace;
@@ -23,5 +23,3 @@ html {
 
   }
 `;
-
-export default GlobalStyle

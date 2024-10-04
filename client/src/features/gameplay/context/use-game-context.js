@@ -1,5 +1,5 @@
 import React, { useState, useContext, createContext, useReducer } from 'react'
-import {useGameData} from 'hooks'
+import {useGameData} from 'features/gameplay/api'
 
 
 /**

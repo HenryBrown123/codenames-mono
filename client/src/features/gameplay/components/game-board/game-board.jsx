@@ -1,9 +1,9 @@
 import React , { useState, useContext } from 'react'
 
 import styled from 'styled-components'
-import {ErrorMessage} from 'components'
-import GameCard from './GameCard'
-import { useGameContext } from 'hooks'
+import {ErrorMessage} from 'features/gameplay/components'
+import GameCard from './game-card'
+import { useGameContext } from 'features/gameplay/context'
 
 const Grid = styled.div`
     height:100%;
@@ -31,14 +31,14 @@ const CardsContainer = styled.div`
  * Functional component that returns the full game board. The game board displays all words in the game
  * as well as underlying color of that card if selected.
  * 
- * e.g. boardData = [{"word":"elephant", "color":"red", "selected":false}, 
+ * e.g. boardData = {words: [{"word":"elephant", "color":"red", "selected":false}, 
  *                   {"word":"tiger", "color":"red", "selected":false} 
- *                   ... ]
+ *                   ... ]}
  * 
  * @param {array} boardData - json array containing words, card colors and whether selected
  */
 
-const GameBoard = () => {
+export const GameBoard = () => {
 
     const boardData  = useGameContext();
 
@@ -60,5 +60,3 @@ const GameBoard = () => {
         </Grid>
     )
 };
-
-export default GameBoard
