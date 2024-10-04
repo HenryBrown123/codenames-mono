@@ -1,7 +1,6 @@
 import React , { Component } from 'react'
 
 import styled from 'styled-components'
-import CountdownClock  from './CountdownClock'
 import ActionButton from './ActionButton'
 import GameMessage from './GameMessage'
 
