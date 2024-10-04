@@ -35,9 +35,9 @@ const ActionButton = () => {
     const game = useGameContext();
     let actionText = '' ;
 
-    if (game.game_paused) {
+    //if (game.game_paused) {
         actionText = 'PLAY';
-    };
+   // };
 
     return (
         <ButtonWrapper>
