@@ -22,14 +22,14 @@ const SectionsContainer = styled.div`
     flex-direction: column;
 `;
 
-const NavSection = styled.div`
-    flex: 1;
-    position: relative;
+// const NavSection = styled.div` // <- Nav removed, kept CSS as intending to put back in again...
+//     flex: 1;
+//     position: relative;
 
-    @media (max-width: 768px) {
-        flex:0;
-      }
-`;
+//     @media (max-width: 768px) {
+//         flex:0;
+//       }
+// `;
 
 const PageSection = styled.div`
     flex: 10;

@@ -1,4 +1,4 @@
-import React, { useState, useContext, createContext, useReducer } from 'react'
+import{ useContext, createContext} from 'react'
 import {useGameData} from 'features/gameplay/api'
 
 
@@ -7,12 +7,6 @@ import {useGameData} from 'features/gameplay/api'
  */
 
 export const GameContext = createContext(null);
-
-const initialGameState = {
-  loading: true,
-  error: '',
-  game: {}
-}
 
 export const GameContextProvider = ({ children}) => {
 

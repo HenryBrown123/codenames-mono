@@ -20,21 +20,10 @@ const Card = styled.button`
     font-size: 3.5vh;
 `
 
-const Flipper = styled(Flip)`
-    flex: 1;
-`
-
-
-
 const GameCard = ({cardText, cardColor, cardSelected}) => {
 
     const [flipped, setFlipped] = useState(cardSelected)
 
-    // if not selected then backgroundColor will use default set in global CSS file
-    var selectedColor = null;
-    if (cardSelected){
-        selectedColor = cardColor;
-    }
     return (
         <CardContainer>        
             <Flip isFlipped={flipped} flipDirection="vertical">
