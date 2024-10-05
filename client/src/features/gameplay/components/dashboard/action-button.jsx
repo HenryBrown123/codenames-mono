@@ -1,7 +1,5 @@
-import React , { Component } from 'react'
+import React , { } from 'react'
 import styled from 'styled-components'
-import { useGameContext } from 'features/gameplay/context'
-
 
 const StyledButton = styled.button`
     font-family: 'Press Start 2p';
@@ -32,7 +30,6 @@ const ButtonWrapper = styled.div`
 
 `
 const ActionButton = () => {
-    const game = useGameContext();
     let actionText = '' ;
 
     //if (game.game_paused) {

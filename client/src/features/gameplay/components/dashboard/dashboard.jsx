@@ -1,5 +1,3 @@
-import React , { Component } from 'react'
-
 import styled from 'styled-components'
 import ActionButton from './action-button'
 import DashboardMessage from './dashboard-message'
