@@ -2,21 +2,26 @@
 Model object used for persisting a new word to the database
 */
 
-const mongoose = require('mongoose')
-var Schema = mongoose.Schema
+import mongoose from 'mongoose'
+import random from 'mongoose-simple-random'
+import AutoIncrementFactory from 'mongoose-sequence'
 
-var random = require('mongoose-simple-random'); // plugin
-var AutoIncrement = require('mongoose-sequence')(mongoose)
+const Schema = mongoose.Schema
 
-var Word = new Schema(
+const AutoIncrement = AutoIncrementFactory(mongoose);
+
+const Word = new Schema(
     {
         word: { type: String, required: true },
     },
     { timestamps: false },
 )
+
 Word.plugin(random);
 Word.plugin(AutoIncrement, {inc_field: 'id'});
-module.exports = mongoose.model('word',Word);
+
+export default mongoose.model('word',Word);
+
 
 
 

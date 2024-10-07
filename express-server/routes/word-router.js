@@ -1,13 +1,12 @@
-const express = require('express')
-const WordCtrl = require('../controllers/word-ctrl')
-
+import express from 'express'
+import {getRandomWord, createWord, getRandomWords, postWordArray} from '../controllers/word-ctrl.js'
 
 const router = express.Router()
 
-router.get('/randomWord', WordCtrl.getRandomWord)
-router.post('/createWord',WordCtrl.createWord)
-router.get('/randomWords',WordCtrl.getRandomWords)
-router.post('/createWordArray',WordCtrl.postWordArray)
+router.get('/randomWord', getRandomWord)
+router.post('/createWord', createWord)
+router.get('/randomWords', getRandomWords)
+router.post('/createWordArray',postWordArray)
 
 
-module.exports = router 
+export default router

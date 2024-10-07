@@ -1,8 +1,6 @@
-const Word = require('../models/word-model')
+import Word from '../models/word-model.js'
 
-
-
-postWordArray = async (req,res) => {
+export const postWordArray = async (req,res) => {
     const body = req.body
     console.log(body[0])
     if (!body) {
@@ -39,7 +37,7 @@ postWordArray = async (req,res) => {
 
 }
 
-getRandomWords = async (req,res) => {
+export const getRandomWords = async (req,res) => {
     await Word.findRandom({},{},{limit:12}, function(err,results){
         if(err){
             return res.status(400).json({ success: false, error: err })
@@ -60,7 +58,7 @@ getRandomWords = async (req,res) => {
 
 }
 
-getRandomWord = async (req, res) => {
+export const getRandomWord = async (req, res) => {
     await Word.findOneRandom(function(err, word) {
         if (err) {
             return res.status(400).json({ success: false, error: err })
@@ -77,7 +75,7 @@ getRandomWord = async (req, res) => {
       .catch(err => console.log(err))
 }
 
-createWord = (req, res) => {
+export const createWord = (req, res) => {
     const body = req.body
 
     if (!body) {
@@ -113,9 +111,3 @@ createWord = (req, res) => {
     
 }
 
-module.exports={
-    getRandomWords,
-    getRandomWord,
-    createWord,
-    postWordArray
-}

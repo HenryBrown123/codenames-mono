@@ -1,12 +1,11 @@
-const express = require('express')
-const GameCtrl = require('../controllers/game-ctrl')
+import express from 'express'
+import {getNewGame, getGame, nextTurn} from '../controllers/game-ctrl.js'
 
 
 const router = express.Router()
 
-router.get('/newGame/:gameSettings?', GameCtrl.getNewGame)
-router.get('/getGame/:_id', GameCtrl.getGame)
-router.get('/nextTurn/:_id', GameCtrl.nextTurn)
+router.get('/newGame/:gameSettings?', getNewGame)
+router.get('/getGame/:_id',  getGame)
+router.get('/nextTurn/:_id', nextTurn)
 
-
-module.exports = router 
+export default router

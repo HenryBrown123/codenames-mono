@@ -1,6 +1,5 @@
-const mongoose = require('mongoose')
-
-const AutoIncrementFactory = require('mongoose-sequence');
+import mongoose from 'mongoose'
+import AutoIncrementFactory from 'mongoose-sequence'
 
 
 mongoose
@@ -12,5 +11,5 @@ mongoose
 const db = mongoose.connection
 const AutoIncrement = AutoIncrementFactory(db)
 
-module.exports = db
+export default db
 
