@@ -1,5 +1,6 @@
 {
   "name": "express-server",
+  "type": "module",
   "version": "1.0.0",
   "description": "Express server for codenames app",
   "main": "index.js",

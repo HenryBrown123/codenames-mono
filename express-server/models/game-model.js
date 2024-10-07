@@ -1,15 +1,14 @@
 /** 
 * Game model object .. stores game states and words used within the game. 
 */
-
-const mongoose = require('mongoose')
-var Schema = mongoose.Schema
+import mongoose from 'mongoose'
+import shortid from 'shortid'
+import random from 'mongoose-simple-random'
 
 // this is the id used to join a game.. restricting to characters that are easy to read/type
-var shortid = require('shortid')
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@');
 
-var Game = new Schema({
+const Game = new mongoose.Schema({
     _id: {
         'type': String,
         'default': shortid.generate
@@ -37,6 +36,5 @@ var Game = new Schema({
     }]
 
 })
-module.exports = mongoose.model('game',Game);
 
-
+export default mongoose.model('game',Game);

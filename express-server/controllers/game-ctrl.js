@@ -1,5 +1,5 @@
-const Word = require('../models/word-model')
-const Game = require('../models/game-model')
+import Word from '../models/word-model.js'
+import Game from '../models/game-model.js'
 
 /**
  * Asynchronous function for returning a new game as a JSON object. 
@@ -12,7 +12,7 @@ const Game = require('../models/game-model')
  */
 
 
-const getNewGame = async (req,res) => { 
+export const getNewGame = async (req,res) => { 
 
     console.log('New game request received')
 
@@ -22,7 +22,7 @@ const getNewGame = async (req,res) => {
         numberOfAssasins: 1
     }
 
-    var gameSettings = req.params.gameSettings ? req.params.gameSettings: defaultGameSettings
+    const gameSettings = req.params.gameSettings ? req.params.gameSettings: defaultGameSettings
     const otherTeam = (gameSettings.startingWithTeam === 'green') ? 'red':'green'
 
 
@@ -34,18 +34,18 @@ const getNewGame = async (req,res) => {
     // these are the number of bystander cards + the assasin card(s)
     const numberOfCardsNonTeam = Math.round((8/25)*gameSettings.numberOfCards)
 
-    var numberOfCardsStartingTeam = Math.ceil((gameSettings.numberOfCards-numberOfCardsNonTeam)/2)
-    var numberOfCardsOtherTeam = Math.floor((gameSettings.numberOfCards-numberOfCardsNonTeam)/2)
-    var numberOfCardsAssasins = gameSettings.numberOfAssasins
+    const numberOfCardsStartingTeam = Math.ceil((gameSettings.numberOfCards-numberOfCardsNonTeam)/2)
+    const numberOfCardsOtherTeam = Math.floor((gameSettings.numberOfCards-numberOfCardsNonTeam)/2)
+    const numberOfCardsAssasins = gameSettings.numberOfAssasins
 
     // total number - (other derived) so total always equals that requested
-    var numberOfCardsBystander = (gameSettings.numberOfCards - 
+    const numberOfCardsBystander = (gameSettings.numberOfCards - 
                                  numberOfCardsStartingTeam - 
                                  numberOfCardsOtherTeam - 
                                  numberOfCardsAssasins)
                                  
     
-    var colorsToAllocate = Array(numberOfCardsStartingTeam).fill(gameSettings.startingWithTeam).concat(
+                                 const colorsToAllocate = Array(numberOfCardsStartingTeam).fill(gameSettings.startingWithTeam).concat(
         Array(numberOfCardsOtherTeam).fill(otherTeam),
         Array(numberOfCardsAssasins).fill('black'),
         Array(numberOfCardsBystander).fill('blue')
@@ -98,7 +98,7 @@ const getNewGame = async (req,res) => {
  */
 
 
-const getGame = async (req,res) => {
+export const getGame = async (req,res) => {
     const id = req.params._id
     await Game.findById(id,function(err,results){
         if(err){
@@ -129,7 +129,7 @@ const getGame = async (req,res) => {
  * 
  */
 
-const nextTurn = async (req,res) => {
+export const nextTurn = async (req,res) => {
     try{
         const game = await getGame(req, res);        
         if(!game.res.success){
@@ -141,5 +141,3 @@ const nextTurn = async (req,res) => {
     }
 }
 
-
-module.exports={getNewGame,getGame, nextTurn}
