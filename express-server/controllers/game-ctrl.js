@@ -1,5 +1,6 @@
-import Word from '../models/word-model.js'
+
 import Game from '../models/game-model.js'
+import { createNewGame } from '../services/gameService';
 
 /**
  * Asynchronous function for returning a new game as a JSON object. 
@@ -11,81 +12,19 @@ import Game from '../models/game-model.js'
  * 
  */
 
+export const getNewGame = async (req, res) => {
+  console.log('New game request received');
 
-export const getNewGame = async (req,res) => { 
+  const gameSettings = req.params.gameSettings;
 
-    console.log('New game request received')
-
-    const defaultGameSettings = {
-        numberOfCards: 25,
-        startingWithTeam: 'green',
-        numberOfAssasins: 1
-    }
-
-    const gameSettings = req.params.gameSettings ? req.params.gameSettings: defaultGameSettings
-    const otherTeam = (gameSettings.startingWithTeam === 'green') ? 'red':'green'
-
-
-    /* Derives which card should be asigned what color based on number of total cards..
-     * The same ratio is used as the default rules.
-     * The starting team will likely have one more card than the next team.
-     */
-
-    // these are the number of bystander cards + the assasin card(s)
-    const numberOfCardsNonTeam = Math.round((8/25)*gameSettings.numberOfCards)
-
-    const numberOfCardsStartingTeam = Math.ceil((gameSettings.numberOfCards-numberOfCardsNonTeam)/2)
-    const numberOfCardsOtherTeam = Math.floor((gameSettings.numberOfCards-numberOfCardsNonTeam)/2)
-    const numberOfCardsAssasins = gameSettings.numberOfAssasins
-
-    // total number - (other derived) so total always equals that requested
-    const numberOfCardsBystander = (gameSettings.numberOfCards - 
-                                 numberOfCardsStartingTeam - 
-                                 numberOfCardsOtherTeam - 
-                                 numberOfCardsAssasins)
-                                 
-    
-                                 const colorsToAllocate = Array(numberOfCardsStartingTeam).fill(gameSettings.startingWithTeam).concat(
-        Array(numberOfCardsOtherTeam).fill(otherTeam),
-        Array(numberOfCardsAssasins).fill('black'),
-        Array(numberOfCardsBystander).fill('blue')
-    )
-
-    await Word.findRandom({},{},{limit:gameSettings.numberOfCards}, function(err,results){
-        if(err){
-            return res.status(400).json({ success: false, error: err })
-        }
-
-        if (!results) {
-            console.log("No results returned from Word.findRandom")
-            return res
-                .status(404)
-                .json({ success: false, error: `error: No words found, populate db with start point (express-server/db/startpoint.json)`})
-        }
-
-        var gameWords = []
-        for( var i = 0; i < results.length; i++){
-            const randomIndex = Math.floor(Math.random() * colorsToAllocate.length)
-            const wordColor = colorsToAllocate[randomIndex];
-            colorsToAllocate.splice(randomIndex,1)
-            const wordTile = {"word":results[i].word,"color":wordColor}
-            gameWords.push(wordTile)
-        }
-        var newGame = new Game(
-            {"number_of_cards":gameSettings.numberOfCards,
-             "starting_team":gameSettings.startingWithTeam,
-              "words":gameWords,
-              "number_of_assasins":gameSettings.numberOfAssasins}
-        )
-        newGame.save()
-
-        console.log(newGame)
-        return res.status(200).json({ success: true, newgame: newGame})       
-       })
-       .catch(err =>
-           console.log(err)
-       )
+  try {
+    const newGame = await createNewGame(gameSettings);
+    console.log(newGame);
+    res.status(200).json({ success: true, newgame: newGame });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
 }
+};
 
 /**
  * Asynchronous function for returning an existing game as a JSON object. 
