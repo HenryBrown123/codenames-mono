@@ -46,7 +46,7 @@ const generateColorsToAllocate = (settings, otherTeam) => {
  * @param {Object} gameSettings - Custom game settings.
  * @returns {Object} - The newly created game.
  */
-export const createNewGame = async (gameSettings = defaultGameSettings) => {
+export async function createNewGame (gameSettings = defaultGameSettings) {
   // Merge custom settings with default settings
   const settings = { ...defaultGameSettings, ...gameSettings };
   console.log("default game settings: ", defaultGameSettings);
