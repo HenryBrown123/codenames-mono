@@ -1,4 +1,6 @@
 import express from "express";
+import path from 'path';
+import { fileURLToPath } from 'url';
 import bodyParser from "body-parser";
 import cors from "cors";
 import db from "./db/index.js";
@@ -18,8 +20,14 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-/* Swagger - API Docs */
+/* Swagger - externally facing API Docs */
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
+
+/* JSDocs - backend project docs */
+// Serve static files from the "docs" directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use('/docs', express.static(path.join(__dirname, 'docs')));
 
 /* api routes */
 app.use("/api", wordRouter);
