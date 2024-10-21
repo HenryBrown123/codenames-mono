@@ -8,3 +8,4 @@ useful links.md
 */.gitignore
 client/.env
 **/.vscode/
+.prettierrc
