@@ -1,5 +1,5 @@
 import express from "express";
-import { getGame, getNewGame } from "../controllers/game-ctrl.js";
+import { getGame, getNewGame, processTurn } from "../controllers/game-ctrl.js";
 
 const router = express.Router();
 
@@ -134,5 +134,47 @@ router.post("/games", getNewGame);
  *         description: Internal server error
  */
 router.get("/games/:_id", getGame);
+
+/**
+ * @swagger
+ * /games/{_id}/turn:
+ *   post:
+ *     summary: Creates a new game with specified or default settings.
+ *     tags:
+ *       - Gameplay
+ *     parameters:
+ *       - in: path
+ *         name: _id
+ *         required: true
+ *         description: The ID of the game to retrieve
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       description: Optional settings for the new game
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Game object
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 game:
+ *                   type: object
+ *       400:
+ *         description: Invalid ID supplied
+ *       404:
+ *         description: Game not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/games/:_id/turn", processTurn);
 
 export default router;
