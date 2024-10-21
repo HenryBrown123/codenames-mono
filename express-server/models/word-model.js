@@ -5,18 +5,18 @@ import AutoIncrementFactory from "mongoose-sequence";
 const Schema = mongoose.Schema;
 const AutoIncrement = AutoIncrementFactory(mongoose);
 
-/** 
+/**
  * Model object used for persisting a new word to the database
-*/
+ */
 
 const WordSchema = new Schema(
   {
     word: { type: String, required: true },
   },
-  { timestamps: false },
+  { timestamps: false }
 );
 
-Word.plugin(random);
-Word.plugin(AutoIncrement, { inc_field: "id" });
+WordSchema.plugin(random);
+WordSchema.plugin(AutoIncrement, { inc_field: "id" });
 
 export default mongoose.model("word", WordSchema);
