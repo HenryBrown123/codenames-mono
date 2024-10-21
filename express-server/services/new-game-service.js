@@ -19,10 +19,10 @@ const generateColorsToAllocate = (settings, otherTeam) => {
   // uses the same ratio as used in the default game settings
   const numberOfCardsNonTeam = Math.round((8 / 25) * settings.numberOfCards);
   const numberOfCardsStartingTeam = Math.ceil(
-    (settings.numberOfCards - numberOfCardsNonTeam) / 2,
+    (settings.numberOfCards - numberOfCardsNonTeam) / 2
   );
   const numberOfCardsOtherTeam = Math.floor(
-    (settings.numberOfCards - numberOfCardsNonTeam) / 2,
+    (settings.numberOfCards - numberOfCardsNonTeam) / 2
   );
   const numberOfCardsAssassins = settings.numberOfAssassins;
   const numberOfCardsBystander =
@@ -36,8 +36,8 @@ const generateColorsToAllocate = (settings, otherTeam) => {
     .fill(settings.startingWithTeam)
     .concat(
       Array(numberOfCardsOtherTeam).fill(otherTeam),
-      Array(numberOfCardsAssassins).fill("black"),
-      Array(numberOfCardsBystander).fill("blue"),
+      Array(numberOfCardsAssassins).fill("assassin"),
+      Array(numberOfCardsBystander).fill("none")
     );
 };
 
@@ -46,12 +46,9 @@ const generateColorsToAllocate = (settings, otherTeam) => {
  * @param {Object} gameSettings - Custom game settings.
  * @returns {Object} - The newly created game.
  */
-export async function createNewGame (gameSettings = defaultGameSettings) {
+export async function createNewGame(gameSettings = defaultGameSettings) {
   // Merge custom settings with default settings
   const settings = { ...defaultGameSettings, ...gameSettings };
-  console.log("default game settings: ", defaultGameSettings);
-  console.log("passed in settings: ", gameSettings);
-  console.log("final game settings: ", settings);
   const otherTeam = settings.startingWithTeam === "green" ? "red" : "green";
   const colorsToAllocate = generateColorsToAllocate(settings, otherTeam);
 
@@ -66,13 +63,13 @@ export async function createNewGame (gameSettings = defaultGameSettings) {
     const gameWords = words.map((word) => {
       const randomIndex = Math.floor(Math.random() * colorsToAllocate.length);
       const wordColor = colorsToAllocate.splice(randomIndex, 1)[0];
-      return { word: word.word, color: wordColor };
+      return { word: word.word, team: wordColor };
     });
 
     // Create a new game document with the settings and words
     const newGame = new Game({
       settings: settings,
-      state: { words: gameWords },
+      state: { cards: gameWords },
     });
 
     // Save the new game to the database
@@ -82,7 +79,7 @@ export async function createNewGame (gameSettings = defaultGameSettings) {
     // Handle errors during game creation
     throw new Error(`Failed to create new game: ${error.message}`);
   }
-};
+}
 
 const getRandomWords = (numberOfWords) => {
   return new Promise((resolve, reject) => {
