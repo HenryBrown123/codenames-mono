@@ -1,5 +1,5 @@
-import Game from "../models/game-model.js";
-import Word from "../models/word-model.js";
+import Game from "../models/game/model.js";
+import Word from "../models/word/model.js";
 
 // Default game settings object
 const defaultGameSettings = {
