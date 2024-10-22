@@ -1,4 +1,4 @@
-import Word from "../models/word-model.js";
+import Word from "../models/word/model.js";
 
 export const postWordArray = async (req, res) => {
   const body = req.body;
@@ -43,12 +43,10 @@ export const getRandomWords = async (req, res) => {
     }
 
     if (!results) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          error: `No words found, populate db with start point (express-server/db/startpoint.json)`,
-        });
+      return res.status(404).json({
+        success: false,
+        error: `No words found, populate db with start point (express-server/db/startpoint.json)`,
+      });
     }
 
     console.log(results);
@@ -62,12 +60,10 @@ export const getRandomWord = async (req, res) => {
       return res.status(400).json({ success: false, error: err });
     }
     if (!word) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          error: `error: No words found, populate db with start point (express-server/db/startpoint.json)`,
-        });
+      return res.status(404).json({
+        success: false,
+        error: `error: No words found, populate db with start point (express-server/db/startpoint.json)`,
+      });
     }
 
     console.log(word);
