@@ -1,10 +1,4 @@
-import express, { Request, Response } from 'express'; 
-
-import path from 'path'; 
-// Path: Module for working with file and directory paths
-
-import { fileURLToPath } from 'url'; 
-// fileURLToPath: Converts file URL to path, part of URL module
+import express from 'express'; 
 
 import bodyParser from 'body-parser'; 
 // Body-Parser: Middleware to parse incoming request bodies
