@@ -1,4 +1,4 @@
-import Game from "../models/game-model.js";
+import Game from "../models/game/model.js";
 import { createNewGame } from "../services/new-game-service.js";
 import { executeTurn } from "../services/gameplay/service.js";
 
