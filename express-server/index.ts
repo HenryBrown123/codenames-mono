@@ -1,8 +1,17 @@
-import express from "express";
-import path from 'path';
-import { fileURLToPath } from 'url';
-import bodyParser from "body-parser";
-import cors from "cors";
+import express, { Request, Response } from 'express'; 
+
+import path from 'path'; 
+// Path: Module for working with file and directory paths
+
+import { fileURLToPath } from 'url'; 
+// fileURLToPath: Converts file URL to path, part of URL module
+
+import bodyParser from 'body-parser'; 
+// Body-Parser: Middleware to parse incoming request bodies
+
+import cors from 'cors'; 
+// CORS: Middleware for enabling Cross-Origin Resource Sharing
+
 import db from "./db/index.js";
 import { default as wordRouter } from "./routes/word-router.js";
 import { default as gameRouter } from "./routes/game-router.js";
@@ -22,12 +31,6 @@ app.get("/", (req, res) => {
 
 /* Swagger - externally facing API Docs */
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
-
-/* JSDocs - backend project docs */
-// Serve static files from the "docs" directory
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-app.use('/docs', express.static(path.join(__dirname, 'docs')));
 
 /* api routes */
 app.use("/api", wordRouter);
