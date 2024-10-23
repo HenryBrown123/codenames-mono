@@ -1,8 +1,18 @@
-import mongoose, { Model } from 'mongoose';
-import shortid from 'shortid';
-import { Team, Stage, Card, Round, Settings, GameState, GameDocument } from './types'
+import mongoose, { Model } from "mongoose";
+import shortid from "shortid";
+import {
+  Team,
+  Stage,
+  Card,
+  Round,
+  Settings,
+  GameState,
+  GameDocument,
+} from "./types";
 
-shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@');
+shortid.characters(
+  "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@"
+);
 
 // Sub-schema for a game word
 const CardSchema = new mongoose.Schema<Card>(
@@ -29,7 +39,12 @@ const RoundSchema = new mongoose.Schema<Round>(
 const SettingsSchema = new mongoose.Schema<Settings>(
   {
     numberOfCards: { type: Number, required: true, default: 24 },
-    startingTeam: { type: String, required: true, default: Team.Green, enum: Object.values(Team) },
+    startingTeam: {
+      type: String,
+      required: true,
+      default: Team.Green,
+      enum: Object.values(Team),
+    },
     numberOfAssassins: { type: Number, required: true, default: 1 },
   },
   { _id: false }
@@ -38,7 +53,12 @@ const SettingsSchema = new mongoose.Schema<Settings>(
 // Sub-schema for game state (stuff you need to know to track gameplay)
 const GameStateSchema = new mongoose.Schema<GameState>(
   {
-    stage: { type: String, required: true, default: Stage.Intro, enum: Object.values(Stage) },
+    stage: {
+      type: String,
+      required: true,
+      default: Stage.Intro,
+      enum: Object.values(Stage),
+    },
     winner: { type: String },
     cards: [CardSchema],
     rounds: [RoundSchema],
@@ -57,18 +77,22 @@ const GameSchema = new mongoose.Schema<GameDocument>(
 );
 
 // Virtuals for derived scores
-GameSchema.virtual('redScore').get(function (this: GameDocument) {
-  return this.state.cards.filter((card) => card.team === Team.Red && card.selected).length;
+GameSchema.virtual("redScore").get(function (this: GameDocument) {
+  return this.state.cards.filter(
+    (card) => card.team === Team.Red && card.selected
+  ).length;
 });
 
-GameSchema.virtual('greenScore').get(function (this: GameDocument) {
-  return this.state.cards.filter((card) => card.team === Team.Green && card.selected).length;
+GameSchema.virtual("greenScore").get(function (this: GameDocument) {
+  return this.state.cards.filter(
+    (card) => card.team === Team.Green && card.selected
+  ).length;
 });
 
 // Ensure virtuals are included in JSON and object output
-GameSchema.set('toJSON', { virtuals: true });
-GameSchema.set('toObject', { virtuals: true });
+GameSchema.set("toJSON", { virtuals: true });
+GameSchema.set("toObject", { virtuals: true });
 
-const GameModel: Model<GameDocument> = mongoose.model<GameDocument>('Game', GameSchema);
+const GameModel = mongoose.model<GameDocument>("Game", GameSchema);
 
 export default GameModel;
