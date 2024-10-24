@@ -1,8 +1,8 @@
 import express, { Request, Response } from "express";
 import {
-  getRandomWord,
+  getRandomWordHandler,
   createWord,
-  getRandomWords,
+  getRandomWordsHandler,
   postWordArray,
 } from "./word-ctrl";
 
@@ -10,7 +10,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/randomWord:
+ * /words/random:
  *   get:
  *     tags:
  *       - Words
@@ -19,13 +19,13 @@ const router = express.Router();
  *       200:
  *         description: A random word
  */
-router.get("/randomWord", async (req: Request, res: Response) => {
-  await getRandomWord(req, res);
+router.get("/words/random", async (req: Request, res: Response) => {
+  await getRandomWordHandler(req, res);
 });
 
 /**
  * @swagger
- * /api/createWord:
+ * /words:
  *   post:
  *     tags:
  *       - Words
@@ -43,28 +43,35 @@ router.get("/randomWord", async (req: Request, res: Response) => {
  *       201:
  *         description: Word created successfully
  */
-router.post("/createWord", async (req: Request, res: Response) => {
+router.post("/words", async (req: Request, res: Response) => {
   await createWord(req, res);
 });
 
 /**
  * @swagger
- * /api/randomWords:
+ * /words/random/array:
  *   get:
  *     tags:
  *       - Words
  *     summary: Get a list of random words
+ *     parameters:
+ *       - in: query
+ *         name: count
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Number of random words to fetch
  *     responses:
  *       200:
  *         description: A list of random words
  */
-router.get("/randomWords", async (req: Request, res: Response) => {
-  await getRandomWords(req, res);
+router.get("/words/random/array", async (req: Request, res: Response) => {
+  await getRandomWordsHandler(req, res);
 });
 
 /**
  * @swagger
- * /api/createWordArray:
+ * /words/array:
  *   post:
  *     tags:
  *       - Words
@@ -84,7 +91,7 @@ router.get("/randomWords", async (req: Request, res: Response) => {
  *       201:
  *         description: Words created successfully
  */
-router.post("/createWordArray", async (req: Request, res: Response) => {
+router.post("/words/array", async (req: Request, res: Response) => {
   await postWordArray(req, res);
 });
 
