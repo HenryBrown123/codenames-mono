@@ -10,7 +10,6 @@
   "author": "Henry Brown",
   "license": "ISC",
   "dependencies": {
-    "@types/mongoose": "^5.11.96",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "express": "^4.21.0",
@@ -24,10 +23,14 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "@types/mongoose": "^5.11.96",
     "@types/body-parser": "^1.19.5",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/mongoose-sequence": "^3.0.11",
+    "@types/mongoose-simple-random": "^0.4.13",
     "@types/node": "^22.7.8",
+    "@types/shortid": "^0.0.32",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.6",
     "tsx": "^4.19.1",
