@@ -1,6 +1,6 @@
-import Game from "../models/game/model.js";
-import { createNewGame } from "../services/new-game-service.js";
-import { executeTurn } from "../services/gameplay/service.js";
+import Game from "./game-model.js";
+import { createNewGame } from "./services/new-game-service.js";
+import { executeTurn } from "./services/gameplay/gameplay-service.js";
 
 /**
  * Asynchronous function for returning a new game as a JSON object.

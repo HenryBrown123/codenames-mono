@@ -15,7 +15,7 @@ const options = {
       },
     ],
   },
-  apis: ["./routes/*.js"],
+  apis: ["./game/**/*-router.{js,ts}"], // Simplified path
 };
 
 const specs = swaggerJsdoc(options);
