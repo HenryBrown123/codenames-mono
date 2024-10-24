@@ -1,14 +1,13 @@
-import express from 'express'; 
+import express from "express";
 
-import bodyParser from 'body-parser'; 
+import bodyParser from "body-parser";
 // Body-Parser: Middleware to parse incoming request bodies
 
-import cors from 'cors'; 
+import cors from "cors";
 // CORS: Middleware for enabling Cross-Origin Resource Sharing
 
 import db from "./db/index.js";
-import { default as wordRouter } from "./routes/word-router.js";
-import { default as gameRouter } from "./routes/game-router.js";
+import { wordRouter, gameRouter } from "./game/";
 import { specs, swaggerUi } from "./swagger.js";
 
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
@@ -16,9 +15,12 @@ db.on("error", console.error.bind(console, "MongoDB connection error:"));
 const app = express();
 const apiPort = 3000;
 
+app.use(cors()); // CORS before other middleware
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cors());
 app.use(bodyParser.json());
+
+db.on("error", console.error.bind(console, "MongoDB connection error:"));
+
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });

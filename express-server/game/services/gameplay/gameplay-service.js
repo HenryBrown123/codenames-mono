@@ -2,7 +2,7 @@ import {
   handleIntroStage,
   handleCodemasterStage,
   handleCodebreakerStage,
-} from "./handlers.js";
+} from "./gameplay-handlers.js";
 
 // object mapping each game stage to its handler
 const gameStageHandlers = {

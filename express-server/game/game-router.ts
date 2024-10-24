@@ -1,5 +1,5 @@
-import express from "express";
-import { getGame, getNewGame, processTurn } from "../controllers/game-ctrl.js";
+import express, { Request, Response } from "express";
+import { getGame, getNewGame, processTurn } from "./game-ctrl";
 
 const router = express.Router();
 
@@ -98,7 +98,9 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.post("/games", getNewGame);
+router.post("/games", async (req: Request, res: Response) => {
+  await getNewGame(req, res);
+});
 
 /**
  * @swagger
@@ -133,7 +135,9 @@ router.post("/games", getNewGame);
  *       500:
  *         description: Internal server error
  */
-router.get("/games/:_id", getGame);
+router.get("/games/:_id", async (req: Request, res: Response) => {
+  await getGame(req, res);
+});
 
 /**
  * @swagger
@@ -175,6 +179,8 @@ router.get("/games/:_id", getGame);
  *       500:
  *         description: Internal server error
  */
-router.post("/games/:_id/turn", processTurn);
+router.post("/games/:_id/turn", async (req: Request, res: Response) => {
+  await processTurn(req, res);
+});
 
 export default router;

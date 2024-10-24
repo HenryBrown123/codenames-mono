@@ -2,13 +2,13 @@ import {
   validateIntroStage,
   validateCodemasterStage,
   validateCodebreakerStage,
-} from "./validation.js";
+} from "./gameplay-validation.js";
 
 import {
   processIntroStage,
   processCodemasterStage,
   processCodebreakerStage,
-} from "./processing.js";
+} from "./gameplay-processing.js";
 
 /**
  * Validates input state and processes various game stages.

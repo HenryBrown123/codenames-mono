@@ -1,14 +1,16 @@
 import mongoose, { Model } from "mongoose";
 import shortid from "shortid";
 import {
+  Settings,
+  Card,
   Team,
   Stage,
-  Card,
   Round,
-  Settings,
   GameState,
-  GameDocument,
-} from "./types";
+  GameData,
+} from "./game-types";
+
+export interface GameDocument extends Document, GameData {}
 
 shortid.characters(
   "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@"

@@ -49,5 +49,3 @@ export interface GameData {
   state: GameState;
   settings: Settings;
 }
-
-export interface GameDocument extends Document, GameData {}
