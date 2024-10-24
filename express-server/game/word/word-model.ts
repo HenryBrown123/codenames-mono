@@ -17,18 +17,20 @@ const WordSchema = new mongoose.Schema<WordDocument>(
 );
 
 // Apply plugins to the schema
+// @ts-ignore
 WordSchema.plugin(random);
+// @ts-ignore
 const AutoIncrement = AutoIncrementFactory(mongoose);
-WordSchema.plugin(AutoIncrement, { inc_field: "id" });
+WordSchema.plugin(AutoIncrement as any, { inc_field: "id" });
 
 // Explicitly declare the type for the Word model
 interface WordModel extends Model<WordDocument> {
   findRandom: (
     conditions: any,
     projection?: any,
-    options?: any
-  ) => Promise<WordDocument[]>; // Simplified without callback
-  findOneRandom: () => Promise<WordDocument>; // Simplified without callback
+    options?: any,
+    callback?: (err: any, res?: WordDocument[]) => void
+  ) => Promise<WordDocument[]>;
 }
 
 const Word: WordModel = mongoose.model<WordDocument, WordModel>(
