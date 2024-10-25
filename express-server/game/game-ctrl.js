@@ -74,7 +74,7 @@ export const getGame = async (req, res) => {
 
 export const processTurn = async (req, res) => {
   const id = req.params._id;
-  const updatedGameObject = req.body;
+  const inputGameState = req.body;
 
   if (!id) {
     return res
@@ -83,13 +83,13 @@ export const processTurn = async (req, res) => {
   }
 
   try {
-    const outputGameObject = await executeTurn(updatedGameObject);
+    const outputGameState = await executeTurn(inputGameState);
 
-    if (!outputGameObject) {
+    if (!outputGameState) {
       return res.status(404).json({ success: false, error: "Game not found" });
     }
 
-    return res.status(200).json({ success: true, game: outputGameObject });
+    return res.status(200).json({ success: true, game: outputGameState });
   } catch (error) {
     console.error("Error processing gmae turn:", error);
     return res

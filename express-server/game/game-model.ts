@@ -3,12 +3,12 @@ import shortid from "shortid";
 import {
   Settings,
   Card,
-  Team,
-  Stage,
   Round,
   GameState,
   GameData,
-} from "./game-types";
+} from "@game/game-common-types";
+
+import { TEAM, STAGE } from "@game/game-common-constants";
 
 export interface GameDocument extends Document, GameData {}
 
@@ -20,7 +20,7 @@ shortid.characters(
 const CardSchema = new mongoose.Schema<Card>(
   {
     word: { type: String, required: true },
-    team: { type: String, required: true, enum: Object.values(Team) },
+    team: { type: String, required: true, enum: Object.values(TEAM) },
     selected: { type: Boolean, required: true, default: false },
   },
   { _id: false }
@@ -29,7 +29,7 @@ const CardSchema = new mongoose.Schema<Card>(
 // Sub-schema for each round
 const RoundSchema = new mongoose.Schema<Round>(
   {
-    team: { type: String, enum: Object.values(Team) },
+    team: { type: String, enum: Object.values(TEAM) },
     codeword: { type: String },
     guessesAllowed: { type: Number },
     guessedWords: [String],
@@ -44,8 +44,8 @@ const SettingsSchema = new mongoose.Schema<Settings>(
     startingTeam: {
       type: String,
       required: true,
-      default: Team.Green,
-      enum: Object.values(Team),
+      default: TEAM.GREEN,
+      enum: Object.values(TEAM),
     },
     numberOfAssassins: { type: Number, required: true, default: 1 },
   },
@@ -58,8 +58,8 @@ const GameStateSchema = new mongoose.Schema<GameState>(
     stage: {
       type: String,
       required: true,
-      default: Stage.Intro,
-      enum: Object.values(Stage),
+      default: STAGE.INTRO,
+      enum: Object.values(STAGE),
     },
     winner: { type: String },
     cards: [CardSchema],
@@ -81,13 +81,13 @@ const GameSchema = new mongoose.Schema<GameDocument>(
 // Virtuals for derived scores
 GameSchema.virtual("redScore").get(function (this: GameDocument) {
   return this.state.cards.filter(
-    (card) => card.team === Team.Red && card.selected
+    (card) => card.team === TEAM.RED && card.selected
   ).length;
 });
 
 GameSchema.virtual("greenScore").get(function (this: GameDocument) {
   return this.state.cards.filter(
-    (card) => card.team === Team.Green && card.selected
+    (card) => card.team === TEAM.GREEN && card.selected
   ).length;
 });
 

@@ -1,12 +1,13 @@
 import { Document } from "mongoose";
-import Game from "../game-model";
-import Word, { WordDocument } from "../word/word-model";
-import { Settings, Team } from "../game-types";
-
+import Game from "@game/game-model";
+import { WordDocument } from "@game/word/word-model";
+import { Settings } from "@game/game-common-types";
+import { getRandomWords } from "@game/word/word-ctrl.js";
+import { TEAM } from "@game/game-common-constants";
 // Default game settings object
 const defaultGameSettings: Settings = {
   numberOfCards: 25,
-  startingTeam: Team.Green,
+  startingTeam: TEAM.GREEN,
   numberOfAssassins: 1,
 };
 
@@ -53,11 +54,11 @@ export async function createNewGame(
 ): Promise<Document> {
   const settings: Settings = { ...defaultGameSettings, ...gameSettings };
   const otherTeam =
-    settings.startingTeam === Team.Green ? Team.Red : Team.Green;
+    settings.startingTeam === TEAM.GREEN ? TEAM.RED : TEAM.GREEN;
   const colorsToAllocate = generateColorsToAllocate(settings, otherTeam);
 
   try {
-    const words = await getRandomWords(settings.numberOfCards);
+    const words: WordDocument[] = await getRandomWords(settings.numberOfCards);
     if (!words || words.length === 0) {
       throw new Error("No words found, please populate the database.");
     }
@@ -70,7 +71,7 @@ export async function createNewGame(
 
     const newGame = new Game({
       settings,
-      state: { cards: gameWords },
+      state: { cards: gameWords, rounds: [{ team: settings.startingTeam }] },
     });
 
     await newGame.save();
@@ -79,14 +80,3 @@ export async function createNewGame(
     throw new Error(`Failed to create new game: ${error.message}`);
   }
 }
-
-const getRandomWords = (numberOfWords: number): Promise<WordDocument[]> => {
-  return new Promise((resolve, reject) => {
-    Word.findRandom({}, {}, { limit: numberOfWords }, (err, results) => {
-      if (err) {
-        return reject(err);
-      }
-      resolve(results);
-    });
-  });
-};
