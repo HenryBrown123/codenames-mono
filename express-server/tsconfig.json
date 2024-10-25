@@ -22,5 +22,9 @@
         // this isn't used by tsx in dev environment as the ts files aren't transpiled into physical js files
         // however, will be used in a production build.
         "outDir": "./dist",
-	}
+   		"baseUrl": ".",
+		"paths": {
+		"@game/*": ["game/*"]
+		}
+}
 }
