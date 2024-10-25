@@ -143,7 +143,7 @@ router.get("/games/:_id", async (req: Request, res: Response) => {
  * @swagger
  * /games/{_id}/turn:
  *   post:
- *     summary: Creates a new game with specified or default settings.
+ *     summary: Processes turn based on current game state and returns new game state
  *     tags:
  *       - Gameplay
  *     parameters:

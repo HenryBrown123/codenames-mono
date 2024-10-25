@@ -70,7 +70,7 @@ router.get("/words/random/array", async (req: Request, res: Response) => {
 });
 
 /**
- * @swagger
+ * @swagger&
  * /words/array:
  *   post:
  *     tags:

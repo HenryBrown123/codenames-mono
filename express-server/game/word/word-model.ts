@@ -1,40 +1,17 @@
-import mongoose, { Document, Model } from "mongoose";
-import random from "mongoose-simple-random";
-import AutoIncrementFactory from "mongoose-sequence";
+import mongoose, { Schema, model, Document, Model } from "mongoose";
 
-/**
- * Model object used for persisting a new word to the database.
- */
+// Model object used for persisting a new word to the database.
 export interface WordDocument extends Document {
   word: string;
 }
 
-const WordSchema = new mongoose.Schema<WordDocument>(
+const WordSchema = new Schema<WordDocument>(
   {
     word: { type: String, required: true },
   },
   { timestamps: false }
 );
 
-// Apply plugins to the schema
-// @ts-ignore
-WordSchema.plugin(random);
-// @ts-ignore
-const AutoIncrement = AutoIncrementFactory(mongoose);
-WordSchema.plugin(AutoIncrement as any, { inc_field: "id" });
+const Word = model("Word", WordSchema);
 
-// Explicitly declare the type for the Word model
-interface WordModel extends Model<WordDocument> {
-  findRandom: (
-    conditions: any,
-    projection?: any,
-    options?: any,
-    callback?: (err: any, res?: WordDocument[]) => void
-  ) => Promise<WordDocument[]>;
-}
-
-const Word: WordModel = mongoose.model<WordDocument, WordModel>(
-  "Word",
-  WordSchema
-);
 export default Word;

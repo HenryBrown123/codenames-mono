@@ -1,16 +1,24 @@
 import { Request, Response } from "express";
 import Word, { WordDocument } from "./word-model";
 
-// Utility function to wrap findRandom in a promise
-const getRandomWords = (numberOfWords: number): Promise<WordDocument[]> => {
-  return new Promise((resolve, reject) => {
-    Word.findRandom({}, {}, { limit: numberOfWords }, (err, results) => {
-      if (err) {
-        return reject(err);
-      }
-      resolve(results);
-    });
-  });
+/**
+ * Utility function that returns an array of unique indices for selecting random words
+ *
+ * @param numberOfWords
+ * @param totalWords
+ * @returns number[]
+ */
+
+const getUniqueRandomIndices = (
+  numberOfWords: number,
+  totalWords: number
+): number[] => {
+  const indices: Set<number> = new Set();
+  while (indices.size < numberOfWords) {
+    const index = Math.floor(Math.random() * totalWords);
+    indices.add(index);
+  }
+  return Array.from(indices);
 };
 
 // Define types for request objects
@@ -23,6 +31,24 @@ export interface CreateWordRequest extends Request {
 }
 
 // Controller functions
+
+export const getRandomWords = async (
+  numberOfWords: number
+): Promise<WordDocument[]> => {
+  try {
+    const totalWords = await Word.countDocuments();
+    const randomIndices = getUniqueRandomIndices(numberOfWords, totalWords);
+    const randomWordsPromises = randomIndices.map((index) =>
+      Word.findOne().skip(index).exec()
+    );
+
+    return await Promise.all(randomWordsPromises);
+  } catch (error) {
+    console.error("Error fetching random words:", error);
+    throw error;
+  }
+};
+
 export const postWordArray = async (
   req: PostWordArrayRequest,
   res: Response
@@ -53,15 +79,24 @@ export const getRandomWordsHandler = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const results = await getRandomWords(12);
-    if (!results) {
+    const numberOfWords: number = parseInt(req.query.count as string);
+
+    if (!numberOfWords) {
+      return res.status(404).json({
+        success: false,
+        error: "No count specified for random array",
+      });
+    }
+
+    const words = await getRandomWords(numberOfWords);
+    if (words.length === 0) {
       return res.status(404).json({
         success: false,
         error:
           "No words found, populate db with start point (express-server/db/startpoint.json)",
       });
     }
-    return res.status(200).json({ success: true, words: results });
+    return res.status(200).json({ success: true, words: words });
   } catch (err: any) {
     return res
       .status(400)
