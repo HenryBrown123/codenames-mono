@@ -1,10 +1,19 @@
+/**
+ * Object representing teams in the game.
+ * @readonly
+ * @enum {string}
+ */
 export const TEAM = {
   RED: "red",
   GREEN: "green",
-  NONE: "none",
   ASSASSIN: "assassin",
 } as const;
 
+/**
+ * Object representing the different stages of the game.
+ * @readonly
+ * @enum {string}
+ */
 export const STAGE = {
   INTRO: "intro",
   CODEMASTER: "codemaster",
