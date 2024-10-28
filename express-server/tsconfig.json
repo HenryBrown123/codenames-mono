@@ -24,7 +24,8 @@
         "outDir": "./dist",
    		"baseUrl": ".",
 		"paths": {
-		"@game/*": ["game/*"]
+		"@game/*": ["src/game/*"],
+		"src/*": ["./src/*"]
 		}
-}
+	}
 }

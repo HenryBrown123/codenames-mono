@@ -1,9 +1,9 @@
 import { Document } from "mongoose";
-import Game from "@game/game-model";
-import { WordDocument } from "@game/word/word-model";
-import { Settings } from "@game/game-common-types";
-import { getRandomWords } from "@game/word/word-ctrl.js";
-import { TEAM } from "@game/game-common-constants";
+import Game from "src/game/game-model";
+import { WordDocument } from "src/game/word/word-model";
+import { Settings } from "src/game/game-common-types";
+import { getRandomWords } from "src/game/word/word-ctrl.js";
+import { TEAM } from "src/game/game-common-constants";
 // Default game settings object
 const defaultGameSettings: Settings = {
   numberOfCards: 25,

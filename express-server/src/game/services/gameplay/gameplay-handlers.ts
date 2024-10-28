@@ -9,7 +9,7 @@ import {
   processCodebreakerStage,
 } from "./gameplay-processing";
 
-import { GameState } from "@game/game-common-types";
+import { GameState } from "src/game/game-common-types";
 
 /**
  * Validates input state and processes various game stages.

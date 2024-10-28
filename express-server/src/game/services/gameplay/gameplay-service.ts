@@ -4,7 +4,7 @@ import {
   handleCodebreakerStage,
   handleGameOverStage,
 } from "./gameplay-handlers";
-import { GameState, Stage } from "@game/game-common-types";
+import { GameState, Stage } from "src/game/game-common-types";
 
 // defines the function type of handlers. Must accept a GameState and return a GameState
 // unless an error is thrown...
