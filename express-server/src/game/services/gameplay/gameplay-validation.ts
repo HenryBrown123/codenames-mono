@@ -46,5 +46,25 @@ export function validateCodemasterStage(inputGameState: GameState): void {
  * @throws {Error} - If validation fails.
  */
 export function validateCodebreakerStage(inputGameState: GameState): void {
-  // Validation logic for 'codebreaker' stage
+  const latestRound = inputGameState.rounds.at(-1);
+
+  if (!latestRound) {
+    throw new Error("No round information found");
+  }
+
+  const guessedWords = latestRound.guessedWords;
+
+  if (!guessedWords || guessedWords.length == 0) {
+    throw new Error("No guessed words against current round");
+  }
+
+  const wordsInCards = inputGameState.cards.map((card) => card.word);
+
+  const wordsNotFound = guessedWords.some(
+    (word) => !wordsInCards.includes(word)
+  );
+
+  if (wordsNotFound) {
+    throw new Error("Guessed word not found in cards");
+  }
 }
