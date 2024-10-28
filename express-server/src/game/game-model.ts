@@ -6,9 +6,9 @@ import {
   Round,
   GameState,
   GameData,
-} from "@game/game-common-types";
+} from "src/game/game-common-types";
 
-import { TEAM, STAGE } from "@game/game-common-constants";
+import { TEAM, STAGE } from "src/game/game-common-constants";
 
 export interface GameDocument extends Document, GameData {}
 

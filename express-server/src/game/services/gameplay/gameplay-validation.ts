@@ -1,4 +1,4 @@
-import { GameState } from "@game/game-common-types";
+import { GameState } from "src/game/game-common-types";
 
 /**
  * Validates input state... compares with old game state
