@@ -113,13 +113,38 @@ describe("Game stage validation functions", () => {
   });
 
   describe("validateCodebreakerStage", () => {
-    it("should pass validation with dummy data", () => {
+    it("should pass validation", () => {
       const gameState: GameState = {
         ...mockGameState,
         stage: STAGE.CODEBREAKER,
         cards: generateMockCards([]),
+        rounds: [{ team: TEAM.RED, codeword: "test", guessedWords: ["red1"] }],
       };
       expect(() => validateCodebreakerStage(gameState)).not.toThrow();
+    });
+
+    it("should fail validation if no guessed words", () => {
+      const gameState: GameState = {
+        ...mockGameState,
+        stage: STAGE.CODEBREAKER,
+        cards: generateMockCards([]),
+        rounds: [{ team: TEAM.RED, codeword: "test", guessedWords: [] }],
+      };
+      expect(() => validateCodebreakerStage(gameState)).toThrow(
+        "No guessed words against current round"
+      );
+    });
+
+    it("should fail validation if gussed word not in cards", () => {
+      const gameState: GameState = {
+        ...mockGameState,
+        stage: STAGE.CODEBREAKER,
+        cards: generateMockCards([]),
+        rounds: [{ team: TEAM.RED, codeword: "test", guessedWords: ["bad"] }],
+      };
+      expect(() => validateCodebreakerStage(gameState)).toThrow(
+        "Guessed word not found in cards"
+      );
     });
   });
 });
