@@ -20,7 +20,8 @@
       ]
     },
     "moduleNameMapper": {
-      "^@game/(.*)$": "<rootDir>/src/game/$1"
+      "^@game/(.*)$": "<rootDir>/src/game/$1",
+      "^@test/(.*)$": "<rootDir>/test/$1"
     }
   },
   "author": "Henry Brown",
