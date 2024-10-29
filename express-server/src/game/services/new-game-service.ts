@@ -1,9 +1,10 @@
 import { Document } from "mongoose";
-import Game from "src/game/game-model";
-import { WordDocument } from "src/game/word/word-model";
-import { Settings } from "src/game/game-common-types";
-import { getRandomWords } from "src/game/word/word-ctrl.js";
-import { TEAM } from "src/game/game-common-constants";
+import Game from "@game/game-model";
+import { WordDocument } from "@game/word/word-model";
+import { Settings, Team } from "@game/game-common-types";
+import { getRandomWords } from "@game/word/word-ctrl.js";
+import { TEAM } from "@game/game-common-constants";
+
 // Default game settings object
 const defaultGameSettings: Settings = {
   numberOfCards: 25,
@@ -19,8 +20,8 @@ const defaultGameSettings: Settings = {
  */
 const generateColorsToAllocate = (
   settings: Settings,
-  otherTeam: string
-): string[] => {
+  otherTeam: Team
+): Team[] => {
   const numberOfCardsNonTeam = Math.round((8 / 25) * settings.numberOfCards);
   const numberOfCardsStartingTeam = Math.ceil(
     (settings.numberOfCards - numberOfCardsNonTeam) / 2
@@ -35,13 +36,29 @@ const generateColorsToAllocate = (
     numberOfCardsOtherTeam -
     numberOfCardsAssassins;
 
-  return Array(numberOfCardsStartingTeam)
-    .fill(settings.startingTeam)
-    .concat(
-      Array(numberOfCardsOtherTeam).fill(otherTeam),
-      Array(numberOfCardsAssassins).fill("assassin"),
-      Array(numberOfCardsBystander).fill("none")
-    );
+  const startingTeamCards: Team[] = Array.from(
+    { length: numberOfCardsStartingTeam },
+    () => settings.startingTeam
+  );
+  const otherTeamCards: Team[] = Array.from(
+    { length: numberOfCardsOtherTeam },
+    () => otherTeam
+  );
+  const assassinCards: Team[] = Array.from(
+    { length: numberOfCardsAssassins },
+    () => TEAM.ASSASSIN
+  );
+  const bystanderCards: Team[] = Array.from(
+    { length: numberOfCardsBystander },
+    () => TEAM.BYSTANDER
+  );
+
+  return [
+    ...startingTeamCards,
+    ...otherTeamCards,
+    ...assassinCards,
+    ...bystanderCards,
+  ];
 };
 
 /**
