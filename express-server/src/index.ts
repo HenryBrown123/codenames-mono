@@ -7,7 +7,7 @@ import cors from "cors";
 // CORS: Middleware for enabling Cross-Origin Resource Sharing
 
 import db from "./db/index.js";
-import { wordRouter, gameRouter } from "./game/index.js";
+import { wordRouter, gameRouter } from "./game/index";
 import { specs, swaggerUi } from "./swagger.js";
 
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
