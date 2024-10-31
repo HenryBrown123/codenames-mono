@@ -8,9 +8,12 @@ import {
   GameData,
 } from "src/game/game-common-types";
 
-import { TEAM, STAGE } from "src/game/game-common-constants";
+import { TEAM, STAGE } from "@game/game-common-constants";
 
-export interface GameDocument extends Document, GameData {}
+export interface GameDocument extends Document, GameData {
+  _id: string;
+  save(): Promise<GameDocument>;
+}
 
 shortid.characters(
   "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@"
