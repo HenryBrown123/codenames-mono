@@ -31,7 +31,6 @@ export type GameState = {
 };
 
 export type GameData = {
-  _id: string;
   state: GameState;
   settings: Settings;
 };
