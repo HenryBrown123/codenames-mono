@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Word, { WordDocument } from "./word-model";
+import Word, { WordData } from "./word-model";
 
 /**
  * Utility function that returns an array of unique indices for selecting random words
@@ -21,7 +21,6 @@ const getUniqueRandomIndices = (
   return Array.from(indices);
 };
 
-// Define types for request objects
 export interface PostWordArrayRequest extends Request {
   body: Array<{ word: string }>;
 }
@@ -30,11 +29,9 @@ export interface CreateWordRequest extends Request {
   body: { word: string };
 }
 
-// Controller functions
-
 export const getRandomWords = async (
   numberOfWords: number
-): Promise<WordDocument[]> => {
+): Promise<WordData[]> => {
   try {
     const totalWords = await Word.countDocuments();
     const randomIndices = getUniqueRandomIndices(numberOfWords, totalWords);
