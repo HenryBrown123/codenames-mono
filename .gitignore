@@ -9,3 +9,4 @@ useful links.md
 client/.env
 **/.vscode/
 .prettierrc
+launch.json
