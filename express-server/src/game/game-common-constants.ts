@@ -1,3 +1,5 @@
+import { Team } from "@game/game-common-types";
+
 /**
  * Object representing teams in the game.
  * @readonly
@@ -7,6 +9,7 @@ export const TEAM = {
   RED: "red",
   GREEN: "green",
   ASSASSIN: "assassin",
+  BYSTANDER: "bystander",
 } as const;
 
 /**
