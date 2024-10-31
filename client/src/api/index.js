@@ -1,21 +1,22 @@
-import axios from 'axios'
+import axios from "axios";
 
 const api = axios.create({
-    baseURL: 'http://localhost:3000/api',
-})
+  baseURL: "http://localhost:3000/api",
+});
 
-export const insertWord = payload => api.post(`/createWord`, payload)
-export const getRandomWords = () => api.get(`/randomWords`)
-export const getNewGame = () => api.get('/game/newGame')
-export const getGame = (id) => api.get(`game/getGame/${id}`)
-export const nextTurn = (id) => api.get(`game/getGame/${id}`)
+export const insertWord = (payload) => api.post("/words", payload);
+export const getRandomWords = () => api.get("/words/random");
+export const getNewGame = (payload) => api.post("/games", payload);
+export const getGame = (id) => api.get(`/games/${id}`);
+export const processTurn = (id, action) =>
+  api.post(`/games/${id}/turn`, action);
 
 const apis = {
-    insertWord,
-    getRandomWords,
-    getNewGame,
-    getGame, 
-    nextTurn
-}
+  insertWord,
+  getRandomWords,
+  getNewGame,
+  getGame,
+  processTurn,
+};
 
-export default apis
+export default apis;
