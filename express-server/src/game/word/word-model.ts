@@ -1,8 +1,10 @@
 import mongoose, { Schema, model, Document, Model } from "mongoose";
 
-// Model object used for persisting a new word to the database.
-export interface WordDocument extends Document {
+export interface WordData {
   word: string;
+}
+export interface WordDocument extends WordData, Document {
+  _id: string;
 }
 
 const WordSchema = new Schema<WordDocument>(
