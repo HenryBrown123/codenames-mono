@@ -1,5 +1,6 @@
-import { TEAM } from "@game/game-common-constants";
-import { GameState, Card, Stage, Round } from "@game/game-common-types";
+import { TEAM, STAGE } from "@game/game-common-constants";
+import { GameState, Card, GameData, Settings } from "@game/game-common-types";
+import { WordData } from "@game/word/word-model";
 
 /**
  * Generated selected
@@ -28,7 +29,7 @@ export const generateCards = (selectedWords: string[]): Card[] => {
   ];
 };
 export const hasWinner = (inputGameState: GameState): boolean => {
-  return getWinnerProperty !== null;
+  return getWinnerProperty(inputGameState) !== null;
 };
 
 /**
@@ -39,4 +40,40 @@ export const hasWinner = (inputGameState: GameState): boolean => {
  */
 export const getWinnerProperty = (inputGameState: GameState): string | null => {
   return inputGameState.winner || null;
+};
+
+export const mockWords = (numberOfWords: Number): WordData[] => {
+  return Array.from({ length: 25 }, (_, i) => ({
+    word: `word${i + 1}`,
+  }));
+};
+
+export const mockNewGameData = {
+  settings: { numberOfCards: 25, startingTeam: TEAM.RED, numberOfAssassins: 1 },
+  state: {
+    stage: STAGE.INTRO,
+    cards: mockWords(25).map((word) => ({
+      word: word.word,
+      team: TEAM.RED,
+      selected: false,
+    })),
+    rounds: [{ team: TEAM.RED }],
+  },
+};
+
+export const mockNonDefaultNewGameData = (
+  expectedSettings: Settings
+): GameData => {
+  return {
+    settings: expectedSettings,
+    state: {
+      stage: STAGE.INTRO,
+      cards: mockWords(expectedSettings.numberOfCards).map((word) => ({
+        word: word.word,
+        team: TEAM.RED,
+        selected: false,
+      })),
+      rounds: [{ team: TEAM.RED }],
+    },
+  };
 };
