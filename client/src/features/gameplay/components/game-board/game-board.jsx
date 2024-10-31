@@ -40,7 +40,7 @@ export const GameBoard = () => {
 
     const boardData  = useGameContext();
 
-    if (boardData.words == null || boardData.words.length === 0 ){
+    if (boardData.cards == null || boardData.cards.length === 0 ){
         return (
             <ErrorMessage messageText="Sorry something went wrong when trying to display the game board :( Please refresh to try again..." />
         )
