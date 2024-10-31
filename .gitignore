@@ -10,3 +10,4 @@ client/.env
 **/.vscode/
 .prettierrc
 launch.json
+package.json
