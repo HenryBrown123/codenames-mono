@@ -1,6 +1,6 @@
-import { Request, Response } from 'express';
+import { Request, Response } from "express";
 import Game from "./game-model";
-import { createNewGame } from "./services/new-game-service";
+import { createNewGame } from "./services/new-game/new-game-service";
 import { executeTurn } from "./services/gameplay/gameplay-service";
 
 /**
@@ -15,12 +15,11 @@ export const getNewGame = async (req: Request, res: Response) => {
   console.log("New game request received");
   const gameSettings = req.body || {};
   try {
-    console.log("About to create new game...");
     const newGame = await createNewGame(gameSettings);
-    console.log(newGame);
     res.status(200).json({ success: true, newgame: newGame });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
+    console.log(error);
   }
 };
 
