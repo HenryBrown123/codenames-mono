@@ -5,9 +5,9 @@ const options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "Swagger Express API",
+      title: "Codenames game API",
       version: "1.0.0",
-      description: "A simple Express API with Swagger documentation",
+      description: "API for interacting with the codenames game server",
     },
     servers: [
       {
