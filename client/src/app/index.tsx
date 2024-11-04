@@ -1,10 +1,10 @@
-import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
-import { Game, HowTo } from "pages";
-import { GlobalStyle } from "style";
+import { Game, HowTo } from 'src/pages';
+import { GlobalStyle } from 'src/style';
 
-import styled from "styled-components";
+import styled from 'styled-components';
 
 const AppContainer = styled.div`
   position: absolute;
@@ -27,15 +27,15 @@ const PageSection = styled.div`
   position: relative;
 `;
 
-function App() {
+const App: React.FC = () => {
   return (
     <AppContainer id="app-container">
       <SectionsContainer id="sections-container">
         <PageSection id="page-container">
           <Router>
             <Routes>
-              <Route path="/game" exact element={<Game />} />
-              <Route path="/howto" exact element={<HowTo />} />
+              <Route path="/game" element={<Game />} />
+              <Route path="/howto" element={<HowTo />} />
             </Routes>
           </Router>
           <GlobalStyle />
@@ -43,6 +43,6 @@ function App() {
       </SectionsContainer>
     </AppContainer>
   );
-}
+};
 
 export default App;
