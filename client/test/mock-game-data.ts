@@ -1,0 +1,41 @@
+import { GameData } from "@game/game-common-types";
+
+export const exampleIntroGameState: GameData = {
+  settings: {
+    numberOfCards: 25,
+    startingTeam: "red",
+    numberOfAssassins: 1,
+  },
+  state: {
+    stage: "intro",
+    cards: [
+      { word: "word1", team: "red", selected: false },
+      { word: "word2", team: "red", selected: false },
+      { word: "word3", team: "red", selected: false },
+      { word: "word4", team: "red", selected: false },
+      { word: "word5", team: "red", selected: false },
+      { word: "word6", team: "red", selected: false },
+      { word: "word7", team: "red", selected: false },
+      { word: "word8", team: "green", selected: false },
+      { word: "word9", team: "green", selected: false },
+      { word: "word10", team: "red", selected: false },
+      { word: "word11", team: "green", selected: false },
+      { word: "word12", team: "green", selected: false },
+      { word: "word13", team: "green", selected: false },
+      { word: "word14", team: "green", selected: false },
+      { word: "word15", team: "green", selected: false },
+      { word: "word16", team: "green", selected: false },
+      { word: "word17", team: "assassin", selected: false },
+      { word: "word18", team: "red", selected: false },
+      { word: "word19", team: "bystander", selected: false },
+      { word: "word20", team: "bystander", selected: false },
+      { word: "word21", team: "bystander", selected: false },
+      { word: "word22", team: "bystander", selected: false },
+      { word: "word23", team: "bystander", selected: false },
+      { word: "word24", team: "bystander", selected: false },
+      { word: "word25", team: "bystander", selected: false },
+    ],
+    rounds: [{ team: "red" }],
+  },
+  _id: "abc123!",
+};

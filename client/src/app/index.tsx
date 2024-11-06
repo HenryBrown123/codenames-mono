@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
-import { Game, HowTo } from 'src/pages';
-import { GlobalStyle } from 'src/style';
+import { Game, HowTo } from '../pages';
+import { GlobalStyle } from '../style';
 
 import styled from 'styled-components';
 
