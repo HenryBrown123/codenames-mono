@@ -6,23 +6,22 @@ import { TEAM } from '@game/game-common-constants';
 import { Team } from '@game/game-common-types';
 
 const Grid = styled.div`
-    height: 100%;
-    flex: 1;
+  height: calc(100% - 50px); // Adjust to leave space for the dashboard
+  flex: 1;
 `;
 
 const CardsContainer = styled.div`
-    display: grid;
-    color: white;
-    width: 100%;
+  display: grid;
+  color: white;
+  width: 100%;
+  height: 100%;
 
-    grid-auto-rows: minmax(min-content, max-content);
-    grid-template-columns: repeat(5, 1fr);
-    grid-row-gap: 0.5em;
-    grid-column-gap: 1em;
+  grid-template-columns: repeat(5, 1fr); // Ensure there are always 5 columns
+  grid-template-rows: repeat(5, 1fr); // Ensure there are always 5 rows
+  grid-gap: 0.5em; // Space between cards
 
-    align-items: center;
-    justify-content: center;
-    font-family: sans-serif;    
+  align-items: stretch; // Make cards stretch to fill the available height
+  justify-items: stretch; // Ensure cards fill the entire width
 `;
 
 const getCardColor = (team: Team): string => {
@@ -41,30 +40,40 @@ const getCardColor = (team: Team): string => {
   }
 };
 
+const GameCardContainer = styled.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
 
 export const GameBoard = () => {
-    const boardData = useGameContext();
+  const boardData = useGameContext();
 
-    if (boardData.state.cards == null || boardData.state.cards.length === 0) {
-        return (
-            <ErrorMessage messageText="Sorry something went wrong when trying to display the game board :( Please refresh to try again..." />
-        );
-    }
-
-    const allCards = boardData.state.cards.map(cardData => (
-        <GameCard 
-            key={cardData.word} 
-            cardText={cardData.word} 
-            cardColor={getCardColor(cardData.team)}  
-            cardSelected={cardData.selected} 
-        />
-    ));
-
+  if (boardData.state.cards == null || boardData.state.cards.length === 0) {
     return (
-        <Grid id="gameboard-wrapper">
-            <CardsContainer id="gameboard-container">
-                {allCards}
-            </CardsContainer>
-        </Grid>
+      <ErrorMessage messageText="Sorry something went wrong when trying to display the game board :( Please refresh to try again..." />
     );
+  }
+
+  const allCards = boardData.state.cards.map(cardData => (
+    <GameCardContainer key={cardData.word}>
+      <GameCard 
+        cardText={cardData.word} 
+        cardColor={getCardColor(cardData.team)}  
+        cardSelected={cardData.selected} 
+      />
+    </GameCardContainer>
+  ));
+
+  return (
+    <Grid id="gameboard-wrapper">
+      <CardsContainer id="gameboard-container">
+        {allCards}
+      </CardsContainer>
+    </Grid>
+  );
 };
