@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { Dashboard, GameBoard, LoadingSpinner } from '@game/components';
 import { GameContextProvider } from '@game/context';
 import { useGameData } from '@game/api';
-import { GameData } from '@game/game-common-types';
+import GameInstructions from '@game/components/game-instructions/game-instructions';
 
 const Grid = styled.div`
     position: absolute;
@@ -72,6 +72,7 @@ const CodeNamesGame: React.FC = () => {
         <Grid>
             <GameContainer>
                 <GameContextProvider value={data}>
+                    <GameInstructions messageText="message" />
                     <GameBoardContainer>
                         <GameBoard />
                     </GameBoardContainer>
