@@ -16,6 +16,9 @@ const Message = styled.p`
     font-size: calc(2vw + 2vh);
     margin:0;
 `
+
+interface GameInstructionsProps { messageText: string; }
+
 /**
  * Functional component that displays game instructions to the user. 
  * 
@@ -24,9 +27,9 @@ const Message = styled.p`
  * @param {String} messageType - the type of message
  */
 
-const DashboardMessage = ({messageText, messageType}) => {
-
-
+const GameInstructions = (props : GameInstructionsProps) => {
+    
+    const {messageText} = props
 
     return (
         <MessageContainer>        
@@ -38,4 +41,4 @@ const DashboardMessage = ({messageText, messageType}) => {
     )
 }
 
-export default DashboardMessage
+export default GameInstructions
