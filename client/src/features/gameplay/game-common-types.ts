@@ -4,12 +4,10 @@ export type Team = (typeof TEAM)[keyof typeof TEAM];
 export type Stage = (typeof STAGE)[keyof typeof STAGE];
 
 export type Card = {
-  _id: string;
   word: string;
   team: Team;
   selected: boolean;
   display?: boolean; // front-end only. Set to true for codemaster stage
-  colour: "red" | "green" | "black" | "blue";
 };
 
 export type Round = {
@@ -35,4 +33,5 @@ export type GameState = {
 export type GameData = {
   state: GameState;
   settings: Settings;
+  _id: string;
 };

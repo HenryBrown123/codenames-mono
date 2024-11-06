@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import { Dashboard, GameBoard, LoadingSpinner } from '@game/components';
 import { GameContextProvider } from '@game/context';
 import { useGameData } from '@game/api';
+import { GameData } from '@game/game-common-types';
 
 const Grid = styled.div`
     position: absolute;
@@ -57,7 +58,6 @@ export const Game: React.FC = () => {
  * This component fetches data from db via api call and passes into child components to present to the user.
  */
 const CodeNamesGame: React.FC = () => {
-    // this is a custom hook
     const { data, error, isLoading } = useGameData();
 
     if (isLoading) {
@@ -71,7 +71,7 @@ const CodeNamesGame: React.FC = () => {
     return (
         <Grid>
             <GameContainer>
-                <GameContextProvider value={data[0].data.newgame}>
+                <GameContextProvider value={data}>
                     <GameBoardContainer>
                         <GameBoard />
                     </GameBoardContainer>
