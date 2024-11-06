@@ -8,20 +8,21 @@ import { Team } from '@game/game-common-types';
 const Grid = styled.div`
   height: calc(100% - 50px); // Adjust to leave space for the dashboard
   flex: 1;
+  display: flex;
+  flex-direction: column;
 `;
 
 const CardsContainer = styled.div`
   display: grid;
-  color: white;
   width: 100%;
   height: 100%;
 
-  grid-template-columns: repeat(5, 1fr); // Ensure there are always 5 columns
-  grid-template-rows: repeat(5, 1fr); // Ensure there are always 5 rows
-  grid-gap: 0.5em; // Space between cards
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  grid-gap: 0.5em;
 
-  align-items: stretch; // Make cards stretch to fill the available height
-  justify-items: stretch; // Ensure cards fill the entire width
+  align-items: stretch;
+  justify-items: stretch;
 `;
 
 const getCardColor = (team: Team): string => {

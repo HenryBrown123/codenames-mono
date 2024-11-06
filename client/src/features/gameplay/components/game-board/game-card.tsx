@@ -9,36 +9,36 @@ interface CardProps {
 }
 
 const CardContainer = styled.div`
-  margin: 0;
   height: 100%;
   width: 100%;
-  justify-content: center;
-  align-items: center;
-  flex-grow: 1; // Ensure it grows to fill the available space
+  padding: 10px;
+  box-sizing: border-box;
 `;
 
 const Card = styled.button<CardProps>`
-  margin: 0;
   height: 100%;
   width: 100%;
   border-radius: 5px;
   background-color: ${props => props.selectedColor || 'var(--color-card)'};
   color: white;
   font-family: sans-serif;
-  font-size: clamp(0.5rem, 2vw, 2rem); // Responsive font size using clamp
+  font-size: clamp(0.5rem, 2vw, 2rem);
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-grow: 1; // Ensure it grows to fill the container
-  flex-shrink: 0; // Prevent it from shrinking
-
-  p {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    text-align: center;
-  }
+  flex-grow: 1;
+  flex-shrink: 0;
 `;
+
+const CardContent = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+`;
+
 
 interface GameCardProps {
   cardText: string;
@@ -51,23 +51,14 @@ const GameCard = ({ cardText, cardColor, cardSelected }: GameCardProps) => {
 
   return (
     <CardContainer>
-      <Flip isFlipped={flipped} flipDirection="vertical">
-        <Card 
-          id="card" 
-          key="front" 
-          onClick={() => setFlipped(true)}
-        >
-          <p>{cardText}</p>
-        </Card>
-        <Card 
-          id="card" 
-          key="back" 
-          onClick={() => setFlipped(true)}
-          selectedColor={cardColor}
-        >
-          <p>{cardText}</p>
-        </Card>
-      </Flip>
+        <Flip isFlipped={flipped} flipDirection="vertical" containerStyle={{ height: '100%', width: '100%' }}>
+          <Card key="front" onClick={() => setFlipped(true)}>
+            <CardContent>{cardText}</CardContent>
+          </Card>
+          <Card key="back" onClick={() => setFlipped(true)} selectedColor={cardColor}>
+            <CardContent>{cardText}</CardContent>
+          </Card>
+        </Flip>
     </CardContainer>
   );
 };
