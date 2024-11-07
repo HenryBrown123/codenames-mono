@@ -1,17 +1,24 @@
-import React, { useContext, createContext, ReactNode } from "react";
+import React, { useContext, createContext, ReactNode, useState } from "react";
 import { useGameData } from "@game/api";
-import { GameData } from "@game/game-common-types"; 
+import { GameData, Stage } from "@game/game-common-types"; 
 
 /** 
  * Main game context hook, providing game state managed by React context.
  * 
  * @returns {GameData | null} - The current game data from context, or null if no game data is available.
  */
-export const GameContext = createContext<GameData | null>(null);
+
+interface GameContextProps { 
+  gameData: GameData | undefined; 
+  stage: Stage; 
+  setStage: (stage: Stage) => void; 
+}
+
+export const GameContext = createContext<GameContextProps | null>(null);
 
 interface GameContextProviderProps {
   children: ReactNode;
-  value: GameData;
+  value: GameContextProps; 
 }
 
 /** 
@@ -21,9 +28,9 @@ interface GameContextProviderProps {
  * @param {GameContextProviderProps} props - The children components to be wrapped by the provider.
  * @returns {JSX.Element} - The GameContext provider with the fetched game data.
  */
-export const GameContextProvider = ({ children }: GameContextProviderProps): JSX.Element => {
-  const { data: game } = useGameData();
-  return <GameContext.Provider value={game}> {children} </GameContext.Provider>;
+export const GameContextProvider = ({ children, value }: GameContextProviderProps): JSX.Element => {
+ 
+  return <GameContext.Provider value={value}> {children} </GameContext.Provider>;
 };
 
 /** 
@@ -31,6 +38,11 @@ export const GameContextProvider = ({ children }: GameContextProviderProps): JSX
  * 
  * @returns {GameData | null} - The current game data from context, or null if no game data is available.
  */
-export const useGameContext = (): GameData | null => {
-  return useContext(GameContext);
+export const useGameContext = (): GameContextProps | null => {
+   const context = useContext(GameContext); 
+   if (!context) { 
+    throw new Error('useGameContext must be used within a GameContextProvider'); 
+  } 
+
+  return context;
 };

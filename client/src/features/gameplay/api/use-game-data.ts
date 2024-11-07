@@ -1,38 +1,47 @@
-import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import apis from "src/api";
-import { GameData } from "@game/game-common-types";
-import { exampleIntroGameState } from "@test/mock-game-data";
+import {
+  useQuery,
+  UseQueryResult,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { GameData, Stage } from "@game/game-common-types";
+import { STAGE } from "@game/game-common-constants";
+import {
+  exampleIntroGameState,
+  exampleCodemasterStage,
+  exampleCodebreakerStage,
+} from "@test/mock-game-data";
 
-/**
- * Hook for retrieving game data via API.
- *
- * Should only be extended for fetching data required to play the game, meaning the game should not be
- * playable until all data has been retrieved by this function.
- *
- */
-
-const fetchNewGame = async (): Promise<GameData> => {
-  const [result] = await Promise.all([apis.getNewGame()]);
-  return result.data;
-};
-
-const fetchStaticGameData = async (): Promise<GameData> => {
+const fetchStaticGameData = async (stage: Stage): Promise<GameData> => {
   try {
-    const staticGameData: GameData = exampleIntroGameState;
+    let gameData: GameData;
+    switch (stage) {
+      case STAGE.CODEMASTER:
+        gameData = exampleCodemasterStage;
+        break;
+      case STAGE.CODEBREAKER:
+        gameData = exampleCodebreakerStage;
+        break;
+      case STAGE.INTRO:
+        gameData = exampleIntroGameState;
+        break;
+      default:
+        console.log("Unknown stage");
+        break;
+    }
     return new Promise((resolve) => {
-      console.log("<--- Static data fetch ---->");
-      console.log(staticGameData); // default prevents static file being treated as a module
-      resolve(staticGameData);
+      console.log("<--- Fetching game data --->");
+      console.log(gameData);
+      resolve(gameData);
     });
   } catch (error) {
-    console.error("Error fetching static game data:", error);
+    console.error("Error fetching game data:", error);
     throw error;
   }
 };
 
-export const useGameData = (): UseQueryResult<GameData, Error> => {
+export const useGameData = (stage: Stage): UseQueryResult<GameData, Error> => {
   return useQuery<GameData>({
-    queryKey: ["game"],
-    queryFn: fetchStaticGameData,
+    queryKey: ["game", stage],
+    queryFn: () => fetchStaticGameData(stage),
   });
 };

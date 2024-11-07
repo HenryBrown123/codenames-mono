@@ -13,7 +13,6 @@ const MessageContainer = styled.div`
 const Message = styled.p`
     border-radius: 15px;
     width: 100%;
-    font-size: calc(2vw + 2vh);
     margin:0;
 `
 
@@ -28,7 +27,7 @@ interface GameInstructionsProps { messageText: string; }
  */
 
 const GameInstructions = (props : GameInstructionsProps) => {
-    
+
     const {messageText} = props
 
     return (
