@@ -1,21 +1,24 @@
 import styled from 'styled-components';
 import ActionButton from './action-button';
-import StageInputForm from './codemaster-input';
+import CodeWordInput from './codemaster-input';
 import { Stage } from '@game/game-common-types';
+import { useGameContext } from '@game/context';
 
 const Grid = styled.div`
-    height: 100vh; /* Ensures the grid takes the full height of the viewport */
+    min-height: 100%; /* Ensures the grid takes at least the full height of the viewport */
     display: flex;
-    align-items: center; /* Centers the content vertically */
-        justify-content: center; /* Centers the content horizontally */
+    align-items: center;
+    justify-content: center;
+    padding: 20px; /* Adds padding to prevent content from touching edges */
 `;
 
 const DashboardContainer = styled.div`
     display: flex;
+    flex-wrap: wrap; /* Allows wrapping when there is not enough space */
     align-items: center;
     justify-content: center;
     width: 100%;
-    height: 100%;
+    gap: 20px; /* Adds spacing between items */
 `;
 
 type DashboardSectionProps = {
@@ -27,8 +30,8 @@ const DashboardSection = styled.div<DashboardSectionProps>`
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    height: 100%;
+    padding: 10px;
+    flex-basis: 100px; /* Ensures minimum width to prevent too small items */
 `;
 
 type DashboardProps = {
@@ -36,13 +39,19 @@ type DashboardProps = {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ stage }) => {
+    const { gameData } = useGameContext();
+    const latestRound = gameData.state.rounds[gameData.state.rounds.length - 1];
+    const codeWord = latestRound?.codeword || "";
+    const numberOfGuesses = latestRound?.guessesAllowed || 0;
+
     return (
         <Grid>
             <DashboardContainer>
                 <DashboardSection size={1}>
                     {/* Conditionally render based on the stage */}
                     {stage === 'intro' && <ActionButton onClick={() => console.log('Clicked!')} text="PLAY" />}
-                    {stage === 'codemaster' && <StageInputForm />}
+                    {stage === 'codemaster' && <CodeWordInput isEditable={true} />}
+                    {stage === 'codebreaker' && <CodeWordInput codeWord={codeWord} numberOfCards={numberOfGuesses} isEditable={false} />}
                 </DashboardSection>
             </DashboardContainer>
         </Grid>
