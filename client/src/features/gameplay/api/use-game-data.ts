@@ -9,6 +9,7 @@ import {
   exampleIntroGameState,
   exampleCodemasterStage,
   exampleCodebreakerStage,
+  exampleGameOverStage,
 } from "@test/mock-game-data";
 
 const fetchStaticGameData = async (stage: Stage): Promise<GameData> => {
@@ -23,6 +24,9 @@ const fetchStaticGameData = async (stage: Stage): Promise<GameData> => {
         break;
       case STAGE.INTRO:
         gameData = exampleIntroGameState;
+        break;
+      case STAGE.GAMEOVER:
+        gameData = exampleGameOverStage;
         break;
       default:
         console.log("Unknown stage");
