@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "cypress"]
+  },
+  "include": ["../src/**/*", "./**/*"],
+  "paths": {
+    "@game/*": ["src/features/gameplay/*"],
+    "@test/*": ["test/*"],
+    "src/*": ["./src/*"]
+  }
+}
