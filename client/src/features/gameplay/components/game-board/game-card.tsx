@@ -1,83 +1,185 @@
-import React, { useState, useEffect, useContext } from 'react';
-import styled from 'styled-components';
-import Flip from 'react-card-flip';
-import { useGameContext } from '@game/context';
+import React, { useEffect, useState } from "react";
+import styled, { keyframes } from "styled-components";
+import { FaStar, FaLeaf, FaSkull, FaPeace } from "react-icons/fa";
+
+const FRONT_CARD_COLOUR = "#494646";
 
 interface CardProps {
-  selectedColor?: string;
-  onClick: () => void;
+  backColour?: string;
   children: React.ReactNode;
+  clickable?: boolean;
+  codemasterView?: boolean;
 }
+
+const getIcon = (color?: string) => {
+  switch (color) {
+    case "red":
+      return <FaStar />;
+    case "green":
+      return <FaLeaf />;
+    case "blue":
+      return <FaPeace />;
+    case "black":
+      return <FaSkull />;
+    default:
+      return null;
+  }
+};
+
+const slideInAnimation = keyframes`
+  0% {
+    transform: translate(-2000px, -2000px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+`;
+
+const sharedCardStyles = `
+  height: 100%;
+  width: 100%;
+  border-radius: 12px; /* Rounded corners */
+  color: white;
+  font-family: sans-serif;
+  font-size: clamp(0.3rem, 2.5vw, 2rem);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 0;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
+  background-image: linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.1) 25%,
+      transparent 25%
+    ),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%),
+    radial-gradient(
+      circle at 10% 20%,
+      rgba(255, 255, 255, 0.05),
+      transparent 20%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgba(255, 255, 255, 0.05),
+      transparent 20%
+    );
+  background-size: 10px 10px, 10px 10px;
+  background-blend-mode: overlay;
+`;
 
 const CardContainer = styled.div`
   height: 100%;
   width: 100%;
   box-sizing: border-box;
-  padding: 0; // Ensure there's no padding affecting the size
+  padding: 0;
+  position: relative;
+  perspective: 1000px;
+  margin: auto;
 `;
 
 const Card = styled.button<CardProps>`
-  height: 100%;
-  width: 100%;
-  border-radius: 5px;
-  background-color: ${props => props.selectedColor || 'var(--color-card)'};
-  color: white;selectedColor
-  font-family: sans-serif;
-  font-size: clamp(0.3rem, 2.5vw, 2rem); 
+  ${sharedCardStyles}
+  background-color: ${(props) =>
+    props.codemasterView && props.backColour
+      ? props.backColour
+      : FRONT_CARD_COLOUR};
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: translateY(-4px);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+`;
+
+const CardContent = styled.div<{ selected?: boolean }>`
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  text-align: center;
-  padding: 0; 
-`;
-
-const CardContent = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
   width: 100%;
   height: 100%;
   text-align: center;
-  word-wrap: break-word; // Ensure text wraps properly
-  overflow-wrap: break-word; // Additional wrapping for long words
-  margin: 0; // Remove any margin
-  padding: 0; // Remove any padding
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  margin: 0;
+  padding: 0;
+  text-decoration: ${(props) => (props.selected ? "line-through" : "none")};
 `;
 
-const FlipContainer = styled.div`
-  height: 100%;
-  width: 100%;
-  box-sizing: border-box; // Ensure padding does not affect the total size
+const CoverCard = styled.div<{ backColour?: string }>`
+  ${sharedCardStyles}
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: ${(props) => props.backColour || FRONT_CARD_COLOUR};
+  opacity: 1;
+  animation: ${slideInAnimation} 0.8s ease-out;
+`;
+
+const CornerIcon = styled.div`
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  color: rgba(255, 255, 255, 0.8); /* Slightly transparent white */
+  font-size: clamp(0.5rem, 1vw, 2rem);
+
+  /* Duplicate icon for bottom-right corner */
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    color: rgba(255, 255, 255, 0.8);
+  }
 `;
 
 interface GameCardProps {
   cardText: string;
   cardColor?: string;
-  cardSelected: boolean;
-  flippable? : boolean;
+  codemasterView: boolean;
+  clickable: boolean;
+  selected?: boolean;
 }
 
 const GameCard: React.FC<GameCardProps> = (props) => {
-  const { cardText, cardColor, cardSelected, flippable } = props;
-  const [flipped, setFlipped] = useState<boolean>(cardSelected);
+  const {
+    cardText,
+    cardColor,
+    codemasterView,
+    clickable,
+    selected: initialSelected,
+  } = props;
+
+  const [selected, setSelected] = useState(initialSelected || false);
 
   const handleClick = () => {
-    if(flippable) {
-      setFlipped(true)
+    if (clickable) {
+      setSelected(true);
     }
-  }
+  };
+
   return (
     <CardContainer>
-      <FlipContainer>
-        <Flip isFlipped={flipped} flipDirection="vertical" containerStyle={{ height: '100%', width: '100%' }}>
-          <Card key="front" onClick={() =>handleClick()}>
-            <CardContent>{cardText}</CardContent>
-          </Card>
-          <Card key="back" onClick={() => handleClick()} selectedColor={cardColor}>
-            <CardContent>{cardText}</CardContent>
-          </Card>
-        </Flip>
-      </FlipContainer>
+      <Card
+        onClick={clickable && !selected ? handleClick : undefined}
+        clickable={clickable}
+        backColour={cardColor}
+        codemasterView={codemasterView}
+        aria-label={`Card with text ${cardText}`}
+      >
+        <CardContent selected={selected}>{cardText}</CardContent>
+      </Card>
+      {selected && (
+        <CoverCard backColour={cardColor} aria-label={`Selected card`}>
+          <CornerIcon>{getIcon(cardColor)}</CornerIcon>
+        </CoverCard>
+      )}
     </CardContainer>
   );
 };

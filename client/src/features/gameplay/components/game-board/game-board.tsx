@@ -1,9 +1,8 @@
-import React, { useMemo } from 'react';
-import styled from 'styled-components';
-import { ErrorMessage } from '@game/components';
-import GameCard from './game-card';
-import { TEAM, STAGE } from '@game/game-common-constants';
-import { Team, GameData } from '@game/game-common-types';
+import React from "react";
+import styled from "styled-components";
+import GameCard from "./game-card";
+import { TEAM, STAGE } from "@game/game-common-constants";
+import { Team, GameData, Stage, Card } from "@game/game-common-types";
 
 const Grid = styled.div`
   height: calc(100% - 50px); // Adjust to leave space for the dashboard
@@ -21,10 +20,6 @@ const CardsContainer = styled.div`
   grid-gap: 0.2em;
   align-items: stretch;
   justify-items: stretch;
-
-  @media (max-width: 512px) {
-    // grid-template-columns: repeat(4, 1fr); // Switch to 4 columns for smaller screens
-  }
 `;
 
 const GameCardContainer = styled.div`
@@ -35,54 +30,68 @@ const GameCardContainer = styled.div`
   align-items: center;
 `;
 
-const getCardColor = (team: Team
-): string => {
-  
+const getCardColor = (team: Team): string => {
   switch (team) {
     case TEAM.ASSASSIN:
-      return "black";
+      return "#1d2023";
     case TEAM.BYSTANDER:
-      return "blue";
+      return "#4169E1";
     case TEAM.RED:
-      return "red";
+      return "#B22222";
     case TEAM.GREEN:
-      return "green";
+      return "#228B22";
     default:
       console.warn("Unknown team:", team);
-      return "blue"; // fallback color
+      return "#4b7fb3";
   }
 };
 
 type GameBoardProps = {
   gameData: GameData;
-}
+  flipUnselectedCards?: boolean;
+};
 
-export const GameBoard: React.FC<GameBoardProps> = ({gameData}) => {
+const getGameCardProps = (
+  cardData: Card,
+  gameStage: Stage,
+  flipUnselectedCards: boolean
+) => {
+  return {
+    cardText: cardData.word,
+    cardColor: getCardColor(cardData.team),
+    clickable: gameStage === STAGE.CODEBREAKER && !cardData.selected,
+    codemasterView: flipUnselectedCards,
+    selected: cardData.selected,
+  };
+};
 
-  if (gameData.state.cards == null || gameData.state.cards.length === 0) {
-    return (
-      <ErrorMessage messageText="Sorry, something went wrong when trying to display the game board :( Please refresh to try again..." />
+const GameBoard: React.FC<GameBoardProps> = ({
+  gameData,
+  flipUnselectedCards = false,
+}) => {
+  const allCards = gameData.state.cards.map((cardData) => {
+    const gameCardProps = getGameCardProps(
+      cardData,
+      gameData.state.stage,
+      flipUnselectedCards
     );
-  }
-
-  console.log("rendering game board for stage ", gameData.state.stage)
-
-   const allCards = gameData.state.cards.map(cardData => (
-      <GameCardContainer id="gamecard-container" key={cardData.word}>
-        <GameCard
-          cardText={cardData.word}
-          cardColor={(gameData.state.stage === STAGE.CODEMASTER && cardData.selected) ? "grey" : getCardColor(cardData.team)}
-          cardSelected={gameData.state.stage === STAGE.CODEMASTER || cardData.selected}
-          flippable={gameData.state.stage === STAGE.CODEBREAKER? true : false}
-        />
+    return (
+      <GameCardContainer
+        aria-label={`gamecard-container for word: ${cardData.word}`}
+        key={cardData.word}
+      >
+        <GameCard {...gameCardProps} />
       </GameCardContainer>
-    ));
+    );
+  });
 
   return (
-    <Grid id="gameboard-wrapper">
-      <CardsContainer id="gameboard-container">
+    <Grid aria-label="game board wrapper">
+      <CardsContainer aria-label="game board container with 25 cards">
         {allCards}
       </CardsContainer>
     </Grid>
   );
 };
+
+export default GameBoard;

@@ -1,25 +1,93 @@
-import { createGlobalStyle } from 'styled-components';
+import { createGlobalStyle } from "styled-components";
 
-// border can be used to toggle boarders around all divs... useful for debug
-export const GlobalStyle = createGlobalStyle`
-* {
-  box-sizing: border-box;
-  font-family: 'Courier New', monospace;
-}
+export const GlobalStyle = createGlobalStyle<{ theme: ThemeType }>`
+  * {
+    box-sizing: border-box;
+    font-family: 'Courier New', monospace;
+  }
 
-div {
-    // border: 1px dashed red;// put boarder around all divs on page for layout development
-}
+  div {
+    // border: 1px dashed red; // for layout debugging
+  }
 
-html {
-    --color-text: black;
-    --color-background: #c2bdbd;
-    --color-primary: #44a85a;
-    --color-secondary: #a6eb25ba;
-    --color-card: #00000096;
-    --color-dashboard: black;
-    --color-team1: #5050eae2;
-    --color-team2: #ea4b4b;
+  html {
+    --color-text: ${({ theme }) => theme.text};
+    --color-background: ${({ theme }) => theme.background};
+    --color-primary: ${({ theme }) => theme.primary};
+    --color-secondary: ${({ theme }) => theme.secondary};
+    --color-card: ${({ theme }) => theme.card};
+    --color-dashboard: ${({ theme }) => theme.dashboard};
+    --color-team1: ${({ theme }) => theme.team1};
+    --color-team2: ${({ theme }) => theme.team2};
+    --color-background-size: "cover"
+  }
 
+  body {
+    color: var(--color-text);
+    background-image: var(--color-background);
+    //background-repeat: no-repeat; // Prevents the background from repeating
+    margin: 0;
+    padding: 0;
+    background-size: var(--color-background-size);
   }
 `;
+
+export interface ThemeType {
+  text: string;
+  background: string;
+  primary: string;
+  secondary: string;
+  card: string;
+  dashboard: string;
+  team1: string;
+  team2: string;
+  error: string;
+  primaryHover: string;
+  buttonText: string;
+  shadowColor: string;
+  shadowDark: string;
+  shadowLight: string;
+  disabledBackground: string;
+}
+
+// @ts-ignore
+import lightBackgroundImage from "/background-light.webp";
+
+export const lightTheme: ThemeType = {
+  text: "white",
+  background: `url(${lightBackgroundImage})`,
+  primary: "#44a85a",
+  secondary: "#a6eb25ba",
+  card: "#00000096",
+  dashboard: "#1a1a1a",
+  team1: "#5050eae2",
+  team2: "#ea4b4b",
+  error: "#cc2e2e",
+  primaryHover: "#3b954f",
+  buttonText: "white",
+  shadowColor: "gray",
+  shadowDark: "black",
+  shadowLight: "white",
+  disabledBackground: "lightgray",
+};
+
+// @ts-ignore
+import darkBackgroundImage from "/background-dark-2.webp";
+
+export const darkTheme: ThemeType = {
+  text: "white",
+  background: `url(${darkBackgroundImage})`,
+  primary: "#1e8c4a",
+  secondary: "#7bcf22",
+  card: "#2e2e2e",
+  dashboard: "#1a1a1a",
+  team1: "#3030d4",
+  team2: "#d44141",
+  error: "#cc2e2e",
+  primaryHover: "#176c3c",
+  buttonText: "white",
+  shadowColor: "darkgray",
+  shadowDark: "black",
+  shadowLight: "gray",
+  disabledBackground: "#2e2e2e",
+};
