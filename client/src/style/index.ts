@@ -1,1 +1,1 @@
-export { GlobalStyle }  from './GlobalStyle'
+export { GlobalStyle, lightTheme, darkTheme } from "./GlobalStyle";
