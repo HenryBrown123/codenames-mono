@@ -1,1 +1,1 @@
-export {GameBoard} from './game-board'
+export { default as GameBoard } from "./game-board";
