@@ -1,8 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import styled from 'styled-components';
-import { useGameContext } from '@game/context';
-import { Stage } from '@game/game-common-types';
-import { STAGE } from '@game/game-common-constants';
+import React, { useState, useEffect, useRef } from "react";
+import styled from "styled-components";
+import { useGameContext } from "@game/context";
+import { Stage } from "@game/game-common-types";
+import { STAGE } from "@game/game-common-constants";
+
+interface OverlayProps {
+  isOpen: boolean;
+}
 
 const BurgerMenu = styled.div`
   position: absolute;
@@ -19,13 +23,14 @@ const BurgerMenu = styled.div`
   div {
     width: 30px;
     height: 3px;
-    background-color: #333;
+    background-color: #2f2e2e; /* White color for contrast */
     transition: all 0.3s ease;
   }
 
   &.open div:nth-child(1) {
     transform: rotate(45deg);
     transform-origin: 5% 50%;
+    background-color: #dbd2d2; /* White color for contrast */
   }
 
   &.open div:nth-child(2) {
@@ -35,6 +40,7 @@ const BurgerMenu = styled.div`
   &.open div:nth-child(3) {
     transform: rotate(-45deg);
     transform-origin: 5% 50%;
+    background-color: #dbd2d2; /* White color for contrast */
   }
 `;
 
@@ -44,13 +50,14 @@ const Sidebar = styled.div`
   left: 0;
   width: 250px;
   min-height: 100%;
-  background-color: #f4f4f4;
+  background-color: #1d2023; /* Dark background */
   transform: translateX(-100%);
   transition: transform 0.3s ease;
   display: flex;
   flex-direction: column;
   padding: 20px;
   z-index: 5;
+  box-shadow: 3px 0 10px rgba(0, 0, 0, 0.5);
 
   &.open {
     transform: translateX(0);
@@ -61,7 +68,7 @@ const Sidebar = styled.div`
     font-size: 24px;
     font-weight: bold;
     text-align: left;
-    padding: 0;
+    color: #ffffff; /* White text */
   }
 
   ul {
@@ -73,14 +80,16 @@ const Sidebar = styled.div`
   li {
     margin: 10px 0;
     cursor: pointer;
-    padding: 10px; // Increase padding for better spacing
+    padding: 12px;
     font-size: 18px;
-    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out; // Smooth transition
+    color: #e0e0e0; /* Light text */
+    border-radius: 8px;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
   }
 
   li:hover {
-    background-color: #ddd;
-    color: #000; // Change text color on hover
+    background-color: #333; /* Darker hover background */
+    color: #fff; /* White text on hover */
   }
 
   @media (max-width: 768px) {
@@ -101,11 +110,24 @@ const Sidebar = styled.div`
   }
 `;
 
+const Overlay = styled.div<OverlayProps>`
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Dark overlay */
+  z-index: 4;
+  opacity: ${({ isOpen }) => (isOpen ? "1" : "0")};
+  pointer-events: ${({ isOpen }) => (isOpen ? "all" : "none")};
+  transition: opacity 0.3s ease;
+`;
+
 export const Menu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const { stage, setStage } = useGameContext();
+  const { setStage } = useGameContext();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -113,8 +135,10 @@ export const Menu: React.FC = () => {
 
   const handleClickOutside = (event: MouseEvent) => {
     if (
-      menuRef.current && !menuRef.current.contains(event.target as Node) &&
-      sidebarRef.current && !sidebarRef.current.contains(event.target as Node)
+      menuRef.current &&
+      !menuRef.current.contains(event.target as Node) &&
+      sidebarRef.current &&
+      !sidebarRef.current.contains(event.target as Node)
     ) {
       setIsOpen(false);
     }
@@ -126,25 +150,33 @@ export const Menu: React.FC = () => {
   };
 
   useEffect(() => {
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   return (
     <>
-      <BurgerMenu ref={menuRef} className={isOpen ? 'open' : ''} onClick={toggleMenu}>
+      <BurgerMenu
+        ref={menuRef}
+        className={isOpen ? "open" : ""}
+        onClick={toggleMenu}
+      >
         <div />
         <div />
         <div />
       </BurgerMenu>
-      <Sidebar ref={sidebarRef} className={isOpen ? 'open' : ''}>
+      <Overlay isOpen={isOpen} onClick={toggleMenu} />
+      <Sidebar ref={sidebarRef} className={isOpen ? "open" : ""}>
         <h2>Dev Panel</h2>
         <ul>
           <li onClick={() => changeGameStage(STAGE.INTRO)}>Intro</li>
           <li onClick={() => changeGameStage(STAGE.CODEMASTER)}>Codemaster</li>
-          <li onClick={() => changeGameStage(STAGE.CODEBREAKER)}>Codebreaker</li>
+          <li onClick={() => changeGameStage(STAGE.CODEBREAKER)}>
+            Codebreaker
+          </li>
+          <li onClick={() => changeGameStage(STAGE.GAMEOVER)}>Game over</li>
         </ul>
       </Sidebar>
     </>

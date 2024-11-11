@@ -1,15 +1,100 @@
-import React, { useState } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import styled from 'styled-components';
+// Import necessary libraries and components
+import React, { ReactNode, useState, useEffect } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import styled from "styled-components";
+import { Dashboard, GameBoard, LoadingSpinner } from "@game/components";
+import { GameContextProvider } from "@game/context";
+import { useGameData } from "@game/api";
+import GameInstructions from "@game/components/game-instructions/game-instructions";
+import { GameData, Stage } from "@game/game-common-types";
+import { STAGE } from "@game/game-common-constants";
+import { Menu } from "./menu";
 
-import { Dashboard, GameBoard, LoadingSpinner } from '@game/components';
-import { GameContextProvider } from '@game/context';
-import { useGameData } from '@game/api';
-import GameInstructions from '@game/components/game-instructions/game-instructions';
-import { GameData, Stage } from '@game/game-common-types';
-import { Menu } from './menu';
+const queryClient = new QueryClient();
 
-const Grid = styled.div`
+type GameLayoutProps = {
+  children: ReactNode;
+};
+
+const GameLayout: React.FC<GameLayoutProps> = ({ children }) => (
+  <GameWrapper>
+    <Banner>
+      <Menu />
+    </Banner>
+    <GameContainer>{children}</GameContainer>
+  </GameWrapper>
+);
+
+const CodeNamesGame: React.FC = () => {
+  const [stage, setStage] = useState<Stage>("intro");
+  const { data, error, isLoading, isRefetching } = useGameData(stage);
+  const [flipUnselectedCards, setFlipUnselectedCards] = useState(false);
+
+  const displayDashboard = true;
+  const displayInstructions = true;
+
+  useEffect(() => {
+    setFlipUnselectedCards(stage === STAGE.CODEMASTER);
+  }, [stage]);
+
+  if (isLoading || isRefetching) {
+    return (
+      <LoadingContainer>
+        <LoadingSpinner displayText={"Loading...."} />;
+      </LoadingContainer>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <ErrorContainer>
+        <h2>Something went wrong :(</h2>
+        <p>Please try refreshing the page.</p>
+      </ErrorContainer>
+    );
+  }
+
+  return (
+    <GameContextProvider
+      value={{
+        gameData: data,
+        setStage,
+        showBackOfCards: flipUnselectedCards,
+        setShowBackOfCards: setFlipUnselectedCards,
+      }}
+    >
+      <GameLayout>
+        {displayInstructions && (
+          <InstructionsContainer>
+            <GameInstructions messageText={getMessage(data)} />
+          </InstructionsContainer>
+        )}
+        <GameBoardContainer>
+          <GameBoard
+            gameData={data}
+            flipUnselectedCards={flipUnselectedCards}
+          />
+        </GameBoardContainer>
+        {displayDashboard && (
+          <DashboardContainer>
+            <Dashboard stage={stage} />
+          </DashboardContainer>
+        )}
+      </GameLayout>
+    </GameContextProvider>
+  );
+};
+
+export const Game: React.FC = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <CodeNamesGame />
+    </QueryClientProvider>
+  );
+};
+
+// Styled Components with Background Image
+const GameWrapper = styled.div`
   position: relative;
   left: 0;
   bottom: 0;
@@ -18,6 +103,9 @@ const Grid = styled.div`
   display: flex;
   flex-direction: column;
   height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 
   @media (max-width: 768px) {
     flex-direction: column;
@@ -39,27 +127,45 @@ const GameContainer = styled.div`
 `;
 
 const InstructionsContainer = styled.div`
-  width: 100%;
-  flex: 0.5;
+  width: 90%;
   display: flex;
   justify-content: center;
-  align-items: center;
-  padding: 1rem;
-  overflow: auto;
-  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  align-items: center; // Increased padding for better spacing
+  font-size: clamp(0.7rem, 2vw, 2rem);
   text-align: center;
-  margin: 0;
-
-  @media (max-width: 768px) {
-    flex: 1;
-    font-size: 4vw;
-  }
+  padding: 1rem;
+  margin: 1rem auto;
+  background-color: rgba(65, 63, 63, 0.8);
+  border-radius: 16px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  max-height: 200px; // Adjust max height as needed
+  overflow-y: auto; // Enable scroll if content overflows vertically
+  word-wrap: break-word; // Ensure long words wrap
+  text-overflow: ellipsis;
 
   /* Smaller font size for landscape mode on small screens */
   @media (max-width: 768px) and (orientation: landscape) {
-    font-size: 2vw;
+    font-size: clamp(0.8rem, 2vw, 2.5rem);
+    padding: 0;
   }
+`;
 
+const DashboardContainer = styled.div`
+  width: 90%; // Reduced width for space around
+  flex: 1.5;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  overflow: auto;
+  padding: 1rem;
+  margin: 1rem auto; // Center with space around
+  background-color: rgba(65, 63, 63, 0.8);
+  border-radius: 16px; // Rounded corners
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); // Subtle shadow for depth
+
+  @media (max-width: 768px) {
+    flex: 1.5;
+  }
 `;
 
 const GameBoardContainer = styled.div`
@@ -72,18 +178,6 @@ const GameBoardContainer = styled.div`
 
   @media (max-width: 768px) {
     flex: 2;
-  }
-`;
-
-const DashboardContainer = styled.div`
-  flex: 1.5;
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  overflow: auto;
-
-  @media (max-width: 768px) {
-    flex: 1.5;
   }
 `;
 
@@ -101,59 +195,47 @@ const Banner = styled.div`
   padding: 0 10px;
 `;
 
-const queryClient = new QueryClient();
+const ErrorContainer = styled.div`
+  display: flex;
+  flex-direction: column; /* Stack child elements vertically */
+  justify-content: center; /* Center vertically */
+  align-items: center; /* Center horizontally */
+  width: 90%;
+  height: 100vh; /* Full height of the viewport */
+  margin: 0 auto; /* Center horizontally in the page */
+  padding: 1rem;
+  text-align: center;
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  background-color: rgba(65, 63, 63, 0.8);
+  border-radius: 16px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+`;
 
+const LoadingContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 90%;
+  height: 100vh;
+  margin: 0 auto;
+  padding: 1rem;
+  text-align: center;
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  background-color: rgba(65, 63, 63, 0.8);
+  border-radius: 16px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+`;
+
+// Utility function to display different messages based on game stage
 const getMessage = (gameData: GameData): string => {
   const messages = {
     intro: `Welcome to the game! Before clicking 'Play', pass the device to the codemaster of the ${gameData.settings.startingTeam} team so they can view all the colours without the codebreakers spying... good luck!`,
-    codemaster: "Enter a codeword and the number of cards associated to the codeword.",
-    codebreaker: "Pick your cards from the codeword."
+    codemaster:
+      "Enter a codeword and the number of cards associated to the codeword.",
+    codebreaker: "Pick your cards from the codeword.",
+    gameover: `Game over, ${gameData.state.winner} wins!`,
   };
 
-  return messages[gameData?.state?.stage] || null;
-};
-
-
-
-const CodeNamesGame: React.FC = () => {
-  const [stage, setStage] = useState<Stage>("intro");
-  const { data, error, isLoading, isRefetching } = useGameData(stage);
-
-  if (isLoading || isRefetching ) {
-    return <LoadingSpinner displayText={"Loading...."} />;
-  }
-
-  if (error || !data) {
-    return <LoadingSpinner displayText={"Something went wrong :("} />;
-  }
-
-
-  return (
-    <GameContextProvider value={{ gameData: data, stage, setStage }}>
-      <Grid>
-        <Banner>
-          <Menu />
-        </Banner>
-        <GameContainer>
-          <InstructionsContainer>
-            <GameInstructions messageText={getMessage(data)} />
-          </InstructionsContainer>
-          <GameBoardContainer>
-            <GameBoard gameData={data}/>
-          </GameBoardContainer>
-          <DashboardContainer>
-            <Dashboard stage={stage} />
-          </DashboardContainer>
-        </GameContainer>
-      </Grid>
-    </GameContextProvider>
-  );
-};
-
-export const Game: React.FC = () => {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <CodeNamesGame />
-    </QueryClientProvider>
-  );
+  return messages[gameData?.state?.stage] || "";
 };
