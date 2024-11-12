@@ -10,9 +10,6 @@ import { GameData, Stage } from "@game/game-common-types";
 
 interface GameContextProps {
   gameData: GameData | undefined;
-  setStage: (stage: Stage) => void;
-  showBackOfCards: boolean;
-  setShowBackOfCards: (shouldFlip: boolean) => void;
 }
 
 export const GameContext = createContext<GameContextProps | null>(null);
