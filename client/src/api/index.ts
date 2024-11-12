@@ -5,22 +5,56 @@ const api = axios.create({
   baseURL: "http://localhost:3000/api",
 });
 
-export const getNewGame = (
-  payload?: Settings
-): Promise<AxiosResponse<GameData>> => api.post("/games", payload);
+type NewGameResponse = {
+  success: boolean;
+  newgame: GameData;
+};
 
-export const getGame = (id: string): Promise<AxiosResponse<GameData>> =>
-  api.get(`/games/${id}`);
+// Updated API calls to better align with React Query hooks
+const createNewGame = async (payload?: Settings): Promise<GameData> => {
+  const response: AxiosResponse<NewGameResponse> = await api.post(
+    "/games",
+    payload
+  );
+  if (!response.data.success) {
+    console.error("Failed to create a new game", response.data);
+  }
+  return response.data.newgame;
+};
 
-export const processTurn = (
+type FetchGameResponse = {
+  success: boolean;
+  game: GameData;
+};
+
+const fetchGame = async (gameId: string): Promise<GameData> => {
+  const response: AxiosResponse<FetchGameResponse> = await api.get(
+    `/games/${gameId}`
+  );
+  console.log(response);
+  return response.data.game;
+};
+
+type SubmitTurnResponse = {
+  success: boolean;
+  game: GameState;
+};
+
+const submitTurn = async (
   id: string,
   gameState: GameState
-): Promise<AxiosResponse<GameData>> => api.post(`/games/${id}/turn`, gameState);
+): Promise<GameState> => {
+  const response: AxiosResponse<SubmitTurnResponse> = await api.post(
+    `/games/${id}/turn`,
+    gameState
+  );
+  return response.data.game;
+};
 
 const apis = {
-  getNewGame,
-  getGame,
-  processTurn,
+  createNewGame,
+  fetchGame,
+  submitTurn,
 };
 
 export default apis;
