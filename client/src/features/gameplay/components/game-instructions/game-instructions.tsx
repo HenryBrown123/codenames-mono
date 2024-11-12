@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import styled from "styled-components";
 
 const MessageContainer = styled.div`
@@ -14,7 +14,7 @@ const Message = styled.p`
   width: 100%;
   margin: 0;
   color: var(--color-text);
-  white-space: pre-wrap; /* Preserves line breaks */
+  white-space: pre-wrap;
 `;
 
 interface GameInstructionsProps {
@@ -22,11 +22,9 @@ interface GameInstructionsProps {
 }
 
 const GameInstructions: React.FC<GameInstructionsProps> = ({ messageText }) => {
-  const [displayedText] = useState(messageText);
-
   return (
     <MessageContainer>
-      <Message>{displayedText}</Message>
+      <Message>{messageText}</Message>
     </MessageContainer>
   );
 };
