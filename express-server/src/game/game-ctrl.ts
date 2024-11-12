@@ -63,13 +63,14 @@ export const getGame = async (req: Request, res: Response) => {
 export const processTurn = async (req: Request, res: Response) => {
   const id = req.params._id;
   const inputGameState = req.body;
+  console.log("Processing turn for game id: ", id);
   if (!id) {
     return res
       .status(400)
       .json({ success: false, error: "ID parameter is missing" });
   }
   try {
-    const outputGameState = await executeTurn(inputGameState);
+    const outputGameState = await executeTurn(id, inputGameState);
     if (!outputGameState) {
       return res.status(404).json({ success: false, error: "Game not found" });
     }

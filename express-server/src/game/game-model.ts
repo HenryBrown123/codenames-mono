@@ -78,7 +78,7 @@ const GameSchema = new mongoose.Schema<GameDocument>(
     state: GameStateSchema,
     settings: SettingsSchema,
   },
-  { timestamps: true }
+  { timestamps: true, strict: true }
 );
 
 // Virtuals for derived scores
