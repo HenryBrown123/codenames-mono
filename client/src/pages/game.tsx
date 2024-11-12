@@ -1,16 +1,14 @@
 // Import necessary libraries and components
-import React, { ReactNode, useState, useEffect } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import React, { ReactNode, useCallback } from "react";
+import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { Dashboard, GameBoard, LoadingSpinner } from "@game/components";
 import { GameContextProvider } from "@game/context";
-import { useGameData } from "@game/api";
+import { useGameData, useProcessTurn } from "@game/api";
 import GameInstructions from "@game/components/game-instructions/game-instructions";
-import { GameData, Stage } from "@game/game-common-types";
+import { GameData } from "@game/game-common-types";
 import { STAGE } from "@game/game-common-constants";
 import { Menu } from "./menu";
-
-const queryClient = new QueryClient();
 
 type GameLayoutProps = {
   children: ReactNode;
@@ -26,16 +24,18 @@ const GameLayout: React.FC<GameLayoutProps> = ({ children }) => (
 );
 
 const CodeNamesGame: React.FC = () => {
-  const [stage, setStage] = useState<Stage>("intro");
-  const { data, error, isLoading, isRefetching } = useGameData(stage);
-  const [flipUnselectedCards, setFlipUnselectedCards] = useState(false);
+  const { gameId } = useParams<{ gameId: string }>();
+  const {
+    data: gameData,
+    error,
+    isLoading,
+    isRefetching,
+  } = useGameData(gameId);
 
-  const displayDashboard = true;
-  const displayInstructions = true;
-
-  useEffect(() => {
-    setFlipUnselectedCards(stage === STAGE.CODEMASTER);
-  }, [stage]);
+  const flipUnselectedCards = gameData
+    ? gameData.state.stage === STAGE.CODEMASTER
+    : null;
+  const instructionMessageText = gameData ? getMessage(gameData) : null;
 
   if (isLoading || isRefetching) {
     return (
@@ -45,7 +45,7 @@ const CodeNamesGame: React.FC = () => {
     );
   }
 
-  if (error || !data) {
+  if (error || !gameData) {
     return (
       <ErrorContainer>
         <h2>Something went wrong :(</h2>
@@ -54,30 +54,32 @@ const CodeNamesGame: React.FC = () => {
     );
   }
 
+  console.log("Returned game state on page: ", gameData);
+
+  const displayInstructions = true;
+  const displayDashboard = true;
+
   return (
     <GameContextProvider
       value={{
-        gameData: data,
-        setStage,
-        showBackOfCards: flipUnselectedCards,
-        setShowBackOfCards: setFlipUnselectedCards,
+        gameData: gameData,
       }}
     >
       <GameLayout>
         {displayInstructions && (
           <InstructionsContainer>
-            <GameInstructions messageText={getMessage(data)} />
+            <GameInstructions messageText={instructionMessageText} />
           </InstructionsContainer>
         )}
         <GameBoardContainer>
           <GameBoard
-            gameData={data}
+            gameData={gameData}
             flipUnselectedCards={flipUnselectedCards}
           />
         </GameBoardContainer>
         {displayDashboard && (
           <DashboardContainer>
-            <Dashboard stage={stage} />
+            <Dashboard stage={gameData.state.stage} />
           </DashboardContainer>
         )}
       </GameLayout>
@@ -86,11 +88,7 @@ const CodeNamesGame: React.FC = () => {
 };
 
 export const Game: React.FC = () => {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <CodeNamesGame />
-    </QueryClientProvider>
-  );
+  return <CodeNamesGame />;
 };
 
 // Styled Components with Background Image
@@ -230,11 +228,11 @@ const LoadingContainer = styled.div`
 // Utility function to display different messages based on game stage
 const getMessage = (gameData: GameData): string => {
   const messages = {
-    intro: `Welcome to the game! Before clicking 'Play', pass the device to the codemaster of the ${gameData.settings.startingTeam} team so they can view all the colours without the codebreakers spying... good luck!`,
+    intro: `Welcome to the game! Before clicking 'Play', pass the device to the codemaster of the ${gameData?.settings.startingTeam} team so they can view all the colours without the codebreakers spying... good luck!`,
     codemaster:
       "Enter a codeword and the number of cards associated to the codeword.",
     codebreaker: "Pick your cards from the codeword.",
-    gameover: `Game over, ${gameData.state.winner} wins!`,
+    gameover: `Game over, ${gameData?.state.winner} wins!`,
   };
 
   return messages[gameData?.state?.stage] || "";
