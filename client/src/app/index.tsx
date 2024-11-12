@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { ThemeProvider } from 'styled-components';
-import styled from 'styled-components';
+import React, { useState } from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { ThemeProvider } from "styled-components";
+import styled from "styled-components";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
-import { Game, HowTo } from '../pages';
-import { GlobalStyle, lightTheme, darkTheme  } from '../style'; // Ensure this path is correct
+import { Game, HowTo, CreateGamePage } from "../pages";
+import { GlobalStyle, lightTheme, darkTheme } from "../style"; // Ensure this path is correct
 
 // Styled Components
 const AppContainer = styled.div`
@@ -45,6 +47,8 @@ const ToggleButton = styled.button`
   }
 `;
 
+const queryClient = new QueryClient();
+
 const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -53,24 +57,28 @@ const App: React.FC = () => {
   };
 
   return (
-    <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
-      <GlobalStyle />
-      <AppContainer id="app-container">
-        <SectionsContainer id="sections-container">
-          <PageSection id="page-container">
-            <Router>
-              <Routes>
-                <Route path="/game" element={<Game />} />
-                <Route path="/howto" element={<HowTo />} />
-              </Routes>
-            </Router>
-          </PageSection>
-        </SectionsContainer>
-        {/*<ToggleButton onClick={toggleTheme}>
-          {isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-        </ToggleButton>*/}
-      </AppContainer>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
+        <GlobalStyle />
+        <AppContainer id="app-container">
+          <SectionsContainer id="sections-container">
+            <PageSection id="page-container">
+              <Router>
+                <Routes>
+                  <Route path="/game/:gameId" element={<Game />} />
+                  <Route path="/howto" element={<HowTo />} />
+                  <Route path="/" element={<CreateGamePage />} />
+                </Routes>
+              </Router>
+            </PageSection>
+          </SectionsContainer>
+          {/*<ToggleButton onClick={toggleTheme}>
+            {isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          </ToggleButton>*/}
+        </AppContainer>
+      </ThemeProvider>
+      {<ReactQueryDevtools initialIsOpen={true} />}
+    </QueryClientProvider>
   );
 };
 
