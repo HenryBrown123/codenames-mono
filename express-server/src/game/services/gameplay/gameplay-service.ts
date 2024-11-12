@@ -4,7 +4,8 @@ import {
   handleCodebreakerStage,
   handleGameOverStage,
 } from "./gameplay-handlers";
-import { GameState, Stage } from "src/game/game-common-types";
+import { GameState, Stage } from "@game/game-common-types";
+import { updateGameDocument } from "./db-operations";
 
 // defines the function type of handlers. Must accept a GameState and return a GameState
 // unless an error is thrown...
@@ -26,20 +27,30 @@ const gameStageHandlers: Record<Stage, GameStageHandler> = {
  * the relevant gameplay logic and outputting an object representing the next state of the game
  * to return via the API (and display on UI).
  *
+ * @param {string} gameId - The ID of the game to update.
  * @param {GameState} inputGameObject - The current state of the game.
  * @returns {Promise<GameState>} - The updated game state after processing.
  * @throws {Error} - If validation fails or processing encounters an issue.
  */
 export async function executeTurn(
+  gameId: string,
   inputGameObject: GameState
 ): Promise<GameState> {
   const handleStage = gameStageHandlers[inputGameObject.stage];
   if (!handleStage) {
+    console.log("executeTurn: invalid game stage");
     throw new Error("Invalid game stage");
   }
   try {
-    return handleStage(inputGameObject); // Validate and process in sequence
+    const updatedGameState = handleStage(inputGameObject); // Validate and process in sequence
+    console.log(
+      "executeTurn: updated game state to persist: ",
+      updatedGameState
+    );
+    await updateGameDocument(gameId, updatedGameState); // Persist the updated game state
+    return updatedGameState;
   } catch (error: any) {
+    console.log("executeTurn: failed ", error.message);
     throw new Error(`Process turn failed: ${error.message}`);
   }
 }

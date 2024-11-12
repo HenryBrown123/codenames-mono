@@ -1,5 +1,5 @@
 import Game, { GameDocument } from "src/game/game-model";
-import { GameState } from "src/game/game-common-types";
+import { GameState, GameData } from "src/game/game-common-types";
 
 /**
  * Fetches the current state from the database.
@@ -26,9 +26,15 @@ export async function fetchGameDocument(id: string): Promise<GameDocument> {
  */
 export async function updateGameDocument(
   id: string,
-  updates: Partial<GameState>
+  updatedState: GameState
 ): Promise<GameDocument> {
-  const updatedGame = await Game.findByIdAndUpdate(id, updates, { new: true });
+  console.log("Update to persist : ", `(game id ${id} `, updatedState);
+  const updatedGameData: Partial<GameData> = { state: updatedState };
+  const updatedGame = await Game.findByIdAndUpdate(id, updatedGameData, {
+    new: true,
+    runValidators: true,
+  });
+  console.log("Returned game state after persist: ", updatedGame);
   if (!updatedGame) {
     throw new Error("Failed to update game state");
   }
