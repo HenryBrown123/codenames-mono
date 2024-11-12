@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
-import ActionButton from "./action-button";
+import ActionButton from "../action-button/action-button";
 import { useGameContext } from "@game/context";
+import { Round } from "@game/game-common-types";
 
 const Container = styled.div`
   display: flex;
@@ -93,14 +94,16 @@ type CodeWordInputProps = {
   codeWord?: string;
   numberOfCards?: number;
   isEditable?: boolean;
+  onSubmit?: (updatedRounds: Round[]) => void;
 };
 
 const CodeWordInput: React.FC<CodeWordInputProps> = ({
   codeWord = "",
   numberOfCards = 0,
   isEditable = false,
+  onSubmit,
 }) => {
-  const { gameData, setShowBackOfCards } = useGameContext();
+  const { gameData } = useGameContext();
 
   // local component state...
   const [displayedWord, setDisplayedWord] = useState(codeWord);
@@ -129,19 +132,22 @@ const CodeWordInput: React.FC<CodeWordInputProps> = ({
     }
   };
 
-  useEffect(() => {
-    if (textInputRef.current) {
-      textInputRef.current.style.width = `${
-        Math.max(displayedWord.length, 10) + 2
-      }ch`;
-    }
-  }, [displayedWord]);
+  /* useEffect to focus the cursor on the input text field as the component becomes editable */
 
   useEffect(() => {
     if (isEditable && textInputRef.current) {
       textInputRef.current.focus();
     }
   }, [isEditable]);
+
+  /* useEffect calls for input validation as the user types */
+
+  useEffect(() => {
+    if (textInputRef.current) {
+      textInputRef.current.style.width = `
+        ${Math.max(displayedWord.length, 10) + 2}ch`;
+    }
+  }, [displayedWord]);
 
   useEffect(() => {
     const wordsInGameData =
@@ -162,11 +168,27 @@ const CodeWordInput: React.FC<CodeWordInputProps> = ({
     }
   }, [displayedWord]);
 
-  const handleSubmit = () => {
+  /* function called to submit the codeword and number of guesses to the parent onSubmit callback. */
+
+  const handleClick = () => {
     if (!error) {
-      setShowBackOfCards(false);
       setDisplaySubmit(false);
       setCanEdit(false);
+
+      const updatedRounds = [...gameData.state.rounds];
+      const lastRound = updatedRounds.at(-1);
+
+      if (lastRound) {
+        const updatedRound = {
+          ...lastRound,
+          codeword: displayedWord,
+          guessesAllowed: displayedNumber,
+        };
+
+        updatedRounds[updatedRounds.length - 1] = updatedRound;
+      }
+
+      onSubmit(updatedRounds);
     }
   };
 
@@ -207,7 +229,7 @@ const CodeWordInput: React.FC<CodeWordInputProps> = ({
         <ButtonWrapper>
           <StyledActionButton
             text="Submit"
-            onClick={handleSubmit}
+            onClick={handleClick}
             enabled={!error && displayedWord.length > 0 && displayedNumber > 0}
           />
         </ButtonWrapper>
