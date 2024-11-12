@@ -1,8 +1,10 @@
+import { useState } from "react";
 import styled from "styled-components";
-import ActionButton from "./action-button";
+import ActionButton from "../action-button/action-button";
 import CodeWordInput from "./codemaster-input";
 import { Stage } from "@game/game-common-types";
 import { useGameContext } from "@game/context";
+import { useProcessTurn } from "@game/api";
 
 const Grid = styled.div`
   min-height: 100%; /* Ensures the grid takes at least the full height of the viewport */
@@ -21,55 +23,86 @@ const DashboardContainer = styled.div`
   gap: 20px; /* Adds spacing between items */
 `;
 
-type DashboardSectionProps = {
-  size: number;
-};
-
-const DashboardSection = styled.div<DashboardSectionProps>`
-  flex: ${(props) => props.size};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px;
-  flex-basis: 100px; /* Ensures minimum width to prevent too small items */
-`;
-
-type DashboardProps = {
-  stage: Stage;
-};
-
-export const Dashboard: React.FC<DashboardProps> = () => {
+// Components for each game stage
+const IntroStage: React.FC = () => {
   const { gameData } = useGameContext();
-  const latestRound = gameData.state.rounds[gameData.state.rounds.length - 1];
+  const { mutate: processTurn, isError } = useProcessTurn();
+  const [actionButtonEnabled, setActionButtonEnabled] = useState(true);
+
+  const handleProcessTurn = () => {
+    setActionButtonEnabled(false);
+    processTurn({ gameId: gameData._id, gameState: gameData.state });
+  };
+
+  return (
+    <>
+      <ActionButton
+        onClick={handleProcessTurn}
+        text="Play"
+        enabled={actionButtonEnabled}
+      />
+      {isError && <div>Something went wrong. Please try again.</div>}
+    </>
+  );
+};
+
+const CodemasterStage: React.FC = () => {
+  const { gameData } = useGameContext();
+  const { mutate: processTurn } = useProcessTurn();
+
+  const latestRound = gameData.state.rounds.at(-1);
   const codeWord = latestRound?.codeword || "";
   const numberOfGuesses = latestRound?.guessesAllowed || 0;
-  const winner = gameData.state.winner;
 
+  const handleSubmit = (updatedRounds: typeof gameData.state.rounds) => {
+    processTurn({
+      gameId: gameData._id,
+      gameState: { ...gameData.state, rounds: updatedRounds },
+    });
+  };
+
+  return (
+    <CodeWordInput
+      isEditable={true}
+      onSubmit={handleSubmit}
+      codeWord={codeWord}
+      numberOfCards={numberOfGuesses}
+    />
+  );
+};
+
+const CodebreakerStage: React.FC = () => {
+  const { gameData } = useGameContext();
+  const latestRound = gameData.state.rounds.at(-1);
+  const codeWord = latestRound?.codeword || "";
+  const numberOfGuesses = latestRound?.guessesAllowed || 0;
+
+  return (
+    <CodeWordInput
+      codeWord={codeWord}
+      numberOfCards={numberOfGuesses}
+      isEditable={false}
+    />
+  );
+};
+
+const GameoverStage: React.FC = () => (
+  <ActionButton
+    onClick={() => console.log("Play again clicked!")}
+    text="Play again"
+  />
+);
+
+// Main Dashboard component
+export const Dashboard: React.FC<{ stage: Stage }> = ({ stage }) => {
   return (
     <Grid>
       <DashboardContainer>
-        <DashboardSection size={1}>
-          {/* Conditionally render based on the stage */}
-          {gameData.state.stage === "intro" && (
-            <ActionButton onClick={() => console.log("Clicked!")} text="Play" />
-          )}
-          {gameData.state.stage === "codemaster" && (
-            <CodeWordInput isEditable={true} />
-          )}
-          {gameData.state.stage === "codebreaker" && (
-            <CodeWordInput
-              codeWord={codeWord}
-              numberOfCards={numberOfGuesses}
-              isEditable={false}
-            />
-          )}
-          {gameData.state.stage === "gameover" && (
-            <ActionButton
-              onClick={() => console.log("Play again clicked!")}
-              text="Play again"
-            />
-          )}
-        </DashboardSection>
+        {/* Conditionally render based on the stage */}
+        {stage === "intro" && <IntroStage />}
+        {stage === "codemaster" && <CodemasterStage />}
+        {stage === "codebreaker" && <CodebreakerStage />}
+        {stage === "gameover" && <GameoverStage />}
       </DashboardContainer>
     </Grid>
   );
