@@ -1,51 +1,67 @@
 import {
   useQuery,
   UseQueryResult,
+  useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { GameData, Stage } from "@game/game-common-types";
-import { STAGE } from "@game/game-common-constants";
-import {
-  exampleIntroGameState,
-  exampleCodemasterStage,
-  exampleCodebreakerStage,
-  exampleGameOverStage,
-} from "@test/mock-game-data";
+import { GameData, GameState, Settings } from "@game/game-common-types";
+import apis from "src/api";
 
-const fetchStaticGameData = async (stage: Stage): Promise<GameData> => {
-  try {
-    let gameData: GameData;
-    switch (stage) {
-      case STAGE.CODEMASTER:
-        gameData = exampleCodemasterStage;
-        break;
-      case STAGE.CODEBREAKER:
-        gameData = exampleCodebreakerStage;
-        break;
-      case STAGE.INTRO:
-        gameData = exampleIntroGameState;
-        break;
-      case STAGE.GAMEOVER:
-        gameData = exampleGameOverStage;
-        break;
-      default:
-        console.log("Unknown stage");
-        break;
-    }
-    return new Promise((resolve) => {
-      console.log("<--- Fetching game data --->");
-      console.log(gameData);
-      resolve(gameData);
-    });
-  } catch (error) {
-    console.error("Error fetching game data:", error);
-    throw error;
-  }
+// Use this hook to fetch server-synced game data
+export const useGameData = (
+  gameId: string | null
+): UseQueryResult<GameData, Error> => {
+  return useQuery<GameData>({
+    queryKey: ["gameData", gameId],
+    queryFn: () =>
+      gameId ? apis.fetchGame(gameId) : Promise.reject("Game ID is required"), // Fetch from server
+  });
 };
 
-export const useGameData = (stage: Stage): UseQueryResult<GameData, Error> => {
-  return useQuery<GameData>({
-    queryKey: ["game", stage],
-    queryFn: () => fetchStaticGameData(stage),
+// Hook for creating a new game
+export const useCreateNewGame = () => {
+  return useMutation({
+    mutationKey: ["createNewGame"],
+    mutationFn: (payload?: Settings) => apis.createNewGame(payload),
+  });
+};
+
+// Hook for processing a turn
+export const useProcessTurn = ({
+  onSuccess,
+  onError,
+}: {
+  onSuccess?: (updatedGameState: GameState) => void;
+  onError?: (error: any) => void;
+} = {}) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["processTurn"],
+    mutationFn: ({
+      gameId,
+      gameState,
+    }: {
+      gameId: string;
+      gameState: GameState;
+    }) => apis.submitTurn(gameId, gameState),
+    onSuccess: (updatedGameState, { gameId }) => {
+      queryClient.setQueryData(["gameData", gameId], (oldData: GameData) => ({
+        ...oldData,
+        state: updatedGameState,
+      }));
+
+      // Custom onSuccess handler if provided
+      if (onSuccess) {
+        onSuccess(updatedGameState);
+      }
+    },
+    onError: (error) => {
+      console.error("Error submitting turn:", error);
+      // Custom onError handler if provided
+      if (onError) {
+        onError(error);
+      }
+    },
   });
 };
