@@ -24,7 +24,7 @@ const DashboardContainer = styled.div`
 `;
 
 // Components for each game stage
-const IntroStage: React.FC = () => {
+const IntroDashboardView: React.FC = () => {
   const { gameData } = useGameContext();
   const { mutate: processTurn, isError } = useProcessTurn();
   const [actionButtonEnabled, setActionButtonEnabled] = useState(true);
@@ -46,7 +46,34 @@ const IntroStage: React.FC = () => {
   );
 };
 
-const CodemasterStage: React.FC = () => {
+// Components for each game stage
+
+type TransitionDashboardViewProps = {
+  onActionClick: () => void;
+};
+
+const TransitionDashboardView: React.FC<TransitionDashboardViewProps> = ({
+  onActionClick,
+}) => {
+  const [actionButtonEnabled, setActionButtonEnabled] = useState(true);
+
+  const handleClick = () => {
+    setActionButtonEnabled(false);
+    onActionClick();
+  };
+
+  return (
+    <>
+      <ActionButton
+        onClick={handleClick}
+        text="Play"
+        enabled={actionButtonEnabled}
+      />
+    </>
+  );
+};
+
+const CodemasterDashboardView: React.FC = () => {
   const { gameData } = useGameContext();
   const { mutate: processTurn } = useProcessTurn();
 
@@ -71,7 +98,7 @@ const CodemasterStage: React.FC = () => {
   );
 };
 
-const CodebreakerStage: React.FC = () => {
+const CodebreakerDashboardView: React.FC = () => {
   const { gameData } = useGameContext();
   const latestRound = gameData.state.rounds.at(-1);
   const codeWord = latestRound?.codeword || "";
@@ -86,23 +113,34 @@ const CodebreakerStage: React.FC = () => {
   );
 };
 
-const GameoverStage: React.FC = () => (
+const GameoverDashboardView: React.FC = () => (
   <ActionButton
     onClick={() => console.log("Play again clicked!")}
     text="Play again"
   />
 );
 
+type DashboardProps = {
+  dashboardView: Stage | "transition";
+  onActionClick?: () => void;
+};
+
 // Main Dashboard component
-export const Dashboard: React.FC<{ stage: Stage }> = ({ stage }) => {
+export const Dashboard: React.FC<DashboardProps> = ({
+  dashboardView,
+  onActionClick,
+}) => {
   return (
     <Grid>
       <DashboardContainer>
         {/* Conditionally render based on the stage */}
-        {stage === "intro" && <IntroStage />}
-        {stage === "codemaster" && <CodemasterStage />}
-        {stage === "codebreaker" && <CodebreakerStage />}
-        {stage === "gameover" && <GameoverStage />}
+        {dashboardView === "transition" && (
+          <TransitionDashboardView onActionClick={onActionClick} />
+        )}
+        {dashboardView === "intro" && <IntroDashboardView />}
+        {dashboardView === "codemaster" && <CodemasterDashboardView />}
+        {dashboardView === "codebreaker" && <CodebreakerDashboardView />}
+        {dashboardView === "gameover" && <GameoverDashboardView />}
       </DashboardContainer>
     </Grid>
   );
