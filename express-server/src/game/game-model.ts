@@ -6,9 +6,10 @@ import {
   Round,
   GameState,
   GameData,
+  Turn,
 } from "src/game/game-common-types";
 
-import { TEAM, STAGE } from "@game/game-common-constants";
+import { TEAM, STAGE, CODEBREAKER_OUTCOMES } from "@game/game-common-constants";
 
 export interface GameDocument extends Document, GameData {
   _id: string;
@@ -19,12 +20,25 @@ shortid.characters(
   "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@"
 );
 
-// Sub-schema for a game word
+// Sub-schema for a game word (card)
 const CardSchema = new mongoose.Schema<Card>(
   {
     word: { type: String, required: true },
     team: { type: String, required: true, enum: Object.values(TEAM) },
     selected: { type: Boolean, required: true, default: false },
+  },
+  { _id: false }
+);
+
+// Sub-schema for each turn
+const TurnSchema = new mongoose.Schema<Turn>(
+  {
+    guessedWord: { type: String, required: true },
+    outcome: {
+      type: String,
+      required: true,
+      enum: Object.values(CODEBREAKER_OUTCOMES),
+    },
   },
   { _id: false }
 );
@@ -35,7 +49,7 @@ const RoundSchema = new mongoose.Schema<Round>(
     team: { type: String, enum: Object.values(TEAM) },
     codeword: { type: String },
     guessesAllowed: { type: Number },
-    guessedWords: [String],
+    turns: [TurnSchema], // Array of turns for this round
   },
   { _id: false }
 );
