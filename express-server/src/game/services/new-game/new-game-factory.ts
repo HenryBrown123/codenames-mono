@@ -1,4 +1,4 @@
-import { Settings, Team, Card, GameData } from "@game/game-common-types";
+import { Settings, Team, Card, GameData, Round } from "@game/game-common-types";
 import { TEAM, STAGE } from "@game/game-common-constants";
 
 /**
@@ -10,6 +10,7 @@ import { TEAM, STAGE } from "@game/game-common-constants";
 const createGameCards = (settings: Settings, words: string[]): Card[] => {
   const otherTeam = settings.startingTeam == TEAM.RED ? TEAM.GREEN : TEAM.RED;
   const numberOfCardsNonTeam = Math.round((8 / 25) * settings.numberOfCards);
+
   const numberOfCardsStartingTeam = Math.ceil(
     (settings.numberOfCards - numberOfCardsNonTeam) / 2
   );
@@ -17,6 +18,7 @@ const createGameCards = (settings: Settings, words: string[]): Card[] => {
     (settings.numberOfCards - numberOfCardsNonTeam) / 2
   );
   const numberOfCardsAssassins = settings.numberOfAssassins;
+
   const numberOfCardsBystander =
     settings.numberOfCards -
     numberOfCardsStartingTeam -
@@ -56,16 +58,27 @@ const createGameCards = (settings: Settings, words: string[]): Card[] => {
   return gameCards;
 };
 
+/**
+ * Creates the initial game data, including settings, cards, and an initial round.
+ * @param settings - Game settings.
+ * @param words - Array of words to create cards.
+ * @returns GameData object.
+ */
 export const createGameData = (
   settings: Settings,
   words: string[]
 ): GameData => {
+  const initialRound: Round = {
+    team: settings.startingTeam,
+    turns: [],
+  };
+
   return {
     settings,
     state: {
       stage: STAGE.INTRO,
       cards: createGameCards(settings, words),
-      rounds: [{ team: settings.startingTeam }],
+      rounds: [initialRound],
     },
   };
 };
