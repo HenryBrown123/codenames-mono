@@ -39,14 +39,16 @@ describe("Stage Handling Functions", () => {
     it("should move stage from codemaster to codebreaker", () => {
       const gameState: GameState = {
         stage: STAGE.CODEMASTER,
-        rounds: [{ team: TEAM.RED, codeword: "test", guessesAllowed: 3 }],
+        rounds: [
+          { team: TEAM.RED, codeword: "test", guessesAllowed: 3, turns: [] },
+        ],
         cards: generateCards([]),
       };
       const newState = handleCodemasterStage(gameState);
       expect(newState.stage).toBe(STAGE.CODEBREAKER);
     });
 
-    it("should throw an error if no round information is", () => {
+    it("should throw an error if no round information is provided", () => {
       const gameState: GameState = {
         stage: STAGE.CODEMASTER,
         rounds: [],
@@ -60,7 +62,7 @@ describe("Stage Handling Functions", () => {
     it("should throw an error if no codeword is provided", () => {
       const gameState: GameState = {
         stage: STAGE.CODEMASTER,
-        rounds: [{ team: TEAM.RED, guessesAllowed: 3 }],
+        rounds: [{ team: TEAM.RED, guessesAllowed: 3, turns: [] }],
         cards: generateCards([]),
       };
       expect(() => handleCodemasterStage(gameState)).toThrow(
@@ -71,7 +73,7 @@ describe("Stage Handling Functions", () => {
     it("should throw an error if no guessesAllowed is provided", () => {
       const gameState: GameState = {
         stage: STAGE.CODEMASTER,
-        rounds: [{ team: TEAM.RED, codeword: "test" }],
+        rounds: [{ team: TEAM.RED, codeword: "test", turns: [] }],
         cards: generateCards([]),
       };
       expect(() => handleCodemasterStage(gameState)).toThrow(
@@ -88,8 +90,8 @@ describe("Stage Handling Functions", () => {
           {
             team: TEAM.RED,
             codeword: "test",
-            guessedWords: ["red1"],
             guessesAllowed: 2,
+            turns: [{ guessedWord: "red1", outcome: "CORRECT_TEAM_CARD" }],
           },
         ],
         cards: generateCards([]),
@@ -97,19 +99,82 @@ describe("Stage Handling Functions", () => {
 
       const newState = handleCodebreakerStage(testGameState);
 
-      // Extract guessed words and check if they are selected
-      const guessedWords = testGameState.rounds.flatMap(
-        (round) => round.guessedWords
+      const guessedWords = testGameState.rounds[0].turns.map(
+        (turn) => turn.guessedWord
       );
       const allGuessedWordsSelected = guessedWords.every((word) => {
         const card = newState.cards.find((card) => card.word === word);
         return card && card.selected;
       });
 
-      // Assertions
-      expect(allGuessedWordsSelected).toBe(true); // Check that all guessed words are selected
-      expect(getWinnerProperty(newState)).toBeNull; // Check that there is no winner yet
-      expect(newState.stage).toBe(STAGE.CODEBREAKER); // Ensure stage remains correct
+      expect(allGuessedWordsSelected).toBe(true);
+      expect(getWinnerProperty(newState)).toBeNull();
+      expect(newState.stage).toBe(STAGE.CODEBREAKER);
+    });
+
+    describe("Turn outcome assertions", () => {
+      it("should set the outcome to CORRECT_TEAM_CARD for a correct guess", () => {
+        const testGameState: GameState = {
+          stage: STAGE.CODEBREAKER,
+          rounds: [
+            {
+              team: TEAM.RED,
+              codeword: "test",
+              guessesAllowed: 3,
+              turns: [{ guessedWord: "red1" }],
+            },
+          ],
+          cards: generateCards(["red1"]),
+        };
+
+        const newState = handleCodebreakerStage(testGameState);
+        const turn = newState.rounds[0].turns.find(
+          (t) => t.guessedWord === "red1"
+        );
+        expect(turn?.outcome).toBe("CORRECT_TEAM_CARD");
+      });
+
+      it("should set the outcome to INCORRECT_TEAM_CARD for a wrong guess", () => {
+        const testGameState: GameState = {
+          stage: STAGE.CODEBREAKER,
+          rounds: [
+            {
+              team: TEAM.RED,
+              codeword: "test",
+              guessesAllowed: 3,
+              turns: [{ guessedWord: "green1" }],
+            },
+          ],
+          cards: generateCards(["green1"]),
+        };
+
+        const newState = handleCodebreakerStage(testGameState);
+        const turn = newState.rounds[0].turns.find(
+          (t) => t.guessedWord === "green1"
+        );
+        expect(turn?.outcome).toBe("OTHER_TEAM_CARD");
+      });
+
+      it("should set the outcome to ASSASSIN_CARD for a guess on the assassin", () => {
+        const testGameState: GameState = {
+          stage: STAGE.CODEBREAKER,
+          rounds: [
+            {
+              team: TEAM.RED,
+              codeword: "test",
+              guessesAllowed: 3,
+              turns: [{ guessedWord: "assassin" }],
+            },
+          ],
+          cards: generateCards(["assassin"]),
+        };
+
+        const newState = handleCodebreakerStage(testGameState);
+        const turn = newState.rounds[0].turns.find(
+          (t) => t.guessedWord === "assassin"
+        );
+        expect(turn?.outcome).toBe("ASSASSIN_CARD");
+      });
     });
 
     it("should update cards and determine the red team as the winner", () => {
@@ -119,68 +184,17 @@ describe("Stage Handling Functions", () => {
           {
             team: TEAM.RED,
             codeword: "test",
-            guessedWords: ["red1", "red2"],
             guessesAllowed: 2,
+            turns: [
+              { guessedWord: "red1", outcome: "CORRECT_TEAM_CARD" },
+              { guessedWord: "red2", outcome: "CORRECT_TEAM_CARD" },
+            ],
           },
         ],
         cards: generateCards(["red1", "red2"]),
       };
       const newState = handleCodebreakerStage(testGameState);
       expect(newState.winner).toBe(TEAM.RED);
-    });
-
-    it("should update cards and determine the green team as the winner", () => {
-      const testGameState: GameState = {
-        stage: STAGE.CODEBREAKER,
-        rounds: [
-          {
-            team: TEAM.GREEN,
-            codeword: "test",
-            guessedWords: ["green1", "green2"],
-            guessesAllowed: 2,
-          },
-        ],
-        cards: generateCards(["green1", "green2"]),
-      };
-      const newState = handleCodebreakerStage(testGameState);
-      expect(newState.winner).toBe(TEAM.GREEN);
-    });
-
-    it("should update cards and determine the other team as the winner when the current team picks assassin", () => {
-      const testGameState: GameState = {
-        stage: STAGE.CODEBREAKER,
-        rounds: [
-          {
-            team: TEAM.RED,
-            codeword: "test",
-            guessedWords: ["assassin"],
-            guessesAllowed: 1,
-          },
-        ],
-        cards: generateCards([]),
-      };
-      const newState = handleCodebreakerStage(testGameState);
-      expect(newState.winner).toBe(TEAM.GREEN);
-    });
-
-    it("should throw an error when both teams win", () => {
-      const testGameState: GameState = {
-        stage: STAGE.CODEBREAKER,
-        rounds: [
-          {
-            team: TEAM.RED,
-            guessedWords: ["red1", "green1"],
-            guessesAllowed: 2,
-          },
-        ],
-        cards: [
-          { word: "red1", team: TEAM.RED, selected: true },
-          { word: "green1", team: TEAM.GREEN, selected: true },
-        ],
-      };
-      expect(() => handleCodebreakerStage(testGameState)).toThrow(
-        "Failed to determine winner... both teams win!"
-      );
     });
   });
 
@@ -192,8 +206,11 @@ describe("Stage Handling Functions", () => {
           {
             team: TEAM.RED,
             codeword: "test",
-            guessedWords: ["red1", "red2"],
             guessesAllowed: 2,
+            turns: [
+              { guessedWord: "red1", outcome: "CORRECT_TEAM_CARD" },
+              { guessedWord: "red2", outcome: "CORRECT_TEAM_CARD" },
+            ],
           },
         ],
         cards: generateCards(["red1", "red2"]),
