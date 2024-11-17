@@ -1,156 +1,195 @@
-import { Card, Team, GameState } from "@game/game-common-types";
-import { TEAM, STAGE } from "@game/game-common-constants";
-
-/**
- * Lookup for the next turn stages, excluding game winning routes. This controls the game flow between
- * stages. I.e. intro -> codemaster <-> codebreaker (-> gameover)
- */
-const NEXT_TURN = {
-  INTRO: STAGE.CODEMASTER,
-  CODEMASTER: STAGE.CODEBREAKER,
-  CODEBREAKER: STAGE.CODEMASTER,
-} as const;
+import { GameState } from "@game/game-common-types";
+import { STAGE } from "@game/game-common-constants";
+import GameStateProcessor from "./gameplay-state-common";
+import CodebreakerStateProcessor from "./gameplay-state-codebreaker";
 
 /**
  * Processes the 'intro' stage and returns an updated game object.
  *
- * @param {GameData} inputGameState - The current state of the game.
- * @returns {GameData} - The updated game state after processing the intro stage.
+ * @param {GameState} inputGameState - The current state of the game.
+ * @returns {GameState} - The updated game state after processing the intro stage.
  */
 export function processIntroStage(inputGameState: GameState): GameState {
-  const nextState: Partial<GameState> = {
-    stage: NEXT_TURN.INTRO,
-  };
-  return { ...inputGameState, ...nextState };
+  return GameStateProcessor.from(inputGameState)
+    .updateStage(STAGE.CODEMASTER)
+    .finalize();
 }
 
 /**
  * Processes the 'codemaster' stage and returns an updated game object.
  *
- * @param {GameData} inputGameState - The current state of the game.
- * @returns {GameData} - The updated game state after processing the codemaster stage.
+ * @param {GameState} inputGameState - The current state of the game.
+ * @returns {GameState} - The updated game state after processing the codemaster stage.
  */
 export function processCodemasterStage(inputGameState: GameState): GameState {
-  const nextGameState: Partial<GameState> = {
-    stage: NEXT_TURN.CODEMASTER,
-  };
-  return { ...inputGameState, ...nextGameState };
+  return GameStateProcessor.from(inputGameState)
+    .updateStage(STAGE.CODEBREAKER)
+    .finalize();
 }
 
 /**
- * Processes the 'codebreaker' stage and returns an updated game object.
+ * Processes the 'codebreaker' stage and returns an updated game object... uses its own modifier object
+ * due to more state update logic needed, (different strategies for different outcomes)
  *
- * @param {GameData} inputGameState - The current state of the game.
- * @returns {GameData} - The updated game state after processing the codebreaker stage.
+ * @param {GameState} inputGameState - The current state of the game.
+ * @returns {GameState} - The updated game state after processing the codebreaker stage.
  */
 export function processCodebreakerStage(inputGameState: GameState): GameState {
-  // Get relevant details for the current round from the input object
-  const lastRound = inputGameState.rounds.at(-1);
-  const selectedWord = lastRound?.guessedWords.at(-1);
-  const currentTeam = lastRound?.team;
-  const otherTeam = currentTeam === TEAM.RED ? TEAM.GREEN : TEAM.RED;
-
-  // Update the "selected" property of the corresponding card in the cards array
-  const updatedCards = inputGameState.cards.map((card) =>
-    card.word === selectedWord ? { ...card, selected: true } : card
-  );
-
-  // Updated game object for merging with input game object
-  const nextGameState: Partial<GameState> = {
-    ...inputGameState,
-    cards: updatedCards,
-  };
-
-  // Determine if there's a winning team based on the selected card(s).
-  const determinedWinner = determineWinner(updatedCards);
-  const actualWinningTeam =
-    determinedWinner === TEAM.ASSASSIN ? otherTeam : determinedWinner;
-
-  if (actualWinningTeam) {
-    nextGameState.stage = STAGE.GAMEOVER;
-    nextGameState.winner = actualWinningTeam;
-    return { ...inputGameState, ...nextGameState };
-  }
-
-  const numberOfGuessesRemaining =
-    (lastRound?.guessesAllowed || 0) - (lastRound?.guessedWords.length || 0);
-
-  if (numberOfGuessesRemaining === 0) {
-    nextGameState.stage = NEXT_TURN.CODEBREAKER;
-    nextGameState.rounds = [...inputGameState.rounds, { team: otherTeam }];
-    return { ...inputGameState, ...nextGameState };
-  }
-
-  // Determine whether the last selected card is for the current team
-  const isCardForCurrentTeam = nextGameState.cards?.some(
-    (card) =>
-      card.selected &&
-      card.team === lastRound?.team &&
-      card.word === selectedWord
-  );
-
-  // if the correct team, proceed with next codebreaker turn, otherwise, new round for codemaster
-
-  if (isCardForCurrentTeam) {
-    return { ...inputGameState, ...nextGameState };
-  }
-
-  nextGameState.stage = NEXT_TURN.CODEMASTER;
-  nextGameState.rounds = [...inputGameState.rounds, { team: otherTeam }];
-
-  return { ...inputGameState, ...nextGameState };
+  return CodebreakerStateProcessor.from(inputGameState)
+    .markCardAsSelected()
+    .updateTurnOutcome() // Determine and store the outcome of the turn
+    .executeCodebreakerTurnStrategy() // Apply strategy logic based on the turn outcome
+    .finalize();
 }
 
-/**
- * Determines the winner based on the selected cards.
- *
- * @param {Card[]} cardArray - The array of cards in the game state.
- * @returns {Team | null} - The winning team ('red' or 'green') or null if no winner.
- * @throws {Error} - If its determined that both teams win.
- */
-function determineWinner(cardArray: Card[]): Team | null {
-  // .reduce() to prevent unnecessary iterations of the array
-  const counts = cardArray.reduce(
-    (acc, card) => {
-      if (card.team === TEAM.GREEN) acc.totalGreen += 1;
-      if (card.team === TEAM.RED) acc.totalRed += 1;
-      if (card.team === TEAM.ASSASSIN) acc.totalAssassin += 1;
-      if (card.selected && card.team === TEAM.GREEN) acc.greenScore += 1;
-      if (card.selected && card.team === TEAM.RED) acc.redScore += 1;
-      if (card.selected && card.team === TEAM.ASSASSIN) acc.assassinScore += 1;
-      return acc;
-    },
-    {
-      totalGreen: 0,
-      totalRed: 0,
-      totalAssassin: 0,
-      greenScore: 0,
-      redScore: 0,
-      assassinScore: 0,
-    }
-  );
+/*
 
-  const {
-    totalGreen,
-    totalRed,
-    totalAssassin,
-    greenScore,
-    redScore,
-    assassinScore,
-  } = counts;
-
-  if (redScore === totalRed && greenScore === totalGreen) {
-    throw new Error("Failed to determine winner... both teams win!");
+{
+  "success": true,
+  "game": {
+    "stage": "codebreaker",
+    "cards": [
+      {
+        "word": "Coop",
+        "team": "red",
+        "selected": false
+      },
+      {
+        "word": "Bruise",
+        "team": "red",
+        "selected": false
+      },
+      {
+        "word": "Aristocrat",
+        "team": "bystander",
+        "selected": false
+      },
+      {
+        "word": "Chef",
+        "team": "assassin",
+        "selected": false
+      },
+      {
+        "word": "Thief",
+        "team": "green",
+        "selected": false
+      },
+      {
+        "word": "Pendulum",
+        "team": "green",
+        "selected": false
+      },
+      {
+        "word": "Elm",
+        "team": "bystander",
+        "selected": false
+      },
+      {
+        "word": "Loyalty",
+        "team": "red",
+        "selected": false
+      },
+      {
+        "word": "Battery",
+        "team": "bystander",
+        "selected": false
+      },
+      {
+        "word": "Shampoo",
+        "team": "red",
+        "selected": false
+      },
+      {
+        "word": "Tinting",
+        "team": "green",
+        "selected": false
+      },
+      {
+        "word": "Queen",
+        "team": "red",
+        "selected": false
+      },
+      {
+        "word": "Hatch",
+        "team": "green",
+        "selected": false
+      },
+      {
+        "word": "Aisle",
+        "team": "red",
+        "selected": false
+      },
+      {
+        "word": "Nest",
+        "team": "red",
+        "selected": false
+      },
+      {
+        "word": "Baby-Sitter",
+        "team": "bystander",
+        "selected": false
+      },
+      {
+        "word": "Money",
+        "team": "bystander",
+        "selected": false
+      },
+      {
+        "word": "Mold",
+        "team": "green",
+        "selected": false
+      },
+      {
+        "word": "Tree",
+        "team": "green",
+        "selected": false
+      },
+      {
+        "word": "Salt",
+        "team": "green",
+        "selected": false
+      },
+      {
+        "word": "Ligament",
+        "team": "bystander",
+        "selected": false
+      },
+      {
+        "word": "Broken",
+        "team": "green",
+        "selected": false
+      },
+      {
+        "word": "Riddle",
+        "team": "red",
+        "selected": false
+      },
+      {
+        "word": "Speakers",
+        "team": "red",
+        "selected": true
+      },
+      {
+        "word": "Whiplash",
+        "team": "bystander",
+        "selected": false
+      }
+    ],
+    "rounds": [
+      {
+        "team": "red",
+        "codeword": "testicle",
+        "guessesAllowed": 3,
+        "turns": [
+          {
+            "guessedWord": "Speakers",
+            "outcome": "CORRECT_TEAM_CARD"
+          }
+        ]
+      }
+    ]
   }
-
-  // all assassins selected (normally only a single assassin)
-  if (totalAssassin === assassinScore) {
-    return TEAM.ASSASSIN;
-  }
-
-  return redScore === totalRed
-    ? TEAM.RED
-    : greenScore === totalGreen
-    ? TEAM.GREEN
-    : null;
 }
+
+
+*/
