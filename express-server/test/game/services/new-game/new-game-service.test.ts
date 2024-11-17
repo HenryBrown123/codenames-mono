@@ -36,95 +36,98 @@ jest.mock("@game/word/word-ctrl", () => ({
 }));
 
 describe("createNewGame", () => {
-  it("should create a new game with default numberOfCards", async () => {
-    const gameDocument = await createNewGame();
-    expect(gameDocument.settings.numberOfCards).toBe(25);
+  describe("Default settings", () => {
+    it("should create a new game with the correct number of cards", async () => {
+      const gameDocument = await createNewGame();
+      expect(gameDocument.state.cards.length).toBe(25);
+    });
+
+    it("should distribute cards correctly (default settings)", async () => {
+      const gameDocument = await createNewGame();
+      const startingTeamCount = gameDocument.state.cards.filter(
+        (card) => card.team === TEAM.RED
+      ).length;
+      const otherTeamCount = gameDocument.state.cards.filter(
+        (card) => card.team === TEAM.GREEN
+      ).length;
+      const assassinCount = gameDocument.state.cards.filter(
+        (card) => card.team === TEAM.ASSASSIN
+      ).length;
+      const bystanderCount = gameDocument.state.cards.filter(
+        (card) => card.team === TEAM.BYSTANDER
+      ).length;
+
+      expect(startingTeamCount).toBe(9); // Starting team
+      expect(otherTeamCount).toBe(8); // Other team
+      expect(assassinCount).toBe(1); // Assassin
+      expect(bystanderCount).toBe(7); // Bystanders
+    });
+
+    it("should create a new game with default startingTeam", async () => {
+      const gameDocument = await createNewGame();
+      expect(gameDocument.state.rounds.at(-1).team).toBe(TEAM.RED);
+    });
+
+    it("should call save on the game document", async () => {
+      const gameDocument = await createNewGame();
+      expect(gameDocument.save).toHaveBeenCalled();
+    });
   });
 
-  it("should create a new game with default startingTeam", async () => {
-    const gameDocument = await createNewGame();
-    expect(gameDocument.state.rounds.at(-1).team).toBe(TEAM.RED);
-  });
-
-  it("should create a new game with default numberOfAssassins", async () => {
-    const gameDocument = await createNewGame();
-    const numberOfAssassins = gameDocument.state.cards.filter(
-      (card) => card.team === TEAM.ASSASSIN
-    ).length;
-    expect(numberOfAssassins).toBe(1);
-  });
-
-  it("should call save on the game document", async () => {
-    const gameDocument = await createNewGame();
-    expect(gameDocument.save).toHaveBeenCalled();
-  });
-
-  it("should match expected game data with game created with default settings", async () => {
-    const gameDocument = await createNewGame();
-    expect(gameDocument).toMatchObject(expectedGameDataDefault);
-  });
-
-  it("should create a new game with the number of cards specified in custom game settings", async () => {
+  describe("Custom settings", () => {
     const customSettings = {
       numberOfCards: 30,
       startingTeam: TEAM.GREEN,
       numberOfAssassins: 2,
     };
-    const gameDocument = await createNewGame(customSettings);
-    expect(gameDocument.state.cards.length).toBe(30);
+
+    it("should create a new game with the correct number of cards (custom settings)", async () => {
+      const gameDocument = await createNewGame(customSettings);
+      expect(gameDocument.state.cards.length).toBe(30);
+    });
+
+    it("should distribute cards correctly (custom settings)", async () => {
+      const gameDocument = await createNewGame(customSettings);
+      const startingTeamCount = gameDocument.state.cards.filter(
+        (card) => card.team === TEAM.GREEN
+      ).length;
+      const otherTeamCount = gameDocument.state.cards.filter(
+        (card) => card.team === TEAM.RED
+      ).length;
+      const assassinCount = gameDocument.state.cards.filter(
+        (card) => card.team === TEAM.ASSASSIN
+      ).length;
+      const bystanderCount = gameDocument.state.cards.filter(
+        (card) => card.team === TEAM.BYSTANDER
+      ).length;
+
+      expect(startingTeamCount).toBe(10);
+      expect(otherTeamCount).toBe(10);
+      expect(assassinCount).toBe(2);
+      expect(bystanderCount).toBe(8);
+    });
+
+    it("should assign the correct starting team in rounds", async () => {
+      const gameDocument = await createNewGame(customSettings);
+      expect(gameDocument.settings.startingTeam).toBe(TEAM.GREEN);
+      expect(gameDocument.state.rounds[0].team).toBe(TEAM.GREEN);
+    });
+
+    it("should call save on the game document", async () => {
+      const gameDocument = await createNewGame(customSettings);
+      expect(gameDocument.save).toHaveBeenCalled();
+    });
   });
 
-  it("should create a new game with custom startingTeam", async () => {
-    const customSettings = {
-      numberOfCards: 30,
-      startingTeam: TEAM.GREEN,
-      numberOfAssassins: 2,
-    };
-    const gameDocument = await createNewGame(customSettings);
-    expect(gameDocument.state.rounds.at(-1).team).toBe(TEAM.GREEN);
-  });
+  describe("Error handling", () => {
+    it("should handle errors correctly when word generation fails", async () => {
+      (
+        getRandomWords as jest.MockedFunction<typeof getRandomWords>
+      ).mockRejectedValueOnce(new Error("Failed to get words"));
 
-  it("should create a new game with custom numberOfAssassins", async () => {
-    const customSettings = {
-      numberOfCards: 30,
-      startingTeam: TEAM.GREEN,
-      numberOfAssassins: 2,
-    };
-    const gameDocument = await createNewGame(customSettings);
-    const numberOfAssassins = gameDocument.state.cards.filter(
-      (card) => card.team === TEAM.ASSASSIN
-    ).length;
-
-    expect(numberOfAssassins).toBe(2);
-  });
-
-  it("should call save on the game document with custom settings", async () => {
-    const customSettings = {
-      numberOfCards: 30,
-      startingTeam: TEAM.GREEN,
-      numberOfAssassins: 2,
-    };
-    const gameDocument = await createNewGame(customSettings);
-    expect(gameDocument.save).toHaveBeenCalled();
-  });
-
-  it("should match expected game data with game created with custom settings", async () => {
-    const customSettings = {
-      numberOfCards: 30,
-      startingTeam: TEAM.GREEN,
-      numberOfAssassins: 2,
-    };
-    const gameDocument = await createNewGame(customSettings);
-    expect(gameDocument).toMatchObject(expectedGameDataCustom);
-  });
-
-  it("should handle errors correctly", async () => {
-    (
-      getRandomWords as jest.MockedFunction<typeof getRandomWords>
-    ).mockRejectedValueOnce(new Error("Failed to get words"));
-
-    await expect(createNewGame()).rejects.toThrow(
-      "Failed to create new game: Failed to get words"
-    );
+      await expect(createNewGame()).rejects.toThrow(
+        "Failed to create new game: Failed to get words"
+      );
+    });
   });
 });
