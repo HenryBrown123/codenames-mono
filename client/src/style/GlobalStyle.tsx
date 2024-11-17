@@ -17,8 +17,8 @@ export const GlobalStyle = createGlobalStyle<{ theme: ThemeType }>`
     --color-secondary: ${({ theme }) => theme.secondary};
     --color-card: ${({ theme }) => theme.card};
     --color-dashboard: ${({ theme }) => theme.dashboard};
-    --color-team1: ${({ theme }) => theme.team1};
-    --color-team2: ${({ theme }) => theme.team2};
+    --color-team1: ${({ theme }) => theme.team1} | "red";
+    --color-team2: ${({ theme }) => theme.team2} | "green";
     --color-background-size: "cover"
   }
 
@@ -60,8 +60,8 @@ export const lightTheme: ThemeType = {
   secondary: "#a6eb25ba",
   card: "#00000096",
   dashboard: "#1a1a1a",
-  team1: "#5050eae2",
-  team2: "#ea4b4b",
+  team1: "#ae3751e1",
+  team2: "rgb(71 134 64)",
   error: "#cc2e2e",
   primaryHover: "#3b954f",
   buttonText: "white",
@@ -81,8 +81,8 @@ export const darkTheme: ThemeType = {
   secondary: "#7bcf22",
   card: "#2e2e2e",
   dashboard: "#1a1a1a",
-  team1: "#3030d4",
-  team2: "#d44141",
+  team1: "#ae3751e1",
+  team2: "rgb(71 134 64)",
   error: "#cc2e2e",
   primaryHover: "#176c3c",
   buttonText: "white",
