@@ -26,6 +26,11 @@ export const generateCards = (selectedWords: string[]): Card[] => {
       team: TEAM.ASSASSIN,
       selected: selectedWords.includes("assassin"),
     },
+    {
+      word: "bystander",
+      team: TEAM.BYSTANDER,
+      selected: selectedWords.includes("bystander"),
+    },
   ];
 };
 export const hasWinner = (inputGameState: GameState): boolean => {
