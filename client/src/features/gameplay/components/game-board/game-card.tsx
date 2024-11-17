@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { FaStar, FaLeaf, FaSkull, FaPeace } from "react-icons/fa";
 
@@ -83,9 +83,7 @@ const CardContainer = styled.div`
 const Card = styled.button<CardProps>`
   ${sharedCardStyles}
   background-color: ${(props) =>
-    props.codemasterView && props.backColour
-      ? props.backColour
-      : FRONT_CARD_COLOUR};
+    props.backColour ? props.backColour : FRONT_CARD_COLOUR};
   transition: transform 0.2s;
 
   &:hover {
@@ -139,28 +137,31 @@ const CornerIcon = styled.div`
   }
 `;
 
-interface GameCardProps {
+export interface GameCardProps {
   cardText: string;
   cardColor?: string;
-  codemasterView: boolean;
+  showTeamColorAsBackground: boolean;
   clickable: boolean;
   selected?: boolean;
+  onClick?: () => void;
 }
 
 const GameCard: React.FC<GameCardProps> = (props) => {
   const {
     cardText,
     cardColor,
-    codemasterView,
+    showTeamColorAsBackground,
     clickable,
     selected: initialSelected,
+    onClick,
   } = props;
 
   const [selected, setSelected] = useState(initialSelected || false);
 
   const handleClick = () => {
-    if (clickable) {
+    if (clickable && onClick) {
       setSelected(true);
+      onClick();
     }
   };
 
@@ -169,8 +170,7 @@ const GameCard: React.FC<GameCardProps> = (props) => {
       <Card
         onClick={clickable && !selected ? handleClick : undefined}
         clickable={clickable}
-        backColour={cardColor}
-        codemasterView={codemasterView}
+        backColour={showTeamColorAsBackground ? cardColor : FRONT_CARD_COLOUR}
         aria-label={`Card with text ${cardText}`}
       >
         <CardContent selected={selected}>{cardText}</CardContent>

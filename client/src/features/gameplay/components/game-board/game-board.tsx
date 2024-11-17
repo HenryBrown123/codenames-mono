@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
 import styled from "styled-components";
 import GameCard from "./game-card";
-import { TEAM, STAGE } from "@game/game-common-constants";
-import { Team, GameData, Stage, Card } from "@game/game-common-types";
+import { STAGE } from "@game/game-common-constants";
+import { GameData, Card, Stage } from "@game/game-common-types";
+import { useProcessTurn } from "@game/api";
+import { useGameplayContext } from "@game/context";
+import { getGameCardProps } from "./game-board-utils";
 
 const Grid = styled.div`
   height: calc(100% - 50px); // Adjust to leave space for the dashboard
@@ -30,66 +33,155 @@ const GameCardContainer = styled.div`
   align-items: center;
 `;
 
-const getCardColor = (team: Team): string => {
-  switch (team) {
-    case TEAM.ASSASSIN:
-      return "#1d2023";
-    case TEAM.BYSTANDER:
-      return "#4169E1";
-    case TEAM.RED:
-      return "#B22222";
-    case TEAM.GREEN:
-      return "#228B22";
-    default:
-      console.warn("Unknown team:", team);
-      return "#4b7fb3";
-  }
+// Reusable card rendering logic
+
+type RenderCardsProps = {
+  cards: Card[];
+  stage: Stage;
+  readOnly?: boolean;
+  handleCardClick?: (cardData: Card) => void;
 };
 
-type GameBoardProps = {
-  gameData: GameData;
-  flipUnselectedCards?: boolean;
-};
+const RenderCards: React.FC<RenderCardsProps> = ({
+  cards,
+  stage,
+  readOnly,
+  handleCardClick,
+}) => (
+  <CardsContainer aria-label="game board container with 25 cards">
+    {cards.map((cardData) => {
+      const gameCardProps = getGameCardProps(cardData, stage, readOnly, () =>
+        handleCardClick(cardData)
+      );
+      return (
+        <GameCardContainer
+          aria-label={`card for word: ${cardData.word}`}
+          key={cardData.word}
+        >
+          <GameCard {...gameCardProps} />
+        </GameCardContainer>
+      );
+    })}
+  </CardsContainer>
+);
 
-const getGameCardProps = (
-  cardData: Card,
-  gameStage: Stage,
-  flipUnselectedCards: boolean
-) => {
-  return {
-    cardText: cardData.word,
-    cardColor: getCardColor(cardData.team),
-    clickable: gameStage === STAGE.CODEBREAKER && !cardData.selected,
-    codemasterView: flipUnselectedCards,
-    selected: cardData.selected,
-  };
-};
-
-const GameBoard: React.FC<GameBoardProps> = ({
+// Game board stages
+const CodebreakerStageBoard: React.FC<{ gameData: GameData }> = ({
   gameData,
-  flipUnselectedCards = false,
 }) => {
-  const allCards = gameData.state.cards.map((cardData) => {
-    const gameCardProps = getGameCardProps(
-      cardData,
-      gameData.state.stage,
-      flipUnselectedCards
-    );
-    return (
-      <GameCardContainer
-        aria-label={`gamecard-container for word: ${cardData.word}`}
-        key={cardData.word}
-      >
-        <GameCard {...gameCardProps} />
-      </GameCardContainer>
-    );
-  });
+  const { mutate: processTurn } = useProcessTurn();
+  const { dispatch } = useGameplayContext();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleCardClick = useCallback(
+    (cardData: Card) => {
+      if (!cardData.selected && !isProcessing) {
+        setIsProcessing(true);
+
+        // Update the selected card
+        const updatedCards = gameData.state.cards.map((card) =>
+          card.word === cardData.word
+            ? { ...card, selected: true }
+            : { ...card }
+        );
+
+        // Add the guessed word to the last round's turns
+        const updatedRounds = [...gameData.state.rounds];
+        const lastRound = updatedRounds.at(-1);
+
+        if (lastRound) {
+          lastRound.turns = [
+            ...(lastRound.turns || []),
+            { guessedWord: cardData.word },
+          ];
+        }
+
+        // Update the game state
+        const updatedGameState = {
+          ...gameData.state,
+          cards: updatedCards,
+          rounds: updatedRounds,
+        };
+
+        processTurn(
+          { gameId: gameData._id, gameState: updatedGameState },
+          {
+            onSuccess: (returnedGameState) => {
+              setIsProcessing(false);
+
+              if (updatedGameState.stage !== returnedGameState.stage) {
+                dispatch({ type: "PAUSE_GAMEPLAY" });
+              }
+            },
+          }
+        );
+      }
+    },
+    [gameData, isProcessing, processTurn]
+  );
 
   return (
+    <RenderCards
+      cards={gameData.state.cards}
+      stage={gameData.state.stage}
+      handleCardClick={handleCardClick}
+    />
+  );
+};
+
+const CodemasterStageBoard: React.FC<{ gameData: GameData }> = ({
+  gameData,
+}) => (
+  <RenderCards
+    cards={gameData.state.cards}
+    stage={gameData.state.stage}
+    handleCardClick={() => {}}
+  />
+);
+
+const ReadOnlyBoard: React.FC<{ gameData: GameData }> = ({ gameData }) => (
+  <RenderCards
+    cards={gameData.state.cards}
+    stage={gameData.state.stage}
+    readOnly={true}
+    handleCardClick={() => {}}
+  />
+);
+
+const DefaultStageBoard: React.FC<{ gameData: GameData }> = ({ gameData }) => (
+  <RenderCards
+    cards={gameData.state.cards}
+    stage={gameData.state.stage}
+    handleCardClick={() => {}}
+  />
+);
+
+// Main GameBoard component
+interface GameBoardProps {
+  gameData: GameData;
+  readOnly: boolean;
+}
+
+const GameBoard: React.FC<GameBoardProps> = ({ gameData, readOnly }) => {
+  if (readOnly) {
+    return (
+      <Grid aria-label="game board wrapper">
+        <ReadOnlyBoard gameData={gameData} />
+      </Grid>
+    );
+  }
+  return (
     <Grid aria-label="game board wrapper">
-      <CardsContainer aria-label="game board container with 25 cards">
-        {allCards}
-      </CardsContainer>
+      {gameData.state.stage === STAGE.CODEBREAKER && (
+        <CodebreakerStageBoard gameData={gameData} />
+      )}
+      {gameData.state.stage === STAGE.CODEMASTER && (
+        <CodemasterStageBoard gameData={gameData} />
+      )}
+      {gameData.state.stage !== STAGE.CODEBREAKER &&
+        gameData.state.stage !== STAGE.CODEMASTER && (
+          <DefaultStageBoard gameData={gameData} />
+        )}
     </Grid>
   );
 };
