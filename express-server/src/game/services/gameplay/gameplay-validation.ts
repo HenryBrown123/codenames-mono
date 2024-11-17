@@ -52,19 +52,19 @@ export function validateCodebreakerStage(inputGameState: GameState): void {
     throw new Error("No round information found");
   }
 
-  const guessedWords = latestRound.guessedWords;
+  if (!latestRound.turns || latestRound.turns.length === 0) {
+    throw new Error("No turns found in the latest round.");
+  }
 
-  if (!guessedWords || guessedWords.length == 0) {
-    throw new Error("No guessed words against current round");
+  const latestTurn = latestRound.turns.at(-1);
+
+  if (!latestTurn || !latestTurn.guessedWord) {
+    throw new Error("The latest turn must have a guessed word.");
   }
 
   const wordsInCards = inputGameState.cards.map((card) => card.word);
 
-  const wordsNotFound = guessedWords.some(
-    (word) => !wordsInCards.includes(word)
-  );
-
-  if (wordsNotFound) {
+  if (!wordsInCards.includes(latestTurn.guessedWord)) {
     throw new Error("Guessed word not found in cards");
   }
 }
