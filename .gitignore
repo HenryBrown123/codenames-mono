@@ -11,3 +11,4 @@ client/.env
 .prettierrc
 launch.json
 package.json
+client/cypress/screenshots/*
