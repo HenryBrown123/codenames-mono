@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
-import { FaStar, FaLeaf, FaSkull, FaPeace } from "react-icons/fa";
+import { FaStar, FaLeaf, FaSkull, FaPeace, FaLess } from "react-icons/fa";
 
 const FRONT_CARD_COLOUR = "#494646";
 
@@ -151,7 +151,7 @@ const GameCard: React.FC<GameCardProps> = (props) => {
     cardText,
     cardColor,
     showTeamColorAsBackground,
-    clickable,
+    clickable = false,
     selected: initialSelected,
     onClick,
   } = props;

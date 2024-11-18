@@ -1,23 +1,5 @@
-import React, { useContext, createContext, ReactNode, useState } from "react";
-import { useGameData } from "@game/api";
-import { GameData, Stage } from "@game/game-common-types";
-
-/**
- * Main game context hook, providing game state managed by React context.
- *
- * @returns {GameData} - The current game data from context, or null if no game data is available.
- */
-
-interface GameContextProps {
-  gameData: GameData;
-}
-
-export const GameContext = createContext<GameContextProps | null>(null);
-
-interface GameContextProviderProps {
-  children: ReactNode;
-  value: GameContextProps;
-}
+import { useContext, createContext, ReactNode } from "react";
+import { GameData } from "@game/game-common-types";
 
 /**
  * GameContextProvider component to wrap around the application's component tree.
@@ -48,3 +30,14 @@ export const useGameContext = (): GameContextProps | null => {
 
   return context;
 };
+
+export const GameContext = createContext<GameContextProps | null>(null);
+
+interface GameContextProps {
+  gameData: GameData;
+}
+
+interface GameContextProviderProps {
+  children: ReactNode;
+  value: GameContextProps;
+}

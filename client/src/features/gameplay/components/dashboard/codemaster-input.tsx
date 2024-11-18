@@ -52,7 +52,7 @@ const UnderlinedTextInput = styled.input<{ isError: boolean }>`
   text-align: center;
   width: auto;
   min-width: 60px;
-  color: ${({ theme }) => theme.text}; // Theme-based text color
+  color: ${({ theme }) => theme.text};
 
   &:focus {
     border-bottom: 2px solid
@@ -65,14 +65,14 @@ const UnderlinedNumberInput = styled(UnderlinedTextInput)`
 `;
 
 const ErrorMessage = styled.div`
-  color: white; // Theme-based error color
+  color: white;
   font-size: clamp(1rem, 2vw, 1.5rem);
   width: 100%;
   text-align: center;
   margin-top: 1rem;
   margin-bottom: 1rem;
   order: 1;
-  background-color: ${({ theme }) => theme.error}; // Theme-based error color
+  background-color: ${({ theme }) => theme.error};
 `;
 
 const ButtonWrapper = styled.div`
@@ -85,9 +85,8 @@ const ButtonWrapper = styled.div`
 
 const StyledActionButton = styled(ActionButton)`
   font-size: clamp(1rem, 2vw, 1.5rem);
-  background-color: ${({ theme }) =>
-    theme.primary}; // Theme-based primary color
-  color: ${({ theme }) => theme.buttonText}; // Theme-based button text color
+  background-color: ${({ theme }) => theme.primary};
+  color: ${({ theme }) => theme.buttonText};
 `;
 
 type CodeWordInputProps = {

@@ -7,7 +7,6 @@ import {
 import { GameData, GameState, Settings } from "@game/game-common-types";
 import apis from "src/api";
 
-// Use this hook to fetch server-synced game data
 export const useGameData = (
   gameId: string | null
 ): UseQueryResult<GameData, Error> => {
@@ -51,14 +50,12 @@ export const useProcessTurn = ({
         state: updatedGameState,
       }));
 
-      // Custom onSuccess handler if provided
       if (onSuccess) {
         onSuccess(updatedGameState);
       }
     },
     onError: (error) => {
       console.error("Error submitting turn:", error);
-      // Custom onError handler if provided
       if (onError) {
         onError(error);
       }
