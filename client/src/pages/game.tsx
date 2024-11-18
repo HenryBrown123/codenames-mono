@@ -1,15 +1,17 @@
 import React, { ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
-import { Dashboard, GameBoard, LoadingSpinner } from "@game/components";
+import { useGameData } from "@game/api";
+
 import {
   GameContextProvider,
   GameplayContextProvider,
   useGameplayContext,
 } from "@game/context";
-import { useGameData } from "@game/api";
+
 import GameInstructions from "@game/components/game-instructions/game-instructions";
-import { GameData } from "@game/game-common-types";
+import { uiConfig } from "@game/ui-stage-scene-config";
+import { LoadingSpinner } from "@game/components";
 import { Menu } from "./menu";
 
 const GameLayout: React.FC<{ children: ReactNode }> = ({ children }) => (
@@ -21,22 +23,18 @@ const GameLayout: React.FC<{ children: ReactNode }> = ({ children }) => (
   </GameWrapper>
 );
 
-const CodeNamesGame: React.FC = () => {
-  const { gameId } = useParams<{ gameId: string }>();
+type CodenamesGameProps = {
+  gameId: string;
+};
+
+const CodeNamesGame: React.FC<CodenamesGameProps> = (props) => {
+  const { gameId } = props;
   const {
     data: gameData,
     error,
     isLoading,
     isRefetching,
   } = useGameData(gameId);
-
-  const { showGameplay, dispatch } = useGameplayContext();
-
-  const instructionMessageText = gameData
-    ? getMessage(gameData, showGameplay ? "main" : "transition")
-    : null;
-
-  const displayInstructions = !!instructionMessageText;
 
   if (isLoading || isRefetching) {
     return (
@@ -55,43 +53,42 @@ const CodeNamesGame: React.FC = () => {
     );
   }
 
-  const displayDashboard = true;
-  const dashBoardView = !showGameplay ? "transition" : gameData.state.stage;
+  return (
+    <GameplayContextProvider currentGameStage={gameData.state.stage}>
+      <GameContextProvider value={{ gameData: gameData }}>
+        <GameContent gameData={gameData} />
+      </GameContextProvider>
+    </GameplayContextProvider>
+  );
+};
+
+const GameContent: React.FC<{ gameData: any }> = ({ gameData }) => {
+  const { currentStage, currentSceneIndex } = useGameplayContext();
+
+  // Get the current stage and scene from the uiConfig
+  const stageConfig = uiConfig[currentStage];
+  const currentSceneName = stageConfig.sceneOrder[currentSceneIndex];
+  const currentScene = stageConfig.scenes[currentSceneName];
 
   return (
-    <GameContextProvider value={{ gameData: gameData }}>
-      <GameLayout>
-        {displayInstructions && (
-          <InstructionsContainer>
-            <GameInstructions messageText={instructionMessageText} />
-          </InstructionsContainer>
-        )}
-        <GameBoardContainer>
-          <GameBoard gameData={gameData} readOnly={!showGameplay} />
-        </GameBoardContainer>
-        {displayDashboard && (
-          <DashboardContainer>
-            <Dashboard
-              dashboardView={dashBoardView}
-              onActionClick={
-                dashBoardView === "transition"
-                  ? () => dispatch({ type: "START_GAMEPLAY" })
-                  : undefined
-              }
-            />
-          </DashboardContainer>
-        )}
-      </GameLayout>
-    </GameContextProvider>
+    <GameLayout>
+      {currentScene.message(gameData) && (
+        <InstructionsContainer>
+          <GameInstructions messageText={currentScene.message(gameData)} />
+        </InstructionsContainer>
+      )}
+      <GameBoardContainer>
+        {currentScene.gameBoard(gameData)}
+      </GameBoardContainer>
+      <DashboardContainer>{currentScene.dashboard()}</DashboardContainer>
+    </GameLayout>
   );
 };
 
 export const Game: React.FC = () => {
-  return (
-    <GameplayContextProvider>
-      <CodeNamesGame />
-    </GameplayContextProvider>
-  );
+  const { gameId } = useParams<{ gameId: string }>();
+
+  return <CodeNamesGame gameId={gameId} />;
 };
 
 // Styled Components with Background Image
@@ -226,29 +223,3 @@ const LoadingContainer = styled.div`
   border-radius: 16px;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 `;
-
-// Utility function to display different messages based on game stage
-const getMessage = (
-  gameData: GameData,
-  messageType: "main" | "transition"
-): string => {
-  const messages = {
-    intro: {
-      transition: `Welcome to the game! Before clicking 'Play', pass the device to the codemaster of the ${gameData?.settings.startingTeam} team so they can view all the colours without the codebreakers spying... good luck!`,
-    },
-    codemaster: {
-      transition: "Codemaster's turn is starting.",
-      main: "Enter a codeword and the number of cards associated to the codeword.",
-    },
-    codebreaker: {
-      transition: "Codebreaker is ready.",
-      main: "Pick your cards from the codeword.",
-    },
-    gameover: {
-      transition: "Game over message.",
-      main: `Game over, ${gameData.state.winner} wins!`,
-    },
-  };
-
-  return messages[gameData?.state?.stage][messageType] || "";
-};
