@@ -127,9 +127,24 @@ export default class CodebreakerStateProcessor extends GameStateProcessor {
   }
 
   private handleCorrectTeamCard(): void {
+    const currentRound = this.lastRound;
+
+    if (!currentRound) {
+      throw new Error("No active round found.");
+    }
+
+    if (currentRound.turns.length >= (currentRound.guessesAllowed ?? 0) + 1) {
+      this.addNewRound(this.otherTeam!);
+      this.gameState.stage = STAGE.CODEMASTER;
+      return;
+    }
+
     if (this.selectedCardsForTeam === this.totalCardsForTeam) {
       this.setGameOver(this.currentTeam!);
+      return;
     }
+
+    // Default: allow more guesses
   }
 
   private handleBystanderCard(): void {
