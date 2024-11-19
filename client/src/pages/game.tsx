@@ -126,6 +126,7 @@ const GameContainer = styled.div`
 
 const InstructionsContainer = styled.div`
   width: 90%;
+  height: 20vh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -136,7 +137,6 @@ const InstructionsContainer = styled.div`
   background-color: rgba(65, 63, 63, 0.8);
   border-radius: 16px;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-  max-height: 200px;
   overflow-y: auto;
   word-wrap: break-word;
   text-overflow: ellipsis;
@@ -149,7 +149,7 @@ const InstructionsContainer = styled.div`
 
 const DashboardContainer = styled.div`
   width: 90%;
-  flex: 1.5;
+  height: 20vh;
   display: flex;
   justify-content: center;
   flex-direction: column;
@@ -161,7 +161,7 @@ const DashboardContainer = styled.div`
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 
   @media (max-width: 768px) {
-    flex: 1.5;
+    height: 25vh;
   }
 `;
 
