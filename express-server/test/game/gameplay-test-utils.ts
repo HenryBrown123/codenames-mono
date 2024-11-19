@@ -11,6 +11,7 @@ export const generateCards = (selectedWords: string[]): Card[] => {
   return [
     { word: "red1", team: TEAM.RED, selected: selectedWords.includes("red1") },
     { word: "red2", team: TEAM.RED, selected: selectedWords.includes("red2") },
+    { word: "red3", team: TEAM.RED, selected: selectedWords.includes("red2") },
     {
       word: "green1",
       team: TEAM.GREEN,
