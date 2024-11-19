@@ -1,5 +1,12 @@
 import express, { Request, Response } from "express";
 import { getGame, getNewGame, processTurn } from "./game-ctrl";
+import {
+  NewGameRequest,
+  GetGameRequest,
+  ProcessTurnRequest,
+  ApiResponse,
+  GameResponseData,
+} from "./game-ctrl";
 
 const router = express.Router();
 
@@ -38,7 +45,7 @@ const router = express.Router();
  *               properties:
  *                 success:
  *                   type: boolean
- *                 newgame:
+ *                 game:
  *                   type: object
  *                   properties:
  *                     settings:
@@ -98,9 +105,12 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.post("/games", async (req: Request, res: Response) => {
-  await getNewGame(req, res);
-});
+router.post(
+  "/games",
+  async (req: NewGameRequest, res: Response<ApiResponse<GameResponseData>>) => {
+    await getNewGame(req, res);
+  }
+);
 
 /**
  * @swagger
@@ -135,9 +145,12 @@ router.post("/games", async (req: Request, res: Response) => {
  *       500:
  *         description: Internal server error
  */
-router.get("/games/:_id", async (req: Request, res: Response) => {
-  await getGame(req, res);
-});
+router.get(
+  "/games/:_id",
+  async (req: GetGameRequest, res: Response<ApiResponse<GameResponseData>>) => {
+    await getGame(req, res);
+  }
+);
 
 /**
  * @swagger
@@ -179,8 +192,14 @@ router.get("/games/:_id", async (req: Request, res: Response) => {
  *       500:
  *         description: Internal server error
  */
-router.post("/games/:_id/turn", async (req: Request, res: Response) => {
-  await processTurn(req, res);
-});
+router.post(
+  "/games/:_id/turn",
+  async (
+    req: ProcessTurnRequest,
+    res: Response<ApiResponse<GameResponseData>>
+  ) => {
+    await processTurn(req, res);
+  }
+);
 
 export default router;
