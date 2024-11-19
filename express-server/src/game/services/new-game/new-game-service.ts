@@ -13,7 +13,7 @@ const defaultGameSettings: Settings = {
 };
 
 /**
- * Creates a new game with the specified or default settings.
+ * Creates a new game with the specified or default settings...
  * @param gameSettings - Custom game settings.
  * @returns The newly created game.
  */
