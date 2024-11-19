@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, memo } from "react";
 import styled, { keyframes } from "styled-components";
 import { FaStar, FaLeaf, FaSkull, FaPeace, FaLess } from "react-icons/fa";
 
@@ -95,7 +95,7 @@ const Card = styled.button<CardProps>`
   }
 `;
 
-const CardContent = styled.div<{ selected?: boolean }>`
+const CardContent = styled.div<{ cardPicked?: boolean }>`
   position: relative;
   display: flex;
   justify-content: center;
@@ -107,7 +107,7 @@ const CardContent = styled.div<{ selected?: boolean }>`
   overflow-wrap: break-word;
   margin: 0;
   padding: 0;
-  text-decoration: ${(props) => (props.selected ? "line-through" : "none")};
+  text-decoration: ${(props) => (props.cardPicked ? "line-through" : "none")};
 `;
 
 const CoverCard = styled.div<{ backColour?: string }>`
@@ -146,21 +146,23 @@ export interface GameCardProps {
   onClick?: () => void;
 }
 
-const GameCard: React.FC<GameCardProps> = (props) => {
+const GameCard: React.FC<GameCardProps> = memo((props) => {
   const {
-    cardText,
-    cardColor,
-    showTeamColorAsBackground,
-    clickable = false,
-    selected: initialSelected,
+    cardText, // doesn't change between stages
+    cardColor, // only changes if card is selected or if stage codemaster
+    showTeamColorAsBackground, // only true for codemaster
+    clickable = false, // changes between
+    selected,
     onClick,
   } = props;
 
-  const [selected, setSelected] = useState(initialSelected || false);
+  // set immediately on the card whilst turn is being processed. Only controls whether the word has strike through text
+  // cover cards are only rendered if the prop is set to "selected"
+  const [cardPicked, setCardPicked] = useState(selected);
 
   const handleClick = () => {
     if (clickable && onClick) {
-      setSelected(true);
+      setCardPicked(true);
       onClick();
     }
   };
@@ -168,12 +170,16 @@ const GameCard: React.FC<GameCardProps> = (props) => {
   return (
     <CardContainer>
       <Card
-        onClick={clickable && !selected ? handleClick : undefined}
+        onClick={
+          clickable && !selected && !cardPicked ? handleClick : undefined
+        }
         clickable={clickable}
         backColour={showTeamColorAsBackground ? cardColor : FRONT_CARD_COLOUR}
         aria-label={`Card with text ${cardText}`}
       >
-        <CardContent selected={selected}>{cardText}</CardContent>
+        <CardContent cardPicked={cardPicked || selected}>
+          {cardText}
+        </CardContent>
       </Card>
       {selected && (
         <CoverCard backColour={cardColor} aria-label={`Selected card`}>
@@ -182,6 +188,6 @@ const GameCard: React.FC<GameCardProps> = (props) => {
       )}
     </CardContainer>
   );
-};
+});
 
 export default GameCard;
