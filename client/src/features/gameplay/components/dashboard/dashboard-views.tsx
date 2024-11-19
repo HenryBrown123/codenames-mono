@@ -1,8 +1,16 @@
 import React, { useState } from "react";
+import styled from "styled-components";
 import ActionButton from "../action-button/action-button";
 import CodeWordInput from "./codemaster-input";
 import { useGameContext, useGameplayContext } from "@game/context";
 import { useProcessTurn } from "@game/api";
+
+const ButtonWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  max-width: 30vw;
+  margin: 0 auto;
+`;
 
 export const IntroDashboardView: React.FC = () => {
   const { gameData } = useGameContext();
@@ -16,11 +24,13 @@ export const IntroDashboardView: React.FC = () => {
 
   return (
     <>
-      <ActionButton
-        onClick={handleProcessTurn}
-        text="Play"
-        enabled={actionButtonEnabled}
-      />
+      <ButtonWrapper>
+        <ActionButton
+          onClick={handleProcessTurn}
+          text="Play"
+          enabled={actionButtonEnabled}
+        />
+      </ButtonWrapper>
       {isError && <div>Something went wrong. Please try again.</div>}
     </>
   );
@@ -36,11 +46,13 @@ export const TransitionDashboardView: React.FC = () => {
   };
 
   return (
-    <ActionButton
-      onClick={handleClick}
-      text="Play"
-      enabled={actionButtonEnabled}
-    />
+    <ButtonWrapper>
+      <ActionButton
+        onClick={handleClick}
+        text="Play"
+        enabled={actionButtonEnabled}
+      />
+    </ButtonWrapper>
   );
 };
 
@@ -90,5 +102,9 @@ export const GameoverDashboardView: React.FC = () => {
     console.log("New game requested"); // Reset to the intro stage
   };
 
-  return <ActionButton onClick={handleClick} text="Play again" />;
+  return (
+    <ButtonWrapper>
+      <ActionButton onClick={handleClick} text="Play again" />
+    </ButtonWrapper>
+  );
 };
