@@ -43,6 +43,7 @@ export interface GameState {
 
 // GameData type
 export interface GameData {
+  _id?: string;
   state: GameState; // The current state of the game
   settings: Settings; // Game settings
 }
