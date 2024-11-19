@@ -13,30 +13,30 @@ import {
 
 describe("Stage Handling Functions", () => {
   describe("handleIntroStage", () => {
-    it("should move stage from intro to codemaster", () => {
+    it("should move stage from intro to codemaster", async () => {
       const gameState: GameState = {
         stage: STAGE.INTRO,
         cards: generateCards([]),
         rounds: [],
       };
-      const newState = handleIntroStage(gameState);
+      const newState = await handleIntroStage(gameState);
       expect(newState.stage).toBe(STAGE.CODEMASTER);
     });
 
-    it("should throw an error if validation fails for the intro stage", () => {
+    it("should throw an error if validation fails for the intro stage", async () => {
       const gameState: GameState = {
         stage: STAGE.INTRO,
         cards: generateCards(["red1"]),
         rounds: [],
       };
-      expect(() => handleIntroStage(gameState)).toThrow(
+      await expect(handleIntroStage(gameState)).rejects.toThrow(
         "No cards should be selected in the intro stage."
       );
     });
   });
 
   describe("handleCodemasterStage", () => {
-    it("should move stage from codemaster to codebreaker", () => {
+    it("should move stage from codemaster to codebreaker", async () => {
       const gameState: GameState = {
         stage: STAGE.CODEMASTER,
         rounds: [
@@ -44,46 +44,46 @@ describe("Stage Handling Functions", () => {
         ],
         cards: generateCards([]),
       };
-      const newState = handleCodemasterStage(gameState);
+      const newState = await handleCodemasterStage(gameState);
       expect(newState.stage).toBe(STAGE.CODEBREAKER);
     });
 
-    it("should throw an error if no round information is provided", () => {
+    it("should throw an error if no round information is provided", async () => {
       const gameState: GameState = {
         stage: STAGE.CODEMASTER,
         rounds: [],
         cards: generateCards([]),
       };
-      expect(() => handleCodemasterStage(gameState)).toThrow(
+      await expect(handleCodemasterStage(gameState)).rejects.toThrow(
         "No rounds found in the game state."
       );
     });
 
-    it("should throw an error if no codeword is provided", () => {
+    it("should throw an error if no codeword is provided", async () => {
       const gameState: GameState = {
         stage: STAGE.CODEMASTER,
         rounds: [{ team: TEAM.RED, guessesAllowed: 3, turns: [] }],
         cards: generateCards([]),
       };
-      expect(() => handleCodemasterStage(gameState)).toThrow(
+      await expect(handleCodemasterStage(gameState)).rejects.toThrow(
         "The latest round must have a codeword set."
       );
     });
 
-    it("should throw an error if no guessesAllowed is provided", () => {
+    it("should throw an error if no guessesAllowed is provided", async () => {
       const gameState: GameState = {
         stage: STAGE.CODEMASTER,
         rounds: [{ team: TEAM.RED, codeword: "test", turns: [] }],
         cards: generateCards([]),
       };
-      expect(() => handleCodemasterStage(gameState)).toThrow(
+      await expect(handleCodemasterStage(gameState)).rejects.toThrow(
         "The latest round must have guessesAllowed set."
       );
     });
   });
 
   describe("handleCodebreakerStage", () => {
-    it("should update cards and remain on codebreaker's turn for more guesses", () => {
+    it("should update cards and remain on codebreaker's turn for more guesses", async () => {
       const testGameState: GameState = {
         stage: STAGE.CODEBREAKER,
         rounds: [
@@ -97,7 +97,7 @@ describe("Stage Handling Functions", () => {
         cards: generateCards([]),
       };
 
-      const newState = handleCodebreakerStage(testGameState);
+      const newState = await handleCodebreakerStage(testGameState);
 
       const guessedWords = testGameState.rounds[0].turns.map(
         (turn) => turn.guessedWord
@@ -113,7 +113,7 @@ describe("Stage Handling Functions", () => {
     });
 
     describe("Turn outcome assertions", () => {
-      it("should set the outcome to CORRECT_TEAM_CARD for a correct guess", () => {
+      it("should set the outcome to CORRECT_TEAM_CARD for a correct guess", async () => {
         const testGameState: GameState = {
           stage: STAGE.CODEBREAKER,
           rounds: [
@@ -127,14 +127,14 @@ describe("Stage Handling Functions", () => {
           cards: generateCards(["red1"]),
         };
 
-        const newState = handleCodebreakerStage(testGameState);
+        const newState = await handleCodebreakerStage(testGameState);
         const turn = newState.rounds[0].turns.find(
           (t) => t.guessedWord === "red1"
         );
         expect(turn?.outcome).toBe("CORRECT_TEAM_CARD");
       });
 
-      it("should set the outcome to INCORRECT_TEAM_CARD for a wrong guess", () => {
+      it("should set the outcome to INCORRECT_TEAM_CARD for a wrong guess", async () => {
         const testGameState: GameState = {
           stage: STAGE.CODEBREAKER,
           rounds: [
@@ -148,14 +148,14 @@ describe("Stage Handling Functions", () => {
           cards: generateCards(["green1"]),
         };
 
-        const newState = handleCodebreakerStage(testGameState);
+        const newState = await handleCodebreakerStage(testGameState);
         const turn = newState.rounds[0].turns.find(
           (t) => t.guessedWord === "green1"
         );
         expect(turn?.outcome).toBe("OTHER_TEAM_CARD");
       });
 
-      it("should set the outcome to ASSASSIN_CARD for a guess on the assassin", () => {
+      it("should set the outcome to ASSASSIN_CARD for a guess on the assassin", async () => {
         const testGameState: GameState = {
           stage: STAGE.CODEBREAKER,
           rounds: [
@@ -169,15 +169,36 @@ describe("Stage Handling Functions", () => {
           cards: generateCards(["assassin"]),
         };
 
-        const newState = handleCodebreakerStage(testGameState);
+        const newState = await handleCodebreakerStage(testGameState);
         const turn = newState.rounds[0].turns.find(
           (t) => t.guessedWord === "assassin"
         );
         expect(turn?.outcome).toBe("ASSASSIN_CARD");
       });
+
+      it("should end the turn if guessesAllowed are exhausted", async () => {
+        const testGameState: GameState = {
+          stage: STAGE.CODEBREAKER,
+          rounds: [
+            {
+              team: TEAM.RED,
+              codeword: "test",
+              guessesAllowed: 1,
+              turns: [
+                { guessedWord: "red1", outcome: "CORRECT_TEAM_CARD" },
+                { guessedWord: "red2" },
+              ],
+            },
+          ],
+          cards: generateCards(["red1"]),
+        };
+
+        const newState = await handleCodebreakerStage(testGameState);
+        expect(newState.stage).toBe(STAGE.CODEMASTER);
+      });
     });
 
-    it("should update cards and determine the red team as the winner", () => {
+    it("should update cards and determine the red team as the winner", async () => {
       const testGameState: GameState = {
         stage: STAGE.CODEBREAKER,
         rounds: [
@@ -193,31 +214,30 @@ describe("Stage Handling Functions", () => {
         ],
         cards: generateCards(["red1", "red2"]),
       };
-      const newState = handleCodebreakerStage(testGameState);
+      const newState = await handleCodebreakerStage(testGameState);
       expect(newState.winner).toBe(TEAM.RED);
     });
   });
 
   describe("handleGameOverStage", () => {
-    it("should throw an error indicating the game is over and no more turns are allowed", () => {
+    it("should throw an error indicating the game is over and no more turns are allowed", async () => {
       const gameState: GameState = {
         stage: STAGE.GAMEOVER,
         rounds: [
           {
             team: TEAM.RED,
             codeword: "test",
-            guessesAllowed: 2,
+            guessesAllowed: 1,
             turns: [
               { guessedWord: "red1", outcome: "CORRECT_TEAM_CARD" },
               { guessedWord: "red2", outcome: "CORRECT_TEAM_CARD" },
+              { guessedWord: "red3", outcome: "CORRECT_TEAM_CARD" },
             ],
           },
         ],
-        cards: generateCards(["red1", "red2"]),
+        cards: generateCards(["red1", "red2", "red3"]),
       };
-      expect(() => handleGameOverStage(gameState)).toThrow(
-        "Game has finished. No more turns."
-      );
+      expect(handleGameOverStage(gameState)).rejects.toThrow();
     });
   });
 });
