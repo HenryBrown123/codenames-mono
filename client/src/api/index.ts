@@ -7,7 +7,7 @@ const api = axios.create({
 
 type NewGameResponse = {
   success: boolean;
-  newgame: GameData;
+  game: GameData;
 };
 
 // Updated API calls to better align with React Query hooks
@@ -19,7 +19,7 @@ const createNewGame = async (payload?: Settings): Promise<GameData> => {
   if (!response.data.success) {
     console.error("Failed to create a new game", response.data);
   }
-  return response.data.newgame;
+  return response.data.game;
 };
 
 type FetchGameResponse = {
@@ -37,7 +37,7 @@ const fetchGame = async (gameId: string): Promise<GameData> => {
 
 type SubmitTurnResponse = {
   success: boolean;
-  game: GameState;
+  game: GameData;
 };
 
 const submitTurn = async (
@@ -48,7 +48,7 @@ const submitTurn = async (
     `/games/${id}/turn`,
     gameState
   );
-  return response.data.game;
+  return response.data.game.state;
 };
 
 const apis = {
