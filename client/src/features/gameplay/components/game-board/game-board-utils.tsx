@@ -52,7 +52,6 @@ export const getCardColor = (team: Team): string => {
     case TEAM.GREEN:
       return "#228B22";
     default:
-      console.warn("Unknown team:", team);
       return "#4b7fb3";
   }
 };
