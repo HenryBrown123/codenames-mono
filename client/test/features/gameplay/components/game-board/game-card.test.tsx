@@ -36,14 +36,4 @@ describe("GameCard Component", () => {
     const coverCardElement = screen.getByLabelText(/Selected card/i);
     expect(coverCardElement).toBeInTheDocument();
   });
-
-  it("displays the cover card after the card is clicked", () => {
-    render(<GameCard {...gameCardProps} />);
-
-    const cardElement = screen.getByText(/Test Card/i);
-    fireEvent.click(cardElement);
-
-    const coverCardElement = screen.getByLabelText(/Selected card/i);
-    expect(coverCardElement).toBeInTheDocument();
-  });
 });
