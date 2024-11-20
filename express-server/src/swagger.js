@@ -14,8 +14,21 @@ const options = {
         url: "http://localhost:3000/api",
       },
     ],
+    components: {
+      securitySchemes: {
+        sessionCookie: {
+          type: "apiKey",
+          in: "cookie",
+          name: "connect.sid",
+          description: "Session cookie used for guest authentication.",
+        },
+      },
+    },
   },
-  apis: ["./src/game/**/*-router.{js,ts}"], // Simplified path
+  apis: [
+    "./src/game/**/*-router.{js,ts}",
+    "./src/auth/**/*-router.{js,ts}", // Include authentication routes
+  ], // Add path for the new auth router
 };
 
 const specs = swaggerJsdoc(options);
