@@ -4,8 +4,8 @@ import {
   handleCodebreakerStage,
   handleGameOverStage,
 } from "./gameplay-handlers";
-import { GameState, Card, Stage } from "@game/game-common-types";
-import { STAGE } from "@game/game-common-constants";
+import { GameState, Card, Stage } from "@game/shared/game-common-types";
+import { STAGE } from "@game/shared/game-common-constants";
 import { fetchGameDocument, updateGameDocument } from "./db-operations";
 
 // defines the function type of handlers. Must accept a GameState and return a Promise<GameState>

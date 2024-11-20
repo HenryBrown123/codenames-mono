@@ -1,7 +1,7 @@
 import { createNewGame } from "@game/services/new-game/new-game-service";
 import Game from "@game/models/game-model";
 import { getRandomWords } from "@game/controllers/word-ctrl";
-import { TEAM } from "@game/game-common-constants";
+import { TEAM } from "@game/shared/game-common-constants";
 import {
   expectedGameDataDefault,
   expectedGameDataCustom,

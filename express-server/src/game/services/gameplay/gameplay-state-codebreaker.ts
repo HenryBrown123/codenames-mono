@@ -1,5 +1,9 @@
-import { CODEBREAKER_OUTCOMES, TEAM, STAGE } from "@game/game-common-constants";
-import { GameState, TurnOutcome, Team } from "@game/game-common-types";
+import {
+  CODEBREAKER_OUTCOMES,
+  TEAM,
+  STAGE,
+} from "@game/shared/game-common-constants";
+import { GameState, TurnOutcome, Team } from "@game/shared/game-common-types";
 import GameStateProcessor from "./gameplay-state-common";
 
 const { OTHER_TEAM_CARD, BYSTANDER_CARD, ASSASSIN_CARD, CORRECT_TEAM_CARD } =

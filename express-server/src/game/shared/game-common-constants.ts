@@ -1,4 +1,4 @@
-import { Team } from "@game/game-common-types";
+import { Team } from "@game/shared/game-common-types";
 
 /**
  * Object representing teams in the game.

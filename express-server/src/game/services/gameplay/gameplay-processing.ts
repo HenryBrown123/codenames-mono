@@ -1,5 +1,5 @@
-import { GameState } from "@game/game-common-types";
-import { STAGE } from "@game/game-common-constants";
+import { GameState } from "@game/shared/game-common-types";
+import { STAGE } from "@game/shared/game-common-constants";
 import GameStateProcessor from "./gameplay-state-common";
 import CodebreakerStateProcessor from "./gameplay-state-codebreaker";
 

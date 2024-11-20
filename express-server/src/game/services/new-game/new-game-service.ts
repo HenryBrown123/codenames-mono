@@ -1,8 +1,8 @@
 import Game, { GameDocument } from "@game/models/game-model";
 import { WordData } from "@game/models/word-model";
-import { Settings } from "@game/game-common-types";
+import { Settings } from "@game/shared/game-common-types";
 import { getRandomWords } from "@game/controllers/word-ctrl";
-import { TEAM } from "@game/game-common-constants";
+import { TEAM } from "@game/shared/game-common-constants";
 import { createGameData } from "./new-game-factory";
 
 // Default game settings object

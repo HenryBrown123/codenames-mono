@@ -1,5 +1,11 @@
-import { Team, GameState, Turn, Round, Stage } from "@game/game-common-types";
-import { TEAM } from "@game/game-common-constants";
+import {
+  Team,
+  GameState,
+  Turn,
+  Round,
+  Stage,
+} from "@game/shared/game-common-types";
+import { TEAM } from "@game/shared/game-common-constants";
 
 /**
  * Base class for handling commom gameplay state updates.

@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import Game from "@game/models/game-model";
 import { createNewGame } from "@game/services/new-game/new-game-service";
 import { executeTurn } from "@game/services/gameplay/gameplay-service";
-import { GameData, GameState } from "@game/game-common-types";
+import { GameData, GameState } from "@game/shared/game-common-types";
 
 /**
  * Common API response type.

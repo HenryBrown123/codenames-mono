@@ -1,5 +1,10 @@
-import { TEAM, STAGE } from "@game/game-common-constants";
-import { GameState, Card, GameData, Settings } from "@game/game-common-types";
+import { TEAM, STAGE } from "@game/shared/game-common-constants";
+import {
+  GameState,
+  Card,
+  GameData,
+  Settings,
+} from "@game/shared/game-common-types";
 import { WordData } from "@game/models/word-model";
 
 /**

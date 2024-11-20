@@ -7,9 +7,13 @@ import {
   GameState,
   GameData,
   Turn,
-} from "@game/game-common-types";
+} from "@game/shared/game-common-types";
 
-import { TEAM, STAGE, CODEBREAKER_OUTCOMES } from "@game/game-common-constants";
+import {
+  TEAM,
+  STAGE,
+  CODEBREAKER_OUTCOMES,
+} from "@game/shared/game-common-constants";
 
 export interface GameDocument extends Document, GameData {
   _id: string;

@@ -1,4 +1,4 @@
-import { TEAM, STAGE } from "@game/game-common-constants";
+import { TEAM, STAGE } from "@game/shared/game-common-constants";
 
 export const expectedGameDataDefault = {
   settings: { numberOfCards: 25, startingTeam: TEAM.RED, numberOfAssassins: 1 },

@@ -4,8 +4,8 @@ import {
   handleCodebreakerStage,
   handleGameOverStage,
 } from "@game/services/gameplay/gameplay-handlers";
-import { TEAM, STAGE } from "@game/game-common-constants";
-import { GameState } from "@game/game-common-types";
+import { TEAM, STAGE } from "@game/shared/game-common-constants";
+import { GameState } from "@game/shared/game-common-types";
 import {
   generateCards,
   getWinnerProperty,

@@ -1,5 +1,5 @@
 import { createGameData } from "@game/services/new-game/new-game-factory";
-import { TEAM, STAGE } from "@game/game-common-constants";
+import { TEAM, STAGE } from "@game/shared/game-common-constants";
 
 describe("createGameData", () => {
   const settings = {

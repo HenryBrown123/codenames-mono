@@ -1,5 +1,11 @@
-import { Settings, Team, Card, GameData, Round } from "@game/game-common-types";
-import { TEAM, STAGE } from "@game/game-common-constants";
+import {
+  Settings,
+  Team,
+  Card,
+  GameData,
+  Round,
+} from "@game/shared/game-common-types";
+import { TEAM, STAGE } from "@game/shared/game-common-constants";
 
 /**
  * Generates an array of colors to be allocated randomly to the game words for any number of total cards
