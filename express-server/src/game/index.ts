@@ -1,2 +1,2 @@
-export { default as wordRouter } from "./word/word-router";
-export { default as gameRouter } from "./game-router";
+export { default as wordRouter } from "./routers/word-router";
+export { default as gameRouter } from "./routers/game-router";

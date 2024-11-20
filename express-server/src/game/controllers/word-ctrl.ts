@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Word, { WordData } from "../models/word-model";
+import Word, { WordData } from "@game/models/word-model";
 
 /**
  * Utility function that returns an array of unique indices for selecting random words

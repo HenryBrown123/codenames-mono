@@ -1,5 +1,5 @@
 import Game, { GameDocument } from "@game/models/game-model";
-import { GameState, GameData } from "src/game/game-common-types";
+import { GameState, GameData } from "@game/game-common-types";
 
 /**
  * Fetches the current state from the database.

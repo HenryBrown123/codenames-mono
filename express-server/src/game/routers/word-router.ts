@@ -4,7 +4,7 @@ import {
   createWord,
   getRandomWordsHandler,
   postWordArray,
-} from "../controllers/word-ctrl";
+} from "@game/controllers/word-ctrl";
 
 const router = express.Router();
 

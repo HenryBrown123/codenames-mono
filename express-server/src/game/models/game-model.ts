@@ -7,7 +7,7 @@ import {
   GameState,
   GameData,
   Turn,
-} from "src/game/game-common-types";
+} from "@game/game-common-types";
 
 import { TEAM, STAGE, CODEBREAKER_OUTCOMES } from "@game/game-common-constants";
 
