@@ -1,12 +1,13 @@
 import express, { Request, Response } from "express";
-import { getGame, getNewGame, processTurn } from "./game-ctrl";
+import { getGame, getNewGame, processTurn } from "@game/controllers/game-ctrl";
+
 import {
   NewGameRequest,
   GetGameRequest,
   ProcessTurnRequest,
   ApiResponse,
   GameResponseData,
-} from "./game-ctrl";
+} from "@game/controllers/game-ctrl";
 
 const router = express.Router();
 

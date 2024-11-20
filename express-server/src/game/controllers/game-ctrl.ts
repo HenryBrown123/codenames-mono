@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Game from "./game-model";
+import Game from "./models/game-model";
 import { createNewGame } from "./services/new-game/new-game-service";
 import { executeTurn } from "./services/gameplay/gameplay-service";
 import { GameData, GameState } from "./game-common-types";

@@ -1,7 +1,7 @@
-import Game, { GameDocument } from "@game/game-model";
-import { WordData } from "@game/word/word-model";
+import Game, { GameDocument } from "@game/models/game-model";
+import { WordData } from "@game/models/word-model";
 import { Settings } from "@game/game-common-types";
-import { getRandomWords } from "@game/word/word-ctrl";
+import { getRandomWords } from "@game/controllers/word-ctrl";
 import { TEAM } from "@game/game-common-constants";
 import { createGameData } from "./new-game-factory";
 

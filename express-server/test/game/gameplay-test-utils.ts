@@ -1,6 +1,6 @@
 import { TEAM, STAGE } from "@game/game-common-constants";
 import { GameState, Card, GameData, Settings } from "@game/game-common-types";
-import { WordData } from "@game/word/word-model";
+import { WordData } from "@game/models/word-model";
 
 /**
  * Generated selected

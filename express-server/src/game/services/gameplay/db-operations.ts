@@ -1,4 +1,4 @@
-import Game, { GameDocument } from "src/game/game-model";
+import Game, { GameDocument } from "@game/models/game-model";
 import { GameState, GameData } from "src/game/game-common-types";
 
 /**
