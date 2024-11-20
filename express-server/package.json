@@ -24,7 +24,8 @@
     },
     "moduleNameMapper": {
       "^@game/(.*)$": "<rootDir>/src/game/$1",
-      "^@test/(.*)$": "<rootDir>/test/$1"
+      "^@test/(.*)$": "<rootDir>/test/$1",
+      "^@auth/(.*)$": "<rootDir>/src/auth/$1"
     }
   },
   "author": "Henry Brown",
@@ -46,6 +47,7 @@
     "@types/body-parser": "^1.19.5",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/express-session": "^1.18.0",
     "@types/jest": "^29.5.14",
     "@types/mongoose": "^5.11.96",
     "@types/node": "^22.7.8",
