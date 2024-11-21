@@ -16,8 +16,13 @@ const sessionSecret = process.env.SESSION_SECRET || "default-secret"; // Make su
 // Initialize Express App
 const app = express();
 
-// Middleware Setup
-app.use(cors()); // Enable Cross-Origin Requests
+// Configure CORS with credentials
+app.use(
+  cors({
+    origin: "http://localhost:8000", // Replace this with the correct front-end origin
+    credentials: true, // Allow credentials (cookies, etc.)
+  })
+);
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
@@ -27,7 +32,11 @@ app.use(
     secret: sessionSecret, // Replace with a stronger secret in production
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: process.env.NODE_ENV === "production" }, // Use secure cookies in production (HTTPS required)
+    cookie: {
+      secure: process.env.NODE_ENV === "production", // Use secure cookies in production (HTTPS required)
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000,
+    },
     store: MongoStore.create({
       mongoUrl: process.env.MONGO_URI || "mongodb://localhost:27017/codenames", // MongoDB connection URL
     }),
@@ -61,6 +70,10 @@ app.use((err: any, req: any, res: any, next: any) => {
 });
 
 /* Start Listening */
-app.listen(apiPort, () => console.log(`Server running on port ${apiPort}`));
+app.listen(apiPort, () =>
+  console.log(
+    `Server running on port ${apiPort}, NODE_ENV: ${process.env.NODE_ENV}`
+  )
+);
 
 export default app; // This is useful for testing

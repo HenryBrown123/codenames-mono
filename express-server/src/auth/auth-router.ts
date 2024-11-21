@@ -25,8 +25,9 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
+
 router.post("/guest", (req: GuestAuthRequest, res: Response) => {
-  res.status(200).json({ success: true, guestId: req.session.guestId });
+  res.status(200).json({ success: true });
 });
 
 /**
@@ -49,6 +50,7 @@ router.post("/guest", (req: GuestAuthRequest, res: Response) => {
  *       500:
  *         description: Internal server error
  */
+
 router.post("/logout", (req: GuestAuthRequest, res: Response) => {
   req.session.destroy((err) => {
     if (err) {

@@ -1,21 +1,32 @@
 import { Request, Response, NextFunction } from "express";
-import { GuestAuthRequest } from "./auth-types";
+import { GuestAuthRequest } from "@auth/auth-types";
+import GuestSessionModel from "@auth/auth-guest-model";
 
 /**
  * Guest Authentication Middleware
- * This middleware initializes guest sessions and prevents users from impersonating others.
+ * This middleware initializes guest sessions and prevents users from hijacking a game
  * It assigns a unique session identifier if not already set.
  */
-export function guestAuth(
+
+export async function guestAuth(
   req: GuestAuthRequest,
   res: Response,
   next: NextFunction
 ) {
   if (!req.session.guestId) {
-    console.log("Generating a new guest session id");
-    // Assign a unique identifier to the guest
-    req.session.guestId = `guest-${Math.random().toString(36).substr(2, 9)}`;
+    const guestId = `guest-${Math.random().toString(36).substr(2, 9)}`;
+    req.session.guestId = guestId;
+
+    // Create a new session in the database
+    try {
+      await GuestSessionModel.create({ guestId });
+    } catch (error) {
+      console.error("Failed to create session in DB:", error);
+      res.status(500).json({ error: "Failed to create guest session" });
+      return;
+    }
   }
+
   next();
 }
 
@@ -31,7 +42,7 @@ export function requireGuestAuth(
   if (!req.session.guestId) {
     console.log("Unauthorized: No guest session found");
     res.status(401).json({ error: "Unauthorized: No guest session found" }); // Send the error response
-    return; // Optional but helps ensure that `next()` isn't called
+    return;
   }
 
   console.log(

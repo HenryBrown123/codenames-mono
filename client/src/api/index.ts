@@ -3,6 +3,7 @@ import { Settings, GameState, GameData } from "@game/game-common-types"; // Adju
 
 const api = axios.create({
   baseURL: "http://localhost:3000/api",
+  withCredentials: true, // Include cookies with each request
 });
 
 type NewGameResponse = {
@@ -51,10 +52,64 @@ const submitTurn = async (
   return response.data.game.state;
 };
 
+interface CreateGuestSessionResponse extends Response {
+  success: boolean;
+}
+
+// Creates a session and guest user
+const createGuestSession = async (): Promise<CreateGuestSessionResponse> => {
+  const response: AxiosResponse<CreateGuestSessionResponse> = await api.post(
+    "/auth/guest"
+  );
+  if (!response.data.success) {
+    console.error("Failed to create a new session", response.data);
+  }
+  console.log("Session created!");
+  return response.data;
+};
+
+interface LogoutSessionResponse extends Response {
+  success: boolean;
+}
+
+const logoutSession = async (): Promise<CreateGuestSessionResponse> => {
+  const response: AxiosResponse<LogoutSessionResponse> = await api.post(
+    "/auth/logout"
+  );
+  if (!response.data.success) {
+    console.error("Failed to log out", response.data);
+  }
+  return response.data;
+};
+
+type NewSingleDeviceGameResponse = {
+  success: boolean;
+  game: GameData;
+};
+
+// Function chaining logout and new session creation alongside new game.
+const createSingleDeviceNewGame = async (
+  payload?: Settings
+): Promise<GameData> => {
+  await logoutSession();
+
+  const newSessionResponse = await createGuestSession();
+
+  if (!newSessionResponse.success) {
+    console.log("failed to create game session");
+    throw Error("Unable to create session for single device game");
+  }
+
+  return await createNewGame(payload);
+};
+
 const apis = {
   createNewGame,
   fetchGame,
   submitTurn,
+  createGuestSession,
+  logoutSession,
+  createSingleDeviceNewGame,
 };
 
 export default apis;

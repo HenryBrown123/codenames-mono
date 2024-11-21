@@ -5,7 +5,7 @@ import styled from "styled-components";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
-import { Game, HowTo, CreateGamePage } from "../pages";
+import { Game, HowTo, CreateGamePage, GuestAuthPage } from "../pages";
 import { GlobalStyle, lightTheme, darkTheme } from "../style"; // Ensure this path is correct
 
 // Styled Components
@@ -65,9 +65,10 @@ const App: React.FC = () => {
             <PageSection id="page-container">
               <Router>
                 <Routes>
+                  <Route path="/create-game" element={<CreateGamePage />} />
                   <Route path="/game/:gameId" element={<Game />} />
                   <Route path="/howto" element={<HowTo />} />
-                  <Route path="/" element={<CreateGamePage />} />
+                  <Route path="/" element={<GuestAuthPage />} />
                 </Routes>
               </Router>
             </PageSection>

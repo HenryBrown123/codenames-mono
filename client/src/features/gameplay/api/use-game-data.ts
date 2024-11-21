@@ -25,6 +25,20 @@ export const useCreateNewGame = () => {
   });
 };
 
+// Hook for creating a guest session
+export const useCreateGuestSession = () => {
+  return useMutation({
+    mutationKey: ["createGuestSession"],
+    mutationFn: () => apis.createGuestSession(),
+    onSuccess: () => {
+      console.log("Guest session created successfully");
+    },
+    onError: (error) => {
+      console.error("Error creating guest session:", error);
+    },
+  });
+};
+
 // Hook for processing a turn
 export const useProcessTurn = ({
   onSuccess,
