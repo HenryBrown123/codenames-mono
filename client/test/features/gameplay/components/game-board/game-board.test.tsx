@@ -4,7 +4,7 @@ import {
   CodebreakerStageBoard,
   ReadOnlyBoard,
   DefaultStageBoard,
-} from "@game/components/game-board/game-board-views";
+} from "@game/ui/game-board/game-board-views";
 import {
   exampleIntroGameState,
   exampleCodemasterStage,
@@ -13,7 +13,7 @@ import {
 } from "@test/mock-game-data";
 import { describe, it, expect } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { GameplayContextProvider } from "@game/context";
+import { GameplayContextProvider } from "@game/state";
 import { useState } from "react";
 
 const queryClient = new QueryClient();

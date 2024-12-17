@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from "axios";
-import { Settings, GameState, GameData } from "@game/game-common-types"; // Adjust the path accordingly
+import { Settings, GameState, GameData } from "@game/types/game-common-types"; // Adjust the path accordingly
 
 const api = axios.create({
   baseURL: "http://localhost:3000/api",
@@ -82,34 +82,12 @@ const logoutSession = async (): Promise<CreateGuestSessionResponse> => {
   return response.data;
 };
 
-type NewSingleDeviceGameResponse = {
-  success: boolean;
-  game: GameData;
-};
-
-// Function chaining logout and new session creation alongside new game.
-const createSingleDeviceNewGame = async (
-  payload?: Settings
-): Promise<GameData> => {
-  await logoutSession();
-
-  const newSessionResponse = await createGuestSession();
-
-  if (!newSessionResponse.success) {
-    console.log("failed to create game session");
-    throw Error("Unable to create session for single device game");
-  }
-
-  return await createNewGame(payload);
-};
-
 const apis = {
   createNewGame,
   fetchGame,
   submitTurn,
   createGuestSession,
   logoutSession,
-  createSingleDeviceNewGame,
 };
 
 export default apis;

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
-import { useGameContext } from "@game/context";
-import { Stage } from "@game/game-common-types";
-import { STAGE } from "@game/game-common-constants";
+import { useGameContext } from "@game/state";
+import { Stage } from "@game/types/game-common-types";
+import { STAGE } from "@game/types/game-common-constants";
 
 interface OverlayProps {
   isOpen: boolean;
@@ -127,7 +127,6 @@ export const Menu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const { setStage } = useGameContext();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -146,7 +145,6 @@ export const Menu: React.FC = () => {
 
   const changeGameStage = (newStage: Stage) => {
     console.log("Changing to stage: " + newStage);
-    setStage(newStage);
   };
 
   useEffect(() => {

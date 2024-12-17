@@ -4,7 +4,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { GameData, GameState, Settings } from "@game/game-common-types";
+import { GameData, GameState, Settings } from "@game/types/game-common-types";
 import apis from "src/api";
 
 export const useGameData = (
@@ -44,7 +44,10 @@ export const useProcessTurn = ({
   onSuccess,
   onError,
 }: {
-  onSuccess?: (updatedGameState: GameState) => void;
+  onSuccess?: (
+    updatedGameState: GameState,
+    variables: { gameId: string; gameState: GameState }
+  ) => void;
   onError?: (error: any) => void;
 } = {}) => {
   const queryClient = useQueryClient();
@@ -58,14 +61,14 @@ export const useProcessTurn = ({
       gameId: string;
       gameState: GameState;
     }) => apis.submitTurn(gameId, gameState),
-    onSuccess: (updatedGameState, { gameId }) => {
+    onSuccess: (updatedGameState, { gameId, gameState }) => {
       queryClient.setQueryData(["gameData", gameId], (oldData: GameData) => ({
         ...oldData,
         state: updatedGameState,
       }));
 
       if (onSuccess) {
-        onSuccess(updatedGameState);
+        onSuccess(updatedGameState, { gameId, gameState });
       }
     },
     onError: (error) => {

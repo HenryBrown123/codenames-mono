@@ -2,94 +2,23 @@ import React, { ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { useGameData } from "@game/api";
+import { GameData } from "@game/types/game-common-types";
 
 import {
   GameContextProvider,
   GameplayContextProvider,
   useGameplayContext,
-} from "@game/context";
+} from "@game/state";
 
-import GameInstructions from "@game/components/game-instructions/game-instructions";
-import { uiConfig } from "@game/ui-stage-scene-config";
-import { LoadingSpinner } from "@game/components";
+import GameInstructions from "@game/ui/game-instructions/game-instructions";
+import { uiConfig } from "@game/state/game-state-config";
+import { LoadingSpinner } from "@game/ui";
+import {
+  messages,
+  gameBoards,
+  dashboards,
+} from "@game/state/game-state-mappings";
 import { Menu } from "./menu";
-
-const GameLayout: React.FC<{ children: ReactNode }> = ({ children }) => (
-  <GameWrapper>
-    <Banner>
-      <Menu />
-    </Banner>
-    <GameContainer>{children}</GameContainer>
-  </GameWrapper>
-);
-
-type CodenamesGameProps = {
-  gameId: string;
-};
-
-const CodeNamesGame: React.FC<CodenamesGameProps> = (props) => {
-  const { gameId } = props;
-  const {
-    data: gameData,
-    error,
-    isLoading,
-    isRefetching,
-  } = useGameData(gameId);
-
-  if (isLoading || isRefetching) {
-    return (
-      <LoadingContainer>
-        <LoadingSpinner displayText={"Loading...."} />
-      </LoadingContainer>
-    );
-  }
-
-  if (error || !gameData) {
-    return (
-      <ErrorContainer>
-        <h2>Something went wrong :(</h2>
-        <p>Please try refreshing the page.</p>
-      </ErrorContainer>
-    );
-  }
-
-  return (
-    <GameplayContextProvider currentGameStage={gameData.state.stage}>
-      <GameContextProvider value={{ gameData: gameData }}>
-        <GameContent gameData={gameData} />
-      </GameContextProvider>
-    </GameplayContextProvider>
-  );
-};
-
-const GameContent: React.FC<{ gameData: any }> = ({ gameData }) => {
-  const { currentStage, currentSceneIndex } = useGameplayContext();
-
-  // Get the current stage and scene from the uiConfig
-  const stageConfig = uiConfig[currentStage];
-  const currentSceneName = stageConfig.sceneOrder[currentSceneIndex];
-  const currentScene = stageConfig.scenes[currentSceneName];
-
-  return (
-    <GameLayout>
-      {currentScene.message(gameData) && (
-        <InstructionsContainer>
-          <GameInstructions messageText={currentScene.message(gameData)} />
-        </InstructionsContainer>
-      )}
-      <GameBoardContainer>
-        {currentScene.gameBoard(gameData)}
-      </GameBoardContainer>
-      <DashboardContainer>{currentScene.dashboard()}</DashboardContainer>
-    </GameLayout>
-  );
-};
-
-export const Game: React.FC = () => {
-  const { gameId } = useParams<{ gameId: string }>();
-
-  return <CodeNamesGame gameId={gameId} />;
-};
 
 // Styled Components with Background Image
 const GameWrapper = styled.div`
@@ -223,3 +152,88 @@ const LoadingContainer = styled.div`
   border-radius: 16px;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 `;
+
+const GameLayout: React.FC<{ children: ReactNode }> = ({ children }) => (
+  <GameWrapper>
+    <Banner>
+      <Menu />
+    </Banner>
+    <GameContainer>{children}</GameContainer>
+  </GameWrapper>
+);
+
+type CodenamesGameProps = {
+  gameId: string;
+};
+
+const CodeNamesGame: React.FC<CodenamesGameProps> = ({ gameId }) => {
+  const {
+    data: gameData,
+    error,
+    isLoading,
+    isRefetching,
+  } = useGameData(gameId);
+
+  if (isLoading || isRefetching) {
+    return (
+      <LoadingContainer>
+        <LoadingSpinner displayText={"Loading...."} />
+      </LoadingContainer>
+    );
+  }
+
+  if (error || !gameData) {
+    return (
+      <ErrorContainer>
+        <h2>Something went wrong :(</h2>
+        <p>Please try refreshing the page.</p>
+      </ErrorContainer>
+    );
+  }
+
+  return (
+    <GameplayContextProvider currentGameStage={gameData.state.stage}>
+      <GameContextProvider value={{ gameData: gameData }}>
+        <GameContent gameData={gameData} />
+      </GameContextProvider>
+    </GameplayContextProvider>
+  );
+};
+
+const GameContent: React.FC<{ gameData: GameData }> = ({ gameData }) => {
+  const { uiStage, currentScene } = useGameplayContext();
+
+  const stageConfig = uiConfig[uiStage];
+  const sceneConfig = stageConfig.scenes[currentScene];
+
+  const message = sceneConfig.message ? messages[sceneConfig.message] : null;
+
+  const BoardComponent = sceneConfig.gameBoard
+    ? gameBoards[sceneConfig.gameBoard]
+    : null;
+
+  const DashboardComponent = sceneConfig.dashboard
+    ? dashboards[sceneConfig.dashboard]
+    : null;
+
+  return (
+    <GameLayout>
+      {message && (
+        <InstructionsContainer>
+          <GameInstructions messageText={message(gameData)} />
+        </InstructionsContainer>
+      )}
+      <GameBoardContainer>
+        {BoardComponent && <BoardComponent gameData={gameData} />}
+      </GameBoardContainer>
+      <DashboardContainer>
+        {DashboardComponent && <DashboardComponent />}
+      </DashboardContainer>
+    </GameLayout>
+  );
+};
+
+export const Game: React.FC = () => {
+  const { gameId } = useParams<{ gameId: string }>();
+  return gameId ? <CodeNamesGame gameId={gameId} /> : null;
+};

@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { useCreateNewGame } from "@game/api";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { LoadingSpinner } from "@game/components";
-import { ActionButton } from "@game/components/action-button";
-import { Settings, Team } from "@game/game-common-types";
+import { LoadingSpinner } from "@game/ui";
+import { ActionButton } from "@game/ui/action-button";
+import { Settings, Team } from "@game/types/game-common-types";
 
 export const CreateGamePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
@@ -14,6 +14,7 @@ export const CreateGamePage: React.FC = () => {
 
   const navigate = useNavigate();
 
+  // theses are the default game settings
   const [numberOfCards, setNumberOfCards] = useState(25);
   const [startingTeam, setStartingTeam] = useState<Team>("red");
   const [numberOfAssassins, setNumberOfAssassins] = useState(1);

@@ -3,8 +3,8 @@ import {
   UseQueryResult,
   useQueryClient,
 } from "@tanstack/react-query";
-import { GameData, Stage } from "@game/game-common-types";
-import { STAGE } from "@game/game-common-constants";
+import { GameData, Stage } from "@game/types/game-common-types";
+import { STAGE } from "@game/types/game-common-constants";
 import {
   exampleIntroGameState,
   exampleCodemasterStage,

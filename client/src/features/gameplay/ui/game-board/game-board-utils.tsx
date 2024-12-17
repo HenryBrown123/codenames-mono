@@ -1,5 +1,5 @@
-import { Card, Stage, Team } from "@game/game-common-types";
-import { TEAM, STAGE } from "@game/game-common-constants";
+import { Card, Stage, Team } from "@game/types/game-common-types";
+import { TEAM, STAGE } from "@game/types/game-common-constants";
 import { GameCardProps } from "./game-card";
 import styled from "styled-components";
 import GameCard from "./game-card";
@@ -9,6 +9,14 @@ import GameCard from "./game-card";
  *
  * @param {RenderCardsProps} props - The props for rendering cards, including the list of cards, current stage, read-only status, and click handler.
  */
+
+type RenderCardsProps = {
+  cards: Card[];
+  stage: Stage;
+  readOnly?: boolean;
+  handleCardClick?: (cardData: Card) => void;
+};
+
 export const RenderCards: React.FC<RenderCardsProps> = ({
   cards,
   stage,
@@ -16,10 +24,11 @@ export const RenderCards: React.FC<RenderCardsProps> = ({
   handleCardClick,
 }) => (
   <CardsContainer aria-label="game board container with 25 cards">
-    {cards.map((cardData) => {
+    {cards.map((cardData, index) => {
       const gameCardProps = getGameCardProps(
         cardData,
         stage,
+        index,
         readOnly,
         () => handleCardClick && handleCardClick(cardData)
       );
@@ -68,6 +77,7 @@ export const getCardColor = (team: Team): string => {
 export const getGameCardProps = (
   cardData: Card,
   gameStage: Stage,
+  cardIndex?: number,
   readOnly?: boolean,
   handleClick?: () => void
 ): GameCardProps => {
@@ -79,6 +89,7 @@ export const getGameCardProps = (
     selected: cardData.selected,
     showTeamColorAsBackground: !readOnly && gameStage === STAGE.CODEMASTER,
     onClick: handleClick,
+    cardIndex: cardIndex,
   };
 };
 
@@ -100,10 +111,3 @@ const GameCardContainer = styled.div`
   justify-content: center;
   align-items: center;
 `;
-
-type RenderCardsProps = {
-  cards: Card[];
-  stage: Stage;
-  readOnly?: boolean;
-  handleCardClick?: (cardData: Card) => void;
-};

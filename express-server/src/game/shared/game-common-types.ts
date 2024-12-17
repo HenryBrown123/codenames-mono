@@ -1,13 +1,13 @@
 import {
   TEAM,
   STAGE,
-  CODEBREAKER_OUTCOMES,
+  CODEBREAKER_OUTCOME,
 } from "@game/shared/game-common-constants";
 
 export type Team = (typeof TEAM)[keyof typeof TEAM];
 export type Stage = (typeof STAGE)[keyof typeof STAGE];
 export type TurnOutcome =
-  (typeof CODEBREAKER_OUTCOMES)[keyof typeof CODEBREAKER_OUTCOMES];
+  (typeof CODEBREAKER_OUTCOME)[keyof typeof CODEBREAKER_OUTCOME];
 
 // Settings type
 export interface Settings {
@@ -35,6 +35,12 @@ export interface Round {
   codeword?: string;
   guessesAllowed?: number;
   turns?: Turn[]; // Array of individual turns in the round
+}
+
+export interface Player {
+  role: "codemaster" | "codebreaker";
+  userId: string;
+  active: boolean;
 }
 
 // GameState type

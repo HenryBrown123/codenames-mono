@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import ActionButton from "../action-button/action-button";
-import { useGameContext } from "@game/context";
-import { Round } from "@game/game-common-types";
+import { useGameContext } from "@game/state";
+import { Round } from "@game/types/game-common-types";
 
 const Container = styled.div`
   display: flex;

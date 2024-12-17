@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import GameCard from "@game/components/game-board/game-card"; // Replace with your actual component path
+import GameCard from "@game/ui/game-board/game-card"; // Replace with your actual component path
 import "@testing-library/jest-dom";
 import { describe, it, expect, beforeEach } from "vitest";
 

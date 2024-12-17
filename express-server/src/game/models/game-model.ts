@@ -7,16 +7,21 @@ import {
   GameState,
   GameData,
   Turn,
+  Player,
 } from "@game/shared/game-common-types";
 
 import {
   TEAM,
   STAGE,
-  CODEBREAKER_OUTCOMES,
+  CODEBREAKER_OUTCOME,
+  GAME_TYPE,
 } from "@game/shared/game-common-constants";
+import GuestSessionModel, { GuestSession } from "@auth/auth-guest-model";
 
 export interface GameDocument extends Document, GameData {
   _id: string;
+  players?: Player[]; // Reference to the players associated with the game
+  gameType: string; // Type of game: single-device or multiplayer
   save(): Promise<GameDocument>;
 }
 
@@ -41,7 +46,7 @@ const TurnSchema = new mongoose.Schema<Turn>(
     outcome: {
       type: String,
       required: true,
-      enum: Object.values(CODEBREAKER_OUTCOMES),
+      enum: Object.values(CODEBREAKER_OUTCOME),
     },
   },
   { _id: false }
@@ -89,12 +94,23 @@ const GameStateSchema = new mongoose.Schema<GameState>(
   { _id: false }
 );
 
+// Sub-schema for players
+const PlayerSchema = new mongoose.Schema<Player>(
+  {
+    role: { type: String, required: true, enum: ["codemaster", "codebreaker"] },
+    userId: { type: String, required: true },
+  },
+  { _id: false }
+);
+
 // Main schema for game
 const GameSchema = new mongoose.Schema<GameDocument>(
   {
     _id: { type: String, default: shortid.generate },
     state: GameStateSchema,
     settings: SettingsSchema,
+    players: { type: [PlayerSchema], default: [] }, // Reference to players
+    gameType: { type: String, required: true, enum: Object.values(GAME_TYPE) }, // Type of game
   },
   { timestamps: true, strict: true }
 );

@@ -1,9 +1,9 @@
-import { TEAM, STAGE, CODEBREAKER_OUTCOMES } from "./game-common-constants";
+import { TEAM, STAGE, CODEBREAKER_OUTCOME } from "./game-common-constants";
 
 export type Team = (typeof TEAM)[keyof typeof TEAM];
 export type Stage = (typeof STAGE)[keyof typeof STAGE];
 export type TurnOutcome =
-  (typeof CODEBREAKER_OUTCOMES)[keyof typeof CODEBREAKER_OUTCOMES];
+  (typeof CODEBREAKER_OUTCOME)[keyof typeof CODEBREAKER_OUTCOME];
 
 // Settings type
 export interface Settings {

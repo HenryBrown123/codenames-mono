@@ -30,9 +30,20 @@ export const STAGE = {
  * @enum {string}
  */
 
-export const CODEBREAKER_OUTCOMES = {
+export const CODEBREAKER_OUTCOME = {
   OTHER_TEAM_CARD: "OTHER_TEAM_CARD",
   BYSTANDER_CARD: "BYSTANDER_CARD",
   ASSASSIN_CARD: "ASSASSIN_CARD",
   CORRECT_TEAM_CARD: "CORRECT_TEAM_CARD",
+} as const;
+
+/**
+ * Object representing the different game types
+ * @readonly
+ * @enum {string}
+ */
+
+export const GAME_TYPE = {
+  SINGLE_DEVICE: "SINGLE_DEVICE",
+  DEMO: "SINGLE_DEVICE",
 } as const;

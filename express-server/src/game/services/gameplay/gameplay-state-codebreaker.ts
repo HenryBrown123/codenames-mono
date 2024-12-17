@@ -1,5 +1,5 @@
 import {
-  CODEBREAKER_OUTCOMES,
+  CODEBREAKER_OUTCOME,
   TEAM,
   STAGE,
 } from "@game/shared/game-common-constants";
@@ -7,7 +7,7 @@ import { GameState, TurnOutcome, Team } from "@game/shared/game-common-types";
 import GameStateProcessor from "./gameplay-state-common";
 
 const { OTHER_TEAM_CARD, BYSTANDER_CARD, ASSASSIN_CARD, CORRECT_TEAM_CARD } =
-  CODEBREAKER_OUTCOMES;
+  CODEBREAKER_OUTCOME;
 
 export default class CodebreakerStateProcessor extends GameStateProcessor {
   private static readonly decisionTable = [

@@ -5,7 +5,7 @@ import { FaStar, FaLeaf, FaSkull, FaPeace, FaLess } from "react-icons/fa";
 const FRONT_CARD_COLOUR = "#494646";
 
 interface CardProps {
-  backColour?: string;
+  backgroundColour?: string;
   children: React.ReactNode;
   clickable?: boolean;
   codemasterView?: boolean;
@@ -83,7 +83,7 @@ const CardContainer = styled.div`
 const Card = styled.button<CardProps>`
   ${sharedCardStyles}
   background-color: ${(props) =>
-    props.backColour ? props.backColour : FRONT_CARD_COLOUR};
+    props.backgroundColour ? props.backgroundColour : FRONT_CARD_COLOUR};
   transition: transform 0.2s;
 
   &:hover {
@@ -110,14 +110,18 @@ const CardContent = styled.div<{ cardPicked?: boolean }>`
   text-decoration: ${(props) => (props.cardPicked ? "line-through" : "none")};
 `;
 
-const CoverCard = styled.div<{ backColour?: string }>`
+const CoverCard = styled.div<{
+  backgroundColour?: string;
+  animationDelay?: number;
+}>`
   ${sharedCardStyles}
   position: absolute;
   top: 0;
   left: 0;
-  background-color: ${(props) => props.backColour || FRONT_CARD_COLOUR};
+  background-color: ${(props) => props.backgroundColour || FRONT_CARD_COLOUR};
   opacity: 1;
   animation: ${slideInAnimation} 0.8s ease-out;
+  animation-delay: ${(props) => props.animationDelay};
 `;
 
 const CornerIcon = styled.div`
@@ -143,16 +147,18 @@ export interface GameCardProps {
   showTeamColorAsBackground: boolean;
   clickable: boolean;
   selected?: boolean;
+  cardIndex?: number;
   onClick?: () => void;
 }
 
 const GameCard: React.FC<GameCardProps> = memo((props) => {
   const {
-    cardText, // doesn't change between stages
-    cardColor, // only changes if card is selected or if stage codemaster
-    showTeamColorAsBackground, // only true for codemaster
-    clickable = false, // changes between
+    cardText,
+    cardColor,
+    showTeamColorAsBackground,
+    clickable = false,
     selected,
+    cardIndex,
     onClick,
   } = props;
 
@@ -174,15 +180,19 @@ const GameCard: React.FC<GameCardProps> = memo((props) => {
           clickable && !selected && !cardPicked ? handleClick : undefined
         }
         clickable={clickable}
-        backColour={showTeamColorAsBackground ? cardColor : FRONT_CARD_COLOUR}
+        backgroundColour={
+          showTeamColorAsBackground ? cardColor : FRONT_CARD_COLOUR
+        }
         aria-label={`Card with text ${cardText}`}
       >
-        <CardContent cardPicked={cardPicked || selected}>
-          {cardText}
-        </CardContent>
+        <CardContent cardPicked={cardPicked}>{cardText}</CardContent>
       </Card>
       {selected && (
-        <CoverCard backColour={cardColor} aria-label={`Selected card`}>
+        <CoverCard
+          animationDelay={cardIndex * 0.1}
+          backgroundColour={cardColor}
+          aria-label={`Selected card`}
+        >
           <CornerIcon>{getIcon(cardColor)}</CornerIcon>
         </CoverCard>
       )}

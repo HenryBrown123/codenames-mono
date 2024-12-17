@@ -1,18 +1,19 @@
 import React, { useCallback, useState, memo } from "react";
 import { useProcessTurn } from "@game/api";
-import { useGameplayContext } from "@game/context";
-import { GameData, Card } from "@game/game-common-types";
+import { useGameplayContext } from "@game/state";
+import { GameData, Card } from "@game/types/game-common-types";
 import { RenderCards } from "./game-board-utils";
 
 /**
- * CodebreakerStageBoard component renders the game board for the codebreaker stage.
- * It allows cards to be picked by the codebreaker which in then calls processTurn to evaluate choice.
+ * CodebreakerStageBoard component now just updates the rounds and calls handleProcessTurn.
+ * The state machine transitions are controlled in the gameplay context's onSuccess handler.
  */
 export const CodebreakerStageBoard: React.FC<{ gameData: GameData }> = memo(
   ({ gameData }) => {
-    const { mutate: processTurn } = useProcessTurn();
-    const { dispatch } = useGameplayContext();
+    const { handleTurnSubmission, uiStage } = useGameplayContext();
     const [isProcessing, setIsProcessing] = useState(false);
+
+    console.log("Rendering codebreaker board");
 
     const handleCardClick = useCallback(
       (cardData: Card) => {
@@ -34,23 +35,17 @@ export const CodebreakerStageBoard: React.FC<{ gameData: GameData }> = memo(
             rounds: updatedRounds,
           };
 
-          processTurn(
-            { gameId: gameData._id, gameState: updatedGameState },
-            {
-              onSuccess: () => {
-                setIsProcessing(false);
-              },
-            }
-          );
+          handleTurnSubmission(gameData._id, updatedGameState);
+          setIsProcessing(false);
         }
       },
-      [gameData, isProcessing, processTurn, dispatch]
+      [gameData, isProcessing, handleTurnSubmission]
     );
 
     return (
       <RenderCards
         cards={gameData.state.cards}
-        stage={gameData.state.stage}
+        stage={uiStage}
         handleCardClick={handleCardClick}
       />
     );
@@ -62,13 +57,17 @@ export const CodebreakerStageBoard: React.FC<{ gameData: GameData }> = memo(
  * It does not allow card interactions but does show the actual colour of the cards.
  */
 export const CodemasterStageBoard: React.FC<{ gameData: GameData }> = memo(
-  ({ gameData }) => (
-    <RenderCards
-      cards={gameData.state.cards}
-      stage={gameData.state.stage}
-      handleCardClick={() => {}}
-    />
-  )
+  ({ gameData }) => {
+    console.log("Rendering codemaster view");
+
+    return (
+      <RenderCards
+        cards={gameData.state.cards}
+        stage={gameData.state.stage}
+        handleCardClick={() => {}}
+      />
+    );
+  }
 );
 
 /**
@@ -76,14 +75,18 @@ export const CodemasterStageBoard: React.FC<{ gameData: GameData }> = memo(
  * It does not allow any interactions with the cards.
  */
 export const ReadOnlyBoard: React.FC<{ gameData: GameData }> = memo(
-  ({ gameData }) => (
-    <RenderCards
-      cards={gameData.state.cards}
-      stage={gameData.state.stage}
-      readOnly={true}
-      handleCardClick={() => {}}
-    />
-  )
+  ({ gameData }) => {
+    console.log("Rendering readonly view");
+
+    return (
+      <RenderCards
+        cards={gameData.state.cards}
+        stage={gameData.state.stage}
+        readOnly={true}
+        handleCardClick={() => {}}
+      />
+    );
+  }
 );
 
 /**

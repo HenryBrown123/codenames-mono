@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useCreateGuestSession } from "@game/api";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { LoadingSpinner } from "@game/components";
-import { ActionButton } from "@game/components/action-button";
+import { LoadingSpinner } from "@game/ui";
+import { ActionButton } from "@game/ui/action-button";
 
 export const GuestAuthPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);

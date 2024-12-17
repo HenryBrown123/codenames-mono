@@ -1,4 +1,4 @@
-import { Team } from "@game/game-common-types";
+import { Team } from "@game/types/game-common-types";
 
 /**
  * Object representing teams in the game.
@@ -30,7 +30,7 @@ export const STAGE = {
  * @enum {string}
  */
 
-export const CODEBREAKER_OUTCOMES = {
+export const CODEBREAKER_OUTCOME = {
   OTHER_TEAM_CARD: "OTHER_TEAM_CARD",
   BYSTANDER_CARD: "BYSTANDER_CARD",
   ASSASSIN_CARD: "ASSASSIN_CARD",
