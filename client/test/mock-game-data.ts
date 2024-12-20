@@ -1,4 +1,4 @@
-import { GameData } from "@game/types/game-common-types";
+import { GameData } from "@shared-types/game-types";
 export const exampleIntroGameState: GameData = {
   settings: {
     numberOfCards: 25,

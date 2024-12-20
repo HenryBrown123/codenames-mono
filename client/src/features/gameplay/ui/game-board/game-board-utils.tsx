@@ -1,5 +1,5 @@
-import { Card, Stage, Team } from "@game/types/game-common-types";
-import { TEAM, STAGE } from "@game/types/game-common-constants";
+import { Card, Stage, Team } from "@shared-types/game-types";
+import { TEAM, STAGE } from "src/shared-types/game-constants";
 import { GameCardProps } from "./game-card";
 import styled from "styled-components";
 import GameCard from "./game-card";

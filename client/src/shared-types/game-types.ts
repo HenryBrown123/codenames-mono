@@ -1,4 +1,4 @@
-import { TEAM, STAGE, CODEBREAKER_OUTCOME } from "./game-common-constants";
+import { TEAM, STAGE, CODEBREAKER_OUTCOME } from "./game-constants";
 
 export type Team = (typeof TEAM)[keyof typeof TEAM];
 export type Stage = (typeof STAGE)[keyof typeof STAGE];

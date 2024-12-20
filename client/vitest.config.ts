@@ -30,8 +30,10 @@ export default defineConfig({
       test: "/test",
       "@": "/src",
       "@game": "/src/features/gameplay",
+      "@game-access": "/src/features/access",
       "@pages": "/src/pages",
       "@style": "/src/style",
+      "@shared-types": "/src/shared-types", // Add alias for style
       "@test": "/test",
     },
     reporters: ["dot"],

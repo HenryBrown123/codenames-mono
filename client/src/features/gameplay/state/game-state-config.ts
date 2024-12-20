@@ -1,5 +1,5 @@
-import { STAGE } from "@game/types/game-common-constants";
-import { Stage } from "@game/types/game-common-types";
+import { STAGE } from "src/shared-types/game-constants";
+import { Stage } from "@shared-types/game-types";
 
 /**
  * The central UI configuration for the game.
@@ -24,7 +24,6 @@ export const uiConfig: UIConfig = {
         gameBoard: "readOnlyBoard",
         dashboard: "transitionDashboard",
         on: {
-          // After processing a turn in preparation, go to main scene
           next: { type: "scene", target: "main" },
         },
       },

@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { useCreateGuestSession } from "@game/api";
+import { useCreateGuestSession } from "@game-access/api";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { LoadingSpinner } from "@game/ui";
 import { ActionButton } from "@game/ui/action-button";
 
-export const GuestAuthPage: React.FC = () => {
+export const GuestAuthPageContent: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const { mutate: createGuestSession, isPending: isCreatingSession } =
     useCreateGuestSession();
@@ -101,4 +101,4 @@ const ErrorText = styled.p`
   margin-top: 1rem;
 `;
 
-export default GuestAuthPage;
+export default GuestAuthPageContent;

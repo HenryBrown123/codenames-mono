@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import { useGameContext } from "@game/state";
-import { Stage } from "@game/types/game-common-types";
-import { STAGE } from "@game/types/game-common-constants";
+import { Stage } from "@shared-types/game-types";
+import { STAGE } from "src/shared-types/game-constants";
 
 interface OverlayProps {
   isOpen: boolean;

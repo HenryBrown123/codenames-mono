@@ -1,12 +1,14 @@
 import React, { useState } from "react";
-import { useCreateNewGame } from "@game/api";
+import { useCreateNewGame } from "@game-access/api";
+
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { LoadingSpinner } from "@game/ui";
 import { ActionButton } from "@game/ui/action-button";
-import { Settings, Team } from "@game/types/game-common-types";
+import { Settings, Team } from "@shared-types/game-types";
+import { ValueScope } from "ajv/dist/compile/codegen";
 
-export const CreateGamePage: React.FC = () => {
+const CreateGamePageContent: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const { mutate: createNewGame, isPending: isCreatingGame } =
@@ -142,6 +144,8 @@ export const CreateGamePage: React.FC = () => {
     </CreateGameLayout>
   );
 };
+
+export default CreateGamePageContent;
 
 // Styled Components with similar styling to the game page
 const CreateGameLayout = styled.div`

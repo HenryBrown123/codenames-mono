@@ -15,8 +15,10 @@ export default defineConfig({
       src: "/src",
       test: "/test",
       "@": "/src",
+      "@lib": "/src/lib",
       "@game": "/src/features/gameplay",
-      "@pages": "/src/pages", // Add alias for pages
+      "@game-access": "/src/features/game-access",
+      "@shared-types": "/src/shared-types", // Add alias for style
       "@style": "/src/style", // Add alias for style
       "@test": "/test",
     },

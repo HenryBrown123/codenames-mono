@@ -4,8 +4,9 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { GameData, GameState, Settings } from "@game/types/game-common-types";
-import apis from "src/api";
+import { GameData, GameState, Settings } from "@shared-types/game-types";
+import fetchGame from "./fetch-game";
+import submitTurn from "./submit-turn";
 
 export const useGameData = (
   gameId: string | null
@@ -13,29 +14,7 @@ export const useGameData = (
   return useQuery<GameData>({
     queryKey: ["gameData", gameId],
     queryFn: () =>
-      gameId ? apis.fetchGame(gameId) : Promise.reject("Game ID is required"), // Fetch from server
-  });
-};
-
-// Hook for creating a new game
-export const useCreateNewGame = () => {
-  return useMutation({
-    mutationKey: ["createNewGame"],
-    mutationFn: (payload?: Settings) => apis.createNewGame(payload),
-  });
-};
-
-// Hook for creating a guest session
-export const useCreateGuestSession = () => {
-  return useMutation({
-    mutationKey: ["createGuestSession"],
-    mutationFn: () => apis.createGuestSession(),
-    onSuccess: () => {
-      console.log("Guest session created successfully");
-    },
-    onError: (error) => {
-      console.error("Error creating guest session:", error);
-    },
+      gameId ? fetchGame(gameId) : Promise.reject("Game ID is required"), // Fetch from server
   });
 };
 
@@ -60,7 +39,7 @@ export const useProcessTurn = ({
     }: {
       gameId: string;
       gameState: GameState;
-    }) => apis.submitTurn(gameId, gameState),
+    }) => submitTurn(gameId, gameState),
     onSuccess: (updatedGameState, { gameId, gameState }) => {
       queryClient.setQueryData(["gameData", gameId], (oldData: GameData) => ({
         ...oldData,

@@ -1,7 +1,3 @@
-export {
-  useGameData,
-  useCreateNewGame,
-  useProcessTurn,
-  useCreateGuestSession,
-} from "./use-game-data";
-export { useMockGameData } from "./use-mock-game-data";
+export * from "./use-game-data";
+export * from "./fetch-game";
+export * from "./submit-turn";

@@ -5,7 +5,7 @@ import React, {
   useReducer,
   useCallback,
 } from "react";
-import { Stage, GameState } from "@game/types/game-common-types";
+import { Stage, GameState } from "@shared-types/game-types";
 import { uiConfig } from "@game/state/game-state-config";
 import { useProcessTurn } from "@game/api";
 
