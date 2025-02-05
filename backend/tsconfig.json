@@ -1,0 +1,18 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@backend/auth/*": ["src/auth/*"],
+      "@backend/db/*": ["src/db/*"],
+      "@backend/game/*": ["src/game/*"],
+      "@backend/game/routers": ["src/game/routers"],
+      "@backend/test/*": ["test/*"]
+    },
+    "outDir": "./dist"
+  },
+  "include": ["src/**/*", "test/**/*", "src/index.ts"], // Include tests if you want them compiled
+  "exclude": ["node_modules"],
+  "references": [{ "path": "../shared" }]
+}

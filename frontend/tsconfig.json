@@ -1,0 +1,21 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "es2015",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@frontend/*": ["src/*"],
+      "@frontend/lib/*": ["src/lib/*"],
+      "@frontend/game/*": ["src/features/gameplay/*"],
+      "@frontend/game-access/*": ["src/features/game-access/*"],
+      "@frontend/pages/*": ["src/pages/*"],
+      "@frontend/style/*": ["src/style/*"]
+    },
+    "outDir": "./dist"
+  },
+  "include": ["src/**/*", "test/**/*"],
+  "exclude": ["node_modules", "dist"],
+  "references": [{ "path": "../shared" }]
+}
