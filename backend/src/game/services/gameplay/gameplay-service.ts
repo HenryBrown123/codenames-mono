@@ -45,7 +45,8 @@ export async function executeTurn(
     throw new Error("Invalid game stage");
   }
   try {
-    // Fetch the persisted game state and hydraft the input game state with card teams
+    // Fetch the persisted game state and hydraft the input game state with card teams for game logic execution
+    // this is because the team is not populated client side until card is selected
     const originalGameState = await fetchGameDocument(gameId);
     const hydratedGameState = addTeamPropToCard(
       inputGameState,

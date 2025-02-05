@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { GuestAuthRequest } from "@auth/auth-types";
-import GuestSessionModel from "@auth/auth-guest-model";
+import { GuestAuthRequest } from "@backend/auth/auth-types";
+import GuestSessionModel from "@backend/auth/auth-guest-model";
 
 /**
  * Guest Authentication Middleware
@@ -11,7 +11,7 @@ import GuestSessionModel from "@auth/auth-guest-model";
 export async function guestAuth(
   req: GuestAuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   if (!req.session.guestId) {
     const guestId = `guest-${Math.random().toString(36).substr(2, 9)}`;
@@ -37,7 +37,7 @@ export async function guestAuth(
 export function requireGuestAuth(
   req: GuestAuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   if (!req.session.guestId) {
     console.log("Unauthorized: No guest session found");
@@ -47,7 +47,7 @@ export function requireGuestAuth(
 
   console.log(
     "Running requireGuestAuth middleware for guestId: ",
-    req.session.guestId
+    req.session.guestId,
   );
   next();
 }

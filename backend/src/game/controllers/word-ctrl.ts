@@ -39,7 +39,13 @@ export const getRandomWords = async (
       Word.findOne().skip(index).exec(),
     );
 
-    return await Promise.all(randomWordsPromises);
+    const words = await Promise.all(randomWordsPromises);
+
+    if (words.includes(null)) {
+      throw new Error("Failed to fetch enough words from the database.");
+    }
+
+    return words as WordData[];
   } catch (error) {
     console.error("Error fetching random words:", error);
     throw error;
@@ -51,23 +57,29 @@ export const postWordArray = async (
   res: Response,
 ): Promise<Response> => {
   const body = req.body;
-  if (!body) {
+  if (!body || body.length === 0) {
     return res
       .status(400)
       .json({ success: false, error: "You must provide one or more words" });
   }
-  for (const wordData of body) {
-    try {
-      const word = new Word(wordData);
-      await word.save();
-      return res
-        .status(201)
-        .json({ success: true, id: word._id, message: "Word created!" });
-    } catch (error) {
-      return res
-        .status(400)
-        .json({ success: false, error, message: "Word not created!" });
-    }
+
+  try {
+    const wordDocs = await Promise.all(
+      body.map(async (wordData) => {
+        const word = new Word(wordData);
+        return word.save();
+      }),
+    );
+
+    return res.status(201).json({
+      success: true,
+      words: wordDocs.map((word) => ({ id: word._id, word: word.word })),
+      message: "Words created!",
+    });
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ success: false, error, message: "Words not created!" });
   }
 };
 

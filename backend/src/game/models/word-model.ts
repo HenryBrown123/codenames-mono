@@ -11,7 +11,7 @@ const WordSchema = new Schema<WordDocument>(
   {
     word: { type: String, required: true },
   },
-  { timestamps: false }
+  { timestamps: false },
 );
 
 const Word = model("Word", WordSchema);

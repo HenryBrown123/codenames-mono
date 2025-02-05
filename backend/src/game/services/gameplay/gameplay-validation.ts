@@ -1,4 +1,4 @@
-import { GameState } from "@codenames/shared/src/game/game-types";
+import { GameState, Card } from "@codenames/shared/src/game/game-types";
 
 /**
  * Validates input state... compares with old game state
@@ -8,7 +8,7 @@ import { GameState } from "@codenames/shared/src/game/game-types";
  */
 export function validateIntroStage(inputGameState: GameState): void {
   // if intro stage then no cards should be selected and the rounds array should be empty
-  if (inputGameState.cards.some((card) => card.selected)) {
+  if (inputGameState.cards.some((card: Card) => card.selected)) {
     throw new Error("No cards should be selected in the intro stage.");
   }
 }
@@ -62,7 +62,7 @@ export function validateCodebreakerStage(inputGameState: GameState): void {
     throw new Error("The latest turn must have a guessed word.");
   }
 
-  const wordsInCards = inputGameState.cards.map((card) => card.word);
+  const wordsInCards = inputGameState.cards.map((card: Card) => card.word);
 
   if (!wordsInCards.includes(latestTurn.guessedWord)) {
     throw new Error("Guessed word not found in cards");

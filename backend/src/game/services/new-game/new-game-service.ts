@@ -31,9 +31,12 @@ export async function createNewGame(
     const words: string[] = wordObjects.map((wordObj) => wordObj.word);
     const newGameData = createGameData(settings, words);
     const newGame = new Game(newGameData);
-    await newGame.save();
-    return newGame;
-  } catch (error) {
-    throw new Error(`Failed to create new game: ${error.message}`);
+
+    return newGame.save();
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(`Failed to create new game: ${error.message}`);
+    }
+    throw new Error("Failed to create new game due to an unknown error.");
   }
 }

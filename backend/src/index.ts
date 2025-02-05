@@ -3,11 +3,16 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import session from "express-session";
 import MongoStore from "connect-mongo";
-import db from "./db/index.js";
-import { wordRouter, gameRouter } from "@game/index";
+import db from "./db";
+import { wordRouter, gameRouter } from "@backend/game/routers";
+// @ts-ignore
 import { specs, swaggerUi } from "./swagger.js";
-import { guestAuth, requireGuestAuth } from "@auth/guest-auth-middleware";
-import { authRouter } from "@auth/auth-router.js";
+
+import {
+  guestAuth,
+  requireGuestAuth,
+} from "@backend/auth/guest-auth-middleware";
+import { authRouter } from "@backend/auth/auth-router";
 
 // Environment Variables Setup
 const apiPort = process.env.API_PORT || 3000;
@@ -21,7 +26,7 @@ app.use(
   cors({
     origin: "http://localhost:8000", // Replace this with the correct front-end origin
     credentials: true, // Allow credentials (cookies, etc.)
-  })
+  }),
 );
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -40,7 +45,7 @@ app.use(
     store: MongoStore.create({
       mongoUrl: process.env.MONGO_URI || "mongodb://localhost:27017/codenames", // MongoDB connection URL
     }),
-  })
+  }),
 );
 
 // Database Error Handling
@@ -72,8 +77,8 @@ app.use((err: any, req: any, res: any, next: any) => {
 /* Start Listening */
 app.listen(apiPort, () =>
   console.log(
-    `Server running on port ${apiPort}, NODE_ENV: ${process.env.NODE_ENV}`
-  )
+    `Server running on port ${apiPort}, NODE_ENV: ${process.env.NODE_ENV}`,
+  ),
 );
 
 export default app; // This is useful for testing

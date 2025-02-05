@@ -4,6 +4,7 @@ import {
   Turn,
   Round,
   Stage,
+  Card,
 } from "@codenames/shared/src/game/game-types";
 import { TEAM } from "@codenames/shared/src/game/game-constants";
 
@@ -76,8 +77,9 @@ export default class GameStateProcessor {
    * @returns {number} - The total number of cards for the current team.
    */
   protected get totalCardsForTeam(): number {
-    return this.gameState.cards.filter((card) => card.team === this.currentTeam)
-      .length;
+    return this.gameState.cards.filter(
+      (card: Card) => card.team === this.currentTeam,
+    ).length;
   }
 
   /**
@@ -86,7 +88,7 @@ export default class GameStateProcessor {
    */
   protected get selectedCardsForTeam(): number {
     return this.gameState.cards.filter(
-      (card) => card.team === this.currentTeam && card.selected,
+      (card: Card) => card.team === this.currentTeam && card.selected,
     ).length;
   }
 

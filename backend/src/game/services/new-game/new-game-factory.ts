@@ -80,7 +80,8 @@ export const createGameData = (
   };
 
   return {
-    settings,
+    settings: settings,
+    gameType: "SINGLE_DEVICE",
     state: {
       stage: STAGE.INTRO,
       cards: createGameCards(settings, words),
