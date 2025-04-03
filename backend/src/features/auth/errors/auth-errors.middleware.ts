@@ -12,6 +12,8 @@ type ErrorResponse = {
   succces: boolean;
   error: string;
   stack?: string;
+  cause?: any;
+  req?: Request;
 };
 
 export const authErrorHandler = (
@@ -29,6 +31,8 @@ export const authErrorHandler = (
     if (process.env.NODE_ENV === "development") {
       errorResponse.stack = err.stack;
       errorResponse.error = err.message;
+      errorResponse.cause = err.cause;
+      errorResponse.req = req;
     }
 
     res.status(500).json(errorResponse);
