@@ -1,84 +1,64 @@
+// src/app.ts
 import express from "express";
-import bodyParser from "body-parser";
 import cors from "cors";
-import session from "express-session";
-import MongoStore from "connect-mongo";
-import db from "./db";
-import { wordRouter, gameRouter } from "@backend/game/routers";
-// @ts-ignore
-import { specs, swaggerUi } from "./swagger.js";
-
+import { createServer } from "http";
 import {
-  guestAuth,
-  requireGuestAuth,
-} from "@backend/auth/guest-auth-middleware";
-import { authRouter } from "@backend/auth/auth-router";
+  errorHandler,
+  notFoundHandler,
+} from "./shared/error-handler.middleware";
+import { initialize as initializeAuth } from "./features/auth";
+// import { initialize as initializeGames } from './features/games';
+// import { initialize as initializePlayers } from './features/players';
+import { postgresDb } from "./db";
 
-// Environment Variables Setup
-const apiPort = process.env.API_PORT || 3000;
-const sessionSecret = process.env.SESSION_SECRET || "default-secret"; // Make sure this is unique and strong in production
+/**
+ * Initialize the Express application with all middleware and features
+ */
+export const initializeApp = () => {
+  // Create Express app
+  const app = express();
 
-// Initialize Express App
-const app = express();
+  // Create HTTP server
+  const httpServer = createServer(app);
 
-// Configure CORS with credentials
-app.use(
-  cors({
-    origin: "http://localhost:8000", // Replace this with the correct front-end origin
-    credentials: true, // Allow credentials (cookies, etc.)
-  }),
-);
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+  // Configure middleware
+  app.use(cors());
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
 
-// Session Middleware (for guest authentication)
-app.use(
-  session({
-    secret: sessionSecret, // Replace with a stronger secret in production
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-      secure: process.env.NODE_ENV === "production", // Use secure cookies in production (HTTPS required)
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
+  // Initialize auth feature with JWT options
+  const auth = initializeAuth(app, postgresDb, {
+    jwtSecret: process.env.JWT_SECRET || "your-secret-key",
+    jwtOptions: {
+      expiresIn: "7d",
+      algorithm: "HS256",
+      issuer: "codenames-app",
     },
-    store: MongoStore.create({
-      mongoUrl: process.env.MONGO_URI || "mongodb://localhost:27017/codenames", // MongoDB connection URL
-    }),
-  }),
-);
+  });
 
-// Database Error Handling
-db.on("error", console.error.bind(console, "MongoDB connection error:"));
+  // Initialize other features and pass auth middleware to them
+  // initializeGames(app, db, {
+  //   middleware: {
+  //     requireAuthentication: auth.middleware.requireAuthentication
+  //   }
+  // });
 
-// Health Check Endpoint
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+  // initializePlayers(app, db, {
+  //   middleware: {
+  //     requireAuthentication: auth.middleware.requireAuthentication
+  //   }
+  // });
 
-/* Swagger - Externally Facing API Docs */
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
+  // Simple health check route
+  app.get("/health", (req, res) => {
+    res.status(200).json({ status: "UP" });
+  });
 
-// Authentication Routes
-app.use("/api/auth", guestAuth, authRouter);
+  // 404 handler for routes that don't match any endpoints
+  app.use(notFoundHandler);
 
-// Apply guestAuth middleware for game routes that require a guest session
-app.use("/api", requireGuestAuth, gameRouter);
+  // Global error handler - catches any errors not handled by feature-specific handlers
+  app.use(errorHandler);
 
-/* API Routes */
-app.use("/api", wordRouter);
-
-/* Error Handling Middleware */
-app.use((err: any, req: any, res: any, next: any) => {
-  console.error(err.stack);
-  res.status(500).json({ success: false, error: "Internal Server Error" });
-});
-
-/* Start Listening */
-app.listen(apiPort, () =>
-  console.log(
-    `Server running on port ${apiPort}, NODE_ENV: ${process.env.NODE_ENV}`,
-  ),
-);
-
-export default app; // This is useful for testing
+  return { app, httpServer, auth };
+};
