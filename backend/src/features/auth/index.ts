@@ -1,23 +1,23 @@
-import type { Express } from "express";
-import type { Kysely } from "kysely";
-import type { DB } from "src/infrastructure/db/db.types";
-import type { SignOptions } from "jsonwebtoken";
+import { Express } from "express";
+import { Kysely } from "kysely";
+import { DB } from "../../infrastructure/db/db.types";
+import { Router } from "express";
+import { JwtConfig } from "src/infrastructure/config/jwt.config";
 
-import * as usersRepository from "./repositories/users.repository";
-import * as authRepository from "./repositories/sessions.repository";
-import * as authService from "./auth.service";
-import * as authController from "./auth.controller";
-import * as authMiddleware from "../../infrastructure/http-middleware/auth.middleware";
-import * as authRoutes from "./auth.router";
-import { authErrorHandler } from "./shared/auth-errors.middleware";
+// Domain repositories
+import * as userRepository from "./domain/user.repository";
+import * as sessionRepository from "./domain/session.repository";
 
-/**
- * Configuration options for the auth feature
- */
-export interface AuthConfig {
-  jwtSecret: string;
-  jwtOptions: SignOptions;
-}
+// Error handlers
+import { authErrorHandler } from "./errors/auth-errors.middleware";
+
+// Create Guest User components
+import * as createGuestUserService from "./create-guest-user/create-guest-user.service";
+import * as createGuestUserController from "./create-guest-user/create-guest-user.controller";
+
+// Login components
+import * as loginService from "./login/login.service";
+import * as loginController from "./login/login.controller";
 
 /**
  * Initialize the auth feature
@@ -25,39 +25,44 @@ export interface AuthConfig {
 export const initialize = (
   app: Express,
   db: Kysely<DB>,
-  config: AuthConfig,
+  jwtConfig: JwtConfig,
 ) => {
-  // create repositories
-  const users = usersRepository.create({ db });
-  const auth = authRepository.create({ db });
+  // Create domain repositories
+  const userRepo = userRepository.create({ db });
+  const sessionRepo = sessionRepository.create({ db });
 
-  // create services
-  const service = authService.create({
-    usersRepository: users,
-    authRepository: auth,
-    jwtSecret: config.jwtSecret,
-    jwtOptions: config.jwtOptions,
+  // Create services
+  const guestUser = createGuestUserService.create({
+    userRepository: userRepo,
+    sessionRepository: sessionRepo,
+    jwtSecret: jwtConfig.secret,
+    jwtOptions: jwtConfig.options,
   });
 
-  // create controllers
-  const controller = authController.create({ authService: service });
-
-  // create middleware
-  const middleware = authMiddleware.create({
-    jwtSecret: config.jwtSecret,
+  const login = loginService.create({
+    userRepository: userRepo,
+    sessionRepository: sessionRepo,
+    jwtSecret: jwtConfig.secret,
+    jwtOptions: jwtConfig.options,
   });
 
-  // Initialize and register routes
-  const router = authRoutes.create({
-    authController: controller,
-  });
+  // Create controllers
+  const createGuestUserHandler = createGuestUserController.create({
+    createGuestUserService: guestUser,
+  }).handle;
 
-  // Apply feature router + dedicated error handler
+  const loginHandler = loginController.create({
+    loginService: login,
+  }).handle;
+
+  // Create router
+  const router = Router();
+
+  // Set up routes
+  router.post("/users", createGuestUserHandler);
+  router.post("/sessions", loginHandler);
+
+  // Apply router and feature-specific error handler
   app.use("/api/auth", router);
   app.use("/api/auth", authErrorHandler);
-
-  // Return components for other features to use
-  return {
-    middleware,
-  };
 };
