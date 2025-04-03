@@ -5,11 +5,11 @@ import { createServer } from "http";
 import {
   errorHandler,
   notFoundHandler,
-} from "./shared/error-handler.middleware";
+} from "./infrastructure/http-middleware/error-handler.middleware";
 import { initialize as initializeAuth } from "./features/auth";
 // import { initialize as initializeGames } from './features/games';
 // import { initialize as initializePlayers } from './features/players';
-import { postgresDb } from "./db";
+import { postgresDb } from "./infrastructure/db";
 
 /**
  * Initialize the Express application with all middleware and features

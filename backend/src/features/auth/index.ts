@@ -1,15 +1,15 @@
 import type { Express } from "express";
 import type { Kysely } from "kysely";
-import type { DB } from "@backend/db/db.types";
+import type { DB } from "src/infrastructure/db/db.types";
 import type { SignOptions } from "jsonwebtoken";
 
 import * as usersRepository from "./repositories/users.repository";
 import * as authRepository from "./repositories/sessions.repository";
 import * as authService from "./auth.service";
 import * as authController from "./auth.controller";
-import * as authMiddleware from "./middleware/auth.middleware";
+import * as authMiddleware from "../../infrastructure/http-middleware/auth.middleware";
 import * as authRoutes from "./auth.router";
-import { authErrorHandler } from "./middleware/auth-errors.middleware";
+import { authErrorHandler } from "./shared/auth-errors.middleware";
 
 /**
  * Configuration options for the auth feature

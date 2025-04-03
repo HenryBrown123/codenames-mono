@@ -1,4 +1,4 @@
-import { DB } from "src/db/db.types";
+import { DB } from "src/infrastructure/db/db.types";
 import { Kysely, sql } from "kysely";
 
 /**

@@ -5,7 +5,7 @@
     "baseUrl": ".",
     "paths": {
       "@backend/auth/*": ["src/legacy/auth/*"],
-      "@backend/db/*": ["src/db/*"],
+      "@backend/db/*": ["src/infrastructure/db/*"],
       "@backend/gameplay/*": ["src/gameplay/*"],
       "@backend/setup/*": ["src/features/setup/*"],
       "@backend/api/*": ["src/api/*"],
@@ -17,7 +17,7 @@
     "src/**/*",
     "test/**/*",
     "src/index.ts",
-    "src/db",
+    "src/infrastructure/db",
     "src/legacy/auth"
   ], // Include tests if you want them compiled
   "exclude": ["node_modules", "src/zzz-legacy/**"],
