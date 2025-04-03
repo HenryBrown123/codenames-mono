@@ -14,3 +14,4 @@ package.json
 client/cypress/screenshots/*
 dist/
 kysely-codegen.js
+backend/.DS_Store
