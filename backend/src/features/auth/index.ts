@@ -12,12 +12,11 @@ import * as sessionRepository from "./domain/session.repository";
 import { authErrorHandler } from "./errors/auth-errors.middleware";
 
 // Create Guest User components
-import * as createGuestUserService from "./create-guest-user/create-guest-user.service";
-import * as createGuestUserController from "./create-guest-user/create-guest-user.controller";
+import * as createGuestUserService from "./create-guest-session/create-guest-user.service";
+import * as createGuestUserController from "./create-guest-session/create-guest-session.controller";
 
 // Login components
-import * as loginService from "./login/login.service";
-import * as loginController from "./login/login.controller";
+import * as guestLoginService from "./create-guest-session/guest-login.service";
 
 /**
  * Initialize the auth feature
@@ -34,24 +33,18 @@ export const initialize = (
   // Create services
   const guestUser = createGuestUserService.create({
     userRepository: userRepo,
-    sessionRepository: sessionRepo,
-    jwtSecret: jwtConfig.secret,
-    jwtOptions: jwtConfig.options,
   });
 
-  const login = loginService.create({
+  const login = guestLoginService.create({
     userRepository: userRepo,
     sessionRepository: sessionRepo,
     jwtSecret: jwtConfig.secret,
     jwtOptions: jwtConfig.options,
   });
 
-  // Create controllers
+  // Create controller
   const createGuestUserHandler = createGuestUserController.create({
     createGuestUserService: guestUser,
-  }).handle;
-
-  const loginHandler = loginController.create({
     loginService: login,
   }).handle;
 
@@ -59,8 +52,7 @@ export const initialize = (
   const router = Router();
 
   // Set up routes
-  router.post("/users", createGuestUserHandler);
-  router.post("/sessions", loginHandler);
+  router.post("/guests", createGuestUserHandler);
 
   // Apply router and feature-specific error handler
   app.use("/api/auth", router);
