@@ -26,7 +26,7 @@ const options = {
     },
   },
   apis: [
-    "./src/game/**/*-router.{js,ts}",
+    "./src/game/**/*.router.{js,ts}",
     "./src/auth/**/*-router.{js,ts}", // Include authentication routes
   ], // Add path for the new auth router
 };
