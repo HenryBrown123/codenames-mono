@@ -1,5 +1,5 @@
 import type { Kysely } from "kysely";
-import type { DB } from "src/db/db.types";
+import type { DB } from "src/infrastructure/db/db.types";
 
 /**
  * Represents the game data returned by the query.

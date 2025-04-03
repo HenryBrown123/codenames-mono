@@ -1,5 +1,5 @@
 import { Kysely } from "kysely";
-import { DB } from "@backend/db/db.types";
+import { DB } from "src/infrastructure/db/db.types";
 
 /**
  * User entity as stored in the database
