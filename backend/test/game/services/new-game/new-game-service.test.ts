@@ -1,6 +1,6 @@
-import { createNewGame } from "@backend/game/services/new-game/new-game-service";
-import Game from "@backend/game/models/game-model";
-import { getRandomWords } from "@backend/game/controllers/word-ctrl";
+import { createNewGame } from "src/zzz-legacy/services/new-game/new-game-service";
+import Game from "src/zzz-legacy/models/game-model";
+import { getRandomWords } from "src/zzz-legacy/controllers/word-ctrl";
 import { TEAM } from "@codenames/shared/src/game/game-constants";
 import {
   expectedGameDataDefault,

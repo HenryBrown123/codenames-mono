@@ -1,4 +1,4 @@
-import { createGameData } from "@backend/game/services/new-game/new-game-factory";
+import { createGameData } from "src/zzz-legacy/services/new-game/new-game-factory";
 import { TEAM, STAGE } from "@codenames/shared/src/game/game-constants";
 
 describe("createGameData", () => {
