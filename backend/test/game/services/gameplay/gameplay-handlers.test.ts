@@ -3,7 +3,7 @@ import {
   handleCodemasterStage,
   handleCodebreakerStage,
   handleGameOverStage,
-} from "@backend/game/services/gameplay/gameplay-handlers";
+} from "src/zzz-legacy/services/gameplay/gameplay-handlers";
 import { TEAM, STAGE } from "@codenames/shared/src/game/game-constants";
 import { GameState } from "@codenames/shared/src/game/game-types";
 import {
