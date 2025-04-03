@@ -1,33 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 
 /**
- * Domain-specific error types
- */
-export class DomainError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "DomainError";
-    Object.setPrototypeOf(this, DomainError.prototype);
-  }
-}
-
-export class NotFoundError extends DomainError {
-  constructor(message: string) {
-    super(message);
-    this.name = "NotFoundError";
-    Object.setPrototypeOf(this, NotFoundError.prototype);
-  }
-}
-
-export class ValidationError extends DomainError {
-  constructor(message: string) {
-    super(message);
-    this.name = "ValidationError";
-    Object.setPrototypeOf(this, ValidationError.prototype);
-  }
-}
-
-/**
  * Global error handler middleware for Express
  * This is error middleware (4 parameters) that handles unexpected errors
  * Expected errors (400-level) should be handled by controllers
@@ -53,8 +26,6 @@ export const errorHandler = (
     (errorResponse as any).stack = err.stack;
   }
 
-  // Domain-specific errors should be handled by controllers
-  // This middleware only handles unexpected errors
   res.status(500).json(errorResponse);
 };
 
