@@ -4,15 +4,28 @@
     "composite": true,
     "baseUrl": ".",
     "paths": {
-      "@backend/auth/*": ["src/auth/*"],
+      "@backend/auth/*": ["src/legacy/auth/*"],
       "@backend/db/*": ["src/db/*"],
-      "@backend/game/*": ["src/game/*"],
-      "@backend/game/routers": ["src/game/routers"],
+      "@backend/gameplay/*": ["src/gameplay/*"],
+      "@backend/setup/*": ["src/features/setup/*"],
+      "@backend/api/*": ["src/api/*"],
       "@backend/test/*": ["test/*"]
     },
     "outDir": "./dist"
   },
-  "include": ["src/**/*", "test/**/*", "src/index.ts"], // Include tests if you want them compiled
-  "exclude": ["node_modules"],
-  "references": [{ "path": "../shared" }]
+  "include": [
+    "src/**/*",
+    "test/**/*",
+    "src/index.ts",
+    "src/db",
+    "src/legacy/auth"
+  ], // Include tests if you want them compiled
+  "exclude": ["node_modules", "src/zzz-legacy/**"],
+  "references": [{ "path": "../shared" }],
+  "watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents",
+    "fallbackPolling": "dynamicPriority",
+    "excludeDirectories": ["src/legacy/**"]
+  }
 }
