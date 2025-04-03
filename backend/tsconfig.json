@@ -9,7 +9,8 @@
       "@backend/gameplay/*": ["src/gameplay/*"],
       "@backend/setup/*": ["src/features/setup/*"],
       "@backend/api/*": ["src/api/*"],
-      "@backend/test/*": ["test/*"]
+      "@backend/test/*": ["test/*"],
+      "~": ["../"]
     },
     "outDir": "./dist"
   },
