@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { GameState, Card } from "@codenames/shared/src/game/game-types";
+import { GameState, Card } from "@codenames/shared/src/types/game-types";
 
 /**
  * Validates input state... compares with old game state

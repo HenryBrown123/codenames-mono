@@ -2,31 +2,21 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
+    "outDir": "./dist",
+    "rootDir": ".",
     "baseUrl": ".",
+    "module": "preserve",
+    "moduleResolution": "bundler",
     "paths": {
       "@backend/auth/*": ["src/legacy/auth/*"],
       "@backend/db/*": ["src/infrastructure/db/*"],
       "@backend/gameplay/*": ["src/gameplay/*"],
       "@backend/setup/*": ["src/features/setup/*"],
       "@backend/api/*": ["src/api/*"],
-      "@backend/test/*": ["test/*"],
-      "~": ["../"]
-    },
-    "outDir": "./dist"
+      "@backend/test/*": ["test/*"]
+    }
   },
-  "include": [
-    "src/**/*",
-    "test/**/*",
-    "src/index.ts",
-    "src/infrastructure/db",
-    "src/legacy/auth"
-  ], // Include tests if you want them compiled
-  "exclude": ["node_modules", "src/zzz-legacy/**"],
-  "references": [{ "path": "../shared" }],
-  "watchOptions": {
-    "watchFile": "useFsEvents",
-    "watchDirectory": "useFsEvents",
-    "fallbackPolling": "dynamicPriority",
-    "excludeDirectories": ["src/legacy/**"]
-  }
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "src/zzz-legacy/**"],
+  "references": [{ "path": "../shared" }]
 }

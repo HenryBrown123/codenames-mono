@@ -8,7 +8,7 @@ import {
   GameData,
   GameState,
   Settings,
-} from "@codenames/shared/src/game/game-types";
+} from "@codenames/shared/src/types/game-types";
 import fetchGame from "./fetch-game";
 import submitTurn from "./submit-turn";
 

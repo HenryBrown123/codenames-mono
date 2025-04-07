@@ -1,4 +1,3 @@
-// src/app.ts
 import express from "express";
 import cors from "cors";
 import { createServer } from "http";
@@ -7,16 +6,16 @@ import {
   notFoundHandler,
 } from "./infrastructure/http-middleware/error-handler.middleware";
 import { initialize as initializeAuth } from "./features/auth";
-// import { initialize as initializeGames } from './features/games';
-// import { initialize as initializePlayers } from './features/players';
 import { postgresDb } from "./infrastructure/db";
 import dotenv from "dotenv";
+import { createOpenApiSpec } from "@codenames/shared/api";
+import { loadEnvFromPackageDir } from "./infrastructure/config";
 
 /**
  * Initialize the Express application with all middleware and features
  */
 
-dotenv.config({ path: "../.env" });
+loadEnvFromPackageDir();
 
 // Create Express app
 const app = express();
@@ -39,19 +38,6 @@ const auth = initializeAuth(app, postgresDb, {
   },
 });
 
-// Initialize other features and pass auth middleware to them
-// initializeGames(app, db, {
-//   middleware: {
-//     requireAuthentication: auth.middleware.requireAuthentication
-//   }
-// });
-
-// initializePlayers(app, db, {
-//   middleware: {
-//     requireAuthentication: auth.middleware.requireAuthentication
-//   }
-// });
-
 // Simple health check route
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "UP" });
@@ -67,5 +53,5 @@ const PORT = process.env.PORT || 3000;
 
 // Start the server
 httpServer.listen(PORT, () => {
-  console.log(`${process.env.NODE_ENV} server running on port ${PORT}`);
+  console.log(`✅ ${process.env.NODE_ENV} server running on port ${PORT}`);
 });

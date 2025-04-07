@@ -1,6 +1,6 @@
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
-import { GameData } from "@codenames/shared/src/game/game-types";
+import { GameData } from "@codenames/shared/src/types/game-types";
 
 type FetchGameResponse = {
   success: boolean;

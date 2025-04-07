@@ -8,7 +8,7 @@ import {
   GameState,
   TurnOutcome,
   Team,
-} from "@codenames/shared/src/game/game-types";
+} from "@codenames/shared/src/types/game-types";
 import GameStateProcessor from "./gameplay-state-common";
 
 const { OTHER_TEAM_CARD, BYSTANDER_CARD, ASSASSIN_CARD, CORRECT_TEAM_CARD } =

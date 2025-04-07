@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { GameState } from "@codenames/shared/src/game/game-types";
+import { GameState } from "@codenames/shared/src/types/game-types";
 import { STAGE } from "@codenames/shared/src/game/game-constants";
 import GameStateProcessor from "./gameplay-state-common";
 import CodebreakerStateProcessor from "./gameplay-state-codebreaker";

@@ -4,7 +4,7 @@ import {
   Card,
   GameData,
   Settings,
-} from "@codenames/shared/src/game/game-types";
+} from "@codenames/shared/src/types/game-types";
 
 /**
  * Generated selected

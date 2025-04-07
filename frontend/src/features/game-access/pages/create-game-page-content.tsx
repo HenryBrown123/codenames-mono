@@ -9,7 +9,7 @@ import {
   GameType,
   Settings,
   Team,
-} from "@codenames/shared/src/game/game-types";
+} from "@codenames/shared/src/types/game-types";
 import { GAME_TYPE } from "@codenames/shared/src/game/game-constants";
 
 const CreateGamePageContent: React.FC = () => {

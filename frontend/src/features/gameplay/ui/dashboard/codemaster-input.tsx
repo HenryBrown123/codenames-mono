@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import ActionButton from "../action-button/action-button";
 import { useGameContext } from "@frontend/game/state";
-import { Round, Card } from "@codenames/shared/src/game/game-types";
+import { Round, Card } from "@codenames/shared/src/types/game-types";
 
 const Container = styled.div`
   display: flex;

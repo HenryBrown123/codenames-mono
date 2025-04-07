@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import { useGameContext } from "@frontend/game/state";
-import { Stage } from "@codenames/shared/src/game/game-types";
+import { Stage } from "@codenames/shared/src/types/game-types";
 import { STAGE } from "src/shared-types/game-constants";
 
 interface OverlayProps {

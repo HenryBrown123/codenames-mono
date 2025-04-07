@@ -1,7 +1,7 @@
 // @ts-nocheck
 import Game, { GameDocument } from "src/zzz-legacy/models/game-model";
 import { WordData } from "src/zzz-legacy/models/word-model";
-import { Settings } from "@codenames/shared/src/game/game-types";
+import { Settings } from "@codenames/shared/src/types/game-types";
 import { getRandomWords } from "src/zzz-legacy/controllers/word-ctrl";
 import { TEAM } from "@codenames/shared/src/game/game-constants";
 import { createGameData } from "./new-game-factory";

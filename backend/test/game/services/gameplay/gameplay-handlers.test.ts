@@ -5,7 +5,7 @@ import {
   handleGameOverStage,
 } from "src/zzz-legacy/services/gameplay/gameplay-handlers";
 import { TEAM, STAGE } from "@codenames/shared/src/game/game-constants";
-import { GameState } from "@codenames/shared/src/game/game-types";
+import { GameState } from "@codenames/shared/src/types/game-types";
 import {
   generateCards,
   getWinnerProperty,

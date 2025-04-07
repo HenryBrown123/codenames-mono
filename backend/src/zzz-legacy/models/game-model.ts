@@ -11,7 +11,7 @@ import {
   Turn,
   Player,
   GameType,
-} from "@codenames/shared/src/game/game-types";
+} from "@codenames/shared/src/types/game-types";
 
 import {
   TEAM,

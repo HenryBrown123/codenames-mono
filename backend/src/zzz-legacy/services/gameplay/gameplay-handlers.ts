@@ -10,7 +10,7 @@ import {
   processCodebreakerStage,
 } from "./gameplay-processing";
 
-import { GameState } from "@codenames/shared/src/game/game-types";
+import { GameState } from "@codenames/shared/src/types/game-types";
 
 /**
  * Handles the intro stage: validates, processes, and returns updated game state.
