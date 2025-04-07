@@ -5,7 +5,7 @@ import {
   Card,
   GameData,
   Round,
-} from "@codenames/shared/src/game/game-types";
+} from "@codenames/shared/src/types/game-types";
 import { TEAM, STAGE } from "@codenames/shared/src/game/game-constants";
 
 /**

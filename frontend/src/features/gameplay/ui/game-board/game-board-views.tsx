@@ -1,7 +1,7 @@
 import React, { useCallback, useState, memo } from "react";
 import { useProcessTurn } from "@frontend/game/api";
 import { useGameplayContext } from "@frontend/game/state";
-import { GameData, Card } from "@codenames/shared/src/game/game-types";
+import { GameData, Card } from "@codenames/shared/src/types/game-types";
 import { RenderCards } from "./game-board-utils";
 
 /**

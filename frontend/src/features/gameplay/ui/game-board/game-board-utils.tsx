@@ -1,4 +1,4 @@
-import { Card, Stage, Team } from "@codenames/shared/src/game/game-types";
+import { Card, Stage, Team } from "@codenames/shared/src/types/game-types";
 import { TEAM, STAGE } from "@codenames/shared/src/game/game-constants";
 import { GameCardProps } from "./game-card";
 import styled from "styled-components";

@@ -1,16 +1,11 @@
 import type { Request, Response, NextFunction } from "express";
 import type { CreateGuestUserService } from "./create-guest-user.service";
 import type { LoginService } from "./guest-login.service";
-import type { Session } from "../domain/session.types";
-/**
- * Response data structure for create guest user endpoint
- */
-export interface CreateGuestUserResponse {
-  user: {
-    username: string;
-  };
-  session: Session;
-}
+import {
+  createGuestResponseSchema,
+  createGuestRequestSchema,
+  CreateGuestResponse,
+} from "./create-guest-session.validation";
 
 /**
  * Controller interface for creating guest users
@@ -43,20 +38,29 @@ export const create = ({
     next: NextFunction,
   ): Promise<void> => {
     try {
+      // run time validation of req object
+      createGuestRequestSchema.parse(req.body);
+
       const user = await createGuestUserService.execute();
       const session = await loginService.execute(user.username);
 
-      const response: CreateGuestUserResponse = {
-        user: {
-          username: user.username,
+      const response: CreateGuestResponse = {
+        success: true,
+        data: {
+          user: {
+            username: user.username,
+          },
+          session: {
+            username: session.username,
+            token: session.token,
+          },
         },
-        session,
       };
 
-      res.status(201).json({
-        success: true,
-        data: response,
-      });
+      // run time validation of response object
+      const validatedResponse = createGuestResponseSchema.parse(response);
+
+      res.status(201).json(validatedResponse);
     } catch (error) {
       next(error);
     }
