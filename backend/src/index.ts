@@ -6,30 +6,39 @@ import {
   notFoundHandler,
 } from "./infrastructure/http-middleware/error-handler.middleware";
 import { initialize as initializeAuth } from "./features/auth";
-import { postgresDb } from "./infrastructure/db";
-import dotenv from "dotenv";
+import * as postgresDb from "./infrastructure/db";
 import { createOpenApiSpec } from "@codenames/shared/api";
 import { loadEnvFromPackageDir } from "./infrastructure/config";
+import swaggerUi from "swagger-ui-express";
+
+/**
+ * Runtime validation of env. variables
+ */
+let env;
+try {
+  env = loadEnvFromPackageDir();
+} catch (error) {
+  process.exit(1);
+}
 
 /**
  * Initialize the Express application with all middleware and features
  */
 
-loadEnvFromPackageDir();
-
-// Create Express app
 const app = express();
+const dbInstance = await postgresDb.initializeDb(env.DATABASE_URL);
 
-// Create HTTP server
-const httpServer = createServer(app);
-
-// Configure middleware
+// Configure general middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Set up Swagger docs
+const swaggerSpec = createOpenApiSpec();
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // Initialize auth feature with JWT options
-const auth = initializeAuth(app, postgresDb, {
+const auth = initializeAuth(app, dbInstance, {
   secret: process.env.JWT_SECRET || "your-secret-key",
   options: {
     expiresIn: "7d",
@@ -38,20 +47,17 @@ const auth = initializeAuth(app, postgresDb, {
   },
 });
 
-// Simple health check route
-app.get("/health", (req, res) => {
+app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "UP" });
 });
 
-// 404 handler for routes that don't match any endpoints
 app.use(notFoundHandler);
-
-// Global error handler - catches any errors not handled by feature-specific handlers
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 3000;
-
 // Start the server
+const httpServer = createServer(app);
+const PORT = env.PORT || 3000;
+
 httpServer.listen(PORT, () => {
   console.log(`✅ ${process.env.NODE_ENV} server running on port ${PORT}`);
 });
