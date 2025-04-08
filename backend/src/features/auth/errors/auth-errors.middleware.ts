@@ -11,9 +11,7 @@ import { NoResultError } from "kysely";
 type ErrorResponse = {
   succces: boolean;
   error: string;
-  stack?: string;
-  cause?: any;
-  req?: Request;
+  details?: { stack?: string; cause?: any; req?: Request };
 };
 
 export const authErrorHandler = (
@@ -22,22 +20,26 @@ export const authErrorHandler = (
   res: Response,
   next: NextFunction,
 ): void => {
-  if (err instanceof UnexpectedAuthError || err instanceof NoResultError) {
-    const errorResponse: ErrorResponse = {
-      succces: false,
-      error: "Unexpected error",
+  const errorResponse: ErrorResponse = {
+    succces: false,
+    error: "Unexpected error",
+  };
+
+  if (process.env.NODE_ENV === "development") {
+    const errorDetails = {
+      stack: err.stack,
+      error: err.message,
+      cause: err.cause,
+      req: req,
     };
 
-    if (process.env.NODE_ENV === "development") {
-      errorResponse.stack = err.stack;
-      errorResponse.error = err.message;
-      errorResponse.cause = err.cause;
-      errorResponse.req = req;
-    }
+    errorResponse.details = errorDetails;
+  }
 
+  if (err instanceof UnexpectedAuthError || err instanceof NoResultError) {
     res.status(500).json(errorResponse);
-
     return;
   }
+  err.cause;
   next(err);
 };
