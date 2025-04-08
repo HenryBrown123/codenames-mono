@@ -3,34 +3,49 @@ import path from "path";
 import fs from "fs";
 import { z } from "zod";
 
+export const loadEnvFromPackageDir = () => {
+  const envPath = path.resolve(process.cwd(), ".env");
+
+  if (!fs.existsSync(envPath)) {
+    console.error(`❌ Error: No .env file found at: ${process.cwd()}`);
+    throw new Error(
+      "Missing .env file. Please create one with required environment variables.",
+    );
+  }
+
+  console.log(`🔍 Loading environment variables from: ${envPath}`);
+  dotenv.config({ path: envPath });
+
+  // validate env variables against zod schema
+  const result = EnvSchema.safeParse(process.env);
+
+  if (!result.success) {
+    console.error("❌ Environment validation failed:");
+    result.error.errors.forEach((issue) => {
+      console.error(`   • ${issue.path.join(".")}: ${issue.message}`);
+    });
+    console.error("Please check your .env file and correct all issues above.");
+    throw result.error;
+  }
+
+  const parsedEnv = result.data;
+
+  if (parsedEnv.NODE_ENV === "development") {
+    console.log("📊 Environment Configuration:");
+    console.log(`   • Environment: ${parsedEnv.NODE_ENV}`);
+    console.log(`   • Port: ${parsedEnv.PORT}`);
+    console.log(`   • Database: ${parsedEnv.DATABASE_URL}`);
+    console.log(`   • JWT Secret: ${parsedEnv.JWT_SECRET}`);
+  }
+
+  console.log("✅ Environment variables validated successfully");
+  return parsedEnv;
+};
+
 // Zod schema for environment variables
 const EnvSchema = z.object({
   PORT: z.string().transform(Number).default("3000"),
   DATABASE_URL: z.string().url("Invalid DATABASE_URL"),
   JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 characters"),
-  NODE_ENV: z
-    .enum(["development", "production", "test"])
-    .default("development"),
+  NODE_ENV: z.enum(["development", "production", "test"]),
 });
-
-export function loadEnvFromPackageDir() {
-  const uniqueEnvPaths = [path.resolve(process.cwd(), ".env")];
-
-  // Find the first existing .env file
-  const existingEnvFile = uniqueEnvPaths.find((p) => {
-    const exists = fs.existsSync(p);
-    return exists;
-  });
-
-  if (existingEnvFile) {
-    console.log(`🔍 Loading environment variables from: ${existingEnvFile}`);
-    dotenv.config({ path: existingEnvFile });
-  } else {
-    throw new Error(`No .env file could be found at: ${process.cwd()}`);
-  }
-
-  const parsedEnv = EnvSchema.parse(process.env);
-
-  console.log("✅ Environment variables validated successfully");
-  return parsedEnv;
-}
