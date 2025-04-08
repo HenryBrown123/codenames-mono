@@ -119,10 +119,6 @@ export function createOpenApiSpec(serverUrl = "http://localhost:3000/api") {
         Session: {
           type: "object",
           properties: {
-            userId: {
-              type: "number",
-              example: 123,
-            },
             username: {
               type: "string",
               example: "Happy-Lion42",
