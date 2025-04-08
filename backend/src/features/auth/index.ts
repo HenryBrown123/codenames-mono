@@ -4,19 +4,17 @@ import { DB } from "../../infrastructure/db/db.types";
 import { Router } from "express";
 import { JwtConfig } from "src/infrastructure/config/jwt.config";
 
+// Error handlers
+import { authErrorHandler } from "./errors/auth-errors.middleware";
+
 // Domain repositories
 import * as userRepository from "./domain/user.repository";
 import * as sessionRepository from "./domain/session.repository";
 
-// Error handlers
-import { authErrorHandler } from "./errors/auth-errors.middleware";
-
 // Create Guest User components
 import * as createGuestUserService from "./create-guest-session/create-guest-user.service";
-import * as createGuestUserController from "./create-guest-session/create-guest-session.controller";
-
-// Login components
 import * as guestLoginService from "./create-guest-session/guest-login.service";
+import * as createGuestUserController from "./create-guest-session/create-guest-session.controller";
 
 /**
  * Initialize the auth feature
