@@ -1,5 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 
+type ErrorResponse = {
+  success: boolean;
+  error: string;
+  details?: {};
+};
+
 /**
  * Global error handler middleware for Express
  * This is error middleware (4 parameters) that handles unexpected errors
@@ -16,14 +22,20 @@ export const errorHandler = (
     err,
   );
 
-  const errorResponse = {
+  const errorResponse: ErrorResponse = {
     success: false,
     error: "An unexpected error occurred",
   };
 
-  // Add stack trace in development environment
   if (process.env.NODE_ENV === "development") {
-    (errorResponse as any).stack = err.stack;
+    const errorDetails = {
+      stack: err.stack,
+      error: err.message,
+      cause: err.cause,
+      req: req.body,
+    };
+
+    errorResponse.details = errorDetails;
   }
 
   res.status(500).json(errorResponse);
