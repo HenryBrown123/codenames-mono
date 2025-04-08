@@ -5,10 +5,9 @@
 
 import type { ColumnType } from "kysely";
 
-export type Generated<T> =
-  T extends ColumnType<infer S, infer I, infer U>
-    ? ColumnType<S, I | undefined, U>
-    : ColumnType<T, T | undefined, T>;
+export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
+  ? ColumnType<S, I | undefined, U>
+  : ColumnType<T, T | undefined, T>;
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
@@ -30,13 +29,15 @@ export interface Clues {
 
 export interface Games {
   created_at: Generated<Timestamp>;
+  game_format: string;
+  game_type: string;
   id: Generated<number>;
   public_id: string;
   status_id: number;
 }
 
 export interface GameStatus {
-  id: Generated<number>;
+  id: number;
   status_name: string;
 }
 
@@ -49,7 +50,7 @@ export interface Guesses {
 }
 
 export interface PlayerRoles {
-  id: Generated<number>;
+  id: number;
   role_name: string;
 }
 
@@ -70,7 +71,7 @@ export interface Players {
 }
 
 export interface PlayerStatuses {
-  id: Generated<number>;
+  id: number;
   status_name: string;
 }
 
@@ -82,7 +83,7 @@ export interface Rounds {
 }
 
 export interface Teams {
-  id: Generated<number>;
+  id: number;
   team_name: string;
 }
 
