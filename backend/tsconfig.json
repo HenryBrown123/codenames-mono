@@ -8,12 +8,9 @@
     "module": "preserve",
     "moduleResolution": "bundler",
     "paths": {
-      "@backend/auth/*": ["src/legacy/auth/*"],
-      "@backend/db/*": ["src/infrastructure/db/*"],
-      "@backend/gameplay/*": ["src/gameplay/*"],
-      "@backend/setup/*": ["src/features/setup/*"],
-      "@backend/api/*": ["src/api/*"],
-      "@backend/test/*": ["test/*"]
+      "@backend/features/*": ["src/features/*"],
+      "@backend/test/*": ["test/*"],
+      "@backend/common/*": ["src/common/*"]
     }
   },
   "include": ["src/**/*"],

@@ -1,4 +1,10 @@
-import { TEAM, STAGE, CODEBREAKER_OUTCOME, GAME_TYPE } from "./game-constants";
+import {
+  TEAM,
+  STAGE,
+  CODEBREAKER_OUTCOME,
+  GAME_TYPE,
+  GAME_FORMAT,
+} from "./shared.constants";
 
 // Team type
 export type Team = (typeof TEAM)[keyof typeof TEAM];
@@ -12,6 +18,9 @@ export type TurnOutcome =
 
 // GameType type
 export type GameType = (typeof GAME_TYPE)[keyof typeof GAME_TYPE];
+
+// Game format options
+export type GameFormat = (typeof GAME_FORMAT)[keyof typeof GAME_FORMAT];
 
 // Settings type
 export interface Settings {

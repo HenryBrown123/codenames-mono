@@ -1,7 +1,5 @@
-import { Kysely, NoResultError } from "kysely";
-import { DB } from "../../../infrastructure/db/db.types";
-import { User } from "./user.types";
-import { UnexpectedAuthError } from "../errors/auth.errors";
+import { Kysely } from "kysely";
+import { DB } from "../../common/db/db.types";
 
 /**
  * Complete repository interface for user operations
@@ -18,6 +16,14 @@ export interface UserRepository {
 export interface Dependencies {
   db: Kysely<DB>;
 }
+/**
+ * User entity as stored in the database
+ */
+export type User = {
+  id: number;
+  username: string;
+  created_at: Date;
+};
 
 /**
  * Create a repository instance for user operations

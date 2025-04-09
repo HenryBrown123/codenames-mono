@@ -1,9 +1,11 @@
 import jwt, { SignOptions } from "jsonwebtoken";
 import { UnexpectedAuthError } from "../errors/auth.errors";
 
-import type { Session } from "../domain/session.types";
-import type { UserRepository } from "../domain/user.repository";
-import type { SessionRepository } from "../domain/session.repository";
+import type { UserRepository } from "@backend/common/data-access/users.repository";
+import type {
+  SessionRepository,
+  Session,
+} from "@backend/common/data-access/sessions.repository";
 
 export interface LoginService {
   execute: (username: string) => Promise<Session>;

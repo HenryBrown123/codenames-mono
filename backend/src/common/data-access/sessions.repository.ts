@@ -1,5 +1,5 @@
 import { Kysely } from "kysely";
-import { DB } from "../../../infrastructure/db/db.types";
+import { DB } from "../../common/db/db.types";
 
 /**
  * Repository interface for session operations
@@ -14,6 +14,14 @@ export interface SessionRepository {
  */
 export interface Dependencies {
   db: Kysely<DB>;
+}
+/**
+ * Represents an authenticated user session
+ */
+export interface Session {
+  userId: number;
+  username: string;
+  token: string;
 }
 
 /**
