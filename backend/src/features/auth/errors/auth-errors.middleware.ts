@@ -4,23 +4,42 @@ import { UnexpectedAuthError } from "./auth.errors";
 import { NoResultError } from "kysely";
 
 /**
- * Auth feature-specific error handler
- * Handles all auth-related domain errors
+ * Error response structure returned to clients
  */
-
-type ErrorResponse = {
+type AuthErrorApiResponse = {
   succces: boolean;
   error: string;
   details?: { stack?: string; cause?: any; req?: Request };
 };
 
+/**
+ * Middleware that handles authentication-specific errors
+ *
+ * This middleware catches domain-specific errors from the auth feature
+ * and returns 500 code. 4xx client errors are returned by controllers
+ * if relavent.
+ *
+ * It handles:
+ * - UnexpectedAuthError: Internal auth service errors
+ * - NoResultError: Database lookup failures
+ * - UnauthorizedError: jwt token error
+ *
+ * Response is sanitized with additional information when in developmenet mode.
+ *
+ * Other errors are passed to the next error handler in the chain.
+ *
+ * @param err - The error object
+ * @param req - Express request object
+ * @param res - Express response object
+ * @param next - Express next function
+ */
 export const authErrorHandler = (
   err: Error,
   req: Request,
   res: Response,
   next: NextFunction,
 ): void => {
-  const errorResponse: ErrorResponse = {
+  const errorResponse: AuthErrorApiResponse = {
     succces: false,
     error: "Unexpected error",
   };
@@ -36,10 +55,14 @@ export const authErrorHandler = (
     errorResponse.details = errorDetails;
   }
 
-  if (err instanceof UnexpectedAuthError || err instanceof NoResultError) {
+  if (
+    err instanceof UnexpectedAuthError ||
+    err instanceof NoResultError ||
+    UnauthorizedError
+  ) {
     res.status(500).json(errorResponse);
     return;
   }
-  err.cause;
+
   next(err);
 };

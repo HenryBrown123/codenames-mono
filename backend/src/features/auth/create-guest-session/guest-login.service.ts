@@ -7,10 +7,16 @@ import type {
   Session,
 } from "@backend/common/data-access/sessions.repository";
 
+/**
+ * Service interface for user login functionality
+ */
 export interface LoginService {
   execute: (username: string) => Promise<Session>;
 }
 
+/**
+ * Dependencies required by the login service
+ */
 export interface Dependencies {
   userRepository: UserRepository;
   sessionRepository: SessionRepository;
@@ -18,17 +24,29 @@ export interface Dependencies {
   jwtOptions: SignOptions;
 }
 
+/**
+ * Creates a login service instance for authenticating users
+ *
+ * @param dependencies - Required repositories and JWT configuration
+ * @returns Service object with execute method
+ */
 export const create = ({
   userRepository,
   sessionRepository,
   jwtSecret,
   jwtOptions,
 }: Dependencies): LoginService => {
+  /**
+   * Authenticates a user by username and generates a JWT token.
+   *
+   * Exception throw if user does not exist as it should not be possible
+   * to fail login for a guest user..
+   *
+   * @param username - The username to authenticate
+   * @returns Promise resolving to a session with JWT token
+   * @throws {UnexpectedAuthError} If user not found.
+   */
   const execute = async (username: string): Promise<Session> => {
-    if (!username || username.trim().length < 3) {
-      throw new UnexpectedAuthError(`Failed to login guest user: ${username}`);
-    }
-
     const sanitizedUsername = username.trim();
 
     const user = await userRepository.findByUsername(sanitizedUsername);

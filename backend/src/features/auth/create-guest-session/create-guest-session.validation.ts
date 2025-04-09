@@ -1,9 +1,21 @@
 import { z } from "zod";
 
-export const createGuestRequestSchema = z.object({});
+/**
+ * Validation schema for guest user creation request
+ *
+ * The request doesn't require any input fields - the username
+ * is generated automatically by the service.
+ */
+export const createGuestRequestSchema = z.object({}).strict();
 
+/**
+ * Type definition for guest user creation request
+ */
 export type CreateGuestRequest = z.infer<typeof createGuestRequestSchema>;
 
+/**
+ * Validation schema for guest user creation response
+ */
 export const createGuestResponseSchema = z
   .object({
     success: z.boolean(),
@@ -21,4 +33,7 @@ export const createGuestResponseSchema = z
   })
   .strict();
 
+/**
+ * Type definition for guest user creation response
+ */
 export type CreateGuestResponse = z.infer<typeof createGuestResponseSchema>;

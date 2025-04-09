@@ -8,8 +8,6 @@ import { Kysely } from "kysely";
 export interface GameData {
   id: number;
   created_at: Date;
-  public_id: string;
-  status: string;
 }
 
 export interface GameRepository {
@@ -18,7 +16,10 @@ export interface GameRepository {
     publicId: string,
     gameType: string,
     gameFormat: string,
-  ) => Promise<{ id: number }>;
+  ) => Promise<{
+    id: number;
+    created_at: Date;
+  }>;
 }
 
 /**
@@ -68,7 +69,7 @@ export const create = ({ db }: Dependencies): GameRepository => {
         game_type: gameType,
         game_format: gameFormat,
       })
-      .returning("id")
+      .returning(["id", "created_at"])
       .executeTakeFirstOrThrow();
 
     return insertedGame;

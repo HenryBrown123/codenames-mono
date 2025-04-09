@@ -17,7 +17,18 @@ import * as guestLoginService from "./create-guest-session/guest-login.service";
 import * as createGuestUserController from "./create-guest-session/create-guest-session.controller";
 
 /**
- * Initialize the auth feature
+ * Initializes the authentication feature module
+ *
+ * This function sets up all authentication-related components:
+ * - Repositories for data access
+ * - Services for business logic
+ * - Controllers for HTTP handling
+ * - Routes for API endpoints
+ * - Error handlers for auth-specific errors
+ *
+ * @param app - Express application instance
+ * @param db - Database connection
+ * @param jwtConfig - JWT configuration options
  */
 export const initialize = (
   app: Express,
