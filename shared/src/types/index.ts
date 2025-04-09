@@ -1,2 +1,2 @@
-export * from "./game-constants";
-export * from "./game-types";
+export * from "./shared.constants";
+export * from "./shared.types";

@@ -1,15 +1,15 @@
 import { Express } from "express";
 import { Kysely } from "kysely";
-import { DB } from "../../infrastructure/db/db.types";
+import { DB } from "../../common/db/db.types";
 import { Router } from "express";
-import { JwtConfig } from "src/infrastructure/config/jwt.config";
+import { JwtConfig } from "src/common/config/jwt.config";
 
 // Error handlers
 import { authErrorHandler } from "./errors/auth-errors.middleware";
 
 // Domain repositories
-import * as userRepository from "./domain/user.repository";
-import * as sessionRepository from "./domain/session.repository";
+import * as userRepository from "../../common/data-access/users.repository";
+import * as sessionRepository from "../../common/data-access/sessions.repository";
 
 // Create Guest User components
 import * as createGuestUserService from "./create-guest-session/create-guest-user.service";

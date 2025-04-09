@@ -43,3 +43,14 @@ export const GAME_TYPE = {
   SINGLE_DEVICE: "SINGLE_DEVICE",
   MULTI_DEVICE: "MULT_DEVICE",
 } as const;
+
+/**
+ * Object representing the different game formats.
+ * @readonly
+ * @enum {string}
+ */
+export const GAME_FORMAT = {
+  QUICK_GAME: "QUICK_GAEM",
+  BEST_OF_THREE: "BEST_OF_THREE",
+  ROUND_ROBIN: "ROUND_ROBIN",
+} as const;

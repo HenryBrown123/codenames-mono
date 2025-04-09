@@ -4,11 +4,11 @@ import { createServer } from "http";
 import {
   errorHandler,
   notFoundHandler,
-} from "./infrastructure/http-middleware/error-handler.middleware";
+} from "./common/http-middleware/error-handler.middleware";
 import { initialize as initializeAuth } from "./features/auth";
-import * as postgresDb from "./infrastructure/db";
+import * as postgresDb from "./common/db";
 import { createOpenApiSpec } from "@codenames/shared/api";
-import { loadEnvFromPackageDir } from "./infrastructure/config";
+import { loadEnvFromPackageDir } from "./common/config";
 import swaggerUi from "swagger-ui-express";
 
 /**

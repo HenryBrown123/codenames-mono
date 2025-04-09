@@ -1,4 +1,4 @@
-import type { UserRepository } from "../domain/user.repository";
+import type { UserRepository } from "@backend/common/data-access/users.repository";
 import { UnexpectedAuthError } from "../errors/auth.errors";
 import { generateUsername } from "./username-generator";
 
