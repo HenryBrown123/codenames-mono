@@ -9,6 +9,9 @@ export interface CreateGuestUserService {
   execute: () => Promise<GuestUser>;
 }
 
+/**
+ * Data structure for guest user information
+ */
 export type GuestUser = {
   id: number;
   username: string;
@@ -22,15 +25,21 @@ export interface Dependencies {
 }
 
 /**
- * Create a service instance for guest user creation
+ * Creates a service instance for guest user creation
+ *
+ * @param dependencies - Required dependencies
+ * @returns Service object with execute method
+ *
  */
 export const create = ({
   userRepository,
 }: Dependencies): CreateGuestUserService => {
   /**
    * Creates a guest user with an auto-generated username
+   *
+   * @returns Promise resolving to the created guest user
+   * @throws {UnexpectedAuthError} If a unique username can't be generated after max attempts
    */
-
   const execute = async (): Promise<GuestUser> => {
     const username = await findUniqueUsername();
     const user = await userRepository.createUser(username);
@@ -42,9 +51,14 @@ export const create = ({
   };
 
   /**
-   * Derive a unique random username for guests..
+   * Attempts to generate a unique username for guest users
+   *
+   * Makes multiple attempts to avoid collisions with existing usernames
+   * in the database. Throws an error if max attempts are reached.
+   *
+   * @returns Promise resolving to a unique username
+   * @throws {UnexpectedAuthError} If max collision threshold is reached
    */
-
   const findUniqueUsername = async (): Promise<string> => {
     const MAX_COLLISIONS = 10;
 
@@ -56,16 +70,15 @@ export const create = ({
       const username = generateUsername();
       const existingUser = await userRepository.findByUsername(username);
 
-      if (existingUser) {
-        console.log("Guest username collision detected - ", username);
-        continue;
+      if (!existingUser) {
+        return username;
       }
 
-      return username;
+      console.log("Guest username collision detected - ", username);
     }
 
     throw new UnexpectedAuthError(
-      `Failed to generate unique  username... reached max collisions (10)`,
+      `Failed to generate unique username... reached max collisions (10)`,
     );
   };
 

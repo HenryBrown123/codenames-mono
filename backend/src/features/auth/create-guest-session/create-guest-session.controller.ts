@@ -23,14 +23,18 @@ export interface Dependencies {
 }
 
 /**
- * Create a controller instance for guest user creation
+ * Creates a controller instance for guest user creation
+ *
+ * @param dependencies - Required service dependencies
+ * @returns Controller object with request handler
+ *
  */
 export const create = ({
   createGuestUserService,
   loginService,
 }: Dependencies): CreateGuestUserController => {
   /**
-   * HTTP handler for creating a guest user
+   * HTTP handler for creating a guest user with auto-generated username and session token
    */
   const handle = async (
     req: Request,
@@ -38,7 +42,6 @@ export const create = ({
     next: NextFunction,
   ): Promise<void> => {
     try {
-      // run time validation of req object
       createGuestRequestSchema.parse(req.body);
 
       const user = await createGuestUserService.execute();
@@ -57,7 +60,6 @@ export const create = ({
         },
       };
 
-      // run time validation of response object
       const validatedResponse = createGuestResponseSchema.parse(response);
 
       res.status(201).json(validatedResponse);
