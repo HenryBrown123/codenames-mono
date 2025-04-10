@@ -5,11 +5,14 @@ import {
   errorHandler,
   notFoundHandler,
 } from "./common/http-middleware/error-handler.middleware";
-import { initialize as initializeAuth } from "./features/auth";
 import * as postgresDb from "./common/db";
 import { createOpenApiSpec } from "@codenames/shared/api";
 import { loadEnvFromPackageDir } from "./common/config";
 import swaggerUi from "swagger-ui-express";
+
+import { initialize as initializeAuth } from "./features/auth";
+import { initialize as initialiseGameSetup } from "./features/setup";
+import * as authMiddleware from "@backend/common/http-middleware/auth.middleware";
 
 /**
  * Runtime validation of env. variables
@@ -18,6 +21,7 @@ let env;
 try {
   env = loadEnvFromPackageDir();
 } catch (error) {
+  console.error("Exiting procces due to invalid environmental variables.");
   process.exit(1);
 }
 
@@ -37,15 +41,23 @@ app.use(express.urlencoded({ extended: true }));
 const swaggerSpec = createOpenApiSpec();
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+// this is the auth middleware handlers to be injected into features
+const authHandlers = authMiddleware.create({
+  jwtSecret: env.JWT_SECRET,
+});
+
 // Initialize auth feature with JWT options
 const auth = initializeAuth(app, dbInstance, {
-  secret: process.env.JWT_SECRET || "your-secret-key",
+  secret: env.JWT_SECRET,
   options: {
     expiresIn: "7d",
     algorithm: "HS256",
     issuer: "codenames-app",
   },
 });
+
+// Initialize setup feature
+const setup = initialiseGameSetup(app, dbInstance, authHandlers);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "UP" });

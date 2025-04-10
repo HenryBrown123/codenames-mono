@@ -9,7 +9,7 @@ export const createGameRequestSchema = z
   .object({
     gameType: z.enum([GAME_TYPE.SINGLE_DEVICE, GAME_TYPE.MULTI_DEVICE]),
     gameFormat: z.enum([
-      GAME_FORMAT.QUICK_GAME,
+      GAME_FORMAT.QUICK,
       GAME_FORMAT.BEST_OF_THREE,
       GAME_FORMAT.ROUND_ROBIN,
     ]),
@@ -33,7 +33,7 @@ export const createGameResponseSchema = z
         publicId: z.string().nonempty(),
         gameType: z.enum([GAME_TYPE.SINGLE_DEVICE, GAME_TYPE.MULTI_DEVICE]),
         gameFormat: z.enum([
-          GAME_FORMAT.QUICK_GAME,
+          GAME_FORMAT.QUICK,
           GAME_FORMAT.BEST_OF_THREE,
           GAME_FORMAT.ROUND_ROBIN,
         ]),

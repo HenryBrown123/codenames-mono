@@ -23,6 +23,10 @@ export function createOpenApiSpec(serverUrl = "http://localhost:3000/api") {
         description: "User authentication operations",
       },
       {
+        name: "Setup",
+        description: "Game setup operations",
+      },
+      {
         name: "System",
         description: "System operations",
       },
@@ -106,6 +110,57 @@ export function createOpenApiSpec(serverUrl = "http://localhost:3000/api") {
           },
         },
       },
+      "/games": {
+        post: {
+          summary: "Create a new game",
+          description:
+            "Creates a new game instance with specified configuration",
+          tags: ["Setup"],
+          security: [{ bearerAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/CreateGameRequest",
+                },
+              },
+            },
+          },
+          responses: {
+            "201": {
+              description: "Game created successfully",
+              content: {
+                "application/json": {
+                  schema: {
+                    $ref: "#/components/schemas/CreateGameResponse",
+                  },
+                },
+              },
+            },
+            "401": {
+              description: "Unauthorized",
+              content: {
+                "application/json": {
+                  schema: {
+                    $ref: "#/components/schemas/Error",
+                  },
+                },
+              },
+            },
+            "500": {
+              description: "Server error",
+              content: {
+                "application/json": {
+                  schema: {
+                    $ref: "#/components/schemas/Error",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     components: {
       securitySchemes: {
@@ -139,6 +194,55 @@ export function createOpenApiSpec(serverUrl = "http://localhost:3000/api") {
             error: {
               type: "string",
               example: "Internal server error",
+            },
+          },
+        },
+        CreateGameRequest: {
+          type: "object",
+          required: ["gameType", "gameFormat"],
+          properties: {
+            gameType: {
+              type: "string",
+              enum: ["SINGLE_DEVICE", "MULTI_DEVICE"],
+            },
+            gameFormat: {
+              type: "string",
+              enum: ["QUICK", "BEST_OF_THREE", "ROUND_ROBIN"],
+            },
+          },
+        },
+        CreateGameResponse: {
+          type: "object",
+          properties: {
+            success: {
+              type: "boolean",
+              example: true,
+            },
+            data: {
+              type: "object",
+              properties: {
+                game: {
+                  type: "object",
+                  properties: {
+                    publicId: {
+                      type: "string",
+                      example: "abc123",
+                    },
+                    gameFormat: {
+                      type: "string",
+                      enum: ["QUICK", "BEST_OF_THREE", "ROUND_ROBIN"],
+                    },
+                    gameType: {
+                      type: "string",
+                      enum: ["SINGLE_DEVICE", "MULTI_DEVICE"],
+                    },
+                    createdAt: {
+                      type: "string",
+                      format: "date-time",
+                    },
+                  },
+                },
+              },
             },
           },
         },
