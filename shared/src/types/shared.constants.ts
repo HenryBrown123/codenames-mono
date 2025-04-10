@@ -50,7 +50,7 @@ export const GAME_TYPE = {
  * @enum {string}
  */
 export const GAME_FORMAT = {
-  QUICK_GAME: "QUICK_GAEM",
+  QUICK: "QUICK",
   BEST_OF_THREE: "BEST_OF_THREE",
   ROUND_ROBIN: "ROUND_ROBIN",
 } as const;

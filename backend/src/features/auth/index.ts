@@ -35,11 +35,9 @@ export const initialize = (
   db: Kysely<DB>,
   jwtConfig: JwtConfig,
 ) => {
-  // Create domain repositories
   const userRepo = userRepository.create({ db });
   const sessionRepo = sessionRepository.create({ db });
 
-  // Create services
   const guestUser = createGuestUserService.create({
     userRepository: userRepo,
   });
@@ -51,19 +49,15 @@ export const initialize = (
     jwtOptions: jwtConfig.options,
   });
 
-  // Create controller
   const createGuestUserHandler = createGuestUserController.create({
     createGuestUserService: guestUser,
     loginService: login,
   }).handle;
 
-  // Create router
   const router = Router();
 
-  // Set up routes
   router.post("/guests", createGuestUserHandler);
 
-  // Apply router and feature-specific error handler
   app.use("/api/auth", router);
   app.use("/api/auth", authErrorHandler);
 };
