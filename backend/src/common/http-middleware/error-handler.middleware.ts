@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { generateAdditionalErrorInfo } from "./add-error-details.utils";
 
 type ErrorResponse = {
   success: boolean;
@@ -28,13 +29,7 @@ export const errorHandler = (
   };
 
   if (process.env.NODE_ENV === "development") {
-    const errorDetails = {
-      stack: err.stack,
-      error: err.message,
-      cause: err.cause,
-      req: req.body,
-    };
-
+    const errorDetails = generateAdditionalErrorInfo(err, req);
     errorResponse.details = errorDetails;
   }
 

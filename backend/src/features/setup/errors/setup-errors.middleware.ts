@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { UnexpectedSetupError } from "./setup.errors";
 import { NoResultError } from "kysely";
+import { UnauthorizedError } from "express-jwt";
+import { JsonObject } from "swagger-ui-express";
+import { generateAdditionalErrorInfo } from "@backend/common/http-middleware/add-error-details.utils";
 
 /**
  * Type definition for setup error API responses
@@ -9,7 +12,7 @@ import { NoResultError } from "kysely";
 type SetupErrorApiResponse = {
   succces: boolean;
   error: string;
-  details?: { stack?: string; cause?: any; req?: Request };
+  details?: { stack?: JsonObject; cause?: any; req?: Request };
 };
 
 /**
@@ -34,14 +37,13 @@ export const setupErrorHandler = (
   };
 
   if (process.env.NODE_ENV === "development") {
-    const errorDetails = {
-      stack: err.stack,
-      error: err.message,
-      cause: err.cause,
-      req: req,
-    };
-
+    const errorDetails = generateAdditionalErrorInfo(err, req);
     errorResponse.details = errorDetails;
+  }
+
+  if (err instanceof UnauthorizedError) {
+    res.status(401).json(errorResponse);
+    return;
   }
 
   if (err instanceof UnexpectedSetupError || err instanceof NoResultError) {
