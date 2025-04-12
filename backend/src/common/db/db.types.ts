@@ -5,16 +5,16 @@
 
 import type { ColumnType } from "kysely";
 
-export type Generated<T> =
-  T extends ColumnType<infer S, infer I, infer U>
-    ? ColumnType<S, I | undefined, U>
-    : ColumnType<T, T | undefined, T>;
+export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
+  ? ColumnType<S, I | undefined, U>
+  : ColumnType<T, T | undefined, T>;
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 export interface Cards {
   id: Generated<number>;
   round_id: number;
+  selected: Generated<boolean>;
   team_id: number;
   word: string;
 }
@@ -35,6 +35,7 @@ export interface Games {
   id: Generated<number>;
   public_id: string;
   status_id: number;
+  updated_at: Generated<Timestamp | null>;
 }
 
 export interface GameStatus {
@@ -65,9 +66,14 @@ export interface PlayerRoundRoles {
 export interface Players {
   game_id: number;
   id: Generated<number>;
+  /**
+   * Public-facing name shown to other players
+   */
+  public_name: string;
   status_id: number;
   status_last_changed: Generated<Timestamp>;
-  team_id: number | null;
+  team_id: number;
+  updated_at: Generated<Timestamp | null>;
   user_id: number;
 }
 
@@ -84,7 +90,8 @@ export interface Rounds {
 }
 
 export interface Teams {
-  id: number;
+  game_id: number;
+  id: Generated<number>;
   team_name: string;
 }
 
