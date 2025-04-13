@@ -1,5 +1,5 @@
-// src/features/lobby/add-players/add-players.controller.ts
-import type { Request, Response, NextFunction } from "express";
+import type { Response, NextFunction } from "express";
+import type { Request } from "express-jwt";
 import type { AddPlayersService } from "./add-players.service";
 import {
   addPlayersRequestSchema,
@@ -7,17 +7,13 @@ import {
   AddPlayersResponse,
 } from "./add-players.validation";
 
-import { AuthorizedRequest } from "@backend/common/http-middleware/auth.middleware";
+import { ExpressJwtRequest } from "express-jwt";
 
 /**
  * Controller interface for adding players to game lobbies
  */
 export interface AddPlayersController {
-  handle: (
-    req: AuthorizedRequest,
-    res: Response,
-    next: NextFunction,
-  ) => Promise<void>;
+  handle: (req: Request, res: Response, next: NextFunction) => Promise<void>;
 }
 
 /**
@@ -37,7 +33,7 @@ export const create = ({
    * HTTP handler for adding players to a game
    */
   const handle = async (
-    req: AuthorizedRequest,
+    req: Request,
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
