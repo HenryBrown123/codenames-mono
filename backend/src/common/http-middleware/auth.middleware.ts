@@ -1,11 +1,15 @@
 import { expressjwt } from "express-jwt";
-import { RequestHandler } from "express";
+import { RequestHandler, Request } from "express";
 
 /**
  * Auth middleware functions
  */
 export interface AuthMiddleware {
   requireAuthentication: RequestHandler;
+}
+
+export interface AuthorizedRequest extends Request {
+  auth: { userId: number; username: string };
 }
 
 /**

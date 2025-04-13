@@ -1,7 +1,8 @@
 // Import feature dependencies
 import * as createGameController from "./create-new-game/create-game.controller";
 import * as createGameService from "./create-new-game/create-game.service";
-import * as gameRpository from "@backend/common/data-access/games.repository";
+import * as gameRepository from "@backend/common/data-access/games.repository";
+import * as teamRepository from "@backend/common/data-access/teams.repository";
 import { setupErrorHandler } from "./errors/setup-errors.middleware";
 
 // Import non-feature dependencies
@@ -23,8 +24,13 @@ export const initialize = (
   db: Kysely<DB>,
   auth: AuthMiddleware,
 ) => {
-  const setupRepo = gameRpository.create({ db });
-  const setupService = createGameService.create({ gameRepository: setupRepo });
+  const setupRepo = gameRepository.create({ db });
+  const teamsRepo = teamRepository.create({ db });
+
+  const setupService = createGameService.create({
+    gameRepository: setupRepo,
+    teamsRepository: teamsRepo,
+  });
 
   const setupHandler = createGameController.create({
     createGameService: setupService,
