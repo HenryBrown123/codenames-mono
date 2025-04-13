@@ -8,10 +8,6 @@ export interface AuthMiddleware {
   requireAuthentication: RequestHandler;
 }
 
-export interface AuthorizedRequest extends Request {
-  auth: { userId: number; username: string };
-}
-
 /**
  * Dependencies required by the auth middleware
  */

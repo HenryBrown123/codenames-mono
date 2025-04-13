@@ -12,6 +12,9 @@ import * as playerRepository from "@backend/common/data-access/players.repositor
 import * as addPlayersService from "./add-players/add-players.service";
 import * as addPlayersController from "./add-players/add-players.controller";
 
+import * as removePlayerService from "./remove-players/remove-players.service";
+import * as removePlayerController from "./remove-players/remove-players.controller";
+
 // Import error handlers
 import { lobbyErrorHandler } from "./errors/lobby-errors.middleware";
 
@@ -35,8 +38,17 @@ export const initialize = (
     playerRepository: playerRepo,
   });
 
-  const playersController = addPlayersController.create({
+  const addPlayersHandler = addPlayersController.create({
     addPlayersService: addPlayers,
+  });
+
+  const removePlayers = removePlayerService.create({
+    gameRepository: gameRepo,
+    playerRepository: playerRepo,
+  });
+
+  const removePlayerHandler = removePlayerController.create({
+    removePlayersService: removePlayers,
   });
 
   const router = Router();
@@ -44,7 +56,13 @@ export const initialize = (
   router.post(
     "/games/:id/players",
     auth.requireAuthentication,
-    playersController.handle,
+    addPlayersHandler.handle,
+  );
+
+  router.delete(
+    "/games/:id/players",
+    auth.requireAuthentication,
+    removePlayerHandler.handle,
   );
 
   // Apply routes and error handlers

@@ -1,5 +1,4 @@
-// src/common/data-access/players.repository.ts
-import { Kysely } from "kysely";
+import { Kysely, DeleteResult } from "kysely";
 import { DB } from "../db/db.types";
 import { UnexpectedLobbyError } from "@backend/features/lobby/errors/lobby.errors";
 
@@ -32,6 +31,7 @@ export interface PlayerInput {
  */
 export interface PlayerRepository {
   addPlayers: (playersData: PlayerInput[]) => Promise<Player[]>;
+  removePlayer: (playerId: number) => Promise<DeleteResult>;
   getPlayersByGameId: (gameId: number) => Promise<Player[]>;
   getPlayerById: (playerId: number) => Promise<Player | null>;
   getPlayersByTeam: (gameId: number, teamId: number) => Promise<Player[]>;
@@ -48,6 +48,19 @@ export interface Dependencies {
  * Create a repository instance for player operations
  */
 export const create = ({ db }: Dependencies): PlayerRepository => {
+  /**
+   * Removes player from game
+   * @param playerId PlayerId to remove
+   * @returns Deleted player
+   */
+  const removePlayer = async (playerId: number) => {
+    const removedPlayer = await db
+      .deleteFrom("players")
+      .where("players.id", "=", playerId)
+      .executeTakeFirstOrThrow();
+
+    return removedPlayer;
+  };
   /**
    * Adds one or more players to a game
    * @param playersData Array of player data
@@ -170,6 +183,7 @@ export const create = ({ db }: Dependencies): PlayerRepository => {
 
   return {
     addPlayers,
+    removePlayer,
     getPlayersByGameId,
     getPlayerById,
     getPlayersByTeam,
