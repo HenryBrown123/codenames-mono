@@ -1,4 +1,5 @@
 import { GameRepository } from "@backend/common/data-access/games.repository";
+import { TeamRepository } from "@backend/common/data-access/teams.repository";
 import { GameType, GameFormat } from "@codenames/shared/types";
 import shortid from "shortid";
 
@@ -13,6 +14,7 @@ export interface CreateGameService {
     publicId: string;
     id: number;
     createdAt: Date;
+    teams: string[];
   }>;
 }
 
@@ -21,6 +23,7 @@ export interface CreateGameService {
  */
 export interface Dependencies {
   gameRepository: GameRepository;
+  teamsRepository: TeamRepository;
 }
 
 /**
@@ -28,7 +31,10 @@ export interface Dependencies {
  * @param dependencies - Required dependencies for the service
  * @returns Service instance with game creation capability
  */
-export const create = ({ gameRepository }: Dependencies): CreateGameService => {
+export const create = ({
+  gameRepository,
+  teamsRepository,
+}: Dependencies): CreateGameService => {
   /**
    * Creates a new game with the specified configuration
    * @param gameType - The type of game (single or multi device)
@@ -44,10 +50,18 @@ export const create = ({ gameRepository }: Dependencies): CreateGameService => {
       gameFormat,
     );
 
+    const teams = await teamsRepository.createTeams(game.id, [
+      "Team Red",
+      "Team Green",
+    ]);
+
+    const uniqueTeamNames = [...new Set(teams.map((team) => team.team_name))];
+
     return {
       id: game.id,
       publicId,
       createdAt: game.created_at,
+      teams: uniqueTeamNames,
     };
   };
 
