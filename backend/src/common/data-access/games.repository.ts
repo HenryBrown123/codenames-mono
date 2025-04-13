@@ -1,6 +1,7 @@
 // src/features/setup/setup.repository.ts
 import { DB } from "src/common/db/db.types";
 import { Kysely } from "kysely";
+import { GameType } from "@codenames/shared/types";
 
 /**
  * Represents the game data returned by the query.
@@ -8,6 +9,10 @@ import { Kysely } from "kysely";
 export interface GameData {
   id: number;
   created_at: Date;
+  public_id: string;
+  status: string;
+  game_type: string;
+  game_format: string;
 }
 
 export interface GameRepository {
@@ -44,6 +49,8 @@ export const create = ({ db }: Dependencies): GameRepository => {
         "games.id",
         "games.created_at",
         "games.public_id",
+        "games.game_type",
+        "games.game_format",
         "game_status.status_name as status",
       ])
       .where("games.public_id", "=", publicId)
