@@ -1,8 +1,3 @@
-/**
- * Creates an OpenAPI specification with dynamic server URL
- * @param serverUrl The base URL for the API server
- */
-
 export function createOpenApiSpec(serverUrl = "http://localhost:3000/api") {
   return {
     openapi: "3.0.0",
@@ -25,6 +20,10 @@ export function createOpenApiSpec(serverUrl = "http://localhost:3000/api") {
       {
         name: "Setup",
         description: "Game setup operations",
+      },
+      {
+        name: "Lobby",
+        description: "Game lobby management operations",
       },
       {
         name: "System",
@@ -161,6 +160,91 @@ export function createOpenApiSpec(serverUrl = "http://localhost:3000/api") {
           },
         },
       },
+      "/games/{id}/players": {
+        post: {
+          summary: "Add players to a game",
+          description: "Adds one or more players to a game lobby",
+          tags: ["Lobby"],
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: {
+                type: "string",
+              },
+              description: "Public ID of the game",
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: {
+                    $ref: "#/components/schemas/PlayerData",
+                  },
+                  minItems: 1,
+                },
+                example: [
+                  {
+                    playerName: "Player 1",
+                    teamId: 1,
+                  },
+                  {
+                    playerName: "Player 2",
+                    teamId: 2,
+                  },
+                ],
+              },
+            },
+          },
+          responses: {
+            "201": {
+              description: "Players added successfully",
+              content: {
+                "application/json": {
+                  schema: {
+                    $ref: "#/components/schemas/AddPlayersResponse",
+                  },
+                },
+              },
+            },
+            "400": {
+              description: "Invalid request",
+              content: {
+                "application/json": {
+                  schema: {
+                    $ref: "#/components/schemas/Error",
+                  },
+                },
+              },
+            },
+            "401": {
+              description: "Unauthorized",
+              content: {
+                "application/json": {
+                  schema: {
+                    $ref: "#/components/schemas/Error",
+                  },
+                },
+              },
+            },
+            "500": {
+              description: "Server error",
+              content: {
+                "application/json": {
+                  schema: {
+                    $ref: "#/components/schemas/Error",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     components: {
       securitySchemes: {
@@ -239,6 +323,57 @@ export function createOpenApiSpec(serverUrl = "http://localhost:3000/api") {
                     createdAt: {
                       type: "string",
                       format: "date-time",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        PlayerData: {
+          type: "object",
+          properties: {
+            playerName: {
+              type: "string",
+              example: "Player 1",
+            },
+            teamId: {
+              type: "integer",
+              example: 1,
+            },
+          },
+        },
+        AddPlayersResponse: {
+          type: "object",
+          properties: {
+            success: {
+              type: "boolean",
+              example: true,
+            },
+            data: {
+              type: "object",
+              properties: {
+                players: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      playerId: {
+                        type: "integer",
+                        example: 42,
+                      },
+                      gameId: {
+                        type: "integer",
+                        example: 123,
+                      },
+                      teamId: {
+                        type: "integer",
+                        example: 1,
+                      },
+                      playerName: {
+                        type: "string",
+                        example: "Player 1",
+                      },
                     },
                   },
                 },

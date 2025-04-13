@@ -11,7 +11,8 @@ import { loadEnvFromPackageDir } from "./common/config";
 import swaggerUi from "swagger-ui-express";
 
 import { initialize as initializeAuth } from "./features/auth";
-import { initialize as initialiseGameSetup } from "./features/setup";
+import { initialize as initializeGameSetup } from "./features/setup";
+import { initialize as initializeLobby } from "./features/lobby";
 import * as authMiddleware from "@backend/common/http-middleware/auth.middleware";
 
 /**
@@ -56,8 +57,9 @@ const auth = initializeAuth(app, dbInstance, {
   },
 });
 
-// Initialize setup feature
-const setup = initialiseGameSetup(app, dbInstance, authHandlers);
+// Initialize features
+const setup = initializeGameSetup(app, dbInstance, authHandlers);
+const lobby = initializeLobby(app, dbInstance, authHandlers);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "UP" });
