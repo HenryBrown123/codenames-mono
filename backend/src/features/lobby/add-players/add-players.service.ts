@@ -62,7 +62,6 @@ export const create = ({
       return [];
     }
 
-    // Get the game by its public ID
     const game = await gameRepository.getGameDataByPublicId(publicGameId);
 
     if (!game) {
@@ -71,7 +70,6 @@ export const create = ({
       );
     }
 
-    // Check if game is in a valid state for adding players (should be in LOBBY state)
     if (game.status !== "LOBBY") {
       throw new UnexpectedLobbyError(
         `Cannot add players to game in '${game.status}' state`,
@@ -96,7 +94,6 @@ export const create = ({
       );
     }
 
-    // Transform the input data to the format required by the repository
     const playerCreateData = playersData.map((player) => ({
       userId,
       gameId: game.id,
@@ -105,10 +102,9 @@ export const create = ({
       statusId: 1,
     }));
 
-    // Add players to the game
-    const players = await playerRepository.addPlayers(playerCreateData);
+    const newPlayers = await playerRepository.addPlayers(playerCreateData);
+    const players = [...existingPlayers, ...newPlayers];
 
-    // Format and return results
     return players.map((player) => ({
       playerId: player.id,
       gameId: player.game_id,

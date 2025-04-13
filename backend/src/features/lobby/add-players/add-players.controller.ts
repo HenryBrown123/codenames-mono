@@ -7,11 +7,17 @@ import {
   AddPlayersResponse,
 } from "./add-players.validation";
 
+import { AuthorizedRequest } from "@backend/common/http-middleware/auth.middleware";
+
 /**
  * Controller interface for adding players to game lobbies
  */
 export interface AddPlayersController {
-  handle: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+  handle: (
+    req: AuthorizedRequest,
+    res: Response,
+    next: NextFunction,
+  ) => Promise<void>;
 }
 
 /**
@@ -31,27 +37,27 @@ export const create = ({
    * HTTP handler for adding players to a game
    */
   const handle = async (
-    req: Request,
+    req: AuthorizedRequest,
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
     try {
-      // Validate just the request body
-      const validatedPlayers = addPlayersRequestSchema.parse(req.body);
+      const validatedPlayers = addPlayersRequestSchema.parse({
+        body: req.body,
+        params: req.params,
+        auth: req.auth,
+      });
 
-      const gameId = req.params.id;
+      const gameId = validatedPlayers.params.id;
+      const userId = validatedPlayers.auth.userId;
+      const playersToAdd = validatedPlayers.body;
 
-      // Extract userId from auth
-      const userId = req.auth.userId;
-
-      // Add players to the game
       const playersData = await addPlayersService.execute(
         gameId,
         userId,
-        validatedPlayers,
+        playersToAdd,
       );
 
-      // Prepare response
       const response: AddPlayersResponse = {
         success: true,
         data: {
@@ -64,7 +70,6 @@ export const create = ({
         },
       };
 
-      // Validate response
       const validatedResponse = addPlayersResponseSchema.parse(response);
 
       res.status(201).json(validatedResponse);
