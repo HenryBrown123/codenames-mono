@@ -16,7 +16,7 @@ export const playerSchema = z
  */
 export const addPlayersRequestSchema = z.object({
   params: z.object({
-    id: z.string().min(1, "Game ID is required"),
+    gameId: z.string().min(1, "Game ID is required"),
   }),
   auth: z.object({
     userId: z.number().int().positive("User ID must be a positive integer"),

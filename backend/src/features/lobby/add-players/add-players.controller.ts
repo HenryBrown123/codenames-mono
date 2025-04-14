@@ -44,7 +44,7 @@ export const create = ({
         auth: req.auth,
       });
 
-      const gameId = validatedPlayers.params.id;
+      const gameId = validatedPlayers.params.gameId;
       const userId = validatedPlayers.auth.userId;
       const playersToAdd = validatedPlayers.body;
 
