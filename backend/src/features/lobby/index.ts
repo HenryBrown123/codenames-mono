@@ -60,7 +60,7 @@ export const initialize = (
   );
 
   router.delete(
-    "/games/:id/players",
+    "/games/:gameId/players/:playerId",
     auth.requireAuthentication,
     removePlayerHandler.handle,
   );

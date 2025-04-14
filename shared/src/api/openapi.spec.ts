@@ -42,29 +42,15 @@ export function createOpenApiSpec(serverUrl = "http://localhost:3000/api") {
               description: "Guest user created successfully",
               content: {
                 "application/json": {
-                  schema: {
-                    type: "object",
-                    properties: {
-                      success: {
-                        type: "boolean",
-                        example: true,
+                  example: {
+                    success: true,
+                    data: {
+                      user: {
+                        username: "Happy-Lion42",
                       },
-                      data: {
-                        type: "object",
-                        properties: {
-                          user: {
-                            type: "object",
-                            properties: {
-                              username: {
-                                type: "string",
-                                example: "Happy-Lion42",
-                              },
-                            },
-                          },
-                          session: {
-                            $ref: "#/components/schemas/Session",
-                          },
-                        },
+                      session: {
+                        username: "Happy-Lion42",
+                        token: "jwt-token-string",
                       },
                     },
                   },
@@ -73,13 +59,6 @@ export function createOpenApiSpec(serverUrl = "http://localhost:3000/api") {
             },
             "500": {
               description: "Server error",
-              content: {
-                "application/json": {
-                  schema: {
-                    $ref: "#/components/schemas/Error",
-                  },
-                },
-              },
             },
           },
         },
@@ -94,14 +73,8 @@ export function createOpenApiSpec(serverUrl = "http://localhost:3000/api") {
               description: "API is running",
               content: {
                 "application/json": {
-                  schema: {
-                    type: "object",
-                    properties: {
-                      status: {
-                        type: "string",
-                        example: "UP",
-                      },
-                    },
+                  example: {
+                    status: "UP",
                   },
                 },
               },
@@ -120,8 +93,9 @@ export function createOpenApiSpec(serverUrl = "http://localhost:3000/api") {
             required: true,
             content: {
               "application/json": {
-                schema: {
-                  $ref: "#/components/schemas/CreateGameRequest",
+                example: {
+                  gameType: "SINGLE_DEVICE",
+                  gameFormat: "QUICK",
                 },
               },
             },
@@ -131,36 +105,30 @@ export function createOpenApiSpec(serverUrl = "http://localhost:3000/api") {
               description: "Game created successfully",
               content: {
                 "application/json": {
-                  schema: {
-                    $ref: "#/components/schemas/CreateGameResponse",
+                  example: {
+                    success: true,
+                    data: {
+                      game: {
+                        publicId: "abc123",
+                        gameType: "SINGLE_DEVICE",
+                        gameFormat: "QUICK",
+                        createdAt: "2024-01-01T00:00:00Z",
+                      },
+                    },
                   },
                 },
               },
             },
             "401": {
               description: "Unauthorized",
-              content: {
-                "application/json": {
-                  schema: {
-                    $ref: "#/components/schemas/Error",
-                  },
-                },
-              },
             },
             "500": {
               description: "Server error",
-              content: {
-                "application/json": {
-                  schema: {
-                    $ref: "#/components/schemas/Error",
-                  },
-                },
-              },
             },
           },
         },
       },
-      "/games/{id}/players": {
+      "/games/{gameId}/players": {
         post: {
           summary: "Add players to a game",
           description: "Adds one or more players to a game lobby",
@@ -168,7 +136,7 @@ export function createOpenApiSpec(serverUrl = "http://localhost:3000/api") {
           security: [{ bearerAuth: [] }],
           parameters: [
             {
-              name: "id",
+              name: "gameId",
               in: "path",
               required: true,
               schema: {
@@ -181,13 +149,6 @@ export function createOpenApiSpec(serverUrl = "http://localhost:3000/api") {
             required: true,
             content: {
               "application/json": {
-                schema: {
-                  type: "array",
-                  items: {
-                    $ref: "#/components/schemas/PlayerData",
-                  },
-                  minItems: 1,
-                },
                 example: [
                   {
                     playerName: "Player 1",
@@ -206,41 +167,93 @@ export function createOpenApiSpec(serverUrl = "http://localhost:3000/api") {
               description: "Players added successfully",
               content: {
                 "application/json": {
-                  schema: {
-                    $ref: "#/components/schemas/AddPlayersResponse",
+                  example: {
+                    success: true,
+                    data: {
+                      players: [
+                        {
+                          playerId: 42,
+                          gameId: 123,
+                          teamId: 1,
+                          playerName: "Player 1",
+                          userId: 789,
+                        },
+                      ],
+                      gameId: "abc123",
+                    },
                   },
                 },
               },
             },
             "400": {
               description: "Invalid request",
-              content: {
-                "application/json": {
-                  schema: {
-                    $ref: "#/components/schemas/Error",
-                  },
-                },
-              },
             },
             "401": {
               description: "Unauthorized",
+            },
+            "500": {
+              description: "Server error",
+            },
+          },
+        },
+      },
+      "/games/{gameId}/players/{playerId}": {
+        delete: {
+          summary: "Remove a player from a game",
+          description: "Removes a specific player from a game lobby",
+          tags: ["Lobby"],
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: "gameId",
+              in: "path",
+              required: true,
+              schema: {
+                type: "string",
+              },
+              description: "Public ID of the game",
+            },
+            {
+              name: "playerId",
+              in: "path",
+              required: true,
+              schema: {
+                type: "integer",
+              },
+              description: "ID of the player to remove",
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Player removed successfully",
               content: {
                 "application/json": {
-                  schema: {
-                    $ref: "#/components/schemas/Error",
+                  example: {
+                    success: true,
+                    data: {
+                      players: [
+                        {
+                          playerId: 43,
+                          gameId: 123,
+                          teamId: 1,
+                          playerName: "Player 2",
+                          userId: 790,
+                        },
+                      ],
+                      gameId: "abc123",
+                    },
                   },
                 },
               },
             },
+            "400": {
+              description: "Invalid request",
+            },
+            "401": {
+              description: "Unauthorized",
+            },
             "500": {
               description: "Server error",
-              content: {
-                "application/json": {
-                  schema: {
-                    $ref: "#/components/schemas/Error",
-                  },
-                },
-              },
             },
           },
         },
@@ -252,134 +265,6 @@ export function createOpenApiSpec(serverUrl = "http://localhost:3000/api") {
           type: "http",
           scheme: "bearer",
           bearerFormat: "JWT",
-        },
-      },
-      schemas: {
-        Session: {
-          type: "object",
-          properties: {
-            username: {
-              type: "string",
-              example: "Happy-Lion42",
-            },
-            token: {
-              type: "string",
-              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-            },
-          },
-        },
-        Error: {
-          type: "object",
-          properties: {
-            success: {
-              type: "boolean",
-              example: false,
-            },
-            error: {
-              type: "string",
-              example: "Internal server error",
-            },
-          },
-        },
-        CreateGameRequest: {
-          type: "object",
-          required: ["gameType", "gameFormat"],
-          properties: {
-            gameType: {
-              type: "string",
-              enum: ["SINGLE_DEVICE", "MULTI_DEVICE"],
-            },
-            gameFormat: {
-              type: "string",
-              enum: ["QUICK", "BEST_OF_THREE", "ROUND_ROBIN"],
-            },
-          },
-        },
-        CreateGameResponse: {
-          type: "object",
-          properties: {
-            success: {
-              type: "boolean",
-              example: true,
-            },
-            data: {
-              type: "object",
-              properties: {
-                game: {
-                  type: "object",
-                  properties: {
-                    publicId: {
-                      type: "string",
-                      example: "abc123",
-                    },
-                    gameFormat: {
-                      type: "string",
-                      enum: ["QUICK", "BEST_OF_THREE", "ROUND_ROBIN"],
-                    },
-                    gameType: {
-                      type: "string",
-                      enum: ["SINGLE_DEVICE", "MULTI_DEVICE"],
-                    },
-                    createdAt: {
-                      type: "string",
-                      format: "date-time",
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-        PlayerData: {
-          type: "object",
-          properties: {
-            playerName: {
-              type: "string",
-              example: "Player 1",
-            },
-            teamId: {
-              type: "integer",
-              example: 1,
-            },
-          },
-        },
-        AddPlayersResponse: {
-          type: "object",
-          properties: {
-            success: {
-              type: "boolean",
-              example: true,
-            },
-            data: {
-              type: "object",
-              properties: {
-                players: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      playerId: {
-                        type: "integer",
-                        example: 42,
-                      },
-                      gameId: {
-                        type: "integer",
-                        example: 123,
-                      },
-                      teamId: {
-                        type: "integer",
-                        example: 1,
-                      },
-                      playerName: {
-                        type: "string",
-                        example: "Player 1",
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
         },
       },
     },
