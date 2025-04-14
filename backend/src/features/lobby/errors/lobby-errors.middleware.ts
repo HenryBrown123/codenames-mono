@@ -9,7 +9,7 @@ import { generateAdditionalErrorInfo } from "@backend/common/http-middleware/add
  * Type definition for setup error API responses
  * Includes error details in development environment
  */
-type SetupErrorApiResponse = {
+type LobbyErrorApiResponse = {
   succces: boolean;
   error: string;
   details?: { stack?: JsonObject; cause?: any; req?: Request };
@@ -31,7 +31,7 @@ export const lobbyErrorHandler = (
   res: Response,
   next: NextFunction,
 ): void => {
-  const errorResponse: SetupErrorApiResponse = {
+  const errorResponse: LobbyErrorApiResponse = {
     succces: false,
     error: "Unexpected error",
   };
