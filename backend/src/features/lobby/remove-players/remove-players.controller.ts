@@ -40,7 +40,7 @@ export const create = ({
         auth: req.auth,
       });
 
-      const gameId = validatedRequest.params.id;
+      const gameId = validatedRequest.params.gameId;
       const userId = validatedRequest.auth.userId;
       const playerIdToRemove = validatedRequest.params.playerId;
 

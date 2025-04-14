@@ -5,7 +5,7 @@ import { z } from "zod";
  */
 export const removePlayersRequestSchema = z.object({
   params: z.object({
-    id: z.string().min(1, "Game ID is required"),
+    gameId: z.string().min(1, "Game ID is required"),
     playerId: z.string().transform(Number),
   }),
   auth: z.object({
