@@ -57,7 +57,6 @@ export const create = ({
       teamId: number;
     }[],
   ): Promise<PlayerResult[]> => {
-    // Handle empty array case
     if (playersData.length === 0) {
       return [];
     }
@@ -76,7 +75,6 @@ export const create = ({
       );
     }
 
-    // Business rule validation - multi-device games can only add one player at a time
     if (game.game_type === GAME_TYPE.MULTI_DEVICE && playersData.length > 1) {
       throw new UnexpectedLobbyError(
         "Multi-device games only allow adding one player at a time",
