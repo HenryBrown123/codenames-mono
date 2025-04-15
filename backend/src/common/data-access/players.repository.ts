@@ -1,6 +1,9 @@
 import { Kysely, DeleteResult } from "kysely";
 import { DB } from "../db/db.types";
-import { UnexpectedLobbyError } from "@backend/features/lobby/errors/lobby.errors";
+import {
+  RepositoryBulkUpdateError,
+  UnexpectedRepositoryError,
+} from "./repository.errors";
 
 /**
  * Player entity as stored in the database
@@ -16,9 +19,9 @@ export type Player = {
 };
 
 /**
- * Player creation or update input
+ * Player creation input
  */
-export interface PlayerInput {
+export interface CreatePlayer {
   userId: number;
   gameId: number;
   publicName: string;
@@ -27,10 +30,22 @@ export interface PlayerInput {
 }
 
 /**
+ * Player modify input
+ */
+export interface ModifyPlayer {
+  gameId: number;
+  playerId: number;
+  publicName?: string;
+  teamId?: number;
+  userId?: number;
+}
+
+/**
  * Repository interface for player operations
  */
 export interface PlayerRepository {
-  addPlayers: (playersData: PlayerInput[]) => Promise<Player[]>;
+  addPlayers: (playersData: CreatePlayer[]) => Promise<Player[]>;
+  modifyPlayers: (playersData: ModifyPlayer[]) => Promise<Player[]>;
   removePlayer: (playerId: number) => Promise<DeleteResult>;
   getPlayersByGameId: (gameId: number) => Promise<Player[]>;
   getPlayerById: (playerId: number) => Promise<Player | null>;
@@ -66,7 +81,7 @@ export const create = ({ db }: Dependencies): PlayerRepository => {
    * @param playersData Array of player data
    * @returns Array of created players
    */
-  const addPlayers = async (playersData: PlayerInput[]) => {
+  const addPlayers = async (playersData: CreatePlayer[]) => {
     if (!playersData.length) {
       return [];
     }
@@ -99,7 +114,7 @@ export const create = ({ db }: Dependencies): PlayerRepository => {
     // return an array of data...
     // Actual DB errors will bubble up to error handlers.
     if (!newPlayers.length) {
-      throw new UnexpectedLobbyError(
+      throw new UnexpectedRepositoryError(
         "Failed to create players. Empty response from inserts.",
       );
     }
@@ -107,6 +122,85 @@ export const create = ({ db }: Dependencies): PlayerRepository => {
     return newPlayers;
   };
 
+  /**
+   * Modifies one or more players in a game
+   * @param playersData Array of player data to update
+   * @returns Array of modified players
+   */
+  const modifyPlayers = async (playersData: ModifyPlayer[]) => {
+    if (!playersData.length) {
+      return [];
+    }
+
+    // Filter to just players with updatable fields as not guaranteed with types
+    const playersWithUpdates = playersData.filter(
+      (player) =>
+        player.publicName !== undefined ||
+        player.teamId !== undefined ||
+        player.userId !== undefined,
+    );
+
+    let modifiedPlayers: Player[] = [];
+
+    await db.transaction().execute(async (trx) => {
+      const updatePromises = playersWithUpdates.map((player) => {
+        const updateValues = Object.fromEntries(
+          Object.entries({
+            user_id: player.userId,
+            public_name: player.publicName,
+            team_id: player.teamId,
+            updated_at: new Date(),
+          }).filter(([_, value]) => value !== undefined),
+        );
+
+        return trx
+          .updateTable("players")
+          .set(updateValues)
+          .where("players.id", "=", player.playerId)
+          .where("players.game_id", "=", player.gameId)
+          .executeTakeFirstOrThrow(); // Use this for individual updates
+      });
+
+      await Promise.all(updatePromises);
+
+      const allPlayerIdsToModify = playersData.map((player) => player.playerId);
+
+      // Get all players in a single query
+      modifiedPlayers = await trx
+        .selectFrom("players")
+        .where("id", "in", allPlayerIdsToModify)
+        .select([
+          "id",
+          "user_id",
+          "game_id",
+          "team_id",
+          "status_id",
+          "public_name",
+          "updated_at",
+        ])
+        .execute();
+
+      const missingPlayers = allPlayerIdsToModify.filter(
+        (playerId) =>
+          !modifiedPlayers.map((player) => player.id).includes(playerId),
+      );
+
+      if (missingPlayers) {
+        throw new RepositoryBulkUpdateError(
+          "Players could not be found to modify",
+          {
+            cause: {
+              expected: playersWithUpdates,
+              modified: modifiedPlayers.map((player) => player.id),
+              missing: missingPlayers,
+            },
+          },
+        );
+      }
+    });
+
+    return modifiedPlayers;
+  };
   /**
    * Gets all players for a specific game
    * @param gameId The game ID
@@ -183,6 +277,7 @@ export const create = ({ db }: Dependencies): PlayerRepository => {
 
   return {
     addPlayers,
+    modifyPlayers,
     removePlayer,
     getPlayersByGameId,
     getPlayerById,
