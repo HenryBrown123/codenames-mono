@@ -1,7 +1,5 @@
-// src/features/setup/setup.repository.ts
 import { DB } from "src/common/db/db.types";
 import { Kysely } from "kysely";
-import { GameType } from "@codenames/shared/types";
 
 /**
  * Represents the game data returned by the query.
