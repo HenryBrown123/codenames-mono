@@ -7,8 +7,6 @@ import {
   AddPlayersResponse,
 } from "./add-players.validation";
 
-import { ExpressJwtRequest } from "express-jwt";
-
 /**
  * Controller interface for adding players to game lobbies
  */
@@ -38,15 +36,15 @@ export const create = ({
     next: NextFunction,
   ): Promise<void> => {
     try {
-      const validatedPlayers = addPlayersRequestSchema.parse({
+      const validatedRequest = addPlayersRequestSchema.parse({
         body: req.body,
         params: req.params,
         auth: req.auth,
       });
 
-      const gameId = validatedPlayers.params.gameId;
-      const userId = validatedPlayers.auth.userId;
-      const playersToAdd = validatedPlayers.body;
+      const gameId = validatedRequest.params.gameId;
+      const userId = validatedRequest.auth.userId;
+      const playersToAdd = validatedRequest.body;
 
       const playersData = await addPlayersService.execute(
         gameId,
