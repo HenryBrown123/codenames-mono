@@ -1,7 +1,15 @@
 import type { Response, NextFunction } from "express";
 import type { Request } from "express-jwt";
+import type { ValidatedBatchPlayersRequest } from "./modify-players.validation";
+import type { ModifyPlayersService } from "./modify-players.service";
 
-// Controller interface
+import {
+  modifySinglePlayerRequestSchema,
+  modifyBatchPlayersRequestSchema,
+  singlePlayerResponseSchema,
+  batchPlayersResponseSchema,
+} from "./modify-players.validation";
+
 export interface ModifyPlayersController {
   handleSingle: (
     req: Request,
@@ -16,18 +24,35 @@ export interface ModifyPlayersController {
 }
 
 // Dependencies interface
-export interface Dependencies {}
+export interface Dependencies {
+  modifyPlayersService: ModifyPlayersService;
+}
 
 // Controller factory
-export const create = (): ModifyPlayersController => {
-  // Single player handler
+export const create = ({
+  modifyPlayersService,
+}: Dependencies): ModifyPlayersController => {
   const handleSingle = async (
     req: Request,
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
     try {
-      // Implementation here
+      const validatedReq = modifySinglePlayerRequestSchema.parse({
+        parms: req.params,
+        body: req.body,
+        auth: req.auth,
+      });
+
+      const modifiedPlayers = await modifyPlayersService.updatePlayers(
+        validatedReq.params.gameId,
+        [{ ...validatedReq.body }],
+      );
+
+      const validatedResponse =
+        singlePlayerResponseSchema.parse(modifiedPlayers);
+
+      res.status(201).json(validatedResponse);
     } catch (error) {
       next(error);
     }
@@ -40,7 +65,21 @@ export const create = (): ModifyPlayersController => {
     next: NextFunction,
   ): Promise<void> => {
     try {
-      // Implementation here
+      const validatedReq = modifyBatchPlayersRequestSchema.parse({
+        parms: req.params,
+        body: req.body,
+        auth: req.auth,
+      });
+
+      const modifiedPlayers = await modifyPlayersService.updatePlayers(
+        validatedReq.params.gameId,
+        validatedReq.body,
+      );
+
+      const validatedResponse =
+        batchPlayersResponseSchema.parse(modifiedPlayers);
+
+      res.status(201).json(validatedResponse);
     } catch (error) {
       next(error);
     }
