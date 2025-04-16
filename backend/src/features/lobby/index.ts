@@ -12,6 +12,9 @@ import * as playerRepository from "@backend/common/data-access/players.repositor
 import * as addPlayersService from "./add-players/add-players.service";
 import * as addPlayersController from "./add-players/add-players.controller";
 
+import * as modifyPlayersService from "./modify-players/modify-players.service";
+import * as modifyPlayersController from "./modify-players/modify-players.controller";
+
 import * as removePlayerService from "./remove-players/remove-players.service";
 import * as removePlayerController from "./remove-players/remove-players.controller";
 
@@ -30,6 +33,9 @@ export const initialize = (
   db: Kysely<DB>,
   auth: AuthMiddleware,
 ) => {
+  /**
+   * Create feature services and controllers and wire up any dependencies
+   */
   const gameRepo = gameRepository.create({ db });
   const playerRepo = playerRepository.create({ db });
 
@@ -51,12 +57,37 @@ export const initialize = (
     removePlayersService: removePlayers,
   });
 
+  const modifyPlayers = modifyPlayersService.create({
+    gameRepository: gameRepo,
+    playerRepository: playerRepo,
+  });
+
+  const modifyPlayerController = modifyPlayersController.create({
+    modifyPlayersService: modifyPlayers,
+  });
+
   const router = Router();
 
   router.post(
-    "/games/:id/players",
+    "/games/:gameId/players",
     auth.requireAuthentication,
     addPlayersHandler.handle,
+  );
+
+  /**
+   * Players can be modified individually or batch
+   */
+
+  router.patch(
+    "/games/:gameId/players",
+    auth.requireAuthentication,
+    modifyPlayerController.handleBatch,
+  );
+
+  router.patch(
+    "/games/:gameId/players/:playerId",
+    auth.requireAuthentication,
+    modifyPlayerController.handleSingle,
   );
 
   router.delete(
