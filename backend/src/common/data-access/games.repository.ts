@@ -1,45 +1,56 @@
-import { DB } from "src/common/db/db.types";
 import { Kysely } from "kysely";
+import { DB } from "../db/db.types";
+import {
+  GameType,
+  GameFormat,
+  GAME_TYPE,
+  GAME_FORMAT,
+} from "@codenames/shared/types";
 
-/**
- * Represents the game data returned by the query.
- */
-export interface GameData {
+import { z } from "zod";
+
+/** Represents the game data returned by the query */
+export type GameData = {
   id: number;
   created_at: Date;
   public_id: string;
   status: string;
-  game_type: string;
-  game_format: string;
-}
-
-export interface GameRepository {
-  getGameDataByPublicId: (publicId: string) => Promise<GameData | null>;
-  createGame: (
-    publicId: string,
-    gameType: string,
-    gameFormat: string,
-  ) => Promise<{
-    id: number;
-    created_at: Date;
-  }>;
-}
+  game_type: GameType;
+  game_format: GameFormat;
+};
 
 /**
- * Dependencies required by the repository
+ * Zod schemas needed due to generated postgrest enum types returning "string" from Kysely query.
+ * Other column primative types are typesafe through types generated through kysely-codegen.
  */
-export interface Dependencies {
-  db: Kysely<DB>;
-}
+export const gameTypeSchema = z.enum([
+  GAME_TYPE.SINGLE_DEVICE,
+  GAME_TYPE.MULTI_DEVICE,
+]);
 
-/**
- * Create a repository instance for game setup operations
- */
-export const create = ({ db }: Dependencies): GameRepository => {
-  /**
-   * Retrieves game data along with its status.
-   */
-  const getGameDataByPublicId = async (publicId: string) => {
+export const gameFormatSchema = z.enum([
+  GAME_FORMAT.QUICK,
+  GAME_FORMAT.BEST_OF_THREE,
+  GAME_FORMAT.ROUND_ROBIN,
+]);
+
+/** Game creation input */
+export type GameInput = {
+  publicId: string;
+  gameType: GameType;
+  gameFormat: GameFormat;
+};
+
+/** Game creation result */
+export type GameResult = {
+  id: number;
+  created_at: Date;
+};
+
+/** Retrieves game data by public ID */
+export const getGameDataByPublicId =
+  (db: Kysely<DB>) =>
+  async (publicId: string): Promise<GameData | null> => {
     const game = await db
       .selectFrom("games")
       .innerJoin("game_status", "games.status_id", "game_status.id")
@@ -54,34 +65,36 @@ export const create = ({ db }: Dependencies): GameRepository => {
       .where("games.public_id", "=", publicId)
       .executeTakeFirst();
 
-    return game || null;
+    return game
+      ? {
+          id: game.id,
+          created_at: game.created_at,
+          public_id: game.public_id,
+          status: game.status,
+          game_type: gameTypeSchema.parse(game.game_type),
+          game_format: gameFormatSchema.parse(game.game_format),
+        }
+      : null;
   };
 
-  /**
-   * Creates a new game with the provided configuration
-   */
-  const createGame = async (
-    publicId: string,
-    gameType: string,
-    gameFormat: string,
-  ) => {
+/** Creates a new game */
+export const createGame =
+  (db: Kysely<DB>) =>
+  async (gameInput: GameInput): Promise<GameResult> => {
     const insertedGame = await db
       .insertInto("games")
       .values({
-        public_id: publicId,
+        public_id: gameInput.publicId,
         status_id: 1,
         created_at: new Date(),
-        game_type: gameType,
-        game_format: gameFormat,
+        game_type: gameInput.gameType,
+        game_format: gameInput.gameFormat,
       })
       .returning(["id", "created_at"])
       .executeTakeFirstOrThrow();
 
-    return insertedGame;
+    return {
+      id: insertedGame.id,
+      created_at: insertedGame.created_at,
+    };
   };
-
-  return {
-    createGame,
-    getGameDataByPublicId,
-  };
-};

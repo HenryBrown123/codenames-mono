@@ -1,47 +1,47 @@
-// Import feature dependencies
-import * as createGameController from "./create-new-game/create-game.controller";
-import * as createGameService from "./create-new-game/create-game.service";
-import * as gameRepository from "@backend/common/data-access/games.repository";
-import * as teamRepository from "@backend/common/data-access/teams.repository";
-import { setupErrorHandler } from "./errors/setup-errors.middleware";
-
-// Import non-feature dependencies
-
-import { DB } from "@backend/common/db/db.types";
-import { Kysely } from "kysely";
 import { Express } from "express";
+import { Kysely } from "kysely";
+import { DB } from "@backend/common/db/db.types";
 import { Router } from "express";
 import { AuthMiddleware } from "@backend/common/http-middleware/auth.middleware";
 
-/**
- * Initializes the setup feature routes and dependencies
- * @param app - Express application instance
- * @param db - Database connection
- * @param jwt - JWT configuration
- */
+// Import repositories
+import {
+  getGameDataByPublicId,
+  createGame,
+} from "@backend/common/data-access/games.repository";
+import { createTeams } from "@backend/common/data-access/teams.repository";
+
+// Import feature components
+import { createGameService } from "./create-new-game/create-game.service";
+import { createGameController } from "./create-new-game/create-game.controller";
+
+// Import error handlers
+import { setupErrorHandler } from "./errors/setup-errors.middleware";
+
+/** Initializes the setup feature module with all routes and dependencies */
 export const initialize = (
   app: Express,
   db: Kysely<DB>,
   auth: AuthMiddleware,
 ) => {
-  const setupRepo = gameRepository.create({ db });
-  const teamsRepo = teamRepository.create({ db });
+  const getGame = getGameDataByPublicId(db);
+  const newGame = createGame(db);
+  const newTeam = createTeams(db);
 
-  const setupService = createGameService.create({
-    gameRepository: setupRepo,
-    teamsRepository: teamsRepo,
+  const setupGameService = createGameService({
+    getGame: getGame,
+    createGame: newGame,
+    createTeams: newTeam,
   });
 
-  const setupHandler = createGameController.create({
-    createGameService: setupService,
-  }).handle;
-
-  const requireAuth = auth.requireAuthentication;
+  const setupGameController = createGameController({
+    createGame: setupGameService,
+  });
 
   const router = Router();
 
-  router.post("/games", requireAuth, setupHandler);
+  router.post("/games", auth, setupGameController);
 
-  app.use("/api/", router);
-  app.use("/api/", setupErrorHandler);
+  app.use("/api", router);
+  app.use("/api", setupErrorHandler);
 };

@@ -1,6 +1,5 @@
 import type { Response, NextFunction } from "express";
 import type { Request } from "express-jwt";
-import type { ValidatedBatchPlayersRequest } from "./modify-players.validation";
 import type { ModifyPlayersService } from "./modify-players.service";
 
 import {
@@ -29,7 +28,7 @@ export interface Dependencies {
 }
 
 // Controller factory
-export const create = ({
+export const modifyPlayersController = ({
   modifyPlayersService,
 }: Dependencies): ModifyPlayersController => {
   const handleSingle = async (

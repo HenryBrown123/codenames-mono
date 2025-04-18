@@ -5,95 +5,91 @@ import { Router } from "express";
 import { AuthMiddleware } from "@backend/common/http-middleware/auth.middleware";
 
 // Import repositories
-import * as gameRepository from "@backend/common/data-access/games.repository";
-import * as playerRepository from "@backend/common/data-access/players.repository";
+import { getGameDataByPublicId } from "@backend/common/data-access/games.repository";
+import {
+  addPlayers,
+  getPlayerById,
+  removePlayer,
+  modifyPlayers,
+} from "@backend/common/data-access/players.repository";
 
 // Import feature components
-import * as addPlayersService from "./add-players/add-players.service";
-import * as addPlayersController from "./add-players/add-players.controller";
+import { addPlayersService } from "./add-players/add-players.service";
+import { addPlayersController } from "./add-players/add-players.controller";
 
-import * as modifyPlayersService from "./modify-players/modify-players.service";
-import * as modifyPlayersController from "./modify-players/modify-players.controller";
+import { modifyPlayersService } from "./modify-players/modify-players.service";
+import { modifyPlayersController } from "./modify-players/modify-players.controller";
 
-import * as removePlayerService from "./remove-players/remove-players.service";
-import * as removePlayerController from "./remove-players/remove-players.controller";
+import { removePlayersService } from "./remove-players/remove-players.service";
+import { removePlayersController } from "./remove-players/remove-players.controller";
 
 // Import error handlers
 import { lobbyErrorHandler } from "./errors/lobby-errors.middleware";
 
-/**
- * Initializes the lobby feature module with all routes and dependencies
- *
- * @param app - Express application instance
- * @param db - Database connection
- * @param auth - Authentication middleware
- */
+/** Initializes the lobby feature module with all routes and dependencies */
 export const initialize = (
   app: Express,
   db: Kysely<DB>,
   auth: AuthMiddleware,
 ) => {
-  /**
-   * Create feature services and controllers and wire up any dependencies
-   */
-  const gameRepo = gameRepository.create({ db });
-  const playerRepo = playerRepository.create({ db });
+  // Create repository functions
+  const getGetGameDataByPublicId = getGameDataByPublicId(db);
+  const getAddPlayers = addPlayers(db);
+  const getPlayers = getPlayerById(db);
+  const getRemovePlayer = removePlayer(db);
+  const getModifyPlayers = modifyPlayers(db);
 
-  const addPlayers = addPlayersService.create({
-    gameRepository: gameRepo,
-    playerRepository: playerRepo,
+  // Create service functions
+  const lobbyAddPlayersService = addPlayersService({
+    getGameByPublicId: getGetGameDataByPublicId,
+    addPlayers: getAddPlayers,
   });
 
-  const addPlayersHandler = addPlayersController.create({
-    addPlayersService: addPlayers,
+  const lobbyModifyPlayersService = modifyPlayersService({
+    getGameByPublicId: getGetGameDataByPublicId,
+    modifyPlayers: getModifyPlayers,
   });
 
-  const removePlayers = removePlayerService.create({
-    gameRepository: gameRepo,
-    playerRepository: playerRepo,
+  const lobbyRemovePlayersService = removePlayersService({
+    getGameByPublicId: getGetGameDataByPublicId,
+    removePlayer: getRemovePlayer,
+    getPlayer: getPlayers,
   });
 
-  const removePlayerHandler = removePlayerController.create({
-    removePlayersService: removePlayers,
+  // Create controllers
+  const lobbyAddPlayersController = addPlayersController({
+    addPlayers: lobbyAddPlayersService,
   });
 
-  const modifyPlayers = modifyPlayersService.create({
-    gameRepository: gameRepo,
-    playerRepository: playerRepo,
+  const lobbyModifyPlayersController = modifyPlayersController({
+    modifyPlayersService: lobbyModifyPlayersService,
   });
 
-  const modifyPlayerController = modifyPlayersController.create({
-    modifyPlayersService: modifyPlayers,
+  const lobbyRemovePlayersController = removePlayersController({
+    removePlayersService: lobbyRemovePlayersService,
   });
 
+  // Create router and register routes
   const router = Router();
 
-  router.post(
-    "/games/:gameId/players",
-    auth.requireAuthentication,
-    addPlayersHandler.handle,
-  );
-
-  /**
-   * Players can be modified individually or batch
-   */
+  router.post("/games/:gameId/players", auth, lobbyAddPlayersController);
 
   router.patch(
     "/games/:gameId/players",
-    auth.requireAuthentication,
-    modifyPlayerController.handleBatch,
+    auth,
+    lobbyModifyPlayersController.handleBatch,
   );
 
   router.patch(
     "/games/:gameId/players/:playerId",
-    auth.requireAuthentication,
-    modifyPlayerController.handleSingle,
+    auth,
+    lobbyModifyPlayersController.handleSingle,
   );
 
   router.delete(
     "/games/:gameId/players/:playerId",
-    auth.requireAuthentication,
-    removePlayerHandler.handle,
+    auth,
+    lobbyRemovePlayersController,
   );
 
   // Apply routes and error handlers

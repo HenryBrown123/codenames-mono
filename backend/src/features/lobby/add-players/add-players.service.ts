@@ -1,11 +1,8 @@
-import type { PlayerRepository } from "@backend/common/data-access/players.repository";
-import type { GameRepository } from "@backend/common/data-access/games.repository";
 import { UnexpectedLobbyError } from "../errors/lobby.errors";
-import { GAME_TYPE } from "@codenames/shared/types";
+import { addPlayers } from "@backend/common/data-access/players.repository";
+import { getGameDataByPublicId } from "@backend/common/data-access/games.repository";
 
-/**
- * Player result data
- */
+/** Represents the result of a player addition operation */
 export type PlayerResult = {
   playerId: number;
   gameId: number;
@@ -13,56 +10,35 @@ export type PlayerResult = {
   playerName: string;
 };
 
-/**
- * Service interface for adding players to a game lobby
- */
-export interface AddPlayersService {
-  execute: (
-    publicGameId: string,
-    userId: number,
-    playersData: {
-      playerName: string;
-      teamId: number;
-    }[],
-  ) => Promise<PlayerResult[]>;
-}
+/** Data structure for adding player information */
+export type PlayerAddData = {
+  playerName: string;
+  teamId: number;
+}[];
 
-/**
- * Dependencies required by the add players service
- */
-export interface Dependencies {
-  playerRepository: PlayerRepository;
-  gameRepository: GameRepository;
-}
+/** Required dependencies for creating the AddPlayersService */
+export type ServiceDependencies = {
+  addPlayers: ReturnType<typeof addPlayers>;
+  getGameByPublicId: ReturnType<typeof getGameDataByPublicId>;
+};
 
-/**
- * Creates a service instance for adding players to game lobbies
- */
-export const create = ({
-  playerRepository,
-  gameRepository,
-}: Dependencies): AddPlayersService => {
+/** Creates an implementation of the add players service */
+export const addPlayersService = (dependencies: ServiceDependencies) => {
   /**
-   * Adds one or more players to a game lobby
-   * @param publicGameId Public ID of the game
-   * @param userId ID of the authenticated user
-   * @param playersData Array of player data
-   * @returns Array of player results
+   * Adds players to a game
+   * @param publicGameId - Public identifier of the game
+   * @param userId - ID of the user adding players
+   * @param playersToAdd - Players to be added
+   * @returns Added player details
    */
-  const execute = async (
+  const addPlayers = async (
     publicGameId: string,
     userId: number,
-    playersData: {
-      playerName: string;
-      teamId: number;
-    }[],
+    playersToAdd: PlayerAddData,
   ): Promise<PlayerResult[]> => {
-    if (playersData.length === 0) {
-      return [];
-    }
+    if (!playersToAdd.length) return [];
 
-    const game = await gameRepository.getGameDataByPublicId(publicGameId);
-
+    const game = await dependencies.getGameByPublicId(publicGameId);
     if (!game) {
       throw new UnexpectedLobbyError(
         `Game with public ID ${publicGameId} not found`,
@@ -75,24 +51,13 @@ export const create = ({
       );
     }
 
-    if (game.game_type === GAME_TYPE.MULTI_DEVICE && playersData.length > 1) {
+    if (game.game_type === "MULTI_DEVICE" && playersToAdd.length > 1) {
       throw new UnexpectedLobbyError(
         "Multi-device games only allow adding one player at a time",
       );
     }
 
-    const existingPlayers = await playerRepository.getPlayersByGameId(game.id);
-    const maxPlayersPerGame = 10;
-
-    // todo: need to think about whether this is exceptional or not.. depends on how much client side
-    // validation... otherwise I could return a result object for the controller to return 4xx response
-    if (existingPlayers.length + playersData.length > maxPlayersPerGame) {
-      throw new UnexpectedLobbyError(
-        `Game has reached the maximum player limit of ${maxPlayersPerGame}`,
-      );
-    }
-
-    const playerCreateData = playersData.map((player) => ({
+    const repositoryRequest = playersToAdd.map((player) => ({
       userId,
       gameId: game.id,
       teamId: player.teamId,
@@ -100,18 +65,15 @@ export const create = ({
       statusId: 1,
     }));
 
-    const newPlayers = await playerRepository.addPlayers(playerCreateData);
-    const players = [...existingPlayers, ...newPlayers];
+    const newPlayers = await dependencies.addPlayers(repositoryRequest);
 
-    return players.map((player) => ({
+    return newPlayers.map((player) => ({
       playerId: player.id,
-      gameId: player.game_id,
-      teamId: player.team_id,
-      playerName: player.public_name,
+      gameId: player.gameId,
+      teamId: player.teamId,
+      playerName: player.publicName,
     }));
   };
 
-  return {
-    execute,
-  };
+  return addPlayers;
 };

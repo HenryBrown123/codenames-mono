@@ -4,17 +4,17 @@ import { DB } from "../../common/db/db.types";
 import { Router } from "express";
 import { JwtConfig } from "src/common/config/jwt.config";
 
-// Error handlers
 import { authErrorHandler } from "./errors/auth-errors.middleware";
 
-// Domain repositories
-import * as userRepository from "../../common/data-access/users.repository";
-import * as sessionRepository from "../../common/data-access/sessions.repository";
+import {
+  findByUsername,
+  createUser,
+} from "@backend/common/data-access/users.repository";
+import { storeSession } from "@backend/common/data-access/sessions.repository";
 
-// Create Guest User components
-import * as createGuestUserService from "./create-guest-session/create-guest-user.service";
-import * as guestLoginService from "./create-guest-session/guest-login.service";
-import * as createGuestUserController from "./create-guest-session/create-guest-session.controller";
+import { createGuestUserService } from "./create-guest-session/create-guest-user.service";
+import { guestLoginService } from "./create-guest-session/guest-login.service";
+import { createGuestUserController } from "./create-guest-session/create-guest-session.controller";
 
 /**
  * Initializes the authentication feature module
@@ -35,28 +35,32 @@ export const initialize = (
   db: Kysely<DB>,
   jwtConfig: JwtConfig,
 ) => {
-  const userRepo = userRepository.create({ db });
-  const sessionRepo = sessionRepository.create({ db });
+  // Initialize repositories
+  const findUser = findByUsername(db);
+  const newUser = createUser(db);
+  const newSession = storeSession(db);
 
-  const guestUser = createGuestUserService.create({
-    userRepository: userRepo,
+  // Initialize services
+  const guestUser = createGuestUserService({
+    findUser,
+    createUser: newUser,
   });
 
-  const login = guestLoginService.create({
-    userRepository: userRepo,
-    sessionRepository: sessionRepo,
+  const login = guestLoginService({
+    findUser,
+    storeSession: newSession,
     jwtSecret: jwtConfig.secret,
     jwtOptions: jwtConfig.options,
   });
 
-  const createGuestUserHandler = createGuestUserController.create({
-    createGuestUserService: guestUser,
-    loginService: login,
-  }).handle;
+  // Initialize controller
+  const createGuestHandler = createGuestUserController({
+    createGuestUser: guestUser,
+    login,
+  });
 
   const router = Router();
-
-  router.post("/guests", createGuestUserHandler);
+  router.post("/guests", createGuestHandler);
 
   app.use("/api/auth", router);
   app.use("/api/auth", authErrorHandler);

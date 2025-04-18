@@ -1,88 +1,77 @@
-import { Kysely, DeleteResult } from "kysely";
-import { DB } from "../db/db.types";
-import {
-  RepositoryBulkUpdateError,
-  UnexpectedRepositoryError,
-} from "./repository.errors";
+import { Kysely, Selectable } from "kysely";
+import { DB, Players } from "../db/db.types";
+import { UnexpectedRepositoryError } from "./repository.errors";
 
-/**
- * Player entity as stored in the database
- */
-export type Player = {
-  id: number;
-  user_id: number;
-  game_id: number;
-  public_name: string;
-  team_id: number;
-  status_id: number;
-  updated_at: Date | null;
-};
-
-/**
- * Player creation input
- */
-export interface CreatePlayer {
+/** Represents the input data for creating a player in the database */
+export type PlayerInput = {
   userId: number;
   gameId: number;
   publicName: string;
   teamId: number;
   statusId: number;
-}
+};
 
-/**
- * Player modify input
- */
-export interface ModifyPlayer {
+/** Player modify input å*/
+export type ModifyPlayerInput = {
   gameId: number;
   playerId: number;
   publicName?: string;
   teamId?: number;
   userId?: number;
-}
+};
+
+/** Represents a player record retrieved from the database */
+export type PlayerResult = {
+  id: number;
+  userId: number;
+  gameId: number;
+  teamId: number;
+  statusId: number;
+  publicName: string;
+};
+
+/** columns to use for PlayerResult type */
+const playerResultColumns = [
+  "id",
+  "user_id",
+  "game_id",
+  "team_id",
+  "status_id",
+  "public_name",
+  "updated_at",
+  "status_last_changed",
+] as const;
 
 /**
- * Repository interface for player operations
+ *
+ * @param db - Database connection
+ * @returns - function that returns a player from player id.
  */
-export interface PlayerRepository {
-  addPlayers: (playersData: CreatePlayer[]) => Promise<Player[]>;
-  modifyPlayers: (playersData: ModifyPlayer[]) => Promise<Player[]>;
-  removePlayer: (playerId: number) => Promise<DeleteResult>;
-  getPlayersByGameId: (gameId: number) => Promise<Player[]>;
-  getPlayerById: (playerId: number) => Promise<Player | null>;
-  getPlayersByTeam: (gameId: number, teamId: number) => Promise<Player[]>;
-}
 
-/**
- * Dependencies required by the player repository
- */
-export interface Dependencies {
-  db: Kysely<DB>;
-}
+export const getPlayerById = (db: Kysely<DB>) => async (playerId: number) => {
+  const player = db
+    .selectFrom("players")
+    .where("players.id", "=", playerId)
+    .select(playerResultColumns)
+    .executeTakeFirst();
 
+  return player;
+};
 /**
- * Create a repository instance for player operations
+ * Creates a function to add players to the database
+ * @param db - Database connection
+ * @returns Function to insert players
  */
-export const create = ({ db }: Dependencies): PlayerRepository => {
+export const addPlayers =
+  (db: Kysely<DB>) =>
   /**
-   * Removes player from game
-   * @param playerId PlayerId to remove
-   * @returns Deleted player
+   * Inserts new players into the database
+   * @param playersData - Array of player data to insert
+   * @returns Newly created player records
+   * @throws {UnexpectedLobbyError} If insertion fails
    */
-  const removePlayer = async (playerId: number) => {
-    const removedPlayer = await db
-      .deleteFrom("players")
-      .where("players.id", "=", playerId)
-      .executeTakeFirstOrThrow();
-
-    return removedPlayer;
-  };
-  /**
-   * Adds one or more players to a game
-   * @param playersData Array of player data
-   * @returns Array of created players
-   */
-  const addPlayers = async (playersData: CreatePlayer[]) => {
-    if (!playersData.length) {
+  async (playersData: PlayerInput[]): Promise<PlayerResult[]> => {
+    if (playersData.length === 0) {
       return [];
     }
 
@@ -98,36 +87,90 @@ export const create = ({ db }: Dependencies): PlayerRepository => {
     const newPlayers = await db
       .insertInto("players")
       .values(values)
-      .returning([
-        "id",
-        "user_id",
-        "game_id",
-        "team_id",
-        "status_id",
-        "public_name",
-        "updated_at",
-      ])
+      .returning(playerResultColumns)
       .execute();
 
-    // at this point the only acceptable outcome is for players to be created.. therefore throw
-    // error if this is not the case. executeTakeFirstOrThrow() not used as this function should
-    // return an array of data...
-    // Actual DB errors will bubble up to error handlers.
     if (!newPlayers.length) {
       throw new UnexpectedRepositoryError(
         "Failed to create players. Empty response from inserts.",
       );
     }
 
-    return newPlayers;
+    return newPlayers.map((player) => ({
+      id: player.id,
+      userId: player.user_id,
+      gameId: player.game_id,
+      teamId: player.team_id,
+      statusId: player.status_id,
+      publicName: player.public_name,
+    }));
   };
 
+/**
+ * Creates a function to retrieve players for a specific game
+ * @param db - Database connection
+ * @returns Function to fetch players by game ID
+ */
+export const getPlayersByGameId =
+  (db: Kysely<DB>) =>
   /**
-   * Modifies one or more players in a game
-   * @param playersData Array of player data to update
-   * @returns Array of modified players
+   * Fetches all players in a given game
+   * @param gameId - The ID of the game to fetch players for
+   * @returns List of players in the specified game
    */
-  const modifyPlayers = async (playersData: ModifyPlayer[]) => {
+  async (gameId: number): Promise<PlayerResult[]> => {
+    const players = await db
+      .selectFrom("players")
+      .where("game_id", "=", gameId)
+      .select(playerResultColumns)
+      .execute();
+
+    return players.map((player) => ({
+      id: player.id,
+      userId: player.user_id,
+      gameId: player.game_id,
+      teamId: player.team_id,
+      statusId: player.status_id,
+      publicName: player.public_name,
+    }));
+  };
+
+/**
+ * Creates a function to remove a player from the database
+ * @param db - Database connection
+ * @returns Function to delete a specific player
+ */
+export const removePlayer =
+  (db: Kysely<DB>) =>
+  /**
+   * Deletes a specific player from the database
+   * @param playerId - The ID of the player to remove
+   * @returns The removed player record or null if not found
+   */
+  async (playerId: number): Promise<PlayerResult> => {
+    const removedPlayer = await db
+      .deleteFrom("players")
+      .where("players.id", "=", playerId)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    return {
+      id: removedPlayer.id,
+      userId: removedPlayer.user_id,
+      gameId: removedPlayer.game_id,
+      teamId: removedPlayer.team_id,
+      statusId: removedPlayer.status_id,
+      publicName: removedPlayer.public_name,
+    };
+  };
+
+/**
+ * Modifies one or more players in a game
+ * @param playersData Array of player data to update
+ * @returns Array of modified players
+ */
+export const modifyPlayers =
+  (db: Kysely<DB>) => async (playersData: ModifyPlayerInput[]) => {
     if (!playersData.length) {
       return [];
     }
@@ -140,147 +183,67 @@ export const create = ({ db }: Dependencies): PlayerRepository => {
         player.userId !== undefined,
     );
 
-    let modifiedPlayers: Player[] = [];
+    const repositoryResponse: Selectable<Players>[] = await db
+      .transaction()
+      .execute(async (trx) => {
+        const updates = playersWithUpdates.map((player) => {
+          // produce object array of values with dynamic properies to prevent
+          // unnecessary updates.
+          const updateValues = Object.fromEntries(
+            Object.entries({
+              user_id: player.userId,
+              public_name: player.publicName,
+              team_id: player.teamId,
+              updated_at: new Date(),
+            }).filter(([_, value]) => value !== undefined),
+          );
 
-    await db.transaction().execute(async (trx) => {
-      const updatePromises = playersWithUpdates.map((player) => {
-        const updateValues = Object.fromEntries(
-          Object.entries({
-            user_id: player.userId,
-            public_name: player.publicName,
-            team_id: player.teamId,
-            updated_at: new Date(),
-          }).filter(([_, value]) => value !== undefined),
+          return trx
+            .updateTable("players")
+            .set(updateValues)
+            .where("players.id", "=", player.playerId)
+            .where("players.game_id", "=", player.gameId)
+            .executeTakeFirstOrThrow();
+        });
+
+        await Promise.all(updates);
+
+        const allPlayerIdsToModify = playersData.map(
+          (player) => player.playerId,
         );
 
-        return trx
-          .updateTable("players")
-          .set(updateValues)
-          .where("players.id", "=", player.playerId)
-          .where("players.game_id", "=", player.gameId)
-          .executeTakeFirstOrThrow(); // Use this for individual updates
+        const modifiedPlayers = await trx
+          .selectFrom("players")
+          .where("id", "in", allPlayerIdsToModify)
+          .select(playerResultColumns)
+          .execute();
+
+        const missingPlayers = allPlayerIdsToModify.filter(
+          (playerId) =>
+            !modifiedPlayers.map((player) => player.id).includes(playerId),
+        );
+
+        if (missingPlayers) {
+          throw new UnexpectedRepositoryError(
+            "Players could not be found to modify",
+            {
+              cause: {
+                expected: playersWithUpdates,
+                modified: modifiedPlayers.map((player) => player.id),
+                missing: missingPlayers,
+              },
+            },
+          );
+        }
+
+        return modifiedPlayers;
       });
 
-      await Promise.all(updatePromises);
-
-      const allPlayerIdsToModify = playersData.map((player) => player.playerId);
-
-      // Get all players in a single query
-      modifiedPlayers = await trx
-        .selectFrom("players")
-        .where("id", "in", allPlayerIdsToModify)
-        .select([
-          "id",
-          "user_id",
-          "game_id",
-          "team_id",
-          "status_id",
-          "public_name",
-          "updated_at",
-        ])
-        .execute();
-
-      const missingPlayers = allPlayerIdsToModify.filter(
-        (playerId) =>
-          !modifiedPlayers.map((player) => player.id).includes(playerId),
+    if (!repositoryResponse) {
+      throw new UnexpectedRepositoryError(
+        "Failed to modify players. Empty response",
       );
+    }
 
-      if (missingPlayers) {
-        throw new RepositoryBulkUpdateError(
-          "Players could not be found to modify",
-          {
-            cause: {
-              expected: playersWithUpdates,
-              modified: modifiedPlayers.map((player) => player.id),
-              missing: missingPlayers,
-            },
-          },
-        );
-      }
-    });
-
-    return modifiedPlayers;
+    return repositoryResponse;
   };
-  /**
-   * Gets all players for a specific game
-   * @param gameId The game ID
-   * @returns Array of players
-   */
-  const getPlayersByGameId = async (gameId: number) => {
-    const players = await db
-      .selectFrom("players")
-      .where("game_id", "=", gameId)
-      .select([
-        "id",
-        "user_id",
-        "game_id",
-        "team_id",
-        "status_id",
-        "public_name", // Changed from playerName
-        "status_last_changed",
-        "updated_at",
-      ])
-      .execute();
-
-    return players || [];
-  };
-
-  /**
-   * Gets players by team in a specific game
-   * @param gameId The game ID
-   * @param teamId The team ID
-   * @returns Array of players
-   */
-  const getPlayersByTeam = async (gameId: number, teamId: number) => {
-    const players = await db
-      .selectFrom("players")
-      .where("game_id", "=", gameId)
-      .where("team_id", "=", teamId)
-      .select([
-        "id",
-        "user_id",
-        "game_id",
-        "team_id",
-        "status_id",
-        "public_name",
-        "status_last_changed",
-        "updated_at",
-      ])
-      .execute();
-
-    return players || [];
-  };
-
-  /**
-   * Gets a player by ID
-   * @param playerId The player ID
-   * @returns The player or null if not found
-   */
-  const getPlayerById = async (playerId: number) => {
-    const player = await db
-      .selectFrom("players")
-      .where("id", "=", playerId)
-      .select([
-        "id",
-        "user_id",
-        "game_id",
-        "team_id",
-        "status_id",
-        "public_name",
-        "status_last_changed",
-        "updated_at",
-      ])
-      .executeTakeFirst();
-
-    return player || null;
-  };
-
-  return {
-    addPlayers,
-    modifyPlayers,
-    removePlayer,
-    getPlayersByGameId,
-    getPlayerById,
-    getPlayersByTeam,
-  };
-};

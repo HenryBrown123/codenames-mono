@@ -1,48 +1,31 @@
 import type { Request, Response, NextFunction } from "express";
-import type { CreateGameService } from "./create-game.service";
+import { createGameService } from "./create-game.service";
 import {
   createGameRequestSchema,
   createGameResponseSchema,
   CreateGameResponse,
 } from "./create.game.validation";
 
-/**
- * Controller interface for creating new games
- */
-export interface CreateGameController {
-  handle: (req: Request, res: Response, next: NextFunction) => Promise<void>;
-}
+/** Dependencies required by the create game controller */
+export type Dependencies = {
+  createGame: ReturnType<typeof createGameService>;
+};
 
-/**
- * Dependencies required by the create game controller
- */
-export interface Dependencies {
-  createGameService: CreateGameService;
-}
-
-/**
- * Creates a controller instance for handling game creation requests
- * @param dependencies - Required dependencies for the controller
- *
- * @returns HTTP Controller instance
- */
-export const create = ({
-  createGameService,
-}: Dependencies): CreateGameController => {
+/** Creates a controller for handling game creation requests */
+export const createGameController =
+  ({ createGame }: Dependencies) =>
   /**
-   * HTTP handler for creating a new game
-   * Validates request, creates game, and returns game details
+   * Handles HTTP request to create a new game
+   * @param req - Express request with game creation details
+   * @param res - Express response object
+   * @param next - Express error handling function
    */
-  const handle = async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> => {
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      // run time validation of req object
+      // Runtime validation of request object
       const parsedReq = createGameRequestSchema.parse(req.body);
 
-      const { publicId, createdAt } = await createGameService.execute(
+      const { publicId, createdAt } = await createGame(
         parsedReq.gameType,
         parsedReq.gameFormat,
       );
@@ -59,7 +42,7 @@ export const create = ({
         },
       };
 
-      // run time validation of response object
+      // Runtime validation of response object
       const validatedResponse = createGameResponseSchema.parse(response);
 
       res.status(201).json(validatedResponse);
@@ -67,8 +50,3 @@ export const create = ({
       next(error);
     }
   };
-
-  return {
-    handle,
-  };
-};

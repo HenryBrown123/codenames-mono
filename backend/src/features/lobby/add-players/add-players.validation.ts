@@ -1,4 +1,3 @@
-// src/features/lobby/add-players/add-players.validation.ts
 import { z } from "zod";
 
 /**

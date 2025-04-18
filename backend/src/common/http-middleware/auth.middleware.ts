@@ -1,34 +1,21 @@
 import { expressjwt } from "express-jwt";
-import { RequestHandler, Request } from "express";
+import { RequestHandler } from "express";
 
-/**
- * Auth middleware functions
- */
-export interface AuthMiddleware {
-  requireAuthentication: RequestHandler;
-}
-
-/**
- * Dependencies required by the auth middleware
- */
-export interface Dependencies {
+/** Dependencies for creating authentication middleware */
+export type Dependencies = {
   jwtSecret: string;
-}
+};
 
-/**
- * Create authentication middleware functions
- */
-export const create = ({ jwtSecret }: Dependencies): AuthMiddleware => {
+/** Authentication middleware type */
+export type AuthMiddleware = RequestHandler;
+
+/** Creates authentication middleware */
+export const authMiddleware = ({ jwtSecret }: Dependencies) =>
   /**
    * Express middleware to require authentication
    * Uses express-jwt to validate JWT token from Authorization header
    */
-  const requireAuthentication = expressjwt({
+  expressjwt({
     secret: jwtSecret,
     algorithms: ["HS256"],
   });
-
-  return {
-    requireAuthentication,
-  };
-};
