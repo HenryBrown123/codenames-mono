@@ -1,6 +1,6 @@
 import { UnexpectedLobbyError } from "../errors/lobby.errors";
-import { GameRepository } from "@backend/common/data-access/games.repository";
-import { PlayerRepository } from "@backend/common/data-access/players.repository";
+import { modifyPlayers } from "@backend/common/data-access/players.repository";
+import { getGameDataByPublicId } from "@backend/common/data-access/games.repository";
 
 /**
  * Represents the result of a player modification operation
@@ -35,20 +35,21 @@ export interface ModifyPlayersService {
 /**
  * Required dependencies for creating the ModifyPlayersService
  */
-export interface Dependencies {
-  playerRepository: PlayerRepository;
-  gameRepository: GameRepository;
-}
+export type ServiceDependencies = {
+  modifyPlayers: ReturnType<typeof modifyPlayers>;
+  getGameByPublicId: ReturnType<typeof getGameDataByPublicId>;
+};
 
 /**
  * Creates and returns an implementation of the ModifyPlayersService
  * @param dependencies - Required repositories for service operations
  * @returns Configured ModifyPlayersService instance
  */
-export const create = ({
-  playerRepository,
-  gameRepository,
-}: Dependencies): ModifyPlayersService => {
+export const modifyPlayersService = (
+  dependencies: ServiceDependencies,
+): ModifyPlayersService => {
+  const { modifyPlayers, getGameByPublicId } = dependencies;
+
   /**
    * Updates multiple players with new information
    * @param publicGameId - Public identifier for the game
@@ -64,7 +65,7 @@ export const create = ({
       return [];
     }
 
-    const game = await gameRepository.getGameDataByPublicId(publicGameId);
+    const game = await getGameByPublicId(publicGameId);
 
     if (!game) {
       throw new UnexpectedLobbyError(
@@ -80,8 +81,7 @@ export const create = ({
       };
     });
 
-    const modifiedPlayers =
-      await playerRepository.modifyPlayers(repositoryRequest);
+    const modifiedPlayers = await modifyPlayers(repositoryRequest);
 
     return modifiedPlayers;
   };

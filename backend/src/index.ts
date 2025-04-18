@@ -13,7 +13,7 @@ import swaggerUi from "swagger-ui-express";
 import { initialize as initializeAuth } from "./features/auth";
 import { initialize as initializeGameSetup } from "./features/setup";
 import { initialize as initializeLobby } from "./features/lobby";
-import * as authMiddleware from "@backend/common/http-middleware/auth.middleware";
+import { authMiddleware } from "@backend/common/http-middleware/auth.middleware";
 
 /**
  * Runtime validation of env. variables
@@ -43,7 +43,7 @@ const swaggerSpec = createOpenApiSpec();
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // this is the auth middleware handlers to be injected into features
-const authHandlers = authMiddleware.create({
+const authHandlers = authMiddleware({
   jwtSecret: env.JWT_SECRET,
 });
 

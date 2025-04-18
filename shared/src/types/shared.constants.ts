@@ -41,8 +41,10 @@ export const CODEBREAKER_OUTCOME = {
  */
 export const GAME_TYPE = {
   SINGLE_DEVICE: "SINGLE_DEVICE",
-  MULTI_DEVICE: "MULT_DEVICE",
+  MULTI_DEVICE: "MULTI_DEVICE",
 } as const;
+
+export type GameType = (typeof GAME_TYPE)[keyof typeof GAME_TYPE];
 
 /**
  * Object representing the different game formats.

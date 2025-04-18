@@ -1,24 +1,28 @@
-// src/common/data-access/teams.repository.ts
 import { Kysely } from "kysely";
 import { DB } from "../db/db.types";
 
-export interface TeamRepository {
-  createTeams: (gameId: number, teamNames: string[]) => Promise<Team[]>;
-  getTeamsByGameId: (gameId: number) => Promise<Team[]>;
-}
-
+/** Represents a team in the database */
 export type Team = {
   id: number;
   game_id: number;
   team_name: string;
 };
 
-export interface Dependencies {
-  db: Kysely<DB>;
-}
+/** Input for creating teams */
+export type TeamInput = {
+  gameId: number;
+  teamNames: string[];
+};
 
-export const create = ({ db }: Dependencies): TeamRepository => {
-  const createTeams = async (gameId: number, teamNames: string[]) => {
+/** Creates teams for a specific game */
+export const createTeams =
+  (db: Kysely<DB>) =>
+  /**
+   * Inserts new teams into the database
+   * @param input - Teams creation input data
+   * @returns Created team records
+   */
+  async ({ gameId, teamNames }: TeamInput): Promise<Team[]> => {
     const values = teamNames.map((name) => ({
       game_id: gameId,
       team_name: name,
@@ -33,7 +37,15 @@ export const create = ({ db }: Dependencies): TeamRepository => {
     return teams;
   };
 
-  const getTeamsByGameId = async (gameId: number) => {
+/** Retrieves teams for a specific game */
+export const getTeamsByGameId =
+  (db: Kysely<DB>) =>
+  /**
+   * Fetches teams for a given game
+   * @param gameId - The ID of the game to fetch teams for
+   * @returns List of teams in the specified game
+   */
+  async (gameId: number): Promise<Team[]> => {
     const teams = await db
       .selectFrom("teams")
       .where("game_id", "=", gameId)
@@ -42,9 +54,3 @@ export const create = ({ db }: Dependencies): TeamRepository => {
 
     return teams;
   };
-
-  return {
-    createTeams,
-    getTeamsByGameId,
-  };
-};

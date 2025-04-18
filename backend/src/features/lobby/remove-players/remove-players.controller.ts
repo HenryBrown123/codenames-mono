@@ -1,39 +1,27 @@
 import type { Response, NextFunction } from "express";
 import type { Request } from "express-jwt";
-import type { RemovePlayersService } from "./remove-players.service";
+import { removePlayersService } from "./remove-players.service";
 import {
   removePlayersRequestSchema,
   removePlayersResponseSchema,
+  RemovePlayersResponse,
 } from "./remove-players.validation";
 
-/**
- * Controller interface for removing players from game lobbies
- */
-export interface RemovePlayersController {
-  handle: (req: Request, res: Response, next: NextFunction) => Promise<void>;
-}
+/** Dependencies required by the remove players controller */
+export type Dependencies = {
+  removePlayersService: ReturnType<typeof removePlayersService>;
+};
 
-/**
- * Dependencies required by the remove players controller
- */
-export interface Dependencies {
-  removePlayersService: RemovePlayersService;
-}
-
-/**
- * Creates a controller instance for handling player removal requests
- */
-export const create = ({
-  removePlayersService,
-}: Dependencies): RemovePlayersController => {
+/** Creates a controller for removing players from a game lobby */
+export const removePlayersController =
+  ({ removePlayersService }: Dependencies) =>
   /**
-   * HTTP handler for removing a player from a game
+   * Handles HTTP request to remove a player from a game
+   * @param req - Express request with game and player details
+   * @param res - Express response object
+   * @param next - Express error handling function
    */
-  const handle = async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> => {
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const validatedRequest = removePlayersRequestSchema.parse({
         params: req.params,
@@ -44,14 +32,16 @@ export const create = ({
       const userId = validatedRequest.auth.userId;
       const playerIdToRemove = validatedRequest.params.playerId;
 
-      const { playersData: remainingPlayers, gameId: publicGameId } =
-        await removePlayersService.execute(gameId, userId, playerIdToRemove);
+      const removedPlayer = await removePlayersService(
+        gameId,
+        userId,
+        playerIdToRemove,
+      );
 
-      const response = {
+      const response: RemovePlayersResponse = {
         success: true,
         data: {
-          players: remainingPlayers,
-          publicId: publicGameId,
+          players: [removedPlayer],
         },
       };
 
@@ -62,8 +52,3 @@ export const create = ({
       next(error);
     }
   };
-
-  return {
-    handle,
-  };
-};

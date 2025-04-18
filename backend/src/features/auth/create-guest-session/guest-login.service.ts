@@ -1,55 +1,21 @@
 import jwt, { SignOptions } from "jsonwebtoken";
 import { UnexpectedAuthError } from "../errors/auth.errors";
+import { findByUsername } from "@backend/common/data-access/users.repository";
+import { storeSession } from "@backend/common/data-access/sessions.repository";
+import type { Session } from "@backend/common/data-access/sessions.repository";
 
-import type { UserRepository } from "@backend/common/data-access/users.repository";
-import type {
-  SessionRepository,
-  Session,
-} from "@backend/common/data-access/sessions.repository";
-
-/**
- * Service interface for user login functionality
- */
-export interface LoginService {
-  execute: (username: string) => Promise<Session>;
-}
-
-/**
- * Dependencies required by the login service
- */
-export interface Dependencies {
-  userRepository: UserRepository;
-  sessionRepository: SessionRepository;
+type ServiceDependencies = {
+  findUser: ReturnType<typeof findByUsername>;
+  storeSession: ReturnType<typeof storeSession>;
   jwtSecret: string;
   jwtOptions: SignOptions;
-}
+};
 
-/**
- * Creates a login service instance for authenticating users
- *
- * @param dependencies - Required repositories and JWT configuration
- * @returns Service object with execute method
- */
-export const create = ({
-  userRepository,
-  sessionRepository,
-  jwtSecret,
-  jwtOptions,
-}: Dependencies): LoginService => {
-  /**
-   * Authenticates a user by username and generates a JWT token.
-   *
-   * Exception throw if user does not exist as it should not be possible
-   * to fail login for a guest user..
-   *
-   * @param username - The username to authenticate
-   * @returns Promise resolving to a session with JWT token
-   * @throws {UnexpectedAuthError} If user not found.
-   */
-  const execute = async (username: string): Promise<Session> => {
+export const guestLoginService =
+  ({ findUser, storeSession, jwtSecret, jwtOptions }: ServiceDependencies) =>
+  async (username: string): Promise<Session> => {
     const sanitizedUsername = username.trim();
-
-    const user = await userRepository.findByUsername(sanitizedUsername);
+    const user = await findUser(sanitizedUsername);
 
     if (!user) {
       throw new UnexpectedAuthError(
@@ -58,15 +24,12 @@ export const create = ({
     }
 
     const token = jwt.sign(
-      {
-        userId: user.id,
-        username: user.username,
-      },
+      { userId: user.id, username: user.username },
       jwtSecret,
       jwtOptions,
     );
 
-    await sessionRepository.storeSession(user.id, token);
+    await storeSession(user.id, token);
 
     return {
       userId: user.id,
@@ -74,8 +37,3 @@ export const create = ({
       token,
     };
   };
-
-  return {
-    execute,
-  };
-};
