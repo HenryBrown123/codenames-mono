@@ -8,6 +8,7 @@ import {
 } from "@codenames/shared/types";
 
 import { z } from "zod";
+import { UnexpectedRepositoryError } from "./repository.errors";
 
 /** Represents the game data returned by the query */
 export type GameData = {
@@ -45,6 +46,12 @@ export type GameInput = {
 export type GameResult = {
   id: number;
   created_at: Date;
+};
+
+/** Update game status input */
+export type UpdateGameStatusInput = {
+  gameId: number;
+  statusId: number;
 };
 
 /** Retrieves game data by public ID */
@@ -85,7 +92,7 @@ export const createGame =
       .insertInto("games")
       .values({
         public_id: gameInput.publicId,
-        status_id: 1,
+        status_id: 1, // SETUP status
         created_at: new Date(),
         game_type: gameInput.gameType,
         game_format: gameInput.gameFormat,
@@ -97,4 +104,48 @@ export const createGame =
       id: insertedGame.id,
       created_at: insertedGame.created_at,
     };
+  };
+
+/** Updates a game's status */
+export const updateGameStatus =
+  (db: Kysely<DB>) =>
+  /**
+   * Updates a game's status in the database
+   * @param input - Game status update data
+   * @returns Updated game record
+   */
+  async (gameId: number, statusName: string): Promise<GameData> => {
+    // Get the status_id corresponding to the status name
+    const updatedGame = await db.transaction().execute(async (trx) => {
+      const status = await trx
+        .selectFrom("game_status")
+        .where("status_name", "=", statusName)
+        .select(["id"])
+        .executeTakeFirstOrThrow();
+
+      return await db
+        .updateTable("games")
+        .set({
+          status_id: status.id,
+          updated_at: new Date(),
+        })
+        .where("id", "=", gameId)
+        .returning([
+          "id",
+          "created_at",
+          "public_id",
+          "game_type",
+          "game_format",
+        ])
+        .executeTakeFirstOrThrow();
+    });
+
+    const gameWithStatus = {
+      ...updatedGame,
+      status: statusName,
+      game_type: gameTypeSchema.parse(updatedGame.game_type),
+      game_format: gameFormatSchema.parse(updatedGame.game_format),
+    };
+
+    return gameWithStatus;
   };
