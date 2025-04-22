@@ -44,8 +44,6 @@ export const GAME_TYPE = {
   MULTI_DEVICE: "MULTI_DEVICE",
 } as const;
 
-export type GameType = (typeof GAME_TYPE)[keyof typeof GAME_TYPE];
-
 /**
  * Object representing the different game formats.
  * @readonly

@@ -1,3 +1,5 @@
+// src/features/lobby/index.ts
+
 import { Express } from "express";
 import { Kysely } from "kysely";
 import { DB } from "@backend/common/db/db.types";
@@ -5,12 +7,16 @@ import { Router } from "express";
 import { AuthMiddleware } from "@backend/common/http-middleware/auth.middleware";
 
 // Import repositories
-import { getGameDataByPublicId } from "@backend/common/data-access/games.repository";
+import {
+  getGameDataByPublicId,
+  updateGameStatus,
+} from "@backend/common/data-access/games.repository";
 import {
   addPlayers,
   getPlayerById,
   removePlayer,
   modifyPlayers,
+  getPlayersByGameId,
 } from "@backend/common/data-access/players.repository";
 
 // Import feature components
@@ -22,6 +28,10 @@ import { modifyPlayersController } from "./modify-players/modify-players.control
 
 import { removePlayersService } from "./remove-players/remove-players.service";
 import { removePlayersController } from "./remove-players/remove-players.controller";
+
+// Import new start game components
+import { startGameService } from "./start-game/start-game.service";
+import { startGameController } from "./start-game/start-game.controller";
 
 // Import error handlers
 import { lobbyErrorHandler } from "./errors/lobby-errors.middleware";
@@ -38,6 +48,8 @@ export const initialize = (
   const getPlayers = getPlayerById(db);
   const getRemovePlayer = removePlayer(db);
   const getModifyPlayers = modifyPlayers(db);
+  const getPlayersByPrivateGameId = getPlayersByGameId(db);
+  const updateGameStatusFn = updateGameStatus(db);
 
   // Create service functions
   const lobbyAddPlayersService = addPlayersService({
@@ -56,6 +68,13 @@ export const initialize = (
     getPlayer: getPlayers,
   });
 
+  // Create the start game service
+  const lobbyStartGameService = startGameService({
+    getGameByPublicId: getGetGameDataByPublicId,
+    updateGameStatus: updateGameStatusFn,
+    getPlayersByGameId: getPlayersByPrivateGameId,
+  });
+
   // Create controllers
   const lobbyAddPlayersController = addPlayersController({
     addPlayers: lobbyAddPlayersService,
@@ -67,6 +86,11 @@ export const initialize = (
 
   const lobbyRemovePlayersController = removePlayersController({
     removePlayersService: lobbyRemovePlayersService,
+  });
+
+  // Create the start game controller
+  const lobbyStartGameController = startGameController({
+    startGame: lobbyStartGameService,
   });
 
   // Create router and register routes
@@ -91,6 +115,8 @@ export const initialize = (
     auth,
     lobbyRemovePlayersController,
   );
+
+  router.post("/games/:gameId/start", auth, lobbyStartGameController);
 
   // Apply routes and error handlers
   app.use("/api", router);
