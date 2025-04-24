@@ -14,6 +14,7 @@ import { initialize as initializeAuth } from "./features/auth";
 import { initialize as initializeGameSetup } from "./features/setup";
 import { initialize as initializeLobby } from "./features/lobby";
 import { authMiddleware } from "@backend/common/http-middleware/auth.middleware";
+import { refreshSystemData } from "./common/data/system-data-loader";
 
 /**
  * Runtime validation of env. variables
@@ -32,6 +33,16 @@ try {
 
 const app = express();
 const dbInstance = await postgresDb.initializeDb(env.DATABASE_URL);
+
+/**
+ * Refresh system data from json files.
+ */
+try {
+  refreshSystemData(dbInstance);
+} catch (error) {
+  console.error(error);
+  console.error("Exiting process as failed to refresh system data");
+}
 
 // Configure general middleware
 app.use(cors());
