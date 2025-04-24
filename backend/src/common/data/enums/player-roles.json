@@ -1,0 +1,16 @@
+{
+  "player_roles": [
+    {
+      "id": 1,
+      "role_name": "CODEMASTER"
+    },
+    {
+      "id": 2,
+      "role_name": "CODEBREAKER"
+    },
+    {
+      "id": 3,
+      "role_name": "SPECTATOR"
+    }
+  ]
+}

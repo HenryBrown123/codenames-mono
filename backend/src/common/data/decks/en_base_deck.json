@@ -1,0 +1,3364 @@
+{
+  "decks": [
+    {
+      "word": "Acne",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Acre",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Addendum",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Advertise",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Aircraft",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Aisle",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Alligator",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Alphabetize",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "America",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Ankle",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Apathy",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Applause",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Applesauc",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Application",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Archaeologist",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Aristocrat",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Arm",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Armada",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Asleep",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Astronaut",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Athlete",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Atlantis",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Aunt",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Avocado",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Baby-Sitter",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Backbone",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bag",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Baguette",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bald",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Balloon",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Banana",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Banister",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Baseball",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Baseboards",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Basketball",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bat",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Battery",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Beach",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Beanstalk",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bedbug",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Beer",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Beethoven",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Belt",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bib",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bicycle",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Big",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bike",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Billboard",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bird",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Birthday",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bite",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Blacksmith",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Blanket",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bleach",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Blimp",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Blossom",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Blueprint",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Blunt",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Blur",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Boa",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Boat",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bob",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bobsled",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Body",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bomb",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bonnet",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Book",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Booth",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bowtie",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Box",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Boy",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Brainstorm",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Brand",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Brave",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bride",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bridge",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Broccoli",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Broken",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Broom",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bruise",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Brunette",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bubble",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Buddy",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Buffalo",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bulb",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bunny",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Bus",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Buy",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cabin",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cafeteria",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cake",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Calculator",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Campsite",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Can",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Canada",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Candle",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Candy",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cape",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Capitalism",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Car",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cardboard",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cartography",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cat",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cd",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Ceiling",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cell",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Century",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Chair",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Chalk",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Champion",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Charger",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cheerleader",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Chef",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Chess",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Chew",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Chicken",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Chime",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "China",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Chocolate",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Church",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Circus",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Clay",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cliff",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cloak",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Clockwork",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Clown",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Clue",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Coach",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Coal",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Coaster",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cog",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cold",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "College",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Comfort",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Computer",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cone",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Constrictor",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Continuum",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Conversation",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cook",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Coop",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cord",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Corduroy",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cot",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cough",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cow",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cowboy",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Crayon",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cream",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Crisp",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Criticize",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Crow",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cruise",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Crumb",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Crust",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cuff",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Curtain",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Cuticle",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Czar",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Dad",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Dart",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Dawn",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Day",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Deep",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Defect",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Dent",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Dentist",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Desk",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Dictionary",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Dimple",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Dirty",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Dismantle",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Ditch",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Diver",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Doctor",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Dog",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Doghouse",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Doll",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Dominoes",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Door",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Dot",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Drain",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Draw",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Dream",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Dress",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Drink",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Drip",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Drums",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Dryer",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Duck",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Dump",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Dunk",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Dust",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Ear",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Eat",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Ebony",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Elbow",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Electricity",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Elephant",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Elevator",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Elf",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Elm",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Engine",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "England",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Ergonomic",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Escalator",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Eureka",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Europe",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Evolution",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Extension",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Eyebrow",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Fan",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Fancy",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Fast",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Feast",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Fence",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Feudalism",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Fiddle",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Figment",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Finger",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Fire",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "First",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Fishing",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Fix",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Fizz",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Flagpole",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Flannel",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Flashlight",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Flock",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Flotsam",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Flower",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Flu",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Flush",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Flutter",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Fog",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Foil",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Football",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Forehead",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Forever",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Fortnight",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "France",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Freckle",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Freight",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Fringe",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Frog",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Frown",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Gallop",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Game",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Garbage",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Garden",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Gasoline",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Gem",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Ginger",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Gingerbread",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Girl",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Glasses",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Goblin",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Gold",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Goodbye",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Grandpa",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Grape",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Grass",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Gratitude",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Gray",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Green",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Guitar",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Gum",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Gumball",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Hair",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Half",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Handle",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Handwriting",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Hang",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Happy",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Hat",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Hatch",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Headache",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Heart",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Hedge",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Helicopter",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Hem",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Hide",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Hill",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Hockey",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Homework",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Honk",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Hopscotch",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Horse",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Hose",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Hot",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "House",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Houseboat",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Hug",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Humidifier",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Hungry",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Hurdle",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Hurt",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Hut",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Ice",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Implode",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Inn",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Inquisition",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Intern",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Internet",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Invitation",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Ironic",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Ivory",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Ivy",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Jade",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Japan",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Jeans",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Jelly",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Jet",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Jig",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Jog",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Journal",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Jump",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Key",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Killer",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Kilogram",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "King",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Kitchen",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Kite",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Knee",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Kneel",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Knife",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Knight",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Koala",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Lace",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Ladder",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Ladybug",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Lag",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Landfill",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Lap",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Laugh",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Laundry",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Law",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Lawn",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Lawnmower",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Leak",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Leg",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Letter",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Level",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Lifestyle",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Ligament",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Light",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Lightsaber",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Lime",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Lion",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Lizard",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Log",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Loiterer",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Lollipop",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Loveseat",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Loyalty",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Lunch",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Lunchbox",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Lyrics",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Machine",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Macho",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mailbox",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mammoth",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mark",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mars",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mascot",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mast",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Matchstick",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mate",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mattress",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mess",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mexico",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Midsummer",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mine",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mistake",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Modern",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mold",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mom",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Monday",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Money",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Monitor",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Monster",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mooch",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Moon",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mop",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Moth",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Motorcycle",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mountain",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mouse",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mower",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mud",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Music",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Mute",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Nature",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Negotiate",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Neighbor",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Nest",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Neutron",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Niece",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Night",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Nightmare",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Nose",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Oar",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Observatory",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Office",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Oil",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Old",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Olympian",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Opaque",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Opener",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Orbit",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Organ",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Organize",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Outer",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Outside",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Ovation",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Overture",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pail",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Paint",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pajamas",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Palace",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pants",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Paper",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Park",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Parody",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Party",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Password",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pastry",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pawn",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pear",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pen",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pencil",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pendulum",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Penis",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Penny",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pepper",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Personal",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Philosopher",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Phone",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Photograph",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Piano",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Picnic",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pigpen",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pillow",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pilot",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pinch",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Ping",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pinwheel",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pirate",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Plaid",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Plan",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Plank",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Plate",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Platypus",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Playground",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Plow",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Plumber",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pocket",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Poem",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Point",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pole",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pomp",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pong",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Pool",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Popsicle",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Population",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Portfolio",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Positive",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Post",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Princess",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Procrastinate",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Protestant",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Psychologist",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Publisher",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Punk",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Puppet",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Puppy",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Push",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Puzzle",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Quarantine",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Queen",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Quicksand",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Quiet",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Race",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Radio",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Raft",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Rag",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Rainbow",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Rainwater",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Random",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Ray",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Recycle",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Red",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Regret",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Reimbursement",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Retaliate",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Rib",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Riddle",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Rim",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Rink",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Roller",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Room",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Rose",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Round",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Roundabout",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Rung",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Runt",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Rut",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sad",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Safe",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Salmon",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Salt",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sandbox",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sandcastle",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sandwich",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sash",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Satellite",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Scar",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Scared",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "School",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Scoundrel",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Scramble",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Scuff",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Seashell",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Season",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sentence",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sequins",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Set",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Shaft",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Shallow",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Shampoo",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Shark",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sheep",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sheets",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sheriff",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Shipwreck",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Shirt",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Shoelace",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Short",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Shower",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Shrink",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sick",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Siesta",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Silhouette",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Singer",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sip",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Skate",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Skating",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Ski",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Slam",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sleep",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sling",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Slow",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Slump",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Smith",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sneeze",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Snow",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Snuggle",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Song",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Space",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Spare",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Speakers",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Spider",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Spit",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sponge",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Spool",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Spoon",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Spring",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sprinkler",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Spy",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Square",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Squint",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Stairs",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Standing",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Star",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "State",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Stick",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Stockholder",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Stoplight",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Stout",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Stove",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Stowaway",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Straw",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Stream",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Streamline",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Stripe",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Student",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sun",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sunburn",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sushi",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Swamp",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Swarm",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Sweater",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Swimming",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Swing",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Tachometer",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Talk",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Taxi",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Teacher",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Teapot",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Teenager",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Telephone",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Ten",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Tennis",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Thief",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Think",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Throne",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Through",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Thunder",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Tide",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Tiger",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Time",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Tinting",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Tiptoe",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Tiptop",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Tired",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Tissue",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Toast",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Toilet",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Tool",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Toothbrush",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Tornado",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Tournament",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Tractor",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Train",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Trash",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Treasure",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Tree",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Triangle",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Trip",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Truck",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Tub",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Tuba",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Tutor",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Television",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Twang",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Twig",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Twitterpated",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Type",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Unemployed",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Upgrade",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Vest",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Vision",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Wag",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Water",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Watermelon",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Wax",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Wedding",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Weed",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Welder",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Whatever",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Wheelchair",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Whiplash",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Whisk",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Whistle",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "White",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Wig",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Will",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Windmill",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Winter",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Wish",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Wolf",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Wool",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "World",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Worm",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Wristwatch",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Yardstick",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Zamboni",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Zen",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Zero",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Zipper",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Zone",
+      "language_code": "en",
+      "deck": 1
+    },
+    {
+      "word": "Zoo",
+      "language_code": "en",
+      "deck": 1
+    }
+  ]
+}

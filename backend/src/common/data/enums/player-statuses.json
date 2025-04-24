@@ -1,0 +1,24 @@
+{
+  "player_statuses": [
+    {
+      "id": 1,
+      "status_name": "ACTIVE"
+    },
+    {
+      "id": 2,
+      "status_name": "WAITING"
+    },
+    {
+      "id": 3,
+      "status_name": "DISCONNECTED"
+    },
+    {
+      "id": 4,
+      "status_name": "SPECTATOR"
+    },
+    {
+      "id": 5,
+      "status_name": "BANNED"
+    }
+  ]
+}
