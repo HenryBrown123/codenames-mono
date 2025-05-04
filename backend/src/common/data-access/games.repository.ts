@@ -5,6 +5,8 @@ import {
   GameFormat,
   GAME_TYPE,
   GAME_FORMAT,
+  GAME_STATE,
+  GameState,
 } from "@codenames/shared/types";
 
 import { z } from "zod";
@@ -15,7 +17,7 @@ export type GameData = {
   id: number;
   created_at: Date;
   public_id: string;
-  status: string;
+  status: GameState;
   game_type: GameType;
   game_format: GameFormat;
 };
@@ -33,6 +35,14 @@ export const gameFormatSchema = z.enum([
   GAME_FORMAT.QUICK,
   GAME_FORMAT.BEST_OF_THREE,
   GAME_FORMAT.ROUND_ROBIN,
+]);
+
+export const gameStateSchema = z.enum([
+  GAME_STATE.LOBBY,
+  GAME_STATE.PAUSED,
+  GAME_STATE.IN_PROGRESS,
+  GAME_STATE.COMPLETED,
+  GAME_STATE.ABANDONED,
 ]);
 
 /** Game creation input */
@@ -77,7 +87,7 @@ export const getGameDataByPublicId =
           id: game.id,
           created_at: game.created_at,
           public_id: game.public_id,
-          status: game.status,
+          status: gameStateSchema.parse(game.status),
           game_type: gameTypeSchema.parse(game.game_type),
           game_format: gameFormatSchema.parse(game.game_format),
         }
@@ -142,7 +152,7 @@ export const updateGameStatus =
 
     const gameWithStatus = {
       ...updatedGame,
-      status: statusName,
+      status: gameStateSchema.parse(statusName),
       game_type: gameTypeSchema.parse(updatedGame.game_type),
       game_format: gameFormatSchema.parse(updatedGame.game_format),
     };

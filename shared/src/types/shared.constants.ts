@@ -54,3 +54,32 @@ export const GAME_FORMAT = {
   BEST_OF_THREE: "BEST_OF_THREE",
   ROUND_ROBIN: "ROUND_ROBIN",
 } as const;
+
+/**
+ * Game states
+ */
+export const GAME_STATE = {
+  LOBBY: "LOBBY",
+  IN_PROGRESS: "IN_PROGRESS",
+  COMPLETED: "COMPLETED",
+  ABANDONED: "ABANDONED",
+  PAUSED: "PAUSED",
+} as const;
+
+/**
+ * Round states
+ */
+export const ROUND_STATE = {
+  SETUP: "SETUP",
+  IN_PROGRESS: "IN_PROGRESS",
+  COMPLETED: "COMPLETED",
+} as const;
+
+/**
+ * Maximum rounds per format
+ */
+export const MAX_ROUNDS_BY_FORMAT = {
+  QUICK: 1,
+  BEST_OF_THREE: 3,
+  ROUND_ROBIN: 5,
+} as const;
