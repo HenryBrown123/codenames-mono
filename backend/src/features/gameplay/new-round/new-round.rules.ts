@@ -5,6 +5,13 @@ import {
 } from "@codenames/shared/types";
 import { gameplayBaseSchema } from "../state/gameplay-state.types";
 
+import {
+  GameplayValidationResult,
+  validateGameplayState,
+} from "../state/validate-gameplay-state";
+
+import { z } from "zod";
+
 /**
  * Game rules that must be satisfied for new round creation.
  */
@@ -44,3 +51,26 @@ export const roundCreationAllowedSchema = gameplayBaseSchema
       };
     },
   );
+
+/**
+ * Type for game state validated for round creation
+ * Using a branded type pattern without a separate utility type
+ */
+export type NewRoundValidGameState = z.infer<
+  typeof roundCreationAllowedSchema
+> & {
+  readonly __brand: "NewRoundValidGameState";
+};
+
+/**
+ * Validates a game state for round creation specifically
+ */
+export function validateForRoundCreation(
+  data: unknown,
+): GameplayValidationResult<NewRoundValidGameState> {
+  // Use the generic validation function with our specific branded type
+  return validateGameplayState<NewRoundValidGameState>(
+    roundCreationAllowedSchema,
+    data,
+  );
+}
