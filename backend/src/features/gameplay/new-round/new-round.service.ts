@@ -1,120 +1,149 @@
-import { getGameDataByPublicId } from "@backend/common/data-access/games.repository";
-import {
-  getLatestRound,
-  createRound,
-  RoundResult,
-} from "@backend/common/data-access/rounds.repository";
-import { UnexpectedGameplayError } from "../errors/gameplay.errors";
-import { GameData } from "@backend/common/data-access/games.repository";
+import { roundCreationAllowedSchema } from "./new-round.rules";
+import { GameState } from "@codenames/shared/types";
+import { GameplayValidationError } from "../state/validate-gameplay-state";
+import { gameplayStateProvider } from "../state/gameplay-state.provider";
+import { validateGameplayState } from "../state/validate-gameplay-state";
+import { createNewRound } from "@backend/common/data-access/rounds.repository";
+
+// ----- GENERIC SERVICE TYPES -----
 
 /**
- * Service dependencies
+ * Generic service factory type
+ * TDependencies: Dependencies required by the service
+ * TService: The type of service function being created
  */
-export type ServiceDependencies = {
-  getGameByPublicId: ReturnType<typeof getGameDataByPublicId>;
-  getLatestRound: ReturnType<typeof getLatestRound>;
-  createRound: ReturnType<typeof createRound>;
+export type ServiceFactory<TDependencies, TService> = (
+  dependencies: TDependencies,
+) => TService;
+
+// ----- PUBLIC TYPES -----
+
+/**
+ * Input type for round creation
+ */
+export type RoundCreationInput = {
+  gameId: string;
+  userId: number;
 };
 
 /**
- * Result of round creation
+ * Result types for round creation with discriminated union
  */
-export type CreateRoundResult = {
-  id: number;
-  gameId: number;
+export type RoundCreationResult =
+  | { success: true; data: RoundCreationSuccess }
+  | { success: false; error: RoundCreationFailure };
+
+/**
+ * Service function signature
+ */
+export type RoundCreationService = (
+  input: RoundCreationInput,
+) => Promise<RoundCreationResult>;
+
+/**
+ * Success case data structure
+ */
+export type RoundCreationSuccess = {
+  roundId: number;
   roundNumber: number;
+  gameId: number;
   createdAt: Date;
 };
 
 /**
- * Validates if a game is ready for a new round to be created
- *
- * @param game - Current game data
- * @param previousRound - Most recent round for the game, if any
- * @throws {UnexpectedGameplayError} If conditions aren't met for round creation
+ * Error codes for round creation
  */
-export const validateGameReadyForRound = (
-  game: GameData,
-  previousRound: RoundResult | null,
-): void => {
-  if (game.status !== "IN_PROGRESS") {
-    throw new UnexpectedGameplayError(
-      `Cannot create round for game in '${game.status}' state. Game must be in 'IN_PROGRESS' state.`,
-    );
-  }
-
-  // If there's no latest round, we can always create a new round
-  if (!previousRound) {
-    return;
-  }
-
-  // Check if the latest round is completed
-  // This depends on how you track round completion in your data model
-  // For example:
-  // if (latestRound.status !== "COMPLETED") {
-  //   throw new UnexpectedGameplayError(
-  //     "Cannot create a new round while the previous round is still in progress"
-  //   );
-  // }
-
-  // Check if maximum rounds have been reached for game format
-  // For example:
-  // if (game.game_format === "BEST_OF_THREE" && latestRound.roundNumber >= 3) {
-  //   throw new UnexpectedGameplayError("Maximum number of rounds already reached");
-  // }
-};
+export const ROUND_CREATION_ERROR = {
+  INVALID_GAME_STATE: "invalid-game-state",
+  GAME_NOT_FOUND: "game-not-found",
+} as const;
 
 /**
- * Create round service
- *
- * Handles the creation of a new round for a game.
- * Starting team selection and card dealing are handled separately.
+ * Failure cases for round creation
  */
-export const createRoundService = (dependencies: ServiceDependencies) => {
-  /**
-   * Creates a new round for a game
-   *
-   * @param publicGameId - Public identifier for the game
-   * @returns Details of the newly created round
-   * @throws {UnexpectedGameplayError} If round creation is not possible
-   */
-  const createNewRound = async (
-    publicGameId: string,
-  ): Promise<CreateRoundResult> => {
-    try {
-      const game = await dependencies.getGameByPublicId(publicGameId);
-      if (!game) {
-        throw new UnexpectedGameplayError("Game not found");
-      }
-      const latestRound = await dependencies.getLatestRound(game.id);
-
-      validateGameReadyForRound(game, latestRound);
-
-      const newRoundNumber = latestRound ? latestRound.roundNumber + 1 : 1;
-
-      const newRound = await dependencies.createRound({
-        gameId: game.id,
-        roundNumber: newRoundNumber,
-      });
-
-      // 5. Return result
-      return {
-        id: newRound.id,
-        gameId: game.id,
-        roundNumber: newRound.roundNumber,
-        createdAt: newRound.createdAt,
-      };
-    } catch (error) {
-      if (error instanceof UnexpectedGameplayError) {
-        throw error;
-      }
-      throw new UnexpectedGameplayError(
-        `Failed to create round: ${error instanceof Error ? error.message : String(error)}`,
-      );
+export type RoundCreationFailure =
+  | {
+      status: typeof ROUND_CREATION_ERROR.INVALID_GAME_STATE;
+      currentState: GameState;
+      validationErrors: GameplayValidationError[];
     }
-  };
+  | {
+      status: typeof ROUND_CREATION_ERROR.GAME_NOT_FOUND;
+      gameId: string;
+    };
 
-  return {
-    createNewRound,
+// ----- DEPENDENCIES TYPE -----
+
+/**
+ * Dependencies for the round creation service
+ */
+export type RoundCreationDependencies = {
+  getGameState: ReturnType<typeof gameplayStateProvider>;
+  createNewRound: ReturnType<typeof createNewRound>;
+  validateGameplayState: typeof validateGameplayState;
+};
+
+// ----- SERVICE IMPLEMENTATION -----
+
+/**
+ * Creates a service for round creation
+ */
+export const roundCreationService: ServiceFactory<
+  RoundCreationDependencies,
+  RoundCreationService
+> = (dependencies) => {
+  /**
+   * Creates a new round for a game if validation passes
+   */
+  return async (input: RoundCreationInput): Promise<RoundCreationResult> => {
+    // Fetch game with rounds
+    const gameData = await dependencies.getGameState(input.gameId);
+
+    if (!gameData) {
+      return {
+        success: false,
+        error: {
+          status: ROUND_CREATION_ERROR.GAME_NOT_FOUND,
+          gameId: input.gameId,
+        },
+      };
+    }
+
+    // Validate game state using the existing validation schema
+    const validationResult = dependencies.validateGameplayState(
+      roundCreationAllowedSchema,
+      gameData,
+    );
+
+    if (!validationResult.valid) {
+      return {
+        success: false,
+        error: {
+          status: ROUND_CREATION_ERROR.INVALID_GAME_STATE,
+          currentState: gameData.status,
+          validationErrors: validationResult.errors,
+        },
+      };
+    }
+
+    // Game validation passed, create the new round
+    const validGame = validationResult.data;
+    const newRoundNumber = (validGame.rounds?.length || 0) + 1;
+
+    const newRound = await dependencies.createNewRound(
+      validGame.id,
+      newRoundNumber,
+    );
+
+    // Return success result
+    return {
+      success: true,
+      data: {
+        roundId: newRound.id,
+        roundNumber: newRound.roundNumber,
+        gameId: validGame.id,
+        createdAt: newRound.createdAt,
+      },
+    };
   };
 };

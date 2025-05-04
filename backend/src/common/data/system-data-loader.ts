@@ -4,7 +4,7 @@ import { refreshBaseDecks } from "./decks/";
 import { refreshEnums } from "./enums";
 
 /**
- * Simple data refresh function to load application system data
+ * Data refresh function to load application system data
  * 1. Delete all existing data from the tables
  * 2. Insert fresh data from the JSON files
  *

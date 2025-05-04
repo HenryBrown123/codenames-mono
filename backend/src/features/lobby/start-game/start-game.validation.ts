@@ -1,5 +1,3 @@
-// src/features/lobby/start-game/start-game.validation.ts
-
 import { z } from "zod";
 import { PlayerResult } from "@backend/common/data-access/players.repository";
 
@@ -33,7 +31,7 @@ export const startGameResponseSchema = z
       }),
     }),
   })
-  .strict();
+  .brand<"GameApiResponse">();
 
 /**
  * Type for the response schema

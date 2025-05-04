@@ -4,71 +4,107 @@ import {
   CODEBREAKER_OUTCOME,
   GAME_TYPE,
   GAME_FORMAT,
+  ROUND_STATE,
+  GAME_STATE,
 } from "./shared.constants";
 
-// Team type
+// Enum value types
 export type Team = (typeof TEAM)[keyof typeof TEAM];
-
-// Stage type
 export type Stage = (typeof STAGE)[keyof typeof STAGE];
-
-// TurnOutcome type
 export type TurnOutcome =
   (typeof CODEBREAKER_OUTCOME)[keyof typeof CODEBREAKER_OUTCOME];
-
-// GameType type
 export type GameType = (typeof GAME_TYPE)[keyof typeof GAME_TYPE];
-
-// Game format options
 export type GameFormat = (typeof GAME_FORMAT)[keyof typeof GAME_FORMAT];
 
-// Settings type
-export interface Settings {
-  numberOfCards: number;
-  startingTeam: Team;
-  numberOfAssassins: number;
+export type GameState = (typeof GAME_STATE)[keyof typeof GAME_STATE];
+export type RoundState = (typeof ROUND_STATE)[keyof typeof ROUND_STATE];
+
+// Player types
+export interface Player {
+  id: number;
+  userId: number;
+  name: string;
+  teamId: number;
+  role?: "codemaster" | "codebreaker" | "spectator";
+  isActive: boolean;
 }
 
-// Card type
+// Card types
 export interface Card {
+  id: number;
   word: string;
-  team?: Team;
-  selected?: boolean;
+  teamId: number; // Reference to team
+  selected: boolean;
+}
+
+// Clue type
+export interface Clue {
+  id: number;
+  word: string;
+  number: number;
+}
+
+// Guess type
+export interface Guess {
+  id: number;
+  cardId: number;
+  playerId: number;
+  outcome?: TurnOutcome;
 }
 
 // Turn type
 export interface Turn {
-  guessedWord: string;
-  outcome?: TurnOutcome;
+  id: number;
+  teamId: number;
+  clue?: Clue;
+  guesses: Guess[];
 }
 
 // Round type
 export interface Round {
-  team: Team;
-  codeword?: string;
-  guessesAllowed?: number;
-  turns?: Turn[];
-}
-
-// Player type
-export interface Player {
-  role: "codemaster" | "codebreaker";
-  userId: string;
-  active: boolean;
-}
-
-// GameState type
-export interface GameState {
-  stage: Stage;
-  winner?: Team;
+  id: number;
+  number: number;
   cards: Card[];
-  rounds: Round[];
+  turns: Turn[];
+  startingTeamId: number;
+  winningTeamId?: number;
 }
 
-// GameData type
-export interface GameData {
-  _id?: string;
-  state: GameState;
-  settings: Settings;
+// Game aggregate root
+export interface Game {
+  id: number;
+  publicId: string;
+  createdAt: Date;
+  updatedAt?: Date;
+  status: string;
+  stage: Stage;
   gameType: GameType;
+  gameFormat: GameFormat;
+  currentRoundId?: number;
+  winner?: Team;
+  settings: {
+    numberOfCards: number;
+    numberOfAssassins: number;
+  };
+  rounds: Round[];
+  players: Player[];
+}
+
+// Game creation settings
+export interface GameSettings {
+  gameType: GameType;
+  gameFormat: GameFormat;
+  numberOfCards?: number;
+  numberOfAssassins?: number;
+}
+
+// Simplified game data for listings
+export interface GameSummary {
+  id: number;
+  publicId: string;
+  createdAt: Date;
+  status: string;
+  gameType: GameType;
+  gameFormat: GameFormat;
+  playerCount: number;
 }

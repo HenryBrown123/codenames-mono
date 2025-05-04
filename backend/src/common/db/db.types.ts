@@ -95,6 +95,16 @@ export interface Rounds {
   game_id: number;
   id: Generated<number>;
   round_number: number;
+  /**
+   * Current status of the round (setup, in progress, completed)
+   */
+  status_id: number;
+  updated_at: Generated<Timestamp | null>;
+}
+
+export interface RoundStatus {
+  id: number;
+  status_name: string;
 }
 
 export interface Teams {
@@ -127,6 +137,7 @@ export interface DB {
   player_round_roles: PlayerRoundRoles;
   player_statuses: PlayerStatuses;
   players: Players;
+  round_status: RoundStatus;
   rounds: Rounds;
   teams: Teams;
   turns: Turns;

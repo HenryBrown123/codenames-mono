@@ -32,7 +32,7 @@ export const startGameController =
       const result = await startGame(gameId);
 
       if (result.success) {
-        const response: StartGameResponse = {
+        const response = {
           success: true,
           data: {
             game: {

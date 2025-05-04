@@ -1,5 +1,5 @@
 import { Kysely } from "kysely";
-import { DB } from "../../common/db/db.types";
+import { DB } from "../db/db.types";
 
 /** Session data structure */
 export type Session = {
