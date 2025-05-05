@@ -1,5 +1,3 @@
-// src/features/gameplay/state/validate-gameplay-state.ts
-
 import { z } from "zod";
 
 /**
@@ -20,7 +18,7 @@ export type GameplayValidationResult<T> =
 
 /**
  * Generic validation function that preserves the type passed as a type parameter
- * This lets you explicitly specify the branded type you want returned
+ * data is branded to allow stricter compile time type safety for gameplay actions.
  */
 export function validateGameplayState<T>(
   schema: z.ZodType,

@@ -1,30 +1,9 @@
 import { gameplayStateProvider } from "../state/gameplay-state.provider";
-import {
-  validateForRoundCreation,
-  GameplayValidationError,
-} from "../state/validate-gameplay-state";
+import { validate } from "./new-round.rules";
+import { createNextRound } from "./new-round.action";
 
-import {
-  createNewRound,
-  RoundResult,
-} from "@backend/common/data-access/rounds.repository";
-
-import { NewRoundValidGameState } from "../state/validate-gameplay-state";
-
-/**
- * Creates a function that accepts only a validated game state for round creation
- * Uses parameter destructuring to pick only the necessary properties
- */
-export const createRoundFromGameplay = (
-  createRoundRepo: ReturnType<typeof createNewRound>,
-) => {
-  return ({ id, rounds }: NewRoundValidGameState): Promise<RoundResult> => {
-    const nextRoundNumber = (rounds?.length || 0) + 1;
-
-    // Use the id from the validated state
-    return createRoundRepo(id, nextRoundNumber);
-  };
-};
+import { UnexpectedGameplayError } from "../errors/gameplay.errors";
+import { GameplayValidationError } from "../state/validate-gameplay-state";
 /**
  * Input type for round creation
  */
@@ -77,66 +56,64 @@ export type RoundCreationResult =
  */
 export type RoundCreationDependencies = {
   getGameState: ReturnType<typeof gameplayStateProvider>;
-  createRoundFromValidState: ReturnType<typeof createRoundFromGameplay>;
+  createRoundFromValidState: ReturnType<typeof createNextRound>;
 };
 
 /**
- * Creates a service for round creation
+ * Creates a service function for round creation
+ * Uses the validate-then-act pattern with branded types for type safety
  */
 export const roundCreationService = (
   dependencies: RoundCreationDependencies,
 ) => {
-  /**
-   * Creates a new round for a game if validation passes
-   */
-  const createRound = async (
-    input: RoundCreationInput,
-  ): Promise<RoundCreationResult> => {
-    // Fetch game with rounds
-    const gameData = await dependencies.getGameState(input.gameId);
+  return async (input: RoundCreationInput): Promise<RoundCreationResult> => {
+    try {
+      // Fetch game with rounds
+      const gameData = await dependencies.getGameState(input.gameId);
 
-    if (!gameData) {
+      if (!gameData) {
+        return {
+          success: false,
+          error: {
+            status: ROUND_CREATION_ERROR.GAME_NOT_FOUND,
+            gameId: input.gameId,
+          },
+        };
+      }
+
+      // Validate game state for round creation - this returns a branded type when valid
+      const validationResult = validate(gameData);
+
+      if (!validationResult.valid) {
+        return {
+          success: false,
+          error: {
+            status: ROUND_CREATION_ERROR.INVALID_GAME_STATE,
+            currentState: gameData.status,
+            validationErrors: validationResult.errors,
+          },
+        };
+      }
+
+      const newRound = await dependencies.createRoundFromValidState(
+        validationResult.data,
+      );
       return {
-        success: false,
-        error: {
-          status: ROUND_CREATION_ERROR.GAME_NOT_FOUND,
-          gameId: input.gameId,
+        success: true,
+        data: {
+          roundId: newRound.id,
+          roundNumber: newRound.roundNumber,
+          gameId: newRound.gameId,
+          createdAt: newRound.createdAt,
         },
       };
+    } catch (error) {
+      // Wrap unexpected errors
+      throw new UnexpectedGameplayError("Failed to create new round", {
+        cause: error,
+      });
     }
-
-    // Validate game state
-    const validationResult = validateForRoundCreation(gameData);
-
-    if (!validationResult.valid) {
-      return {
-        success: false,
-        error: {
-          status: ROUND_CREATION_ERROR.INVALID_GAME_STATE,
-          currentState: gameData.status,
-          validationErrors: validationResult.errors,
-        },
-      };
-    }
-
-    // Game validation passed, create the new round with the validated state
-    const newRound = await dependencies.createRoundFromValidState(
-      validationResult.data,
-    );
-
-    // Return success result
-    return {
-      success: true,
-      data: {
-        roundId: newRound.id,
-        roundNumber: newRound.roundNumber,
-        gameId: newRound.gameId,
-        createdAt: newRound.createdAt,
-      },
-    };
   };
-
-  return createRound;
 };
 
 /**

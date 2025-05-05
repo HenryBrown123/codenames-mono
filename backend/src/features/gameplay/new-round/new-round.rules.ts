@@ -3,6 +3,7 @@ import {
   ROUND_STATE,
   MAX_ROUNDS_BY_FORMAT,
 } from "@codenames/shared/types";
+
 import { gameplayBaseSchema } from "../state/gameplay-state.types";
 
 import {
@@ -13,19 +14,41 @@ import {
 import { z } from "zod";
 
 /**
- * Game rules that must be satisfied for new round creation.
+ * Type for game state validated for round creation
+ * Using a branded type pattern to ensure type safety
  */
-export const roundCreationAllowedSchema = gameplayBaseSchema
-  // Game must be in progress
-  .refine(
-    (game) => {
-      return game.status === GAME_STATE.IN_PROGRESS;
-    },
-    {
-      message: "Game must be in progress to create a round",
-      path: ["status"],
-    },
-  )
+export type NewRoundValidGameState = z.infer<
+  typeof roundCreationAllowedSchema
+> & {
+  readonly __brand: "NewRoundValidGameState";
+};
+
+/**
+ * Validates a game state for round creation specifically
+ * Returns a branded type when validation succeeds
+ */
+export function validate(
+  data: unknown,
+): GameplayValidationResult<NewRoundValidGameState> {
+  return validateGameplayState<NewRoundValidGameState>(
+    roundCreationAllowedSchema,
+    data,
+  );
+}
+
+/**
+ * Schema specifically for validating a game state for round creation
+ * Extends the base schema by narrowing the status field to only allow IN_PROGRESS
+ */
+const roundCreationSchema = gameplayBaseSchema.extend({
+  status: z.literal(GAME_STATE.IN_PROGRESS),
+});
+
+/**
+ * Apply additional refinements for runtime validations that can't be expressed
+ * in the type system alone
+ */
+const roundCreationAllowedSchema = roundCreationSchema
   // Latest round must be completed (if it exists)
   .refine(
     (game) => {
@@ -51,26 +74,3 @@ export const roundCreationAllowedSchema = gameplayBaseSchema
       };
     },
   );
-
-/**
- * Type for game state validated for round creation
- * Using a branded type pattern without a separate utility type
- */
-export type NewRoundValidGameState = z.infer<
-  typeof roundCreationAllowedSchema
-> & {
-  readonly __brand: "NewRoundValidGameState";
-};
-
-/**
- * Validates a game state for round creation specifically
- */
-export function validateForRoundCreation(
-  data: unknown,
-): GameplayValidationResult<NewRoundValidGameState> {
-  // Use the generic validation function with our specific branded type
-  return validateGameplayState<NewRoundValidGameState>(
-    roundCreationAllowedSchema,
-    data,
-  );
-}
