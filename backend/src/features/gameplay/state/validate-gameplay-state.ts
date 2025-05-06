@@ -1,4 +1,6 @@
+// src/features/gameplay/state/validate-gameplay-state.ts
 import { z } from "zod";
+import { GameAggregate } from "./gameplay-state.types";
 
 /**
  * Represents a structured validation error in the gameplay feature
@@ -17,20 +19,28 @@ export type GameplayValidationResult<T> =
   | { valid: false; errors: GameplayValidationError[] };
 
 /**
- * Generic validation function that preserves the type passed as a type parameter
- * data is branded to allow stricter compile time type safety for gameplay actions.
+ * Type utility to create a branded type from a Zod schema
  */
-export function validateGameplayState<T>(
-  schema: z.ZodType,
+export type ValidatedGameState<SchemaType extends z.ZodType> =
+  z.infer<SchemaType> &
+    GameAggregate & {
+      readonly __brand: unique symbol;
+    };
+
+/**
+ * Validates game state data against a schema and returns a properly typed result
+ */
+export function validateGameState<SchemaType extends z.ZodType>(
+  schema: SchemaType,
   data: unknown,
-): GameplayValidationResult<T> {
+): GameplayValidationResult<ValidatedGameState<SchemaType>> {
   const result = schema.safeParse(data);
 
   if (result.success) {
-    // Return the data with the explicit type T
+    // Return the data with the branded type
     return {
       valid: true,
-      data: result.data as T,
+      data: result.data as ValidatedGameState<SchemaType>,
     };
   } else {
     return {

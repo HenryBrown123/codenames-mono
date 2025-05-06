@@ -5,72 +5,77 @@ import {
 } from "@codenames/shared/types";
 
 import { gameplayBaseSchema } from "../state/gameplay-state.types";
+import { GameAggregate } from "../state/gameplay-state.types";
+import { gameAccessors } from "../state/gameplay-state.helpers";
 
 import {
+  validateGameState,
+  ValidatedGameState,
   GameplayValidationResult,
-  validateGameplayState,
 } from "../state/validate-gameplay-state";
 
 import { z } from "zod";
 
 /**
- * Type for game state validated for round creation
- * Using a branded type pattern to ensure type safety
+ * Domain rules for creating a new round in a game
  */
-export type NewRoundValidGameState = z.infer<
-  typeof roundCreationAllowedSchema
-> & {
-  readonly __brand: "NewRoundValidGameState";
+const roundCreationRules = {
+  /**
+   * Checks if the previous round is properly completed and can be followed by a new round
+   */
+  isPreviousRoundCompleted(game: GameAggregate): boolean {
+    const latestRound = gameAccessors.getLatestRound(game);
+    // If no rounds exist, this rule passes
+    if (!latestRound) return true;
+
+    // Check the status of the latest round
+    return latestRound.status === ROUND_STATE.COMPLETED;
+  },
+
+  /**
+   * Verifies if the game hasn't reached its maximum allowed rounds
+   */
+  isWithinMaxRounds(game: GameAggregate): boolean {
+    const currentRoundCount = gameAccessors.getRoundCount(game);
+    const maxRounds = MAX_ROUNDS_BY_FORMAT[game.game_format];
+
+    return currentRoundCount < maxRounds;
+  },
 };
 
 /**
- * Validates a game state for round creation specifically
- * Returns a branded type when validation succeeds
- */
-export function validate(
-  data: unknown,
-): GameplayValidationResult<NewRoundValidGameState> {
-  return validateGameplayState<NewRoundValidGameState>(
-    roundCreationAllowedSchema,
-    data,
-  );
-}
-
-/**
- * Schema specifically for validating a game state for round creation
- * Extends the base schema by narrowing the status field to only allow IN_PROGRESS
+ * Game state schema with round creation constraints
  */
 const roundCreationSchema = gameplayBaseSchema.extend({
   status: z.literal(GAME_STATE.IN_PROGRESS),
 });
 
 /**
- * Apply additional refinements for runtime validations that can't be expressed
- * in the type system alone
+ * Complete schema with domain rule validations
  */
 const roundCreationAllowedSchema = roundCreationSchema
-  // Latest round must be completed (if it exists)
-  .refine(
-    (game) => {
-      if (!game.rounds || game.rounds.length === 0) return true;
-      const latestRound = game.rounds[game.rounds.length - 1];
-      return latestRound.status === ROUND_STATE.COMPLETED;
-    },
-    {
-      message: "Previous round must be completed before creating a new round",
-      path: ["rounds"],
-    },
-  )
-  // Maximum rounds not reached
-  .refine(
-    (game) => {
-      if (!game.rounds || game.rounds.length === 0) return true;
-      return game.rounds.length < MAX_ROUNDS_BY_FORMAT[game.game_format];
-    },
-    (game) => {
-      return {
-        message: `Maximum of ${MAX_ROUNDS_BY_FORMAT[game.game_format]} rounds allowed for ${game.game_format} format`,
-        path: ["rounds"],
-      };
-    },
-  );
+  .refine(roundCreationRules.isPreviousRoundCompleted, {
+    message: "Previous round must be completed before creating a new round",
+    path: ["rounds"],
+  })
+  .refine(roundCreationRules.isWithinMaxRounds, (game) => ({
+    message: `Maximum of ${MAX_ROUNDS_BY_FORMAT[game.game_format]} rounds allowed for ${game.game_format} format`,
+    path: ["rounds"],
+  }));
+
+/**
+ * Type for a valid round creation game state
+ */
+export type NewRoundValidGameState = ValidatedGameState<
+  typeof roundCreationAllowedSchema
+>;
+
+/**
+ * Validation function for game rules, wraps schema validation using specific round creation schema
+ * that outputs a branded type.
+ */
+export function validate(
+  data: unknown,
+): GameplayValidationResult<NewRoundValidGameState> {
+  return validateGameState(roundCreationAllowedSchema, data);
+}
