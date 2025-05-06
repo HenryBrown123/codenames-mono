@@ -1,8 +1,7 @@
 import { gameplayStateProvider } from "../state/gameplay-state.provider";
-import { validate } from "./new-round.rules";
-import { createNextRound } from "./new-round.action";
+import { validate as checkRoundCreationRules } from "./new-round.rules";
+import { createNextRound } from "./new-round.actions";
 
-import { UnexpectedGameplayError } from "../errors/gameplay.errors";
 import { GameplayValidationError } from "../state/validate-gameplay-state";
 /**
  * Input type for round creation
@@ -61,58 +60,50 @@ export type RoundCreationDependencies = {
 
 /**
  * Creates a service function for round creation
- * Uses the validate-then-act pattern with branded types for type safety
  */
 export const roundCreationService = (
   dependencies: RoundCreationDependencies,
 ) => {
   return async (input: RoundCreationInput): Promise<RoundCreationResult> => {
-    try {
-      // Fetch game with rounds
-      const gameData = await dependencies.getGameState(input.gameId);
+    // Fetch game with rounds
+    const gameData = await dependencies.getGameState(input.gameId);
 
-      if (!gameData) {
-        return {
-          success: false,
-          error: {
-            status: ROUND_CREATION_ERROR.GAME_NOT_FOUND,
-            gameId: input.gameId,
-          },
-        };
-      }
-
-      // Validate game state for round creation - this returns a branded type when valid
-      const validationResult = validate(gameData);
-
-      if (!validationResult.valid) {
-        return {
-          success: false,
-          error: {
-            status: ROUND_CREATION_ERROR.INVALID_GAME_STATE,
-            currentState: gameData.status,
-            validationErrors: validationResult.errors,
-          },
-        };
-      }
-
-      const newRound = await dependencies.createRoundFromValidState(
-        validationResult.data,
-      );
+    if (!gameData) {
       return {
-        success: true,
-        data: {
-          roundId: newRound.id,
-          roundNumber: newRound.roundNumber,
-          gameId: newRound.gameId,
-          createdAt: newRound.createdAt,
+        success: false,
+        error: {
+          status: ROUND_CREATION_ERROR.GAME_NOT_FOUND,
+          gameId: input.gameId,
         },
       };
-    } catch (error) {
-      // Wrap unexpected errors
-      throw new UnexpectedGameplayError("Failed to create new round", {
-        cause: error,
-      });
     }
+
+    // Validate game state for round creation - this returns a branded type when valid
+    const validationResult = checkRoundCreationRules(gameData);
+
+    if (!validationResult.valid) {
+      return {
+        success: false,
+        error: {
+          status: ROUND_CREATION_ERROR.INVALID_GAME_STATE,
+          currentState: gameData.status,
+          validationErrors: validationResult.errors,
+        },
+      };
+    }
+
+    const newRound = await dependencies.createRoundFromValidState(
+      validationResult.data,
+    );
+    return {
+      success: true,
+      data: {
+        roundId: newRound.id,
+        roundNumber: newRound.roundNumber,
+        gameId: newRound.gameId,
+        createdAt: newRound.createdAt,
+      },
+    };
   };
 };
 
