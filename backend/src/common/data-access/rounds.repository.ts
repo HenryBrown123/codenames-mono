@@ -2,17 +2,28 @@ import { Kysely } from "kysely";
 import { DB } from "../db/db.types";
 import { ROUND_STATE, RoundState } from "@codenames/shared/types";
 import { z } from "zod";
-import { roundSchema } from "@backend/features/gameplay/state/gameplay-state.validation";
 
-/**
- * Result from creating or fetching a round
- */
+/** Repository function types */
+export type GetRoundsByGameIdFn = (gameId: number) => Promise<RoundResult[]>;
+export type CreateRoundFn = (input: RoundInput) => Promise<RoundResult>;
+
+export type UpdateRoundStatusFn = (
+  roundId: number,
+  status: RoundState,
+) => Promise<RoundResult>;
+
+/** Data types */
 export type RoundResult = {
   id: number;
   gameId: number;
   roundNumber: number;
+  status: RoundState;
   createdAt: Date;
-  status?: RoundState;
+};
+
+export type RoundInput = {
+  gameId: number;
+  roundNumber: number;
 };
 
 /**
@@ -50,6 +61,7 @@ export const getRoundsByGameId =
         id: round.id,
         gameId: round.gameId,
         roundNumber: round.roundNumber,
+        status: round.status as RoundState,
         createdAt: round.createdAt,
       };
     });
@@ -62,7 +74,7 @@ export const getRoundsByGameId =
  */
 export const createNewRound =
   (db: Kysely<DB>) =>
-  async (gameId: number, roundNumber: number): Promise<RoundResult> => {
+  async (input: RoundInput): Promise<RoundResult> => {
     // First get the SETUP status ID
     const statusResult = await db
       .selectFrom("round_status")
@@ -78,8 +90,8 @@ export const createNewRound =
     const result = await db
       .insertInto("rounds")
       .values({
-        game_id: gameId,
-        round_number: roundNumber,
+        game_id: input.gameId,
+        round_number: input.roundNumber,
         status_id: statusResult.id,
         created_at: new Date(),
       })
@@ -91,7 +103,13 @@ export const createNewRound =
       ])
       .executeTakeFirstOrThrow();
 
-    return result;
+    return {
+      id: result.id,
+      gameId: result.gameId,
+      roundNumber: result.roundNumber,
+      status: ROUND_STATE.SETUP,
+      createdAt: result.createdAt,
+    };
   };
 
 /**
@@ -121,6 +139,7 @@ export const getLatestRound =
       id: round.id,
       gameId: round.gameId,
       roundNumber: round.roundNumber,
+      status: round.status as RoundState,
       createdAt: round.createdAt,
     };
 

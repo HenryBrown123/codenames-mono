@@ -1,6 +1,8 @@
 import { UnexpectedLobbyError } from "../errors/lobby.errors";
 import { addPlayers } from "@backend/common/data-access/players.repository";
 import { getGameDataByPublicId } from "@backend/common/data-access/games.repository";
+import { GetGameByPublicId } from "@backend/common/data-access/games.repository";
+import { AddPlayersFn } from "@backend/common/data-access/players.repository";
 
 /** Represents the result of a player addition operation */
 export type PlayerResult = {
@@ -18,8 +20,8 @@ export type PlayerAddData = {
 
 /** Required dependencies for creating the AddPlayersService */
 export type ServiceDependencies = {
-  addPlayers: ReturnType<typeof addPlayers>;
-  getGameByPublicId: ReturnType<typeof getGameDataByPublicId>;
+  addPlayers: AddPlayersFn;
+  getGameByPublicId: GetGameByPublicId;
 };
 
 /** Creates an implementation of the add players service */

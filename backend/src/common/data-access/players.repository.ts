@@ -42,6 +42,31 @@ const playerResultColumns = [
   "status_last_changed",
 ] as const;
 
+/** Repository function types */
+export type GetPlayerByIdFn = (playerId: number) => Promise<PlayerData | null>;
+export type GetPlayersByGameIdFn = (gameId: number) => Promise<PlayerData[]>;
+export type AddPlayersFn = (players: PlayerInput[]) => Promise<PlayerResult[]>;
+export type ModifyPlayersFn = (
+  updates: PlayerUpdateInput[],
+) => Promise<PlayerResult[]>;
+export type RemovePlayerFn = (playerId: number) => Promise<PlayerResult | null>;
+
+/** Data types */
+export type PlayerData = {
+  id: number;
+  user_id: number;
+  game_id: number;
+  team_id: number;
+  public_name: string;
+  status_id: number;
+};
+
+export type PlayerUpdateInput = {
+  playerId: number;
+  gameId: number;
+  teamId?: number;
+};
+
 /**
  *
  * @param db - Database connection

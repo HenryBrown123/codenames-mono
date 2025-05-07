@@ -64,9 +64,17 @@ export type UpdateGameStatusInput = {
   statusId: number;
 };
 
+/** Repository function types */
+export type GetGameByPublicId = (publicId: string) => Promise<GameData | null>;
+export type CreateGameFn = (gameInput: GameInput) => Promise<GameResult>;
+export type UpdateGameStatusFn = (
+  gameId: number,
+  statusName: string,
+) => Promise<GameData>;
+
 /** Retrieves game data by public ID */
 export const getGameDataByPublicId =
-  (db: Kysely<DB>) =>
+  (db: Kysely<DB>): GetGameByPublicId =>
   async (publicId: string): Promise<GameData | null> => {
     const game = await db
       .selectFrom("games")
@@ -96,7 +104,7 @@ export const getGameDataByPublicId =
 
 /** Creates a new game */
 export const createGame =
-  (db: Kysely<DB>) =>
+  (db: Kysely<DB>): CreateGameFn =>
   async (gameInput: GameInput): Promise<GameResult> => {
     const insertedGame = await db
       .insertInto("games")
@@ -118,12 +126,7 @@ export const createGame =
 
 /** Updates a game's status */
 export const updateGameStatus =
-  (db: Kysely<DB>) =>
-  /**
-   * Updates a game's status in the database
-   * @param input - Game status update data
-   * @returns Updated game record
-   */
+  (db: Kysely<DB>): UpdateGameStatusFn =>
   async (gameId: number, statusName: string): Promise<GameData> => {
     // Get the status_id corresponding to the status name
     const updatedGame = await db.transaction().execute(async (trx) => {
