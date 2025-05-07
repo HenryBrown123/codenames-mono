@@ -2,7 +2,7 @@ import { Kysely } from "kysely";
 import { DB } from "../db/db.types";
 import { ROUND_STATE, RoundState } from "@codenames/shared/types";
 import { z } from "zod";
-import { roundSchema } from "@backend/features/gameplay/state/gameplay-state.types";
+import { roundSchema } from "@backend/features/gameplay/state/gameplay-state.validation";
 
 /**
  * Result from creating or fetching a round

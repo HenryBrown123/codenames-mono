@@ -6,17 +6,10 @@ import {
 
 import { GameAggregate, Round } from "./gameplay-state.types";
 
-/**
- * Creates a function that retrieves complete game state by composing
- * multiple repository calls
- */
 export const gameplayStateProvider = (
   getGameById: ReturnType<typeof getGameDataByPublicId>,
   getRounds: ReturnType<typeof getRoundsByGameId>,
 ) => {
-  /**
-   * Maps repository round data to domain round data
-   */
   const gameplayRoundMapper = (roundData: RoundResult): Round => {
     return {
       id: roundData.id,
@@ -27,11 +20,6 @@ export const gameplayStateProvider = (
     };
   };
 
-  /**
-   * Gets the complete game state by public ID
-   * @param gameId Public ID of the game
-   * @returns Complete game aggregate or null if not found
-   */
   const getGameplayState = async (
     gameId: string,
   ): Promise<GameAggregate | null> => {
