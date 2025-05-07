@@ -15,25 +15,23 @@ export const roundSchema = z.object({
   createdAt: z.date(),
 });
 
-export const gameplayBaseSchema = z
-  .object({
-    id: z.number().int().positive(),
-    public_id: z.string(),
-    status: z.enum([
-      GAME_STATE.LOBBY,
-      GAME_STATE.IN_PROGRESS,
-      GAME_STATE.COMPLETED,
-      GAME_STATE.ABANDONED,
-      GAME_STATE.PAUSED,
-    ]),
-    game_format: z.enum([
-      GAME_FORMAT.BEST_OF_THREE,
-      GAME_FORMAT.QUICK,
-      GAME_FORMAT.ROUND_ROBIN,
-    ]),
-    rounds: z.array(roundSchema).optional().default([]),
-  })
-  .passthrough();
+export const gameplayBaseSchema = z.object({
+  id: z.number().int().positive(),
+  public_id: z.string(),
+  status: z.enum([
+    GAME_STATE.LOBBY,
+    GAME_STATE.IN_PROGRESS,
+    GAME_STATE.COMPLETED,
+    GAME_STATE.ABANDONED,
+    GAME_STATE.PAUSED,
+  ]),
+  game_format: z.enum([
+    GAME_FORMAT.BEST_OF_THREE,
+    GAME_FORMAT.QUICK,
+    GAME_FORMAT.ROUND_ROBIN,
+  ]),
+  rounds: z.array(roundSchema).optional().default([]),
+});
 
 // Define GameplaySchema type to accept both base and refined schemas
 export type GameplaySchema = z.ZodType<GameAggregate, any, GameAggregate>;

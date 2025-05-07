@@ -4,10 +4,7 @@ import {
   MAX_ROUNDS_BY_FORMAT,
 } from "@codenames/shared/types";
 
-import {
-  gameplayBaseSchema,
-  GameplaySchema,
-} from "../state/gameplay-state.types";
+import { gameplayBaseSchema } from "../state/gameplay-state.types";
 import { GameAggregate } from "../state/gameplay-state.types";
 import { complexProperties } from "../state/gameplay-state.helpers";
 
@@ -64,7 +61,7 @@ const roundCreationAllowedSchema = roundCreationSchema
   .refine(roundCreationRules.isWithinMaxRounds, (game) => ({
     message: `Maximum of ${MAX_ROUNDS_BY_FORMAT[game.game_format]} rounds allowed for ${game.game_format} format`,
     path: ["rounds"],
-  })) as GameplaySchema; // Cast to GameplaySchema type
+  }));
 
 /**
  * Type definition for a valid game state during round creation

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z, ZodSchema } from "zod";
 import { GameAggregate, GameplaySchema } from "./gameplay-state.types";
 
 /**
@@ -20,14 +20,14 @@ export type GameplayValidationResult<T> =
 /**
  * Type utility to create a branded type from a schema that validates GameAggregate
  */
-export type ValidatedGameState<T extends GameplaySchema> = z.infer<T> & {
+export type ValidatedGameState<T extends ZodSchema> = z.infer<T> & {
   readonly __brand: unique symbol;
 };
 
 /**
  * Runtime validation of gameplay state
  */
-export function validateGameState<T extends GameplaySchema>(
+export function validateGameState<T extends z.ZodType>(
   schema: T,
   data: unknown,
 ): GameplayValidationResult<ValidatedGameState<T>> {
