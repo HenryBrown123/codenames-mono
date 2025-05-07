@@ -1,11 +1,11 @@
 import { GameAggregate, Round } from "./gameplay-state.types";
 
 /**
- * A module of pure accessor functions for game state
+ * Collection of pure accessor functions for retrieving derived game state
  */
-export const gameAccessors = {
+export const complexProperties = {
   /**
-   * Gets the most recently started round in the game
+   * @returns The most recently started round or null if no rounds exist
    */
   getLatestRound(game: GameAggregate): Round | null {
     if (!game.rounds || game.rounds.length === 0) return null;
@@ -13,7 +13,7 @@ export const gameAccessors = {
   },
 
   /**
-   * Gets the current round sequence number
+   * @returns Total number of rounds in the game
    */
   getRoundCount(game: GameAggregate): number {
     if (!game.rounds || game.rounds.length === 0) return 0;
@@ -21,7 +21,8 @@ export const gameAccessors = {
   },
 
   /**
-   * Finds a specific round by its sequence number
+   * @param roundNumber - The sequence number of the round to find
+   * @returns The requested round or null if not found
    */
   findRoundByNumber(game: GameAggregate, roundNumber: number): Round | null {
     if (!game.rounds || game.rounds.length === 0) return null;
