@@ -1,6 +1,31 @@
 import { Kysely } from "kysely";
 import { DB } from "../db/db.types";
 
+/** Repository function types */
+export type GetUserByIdFn = (userId: number) => Promise<UserData | null>;
+export type CreateUserFn = (input: UserInput) => Promise<UserResult>;
+export type GetUserByEmailFn = (email: string) => Promise<UserData | null>;
+
+/** Data types */
+export type UserData = {
+  id: number;
+  email: string;
+  username: string;
+  created_at: Date;
+};
+
+export type UserInput = {
+  email: string;
+  username: string;
+  passwordHash: string;
+};
+
+export type UserResult = {
+  id: number;
+  email: string;
+  username: string;
+};
+
 /** User as stored in the database */
 export type User = {
   id: number;

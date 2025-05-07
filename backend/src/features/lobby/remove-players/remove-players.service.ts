@@ -2,8 +2,13 @@ import { UnexpectedLobbyError } from "../errors/lobby.errors";
 import {
   removePlayer,
   getPlayerById,
+  RemovePlayerFn,
+  GetPlayerByIdFn,
 } from "@backend/common/data-access/players.repository";
-import { getGameDataByPublicId } from "@backend/common/data-access/games.repository";
+import {
+  getGameDataByPublicId,
+  GetGameByPublicId,
+} from "@backend/common/data-access/games.repository";
 
 /** Represents the result of a player removal operation */
 export type PlayerResult = {
@@ -15,9 +20,9 @@ export type PlayerResult = {
 
 /** Required dependencies for creating the RemovePlayersService */
 export type ServiceDependencies = {
-  removePlayer: ReturnType<typeof removePlayer>;
-  getPlayer: ReturnType<typeof getPlayerById>;
-  getGameByPublicId: ReturnType<typeof getGameDataByPublicId>;
+  removePlayer: RemovePlayerFn;
+  getPlayer: GetPlayerByIdFn;
+  getGameByPublicId: GetGameByPublicId;
 };
 
 /** Creates an implementation of the remove players service */

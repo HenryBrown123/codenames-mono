@@ -1,6 +1,22 @@
 import { Kysely } from "kysely";
 import { DB } from "../db/db.types";
 
+/** Repository function types */
+export type CreateTeamsFn = (input: TeamsInput) => Promise<TeamResult[]>;
+export type GetTeamsByGameIdFn = (gameId: number) => Promise<TeamResult[]>;
+
+/** Data types */
+export type TeamsInput = {
+  gameId: number;
+  teamNames: string[];
+};
+
+export type TeamResult = {
+  id: number;
+  game_id: number;
+  team_name: string;
+};
+
 /** Represents a team in the database */
 export type Team = {
   id: number;

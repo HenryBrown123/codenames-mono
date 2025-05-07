@@ -83,7 +83,7 @@ export const roundCreationService = (
    * 2. Validate the current game state
    * 3. Create a new round if all checks pass
    *
-   * @throws Never - Errors are returned in the result object
+   * @throws Never - Errors are returned in the result object or will bubble up.
    */
   return async (input: RoundCreationInput): Promise<RoundCreationResult> => {
     const gameData = await dependencies.getGameState(input.gameId);

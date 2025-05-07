@@ -1,4 +1,4 @@
-import { getGameDataByPublicId } from "@backend/common/data-access/games.repository";
+import { GetGameByPublicId } from "@backend/common/data-access/games.repository";
 import {
   getRoundsByGameId,
   RoundResult,
@@ -7,7 +7,7 @@ import {
 import { GameAggregate, Round } from "./gameplay-state.types";
 
 export const gameplayStateProvider = (
-  getGameById: ReturnType<typeof getGameDataByPublicId>,
+  getGameById: GetGameByPublicId,
   getRounds: ReturnType<typeof getRoundsByGameId>,
 ) => {
   const gameplayRoundMapper = (roundData: RoundResult): Round => {
