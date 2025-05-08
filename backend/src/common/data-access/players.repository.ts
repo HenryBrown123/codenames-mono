@@ -2,7 +2,29 @@ import { Kysely, Selectable } from "kysely";
 import { DB, Players } from "../db/db.types";
 import { UnexpectedRepositoryError } from "./repository.errors";
 
-/** Represents the input data for creating a player in the database */
+/**
+ * ==================
+ * REPOSITORY TYPES
+ * ==================
+ */
+
+/** Domain-specific identifier types */
+export type PlayerId = number;
+export type UserId = number;
+export type GameId = number;
+export type TeamId = number;
+
+/** Entity data types */
+export type PlayerData = {
+  id: number;
+  user_id: number;
+  game_id: number;
+  team_id: number;
+  public_name: string;
+  status_id: number;
+};
+
+/** Input data types */
 export type PlayerInput = {
   userId: number;
   gameId: number;
@@ -11,7 +33,12 @@ export type PlayerInput = {
   statusId: number;
 };
 
-/** Player modify input å*/
+export type PlayerUpdateInput = {
+  playerId: number;
+  gameId: number;
+  teamId?: number;
+};
+
 export type ModifyPlayerInput = {
   gameId: number;
   playerId: number;
@@ -20,7 +47,7 @@ export type ModifyPlayerInput = {
   userId?: number;
 };
 
-/** Represents a player record retrieved from the database */
+/** Output/result types */
 export type PlayerResult = {
   id: number;
   userId: number;
@@ -30,7 +57,24 @@ export type PlayerResult = {
   publicName: string;
 };
 
-/** columns to use for PlayerResult type */
+/** Repository function types */
+export type PlayerFinder<T> = (identifier: T) => Promise<PlayerData | null>;
+export type PlayersLister = (gameId: GameId) => Promise<PlayerResult[]>;
+export type PlayersCreator = (
+  players: PlayerInput[],
+) => Promise<PlayerResult[]>;
+export type PlayersUpdater = (
+  updates: ModifyPlayerInput[],
+) => Promise<PlayerResult[]>;
+export type PlayerRemover = (playerId: PlayerId) => Promise<PlayerResult>;
+
+/**
+ * ==================
+ * DATABASE UTILITIES
+ * ==================
+ */
+
+/** Columns to use for PlayerResult type */
 const playerResultColumns = [
   "id",
   "user_id",
@@ -42,60 +86,80 @@ const playerResultColumns = [
   "status_last_changed",
 ] as const;
 
-/** Repository function types */
-export type GetPlayerByIdFn = (playerId: number) => Promise<PlayerData | null>;
-export type GetPlayersByGameIdFn = (gameId: number) => Promise<PlayerData[]>;
-export type AddPlayersFn = (players: PlayerInput[]) => Promise<PlayerResult[]>;
-export type ModifyPlayersFn = (
-  updates: PlayerUpdateInput[],
-) => Promise<PlayerResult[]>;
-export type RemovePlayerFn = (playerId: number) => Promise<PlayerResult | null>;
-
-/** Data types */
-export type PlayerData = {
-  id: number;
-  user_id: number;
-  game_id: number;
-  team_id: number;
-  public_name: string;
-  status_id: number;
-};
-
-export type PlayerUpdateInput = {
-  playerId: number;
-  gameId: number;
-  teamId?: number;
-};
+/**
+ * ==================
+ * REPOSITORY FUNCTIONS
+ * ==================
+ */
 
 /**
+ * Creates a function for finding a player by ID
  *
  * @param db - Database connection
- * @returns - function that returns a player from player id.
  */
+export const findPlayerById =
+  (db: Kysely<DB>): PlayerFinder<PlayerId> =>
+  /**
+   * Retrieves player data using its ID
+   *
+   * @param playerId - The player's ID
+   * @returns Player data if found, null otherwise
+   */
+  async (playerId) => {
+    const player = await db
+      .selectFrom("players")
+      .where("players.id", "=", playerId)
+      .select(playerResultColumns)
+      .executeTakeFirst();
 
-export const getPlayerById = (db: Kysely<DB>) => async (playerId: number) => {
-  const player = db
-    .selectFrom("players")
-    .where("players.id", "=", playerId)
-    .select(playerResultColumns)
-    .executeTakeFirst();
+    return player || null;
+  };
 
-  return player;
-};
 /**
- * Creates a function to add players to the database
+ * Creates a function for listing players in a game
+ *
  * @param db - Database connection
- * @returns Function to insert players
+ */
+export const findPlayersByGameId =
+  (db: Kysely<DB>): PlayersLister =>
+  /**
+   * Fetches all players in a given game
+   *
+   * @param gameId - The ID of the game to fetch players for
+   * @returns List of players in the specified game
+   */
+  async (gameId) => {
+    const players = await db
+      .selectFrom("players")
+      .where("game_id", "=", gameId)
+      .select(playerResultColumns)
+      .execute();
+
+    return players.map((player) => ({
+      id: player.id,
+      userId: player.user_id,
+      gameId: player.game_id,
+      teamId: player.team_id,
+      statusId: player.status_id,
+      publicName: player.public_name,
+    }));
+  };
+
+/**
+ * Creates a function for adding players to a game
+ *
+ * @param db - Database connection
  */
 export const addPlayers =
-  (db: Kysely<DB>) =>
+  (db: Kysely<DB>): PlayersCreator =>
   /**
    * Inserts new players into the database
+   *
    * @param playersData - Array of player data to insert
    * @returns Newly created player records
-   * @throws {UnexpectedLobbyError} If insertion fails
+   * @throws {UnexpectedRepositoryError} If insertion fails
    */
-  async (playersData: PlayerInput[]): Promise<PlayerResult[]> => {
+  async (playersData) => {
     if (playersData.length === 0) {
       return [];
     }
@@ -132,47 +196,20 @@ export const addPlayers =
   };
 
 /**
- * Creates a function to retrieve players for a specific game
+ * Creates a function for removing a player from a game
+ *
  * @param db - Database connection
- * @returns Function to fetch players by game ID
- */
-export const getPlayersByGameId =
-  (db: Kysely<DB>) =>
-  /**
-   * Fetches all players in a given game
-   * @param gameId - The ID of the game to fetch players for
-   * @returns List of players in the specified game
-   */
-  async (gameId: number): Promise<PlayerResult[]> => {
-    const players = await db
-      .selectFrom("players")
-      .where("game_id", "=", gameId)
-      .select(playerResultColumns)
-      .execute();
-
-    return players.map((player) => ({
-      id: player.id,
-      userId: player.user_id,
-      gameId: player.game_id,
-      teamId: player.team_id,
-      statusId: player.status_id,
-      publicName: player.public_name,
-    }));
-  };
-
-/**
- * Creates a function to remove a player from the database
- * @param db - Database connection
- * @returns Function to delete a specific player
  */
 export const removePlayer =
-  (db: Kysely<DB>) =>
+  (db: Kysely<DB>): PlayerRemover =>
   /**
    * Deletes a specific player from the database
+   *
    * @param playerId - The ID of the player to remove
-   * @returns The removed player record or null if not found
+   * @returns The removed player record
+   * @throws If player not found
    */
-  async (playerId: number): Promise<PlayerResult> => {
+  async (playerId) => {
     const removedPlayer = await db
       .deleteFrom("players")
       .where("players.id", "=", playerId)
@@ -190,12 +227,20 @@ export const removePlayer =
   };
 
 /**
- * Modifies one or more players in a game
- * @param playersData Array of player data to update
- * @returns Array of modified players
+ * Creates a function for modifying players in a game
+ *
+ * @param db - Database connection
  */
 export const modifyPlayers =
-  (db: Kysely<DB>) => async (playersData: ModifyPlayerInput[]) => {
+  (db: Kysely<DB>): PlayersUpdater =>
+  /**
+   * Updates information for multiple players
+   *
+   * @param playersData - Array of player data to update
+   * @returns Array of modified players
+   * @throws If players not found or update fails
+   */
+  async (playersData) => {
     if (!playersData.length) {
       return [];
     }
@@ -248,7 +293,7 @@ export const modifyPlayers =
             !modifiedPlayers.map((player) => player.id).includes(playerId),
         );
 
-        if (missingPlayers) {
+        if (missingPlayers.length > 0) {
           throw new UnexpectedRepositoryError(
             "Players could not be found to modify",
             {
@@ -260,7 +305,6 @@ export const modifyPlayers =
             },
           );
         }
-
         return modifiedPlayers;
       });
 
@@ -270,5 +314,16 @@ export const modifyPlayers =
       );
     }
 
-    return repositoryResponse;
+    const mappedOutput = repositoryResponse.map((player) => {
+      return {
+        id: player.id,
+        userId: player.user_id,
+        gameId: player.game_id,
+        teamId: player.team_id,
+        statusId: player.status_id,
+        publicName: player.public_name,
+      };
+    });
+
+    return mappedOutput;
   };
