@@ -12,7 +12,17 @@ import {
 import { z } from "zod";
 import { UnexpectedRepositoryError } from "./repository.errors";
 
-/** Represents the game data returned by the query */
+/**
+ * ==================
+ * DOMAIN TYPES
+ * ==================
+ */
+
+/** Domain-specific identifier types */
+export type PublicId = string;
+export type InternalId = number;
+
+/** Entity data types */
 export type GameData = {
   id: number;
   created_at: Date;
@@ -21,6 +31,32 @@ export type GameData = {
   game_type: GameType;
   game_format: GameFormat;
 };
+
+/** Input and result types */
+export type GameInput = {
+  publicId: string;
+  gameType: GameType;
+  gameFormat: GameFormat;
+};
+
+export type GameResult = {
+  id: number;
+  created_at: Date;
+};
+
+/** Generic repository function types */
+export type GameFinder<T> = (identifier: T) => Promise<GameData | null>;
+export type GameCreator = (input: GameInput) => Promise<GameResult>;
+export type GameStatusUpdater = (
+  gameId: InternalId,
+  statusName: GameState,
+) => Promise<GameData>;
+
+/**
+ * ==================
+ * VALIDATION SCHEMAS
+ * ==================
+ */
 
 /**
  * Zod schemas needed due to generated postgrest enum types returning "string" from Kysely query.
@@ -45,37 +81,26 @@ export const gameStateSchema = z.enum([
   GAME_STATE.ABANDONED,
 ]);
 
-/** Game creation input */
-export type GameInput = {
-  publicId: string;
-  gameType: GameType;
-  gameFormat: GameFormat;
-};
+/**
+ * ==================
+ * REPOSITORY FUNCTIONS
+ * ==================
+ */
 
-/** Game creation result */
-export type GameResult = {
-  id: number;
-  created_at: Date;
-};
-
-/** Update game status input */
-export type UpdateGameStatusInput = {
-  gameId: number;
-  statusId: number;
-};
-
-/** Repository function types */
-export type GetGameByPublicId = (publicId: string) => Promise<GameData | null>;
-export type CreateGameFn = (gameInput: GameInput) => Promise<GameResult>;
-export type UpdateGameStatusFn = (
-  gameId: number,
-  statusName: string,
-) => Promise<GameData>;
-
-/** Retrieves game data by public ID */
-export const getGameDataByPublicId =
-  (db: Kysely<DB>): GetGameByPublicId =>
-  async (publicId: string): Promise<GameData | null> => {
+/**
+ * Creates a function for finding games by public ID
+ *
+ * @param db - Database connection
+ */
+export const findGameByPublicId =
+  (db: Kysely<DB>): GameFinder<PublicId> =>
+  /**
+   * Retrieves game data using its public identifier
+   *
+   * @param publicId - The game's public-facing ID
+   * @returns Game data if found, null otherwise
+   */
+  async (publicId) => {
     const game = await db
       .selectFrom("games")
       .innerJoin("game_status", "games.status_id", "game_status.id")
@@ -102,10 +127,20 @@ export const getGameDataByPublicId =
       : null;
   };
 
-/** Creates a new game */
+/**
+ * Creates a function for creating new games
+ *
+ * @param db - Database connection
+ */
 export const createGame =
-  (db: Kysely<DB>): CreateGameFn =>
-  async (gameInput: GameInput): Promise<GameResult> => {
+  (db: Kysely<DB>): GameCreator =>
+  /**
+   * Inserts a new game into the database
+   *
+   * @param gameInput - Game creation parameters
+   * @returns Created game's ID and timestamp
+   */
+  async (gameInput) => {
     const insertedGame = await db
       .insertInto("games")
       .values({
@@ -124,10 +159,22 @@ export const createGame =
     };
   };
 
-/** Updates a game's status */
+/**
+ * Creates a function for updating a game's status
+ *
+ * @param db - Database connection
+ */
 export const updateGameStatus =
-  (db: Kysely<DB>): UpdateGameStatusFn =>
-  async (gameId: number, statusName: string): Promise<GameData> => {
+  (db: Kysely<DB>): GameStatusUpdater =>
+  /**
+   * Changes a game's status to a new value
+   *
+   * @param gameId - The game's internal ID
+   * @param statusName - The new status to apply
+   * @returns Updated game data
+   * @throws If game not found or status is invalid
+   */
+  async (gameId, statusName) => {
     // Get the status_id corresponding to the status name
     const updatedGame = await db.transaction().execute(async (trx) => {
       const status = await trx
