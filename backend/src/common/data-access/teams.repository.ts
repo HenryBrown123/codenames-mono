@@ -34,7 +34,9 @@ export type TeamResult = {
 };
 
 /** Function that finds teams by game ID */
-export type TeamsFinder<T> = (identifier: T) => Promise<TeamResult[]>;
+export type TeamsFinder<T extends GameId> = (
+  identifier: T,
+) => Promise<TeamResult[]>;
 
 /** Function that creates multiple teams */
 export type TeamsCreator = (input: TeamsInput) => Promise<TeamResult[]>;

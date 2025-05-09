@@ -1,15 +1,16 @@
-import { createNewRound } from "@backend/common/data-access/rounds.repository";
+import { RoundCreator } from "@backend/common/data-access/rounds.repository";
+import { GameplayStateProvider } from "../state/gameplay-state.provider";
+
 import { createNextRound } from "./new-round.actions";
 import { roundCreationService } from "./new-round.service";
 import { newRoundController } from "./new-round.controller";
-import { gameplayStateProvider } from "../state/gameplay-state.provider";
 
 /**
  * Dependencies required by the new round feature module
  */
 export interface NewRoundDependencies {
-  getGameState: ReturnType<typeof gameplayStateProvider>;
-  createRound: ReturnType<typeof createNewRound>;
+  getGameState: GameplayStateProvider;
+  createRound: RoundCreator;
 }
 
 /**

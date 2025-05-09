@@ -103,20 +103,20 @@ export const getRoundsByGameId =
       .where("rounds.game_id", "=", gameId)
       .select([
         "rounds.id",
-        "rounds.game_id as gameId",
-        "rounds.round_number as roundNumber",
-        "round_status.status_name as status",
-        "rounds.created_at as createdAt",
+        "rounds.game_id",
+        "rounds.round_number",
+        "round_status.status_name",
+        "rounds.created_at",
       ])
       .orderBy("rounds.round_number", "asc")
       .execute();
 
     return rounds.map((round) => ({
       id: round.id,
-      gameId: round.gameId,
-      roundNumber: round.roundNumber,
-      status: roundStatusSchema.parse(round.status),
-      createdAt: round.createdAt,
+      gameId: round.game_id,
+      roundNumber: round.round_number,
+      status: roundStatusSchema.parse(round.status_name),
+      createdAt: round.created_at,
     }));
   };
 
@@ -139,15 +139,15 @@ export const getRoundById =
       ])
       .executeTakeFirst();
 
-    if (!round) return null;
-
-    return {
-      id: round.id,
-      gameId: round.gameId,
-      roundNumber: round.roundNumber,
-      status: roundStatusSchema.parse(round.status),
-      createdAt: round.createdAt,
-    };
+    return round
+      ? {
+          id: round.id,
+          gameId: round.gameId,
+          roundNumber: round.roundNumber,
+          status: roundStatusSchema.parse(round.status),
+          createdAt: round.createdAt,
+        }
+      : null;
   };
 
 /**
@@ -171,15 +171,15 @@ export const getLatestRound =
       .limit(1)
       .executeTakeFirst();
 
-    if (!round) return null;
-
-    return {
-      id: round.id,
-      gameId: round.gameId,
-      roundNumber: round.roundNumber,
-      status: roundStatusSchema.parse(round.status),
-      createdAt: round.createdAt,
-    };
+    return round
+      ? {
+          id: round.id,
+          gameId: round.gameId,
+          roundNumber: round.roundNumber,
+          status: roundStatusSchema.parse(round.status),
+          createdAt: round.createdAt,
+        }
+      : null;
   };
 
 /**

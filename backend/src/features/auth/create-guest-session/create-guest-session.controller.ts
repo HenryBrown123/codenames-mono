@@ -1,19 +1,27 @@
 import type { Request, Response, NextFunction } from "express";
 import type { GuestUser } from "./create-guest-user.service";
-import type { Session } from "@backend/common/data-access/sessions.repository";
+import type { GuestLoginService } from "./guest-login.service";
 import {
   createGuestResponseSchema,
   createGuestRequestSchema,
   CreateGuestResponse,
 } from "./create-guest-session.validation";
 
+/** Dependencies required by the guest user controller */
 type ControllerDependencies = {
   createGuestUser: () => Promise<GuestUser>;
-  login: (username: string) => Promise<Session>;
+  login: GuestLoginService;
 };
 
+/** Creates a controller for handling guest user creation requests */
 export const createGuestUserController =
   ({ createGuestUser, login }: ControllerDependencies) =>
+  /**
+   * Handles HTTP request to create a new guest user
+   * @param req - Express request object
+   * @param res - Express response object
+   * @param next - Express error handling function
+   */
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       createGuestRequestSchema.parse(req.body);
@@ -28,7 +36,7 @@ export const createGuestUserController =
             username: user.username,
           },
           session: {
-            username: session.username,
+            username: user.username,
             token: session.token,
           },
         },

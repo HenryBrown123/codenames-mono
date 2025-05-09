@@ -1,18 +1,30 @@
 import {
   PublicId,
+  InternalId,
   GameFinder,
 } from "@backend/common/data-access/games.repository";
+
 import {
-  getRoundsByGameId,
+  RoundFinderAll,
   RoundResult,
 } from "@backend/common/data-access/rounds.repository";
 
 import { GameAggregate, Round } from "./gameplay-state.types";
 
+/**
+ * Creates a provider that assembles the complete game state from different data sources
+ *
+ * @param getGameById - Function to retrieve game data using public ID
+ * @param getRounds - Function to retrieve rounds for a game using internal ID
+ * @returns Function that provides the complete game state for a given game ID
+ */
 export const gameplayStateProvider = (
   getGameById: GameFinder<PublicId>,
-  getRounds: ReturnType<typeof getRoundsByGameId>,
+  getRounds: RoundFinderAll<InternalId>,
 ) => {
+  /**
+   * Maps repository round data to domain Round type
+   */
   const gameplayRoundMapper = (roundData: RoundResult): Round => {
     return {
       id: roundData.id,
@@ -23,6 +35,12 @@ export const gameplayStateProvider = (
     };
   };
 
+  /**
+   * Retrieves and assembles the complete game state for a given game
+   *
+   * @param gameId - Public identifier of the game
+   * @returns Complete game state object or null if game not found
+   */
   const getGameplayState = async (
     gameId: string,
   ): Promise<GameAggregate | null> => {
@@ -43,3 +61,5 @@ export const gameplayStateProvider = (
 
   return getGameplayState;
 };
+
+export type GameplayStateProvider = ReturnType<typeof gameplayStateProvider>;

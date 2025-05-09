@@ -4,7 +4,7 @@ import { UnexpectedRepositoryError } from "./repository.errors";
 
 /**
  * ==================
- * REPOSITORY TYPES
+ * COMMON TYPES
  * ==================
  */
 
@@ -14,40 +14,7 @@ export type UserId = number;
 export type GameId = number;
 export type TeamId = number;
 
-/** Entity data types */
-export type PlayerData = {
-  id: number;
-  user_id: number;
-  game_id: number;
-  team_id: number;
-  public_name: string;
-  status_id: number;
-};
-
-/** Input data types */
-export type PlayerInput = {
-  userId: number;
-  gameId: number;
-  publicName: string;
-  teamId: number;
-  statusId: number;
-};
-
-export type PlayerUpdateInput = {
-  playerId: number;
-  gameId: number;
-  teamId?: number;
-};
-
-export type ModifyPlayerInput = {
-  gameId: number;
-  playerId: number;
-  publicName?: string;
-  teamId?: number;
-  userId?: number;
-};
-
-/** Output/result types */
+/** Common result type shared by repository functions */
 export type PlayerResult = {
   id: number;
   userId: number;
@@ -56,32 +23,6 @@ export type PlayerResult = {
   statusId: number;
   publicName: string;
 };
-
-/** Repository function types */
-export type PlayerFinder<T extends PlayerId> = (
-  identifier: T,
-) => Promise<PlayerResult | null>;
-
-/** Repository function types */
-export type PlayerFinderAll<T extends GameId> = (
-  identifier: T,
-) => Promise<PlayerResult[] | []>;
-
-export type PlayersCreator = (
-  players: PlayerInput[],
-) => Promise<PlayerResult[]>;
-
-export type PlayersUpdater = (
-  updates: ModifyPlayerInput[],
-) => Promise<PlayerResult[]>;
-
-export type PlayerRemover = (playerId: PlayerId) => Promise<PlayerResult>;
-
-/**
- * ==================
- * DATABASE UTILITIES
- * ==================
- */
 
 /** Columns to use for PlayerResult type */
 const playerResultColumns = [
@@ -95,9 +36,20 @@ const playerResultColumns = [
   "status_last_changed",
 ] as const;
 
+/** Repository function type for finding all players for a game or user */
+export type PlayerFinderAll<T extends GameId | UserId> = (
+  identifier: T,
+) => Promise<PlayerResult[]>;
+
+/** Repository function type for finding a player by ID...
+ * generic type so expandable for different search ids */
+export type PlayerFinder<T extends PlayerId> = (
+  identifier: T,
+) => Promise<PlayerResult | null>;
+
 /**
  * ==================
- * REPOSITORY FUNCTIONS
+ * FIND PLAYER BY ID
  * ==================
  */
 
@@ -134,6 +86,12 @@ export const findPlayerById =
   };
 
 /**
+ * ==================
+ * FIND PLAYERS BY GAME ID
+ * ==================
+ */
+
+/**
  * Creates a function for listing players in a game
  *
  * @param db - Database connection
@@ -162,6 +120,56 @@ export const findPlayersByGameId =
       publicName: player.public_name,
     }));
   };
+
+/**
+ * Creates a function for listing players in a game
+ *
+ * @param db - Database connection
+ */
+export const findPlayersByUserId =
+  (db: Kysely<DB>): PlayerFinderAll<UserId> =>
+  /**
+   * Fetches all players in a given game
+   *
+   * @param gameId - The ID of the game to fetch players for
+   * @returns List of players in the specified game
+   */
+  async (userId) => {
+    const players = await db
+      .selectFrom("players")
+      .where("user_id", "=", userId)
+      .select(playerResultColumns)
+      .execute();
+
+    return players.map((player) => ({
+      id: player.id,
+      userId: player.user_id,
+      gameId: player.game_id,
+      teamId: player.team_id,
+      statusId: player.status_id,
+      publicName: player.public_name,
+    }));
+  };
+
+/**
+ * ==================
+ * ADD PLAYERS
+ * ==================
+ */
+
+/** Input type for adding players */
+export type PlayerInput = {
+  userId: number;
+  gameId: number;
+  publicName: string;
+  teamId: number;
+  statusId: number;
+};
+
+/** Repository function type for creating players */
+export type PlayersCreator = (
+  players: PlayerInput[],
+) => Promise<PlayerResult[]>;
 
 /**
  * Creates a function for adding players to a game
@@ -214,6 +222,15 @@ export const addPlayers =
   };
 
 /**
+ * ==================
+ * REMOVE PLAYER
+ * ==================
+ */
+
+/** Repository function type for removing a player */
+export type PlayerRemover = (playerId: PlayerId) => Promise<PlayerResult>;
+
+/**
  * Creates a function for removing a player from a game
  *
  * @param db - Database connection
@@ -243,6 +260,26 @@ export const removePlayer =
       publicName: removedPlayer.public_name,
     };
   };
+
+/**
+ * ==================
+ * MODIFY PLAYERS
+ * ==================
+ */
+
+/** Input type for modifying player data */
+export type ModifyPlayerInput = {
+  gameId: number;
+  playerId: number;
+  publicName?: string;
+  teamId?: number;
+  userId?: number;
+};
+
+/** Repository function type for updating players */
+export type PlayersUpdater = (
+  updates: ModifyPlayerInput[],
+) => Promise<PlayerResult[]>;
 
 /**
  * Creates a function for modifying players in a game

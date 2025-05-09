@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { generateAdditionalErrorInfo } from "./add-error-details.utils";
+import { generateAdditionalErrorInfo } from "./add-error-details.helper";
 
 type ErrorResponse = {
   success: boolean;

@@ -52,6 +52,7 @@ export type GameCreator = ({
   gameType,
   gameFormat,
 }: GameInput) => Promise<GameResult>;
+
 export type GameStatusUpdater = (
   gameId: InternalId,
   statusName: GameState,
