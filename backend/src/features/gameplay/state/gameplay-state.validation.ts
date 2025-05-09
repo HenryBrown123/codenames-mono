@@ -1,5 +1,4 @@
 import { z, ZodSchema } from "zod";
-import { GameAggregate, GameplaySchema } from "./gameplay-state.types";
 
 /**
  * Represents a structured validation error in the gameplay feature

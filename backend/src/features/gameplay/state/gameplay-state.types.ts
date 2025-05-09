@@ -1,4 +1,3 @@
-// src/features/gameplay/state/gameplay-state.types.ts
 import { z } from "zod";
 import { GAME_STATE, GAME_FORMAT, ROUND_STATE } from "@codenames/shared/types";
 

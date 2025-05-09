@@ -21,7 +21,7 @@ export const complexProperties = {
   },
 
   /**
-   * @param roundNumber - The sequence number of the round to find
+   * @param roundNumber - Round sequence number
    * @returns The requested round or null if not found
    */
   findRoundByNumber(game: GameAggregate, roundNumber: number): Round | null {

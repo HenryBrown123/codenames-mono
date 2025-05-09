@@ -2,17 +2,44 @@ import { Kysely } from "kysely";
 import { DB } from "../db/db.types";
 import { ROUND_STATE, RoundState } from "@codenames/shared/types";
 import { z } from "zod";
+import { UnexpectedRepositoryError } from "./repository.errors";
 
-/** Repository function types */
-export type GetRoundsByGameIdFn = (gameId: number) => Promise<RoundResult[]>;
-export type CreateRoundFn = (input: RoundInput) => Promise<RoundResult>;
+/**
+ * ==================
+ * REPOSITORY TYPES
+ * ==================
+ */
 
-export type UpdateRoundStatusFn = (
-  roundId: number,
-  status: RoundState,
-) => Promise<RoundResult>;
+/** A unique identifier for a round */
+export type RoundId = number;
 
-/** Data types */
+/** A unique identifier for a game */
+export type GameId = number;
+
+/** Round data as stored in the database */
+export type RoundData = {
+  id: number;
+  game_id: number;
+  round_number: number;
+  status_id: number;
+  status_name: string;
+  created_at: Date;
+  updated_at?: Date | null;
+};
+
+/** Parameters for creating a new round */
+export type RoundInput = {
+  gameId: number;
+  roundNumber: number;
+};
+
+/** Parameters for updating a round's status */
+export type RoundStatusUpdateInput = {
+  roundId: number;
+  status: RoundState;
+};
+
+/** Standardized round data returned from repository */
 export type RoundResult = {
   id: number;
   gameId: number;
@@ -21,27 +48,55 @@ export type RoundResult = {
   createdAt: Date;
 };
 
-export type RoundInput = {
-  gameId: number;
-  roundNumber: number;
-};
+/** Function that finds multiple rounds by a specific identifier type */
+export type RoundFinderAll<T extends GameId> = (
+  identifier: T,
+) => Promise<RoundResult[]>;
+
+/** Function that finds a single round by a specific identifier type */
+export type RoundFinder<T extends RoundId> = (
+  identifier: T,
+) => Promise<RoundResult | null>;
+
+/** Function that creates a new round */
+export type RoundCreator = ({
+  gameId,
+  roundNumber,
+}: RoundInput) => Promise<RoundResult>;
+
+/** Function that updates a round's status */
+export type RoundStatusUpdater = ({
+  roundId,
+  status,
+}: RoundStatusUpdateInput) => Promise<RoundResult>;
 
 /**
- * Zod schemas needed due to generated postgrest enum types returning "string" from Kysely query.
- * Other column primative types are typesafe through types generated through kysely-codegen.
+ * ==================
+ * VALIDATION SCHEMAS
+ * ==================
  */
-export const roundStatus = z.enum([
+
+/**
+ * Zod schema for round status validation
+ */
+export const roundStatusSchema = z.enum([
   ROUND_STATE.SETUP,
   ROUND_STATE.IN_PROGRESS,
   ROUND_STATE.COMPLETED,
 ]);
 
 /**
- * Gets all rounds for a specific game
+ * ==================
+ * REPOSITORY FUNCTIONS
+ * ==================
+ */
+
+/**
+ * Creates a function for retrieving rounds by game ID
  */
 export const getRoundsByGameId =
-  (db: Kysely<DB>) =>
-  async (gameId: number): Promise<RoundResult[]> => {
+  (db: Kysely<DB>): RoundFinderAll<GameId> =>
+  async (gameId) => {
     const rounds = await db
       .selectFrom("rounds")
       .innerJoin("round_status", "rounds.status_id", "round_status.id")
@@ -56,68 +111,51 @@ export const getRoundsByGameId =
       .orderBy("rounds.round_number", "asc")
       .execute();
 
-    const result = rounds.map((round) => {
-      return {
-        id: round.id,
-        gameId: round.gameId,
-        roundNumber: round.roundNumber,
-        status: round.status as RoundState,
-        createdAt: round.createdAt,
-      };
-    });
-
-    return result;
+    return rounds.map((round) => ({
+      id: round.id,
+      gameId: round.gameId,
+      roundNumber: round.roundNumber,
+      status: roundStatusSchema.parse(round.status),
+      createdAt: round.createdAt,
+    }));
   };
 
 /**
- * Creates a new round in the database
+ * Creates a function for retrieving a round by its ID
  */
-export const createNewRound =
-  (db: Kysely<DB>) =>
-  async (input: RoundInput): Promise<RoundResult> => {
-    // First get the SETUP status ID
-    const statusResult = await db
-      .selectFrom("round_status")
-      .where("status_name", "=", "SETUP")
-      .select(["id"])
+export const getRoundById =
+  (db: Kysely<DB>): RoundFinder<RoundId> =>
+  async (roundId) => {
+    const round = await db
+      .selectFrom("rounds")
+      .innerJoin("round_status", "rounds.status_id", "round_status.id")
+      .where("rounds.id", "=", roundId)
+      .select([
+        "rounds.id",
+        "rounds.game_id as gameId",
+        "rounds.round_number as roundNumber",
+        "round_status.status_name as status",
+        "rounds.created_at as createdAt",
+      ])
       .executeTakeFirst();
 
-    if (!statusResult) {
-      throw new Error("Round status 'SETUP' not found in database");
-    }
-
-    // Create the round
-    const result = await db
-      .insertInto("rounds")
-      .values({
-        game_id: input.gameId,
-        round_number: input.roundNumber,
-        status_id: statusResult.id,
-        created_at: new Date(),
-      })
-      .returning([
-        "id",
-        "game_id as gameId",
-        "round_number as roundNumber",
-        "created_at as createdAt",
-      ])
-      .executeTakeFirstOrThrow();
+    if (!round) return null;
 
     return {
-      id: result.id,
-      gameId: result.gameId,
-      roundNumber: result.roundNumber,
-      status: ROUND_STATE.SETUP,
-      createdAt: result.createdAt,
+      id: round.id,
+      gameId: round.gameId,
+      roundNumber: round.roundNumber,
+      status: roundStatusSchema.parse(round.status),
+      createdAt: round.createdAt,
     };
   };
 
 /**
- * Gets the latest round for a game
+ * Creates a function for retrieving the latest round for a game
  */
 export const getLatestRound =
-  (db: Kysely<DB>) =>
-  async (gameId: number): Promise<RoundResult | null> => {
+  (db: Kysely<DB>): RoundFinder<GameId> =>
+  async (gameId) => {
     const round = await db
       .selectFrom("rounds")
       .innerJoin("round_status", "rounds.status_id", "round_status.id")
@@ -135,13 +173,108 @@ export const getLatestRound =
 
     if (!round) return null;
 
-    const result = {
+    return {
       id: round.id,
       gameId: round.gameId,
       roundNumber: round.roundNumber,
-      status: round.status as RoundState,
+      status: roundStatusSchema.parse(round.status),
       createdAt: round.createdAt,
     };
+  };
 
-    return result;
+/**
+ * Creates a function for creating new rounds
+ */
+export const createNewRound =
+  (db: Kysely<DB>): RoundCreator =>
+  async ({ gameId, roundNumber }) => {
+    return await db.transaction().execute(async (trx) => {
+      const statusResult = await trx
+        .selectFrom("round_status")
+        .where("status_name", "=", ROUND_STATE.SETUP)
+        .select(["id"])
+        .executeTakeFirst();
+
+      if (!statusResult) {
+        throw new UnexpectedRepositoryError(
+          `Round status '${ROUND_STATE.SETUP}' not found in database`,
+        );
+      }
+
+      // Create the round
+      const result = await trx
+        .insertInto("rounds")
+        .values({
+          game_id: gameId,
+          round_number: roundNumber,
+          status_id: statusResult.id,
+          created_at: new Date(),
+        })
+        .returning(["id", "game_id", "round_number", "created_at"])
+        .executeTakeFirstOrThrow();
+
+      return {
+        id: result.id,
+        gameId: result.game_id,
+        roundNumber: result.round_number,
+        status: ROUND_STATE.SETUP,
+        createdAt: result.created_at,
+      };
+    });
+  };
+
+/**
+ * Creates a function for updating a round's status
+ */
+export const updateRoundStatus =
+  (db: Kysely<DB>): RoundStatusUpdater =>
+  async ({ roundId, status }) => {
+    try {
+      return await db.transaction().execute(async (trx) => {
+        // Get the status ID for the requested status
+        const statusResult = await trx
+          .selectFrom("round_status")
+          .where("status_name", "=", status)
+          .select(["id"])
+          .executeTakeFirst();
+
+        if (!statusResult) {
+          throw new UnexpectedRepositoryError(
+            `Round status '${status}' not found in database`,
+          );
+        }
+
+        // Update the round's status
+        const updatedRound = await trx
+          .updateTable("rounds")
+          .set({
+            status_id: statusResult.id,
+            updated_at: new Date(),
+          })
+          .where("id", "=", roundId)
+          .returning([
+            "id",
+            "game_id as gameId",
+            "round_number as roundNumber",
+            "created_at as createdAt",
+          ])
+          .executeTakeFirstOrThrow();
+
+        return {
+          id: updatedRound.id,
+          gameId: updatedRound.gameId,
+          roundNumber: updatedRound.roundNumber,
+          status: status,
+          createdAt: updatedRound.createdAt,
+        };
+      });
+    } catch (error) {
+      if (error instanceof UnexpectedRepositoryError) {
+        throw error;
+      }
+      throw new UnexpectedRepositoryError(
+        `Failed to update status for round ${roundId}`,
+        { cause: error },
+      );
+    }
   };

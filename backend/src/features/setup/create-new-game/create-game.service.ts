@@ -1,8 +1,9 @@
 import {
-  createGame,
-  getGameDataByPublicId,
+  GameCreator,
+  GameFinder,
+  PublicId,
 } from "@backend/common/data-access/games.repository";
-import { createTeams } from "@backend/common/data-access/teams.repository";
+import { TeamsCreator } from "@backend/common/data-access/teams.repository";
 import { GameType, GameFormat } from "@codenames/shared/types";
 import shortid from "shortid";
 
@@ -16,9 +17,9 @@ export type GameCreationResult = {
 
 /** Dependencies for the create game service */
 export type ServiceDependencies = {
-  getGame: ReturnType<typeof getGameDataByPublicId>;
-  createGame: ReturnType<typeof createGame>;
-  createTeams: ReturnType<typeof createTeams>;
+  getGame: GameFinder<PublicId>;
+  createGame: GameCreator;
+  createTeams: TeamsCreator;
 };
 
 /** Creates a game creation service */

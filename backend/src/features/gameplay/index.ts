@@ -21,7 +21,7 @@ export const initialize = (
   auth: AuthMiddleware,
 ) => {
   // Initialize repository function
-  const getGameById = gameRepository.getGameDataByPublicId(db);
+  const getGameById = gameRepository.findGameByPublicId(db);
   const getRounds = roundsRepository.getRoundsByGameId(db);
   const createRound = roundsRepository.createNewRound(db);
 

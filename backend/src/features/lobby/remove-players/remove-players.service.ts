@@ -1,13 +1,12 @@
 import { UnexpectedLobbyError } from "../errors/lobby.errors";
 import {
-  removePlayer,
-  getPlayerById,
-  RemovePlayerFn,
-  GetPlayerByIdFn,
+  PlayerFinder,
+  PlayerRemover,
+  PlayerId,
 } from "@backend/common/data-access/players.repository";
 import {
-  getGameDataByPublicId,
-  GetGameByPublicId,
+  GameFinder,
+  PublicId,
 } from "@backend/common/data-access/games.repository";
 
 /** Represents the result of a player removal operation */
@@ -20,9 +19,9 @@ export type PlayerResult = {
 
 /** Required dependencies for creating the RemovePlayersService */
 export type ServiceDependencies = {
-  removePlayer: RemovePlayerFn;
-  getPlayer: GetPlayerByIdFn;
-  getGameByPublicId: GetGameByPublicId;
+  removePlayer: PlayerRemover;
+  getPlayer: PlayerFinder<PlayerId>;
+  getGameByPublicId: GameFinder<PublicId>;
 };
 
 /** Creates an implementation of the remove players service */
@@ -53,13 +52,13 @@ export const removePlayersService = (dependencies: ServiceDependencies) => {
     }
 
     const playerToRemove = await dependencies.getPlayer(playerIdToRemove);
-    if (!playerToRemove || playerToRemove.game_id !== game.id) {
+    if (!playerToRemove || playerToRemove.gameId !== game.id) {
       throw new UnexpectedLobbyError(
         `Player ${playerIdToRemove} not found in this game`,
       );
     }
 
-    if (playerToRemove.user_id !== userId) {
+    if (playerToRemove.userId !== userId) {
       throw new UnexpectedLobbyError(
         "You do not have permission to remove this player",
       );

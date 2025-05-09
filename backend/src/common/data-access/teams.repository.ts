@@ -1,44 +1,56 @@
 import { Kysely } from "kysely";
 import { DB } from "../db/db.types";
 
-/** Repository function types */
-export type CreateTeamsFn = (input: TeamsInput) => Promise<TeamResult[]>;
-export type GetTeamsByGameIdFn = (gameId: number) => Promise<TeamResult[]>;
+/**
+ * ==================
+ * REPOSITORY TYPES
+ * ==================
+ */
 
-/** Data types */
+/** A unique identifier for a team */
+export type TeamId = number;
+
+/** A unique identifier for a game */
+export type GameId = number;
+
+/** Team data as stored in the database */
+export type TeamData = {
+  id: number;
+  game_id: number;
+  team_name: string;
+};
+
+/** Parameters for creating teams */
 export type TeamsInput = {
   gameId: number;
   teamNames: string[];
 };
 
+/** Standardized team data returned from repository */
 export type TeamResult = {
   id: number;
   game_id: number;
   team_name: string;
 };
 
-/** Represents a team in the database */
-export type Team = {
-  id: number;
-  game_id: number;
-  team_name: string;
-};
+/** Function that finds teams by game ID */
+export type TeamsFinder<T> = (identifier: T) => Promise<TeamResult[]>;
 
-/** Input for creating teams */
-export type TeamInput = {
-  gameId: number;
-  teamNames: string[];
-};
+/** Function that creates multiple teams */
+export type TeamsCreator = (input: TeamsInput) => Promise<TeamResult[]>;
 
-/** Creates teams for a specific game */
+/**
+ * ==================
+ * REPOSITORY FUNCTIONS
+ * ==================
+ */
+
+/**
+ * Creates a function for creating teams for a game
+ */
 export const createTeams =
-  (db: Kysely<DB>) =>
-  /**
-   * Inserts new teams into the database
-   * @param input - Teams creation input data
-   * @returns Created team records
-   */
-  async ({ gameId, teamNames }: TeamInput): Promise<Team[]> => {
+  (db: Kysely<DB>): TeamsCreator =>
+  async ({ gameId, teamNames }) => {
     const values = teamNames.map((name) => ({
       game_id: gameId,
       team_name: name,
@@ -53,15 +65,12 @@ export const createTeams =
     return teams;
   };
 
-/** Retrieves teams for a specific game */
+/**
+ * Creates a function for retrieving teams by game ID
+ */
 export const getTeamsByGameId =
-  (db: Kysely<DB>) =>
-  /**
-   * Fetches teams for a given game
-   * @param gameId - The ID of the game to fetch teams for
-   * @returns List of teams in the specified game
-   */
-  async (gameId: number): Promise<Team[]> => {
+  (db: Kysely<DB>): TeamsFinder<GameId> =>
+  async (gameId) => {
     const teams = await db
       .selectFrom("teams")
       .where("game_id", "=", gameId)
