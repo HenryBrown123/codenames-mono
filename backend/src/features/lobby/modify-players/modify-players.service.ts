@@ -1,11 +1,8 @@
 import { UnexpectedLobbyError } from "../errors/lobby.errors";
+import { PlayersUpdater } from "@backend/common/data-access/players.repository";
 import {
-  modifyPlayers,
-  ModifyPlayersFn,
-} from "@backend/common/data-access/players.repository";
-import {
-  getGameDataByPublicId,
-  GetGameByPublicId,
+  GameFinder,
+  PublicId,
 } from "@backend/common/data-access/games.repository";
 
 /**
@@ -42,8 +39,8 @@ export interface ModifyPlayersService {
  * Required dependencies for creating the ModifyPlayersService
  */
 export type ServiceDependencies = {
-  modifyPlayers: ModifyPlayersFn;
-  getGameByPublicId: GetGameByPublicId;
+  modifyPlayers: PlayersUpdater;
+  getGameByPublicId: GameFinder<PublicId>;
 };
 
 /**

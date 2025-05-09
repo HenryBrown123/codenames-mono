@@ -58,14 +58,23 @@ export type PlayerResult = {
 };
 
 /** Repository function types */
-export type PlayerFinder<T> = (identifier: T) => Promise<PlayerData | null>;
-export type PlayersLister = (gameId: GameId) => Promise<PlayerResult[]>;
+export type PlayerFinder<T extends PlayerId> = (
+  identifier: T,
+) => Promise<PlayerResult | null>;
+
+/** Repository function types */
+export type PlayerFinderAll<T extends GameId> = (
+  identifier: T,
+) => Promise<PlayerResult[] | []>;
+
 export type PlayersCreator = (
   players: PlayerInput[],
 ) => Promise<PlayerResult[]>;
+
 export type PlayersUpdater = (
   updates: ModifyPlayerInput[],
 ) => Promise<PlayerResult[]>;
+
 export type PlayerRemover = (playerId: PlayerId) => Promise<PlayerResult>;
 
 /**
@@ -112,7 +121,16 @@ export const findPlayerById =
       .select(playerResultColumns)
       .executeTakeFirst();
 
-    return player || null;
+    return player
+      ? {
+          id: player.id,
+          userId: player.user_id,
+          gameId: player.game_id,
+          teamId: player.team_id,
+          statusId: player.status_id,
+          publicName: player.public_name,
+        }
+      : null;
   };
 
 /**
@@ -121,7 +139,7 @@ export const findPlayerById =
  * @param db - Database connection
  */
 export const findPlayersByGameId =
-  (db: Kysely<DB>): PlayersLister =>
+  (db: Kysely<DB>): PlayerFinderAll<GameId> =>
   /**
    * Fetches all players in a given game
    *

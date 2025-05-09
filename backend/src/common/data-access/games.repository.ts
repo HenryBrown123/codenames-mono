@@ -10,8 +10,6 @@ import {
 } from "@codenames/shared/types";
 
 import { z } from "zod";
-import { UnexpectedRepositoryError } from "./repository.errors";
-
 /**
  * ==================
  * DOMAIN TYPES
@@ -45,8 +43,15 @@ export type GameResult = {
 };
 
 /** Generic repository function types */
-export type GameFinder<T> = (identifier: T) => Promise<GameData | null>;
-export type GameCreator = (input: GameInput) => Promise<GameResult>;
+export type GameFinder<T extends InternalId | PublicId> = (
+  identifier: T,
+) => Promise<GameData | null>;
+
+export type GameCreator = ({
+  publicId,
+  gameType,
+  gameFormat,
+}: GameInput) => Promise<GameResult>;
 export type GameStatusUpdater = (
   gameId: InternalId,
   statusName: GameState,
