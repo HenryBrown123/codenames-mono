@@ -1,7 +1,8 @@
-import { gameplayStateProvider } from "../state/gameplay-state.provider";
+import type { GameplayStateProvider } from "../state/gameplay-state.provider";
+import type { GameplayValidationError } from "../state/gameplay-state.validation";
+
 import { validate as checkRoundCreationRules } from "./new-round.rules";
 import { createNextRound } from "./new-round.actions";
-import { GameplayValidationError } from "../state/gameplay-state.validation";
 
 /**
  * Basic input required to create a new round
@@ -54,34 +55,19 @@ export type RoundCreationResult =
  * External dependencies required by the round creation service
  */
 export type RoundCreationDependencies = {
-  getGameState: ReturnType<typeof gameplayStateProvider>;
+  getGameState: GameplayStateProvider;
   createRoundFromValidState: ReturnType<typeof createNextRound>;
 };
 
 /**
  * Creates a service for managing new round creation in a game
  *
- * @example
- * const service = roundCreationService({
- *   getGameState: gameStateProvider,
- *   createRoundFromValidState: createNextRound
- * });
- *
- * const result = await service({
- *   gameId: "game123",
- *   userId: 456
- * });
  */
 export const roundCreationService = (
   dependencies: RoundCreationDependencies,
 ) => {
   /**
    * Attempts to create a new round for a game
-   *
-   * This function will:
-   * 1. Verify the game exists
-   * 2. Validate the current game state
-   * 3. Create a new round if all checks pass
    *
    * @throws Never - Errors are returned in the result object or will bubble up.
    */

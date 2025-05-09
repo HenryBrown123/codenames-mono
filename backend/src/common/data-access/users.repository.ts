@@ -1,42 +1,61 @@
 import { Kysely } from "kysely";
 import { DB } from "../db/db.types";
+import { UnexpectedRepositoryError } from "./repository.errors";
 
-/** Repository function types */
-export type GetUserByIdFn = (userId: number) => Promise<UserData | null>;
-export type CreateUserFn = (input: UserInput) => Promise<UserResult>;
-export type GetUserByEmailFn = (email: string) => Promise<UserData | null>;
+/**
+ * ==================
+ * REPOSITORY TYPES
+ * ==================
+ */
 
-/** Data types */
+/** Domain-specific identifier types */
+export type UserId = number;
+export type Username = string;
+
+/** Entity data types */
 export type UserData = {
-  id: number;
-  email: string;
   username: string;
   created_at: Date;
 };
 
+/** Input and result types */
 export type UserInput = {
-  email: string;
   username: string;
-  passwordHash: string;
 };
 
 export type UserResult = {
   id: number;
-  email: string;
-  username: string;
-};
-
-/** User as stored in the database */
-export type User = {
-  id: number;
   username: string;
   created_at: Date;
 };
 
-/** Find user by username */
+/** Generic repository function types */
+export type UserFinder<T extends UserId | Username> = (
+  identifier: T,
+) => Promise<UserResult | null>;
+
+export type UserCreator = (input: UserInput) => Promise<UserResult>;
+
+/**
+ * ==================
+ * REPOSITORY FUNCTIONS
+ * ==================
+ */
+
+/**
+ * Creates a function for finding users by username
+ *
+ * @param db - Database connection
+ */
 export const findByUsername =
-  (db: Kysely<DB>) =>
-  async (username: string): Promise<User | null> => {
+  (db: Kysely<DB>): UserFinder<Username> =>
+  /**
+   * Retrieves user data using their username
+   *
+   * @param username - The user's username
+   * @returns User data if found, null otherwise
+   */
+  async (username) => {
     const user = await db
       .selectFrom("users")
       .where("username", "=", username)
@@ -46,10 +65,20 @@ export const findByUsername =
     return user || null;
   };
 
-/** Find user by ID */
+/**
+ * Creates a function for finding users by ID
+ *
+ * @param db - Database connection
+ */
 export const findById =
-  (db: Kysely<DB>) =>
-  async (userId: number): Promise<User | null> => {
+  (db: Kysely<DB>): UserFinder<UserId> =>
+  /**
+   * Retrieves user data using their ID
+   *
+   * @param userId - The user's ID
+   * @returns User data if found, null otherwise
+   */
+  async (userId) => {
     const user = await db
       .selectFrom("users")
       .where("id", "=", userId)
@@ -59,18 +88,38 @@ export const findById =
     return user || null;
   };
 
-/** Create a new user */
+/**
+ * Creates a function for creating new users
+ *
+ * @param db - Database connection
+ */
 export const createUser =
-  (db: Kysely<DB>) =>
-  async (username: string): Promise<User> => {
-    const newUser = await db
-      .insertInto("users")
-      .values({
-        username,
-        created_at: new Date(),
-      })
-      .returning(["id", "username", "created_at"])
-      .executeTakeFirstOrThrow();
+  (db: Kysely<DB>): UserCreator =>
+  /**
+   * Creates a new user in the database
+   *
+   * @param input - User creation parameters
+   * @returns Created user data
+   * @throws {UnexpectedRepositoryError} If user creation fails
+   */
+  async ({ username }) => {
+    try {
+      const newUser = await db
+        .insertInto("users")
+        .values({
+          username,
+          created_at: new Date(),
+        })
+        .returning(["id", "username", "created_at"])
+        .executeTakeFirstOrThrow();
 
-    return newUser;
+      return newUser;
+    } catch (error) {
+      throw new UnexpectedRepositoryError(
+        `Failed to create user: ${username}`,
+        {
+          cause: error,
+        },
+      );
+    }
   };

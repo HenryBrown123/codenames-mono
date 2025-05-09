@@ -1,13 +1,14 @@
 import { UnexpectedAuthError } from "../errors/auth.errors";
 import {
-  findByUsername,
-  createUser,
+  UserFinder,
+  UserCreator,
+  Username,
 } from "@backend/common/data-access/users.repository";
 import { generateUsername } from "./username-generator";
 
 type ServiceDependencies = {
-  findUser: ReturnType<typeof findByUsername>;
-  createUser: ReturnType<typeof createUser>;
+  findUser: UserFinder<Username>;
+  createUser: UserCreator;
 };
 
 export type GuestUser = {
@@ -19,7 +20,7 @@ export const createGuestUserService = ({
   findUser,
   createUser,
 }: ServiceDependencies) => {
-  const findUniqueUsername = async (): Promise<string> => {
+  const findUniqueUsername = async (): Promise<Username> => {
     const MAX_COLLISIONS = 10;
 
     for (
@@ -41,7 +42,7 @@ export const createGuestUserService = ({
 
   return async (): Promise<GuestUser> => {
     const username = await findUniqueUsername();
-    const user = await createUser(username);
+    const user = await createUser({ username });
 
     return {
       id: user.id,

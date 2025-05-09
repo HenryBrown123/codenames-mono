@@ -4,8 +4,8 @@ import {
   MAX_ROUNDS_BY_FORMAT,
 } from "@codenames/shared/types";
 
-import { gameplayBaseSchema } from "../state/gameplay-state.types";
 import { GameAggregate } from "../state/gameplay-state.types";
+import { gameplayBaseSchema } from "../state/gameplay-state.types";
 import { complexProperties } from "../state/gameplay-state.helpers";
 
 import {

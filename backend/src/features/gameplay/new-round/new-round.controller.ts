@@ -1,4 +1,3 @@
-// src/features/gameplay/new-round/new-round.controller.ts
 import type { Response, NextFunction } from "express";
 import type { Request } from "express-jwt";
 import { RoundCreationService } from "./new-round.service";
@@ -104,7 +103,6 @@ export const newRoundController = ({ createRound }: Dependencies) => {
 
         res.status(201).json(response);
       } else {
-        // Handle specific error cases
         const errorResponse: NewRoundErrorResponse = {
           success: false,
           error: "Failed to create new round",
@@ -113,7 +111,6 @@ export const newRoundController = ({ createRound }: Dependencies) => {
           },
         };
 
-        // Add validation errors if present
         if (
           result.error.status === "invalid-game-state" &&
           result.error.validationErrors
@@ -122,7 +119,6 @@ export const newRoundController = ({ createRound }: Dependencies) => {
             result.error.validationErrors;
         }
 
-        // Return appropriate status code based on error type
         const statusCode =
           result.error.status === "game-not-found"
             ? 404
@@ -133,7 +129,6 @@ export const newRoundController = ({ createRound }: Dependencies) => {
         res.status(statusCode).json(errorResponse);
       }
     } catch (error) {
-      // Pass unexpected errors to middleware
       next(error);
     }
   };
