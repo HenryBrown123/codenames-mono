@@ -1,45 +1,59 @@
-import type {
+import {
   RandomWordsSelector,
   CardsCreator,
   CardInput,
+  CARD_TYPE,
+  CardType,
 } from "@backend/common/data-access/cards.repository";
 import type { DealCardsValidGameState } from "./deal-cards.rules";
 import { complexProperties } from "../state/gameplay-state.helpers";
 import type { TeamId } from "@backend/common/data-access/teams.repository";
-import { UnexpectedGameplayError } from "../errors/gameplay.errors";
 
 /**
- * Card distribution specification for teams
+ * Represents a position in the card grid with its assigned card type
  */
-type TeamDistribution = {
-  teamId: TeamId;
-  count: number;
+type CardPosition = {
+  cardType: CardType;
+  teamId?: TeamId;
 };
 
 /**
- * Randomly selects a team while tracking remaining counts
- * Returns the selected team and the updated distribution
+ * Generic Fisher-Yates shuffle that works with any array type
  */
-const selectRandomTeam = (
-  distribution: TeamDistribution[],
-): [TeamId, TeamDistribution[]] => {
-  const availableTeams = distribution.filter((t) => t.count > 0);
+const shuffleCards = <T>(items: T[]): T[] => {
+  const shuffled = [...items];
 
-  if (availableTeams.length === 0) {
-    throw new Error("No teams available for card distribution");
+  // Start from the last position and work backwards
+  for (let currentPos = shuffled.length - 1; currentPos > 0; currentPos--) {
+    // Pick a random position from 0 to currentPos (inclusive)
+    const swapPos = Math.floor(Math.random() * (currentPos + 1));
+    // Swap the cards at these positions
+    [shuffled[currentPos], shuffled[swapPos]] = [
+      shuffled[swapPos],
+      shuffled[currentPos],
+    ];
   }
 
-  const randomIndex = Math.floor(Math.random() * availableTeams.length);
-  const selectedTeam = availableTeams[randomIndex];
-
-  const updatedDistribution = distribution.map((team) =>
-    team.teamId === selectedTeam.teamId
-      ? { ...team, count: team.count - 1 }
-      : team,
-  );
-
-  return [selectedTeam.teamId, updatedDistribution];
+  return shuffled;
 };
+
+/**
+ * Allocates the initial card type distribution before shuffling
+ * - Starting team: 9 cards
+ * - Other team: 8 cards
+ * - Assassin: 1 card
+ * - Bystander: 7 cards
+ * Total: 25 cards (5x5 grid)
+ */
+const allocateInitialCardTypes = (
+  startingTeam: TeamId,
+  otherTeam: TeamId,
+): CardPosition[] => [
+  ...Array(9).fill({ cardType: CARD_TYPE.TEAM, teamId: startingTeam }),
+  ...Array(8).fill({ cardType: CARD_TYPE.TEAM, teamId: otherTeam }),
+  { cardType: CARD_TYPE.ASSASSIN },
+  ...Array(7).fill({ cardType: CARD_TYPE.BYSTANDER }),
+];
 
 /**
  * Factory function that creates a card dealing action with repository dependencies
@@ -53,85 +67,55 @@ export const dealCardsToRound = (
   createCards: CardsCreator,
 ) => {
   /**
-   * Deals cards to a round for a pre-validated game state
+   * Lays out cards on the game grid for a pre-validated game state
    *
    * @param gameState - Validated game state that meets all business rules
-   * @param teams - Available teams in the game
-   * @returns Dealt cards data
+   * @returns Laid out cards data with grid information
    */
-  const dealCards = async (
-    gameState: DealCardsValidGameState,
-    teams: { id: number; teamName: string }[],
-  ) => {
+  const layOutCards = async (gameState: DealCardsValidGameState) => {
     const latestRound = complexProperties.getLatestRound(gameState);
-    if (!latestRound) {
-      throw new UnexpectedGameplayError(
-        "Cannot deal cards: no active round found",
-      );
-    }
+    const [team1, team2] = gameState.teams;
 
-    // Find team IDs
-    const redTeam = teams.find((t) =>
-      t.teamName.toLowerCase().includes("red"),
-    )?.id;
-    const greenTeam = teams.find((t) =>
-      t.teamName.toLowerCase().includes("green"),
-    )?.id;
-    const bystanderTeam = teams.find((t) =>
-      t.teamName.toLowerCase().includes("bystander"),
-    )?.id;
-    const assassinTeam = teams.find((t) =>
-      t.teamName.toLowerCase().includes("assassin"),
-    )?.id;
+    // Determine starting team
+    const startsFirst = Math.random() > 0.5;
+    const [startingTeam, otherTeam] = startsFirst
+      ? [team1.id, team2.id]
+      : [team2.id, team1.id];
 
-    if (!redTeam || !greenTeam || !bystanderTeam || !assassinTeam) {
-      throw new UnexpectedGameplayError(
-        "Cannot deal cards: missing required team types",
-      );
-    }
+    // Allocate card types and randomize positions on the grid
+    const cardsWithoutWords = allocateInitialCardTypes(startingTeam, otherTeam);
+    const shuffledCards = shuffleCards(cardsWithoutWords);
 
-    // Determine starting team randomly
-    const startingTeamId = Math.random() > 0.5 ? redTeam : greenTeam;
-    const otherTeamId = startingTeamId === redTeam ? greenTeam : redTeam;
-
-    // Initial team distribution
-    let teamDistribution: TeamDistribution[] = [
-      { teamId: startingTeamId, count: 9 }, // Starting team gets 9 cards
-      { teamId: otherTeamId, count: 8 }, // Other team gets 8 cards
-      { teamId: assassinTeam, count: 1 }, // 1 assassin card
-      { teamId: bystanderTeam, count: 7 }, // 7 bystander cards
-    ];
-
-    const totalCards = teamDistribution.reduce(
-      (sum, { count }) => sum + count,
-      0,
-    );
-
-    const words = await getRandomWords(totalCards);
-
-    const cardInputs: CardInput[] = [];
-
-    for (const word of words) {
-      const [teamId, updatedDistribution] = selectRandomTeam(teamDistribution);
-      teamDistribution = updatedDistribution;
-
-      cardInputs.push({
-        roundId: latestRound.id,
-        word,
-        teamId,
-      });
-    }
+    // Place words on the shuffled cards
+    const words = await getRandomWords(shuffledCards.length);
+    const cardInputs: CardInput[] = words.map((word, position) => ({
+      roundId: latestRound.id,
+      word,
+      cardType: shuffledCards[position].cardType,
+      teamId: shuffledCards[position].teamId,
+    }));
 
     const cards = await createCards(cardInputs);
+
+    // Calculate grid distribution
+    const gridDistribution = {
+      [startingTeam]: cards.filter((c) => c.teamId === startingTeam).length,
+      [otherTeam]: cards.filter((c) => c.teamId === otherTeam).length,
+      assassin: cards.filter((c) => c.cardType === CARD_TYPE.ASSASSIN).length,
+      bystander: cards.filter((c) => c.cardType === CARD_TYPE.BYSTANDER).length,
+    };
 
     return {
       roundId: latestRound.id,
       roundNumber: latestRound.roundNumber,
-      startingTeamId,
-      totalCards: cards.length,
+      startingTeam,
+      otherTeam,
+      gridSize: 25, // Standard 5x5 grid
+      cardsLaidOut: cards.length,
+      gridDistribution,
       cards,
     };
   };
 
-  return dealCards;
+  return layOutCards;
 };

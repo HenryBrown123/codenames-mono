@@ -9,6 +9,8 @@ import {
   RoundResult,
 } from "@backend/common/data-access/rounds.repository";
 
+import { PlayerFinderAll } from "@backend/common/data-access/players.repository";
+import { TeamsFinder } from "@backend/common/data-access/teams.repository";
 import { GameAggregate, Round } from "./gameplay-state.types";
 
 /**
@@ -21,6 +23,8 @@ import { GameAggregate, Round } from "./gameplay-state.types";
 export const gameplayStateProvider = (
   getGameById: GameFinder<PublicId>,
   getRounds: RoundFinderAll<InternalId>,
+  getTeams: TeamsFinder<InternalId>,
+  getPlayers: PlayerFinderAll<InternalId>,
 ) => {
   /**
    * Maps repository round data to domain Round type
@@ -49,6 +53,18 @@ export const gameplayStateProvider = (
 
     const roundsData = await getRounds(game.id);
     const rounds = roundsData.map(gameplayRoundMapper);
+    const teams = await getTeams(game.id);
+    const players = await getPlayers(game.id);
+
+    const teamsWIthPlayers = teams.map((team) => {
+      const playersForTeam = players.filter(
+        (player) => player.teamId === team.id,
+      );
+      return {
+        ...team,
+        players: playersForTeam,
+      };
+    });
 
     return {
       id: game.id,
@@ -56,6 +72,7 @@ export const gameplayStateProvider = (
       status: game.status,
       game_format: game.game_format,
       rounds: rounds,
+      teams: teamsWIthPlayers,
     };
   };
 

@@ -19,6 +19,34 @@ export const roundSchema = z.object({
 });
 
 /**
+ * Schema for validating player data
+ *
+ * Defines the structure of a single game round with validation rules
+ */
+export const playerSchema = z.object({
+  id: z.number().int().positive(),
+  userId: z.number().int().positive(),
+  gameId: z.number().int().positive(),
+  teamId: z.number().int().positive(),
+  statusId: z.number().int().positive(),
+  publicName: z.string(),
+});
+
+export type Player = z.infer<typeof playerSchema>;
+
+/**
+ * Schema for validating player data
+ *
+ * Defines the structure of a single game round with validation rules
+ */
+export const teamSchema = z.object({
+  id: z.number().int().positive(),
+  gameId: z.number().int().positive(),
+  teamName: z.string(),
+  players: z.array(playerSchema).optional().default([]),
+});
+
+/**
  * Base schema for validating game state
  *
  * Defines the core structure of a game with validation rules
@@ -41,6 +69,7 @@ export const gameplayBaseSchema = z.object({
     GAME_FORMAT.ROUND_ROBIN,
   ]),
   rounds: z.array(roundSchema).optional().default([]),
+  teams: z.array(teamSchema).optional().default([]),
 });
 
 /**
