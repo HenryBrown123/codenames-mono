@@ -10,7 +10,7 @@ import {
   GameplayValidationResult,
 } from "../state/gameplay-state.validation";
 
-import { z } from "zod";
+import { any, z } from "zod";
 
 /**
  * Rules for validating card dealing in a game
@@ -25,6 +25,10 @@ const cardDealingRules = {
     const latestRound = complexProperties.getLatestRound(game);
     if (!latestRound) return false;
     return latestRound.status === ROUND_STATE.SETUP;
+  },
+
+  hasMinimumTwoTeams(game: GameAggregate): boolean {
+    return complexProperties.getTeamCount(game) >= 2;
   },
 
   /**

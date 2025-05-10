@@ -14,12 +14,22 @@ export type RoundId = number;
 export type TeamId = number;
 export type DeckId = number;
 
+/** Card types enum */
+export const CARD_TYPE = {
+  TEAM: "TEAM",
+  BYSTANDER: "BYSTANDER",
+  ASSASSIN: "ASSASSIN",
+} as const;
+
+export type CardType = (typeof CARD_TYPE)[keyof typeof CARD_TYPE];
+
 /** Card data as stored in the database */
 export type CardData = {
   id: number;
   round_id: number;
   word: string;
-  team_id: number;
+  card_type: CardType;
+  team_id: number | null;
   selected: boolean;
 };
 
@@ -27,7 +37,8 @@ export type CardData = {
 export type CardInput = {
   roundId: number;
   word: string;
-  teamId: number;
+  cardType: CardType;
+  teamId?: number; // Optional, required only for TEAM cards
 };
 
 /** Standardized card data returned from repository */
@@ -35,7 +46,8 @@ export type CardResult = {
   id: number;
   roundId: number;
   word: string;
-  teamId: number;
+  cardType: CardType;
+  teamId: number | null;
   selected: boolean;
 };
 
@@ -45,6 +57,11 @@ export type CardsFinder<T extends RoundId> = (
 ) => Promise<CardResult[]>;
 
 export type CardsCreator = (cards: CardInput[]) => Promise<CardResult[]>;
+
+export type CardUpdater = (
+  cardIds: CardId[],
+  updates: { selected?: boolean },
+) => Promise<CardResult[]>;
 
 export type RandomWordsSelector = (
   count: number,
@@ -73,13 +90,14 @@ export const getCardsByRoundId =
     const cards = await db
       .selectFrom("cards")
       .where("round_id", "=", roundId)
-      .select(["id", "round_id", "word", "team_id", "selected"])
+      .select(["id", "round_id", "word", "card_type", "team_id", "selected"])
       .execute();
 
     return cards.map((card) => ({
       id: card.id,
       roundId: card.round_id,
       word: card.word,
+      cardType: card.card_type as CardType,
       teamId: card.team_id,
       selected: card.selected,
     }));
@@ -103,28 +121,102 @@ export const createCards =
     }
 
     try {
+      // Validate team card assignments
+      for (const card of cards) {
+        if (card.cardType === CARD_TYPE.TEAM && !card.teamId) {
+          throw new UnexpectedRepositoryError(
+            `Team card "${card.word}" must have a teamId`,
+          );
+        }
+        if (card.cardType !== CARD_TYPE.TEAM && card.teamId) {
+          throw new UnexpectedRepositoryError(
+            `Non-team card "${card.word}" cannot have a teamId`,
+          );
+        }
+      }
+
       const values = cards.map((card) => ({
         round_id: card.roundId,
         word: card.word,
-        team_id: card.teamId,
+        card_type: card.cardType,
+        team_id: card.teamId || null,
         selected: false,
       }));
 
       const insertedCards = await db
         .insertInto("cards")
         .values(values)
-        .returning(["id", "round_id", "word", "team_id", "selected"])
+        .returning([
+          "id",
+          "round_id",
+          "word",
+          "card_type",
+          "team_id",
+          "selected",
+        ])
         .execute();
 
       return insertedCards.map((card) => ({
         id: card.id,
         roundId: card.round_id,
         word: card.word,
+        cardType: card.card_type as CardType,
         teamId: card.team_id,
         selected: card.selected,
       }));
     } catch (error) {
+      if (error instanceof UnexpectedRepositoryError) {
+        throw error;
+      }
       throw new UnexpectedRepositoryError(`Failed to create cards for round.`, {
+        cause: error,
+      });
+    }
+  };
+
+/**
+ * Creates a function for updating cards (primarily for marking as selected)
+ */
+export const updateCards =
+  (db: Kysely<DB>): CardUpdater =>
+  /**
+   * Updates specified cards with given data
+   *
+   * @param cardIds - Array of card IDs to update
+   * @param updates - Object containing updates to apply
+   * @returns Updated card records
+   * @throws {UnexpectedRepositoryError} If update fails
+   */
+  async (cardIds, updates) => {
+    if (cardIds.length === 0) {
+      return [];
+    }
+
+    try {
+      const updatedCards = await db
+        .updateTable("cards")
+        .set(updates)
+        .where("id", "in", cardIds)
+        .returning([
+          "id",
+          "round_id",
+          "word",
+          "card_type",
+          "team_id",
+          "selected",
+        ])
+        .execute();
+
+      return updatedCards.map((card) => ({
+        id: card.id,
+        roundId: card.round_id,
+        word: card.word,
+        cardType: card.card_type as CardType,
+        teamId: card.team_id,
+        selected: card.selected,
+      }));
+    } catch (error) {
+      throw new UnexpectedRepositoryError(`Failed to update cards.`, {
         cause: error,
       });
     }
@@ -139,6 +231,7 @@ export const getRandomWords =
    * Retrieves random words from the decks table
    *
    * @param count - Number of words to retrieve
+   * @param deck - Deck identifier (defaults to "BASE")
    * @param languageCode - Optional language code filter (defaults to 'en')
    * @returns Array of random words
    * @throws {UnexpectedRepositoryError} If retrieving words fails
@@ -160,4 +253,46 @@ export const getRandomWords =
     }
 
     return words.map((w) => w.word);
+  };
+
+/**
+ * Creates a function for getting cards by type for a round
+ */
+export const getCardsByTypeAndRound =
+  (db: Kysely<DB>) =>
+  /**
+   * Retrieves cards of a specific type for a given round
+   *
+   * @param roundId - The round's ID
+   * @param cardType - Type of cards to retrieve
+   * @param teamId - Optional team ID filter (for TEAM cards)
+   * @returns List of cards matching the criteria
+   */
+  async (
+    roundId: number,
+    cardType: CardType,
+    teamId?: number,
+  ): Promise<CardResult[]> => {
+    let query = db
+      .selectFrom("cards")
+      .where("round_id", "=", roundId)
+      .where("card_type", "=", cardType);
+
+    // Add team filter if provided and card type is TEAM
+    if (cardType === CARD_TYPE.TEAM && teamId !== undefined) {
+      query = query.where("team_id", "=", teamId);
+    }
+
+    const cards = await query
+      .select(["id", "round_id", "word", "card_type", "team_id", "selected"])
+      .execute();
+
+    return cards.map((card) => ({
+      id: card.id,
+      roundId: card.round_id,
+      word: card.word,
+      cardType: card.card_type as CardType,
+      teamId: card.team_id,
+      selected: card.selected,
+    }));
   };

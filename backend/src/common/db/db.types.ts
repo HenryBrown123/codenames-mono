@@ -12,17 +12,12 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 export interface Cards {
+  card_type: string;
   id: Generated<number>;
   round_id: number;
   selected: Generated<boolean>;
-  team_id: number;
-  type_id: number | null;
+  team_id: number | null;
   word: string;
-}
-
-export interface CardTypes {
-  id: number;
-  type_name: string;
 }
 
 export interface Clues {
@@ -133,7 +128,6 @@ export interface Users {
 }
 
 export interface DB {
-  card_types: CardTypes;
   cards: Cards;
   clues: Clues;
   decks: Decks;

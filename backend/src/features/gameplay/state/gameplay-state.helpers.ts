@@ -13,6 +13,13 @@ export const complexProperties = {
   },
 
   /**
+   * @returns The most recently started round or null if no rounds exist
+   */
+  getTeamCount(game: GameAggregate): number {
+    return game.teams ? game.teams.length : 0;
+  },
+
+  /**
    * @returns Total number of rounds in the game
    */
   getRoundCount(game: GameAggregate): number {
