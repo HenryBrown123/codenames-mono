@@ -29,8 +29,8 @@ export type TeamsInput = {
 /** Standardized team data returned from repository */
 export type TeamResult = {
   id: number;
-  game_id: number;
-  team_name: string;
+  gameId: number;
+  teamName: string;
 };
 
 /** Function that finds teams by game ID */
@@ -64,7 +64,13 @@ export const createTeams =
       .returning(["id", "game_id", "team_name"])
       .execute();
 
-    return teams;
+    return teams
+      ? teams.map((team) => ({
+          id: team.id,
+          gameId: team.game_id,
+          teamName: team.team_name,
+        }))
+      : [];
   };
 
 /**
@@ -79,5 +85,11 @@ export const getTeamsByGameId =
       .select(["id", "game_id", "team_name"])
       .execute();
 
-    return teams;
+    return teams
+      ? teams.map((team) => ({
+          id: team.id,
+          gameId: team.game_id,
+          teamName: team.team_name,
+        }))
+      : [];
   };

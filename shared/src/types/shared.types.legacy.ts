@@ -1,5 +1,5 @@
 import {
-  TEAM,
+  CARD_TYPE,
   STAGE,
   CODEBREAKER_OUTCOME,
   GAME_TYPE,
@@ -7,7 +7,7 @@ import {
 } from "./shared.constants";
 
 // Team type
-export type Team = (typeof TEAM)[keyof typeof TEAM];
+export type Team = (typeof CARD_TYPE)[keyof typeof CARD_TYPE];
 
 // Stage type
 export type Stage = (typeof STAGE)[keyof typeof STAGE];

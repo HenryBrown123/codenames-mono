@@ -16,7 +16,13 @@ export interface Cards {
   round_id: number;
   selected: Generated<boolean>;
   team_id: number;
+  type_id: number | null;
   word: string;
+}
+
+export interface CardTypes {
+  id: number;
+  type_name: string;
 }
 
 export interface Clues {
@@ -30,7 +36,7 @@ export interface Clues {
 
 export interface Decks {
   created_at: Generated<Timestamp>;
-  deck: Generated<number>;
+  deck: string;
   id: Generated<number>;
   language_code: Generated<string>;
   word: string;
@@ -127,6 +133,7 @@ export interface Users {
 }
 
 export interface DB {
+  card_types: CardTypes;
   cards: Cards;
   clues: Clues;
   decks: Decks;
