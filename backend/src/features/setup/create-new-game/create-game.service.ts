@@ -73,7 +73,7 @@ export const createGameService = (dependencies: ServiceDependencies) => {
       teamNames: ["Team Red", "Team Green"],
     });
 
-    const uniqueTeamNames = [...new Set(teams.map((team) => team.team_name))];
+    const uniqueTeamNames = [...new Set(teams.map((team) => team.teamName))];
 
     return {
       id: game.id,

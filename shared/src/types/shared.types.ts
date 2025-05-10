@@ -1,5 +1,5 @@
 import {
-  TEAM,
+  CARD_TYPE,
   STAGE,
   CODEBREAKER_OUTCOME,
   GAME_TYPE,
@@ -9,7 +9,7 @@ import {
 } from "./shared.constants";
 
 // Enum value types
-export type Team = (typeof TEAM)[keyof typeof TEAM];
+export type Team = (typeof CARD_TYPE)[keyof typeof CARD_TYPE];
 export type Stage = (typeof STAGE)[keyof typeof STAGE];
 export type TurnOutcome =
   (typeof CODEBREAKER_OUTCOME)[keyof typeof CODEBREAKER_OUTCOME];

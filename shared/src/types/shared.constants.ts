@@ -3,9 +3,8 @@
  * @readonly
  * @enum {string}
  */
-export const TEAM = {
-  RED: "red",
-  GREEN: "green",
+export const CARD_TYPE = {
+  TEAM: "team",
   ASSASSIN: "assassin",
   BYSTANDER: "bystander",
 } as const;
