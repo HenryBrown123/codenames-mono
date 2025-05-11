@@ -7,11 +7,12 @@ import { DB } from "../../db/db.types";
 const enums = [gameStatuses, playerStatuses, playerRoles];
 
 export const refreshEnums = async (trx: Transaction<DB>) => {
-  // Option 1: Use deferred constraints (recommended)
-  // This tells Postgres to check constraints at the end of the transaction
-  await sql`SET CONSTRAINTS ALL DEFERRED`.execute(trx);
-
   try {
+    // Set all constraints to deferred for this transaction
+    await sql`SET CONSTRAINTS ALL DEFERRED`.execute(trx);
+
+    console.log("Refreshing system enum data...");
+
     for (const enumData of enums) {
       for (const [tableName, rows] of Object.entries(enumData)) {
         if (!Array.isArray(rows) || rows.length === 0) {
@@ -23,7 +24,7 @@ export const refreshEnums = async (trx: Transaction<DB>) => {
 
         console.log(`Refreshing data for table '${tableName}'...`);
 
-        // Delete all existing data (will be checked at transaction commit)
+        // Delete all existing data (constraints will be checked at commit)
         await trx.deleteFrom(tableName as keyof DB).execute();
 
         // Insert fresh data
@@ -33,12 +34,16 @@ export const refreshEnums = async (trx: Transaction<DB>) => {
           .execute();
 
         console.log(
-          `....Successfully refreshed table '${tableName}' with ${rows.length} rows`,
+          `✓ Successfully refreshed table '${tableName}' with ${rows.length} rows`,
         );
       }
     }
-  } finally {
-    // Constraints will be checked when transaction commits
-    // No need to explicitly re-enable them
+
+    // Constraints will be checked automatically when transaction commits
+    console.log("✅ All enum data refreshed successfully");
+  } catch (error) {
+    console.error("❌ Error refreshing enum data:", error);
+    // The transaction will be rolled back automatically
+    throw error;
   }
 };

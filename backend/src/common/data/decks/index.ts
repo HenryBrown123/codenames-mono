@@ -8,29 +8,57 @@ const BASE_DECK_IDS = ["BASE"];
 export const refreshBaseDecks = async (trx: Transaction<DB>): Promise<void> => {
   const decks = [enBaseDeck, esBaseDeck];
 
-  await trx.deleteFrom("decks").where("deck", "in", BASE_DECK_IDS).execute();
+  try {
+    console.log("Starting deck refresh...");
 
-  for (const deckData of decks) {
-    const rows = deckData.decks;
+    // Delete existing base deck data
+    const deleteResult = await trx
+      .deleteFrom("decks")
+      .where("deck", "in", BASE_DECK_IDS)
+      .executeTakeFirst();
 
-    if (!Array.isArray(rows) || rows.length === 0) {
-      console.warn(`⚠️ No deck data found, skipping`);
-      continue;
-    }
+    console.log(
+      `Deleted ${deleteResult.numDeletedRows || 0} existing deck entries`,
+    );
 
-    try {
+    // Process each deck file
+    for (const deckData of decks) {
+      const rows = deckData.decks;
+
+      // Validate the deck data structure
+      if (!Array.isArray(rows) || rows.length === 0) {
+        console.warn(`⚠️ No deck data found in deck file, skipping`);
+        continue;
+      }
+
+      // Get language and deck info for logging
+      const sampleCard = rows[0];
+      const deckName = sampleCard?.deck || "unknown";
+      const languageCode = sampleCard?.language_code || "unknown";
+
       console.log(
-        `Refreshing deck ${deckData.decks.at(-1)?.deck}, lang code ${deckData.decks.at(-1)?.language_code}`,
+        `Refreshing deck '${deckName}' (language: ${languageCode}) with ${rows.length} cards...`,
       );
 
-      await trx.insertInto("decks").values(rows).execute();
+      try {
+        // Insert all rows for this deck
+        const insertResult = await trx
+          .insertInto("decks")
+          .values(rows)
+          .executeTakeFirst();
 
-      console.log(
-        `....Successfully refreshed base deck with ${rows.length} rows`,
-      );
-    } catch (error) {
-      console.error(`Error refreshing base deck:`, error);
-      throw error;
+        console.log(
+          `✓ Successfully inserted ${insertResult.numInsertedOrUpdatedRows || rows.length} cards for deck '${deckName}'`,
+        );
+      } catch (deckError) {
+        console.error(`❌ Error refreshing deck '${deckName}':`, deckError);
+        throw deckError; // Re-throw to trigger transaction rollback
+      }
     }
+
+    console.log("✅ All base decks refreshed successfully");
+  } catch (error) {
+    console.error("❌ Error during deck refresh:", error);
+    throw error; // This will cause the transaction to rollback
   }
 };
