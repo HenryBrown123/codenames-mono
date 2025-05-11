@@ -1,7 +1,7 @@
 import type { Response, NextFunction } from "express";
 import type { Request } from "express-jwt";
 import type { DealCardsService } from "./deal-cards.service";
-import { z } from "zod";
+import { boolean, z } from "zod";
 
 /**
  * Request validation schema for dealing cards
@@ -21,19 +21,6 @@ export const dealCardsRequestSchema = z.object({
 export type ValidatedDealCardsRequest = z.infer<typeof dealCardsRequestSchema>;
 
 /**
- * Response schema for card dealing
- */
-export const dealCardsResponseSchema = z.object({
-  success: z.boolean(),
-  data: z.object({
-    roundId: z.number(),
-    roundNumber: z.number(),
-    startingTeamId: z.number(),
-    cardIds: z.array(z.number()),
-  }),
-});
-
-/**
  * Type definition for error response
  */
 export type DealCardsErrorResponse = {
@@ -48,7 +35,15 @@ export type DealCardsErrorResponse = {
 /**
  * Type definition for deal cards response
  */
-export type DealCardsResponse = z.infer<typeof dealCardsResponseSchema>;
+export type DealCardsResponse = {
+  success: boolean;
+  data: {
+    roundId: number;
+    roundNumber: number;
+    startingTeamId: number;
+    cards: { word: string; selected: boolean }[];
+  };
+};
 
 /**
  * Dependencies required by the deal cards controller
@@ -92,7 +87,12 @@ export const dealCardsController = ({ dealCards }: Dependencies) => {
             roundId: result.data.roundId,
             roundNumber: result.data.roundNumber,
             startingTeamId: result.data.startingTeamId,
-            cardIds: result.data.cards.map((card) => card.id),
+            cards: result.data.cards.map((card) => {
+              return {
+                word: card.word,
+                selected: card.selected,
+              };
+            }),
           },
         };
 

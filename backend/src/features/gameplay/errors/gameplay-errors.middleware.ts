@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import { UnauthorizedError } from "express-jwt";
 import { UnexpectedGameplayError } from "./gameplay.errors";
 import { NoResultError } from "kysely";
+import { generateAdditionalErrorInfo } from "@backend/common/http-middleware/add-error-details.helper";
+import { JsonObject } from "swagger-ui-express";
 
 /**
  * Error response structure returned to clients
@@ -9,7 +11,7 @@ import { NoResultError } from "kysely";
 type GameplayErrorApiResponse = {
   succces: boolean;
   error: string;
-  details?: { stack?: string; cause?: any; req?: Request };
+  details?: { stack?: JsonObject; cause?: any; req?: Request };
 };
 
 /**
@@ -45,13 +47,7 @@ export const gameplayErrorHandler = (
   };
 
   if (process.env.NODE_ENV === "development") {
-    const errorDetails = {
-      stack: err.stack,
-      error: err.message,
-      cause: err.cause,
-      req: req,
-    };
-
+    const errorDetails = generateAdditionalErrorInfo(err, req);
     errorResponse.details = errorDetails;
   }
 

@@ -3,7 +3,7 @@ import esBaseDeck from "./es_base_deck.json";
 import { Transaction } from "kysely";
 import { DB } from "../../db/db.types";
 
-const BASE_DECK_IDS = [1, 2];
+const BASE_DECK_IDS = ["BASE"];
 
 export const refreshBaseDecks = async (trx: Transaction<DB>): Promise<void> => {
   const decks = [enBaseDeck, esBaseDeck];
@@ -19,7 +19,9 @@ export const refreshBaseDecks = async (trx: Transaction<DB>): Promise<void> => {
     }
 
     try {
-      console.log(`Refreshing base deck data...`);
+      console.log(
+        `Refreshing deck ${deckData.decks.at(-1)?.deck}, lang code ${deckData.decks.at(-1)?.language_code}`,
+      );
 
       await trx.insertInto("decks").values(rows).execute();
 

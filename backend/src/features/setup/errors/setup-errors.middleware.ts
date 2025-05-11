@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { UnexpectedSetupError } from "./setup.errors";
-import { NoResultError } from "kysely";
 import { UnauthorizedError } from "express-jwt";
+import { NoResultError } from "kysely";
 import { JsonObject } from "swagger-ui-express";
 import { generateAdditionalErrorInfo } from "@backend/common/http-middleware/add-error-details.helper";
 
