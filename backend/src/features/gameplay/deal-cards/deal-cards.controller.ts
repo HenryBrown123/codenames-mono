@@ -29,8 +29,6 @@ export const dealCardsResponseSchema = z.object({
     roundId: z.number(),
     roundNumber: z.number(),
     startingTeamId: z.number(),
-    totalCards: z.number(),
-    // We don't return all card details in the response to avoid exposing team assignments
     cardIds: z.array(z.number()),
   }),
 });
@@ -94,7 +92,6 @@ export const dealCardsController = ({ dealCards }: Dependencies) => {
             roundId: result.data.roundId,
             roundNumber: result.data.roundNumber,
             startingTeamId: result.data.startingTeamId,
-            totalCards: result.data.totalCards,
             cardIds: result.data.cards.map((card) => card.id),
           },
         };
@@ -118,8 +115,7 @@ export const dealCardsController = ({ dealCards }: Dependencies) => {
         }
 
         const statusCode =
-          result.error.status === "game-not-found" ||
-          result.error.status === "teams-not-found"
+          result.error.status === "game-not-found"
             ? 404
             : result.error.status === "invalid-game-state"
               ? 409
