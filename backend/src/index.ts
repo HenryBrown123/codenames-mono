@@ -13,6 +13,7 @@ import swaggerUi from "swagger-ui-express";
 import { initialize as initializeAuth } from "./features/auth";
 import { initialize as initializeGameSetup } from "./features/setup";
 import { initialize as initializeLobby } from "./features/lobby";
+import { initialize as initializeGameplay } from "./features/gameplay";
 import { authMiddleware } from "@backend/common/http-middleware/auth.middleware";
 import { refreshSystemData } from "./common/data/system-data-loader";
 
@@ -71,6 +72,7 @@ const auth = initializeAuth(app, dbInstance, {
 // Initialize features
 const setup = initializeGameSetup(app, dbInstance, authHandlers);
 const lobby = initializeLobby(app, dbInstance, authHandlers);
+const gameplay = initializeGameplay(app, dbInstance, authHandlers);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "UP" });
