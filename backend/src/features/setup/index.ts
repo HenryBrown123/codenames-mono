@@ -6,7 +6,7 @@ import { AuthMiddleware } from "@backend/common/http-middleware/auth.middleware"
 
 // Import repositories
 import {
-  getGameDataByPublicId,
+  findGameByPublicId as getGameDataByPublicId,
   createGame,
 } from "@backend/common/data-access/games.repository";
 import { createTeams } from "@backend/common/data-access/teams.repository";

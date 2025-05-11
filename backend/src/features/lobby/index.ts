@@ -8,15 +8,15 @@ import { AuthMiddleware } from "@backend/common/http-middleware/auth.middleware"
 
 // Import repositories
 import {
-  getGameDataByPublicId,
+  findGameByPublicId as getGameDataByPublicId,
   updateGameStatus,
 } from "@backend/common/data-access/games.repository";
 import {
   addPlayers,
-  getPlayerById,
+  findPlayerById as getPlayerById,
   removePlayer,
   modifyPlayers,
-  getPlayersByGameId,
+  findPlayersByGameId as getPlayersByGameId,
 } from "@backend/common/data-access/players.repository";
 
 // Import feature components
