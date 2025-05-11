@@ -1,6 +1,6 @@
 import { GAME_STATE, ROUND_STATE } from "@codenames/shared/types";
 
-import { GameAggregate } from "../state/gameplay-state.types";
+import { GameAggregate, roundSchema } from "../state/gameplay-state.types";
 import { gameplayBaseSchema } from "../state/gameplay-state.types";
 import { complexProperties } from "../state/gameplay-state.helpers";
 
@@ -10,23 +10,37 @@ import {
   GameplayValidationResult,
 } from "../state/gameplay-state.validation";
 
-import { any, z } from "zod";
+import { z } from "zod";
 
 /**
  * Rules for validating card dealing in a game
  */
 const cardDealingRules = {
   /**
-   * Checks if the round exists and is in SETUP state
+   * Checks if the game has at least one round
    * @param game - The current game state
-   * @returns true if the latest round is in SETUP state
+   * @returns true if the game has at least one round
    */
-  isRoundInSetupState(game: GameAggregate): boolean {
-    const latestRound = complexProperties.getLatestRound(game);
-    if (!latestRound) return false;
-    return latestRound.status === ROUND_STATE.SETUP;
+  hasRounds(game: GameAggregate): boolean {
+    return complexProperties.getRoundCount(game) >= 1;
   },
 
+  /**
+   * Checks if the latest round is in SETUP state
+   * @param game - The current game state
+   * @returns true if the latest round exists and is in SETUP state
+   */
+  isLatestRoundInSetupState(game: GameAggregate): boolean {
+    const latestRound = complexProperties.getLatestRound(game);
+    // If there are rounds, there must be a latest round
+    return latestRound !== null && latestRound.status === ROUND_STATE.SETUP;
+  },
+
+  /**
+   * Checks if the game has at least 2 teams for proper gameplay
+   * @param game - The current game state
+   * @returns true if the game has at least 2 teams
+   */
   hasMinimumTwoTeams(game: GameAggregate): boolean {
     return complexProperties.getTeamCount(game) >= 2;
   },
@@ -48,15 +62,24 @@ const cardDealingRules = {
  */
 const cardDealingSchema = gameplayBaseSchema.extend({
   status: z.literal(GAME_STATE.IN_PROGRESS),
+  rounds: z.array(roundSchema).min(1, "Game must have at least one round"), // Enforce rounds > 0
 });
 
 /**
  * Enhanced schema that includes rules for card dealing validation
  */
 const cardDealingAllowedSchema = cardDealingSchema
-  .refine(cardDealingRules.isRoundInSetupState, {
-    message: "Cards can only be dealt to a round in SETUP state",
+  .refine(cardDealingRules.hasRounds, {
+    message: "Game must have at least one round to deal cards",
     path: ["rounds"],
+  })
+  .refine(cardDealingRules.isLatestRoundInSetupState, {
+    message: "Latest round must be in SETUP state to deal cards",
+    path: ["rounds"],
+  })
+  .refine(cardDealingRules.hasMinimumTwoTeams, {
+    message: "Game must have at least 2 teams to deal cards",
+    path: ["teams"],
   })
   .refine(cardDealingRules.hasNoCardsDealt, {
     message: "Cards have already been dealt for this round",

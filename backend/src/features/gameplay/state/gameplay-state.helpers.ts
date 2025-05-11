@@ -1,3 +1,4 @@
+import { UnexpectedGameplayError } from "../errors/gameplay.errors";
 import { GameAggregate, Round } from "./gameplay-state.types";
 
 /**
@@ -10,6 +11,15 @@ export const complexProperties = {
   getLatestRound(game: GameAggregate): Round | null {
     if (!game.rounds || game.rounds.length === 0) return null;
     return game.rounds[game.rounds.length - 1];
+  },
+
+  /**
+   * @returns The most recently started round or throws if no rounds exist
+   */
+  getLatestRoundOrThrow(game: GameAggregate): Round {
+    const latestRound = this.getLatestRound(game);
+    if (!latestRound) throw new UnexpectedGameplayError("No rounds found");
+    return latestRound;
   },
 
   /**

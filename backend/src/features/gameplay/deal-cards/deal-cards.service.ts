@@ -1,13 +1,9 @@
 import type { GameplayStateProvider } from "../state/gameplay-state.provider";
 import type { GameplayValidationError } from "../state/gameplay-state.validation";
 import type { CardResult } from "@backend/common/data-access/cards.repository";
-import type {
-  TeamsFinder,
-  GameId,
-} from "@backend/common/data-access/teams.repository";
 
 import { validate as checkCardDealingRules } from "./deal-cards.rules";
-import { dealCardsToRound } from "./deal-cards.actions";
+import { CardDealer } from "./deal-cards.actions";
 
 /**
  * Basic input required to deal cards
@@ -24,7 +20,6 @@ export type DealCardsSuccess = {
   roundId: number;
   roundNumber: number;
   startingTeamId: number;
-  totalCards: number;
   cards: CardResult[];
 };
 
@@ -34,7 +29,6 @@ export type DealCardsSuccess = {
 export const DEAL_CARDS_ERROR = {
   INVALID_GAME_STATE: "invalid-game-state",
   GAME_NOT_FOUND: "game-not-found",
-  TEAMS_NOT_FOUND: "teams-not-found",
 } as const;
 
 /**
@@ -48,10 +42,6 @@ export type DealCardsFailure =
     }
   | {
       status: typeof DEAL_CARDS_ERROR.GAME_NOT_FOUND;
-      gameId: string;
-    }
-  | {
-      status: typeof DEAL_CARDS_ERROR.TEAMS_NOT_FOUND;
       gameId: string;
     };
 
@@ -67,8 +57,7 @@ export type DealCardsResult =
  */
 export type DealCardsDependencies = {
   getGameState: GameplayStateProvider;
-  getTeamsByGameId: TeamsFinder<GameId>;
-  dealCardsFromValidState: ReturnType<typeof dealCardsToRound>;
+  dealCardsFromValidState: CardDealer;
 };
 
 /**
@@ -106,27 +95,20 @@ export const dealCardsService = (dependencies: DealCardsDependencies) => {
       };
     }
 
-    // Get teams for the game
-    const teams = await dependencies.getTeamsByGameId(gameData.id);
-
-    if (!teams || teams.length === 0) {
-      return {
-        success: false,
-        error: {
-          status: DEAL_CARDS_ERROR.TEAMS_NOT_FOUND,
-          gameId: input.gameId,
-        },
-      };
-    }
-
+    // Since validation passed, we have a DealCardsValidGameState
+    // Pass the validated game state to our action
     const dealtCards = await dependencies.dealCardsFromValidState(
       validationResult.data,
-      teams,
     );
 
     return {
       success: true,
-      data: dealtCards,
+      data: {
+        roundId: dealtCards.roundId,
+        roundNumber: dealtCards.roundNumber,
+        startingTeamId: dealtCards.startingTeam,
+        cards: dealtCards.cards,
+      },
     };
   };
 };

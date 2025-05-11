@@ -43,7 +43,7 @@ const shuffleCards = <T>(items: T[]): T[] => {
  * - Other team: 8 cards
  * - Assassin: 1 card
  * - Bystander: 7 cards
- * Total: 25 cards (5x5 grid)
+ * Total: 25 cards
  */
 const allocateInitialCardTypes = (
   startingTeam: TeamId,
@@ -72,21 +72,20 @@ export const dealCardsToRound = (
    * @param gameState - Validated game state that meets all business rules
    * @returns Laid out cards data with grid information
    */
-  const layOutCards = async (gameState: DealCardsValidGameState) => {
-    const latestRound = complexProperties.getLatestRound(gameState);
+  return async (gameState: DealCardsValidGameState) => {
+    // validated game state means there should always be a latest round.
+    // complex properties does not inherit refined validated types
+    const latestRound = complexProperties.getLatestRoundOrThrow(gameState);
     const [team1, team2] = gameState.teams;
 
-    // Determine starting team
     const startsFirst = Math.random() > 0.5;
     const [startingTeam, otherTeam] = startsFirst
       ? [team1.id, team2.id]
       : [team2.id, team1.id];
 
-    // Allocate card types and randomize positions on the grid
     const cardsWithoutWords = allocateInitialCardTypes(startingTeam, otherTeam);
     const shuffledCards = shuffleCards(cardsWithoutWords);
 
-    // Place words on the shuffled cards
     const words = await getRandomWords(shuffledCards.length);
     const cardInputs: CardInput[] = words.map((word, position) => ({
       roundId: latestRound.id,
@@ -97,25 +96,14 @@ export const dealCardsToRound = (
 
     const cards = await createCards(cardInputs);
 
-    // Calculate grid distribution
-    const gridDistribution = {
-      [startingTeam]: cards.filter((c) => c.teamId === startingTeam).length,
-      [otherTeam]: cards.filter((c) => c.teamId === otherTeam).length,
-      assassin: cards.filter((c) => c.cardType === CARD_TYPE.ASSASSIN).length,
-      bystander: cards.filter((c) => c.cardType === CARD_TYPE.BYSTANDER).length,
-    };
-
     return {
       roundId: latestRound.id,
       roundNumber: latestRound.roundNumber,
       startingTeam,
       otherTeam,
-      gridSize: 25, // Standard 5x5 grid
-      cardsLaidOut: cards.length,
-      gridDistribution,
       cards,
     };
   };
-
-  return layOutCards;
 };
+
+export type CardDealer = ReturnType<typeof dealCardsToRound>;

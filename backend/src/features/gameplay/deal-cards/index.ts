@@ -19,7 +19,6 @@ import { dealCardsService } from "./deal-cards.service";
  */
 export interface DealCardsDependencies {
   getGameState: GameplayStateProvider;
-  getTeamsByGameId: TeamsFinder<GameId>;
   getRandomWords: RandomWordsSelector;
   createCards: CardsCreator;
 }
@@ -43,7 +42,6 @@ export const dealCards = (dependencies: DealCardsDependencies) => {
 
   const dealCardsServiceInstance = dealCardsService({
     getGameState: dependencies.getGameState,
-    getTeamsByGameId: dependencies.getTeamsByGameId,
     dealCardsFromValidState: dealCardsAction,
   });
 
