@@ -43,7 +43,6 @@ export type CardInput = {
 /** Standardized card data returned from repository */
 export type CardResult = {
   id: number;
-  roundId: number;
   word: string;
   cardType: CardType;
   teamId: number | null;

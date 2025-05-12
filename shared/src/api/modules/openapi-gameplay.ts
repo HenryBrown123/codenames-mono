@@ -81,11 +81,11 @@ export function createGameplayPaths() {
         },
       },
     },
-    "/games/{gameId}/rounds/{roundId}/cards": {
+    "/games/{gameId}/rounds/{roundId}/deal": {
       post: {
         summary: "Deal cards for a round",
         description:
-          "Deals 25 random cards to a round and distributes them among teams",
+          "Deals 25 random cards to a round and distributes them among teams. Can be called multiple times to re-deal cards as long as the round is in the correct state.",
         tags: ["Gameplay"],
         security: [{ bearerAuth: [] }],
         parameters: [
@@ -105,7 +105,7 @@ export function createGameplayPaths() {
             schema: {
               type: "string",
             },
-            description: "ID of the round (currently not used in validation)",
+            description: "ID of the round",
           },
         ],
         responses: {
@@ -119,14 +119,18 @@ export function createGameplayPaths() {
                     roundId: 123,
                     roundNumber: 1,
                     startingTeamId: 1,
-                    cardIds: [1, 2, 3, 4, 5, "..."],
+                    cards: [
+                      { word: "apple", selected: false },
+                      { word: "tree", selected: false },
+                      // ... additional cards
+                    ],
                   },
                 },
               },
             },
           },
           "404": {
-            description: "Game not found",
+            description: "Game or round not found",
             content: {
               "application/json": {
                 example: {
@@ -151,8 +155,7 @@ export function createGameplayPaths() {
                     validationErrors: [
                       {
                         path: "rounds",
-                        message:
-                          "Latest round must be in SETUP state to deal cards",
+                        message: "Round must be in SETUP state to deal cards",
                       },
                     ],
                   },
