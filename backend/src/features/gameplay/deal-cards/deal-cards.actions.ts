@@ -54,17 +54,16 @@ const allocateInitialCardTypes = (
   { cardType: CARD_TYPE.ASSASSIN },
   ...Array(7).fill({ cardType: CARD_TYPE.BYSTANDER }),
 ];
-
 /**
  * Factory function that creates a card dealing action with repository dependencies
  *
  * @param getRandomWords - Repository function for retrieving random words
- * @param createCards - Repository function for creating new cards
+ * @param replaceCards - Repository function for replacing cards in a round
  * @returns Function that deals cards for a validated game state
  */
 export const dealCardsToRound = (
   getRandomWords: RandomWordsSelector,
-  createCards: CardsCreator,
+  replaceCards: CardsCreator,
 ) => {
   /**
    * Lays out cards on the game grid for a pre-validated game state
@@ -74,7 +73,6 @@ export const dealCardsToRound = (
    */
   return async (gameState: DealCardsValidGameState) => {
     // validated game state means there should always be a latest round.
-    // complex properties does not inherit refined validated types
     const latestRound = complexProperties.getLatestRoundOrThrow(gameState);
     const [team1, team2] = gameState.teams;
 
@@ -87,14 +85,15 @@ export const dealCardsToRound = (
     const shuffledCards = shuffleCards(cardsWithoutWords);
 
     const words = await getRandomWords(shuffledCards.length);
+
     const cardInputs: CardInput[] = words.map((word, position) => ({
-      roundId: latestRound.id,
       word,
       cardType: shuffledCards[position].cardType,
       teamId: shuffledCards[position].teamId,
     }));
 
-    const cards = await createCards(cardInputs);
+    // Always use replaceCards, which will handle both first-time and subsequent operations
+    const cards = await replaceCards(latestRound.id, cardInputs);
 
     return {
       roundId: latestRound.id,

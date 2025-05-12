@@ -2,6 +2,16 @@ import { z } from "zod";
 import { GAME_STATE, GAME_FORMAT, ROUND_STATE } from "@codenames/shared/types";
 
 /**
+ * Schema for validating cards data
+ */
+
+export const cardSchema = z.object({
+  id: z.number().int().positive(),
+  word: z.string(),
+  selected: z.boolean(),
+});
+
+/**
  * Schema for validating round data
  *
  * Defines the structure of a single game round with validation rules
@@ -15,6 +25,7 @@ export const roundSchema = z.object({
     ROUND_STATE.IN_PROGRESS,
     ROUND_STATE.COMPLETED,
   ]),
+  cards: z.array(cardSchema).optional().default([]),
   createdAt: z.date(),
 });
 

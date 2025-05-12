@@ -1,4 +1,4 @@
-import { Kysely, sql } from "kysely";
+import { Kysely, Transaction, sql } from "kysely";
 import { DB } from "../db/db.types";
 import { UnexpectedRepositoryError } from "./repository.errors";
 
@@ -35,7 +35,6 @@ export type CardData = {
 
 /** Parameters for creating cards */
 export type CardInput = {
-  roundId: number;
   word: string;
   cardType: CardType;
   teamId?: number; // Optional, required only for TEAM cards
@@ -56,7 +55,10 @@ export type CardsFinder<T extends RoundId> = (
   identifier: T,
 ) => Promise<CardResult[]>;
 
-export type CardsCreator = (cards: CardInput[]) => Promise<CardResult[]>;
+export type CardsCreator = (
+  roundId: number,
+  cards: CardInput[],
+) => Promise<CardResult[]>;
 
 export type CardUpdater = (
   cardIds: CardId[],
@@ -109,13 +111,14 @@ export const getCardsByRoundId =
 export const createCards =
   (db: Kysely<DB>): CardsCreator =>
   /**
-   * Inserts new cards into the database
+   * Inserts new cards into the database for a specific round
    *
+   * @param roundId - The ID of the round to create cards for
    * @param cards - Array of card data to insert
    * @returns Newly created card records
    * @throws {UnexpectedRepositoryError} If insertion fails
    */
-  async (cards) => {
+  async (roundId, cards) => {
     if (cards.length === 0) {
       return [];
     }
@@ -136,7 +139,7 @@ export const createCards =
       }
 
       const values = cards.map((card) => ({
-        round_id: card.roundId,
+        round_id: roundId,
         word: card.word,
         card_type: card.cardType,
         team_id: card.teamId || null,
@@ -168,35 +171,95 @@ export const createCards =
       if (error instanceof UnexpectedRepositoryError) {
         throw error;
       }
-      throw new UnexpectedRepositoryError(`Failed to create cards for round.`, {
-        cause: error,
-      });
+      throw new UnexpectedRepositoryError(
+        `Failed to create cards for round ${roundId}.`,
+        {
+          cause: error,
+        },
+      );
     }
   };
 
 /**
- * Replaces the cards associated with a specific game round in the database.
+ * Creates a function for replacing all cards for a round
  *
- * This function performs the operation within a database transaction to ensure
- * atomicity. It first deletes all existing cards for the specified game round
- * and then creates new cards based on the provided input.
- *
- * @param db - The Kysely database instance used to interact with the database.
- * @returns A function that takes the following parameters:
- *   - `roundId` - The ID of the game round whose cards are to be replaced.
- *   - `cards` - An array of card input objects representing the new cards to be added.
- *
- * @throws Will throw an error if the transaction fails or if the card creation process encounters an issue.
+ * @param db - Database connection
  */
-export const replaceCards = (db: Kysely<DB>) => {
-  return async (roundId: number, cards: CardInput[]) => {
-    db.transaction().execute(async (trx) => {
-      await trx.deleteFrom("cards").where("round_id", "=", roundId).execute();
-      const insertedCards = await createCards(db)(cards);
-      return insertedCards;
-    });
+export const replaceCards =
+  (db: Kysely<DB>): CardsCreator =>
+  /**
+   * Replaces all cards for a round within a transaction
+   *
+   * @param roundId - ID of the round to replace cards for
+   * @param cards - New card data
+   * @returns Newly created card records
+   * @throws {UnexpectedRepositoryError} If operation fails
+   */
+  async (roundId, cards) => {
+    try {
+      return await db.transaction().execute(async (trx) => {
+        // Delete existing cards for this round
+        await trx.deleteFrom("cards").where("round_id", "=", roundId).execute();
+
+        // Use the existing creator function but with the transaction
+        const cardCreator = createCards(trx);
+        return await cardCreator(roundId, cards);
+      });
+    } catch (error) {
+      throw new UnexpectedRepositoryError(
+        `Failed to replace cards for round ${roundId}`,
+        { cause: error },
+      );
+    }
   };
-};
+
+/**
+ * Creates a function for updating cards (primarily for marking as selected)
+ */
+export const updateCards =
+  (db: Kysely<DB>): CardUpdater =>
+  /**
+   * Updates specified cards with given data
+   *
+   * @param cardIds - Array of card IDs to update
+   * @param updates - Object containing updates to apply
+   * @returns Updated card records
+   * @throws {UnexpectedRepositoryError} If update fails
+   */
+  async (cardIds, updates) => {
+    if (cardIds.length === 0) {
+      return [];
+    }
+
+    try {
+      const updatedCards = await db
+        .updateTable("cards")
+        .set(updates)
+        .where("id", "in", cardIds)
+        .returning([
+          "id",
+          "round_id",
+          "word",
+          "card_type",
+          "team_id",
+          "selected",
+        ])
+        .execute();
+
+      return updatedCards.map((card) => ({
+        id: card.id,
+        roundId: card.round_id,
+        word: card.word,
+        cardType: card.card_type as CardType,
+        teamId: card.team_id,
+        selected: card.selected,
+      }));
+    } catch (error) {
+      throw new UnexpectedRepositoryError(`Failed to update cards.`, {
+        cause: error,
+      });
+    }
+  };
 
 /**
  * Creates a function for selecting random words from the decks table
