@@ -175,52 +175,28 @@ export const createCards =
   };
 
 /**
- * Creates a function for updating cards (primarily for marking as selected)
+ * Replaces the cards associated with a specific game round in the database.
+ *
+ * This function performs the operation within a database transaction to ensure
+ * atomicity. It first deletes all existing cards for the specified game round
+ * and then creates new cards based on the provided input.
+ *
+ * @param db - The Kysely database instance used to interact with the database.
+ * @returns A function that takes the following parameters:
+ *   - `roundId` - The ID of the game round whose cards are to be replaced.
+ *   - `cards` - An array of card input objects representing the new cards to be added.
+ *
+ * @throws Will throw an error if the transaction fails or if the card creation process encounters an issue.
  */
-export const updateCards =
-  (db: Kysely<DB>): CardUpdater =>
-  /**
-   * Updates specified cards with given data
-   *
-   * @param cardIds - Array of card IDs to update
-   * @param updates - Object containing updates to apply
-   * @returns Updated card records
-   * @throws {UnexpectedRepositoryError} If update fails
-   */
-  async (cardIds, updates) => {
-    if (cardIds.length === 0) {
-      return [];
-    }
-
-    try {
-      const updatedCards = await db
-        .updateTable("cards")
-        .set(updates)
-        .where("id", "in", cardIds)
-        .returning([
-          "id",
-          "round_id",
-          "word",
-          "card_type",
-          "team_id",
-          "selected",
-        ])
-        .execute();
-
-      return updatedCards.map((card) => ({
-        id: card.id,
-        roundId: card.round_id,
-        word: card.word,
-        cardType: card.card_type as CardType,
-        teamId: card.team_id,
-        selected: card.selected,
-      }));
-    } catch (error) {
-      throw new UnexpectedRepositoryError(`Failed to update cards.`, {
-        cause: error,
-      });
-    }
+export const replaceCards = (db: Kysely<DB>) => {
+  return async (roundId: number, cards: CardInput[]) => {
+    db.transaction().execute(async (trx) => {
+      await trx.deleteFrom("cards").where("round_id", "=", roundId).execute();
+      const insertedCards = await createCards(db)(cards);
+      return insertedCards;
+    });
   };
+};
 
 /**
  * Creates a function for selecting random words from the decks table
