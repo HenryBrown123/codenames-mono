@@ -6,6 +6,7 @@ import {
   GAME_FORMAT,
   ROUND_STATE,
   GAME_STATE,
+  PLAYER_ROLE,
 } from "./shared.constants";
 
 // Enum value types
@@ -18,6 +19,8 @@ export type GameFormat = (typeof GAME_FORMAT)[keyof typeof GAME_FORMAT];
 
 export type GameState = (typeof GAME_STATE)[keyof typeof GAME_STATE];
 export type RoundState = (typeof ROUND_STATE)[keyof typeof ROUND_STATE];
+
+export type PlayerRole = (typeof PLAYER_ROLE)[keyof typeof PLAYER_ROLE];
 
 // Player types
 export interface Player {
