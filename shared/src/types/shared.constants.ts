@@ -82,3 +82,14 @@ export const MAX_ROUNDS_BY_FORMAT = {
   BEST_OF_THREE: 3,
   ROUND_ROBIN: 5,
 } as const;
+
+/**
+ * Player role enum
+ */
+
+export const PLAYER_ROLE = {
+  CODEMASTER: "CODEMASTER",
+  CODEBREAKER: "CODEBREAKER",
+  SPECTATOR: "SPECTATOR",
+  NONE: "NONE",
+} as const;
