@@ -1,7 +1,7 @@
 import type { Response, NextFunction } from "express";
 import type { Request } from "express-jwt";
 import type { DealCardsService } from "./deal-cards.service";
-import { boolean, z } from "zod";
+import { z } from "zod";
 
 /**
  * Request validation schema for dealing cards
@@ -9,10 +9,18 @@ import { boolean, z } from "zod";
 export const dealCardsRequestSchema = z.object({
   params: z.object({
     gameId: z.string().min(1, "Game ID is required"),
+    id: z.string().min(1, "Round ID is required"),
   }),
   auth: z.object({
     userId: z.number().int().positive("User ID must be a positive integer"),
   }),
+  body: z
+    .object({
+      deck: z.string().min(1).default("BASE"),
+      languageCode: z.string().min(2).max(5).default("en"),
+    })
+    .optional()
+    .default({}),
 });
 
 /**
@@ -57,8 +65,9 @@ export type Dependencies = {
  */
 export const dealCardsController = ({ dealCards }: Dependencies) => {
   /**
-   * Handles HTTP request to deal cards in a game
-   * @param req - Express request with game ID
+   * Handles HTTP request to deal random cards for a round
+   *
+   * @param req - Express request with game ID, round ID, and optional deck parameters
    * @param res - Express response object
    * @param next - Express error handling function
    */
@@ -71,6 +80,7 @@ export const dealCardsController = ({ dealCards }: Dependencies) => {
       const validatedRequest = dealCardsRequestSchema.parse({
         params: req.params,
         auth: req.auth,
+        body: req.body || {},
       });
 
       const result = await dealCards({

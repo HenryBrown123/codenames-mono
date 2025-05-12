@@ -58,7 +58,8 @@ export const initialize = (
   const router = Router();
 
   router.post("/games/:gameId/rounds", auth, newRoundController);
-  router.post("/games/:gameId/rounds/:id/cards", auth, dealCardsController);
+
+  router.post("/games/:gameId/rounds/:id/deal", auth, dealCardsController);
 
   app.use("/api", router);
   app.use("/api", gameplayErrorHandler);
