@@ -440,7 +440,7 @@ const buildHistoricalRoundResponse = (
 ): HistoricalRoundResponse => {
   // Filter to just the role assignments for this round
   const roundRoleAssignments = allRoleAssignments.filter(
-    (assignment) => assignment.roundId === round.id,
+    (assignment) => assignment._roundId === round._id,
   );
 
   return {
@@ -480,7 +480,7 @@ const applyCardVisibilityRules = (
   playerRole: PlayerRole,
 ): CardResponse => {
   const baseCard = {
-    id: card.id,
+    _id: card._id,
     word: card.word,
     selected: card.selected,
   };
@@ -489,7 +489,7 @@ const applyCardVisibilityRules = (
   if (playerRole === PLAYER_ROLE.CODEMASTER) {
     return {
       ...baseCard,
-      teamId: card.teamId,
+      teamId: card._teamId,
       cardType: card.cardType,
     };
   }
@@ -498,7 +498,7 @@ const applyCardVisibilityRules = (
   if (card.selected) {
     return {
       ...baseCard,
-      teamId: card.teamId,
+      teamId: card._teamId,
       cardType: card.cardType,
     };
   }

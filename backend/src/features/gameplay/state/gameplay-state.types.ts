@@ -6,7 +6,7 @@ import { GAME_STATE, GAME_FORMAT, ROUND_STATE } from "@codenames/shared/types";
  */
 
 export const cardSchema = z.object({
-  id: z.number().int().positive(),
+  _id: z.number().int().positive(),
   word: z.string(),
   selected: z.boolean(),
 });
@@ -17,7 +17,7 @@ export const cardSchema = z.object({
  * Defines the structure of a single game round with validation rules
  */
 export const roundSchema = z.object({
-  id: z.number().int().positive(),
+  _id: z.number().int().positive(),
   gameId: z.number().int().positive(),
   roundNumber: z.number().int().positive(),
   status: z.enum([
@@ -35,10 +35,10 @@ export const roundSchema = z.object({
  * Defines the structure of a single game round with validation rules
  */
 export const playerSchema = z.object({
-  id: z.number().int().positive(),
-  userId: z.number().int().positive(),
-  gameId: z.number().int().positive(),
-  teamId: z.number().int().positive(),
+  _id: z.number().int().positive(),
+  _userId: z.number().int().positive(),
+  _gameId: z.number().int().positive(),
+  _teamId: z.number().int().positive(),
   statusId: z.number().int().positive(),
   publicName: z.string(),
 });
@@ -51,9 +51,9 @@ export type Player = z.infer<typeof playerSchema>;
  * Defines the structure of a single game round with validation rules
  */
 export const teamSchema = z.object({
-  id: z.number().int().positive(),
-  gameId: z.number().int().positive(),
-  teamName: z.string(),
+  _id: z.number().int().positive(),
+  _gameId: z.number().int().positive(),
+  _teamName: z.string(),
   players: z.array(playerSchema).optional().default([]),
 });
 
@@ -65,7 +65,7 @@ export const teamSchema = z.object({
  * can be extended for specific gameplay action validation rules.
  */
 export const gameplayBaseSchema = z.object({
-  id: z.number().int().positive(),
+  _id: z.number().int().positive(),
   public_id: z.string(),
   status: z.enum([
     GAME_STATE.LOBBY,

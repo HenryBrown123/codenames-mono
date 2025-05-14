@@ -14,7 +14,17 @@ type ServiceDependencies = {
   jwtOptions: SignOptions;
 };
 
-export type GuestLoginService = (username: Username) => Promise<SessionResult>;
+/**
+ * Result of login operation specific to the service layer
+ */
+export type GuestLoginResult = {
+  username: string;
+  token: string;
+};
+
+export type GuestLoginService = (
+  username: Username,
+) => Promise<GuestLoginResult>;
 
 export const guestLoginService =
   ({
@@ -34,15 +44,24 @@ export const guestLoginService =
     }
 
     const token = jwt.sign(
-      { userId: user.id, username: user.username },
+      { userId: user._id, username: user.username },
       jwtSecret,
       jwtOptions,
     );
 
     const session = await storeSession({
-      userId: user.id,
+      userId: user._id,
       token,
     });
 
-    return session;
+    if (!session) {
+      throw new UnexpectedAuthError(
+        `Failed to create session for user: ${sanitizedUsername}`,
+      );
+    }
+
+    return {
+      username: user.username,
+      token: session.token,
+    };
   };

@@ -92,11 +92,10 @@ export const dealCardsToRound = (
       teamId: shuffledCards[position].teamId,
     }));
 
-    // Always use replaceCards, which will handle both first-time and subsequent operations
     const cards = await replaceCards(latestRound.id, cardInputs);
 
     return {
-      roundId: latestRound.id,
+      _roundId: latestRound.id,
       roundNumber: latestRound.roundNumber,
       startingTeam,
       otherTeam,
