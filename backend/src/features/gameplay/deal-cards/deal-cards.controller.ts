@@ -46,10 +46,10 @@ export type DealCardsErrorResponse = {
 export type DealCardsResponse = {
   success: boolean;
   data: {
-    _roundId: number;
+    roundId: number;
     roundNumber: number;
-    _startingTeamId: number;
-    cards: { word: string; selected: boolean }[];
+    startingTeamId: number;
+    cards: { id?: number; word: string; selected: boolean }[];
   };
 };
 
@@ -94,15 +94,14 @@ export const dealCardsController = ({ dealCards }: Dependencies) => {
         const response: DealCardsResponse = {
           success: true,
           data: {
-            _roundId: result.data._roundId,
+            roundId: result.data._roundId,
             roundNumber: result.data.roundNumber,
-            _startingTeamId: result.data._startingTeamId,
-            cards: result.data.cards.map((card) => {
-              return {
-                word: card.word,
-                selected: card.selected,
-              };
-            }),
+            startingTeamId: result.data._startingTeamId,
+            cards: result.data.cards.map((card) => ({
+              id: card._id,
+              word: card.word,
+              selected: card.selected,
+            })),
           },
         };
 

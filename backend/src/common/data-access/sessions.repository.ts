@@ -13,15 +13,6 @@ export type UserId = number;
 export type SessionId = number;
 export type Token = string;
 
-/** Entity data types */
-export type SessionData = {
-  _id: number;
-  _user_id: number;
-  token: string;
-  expires_at: Date;
-  created_at: Date;
-};
-
 /** Input and result types */
 export type SessionInput = {
   userId: number;

@@ -93,9 +93,9 @@ export const newRoundController = ({ createRound }: Dependencies) => {
           success: true,
           data: {
             round: {
-              id: result.data.roundId,
+              id: result.data._roundId,
               roundNumber: result.data.roundNumber,
-              gameId: result.data.gameId,
+              gameId: result.data._gameId,
               createdAt: result.data.createdAt,
             },
           },

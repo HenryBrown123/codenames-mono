@@ -12,7 +12,7 @@ type ServiceDependencies = {
 };
 
 export type GuestUser = {
-  id: number;
+  _id: number;
   username: string;
 };
 
@@ -45,7 +45,7 @@ export const createGuestUserService = ({
     const user = await createUser({ username });
 
     return {
-      id: user.id,
+      _id: user._id,
       username: user.username,
     };
   };
