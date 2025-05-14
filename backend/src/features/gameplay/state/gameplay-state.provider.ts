@@ -10,7 +10,7 @@ import {
 } from "@backend/common/data-access/teams.repository";
 
 import {
-  PlayersFinder,
+  PlayerFinderAll,
   PlayerResult,
   PlayerContextFinder,
 } from "@backend/common/data-access/players.repository";
@@ -34,6 +34,7 @@ import {
 import { PLAYER_ROLE, PlayerRole } from "@codenames/shared/types";
 
 import { GameAggregate } from "./gameplay-state.types";
+import { UnexpectedGameplayError } from "../errors/gameplay.errors";
 
 /**
  * Player context information for the current user
@@ -73,7 +74,7 @@ export const gameplayStateProvider = (
   getTeams: TeamsFinder<InternalId>,
   getCardsByRoundId: CardsFinder<RoundId>,
   getTurnsByRoundId: TurnsFinder<RoundId>,
-  getPlayersByRoundId: PlayersFinder<RoundId>,
+  getPlayersByRoundId: PlayerFinderAll<RoundId>,
   getLatestRound: RoundFinder<InternalId>,
   getPlayerContext: PlayerContextFinder,
 ): GameplayStateProvider => {
@@ -95,12 +96,16 @@ export const gameplayStateProvider = (
     if (!latestRound) return null;
 
     // Get player context first to verify authorization
-    const playerContext = await getPlayerContext(game._id, userId);
+    const playerContext = await getPlayerContext(
+      game._id,
+      userId,
+      latestRound._id,
+    );
     if (!playerContext) {
       return null; // User not authorized for this game
     }
 
-    // Now get the rest of the game data
+    // Collect all data needed for the game state
     const [teams, cards, turns, players] = await Promise.all([
       getTeams(game._id),
       getCardsByRoundId(latestRound._id),
@@ -108,9 +113,12 @@ export const gameplayStateProvider = (
       getPlayersByRoundId(latestRound._id),
     ]);
 
-    const teamsWithScores = teams.map((team) => ({
-      ...team,
-      score: 0,
+    // Transform teams to include players array and proper property names
+    const teamsWithPlayers = teams.map((team) => ({
+      _id: team._id,
+      _gameId: team._gameId,
+      teamName: team.teamName,
+      players: players.filter((player) => player._teamId === team._id) || [],
     }));
 
     return {
@@ -118,7 +126,7 @@ export const gameplayStateProvider = (
       public_id: game.public_id,
       status: game.status,
       game_format: game.game_format,
-      teams: teamsWithScores,
+      teams: teamsWithPlayers,
       currentRound: {
         _id: latestRound._id,
         number: latestRound.roundNumber,
@@ -126,6 +134,7 @@ export const gameplayStateProvider = (
         players,
         cards,
         turns,
+        createdAt: latestRound.createdAt,
       },
       playerContext,
       createdAt: game.created_at,

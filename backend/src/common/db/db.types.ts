@@ -21,12 +21,11 @@ export interface Cards {
 }
 
 export interface Clues {
-  clue: string;
-  clue_number: number;
   created_at: Generated<Timestamp>;
   id: Generated<number>;
-  player_id: number;
+  number: number;
   turn_id: number;
+  word: string;
 }
 
 export interface Decks {
@@ -41,7 +40,13 @@ export interface Games {
   created_at: Generated<Timestamp>;
   game_format: string;
   game_type: string;
+  /**
+   * Internal ID
+   */
   id: Generated<number>;
+  /**
+   * Public-facing ID used in URLs and APIs
+   */
   public_id: string;
   status_id: number;
   updated_at: Generated<Timestamp | null>;
@@ -56,6 +61,7 @@ export interface Guesses {
   card_id: number;
   created_at: Generated<Timestamp>;
   id: Generated<number>;
+  outcome: string | null;
   player_id: number;
   turn_id: number;
 }
@@ -108,6 +114,14 @@ export interface RoundStatus {
   status_name: string;
 }
 
+export interface Sessions {
+  created_at: Generated<Timestamp>;
+  expires_at: Timestamp;
+  id: Generated<number>;
+  token: string;
+  user_id: number;
+}
+
 export interface Teams {
   game_id: number;
   id: Generated<number>;
@@ -115,14 +129,21 @@ export interface Teams {
 }
 
 export interface Turns {
+  completed_at: Timestamp | null;
   created_at: Generated<Timestamp>;
+  guesses_remaining: Generated<number>;
   id: Generated<number>;
   round_id: number;
+  status: Generated<string>;
   team_id: number;
+  updated_at: Generated<Timestamp | null>;
 }
 
 export interface Users {
   created_at: Generated<Timestamp>;
+  /**
+   * Internal ID
+   */
   id: Generated<number>;
   username: string;
 }
@@ -140,6 +161,7 @@ export interface DB {
   players: Players;
   round_status: RoundStatus;
   rounds: Rounds;
+  sessions: Sessions;
   teams: Teams;
   turns: Turns;
   users: Users;
