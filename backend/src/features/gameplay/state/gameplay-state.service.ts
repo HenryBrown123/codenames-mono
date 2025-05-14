@@ -1,7 +1,7 @@
 import { GameplayStateProvider } from "../state/gameplay-state.provider";
 import { complexProperties } from "../state/gameplay-state.helpers";
-import { GameAggregate, Player } from "../state/gameplay-state.types";
-import { ROUND_STATE, PlayerRole } from "@codenames/shared/types";
+import { GameAggregate, Round, Player } from "../state/gameplay-state.types";
+import { PLAYER_ROLE, ROUND_STATE, PlayerRole } from "@codenames/shared/types";
 import { CardResult } from "@backend/common/data-access/cards.repository";
 
 /**
@@ -148,14 +148,17 @@ export type GetGameStateDependencies = {
 };
 
 /**
- * Creates a service for retrieving complete game state
+ * Creates a service for retrieving role-specific game state
+ *
+ * @param dependencies - External dependencies required by this service
+ * @returns Function that retrieves game state with proper role-based visibility
  */
 export const getGameStateService = (dependencies: GetGameStateDependencies) => {
   /**
-   * Retrieves the complete state of a game
+   * Retrieves the game state with visibility rules applied based on player role
    *
    * @param input - Game ID, user ID, and optional player ID
-   * @returns Full game state or error
+   * @returns Role-specific game state or error
    */
   return async (input: GetGameStateInput): Promise<GetGameStateResult> => {
     // Retrieve raw game state from provider
@@ -171,12 +174,22 @@ export const getGameStateService = (dependencies: GetGameStateDependencies) => {
       };
     }
 
-    // Determine player info and authorization
-    const playerContext = { role: "CODEMASTER" };
+    // Determine player's role for the current round
+    const currentRound = complexProperties.getLatestRound(gameData);
+    const roleAssignments = currentRound
+      ? await dependencies.getRoundRoleAssignments(currentRound.id)
+      : [];
 
-    // if role.none :
+    // TODO: improve this role lookup.... seems silly I need the whole of gamedata, roleassignments along with
+    // userId and playerId.... can't we p
+    const playerRole = determinePlayerRole(
+      input.userId,
+      input.playerId,
+      roleAssignments,
+      gameData,
+    );
 
-    if (!playerContext.role) {
+    if (playerRole === PLAYER_ROLE.NONE) {
       return {
         success: false,
         error: {
@@ -187,26 +200,309 @@ export const getGameStateService = (dependencies: GetGameStateDependencies) => {
       };
     }
 
-    // run sanitization function that strips out data that isn't accessible via role....
-    // best to only allow specific attributes rather than Omitting...
-    const sanitizedGameplayState = gameData;
-
+    // Build the response with role-specific visibility rules
     return {
       success: true,
-      data: {
-        publicId: sanitizedGameplayState.public_id,
-        status: sanitizedGameplayState.status,
-        gameType: "SINGLE_DEVICE",
-        gameFormat: sanitizedGameplayState.game_format,
-        teams:  sanitizedGameplayState.teams.map((team) => {team.id,team.teamName,team.players}),
-        currentRound: CurrentRoundResponse | null;
-        historicalRounds: HistoricalRoundResponse[];
-        playerContext: {
-          playerId?: number;
-          teamId?: number;
-          role: PlayerRole;
-        };
-      };
+      data: buildGameStateResponse(
+        gameData,
+        playerRole,
+        roleAssignments,
+        input.playerId,
+      ),
     };
   };
+};
+
+/**
+ * Determines a player's role based on role assignments and game context
+ *
+ * @param userId - User ID requesting the state
+ * @param playerId - Optional player ID in the game
+ * @param roleAssignments - Current role assignments
+ * @param gameData - Complete game state
+ * @returns The determined player role
+ */
+const determinePlayerRole = (
+  userId: number,
+  playerId: number | undefined,
+  roleAssignments: RoleAssignment[],
+  gameData: GameAggregate,
+): PlayerRole => {
+  if (!playerId) {
+    return PLAYER_ROLE.CODEMASTER;
+  }
+
+  // Check if player belongs to this game
+  const playerExists = gameData.teams.some((team) =>
+    team.players.some(
+      (player) => player.id === playerId && player.userId === userId,
+    ),
+  );
+
+  if (!playerExists) {
+    return PLAYER_ROLE.NONE;
+  }
+
+  // Multi-device mode checks role assignments
+  const playerAssignment = roleAssignments.find((r) => r.playerId === playerId);
+  return playerAssignment?.role || PLAYER_ROLE.SPECTATOR;
+};
+
+/**
+ * Builds a complete game state response with proper role-based visibility
+ *
+ * @param gameData - Complete aggregated game data
+ * @param playerRole - Role of the requesting player
+ * @param roleAssignments - Current role assignments
+ * @param playerId - Optional player ID in the game
+ * @returns Complete game state response
+ */
+const buildGameStateResponse = (
+  gameData: GameAggregate,
+  playerRole: PlayerRole,
+  roleAssignments: RoleAssignment[],
+  playerId?: number,
+): GameStateResponse => {
+  const currentRound = complexProperties.getLatestRound(gameData);
+  const historicalRounds = gameData.rounds.filter(
+    (round) =>
+      round.id !== currentRound?.id && round.status === ROUND_STATE.COMPLETED,
+  );
+
+  // Find the player's team
+  const playerTeam = playerId
+    ? findPlayerTeam(playerId, gameData.teams)
+    : undefined;
+
+  return {
+    id: gameData.id,
+    publicId: gameData.public_id,
+    status: gameData.status,
+    gameType: gameData.game_type,
+    gameFormat: gameData.game_format,
+    createdAt: new Date(), // This would ideally come from gameData
+
+    teams: buildTeamsResponse(gameData.teams, historicalRounds),
+
+    currentRound: currentRound
+      ? buildCurrentRoundResponse(currentRound, playerRole, roleAssignments)
+      : null,
+
+    historicalRounds: historicalRounds.map((round) =>
+      buildHistoricalRoundResponse(round, playerRole, roleAssignments),
+    ),
+
+    playerContext: {
+      playerId,
+      teamId: playerTeam?.id,
+      role: playerRole,
+    },
+  };
+};
+
+/**
+ * Finds a player's team
+ *
+ * @param playerId - ID of the player to find
+ * @param teams - Available teams in the game
+ * @returns The player's team or undefined
+ */
+const findPlayerTeam = (playerId: number, teams: GameAggregate["teams"]) => {
+  return teams.find((team) =>
+    team.players.some((player) => player.id === playerId),
+  );
+};
+
+/**
+ * Builds the teams section of the response
+ *
+ * @param teams - Teams from the game data
+ * @param historicalRounds - Completed rounds for score calculation
+ * @returns Array of team responses
+ */
+const buildTeamsResponse = (
+  teams: GameAggregate["teams"],
+  historicalRounds: Round[],
+): TeamResponse[] => {
+  return teams.map((team) => ({
+    id: team.id,
+    name: team.teamName,
+    score: calculateTeamScore(team.id, historicalRounds),
+    players: team.players.map((player) => ({
+      id: player.id,
+      userId: player.userId,
+      name: player.publicName,
+      isActive: player.statusId === 1, // Assuming status 1 = active
+    })),
+  }));
+};
+
+/**
+ * Calculates a team's score based on completed rounds
+ *
+ * @param teamId - ID of the team
+ * @param historicalRounds - Completed rounds
+ * @returns The team's score
+ */
+const calculateTeamScore = (
+  teamId: number,
+  historicalRounds: Round[],
+): number => {
+  // Count rounds where this team was the winner
+  return historicalRounds.filter((round) => {
+    // This would be replaced with actual logic to determine winners
+    // For now it's just a placeholder
+    return false; // Replace with actual winner logic
+  }).length;
+};
+
+/**
+ * Builds the current round response with role-specific visibility
+ *
+ * @param round - Current round data
+ * @param playerRole - Role of the requesting player
+ * @param roleAssignments - Current role assignments
+ * @returns Current round response
+ */
+const buildCurrentRoundResponse = (
+  round: Round,
+  playerRole: PlayerRole,
+  roleAssignments: RoleAssignment[],
+): CurrentRoundResponse => {
+  // Determine the starting team (this would come from your game logic)
+  const startingTeamId = determineStartingTeam(round);
+
+  // Determine the current team's turn (also from game logic)
+  const currentTeamId = determineCurrentTeam(round);
+
+  return {
+    id: round.id,
+    roundNumber: round.roundNumber,
+    status: round.status,
+    startingTeamId,
+    cards: round.cards.map((card) =>
+      applyCardVisibilityRules(card, playerRole),
+    ),
+    currentTeamId,
+    currentTurn: buildCurrentTurnResponse(round),
+    roleAssignments: roleAssignments,
+  };
+};
+
+/**
+ * Determines the starting team for a round
+ *
+ * @param round - Round data
+ * @returns ID of the starting team
+ */
+const determineStartingTeam = (round: Round): number => {
+  // This would use your game logic to determine the starting team
+  // For now, return a placeholder value
+  return 1;
+};
+
+/**
+ * Determines the team currently taking its turn
+ *
+ * @param round - Round data
+ * @returns ID of the current team
+ */
+const determineCurrentTeam = (round: Round): number => {
+  // This would use your game logic to determine the current team
+  // For now, return a placeholder value
+  return 1;
+};
+
+/**
+ * Builds the current turn response
+ *
+ * @param round - Current round data
+ * @returns Current turn information or undefined
+ */
+const buildCurrentTurnResponse = (round: Round): TurnResponse | undefined => {
+  // This would extract current turn information from the round
+  // For now, return undefined as a placeholder
+  return undefined;
+};
+
+/**
+ * Builds a historical round response with role-specific visibility
+ *
+ * @param round - Historical round data
+ * @param playerRole - Role of the requesting player
+ * @param allRoleAssignments - All role assignments
+ * @returns Historical round response
+ */
+const buildHistoricalRoundResponse = (
+  round: Round,
+  playerRole: PlayerRole,
+  allRoleAssignments: RoleAssignment[],
+): HistoricalRoundResponse => {
+  // Filter to just the role assignments for this round
+  const roundRoleAssignments = allRoleAssignments.filter(
+    (assignment) => assignment.roundId === round.id,
+  );
+
+  return {
+    id: round.id,
+    roundNumber: round.roundNumber,
+    status: round.status,
+    winningTeamId: determineWinningTeam(round),
+    startingTeamId: determineStartingTeam(round),
+    cards: round.cards.map((card) =>
+      applyCardVisibilityRules(card, playerRole),
+    ),
+    roleAssignments: roundRoleAssignments,
+  };
+};
+
+/**
+ * Determines the winning team for a completed round
+ *
+ * @param round - Completed round data
+ * @returns ID of the winning team or undefined
+ */
+const determineWinningTeam = (round: Round): number | undefined => {
+  // This would use your game logic to determine the winner
+  // For now, return undefined as a placeholder
+  return undefined;
+};
+
+/**
+ * Applies role-specific visibility rules to a card
+ *
+ * @param card - Card data
+ * @param playerRole - Role of the requesting player
+ * @returns Card with appropriate visibility
+ */
+const applyCardVisibilityRules = (
+  card: CardResult,
+  playerRole: PlayerRole,
+): CardResponse => {
+  const baseCard = {
+    id: card.id,
+    word: card.word,
+    selected: card.selected,
+  };
+
+  // Codemasters can see everything
+  if (playerRole === PLAYER_ROLE.CODEMASTER) {
+    return {
+      ...baseCard,
+      teamId: card.teamId,
+      cardType: card.cardType,
+    };
+  }
+
+  // Others can only see revealed information
+  if (card.selected) {
+    return {
+      ...baseCard,
+      teamId: card.teamId,
+      cardType: card.cardType,
+    };
+  }
+
+  // Unrevealed cards show minimal info
+  return baseCard;
 };
