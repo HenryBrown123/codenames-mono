@@ -38,10 +38,18 @@ export const removePlayersController =
         playerIdToRemove,
       );
 
+      // Map from internal model (with underscore-prefixed IDs) to API response format
       const response: RemovePlayersResponse = {
         success: true,
         data: {
-          players: [removedPlayer],
+          players: [
+            {
+              playerId: removedPlayer._id,
+              gameId: removedPlayer._gameId,
+              teamId: removedPlayer._teamId,
+              playerName: removedPlayer.playerName,
+            },
+          ],
         },
       };
 

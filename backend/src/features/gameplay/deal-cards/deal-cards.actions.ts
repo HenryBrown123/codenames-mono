@@ -78,8 +78,8 @@ export const dealCardsToRound = (
 
     const startsFirst = Math.random() > 0.5;
     const [startingTeam, otherTeam] = startsFirst
-      ? [team1.id, team2.id]
-      : [team2.id, team1.id];
+      ? [team1._id, team2._id]
+      : [team2._id, team1._id];
 
     const cardsWithoutWords = allocateInitialCardTypes(startingTeam, otherTeam);
     const shuffledCards = shuffleCards(cardsWithoutWords);
@@ -92,10 +92,10 @@ export const dealCardsToRound = (
       teamId: shuffledCards[position].teamId,
     }));
 
-    const cards = await replaceCards(latestRound.id, cardInputs);
+    const cards = await replaceCards(latestRound._id, cardInputs);
 
     return {
-      _roundId: latestRound.id,
+      _roundId: latestRound._id,
       roundNumber: latestRound.roundNumber,
       startingTeam,
       otherTeam,

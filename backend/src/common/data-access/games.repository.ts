@@ -127,8 +127,8 @@ export const findGameByPublicId =
     return game
       ? {
           _id: game.id,
-          created_at: game.created_at,
-          updated_at: game.updated_at,
+          created_at: game.created_at || null,
+          updated_at: game.updated_at || null,
           public_id: game.public_id,
           status: gameStateSchema.parse(game.status),
           game_type: gameTypeSchema.parse(game.game_type),

@@ -1,38 +1,13 @@
 import { z } from "zod";
-import { GAME_STATE, GAME_FORMAT, ROUND_STATE } from "@codenames/shared/types";
-
-/**
- * Schema for validating cards data
- */
-
-export const cardSchema = z.object({
-  _id: z.number().int().positive(),
-  word: z.string(),
-  selected: z.boolean(),
-});
-
-/**
- * Schema for validating round data
- *
- * Defines the structure of a single game round with validation rules
- */
-export const roundSchema = z.object({
-  _id: z.number().int().positive(),
-  gameId: z.number().int().positive(),
-  roundNumber: z.number().int().positive(),
-  status: z.enum([
-    ROUND_STATE.SETUP,
-    ROUND_STATE.IN_PROGRESS,
-    ROUND_STATE.COMPLETED,
-  ]),
-  cards: z.array(cardSchema).optional().default([]),
-  createdAt: z.date(),
-});
+import {
+  GAME_STATE,
+  GAME_FORMAT,
+  ROUND_STATE,
+  PLAYER_ROLE,
+} from "@codenames/shared/types";
 
 /**
  * Schema for validating player data
- *
- * Defines the structure of a single game round with validation rules
  */
 export const playerSchema = z.object({
   _id: z.number().int().positive(),
@@ -43,26 +18,108 @@ export const playerSchema = z.object({
   publicName: z.string(),
 });
 
-export type Player = z.infer<typeof playerSchema>;
-
 /**
- * Schema for validating player data
- *
- * Defines the structure of a single game round with validation rules
+ * Schema for validating team data
  */
 export const teamSchema = z.object({
   _id: z.number().int().positive(),
   _gameId: z.number().int().positive(),
-  _teamName: z.string(),
+  teamName: z.string(),
   players: z.array(playerSchema).optional().default([]),
 });
 
 /**
+ * Schema for validating cards data
+ */
+export const cardSchema = z.object({
+  _id: z.number().int().positive(),
+  _roundId: z.number().int().positive(), // Added to match repository
+  _teamId: z.number().int().nullable(), // Added to match repository
+  word: z.string(),
+  cardType: z.string(), // Added to match repository
+  selected: z.boolean(),
+});
+
+/**
+ * Schema for validating guess data
+ */
+export const guessSchema = z.object({
+  _id: z.number().int().positive(),
+  _turnId: z.number().int().positive(),
+  _playerId: z.number().int().positive(),
+  _cardId: z.number().int().positive(),
+  outcome: z.string().nullable(),
+  createdAt: z.date(),
+});
+
+/**
+ * Schema for validating clue data
+ */
+export const clueSchema = z.object({
+  _id: z.number().int().positive(),
+  _turnId: z.number().int().positive(),
+  word: z.string(),
+  number: z.number().int().positive(),
+  createdAt: z.date(),
+});
+
+/**
+ * Schema for validating turn data
+ */
+export const turnSchema = z.object({
+  _id: z.number().int().positive(),
+  _roundId: z.number().int().positive(),
+  _teamId: z.number().int().positive(),
+  status: z.string(),
+  guessesRemaining: z.number().int(),
+  createdAt: z.date(),
+  completedAt: z.date().nullable(),
+  clue: clueSchema.optional(),
+  guesses: z.array(guessSchema).default([]),
+});
+
+/**
+ * Schema for validating round data
+ */
+export const roundSchema = z.object({
+  _id: z.number().int().positive(),
+  number: z.number().int().positive(),
+  status: z.enum([
+    ROUND_STATE.SETUP,
+    ROUND_STATE.IN_PROGRESS,
+    ROUND_STATE.COMPLETED,
+  ]),
+  cards: z.array(cardSchema).optional().default([]),
+  turns: z.array(turnSchema).optional().default([]),
+  players: z.array(playerSchema).optional().default([]),
+  createdAt: z.date(),
+});
+
+/**
+ * Schema for player context data
+ */
+export const playerContextSchema = z.object({
+  _userId: z.number().int().positive(),
+  _playerId: z.number().int().positive(),
+  _teamId: z.number().int().positive(),
+  username: z.string(),
+  playerName: z.string(),
+  teamName: z.string(),
+  role: z.enum([
+    PLAYER_ROLE.SPECTATOR,
+    PLAYER_ROLE.CODEMASTER,
+    PLAYER_ROLE.CODEBREAKER,
+    PLAYER_ROLE.NONE,
+  ]),
+});
+
+/**
+ * Schema for validating the current round
+ */
+export const currentRoundSchema = roundSchema;
+
+/**
  * Base schema for validating game state
- *
- * Defines the core structure of a game with validation rules
- * for common properties that appear in all game states... schema
- * can be extended for specific gameplay action validation rules.
  */
 export const gameplayBaseSchema = z.object({
   _id: z.number().int().positive(),
@@ -79,28 +136,28 @@ export const gameplayBaseSchema = z.object({
     GAME_FORMAT.QUICK,
     GAME_FORMAT.ROUND_ROBIN,
   ]),
-  rounds: z.array(roundSchema).optional().default([]),
-  teams: z.array(teamSchema).optional().default([]),
+  teams: z.array(teamSchema),
+  currentRound: currentRoundSchema.optional(),
+  playerContext: playerContextSchema,
+  createdAt: z.date(),
+  updatedAt: z.date().optional().nullable(),
 });
 
 /**
  * Type for game state validation schemas
- *
- * Used to represent schemas that can validate the GameAggregate type,
- * allowing for both the base schema and refined schemas with additional validation
  */
 export type GameplaySchema = z.ZodType<GameAggregate, any, GameAggregate>;
 
 /**
- * Round entity type
- *
- * Represents a single round within a game
+ * Entity types derived from schemas
  */
+export type Player = z.infer<typeof playerSchema>;
+export type Team = z.infer<typeof teamSchema>;
+export type Card = z.infer<typeof cardSchema>;
+export type Guess = z.infer<typeof guessSchema>;
+export type Clue = z.infer<typeof clueSchema>;
+export type Turn = z.infer<typeof turnSchema>;
 export type Round = z.infer<typeof roundSchema>;
-
-/**
- * Game state aggregate type
- *
- * Represents the complete state of a game including all rounds
- */
+export type PlayerContext = z.infer<typeof playerContextSchema>;
+export type CurrentRound = z.infer<typeof currentRoundSchema>;
 export type GameAggregate = z.infer<typeof gameplayBaseSchema>;
