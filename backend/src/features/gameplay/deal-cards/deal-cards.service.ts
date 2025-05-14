@@ -17,9 +17,9 @@ export type DealCardsInput = {
  * Represents the successful dealing of cards
  */
 export type DealCardsSuccess = {
-  roundId: number;
+  _roundId: number;
   roundNumber: number;
-  startingTeamId: number;
+  _startingTeamId: number;
   cards: CardResult[];
 };
 
@@ -104,9 +104,9 @@ export const dealCardsService = (dependencies: DealCardsDependencies) => {
     return {
       success: true,
       data: {
-        roundId: dealtCards.roundId,
+        _roundId: dealtCards._roundId,
         roundNumber: dealtCards.roundNumber,
-        startingTeamId: dealtCards.startingTeam,
+        _startingTeamId: dealtCards.startingTeam,
         cards: dealtCards.cards,
       },
     };

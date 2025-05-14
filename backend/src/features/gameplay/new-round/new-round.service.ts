@@ -16,9 +16,9 @@ export type RoundCreationInput = {
  * Represents the successful creation of a new round
  */
 export type RoundCreationSuccess = {
-  roundId: number;
+  _roundId: number;
   roundNumber: number;
-  gameId: number;
+  _gameId: number;
   createdAt: Date;
 };
 
@@ -103,9 +103,9 @@ export const roundCreationService = (
     return {
       success: true,
       data: {
-        roundId: newRound.id,
+        _roundId: newRound._id,
         roundNumber: newRound.roundNumber,
-        gameId: newRound.gameId,
+        _gameId: newRound._gameId,
         createdAt: newRound.createdAt,
       },
     };

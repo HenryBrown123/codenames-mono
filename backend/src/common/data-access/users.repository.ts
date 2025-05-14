@@ -24,7 +24,7 @@ export type UserInput = {
 };
 
 export type UserResult = {
-  id: number;
+  _id: number;
   username: string;
   created_at: Date;
 };
@@ -62,7 +62,13 @@ export const findByUsername =
       .select(["id", "username", "created_at"])
       .executeTakeFirst();
 
-    return user || null;
+    return user
+      ? {
+          _id: user.id,
+          username: user.username,
+          created_at: user.created_at,
+        }
+      : null;
   };
 
 /**
@@ -85,7 +91,13 @@ export const findById =
       .select(["id", "username", "created_at"])
       .executeTakeFirst();
 
-    return user || null;
+    return user
+      ? {
+          _id: user.id,
+          username: user.username,
+          created_at: user.created_at,
+        }
+      : null;
   };
 
 /**
@@ -113,7 +125,11 @@ export const createUser =
         .returning(["id", "username", "created_at"])
         .executeTakeFirstOrThrow();
 
-      return newUser;
+      return {
+        _id: newUser.id,
+        username: newUser.username,
+        created_at: newUser.created_at,
+      };
     } catch (error) {
       throw new UnexpectedRepositoryError(
         `Failed to create user: ${username}`,

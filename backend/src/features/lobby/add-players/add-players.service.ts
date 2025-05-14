@@ -7,9 +7,9 @@ import { PlayersCreator } from "@backend/common/data-access/players.repository";
 
 /** Represents the result of a player addition operation */
 export type PlayerResult = {
-  playerId: number;
-  gameId: number;
-  teamId: number;
+  _playerId: number;
+  _gameId: number;
+  _teamId: number;
   playerName: string;
 };
 
@@ -62,7 +62,7 @@ export const addPlayersService = (dependencies: ServiceDependencies) => {
 
     const repositoryRequest = playersToAdd.map((player) => ({
       userId,
-      gameId: game.id,
+      gameId: game._id,
       teamId: player.teamId,
       publicName: player.playerName,
       statusId: 1,
@@ -71,9 +71,9 @@ export const addPlayersService = (dependencies: ServiceDependencies) => {
     const newPlayers = await dependencies.addPlayers(repositoryRequest);
 
     return newPlayers.map((player) => ({
-      playerId: player.id,
-      gameId: player.gameId,
-      teamId: player.teamId,
+      _playerId: player._id,
+      _gameId: player._gameId,
+      _teamId: player._teamId,
       playerName: player.publicName,
     }));
   };

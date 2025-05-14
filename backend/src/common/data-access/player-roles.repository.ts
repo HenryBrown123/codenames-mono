@@ -18,9 +18,9 @@ export type RoleId = number;
 
 /** Entity data types */
 export type PlayerRoundRoleData = {
-  player_id: number;
-  round_id: number;
-  role_id: number;
+  _player_id: number;
+  _round_id: number;
+  _role_id: number;
   assigned_at: Date;
 };
 
@@ -33,9 +33,9 @@ export type PlayerRoleInput = {
 };
 
 export type RoleAssignmentResult = {
-  playerId: number;
-  roundId: number;
-  teamId: number;
+  _playerId: number;
+  _roundId: number;
+  _teamId: number;
   role: PlayerRole;
 };
 
@@ -88,9 +88,9 @@ export const getRoundRoleAssignments =
         .execute();
 
       return roleAssignments.map((assignment) => ({
-        playerId: assignment.playerId,
-        roundId: assignment.roundId,
-        teamId: assignment.teamId,
+        _playerId: assignment.playerId,
+        _roundId: assignment.roundId,
+        _teamId: assignment.teamId,
         role: mapRoleNameToEnum(assignment.roleName),
       }));
     } catch (error) {
@@ -142,9 +142,9 @@ export const assignPlayerRoles =
           .executeTakeFirst();
 
         return {
-          playerId: assignment.playerId,
-          roundId: assignment.roundId,
-          teamId: assignment.teamId,
+          _playerId: assignment.playerId,
+          _roundId: assignment.roundId,
+          _teamId: assignment.teamId,
           role: mapRoleNameToEnum(roleRecord?.role_name || ""),
         };
       });
@@ -167,7 +167,7 @@ export const assignPlayerRoles =
 function mapRoleNameToEnum(roleName: string): PlayerRole {
   switch (roleName.toUpperCase()) {
     case "CODEMASTER":
-      return PLAYER_ROLE.CODEBREAKER;
+      return PLAYER_ROLE.CODEMASTER;
     case "CODEBREAKER":
       return PLAYER_ROLE.CODEBREAKER;
     case "SPECTATOR":

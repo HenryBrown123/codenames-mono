@@ -13,13 +13,6 @@ export type TeamId = number;
 /** A unique identifier for a game */
 export type GameId = number;
 
-/** Team data as stored in the database */
-export type TeamData = {
-  id: number;
-  game_id: number;
-  team_name: string;
-};
-
 /** Parameters for creating teams */
 export type TeamsInput = {
   gameId: number;
@@ -28,8 +21,8 @@ export type TeamsInput = {
 
 /** Standardized team data returned from repository */
 export type TeamResult = {
-  id: number;
-  gameId: number;
+  _id: number;
+  _gameId: number;
   teamName: string;
 };
 
@@ -66,8 +59,8 @@ export const createTeams =
 
     return teams
       ? teams.map((team) => ({
-          id: team.id,
-          gameId: team.game_id,
+          _id: team.id,
+          _gameId: team.game_id,
           teamName: team.team_name,
         }))
       : [];
@@ -87,8 +80,8 @@ export const getTeamsByGameId =
 
     return teams
       ? teams.map((team) => ({
-          id: team.id,
-          gameId: team.game_id,
+          _id: team.id,
+          _gameId: team.game_id,
           teamName: team.team_name,
         }))
       : [];

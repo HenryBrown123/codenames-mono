@@ -8,12 +8,13 @@ import {
   GameFinder,
   PublicId,
 } from "@backend/common/data-access/games.repository";
+import { GAME_STATE } from "@codenames/shared/types";
 
 /** Represents the result of a player removal operation */
 export type PlayerResult = {
-  playerId: number;
-  gameId: number;
-  teamId: number;
+  _id: number;
+  _gameId: number;
+  _teamId: number;
   playerName: string;
 };
 
@@ -45,38 +46,38 @@ export const removePlayersService = (dependencies: ServiceDependencies) => {
       );
     }
 
-    if (game.status !== "LOBBY") {
+    if (game.status !== GAME_STATE.LOBBY) {
       throw new UnexpectedLobbyError(
         `Cannot remove players from game in '${game.status}' state`,
       );
     }
 
     const playerToRemove = await dependencies.getPlayer(playerIdToRemove);
-    if (!playerToRemove || playerToRemove.gameId !== game.id) {
+    if (!playerToRemove || playerToRemove._gameId !== game._id) {
       throw new UnexpectedLobbyError(
         `Player ${playerIdToRemove} not found in this game`,
       );
     }
 
-    if (playerToRemove.userId !== userId) {
+    if (playerToRemove._userId !== userId) {
       throw new UnexpectedLobbyError(
         "You do not have permission to remove this player",
       );
     }
 
-    const remainingPlayers = await dependencies.removePlayer(playerIdToRemove);
+    const removedPlayer = await dependencies.removePlayer(playerIdToRemove);
 
-    if (!remainingPlayers) {
+    if (!removedPlayer) {
       throw new UnexpectedLobbyError(
         `Failed to remove player ${playerIdToRemove}`,
       );
     }
 
     return {
-      playerId: remainingPlayers.id,
-      gameId: remainingPlayers.gameId,
-      teamId: remainingPlayers.teamId,
-      playerName: remainingPlayers.publicName,
+      _id: removedPlayer._id,
+      _gameId: removedPlayer._gameId,
+      _teamId: removedPlayer._teamId,
+      playerName: removedPlayer.publicName,
     };
   };
 

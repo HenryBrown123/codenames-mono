@@ -1,21 +1,26 @@
 import {
-  getGameDataByPublicId,
-  updateGameStatus,
+  PublicId,
+  InternalId,
+  GameFinder,
+  GameStatusUpdater,
 } from "@backend/common/data-access/games.repository";
-import { getPlayersByGameId } from "@backend/common/data-access/players.repository";
+
+import { PlayerFinderAll } from "@backend/common/data-access/players.repository";
+
+import { GAME_STATE } from "@codenames/shared/types";
 import { validateGameCanBeStarted } from "./start-game.validation";
 
 /** Required dependencies for creating the StartGameService */
 export type ServiceDependencies = {
-  getGameByPublicId: ReturnType<typeof getGameDataByPublicId>;
-  updateGameStatus: ReturnType<typeof updateGameStatus>;
-  getPlayersByGameId: ReturnType<typeof getPlayersByGameId>;
+  getGameByPublicId: GameFinder<PublicId>;
+  updateGameStatus: GameStatusUpdater;
+  getPlayersByGameId: PlayerFinderAll<InternalId>;
 };
 
 /** Game start success result */
 export type GameStartSuccess = {
+  _id: number;
   success: true;
-  gameId: number;
   publicId: string;
   status: string;
 };
@@ -45,7 +50,7 @@ export const startGameService = (dependencies: ServiceDependencies) => {
       };
     }
 
-    const players = await dependencies.getPlayersByGameId(game.id);
+    const players = await dependencies.getPlayersByGameId(game._id);
 
     const validationResult = validateGameCanBeStarted(game.status, players);
     if (!validationResult.valid) {
@@ -56,13 +61,13 @@ export const startGameService = (dependencies: ServiceDependencies) => {
     }
 
     const updatedGame = await dependencies.updateGameStatus(
-      game.id,
-      "IN_PROGRESS",
+      game._id,
+      GAME_STATE.IN_PROGRESS,
     );
 
     return {
       success: true,
-      gameId: updatedGame.id,
+      _id: updatedGame._id,
       publicId: updatedGame.public_id,
       status: updatedGame.status,
     };

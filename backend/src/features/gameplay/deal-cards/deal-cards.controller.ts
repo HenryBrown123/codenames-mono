@@ -46,9 +46,9 @@ export type DealCardsErrorResponse = {
 export type DealCardsResponse = {
   success: boolean;
   data: {
-    roundId: number;
+    _roundId: number;
     roundNumber: number;
-    startingTeamId: number;
+    _startingTeamId: number;
     cards: { word: string; selected: boolean }[];
   };
 };
@@ -94,9 +94,9 @@ export const dealCardsController = ({ dealCards }: Dependencies) => {
         const response: DealCardsResponse = {
           success: true,
           data: {
-            roundId: result.data.roundId,
+            _roundId: result.data._roundId,
             roundNumber: result.data.roundNumber,
-            startingTeamId: result.data.startingTeamId,
+            _startingTeamId: result.data._startingTeamId,
             cards: result.data.cards.map((card) => {
               return {
                 word: card.word,
