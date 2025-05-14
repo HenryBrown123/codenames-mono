@@ -16,17 +16,6 @@ export type RoundId = number;
 /** A unique identifier for a game */
 export type GameId = number;
 
-/** Round data as stored in the database */
-export type RoundData = {
-  id: number;
-  game_id: number;
-  round_number: number;
-  status_id: number;
-  status_name: string;
-  created_at: Date;
-  updated_at?: Date | null;
-};
-
 /** Parameters for creating a new round */
 export type RoundInput = {
   gameId: number;
@@ -41,8 +30,8 @@ export type RoundStatusUpdateInput = {
 
 /** Standardized round data returned from repository */
 export type RoundResult = {
-  id: number;
-  gameId: number;
+  _id: number;
+  _gameId: number;
   roundNumber: number;
   status: RoundState;
   createdAt: Date;
@@ -54,7 +43,7 @@ export type RoundFinderAll<T extends GameId> = (
 ) => Promise<RoundResult[]>;
 
 /** Function that finds a single round by a specific identifier type */
-export type RoundFinder<T extends RoundId> = (
+export type RoundFinder<T extends RoundId | GameId> = (
   identifier: T,
 ) => Promise<RoundResult | null>;
 
@@ -112,8 +101,8 @@ export const getRoundsByGameId =
       .execute();
 
     return rounds.map((round) => ({
-      id: round.id,
-      gameId: round.game_id,
+      _id: round.id,
+      _gameId: round.game_id,
       roundNumber: round.round_number,
       status: roundStatusSchema.parse(round.status_name),
       createdAt: round.created_at,
@@ -141,8 +130,8 @@ export const getRoundById =
 
     return round
       ? {
-          id: round.id,
-          gameId: round.gameId,
+          _id: round.id,
+          _gameId: round.gameId,
           roundNumber: round.roundNumber,
           status: roundStatusSchema.parse(round.status),
           createdAt: round.createdAt,
@@ -173,8 +162,8 @@ export const getLatestRound =
 
     return round
       ? {
-          id: round.id,
-          gameId: round.gameId,
+          _id: round.id,
+          _gameId: round.gameId,
           roundNumber: round.roundNumber,
           status: roundStatusSchema.parse(round.status),
           createdAt: round.createdAt,
@@ -214,8 +203,8 @@ export const createNewRound =
         .executeTakeFirstOrThrow();
 
       return {
-        id: result.id,
-        gameId: result.game_id,
+        _id: result.id,
+        _gameId: result.game_id,
         roundNumber: result.round_number,
         status: ROUND_STATE.SETUP,
         createdAt: result.created_at,
@@ -261,8 +250,8 @@ export const updateRoundStatus =
           .executeTakeFirstOrThrow();
 
         return {
-          id: updatedRound.id,
-          gameId: updatedRound.gameId,
+          _id: updatedRound.id,
+          _gameId: updatedRound.gameId,
           roundNumber: updatedRound.roundNumber,
           status: status,
           createdAt: updatedRound.createdAt,

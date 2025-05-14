@@ -9,7 +9,7 @@ import shortid from "shortid";
 
 /** Result of game creation */
 export type GameCreationResult = {
-  id: number;
+  _id: number;
   publicId: string;
   createdAt: Date;
   teams: string[];
@@ -69,14 +69,14 @@ export const createGameService = (dependencies: ServiceDependencies) => {
     });
 
     const teams = await dependencies.createTeams({
-      gameId: game.id,
+      gameId: game._id,
       teamNames: ["Team Red", "Team Green"],
     });
 
     const uniqueTeamNames = [...new Set(teams.map((team) => team.teamName))];
 
     return {
-      id: game.id,
+      _id: game._id,
       publicId,
       createdAt: game.created_at,
       teams: uniqueTeamNames,

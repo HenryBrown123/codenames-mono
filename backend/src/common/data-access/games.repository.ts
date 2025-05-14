@@ -8,8 +8,8 @@ import {
   GAME_STATE,
   GameState,
 } from "@codenames/shared/types";
-
 import { z } from "zod";
+
 /**
  * ==================
  * DOMAIN TYPES
@@ -22,8 +22,9 @@ export type InternalId = number;
 
 /** Entity data types */
 export type GameData = {
-  id: number;
+  _id: number;
   created_at: Date;
+  updated_at?: Date | null;
   public_id: string;
   status: GameState;
   game_type: GameType;
@@ -38,8 +39,9 @@ export type GameInput = {
 };
 
 export type GameResult = {
-  id: number;
+  _id: number;
   created_at: Date;
+  updated_at?: Date | null;
 };
 
 /** Generic repository function types */
@@ -113,6 +115,7 @@ export const findGameByPublicId =
       .select([
         "games.id",
         "games.created_at",
+        "games.updated_at",
         "games.public_id",
         "games.game_type",
         "games.game_format",
@@ -123,8 +126,51 @@ export const findGameByPublicId =
 
     return game
       ? {
-          id: game.id,
+          _id: game.id,
           created_at: game.created_at,
+          updated_at: game.updated_at,
+          public_id: game.public_id,
+          status: gameStateSchema.parse(game.status),
+          game_type: gameTypeSchema.parse(game.game_type),
+          game_format: gameFormatSchema.parse(game.game_format),
+        }
+      : null;
+  };
+
+/**
+ * Creates a function for finding games by internal ID
+ *
+ * @param db - Database connection
+ */
+export const findGameById =
+  (db: Kysely<DB>): GameFinder<InternalId> =>
+  /**
+   * Retrieves game data using its internal ID
+   *
+   * @param gameId - The game's internal ID
+   * @returns Game data if found, null otherwise
+   */
+  async (gameId) => {
+    const game = await db
+      .selectFrom("games")
+      .innerJoin("game_status", "games.status_id", "game_status.id")
+      .select([
+        "games.id",
+        "games.created_at",
+        "games.updated_at",
+        "games.public_id",
+        "games.game_type",
+        "games.game_format",
+        "game_status.status_name as status",
+      ])
+      .where("games.id", "=", gameId)
+      .executeTakeFirst();
+
+    return game
+      ? {
+          _id: game.id, // Changed from id to _id
+          created_at: game.created_at,
+          updated_at: game.updated_at, // Added updated_at
           public_id: game.public_id,
           status: gameStateSchema.parse(game.status),
           game_type: gameTypeSchema.parse(game.game_type),
@@ -147,21 +193,24 @@ export const createGame =
    * @returns Created game's ID and timestamp
    */
   async (gameInput) => {
+    const now = new Date();
     const insertedGame = await db
       .insertInto("games")
       .values({
         public_id: gameInput.publicId,
         status_id: 1, // SETUP status
-        created_at: new Date(),
+        created_at: now,
+        updated_at: now, // Added updated_at
         game_type: gameInput.gameType,
         game_format: gameInput.gameFormat,
       })
-      .returning(["id", "created_at"])
+      .returning(["id", "created_at", "updated_at"]) // Added updated_at
       .executeTakeFirstOrThrow();
 
     return {
-      id: insertedGame.id,
+      _id: insertedGame.id, // Changed from id to _id
       created_at: insertedGame.created_at,
+      updated_at: insertedGame.updated_at || null, // Added updated_at
     };
   };
 
@@ -189,16 +238,18 @@ export const updateGameStatus =
         .select(["id"])
         .executeTakeFirstOrThrow();
 
+      const now = new Date();
       return await db
         .updateTable("games")
         .set({
           status_id: status.id,
-          updated_at: new Date(),
+          updated_at: now,
         })
         .where("id", "=", gameId)
         .returning([
           "id",
           "created_at",
+          "updated_at",
           "public_id",
           "game_type",
           "game_format",
@@ -207,7 +258,10 @@ export const updateGameStatus =
     });
 
     const gameWithStatus = {
-      ...updatedGame,
+      _id: updatedGame.id, // Changed from id to _id
+      created_at: updatedGame.created_at,
+      updated_at: updatedGame.updated_at || null,
+      public_id: updatedGame.public_id,
       status: gameStateSchema.parse(statusName),
       game_type: gameTypeSchema.parse(updatedGame.game_type),
       game_format: gameFormatSchema.parse(updatedGame.game_format),

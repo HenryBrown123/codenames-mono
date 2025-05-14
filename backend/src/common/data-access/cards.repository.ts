@@ -25,11 +25,11 @@ export type CardType = (typeof CARD_TYPE)[keyof typeof CARD_TYPE];
 
 /** Card data as stored in the database */
 export type CardData = {
-  id: number;
-  round_id: number;
+  _id: number;
+  _round_id: number;
   word: string;
   card_type: CardType;
-  team_id: number | null;
+  _team_id: number | null;
   selected: boolean;
 };
 
@@ -42,10 +42,11 @@ export type CardInput = {
 
 /** Standardized card data returned from repository */
 export type CardResult = {
-  id: number;
+  _id: number;
+  _roundId: number;
   word: string;
   cardType: CardType;
-  teamId: number | null;
+  _teamId: number | null;
   selected: boolean;
 };
 
@@ -95,11 +96,11 @@ export const getCardsByRoundId =
       .execute();
 
     return cards.map((card) => ({
-      id: card.id,
-      roundId: card.round_id,
+      _id: card.id,
+      _roundId: card.round_id,
+      _teamId: card.team_id,
       word: card.word,
       cardType: card.card_type as CardType,
-      teamId: card.team_id,
       selected: card.selected,
     }));
   };
@@ -159,11 +160,11 @@ export const createCards =
         .execute();
 
       return insertedCards.map((card) => ({
-        id: card.id,
-        roundId: card.round_id,
+        _id: card.id,
+        _roundId: card.round_id,
+        _teamId: card.team_id,
         word: card.word,
         cardType: card.card_type as CardType,
-        teamId: card.team_id,
         selected: card.selected,
       }));
     } catch (error) {
@@ -246,11 +247,11 @@ export const updateCards =
         .execute();
 
       return updatedCards.map((card) => ({
-        id: card.id,
-        roundId: card.round_id,
+        _id: card.id,
+        _roundId: card.round_id,
+        _teamId: card.team_id,
         word: card.word,
         cardType: card.card_type as CardType,
-        teamId: card.team_id,
         selected: card.selected,
       }));
     } catch (error) {
@@ -326,11 +327,11 @@ export const getCardsByTypeAndRound =
       .execute();
 
     return cards.map((card) => ({
-      id: card.id,
-      roundId: card.round_id,
+      _id: card.id,
+      _roundId: card.round_id,
+      _teamId: card.team_id,
       word: card.word,
       cardType: card.card_type as CardType,
-      teamId: card.team_id,
       selected: card.selected,
     }));
   };

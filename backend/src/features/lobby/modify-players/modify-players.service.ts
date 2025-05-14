@@ -78,7 +78,7 @@ export const modifyPlayersService = (
 
     const repositoryRequest = playersToModify.map((player) => {
       return {
-        gameId: game.id,
+        gameId: game._id,
         playerId: player.playerId,
         teamId: player.teamId,
       };

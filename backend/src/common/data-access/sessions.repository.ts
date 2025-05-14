@@ -15,8 +15,8 @@ export type Token = string;
 
 /** Entity data types */
 export type SessionData = {
-  id: number;
-  user_id: number;
+  _id: number;
+  _user_id: number;
   token: string;
   expires_at: Date;
   created_at: Date;
@@ -30,8 +30,8 @@ export type SessionInput = {
 };
 
 export type SessionResult = {
-  id: number;
-  userId: number;
+  _id: number;
+  _userId: number;
   username: string;
   token: string;
   expiresAt: Date;
@@ -101,8 +101,8 @@ export const storeSession =
 
       // Simulated result for stateless implementation
       return {
-        id: 0, // Placeholder ID for stateless implementation
-        userId: userId,
+        _id: 0, // Placeholder ID for stateless implementation
+        _userId: userId,
         username: user.username,
         token: token,
         expiresAt: calculatedExpiresAt,

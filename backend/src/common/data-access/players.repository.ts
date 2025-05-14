@@ -1,6 +1,7 @@
 import { Kysely, Selectable } from "kysely";
 import { DB, Players } from "../db/db.types";
 import { UnexpectedRepositoryError } from "./repository.errors";
+import { PLAYER_ROLE, PlayerRole } from "@codenames/shared/types";
 
 /**
  * ==================
@@ -13,15 +14,27 @@ export type PlayerId = number;
 export type UserId = number;
 export type GameId = number;
 export type TeamId = number;
+export type RoundId = number;
 
 /** Common result type shared by repository functions */
 export type PlayerResult = {
-  id: number;
-  userId: number;
-  gameId: number;
-  teamId: number;
+  _id: number;
+  _userId: number;
+  _gameId: number;
+  _teamId: number;
   statusId: number;
   publicName: string;
+};
+
+/** Player context type containing additional user data and role information */
+export type PlayerContext = {
+  _userId: number;
+  _playerId: number;
+  _teamId: number;
+  username: string;
+  playerName: string;
+  teamName: string;
+  role: PlayerRole;
 };
 
 /** Columns to use for PlayerResult type */
@@ -41,11 +54,17 @@ export type PlayerFinderAll<T extends GameId | UserId> = (
   identifier: T,
 ) => Promise<PlayerResult[]>;
 
-/** Repository function type for finding a player by ID...
- * generic type so expandable for different search ids */
+/** Repository function type for finding a player by ID */
 export type PlayerFinder<T extends PlayerId> = (
   identifier: T,
 ) => Promise<PlayerResult | null>;
+
+/** Repository function type for finding player context */
+export type PlayerContextFinder = (
+  gameId: GameId,
+  userId: UserId,
+  roundId: RoundId,
+) => Promise<PlayerContext | null>;
 
 /**
  * ==================
@@ -75,10 +94,10 @@ export const findPlayerById =
 
     return player
       ? {
-          id: player.id,
-          userId: player.user_id,
-          gameId: player.game_id,
-          teamId: player.team_id,
+          _id: player.id,
+          _userId: player.user_id,
+          _gameId: player.game_id,
+          _teamId: player.team_id,
           statusId: player.status_id,
           publicName: player.public_name,
         }
@@ -112,27 +131,27 @@ export const findPlayersByGameId =
       .execute();
 
     return players.map((player) => ({
-      id: player.id,
-      userId: player.user_id,
-      gameId: player.game_id,
-      teamId: player.team_id,
+      _id: player.id,
+      _userId: player.user_id,
+      _gameId: player.game_id,
+      _teamId: player.team_id,
       statusId: player.status_id,
       publicName: player.public_name,
     }));
   };
 
 /**
- * Creates a function for listing players in a game
+ * Creates a function for listing players by user ID
  *
  * @param db - Database connection
  */
 export const findPlayersByUserId =
   (db: Kysely<DB>): PlayerFinderAll<UserId> =>
   /**
-   * Fetches all players in a given game
+   * Fetches all players associated with a user
    *
-   * @param gameId - The ID of the game to fetch players for
-   * @returns List of players in the specified game
+   * @param userId - The user ID to fetch players for
+   * @returns List of players for the specified user
    */
   async (userId) => {
     const players = await db
@@ -142,14 +161,89 @@ export const findPlayersByUserId =
       .execute();
 
     return players.map((player) => ({
-      id: player.id,
-      userId: player.user_id,
-      gameId: player.game_id,
-      teamId: player.team_id,
+      _id: player.id,
+      _userId: player.user_id,
+      _gameId: player.game_id,
+      _teamId: player.team_id,
       statusId: player.status_id,
       publicName: player.public_name,
     }));
   };
+
+/**
+ * Creates a function for retrieving player context information
+ *
+ * @param db - Database connection
+ */
+export const getPlayerContext =
+  (db: Kysely<DB>): PlayerContextFinder =>
+  /**
+   * Retrieves context information for a specific player in a specific round
+   *
+   * @param gameId - The game ID
+   * @param userId - The user ID
+   * @param roundId - The round ID
+   * @returns Player context information or null if not found
+   */
+  async (gameId, userId, roundId) => {
+    const playerContext = await db
+      .selectFrom("players")
+      .innerJoin("users", "players.user_id", "users.id")
+      .innerJoin("teams", "players.team_id", "teams.id")
+      .leftJoin("player_round_roles", (join) =>
+        join
+          .onRef("player_round_roles.player_id", "=", "players.id")
+          .on("player_round_roles.round_id", "=", roundId),
+      )
+      .leftJoin("player_roles", "player_round_roles.role_id", "player_roles.id")
+      .where("players.game_id", "=", gameId)
+      .where("players.user_id", "=", userId)
+      .select([
+        "players.id as playerId",
+        "players.user_id as userId",
+        "players.team_id as teamId",
+        "players.public_name as playerName",
+        "users.username",
+        "teams.team_name as teamName",
+        "player_roles.role_name as roleName",
+      ])
+      .executeTakeFirst();
+
+    if (!playerContext) {
+      return null;
+    }
+
+    // Parse role name or default to spectator
+    const role = playerContext.roleName
+      ? parseRoleName(playerContext.roleName)
+      : PLAYER_ROLE.SPECTATOR;
+
+    return {
+      _userId: playerContext.userId,
+      _playerId: playerContext.playerId,
+      _teamId: playerContext.teamId,
+      username: playerContext.username,
+      playerName: playerContext.playerName,
+      teamName: playerContext.teamName,
+      role,
+    };
+  };
+
+/**
+ * Helper function to parse role name into PlayerRole enum
+ */
+function parseRoleName(roleName: string): PlayerRole {
+  switch (roleName.toUpperCase()) {
+    case "CODEMASTER":
+      return PLAYER_ROLE.CODEMASTER;
+    case "CODEBREAKER":
+      return PLAYER_ROLE.CODEBREAKER;
+    case "SPECTATOR":
+      return PLAYER_ROLE.SPECTATOR;
+    default:
+      return PLAYER_ROLE.NONE;
+  }
+}
 
 /**
  * ==================
@@ -212,10 +306,10 @@ export const addPlayers =
     }
 
     return newPlayers.map((player) => ({
-      id: player.id,
-      userId: player.user_id,
-      gameId: player.game_id,
-      teamId: player.team_id,
+      _id: player.id,
+      _userId: player.user_id,
+      _gameId: player.game_id,
+      _teamId: player.team_id,
       statusId: player.status_id,
       publicName: player.public_name,
     }));
@@ -252,10 +346,10 @@ export const removePlayer =
       .executeTakeFirstOrThrow();
 
     return {
-      id: removedPlayer.id,
-      userId: removedPlayer.user_id,
-      gameId: removedPlayer.game_id,
-      teamId: removedPlayer.team_id,
+      _id: removedPlayer.id,
+      _userId: removedPlayer.user_id,
+      _gameId: removedPlayer.game_id,
+      _teamId: removedPlayer.team_id,
       statusId: removedPlayer.status_id,
       publicName: removedPlayer.public_name,
     };
@@ -371,10 +465,10 @@ export const modifyPlayers =
 
     const mappedOutput = repositoryResponse.map((player) => {
       return {
-        id: player.id,
-        userId: player.user_id,
-        gameId: player.game_id,
-        teamId: player.team_id,
+        _id: player.id,
+        _userId: player.user_id,
+        _gameId: player.game_id,
+        _teamId: player.team_id,
         statusId: player.status_id,
         publicName: player.public_name,
       };
