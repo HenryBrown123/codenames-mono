@@ -122,9 +122,20 @@ export const playerContextSchema = z.object({
  */
 export const currentRoundSchema = roundSchema;
 
-/**
- * Base schema for validating game state
- */
+export const historicalRoundSchema = z.object({
+  _id: z.number().int().positive(),
+  number: z.number().int().positive(),
+  status: z.enum([
+    ROUND_STATE.SETUP,
+    ROUND_STATE.IN_PROGRESS,
+    ROUND_STATE.COMPLETED,
+  ]),
+  _winningTeamId: z.number().int().positive().nullable(),
+  winningTeamName: z.string().nullable(),
+  createdAt: z.date(),
+});
+
+// Update gameplayBaseSchema to include historicalRounds
 export const gameplayBaseSchema = z.object({
   _id: z.number().int().positive(),
   public_id: z.string(),
@@ -142,11 +153,14 @@ export const gameplayBaseSchema = z.object({
   ]),
   teams: z.array(teamSchema),
   currentRound: currentRoundSchema.optional(),
+  historicalRounds: z.array(historicalRoundSchema).optional().default([]),
   playerContext: playerContextSchema,
   createdAt: z.date(),
   updatedAt: z.date().optional().nullable(),
 });
 
+// Update the types
+export type HistoricalRound = z.infer<typeof historicalRoundSchema>;
 /**
  * Type for game state validation schemas
  */

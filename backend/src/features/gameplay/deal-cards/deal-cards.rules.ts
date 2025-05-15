@@ -1,7 +1,10 @@
 import { GAME_STATE, ROUND_STATE } from "@codenames/shared/types";
 
 import { GameAggregate, roundSchema } from "../state/gameplay-state.types";
-import { gameplayBaseSchema } from "../state/gameplay-state.types";
+import {
+  gameplayBaseSchema,
+  currentRoundSchema,
+} from "../state/gameplay-state.types";
 import { complexProperties } from "../state/gameplay-state.helpers";
 
 import {
@@ -62,7 +65,9 @@ const cardDealingRules = {
  */
 const cardDealingSchema = gameplayBaseSchema.extend({
   status: z.literal(GAME_STATE.IN_PROGRESS),
-  rounds: z.array(roundSchema).min(1, "Game must have at least one round"), // Enforce rounds > 0
+  currentRound: currentRoundSchema.extend({
+    status: z.literal(ROUND_STATE.SETUP),
+  }),
 });
 
 /**

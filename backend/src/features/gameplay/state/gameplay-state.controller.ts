@@ -1,6 +1,6 @@
 import type { Response, NextFunction } from "express";
 import type { Request } from "express-jwt";
-import { GetGameStateResult } from "./gameplay-state.service";
+import type { GetGameStateResult } from "./gameplay-state.service";
 import { z } from "zod";
 
 /**

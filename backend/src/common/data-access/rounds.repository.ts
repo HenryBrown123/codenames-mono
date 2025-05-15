@@ -16,6 +16,9 @@ export type RoundId = number;
 /** A unique identifier for a game */
 export type GameId = number;
 
+/** A unique identifier for a team */
+export type TeamId = number;
+
 /** Parameters for creating a new round */
 export type RoundInput = {
   gameId: number;
@@ -28,10 +31,18 @@ export type RoundStatusUpdateInput = {
   status: RoundState;
 };
 
+/** Parameters for updating a round's winning team */
+export type RoundWinnerUpdateInput = {
+  roundId: number;
+  winningTeamId: TeamId | null;
+};
+
 /** Standardized round data returned from repository */
 export type RoundResult = {
   _id: number;
   _gameId: number;
+  _winningTeamId: TeamId | null;
+  winningTeamName: string | null;
   roundNumber: number;
   status: RoundState;
   createdAt: Date;
@@ -58,6 +69,12 @@ export type RoundStatusUpdater = ({
   roundId,
   status,
 }: RoundStatusUpdateInput) => Promise<RoundResult>;
+
+/** Function that updates a round's winning team */
+export type RoundWinnerUpdater = ({
+  roundId,
+  winningTeamId,
+}: RoundWinnerUpdateInput) => Promise<RoundResult>;
 
 /**
  * ==================
@@ -89,11 +106,14 @@ export const getRoundsByGameId =
     const rounds = await db
       .selectFrom("rounds")
       .innerJoin("round_status", "rounds.status_id", "round_status.id")
+      .leftJoin("teams", "rounds.winning_team_id", "teams.id")
       .where("rounds.game_id", "=", gameId)
       .select([
         "rounds.id",
         "rounds.game_id",
         "rounds.round_number",
+        "rounds.winning_team_id",
+        "teams.team_name as winning_team_name",
         "round_status.status_name",
         "rounds.created_at",
       ])
@@ -103,6 +123,8 @@ export const getRoundsByGameId =
     return rounds.map((round) => ({
       _id: round.id,
       _gameId: round.game_id,
+      _winningTeamId: round.winning_team_id,
+      winningTeamName: round.winning_team_name,
       roundNumber: round.round_number,
       status: roundStatusSchema.parse(round.status_name),
       createdAt: round.created_at,
@@ -118,11 +140,14 @@ export const getRoundById =
     const round = await db
       .selectFrom("rounds")
       .innerJoin("round_status", "rounds.status_id", "round_status.id")
+      .leftJoin("teams", "rounds.winning_team_id", "teams.id")
       .where("rounds.id", "=", roundId)
       .select([
         "rounds.id",
         "rounds.game_id as gameId",
         "rounds.round_number as roundNumber",
+        "rounds.winning_team_id as winningTeamId",
+        "teams.team_name as winningTeamName",
         "round_status.status_name as status",
         "rounds.created_at as createdAt",
       ])
@@ -132,6 +157,8 @@ export const getRoundById =
       ? {
           _id: round.id,
           _gameId: round.gameId,
+          _winningTeamId: round.winningTeamId,
+          winningTeamName: round.winningTeamName,
           roundNumber: round.roundNumber,
           status: roundStatusSchema.parse(round.status),
           createdAt: round.createdAt,
@@ -148,11 +175,14 @@ export const getLatestRound =
     const round = await db
       .selectFrom("rounds")
       .innerJoin("round_status", "rounds.status_id", "round_status.id")
+      .leftJoin("teams", "rounds.winning_team_id", "teams.id")
       .where("rounds.game_id", "=", gameId)
       .select([
         "rounds.id",
         "rounds.game_id as gameId",
         "rounds.round_number as roundNumber",
+        "rounds.winning_team_id as winningTeamId",
+        "teams.team_name as winningTeamName",
         "round_status.status_name as status",
         "rounds.created_at as createdAt",
       ])
@@ -164,6 +194,8 @@ export const getLatestRound =
       ? {
           _id: round.id,
           _gameId: round.gameId,
+          _winningTeamId: round.winningTeamId,
+          winningTeamName: round.winningTeamName,
           roundNumber: round.roundNumber,
           status: roundStatusSchema.parse(round.status),
           createdAt: round.createdAt,
@@ -197,14 +229,23 @@ export const createNewRound =
           game_id: gameId,
           round_number: roundNumber,
           status_id: statusResult.id,
+          winning_team_id: null,
           created_at: new Date(),
         })
-        .returning(["id", "game_id", "round_number", "created_at"])
+        .returning([
+          "id",
+          "game_id",
+          "round_number",
+          "winning_team_id",
+          "created_at",
+        ])
         .executeTakeFirstOrThrow();
 
       return {
         _id: result.id,
         _gameId: result.game_id,
+        _winningTeamId: result.winning_team_id,
+        winningTeamName: null, // No winning team at creation time
         roundNumber: result.round_number,
         status: ROUND_STATE.SETUP,
         createdAt: result.created_at,
@@ -245,13 +286,28 @@ export const updateRoundStatus =
             "id",
             "game_id as gameId",
             "round_number as roundNumber",
+            "winning_team_id as winningTeamId",
             "created_at as createdAt",
           ])
           .executeTakeFirstOrThrow();
 
+        // Get the team name for the winning team if there is one
+        let winningTeamName = null;
+        if (updatedRound.winningTeamId) {
+          const team = await trx
+            .selectFrom("teams")
+            .where("id", "=", updatedRound.winningTeamId)
+            .select(["team_name"])
+            .executeTakeFirst();
+
+          winningTeamName = team ? team.team_name : null;
+        }
+
         return {
           _id: updatedRound.id,
           _gameId: updatedRound.gameId,
+          _winningTeamId: updatedRound.winningTeamId,
+          winningTeamName,
           roundNumber: updatedRound.roundNumber,
           status: status,
           createdAt: updatedRound.createdAt,
@@ -263,6 +319,67 @@ export const updateRoundStatus =
       }
       throw new UnexpectedRepositoryError(
         `Failed to update status for round ${roundId}`,
+        { cause: error },
+      );
+    }
+  };
+
+/**
+ * Creates a function for updating a round's winning team
+ */
+export const updateRoundWinner =
+  (db: Kysely<DB>): RoundWinnerUpdater =>
+  async ({ roundId, winningTeamId }) => {
+    try {
+      // Find the team name if a team ID is provided
+      let winningTeamName = null;
+      if (winningTeamId) {
+        const team = await db
+          .selectFrom("teams")
+          .where("id", "=", winningTeamId)
+          .select(["team_name"])
+          .executeTakeFirst();
+
+        winningTeamName = team ? team.team_name : null;
+      }
+
+      // Update the round's winning team
+      const updatedRound = await db
+        .updateTable("rounds")
+        .set({
+          winning_team_id: winningTeamId,
+          updated_at: new Date(),
+        })
+        .where("id", "=", roundId)
+        .returning([
+          "id",
+          "game_id as gameId",
+          "round_number as roundNumber",
+          "winning_team_id as winningTeamId",
+          "created_at as createdAt",
+        ])
+        .executeTakeFirstOrThrow();
+
+      // Get the current status to include in the return value
+      const roundStatus = await db
+        .selectFrom("rounds")
+        .innerJoin("round_status", "rounds.status_id", "round_status.id")
+        .where("rounds.id", "=", roundId)
+        .select(["round_status.status_name as status"])
+        .executeTakeFirstOrThrow();
+
+      return {
+        _id: updatedRound.id,
+        _gameId: updatedRound.gameId,
+        roundNumber: updatedRound.roundNumber,
+        status: roundStatusSchema.parse(roundStatus.status),
+        _winningTeamId: updatedRound.winningTeamId,
+        winningTeamName,
+        createdAt: updatedRound.createdAt,
+      };
+    } catch (error) {
+      throw new UnexpectedRepositoryError(
+        `Failed to update winner for round ${roundId}`,
         { cause: error },
       );
     }
