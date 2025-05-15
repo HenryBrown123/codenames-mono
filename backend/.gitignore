@@ -1,0 +1,8 @@
+.DS_Store
+
+# Ignore rebase utility script
+rebase-script.sh
+
+# Ignore compiled TypeScript output
+./dist/*
+./env

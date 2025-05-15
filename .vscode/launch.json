@@ -1,0 +1,44 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    
+
+
+    {
+      "name": "Launch Backend Server",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/express-server/src/index.ts",
+      "cwd": "${workspaceFolder}/express-server",
+      "runtimeArgs": ["--import", "tsx"],
+      "outFiles": ["${workspaceFolder}/express-server/**/*.js"],
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Debug Backend Jest Tests",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/express-server/node_modules/.bin/jest",
+      "args": ["--runInBand", "--detectOpenHandles"],
+      "cwd": "${workspaceFolder}/express-server",
+      "runtimeArgs": ["--inspect-brk", "--import", "tsx"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"]
+    },
+{
+  "name": "Run Jest Tests",
+  "type": "node",
+  "request": "launch",
+  "program": "${workspaceFolder}/express-server/node_modules/.bin/jest",
+  "args": ["--runInBand", "--detectOpenHandles"],
+  "cwd": "${workspaceFolder}/express-server",
+  "runtimeArgs": ["--import", "tsx"],
+  "console": "integratedTerminal",
+  "internalConsoleOptions": "neverOpen",
+  "skipFiles": ["<node_internals>/**"]
+}
+
+  ]
+}
