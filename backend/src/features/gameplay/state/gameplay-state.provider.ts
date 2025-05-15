@@ -114,11 +114,23 @@ export const gameplayStateProvider = (
     ]);
 
     // Transform teams to include players array and proper property names
-    const teamsWithPlayers = teams.map((team) => ({
+    const teamsWithPlayers = teams.map((team: TeamResult) => ({
       _id: team._id,
       _gameId: team._gameId,
       teamName: team.teamName,
-      players: players.filter((player) => player._teamId === team._id) || [],
+      players:
+        players.filter((player: PlayerResult) => player._teamId === team._id) ||
+        [],
+    }));
+
+    const cardsMapped = cards.map((card: CardResult) => ({
+      _id: card._id,
+      _roundId: card._roundId,
+      _teamId: card._teamId,
+      teamName: card.teamName,
+      word: card.word,
+      cardType: card.cardType,
+      selected: card.selected,
     }));
 
     return {
@@ -132,7 +144,7 @@ export const gameplayStateProvider = (
         number: latestRound.roundNumber,
         status: latestRound.status,
         players,
-        cards,
+        cards: cardsMapped,
         turns,
         createdAt: latestRound.createdAt,
       },

@@ -27,10 +27,11 @@ export type CardType = (typeof CARD_TYPE)[keyof typeof CARD_TYPE];
 export type CardData = {
   _id: number;
   _round_id: number;
+  _team_id: number | null;
+  teamName: string | null;
+  selected: boolean;
   word: string;
   card_type: CardType;
-  _team_id: number | null;
-  selected: boolean;
 };
 
 /** Parameters for creating cards */
@@ -47,6 +48,7 @@ export type CardResult = {
   word: string;
   cardType: CardType;
   _teamId: number | null;
+  teamName: string | null;
   selected: boolean;
 };
 
@@ -77,6 +79,12 @@ export type RandomWordsSelector = (
  * ==================
  */
 
+// SQL expression for team name lookup - kept simple and contained
+const teamNameLookup =
+  sql<string>`(SELECT team_name FROM teams WHERE teams.id = cards.team_id)`.as(
+    "team_name",
+  );
+
 /**
  * Creates a function for retrieving cards by round ID
  */
@@ -91,14 +99,24 @@ export const getCardsByRoundId =
   async (roundId) => {
     const cards = await db
       .selectFrom("cards")
-      .where("round_id", "=", roundId)
-      .select(["id", "round_id", "word", "card_type", "team_id", "selected"])
+      .leftJoin("teams", "cards.team_id", "teams.id")
+      .where("cards.round_id", "=", roundId)
+      .select([
+        "cards.id",
+        "cards.round_id",
+        "cards.word",
+        "cards.card_type",
+        "cards.team_id",
+        "cards.selected",
+        "teams.team_name",
+      ])
       .execute();
 
     return cards.map((card) => ({
       _id: card.id,
       _roundId: card.round_id,
       _teamId: card.team_id,
+      teamName: card.team_name,
       word: card.word,
       cardType: card.card_type as CardType,
       selected: card.selected,
@@ -124,7 +142,6 @@ export const createCards =
     }
 
     try {
-      // Validate team card assignments
       for (const card of cards) {
         if (card.cardType === CARD_TYPE.TEAM && !card.teamId) {
           throw new UnexpectedRepositoryError(
@@ -146,6 +163,7 @@ export const createCards =
         selected: false,
       }));
 
+      // Use raw SQL to get the team names in the returning clause
       const insertedCards = await db
         .insertInto("cards")
         .values(values)
@@ -156,6 +174,7 @@ export const createCards =
           "card_type",
           "team_id",
           "selected",
+          teamNameLookup,
         ])
         .execute();
 
@@ -163,6 +182,7 @@ export const createCards =
         _id: card.id,
         _roundId: card.round_id,
         _teamId: card.team_id,
+        teamName: card.team_name,
         word: card.word,
         cardType: card.card_type as CardType,
         selected: card.selected,
@@ -243,6 +263,7 @@ export const updateCards =
           "card_type",
           "team_id",
           "selected",
+          teamNameLookup,
         ])
         .execute();
 
@@ -250,6 +271,7 @@ export const updateCards =
         _id: card.id,
         _roundId: card.round_id,
         _teamId: card.team_id,
+        teamName: card.team_name,
         word: card.word,
         cardType: card.card_type as CardType,
         selected: card.selected,
@@ -292,46 +314,4 @@ export const getRandomWords =
     }
 
     return words.map((w) => w.word);
-  };
-
-/**
- * Creates a function for getting cards by type for a round
- */
-export const getCardsByTypeAndRound =
-  (db: Kysely<DB>) =>
-  /**
-   * Retrieves cards of a specific type for a given round
-   *
-   * @param roundId - The round's ID
-   * @param cardType - Type of cards to retrieve
-   * @param teamId - Optional team ID filter (for TEAM cards)
-   * @returns List of cards matching the criteria
-   */
-  async (
-    roundId: number,
-    cardType: CardType,
-    teamId?: number,
-  ): Promise<CardResult[]> => {
-    let query = db
-      .selectFrom("cards")
-      .where("round_id", "=", roundId)
-      .where("card_type", "=", cardType);
-
-    // Add team filter if provided and card type is TEAM
-    if (cardType === CARD_TYPE.TEAM && teamId !== undefined) {
-      query = query.where("team_id", "=", teamId);
-    }
-
-    const cards = await query
-      .select(["id", "round_id", "word", "card_type", "team_id", "selected"])
-      .execute();
-
-    return cards.map((card) => ({
-      _id: card.id,
-      _roundId: card.round_id,
-      _teamId: card.team_id,
-      word: card.word,
-      cardType: card.card_type as CardType,
-      selected: card.selected,
-    }));
   };

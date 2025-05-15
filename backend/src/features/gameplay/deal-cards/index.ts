@@ -3,11 +3,6 @@ import {
   CardsCreator,
 } from "@backend/common/data-access/cards.repository";
 
-import {
-  TeamsFinder,
-  GameId,
-} from "@backend/common/data-access/teams.repository";
-
 import { GameplayStateProvider } from "../state/gameplay-state.provider";
 
 import { dealCardsToRound } from "./deal-cards.actions";

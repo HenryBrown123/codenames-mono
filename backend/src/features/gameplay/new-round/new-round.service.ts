@@ -72,7 +72,10 @@ export const roundCreationService = (
    * @throws Never - Errors are returned in the result object or will bubble up.
    */
   return async (input: RoundCreationInput): Promise<RoundCreationResult> => {
-    const gameData = await dependencies.getGameState(input.gameId);
+    const gameData = await dependencies.getGameState(
+      input.gameId,
+      input.userId,
+    );
 
     if (!gameData) {
       return {

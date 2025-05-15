@@ -70,7 +70,10 @@ export const dealCardsService = (dependencies: DealCardsDependencies) => {
    * @throws Never - Errors are returned in the result object
    */
   return async (input: DealCardsInput): Promise<DealCardsResult> => {
-    const gameData = await dependencies.getGameState(input.gameId);
+    const gameData = await dependencies.getGameState(
+      input.gameId,
+      input.userId,
+    );
 
     if (!gameData) {
       return {

@@ -14,6 +14,7 @@ export const playerSchema = z.object({
   _userId: z.number().int().positive(),
   _gameId: z.number().int().positive(),
   _teamId: z.number().int().positive(),
+  teamName: z.string(),
   statusId: z.number().int().positive(),
   publicName: z.string(),
 });
@@ -33,10 +34,11 @@ export const teamSchema = z.object({
  */
 export const cardSchema = z.object({
   _id: z.number().int().positive(),
-  _roundId: z.number().int().positive(), // Added to match repository
-  _teamId: z.number().int().nullable(), // Added to match repository
+  _roundId: z.number().int().positive(),
+  _teamId: z.number().int().nullable(),
+  teamName: z.string().optional().nullable(),
   word: z.string(),
-  cardType: z.string(), // Added to match repository
+  cardType: z.string(),
   selected: z.boolean(),
 });
 
@@ -48,6 +50,7 @@ export const guessSchema = z.object({
   _turnId: z.number().int().positive(),
   _playerId: z.number().int().positive(),
   _cardId: z.number().int().positive(),
+  playerName: z.string(),
   outcome: z.string().nullable(),
   createdAt: z.date(),
 });
@@ -70,6 +73,7 @@ export const turnSchema = z.object({
   _id: z.number().int().positive(),
   _roundId: z.number().int().positive(),
   _teamId: z.number().int().positive(),
+  teamName: z.string(),
   status: z.string(),
   guessesRemaining: z.number().int(),
   createdAt: z.date(),
