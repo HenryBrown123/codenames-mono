@@ -1,4 +1,4 @@
-import { Kysely, Selectable } from "kysely";
+import { Kysely, Selectable, sql } from "kysely";
 import { DB, Players } from "../db/db.types";
 import { UnexpectedRepositoryError } from "./repository.errors";
 import { PLAYER_ROLE, PlayerRole } from "@codenames/shared/types";
@@ -22,6 +22,7 @@ export type PlayerResult = {
   _userId: number;
   _gameId: number;
   _teamId: number;
+  teamName: string;
   statusId: number;
   publicName: string;
 };
@@ -66,6 +67,12 @@ export type PlayerContextFinder = (
   roundId: RoundId,
 ) => Promise<PlayerContext | null>;
 
+// SQL expression for team name lookup - kept simple and contained
+const teamNameLookup =
+  sql<string>`(SELECT team_name FROM teams WHERE teams.id = players.team_id)`.as(
+    "team_name",
+  );
+
 /**
  * ==================
  * FIND PLAYER BY ID
@@ -88,8 +95,10 @@ export const findPlayerById =
   async (playerId) => {
     const player = await db
       .selectFrom("players")
+      .innerJoin("teams", "players.team_id", "teams.id")
       .where("players.id", "=", playerId)
       .select(playerResultColumns)
+      .select(["teams.team_name"])
       .executeTakeFirst();
 
     return player
@@ -98,6 +107,7 @@ export const findPlayerById =
           _userId: player.user_id,
           _gameId: player.game_id,
           _teamId: player.team_id,
+          teamName: player.team_name,
           statusId: player.status_id,
           publicName: player.public_name,
         }
@@ -128,6 +138,7 @@ export const findPlayersByGameId =
       .selectFrom("players")
       .where("game_id", "=", gameId)
       .select(playerResultColumns)
+      .select(teamNameLookup)
       .execute();
 
     return players.map((player) => ({
@@ -135,6 +146,7 @@ export const findPlayersByGameId =
       _userId: player.user_id,
       _gameId: player.game_id,
       _teamId: player.team_id,
+      teamName: player.team_name,
       statusId: player.status_id,
       publicName: player.public_name,
     }));
@@ -158,6 +170,7 @@ export const findPlayersByUserId =
       .selectFrom("players")
       .where("user_id", "=", userId)
       .select(playerResultColumns)
+      .select(teamNameLookup)
       .execute();
 
     return players.map((player) => ({
@@ -165,6 +178,7 @@ export const findPlayersByUserId =
       _userId: player.user_id,
       _gameId: player.game_id,
       _teamId: player.team_id,
+      teamName: player.team_name,
       statusId: player.status_id,
       publicName: player.public_name,
     }));
@@ -207,6 +221,7 @@ export const getPlayerContext =
         "teams.team_name as teamName",
         "player_roles.role_name as roleName",
       ])
+      .select(teamNameLookup)
       .executeTakeFirst();
 
     if (!playerContext) {
@@ -297,6 +312,7 @@ export const addPlayers =
       .insertInto("players")
       .values(values)
       .returning(playerResultColumns)
+      .returning(teamNameLookup)
       .execute();
 
     if (!newPlayers.length) {
@@ -310,6 +326,7 @@ export const addPlayers =
       _userId: player.user_id,
       _gameId: player.game_id,
       _teamId: player.team_id,
+      teamName: player.team_name,
       statusId: player.status_id,
       publicName: player.public_name,
     }));
@@ -342,7 +359,8 @@ export const removePlayer =
     const removedPlayer = await db
       .deleteFrom("players")
       .where("players.id", "=", playerId)
-      .returningAll()
+      .returning(playerResultColumns)
+      .returning(teamNameLookup)
       .executeTakeFirstOrThrow();
 
     return {
@@ -350,6 +368,7 @@ export const removePlayer =
       _userId: removedPlayer.user_id,
       _gameId: removedPlayer.game_id,
       _teamId: removedPlayer.team_id,
+      teamName: removedPlayer.team_name,
       statusId: removedPlayer.status_id,
       publicName: removedPlayer.public_name,
     };
@@ -402,60 +421,57 @@ export const modifyPlayers =
         player.userId !== undefined,
     );
 
-    const repositoryResponse: Selectable<Players>[] = await db
-      .transaction()
-      .execute(async (trx) => {
-        const updates = playersWithUpdates.map((player) => {
-          // produce object array of values with dynamic properies to prevent
-          // unnecessary updates.
-          const updateValues = Object.fromEntries(
-            Object.entries({
-              user_id: player.userId,
-              public_name: player.publicName,
-              team_id: player.teamId,
-              updated_at: new Date(),
-            }).filter(([_, value]) => value !== undefined),
-          );
-
-          return trx
-            .updateTable("players")
-            .set(updateValues)
-            .where("players.id", "=", player.playerId)
-            .where("players.game_id", "=", player.gameId)
-            .executeTakeFirstOrThrow();
-        });
-
-        await Promise.all(updates);
-
-        const allPlayerIdsToModify = playersData.map(
-          (player) => player.playerId,
+    const repositoryResponse = await db.transaction().execute(async (trx) => {
+      const updates = playersWithUpdates.map((player) => {
+        // produce object array of values with dynamic properies to prevent
+        // unnecessary updates.
+        const updateValues = Object.fromEntries(
+          Object.entries({
+            user_id: player.userId,
+            public_name: player.publicName,
+            team_id: player.teamId,
+            updated_at: new Date(),
+          }).filter(([_, value]) => value !== undefined),
         );
 
-        const modifiedPlayers = await trx
-          .selectFrom("players")
-          .where("id", "in", allPlayerIdsToModify)
-          .select(playerResultColumns)
-          .execute();
-
-        const missingPlayers = allPlayerIdsToModify.filter(
-          (playerId) =>
-            !modifiedPlayers.map((player) => player.id).includes(playerId),
-        );
-
-        if (missingPlayers.length > 0) {
-          throw new UnexpectedRepositoryError(
-            "Players could not be found to modify",
-            {
-              cause: {
-                expected: playersWithUpdates,
-                modified: modifiedPlayers.map((player) => player.id),
-                missing: missingPlayers,
-              },
-            },
-          );
-        }
-        return modifiedPlayers;
+        return trx
+          .updateTable("players")
+          .set(updateValues)
+          .where("players.id", "=", player.playerId)
+          .where("players.game_id", "=", player.gameId)
+          .executeTakeFirstOrThrow();
       });
+
+      await Promise.all(updates);
+
+      const allPlayerIdsToModify = playersData.map((player) => player.playerId);
+
+      const modifiedPlayers = await trx
+        .selectFrom("players")
+        .where("id", "in", allPlayerIdsToModify)
+        .select(playerResultColumns)
+        .select(teamNameLookup)
+        .execute();
+
+      const missingPlayers = allPlayerIdsToModify.filter(
+        (playerId) =>
+          !modifiedPlayers.map((player) => player.id).includes(playerId),
+      );
+
+      if (missingPlayers.length > 0) {
+        throw new UnexpectedRepositoryError(
+          "Players could not be found to modify",
+          {
+            cause: {
+              expected: playersWithUpdates,
+              modified: modifiedPlayers.map((player) => player.id),
+              missing: missingPlayers,
+            },
+          },
+        );
+      }
+      return modifiedPlayers;
+    });
 
     if (!repositoryResponse) {
       throw new UnexpectedRepositoryError(
@@ -469,6 +485,7 @@ export const modifyPlayers =
         _userId: player.user_id,
         _gameId: player.game_id,
         _teamId: player.team_id,
+        teamName: player.team_name,
         statusId: player.status_id,
         publicName: player.public_name,
       };

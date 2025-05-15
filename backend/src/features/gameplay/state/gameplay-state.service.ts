@@ -1,5 +1,5 @@
 import { GameplayStateProvider } from "../state/gameplay-state.provider";
-import { GameAggregate, teamSchema } from "../state/gameplay-state.types";
+import { GameAggregate } from "../state/gameplay-state.types";
 import { PLAYER_ROLE, PlayerRole } from "@codenames/shared/types";
 
 /**
@@ -8,6 +8,62 @@ import { PLAYER_ROLE, PlayerRole } from "@codenames/shared/types";
 export type GetGameStateInput = {
   gameId: string;
   userId: number;
+};
+
+export type GetGameStateResult =
+  | { success: true; data: PublicGameStateResponse }
+  | { success: false; error: GetGameStateFailure };
+
+/**
+ * Public API response structure
+ */
+export type PublicGameStateResponse = {
+  publicId: string;
+  status: string;
+  gameType: string;
+  gameFormat: string;
+  createdAt: Date;
+  teams: {
+    id: number;
+    name: string;
+    score: number;
+    players: {
+      id: number;
+      userId: number;
+      name: string;
+      isActive: boolean;
+    }[];
+  }[];
+  currentRound: {
+    roundNumber: number;
+    status: string;
+    cards: {
+      word: string;
+      selected: boolean;
+      teamName?: string | null;
+      cardType?: string;
+    }[];
+    turns: {
+      id: number;
+      teamId: number;
+      teamName: string;
+      status: string;
+      guessesRemaining: number;
+      clue?: { word: string; number: number };
+      guesses: {
+        id: number;
+        playerId: number;
+        playerName: string;
+        cardId: number;
+        outcome: string | null;
+      }[];
+    }[];
+  } | null;
+  playerContext: {
+    playerName: string;
+    teamName: string;
+    role: PlayerRole;
+  };
 };
 
 /**
@@ -24,49 +80,6 @@ export const GAME_STATE_ERROR = {
 export type GetGameStateFailure =
   | { status: typeof GAME_STATE_ERROR.GAME_NOT_FOUND; gameId: string }
   | { status: typeof GAME_STATE_ERROR.UNAUTHORIZED; userId: number };
-
-export type GetGameStateResult =
-  | { success: true; data: PublicGameStateResponse }
-  | { success: false; error: GetGameStateFailure };
-
-/**
- * Public API response structure
- */
-export type PublicGameStateResponse = {
-  publicId: string;
-  status: string;
-  gameType: string;
-  gameFormat: string;
-  createdAt: Date;
-  teams: {
-    name: string;
-    score: number;
-    players: {
-      name: string;
-      isActive: boolean;
-    }[];
-  }[];
-  currentRound: {
-    roundNumber: number;
-    status: string;
-    cards: {
-      word: string;
-      selected: boolean;
-      teamName?: string | null;
-      cardType?: string;
-    }[];
-    currentTurn?: {
-      teamName: string;
-      clue?: { word: string; number: number };
-      guesses: any[];
-    };
-  } | null;
-  playerContext: {
-    playerName: string;
-    teamName: string;
-    role: PlayerRole;
-  };
-};
 
 /**
  * Dependencies required by the service
@@ -118,15 +131,11 @@ export const getGameStateService = (dependencies: GetGameStateDependencies) => {
  */
 function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
   const playerRole = gameData.playerContext.role;
-  const latestTurn = gameData.currentRound?.turns?.length
-    ? gameData.currentRound.turns[gameData.currentRound.turns.length - 1]
-    : undefined;
 
   return {
-    id: gameData._id,
     publicId: gameData.public_id,
     status: gameData.status,
-    gameType: "SINGLE_DEVICE",
+    gameType: "SINGLE_DEVICE", // This looks hardcoded, might want to get from gameData
     gameFormat: gameData.game_format,
     createdAt: gameData.createdAt,
 
@@ -150,18 +159,26 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
           cards: gameData.currentRound.cards.map((card) =>
             applyCardVisibility(card, playerRole),
           ),
-          currentTurn: latestTurn
-            ? {
-                teamName: ,
-                clue: latestTurn.clue
-                  ? {
-                      word: latestTurn.clue.word,
-                      number: latestTurn.clue.number,
-                    }
-                  : undefined,
-                guesses: latestTurn.guesses || [],
-              }
-            : undefined,
+          turns: gameData.currentRound.turns.map((turn) => ({
+            id: turn._id,
+            teamId: turn._teamId,
+            teamName: turn.teamName,
+            status: turn.status,
+            guessesRemaining: turn.guessesRemaining,
+            clue: turn.clue
+              ? {
+                  word: turn.clue.word,
+                  number: turn.clue.number,
+                }
+              : undefined,
+            guesses: turn.guesses.map((guess) => ({
+              id: guess._id,
+              playerId: guess._playerId,
+              playerName: guess.playerName,
+              cardId: guess._cardId,
+              outcome: guess.outcome,
+            })),
+          })),
         }
       : null,
 

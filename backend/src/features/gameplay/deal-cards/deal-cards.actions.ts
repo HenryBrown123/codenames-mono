@@ -96,7 +96,7 @@ export const dealCardsToRound = (
 
     return {
       _roundId: latestRound._id,
-      roundNumber: latestRound.roundNumber,
+      roundNumber: latestRound.number,
       startingTeam,
       otherTeam,
       cards,
