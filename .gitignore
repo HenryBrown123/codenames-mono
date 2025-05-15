@@ -80,3 +80,4 @@ branch_changes.sh
 # Misc
 .DS_Store
 Thumbs.db
+rebase-script.sh
