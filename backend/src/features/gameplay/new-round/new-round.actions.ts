@@ -18,7 +18,7 @@ export const createNextRound = (createRoundRepo: RoundCreator) => {
   const createNewRound = async (gameState: NewRoundValidGameState) => {
     const nextRoundNumber = complexProperties.getRoundCount(gameState) + 1;
     return await createRoundRepo({
-      gameId: gameState.id,
+      gameId: gameState._id,
       roundNumber: nextRoundNumber,
     });
   };

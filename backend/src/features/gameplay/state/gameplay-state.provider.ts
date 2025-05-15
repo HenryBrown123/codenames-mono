@@ -19,6 +19,7 @@ import {
   RoundResult,
   RoundFinder,
   RoundId,
+  RoundFinderAll,
 } from "@backend/common/data-access/rounds.repository";
 
 import {
@@ -33,7 +34,7 @@ import {
 
 import { PLAYER_ROLE, PlayerRole } from "@codenames/shared/types";
 
-import { GameAggregate } from "./gameplay-state.types";
+import { GameAggregate, HistoricalRound } from "./gameplay-state.types";
 import { UnexpectedGameplayError } from "../errors/gameplay.errors";
 
 /**
@@ -66,6 +67,7 @@ export type GameplayStateProvider = (
  * @param getTurnsByRoundId - Function to retrieve turns for a round
  * @param getPlayersByRoundId - Function to retrieve players for a round
  * @param getLatestRound - Function to retrieve the latest round for a game
+ * @param getAllRounds - Function to retrieve all rounds for a game
  * @param getPlayerContext - Function to retrieve player context info
  * @returns Function that provides the complete game state for a given game ID and user
  */
@@ -76,6 +78,7 @@ export const gameplayStateProvider = (
   getTurnsByRoundId: TurnsFinder<RoundId>,
   getPlayersByRoundId: PlayerFinderAll<RoundId>,
   getLatestRound: RoundFinder<InternalId>,
+  getAllRounds: RoundFinderAll<InternalId>,
   getPlayerContext: PlayerContextFinder,
 ): GameplayStateProvider => {
   /**
@@ -106,11 +109,12 @@ export const gameplayStateProvider = (
     }
 
     // Collect all data needed for the game state
-    const [teams, cards, turns, players] = await Promise.all([
+    const [teams, cards, turns, players, allRounds] = await Promise.all([
       getTeams(game._id),
       getCardsByRoundId(latestRound._id),
       getTurnsByRoundId(latestRound._id),
       getPlayersByRoundId(latestRound._id),
+      getAllRounds(game._id),
     ]);
 
     // Transform teams to include players array and proper property names
@@ -133,6 +137,18 @@ export const gameplayStateProvider = (
       selected: card.selected,
     }));
 
+    // Create historical rounds data - excluding the current round
+    const historicalRounds = allRounds
+      .filter((round) => round._id !== latestRound._id)
+      .map((round) => ({
+        _id: round._id,
+        number: round.roundNumber,
+        status: round.status,
+        _winningTeamId: round._winningTeamId,
+        winningTeamName: round.winningTeamName,
+        createdAt: round.createdAt,
+      }));
+
     return {
       _id: game._id,
       public_id: game.public_id,
@@ -148,6 +164,7 @@ export const gameplayStateProvider = (
         turns,
         createdAt: latestRound.createdAt,
       },
+      historicalRounds,
       playerContext,
       createdAt: game.created_at,
       updatedAt: game.updated_at,
