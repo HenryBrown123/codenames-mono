@@ -1,6 +1,6 @@
 import type { Response, NextFunction } from "express";
 import type { Request } from "express-jwt";
-import { RoundCreationService } from "./new-round.service";
+import type { RoundCreationService } from "./new-round.service";
 import { z } from "zod";
 
 /**
@@ -16,15 +16,10 @@ export const newRoundRequestSchema = z.object({
 });
 
 /**
- * Type definition for validated request
- */
-export type ValidatedNewRoundRequest = z.infer<typeof newRoundRequestSchema>;
-
-/**
  * Response schema for new round creation
  */
 export const newRoundResponseSchema = z.object({
-  success: z.boolean(),
+  success: z.literal(true),
   data: z.object({
     round: z.object({
       id: z.number(),
@@ -36,21 +31,32 @@ export const newRoundResponseSchema = z.object({
 });
 
 /**
- * Type definition for error response
+ * Error response schema for new round creation failures
  */
-export type NewRoundErrorResponse = {
-  success: false;
-  error: string;
-  details?: {
-    code: string;
-    validationErrors?: { path: string; message: string }[];
-  };
-};
+export const newRoundErrorSchema = z.object({
+  success: z.literal(false),
+  error: z.string(),
+  details: z
+    .object({
+      code: z.string(),
+      validationErrors: z
+        .array(
+          z.object({
+            path: z.string(),
+            message: z.string(),
+          }),
+        )
+        .optional(),
+    })
+    .optional(),
+});
 
 /**
- * Type definition for new round response
+ * Type definitions
  */
+export type ValidatedNewRoundRequest = z.infer<typeof newRoundRequestSchema>;
 export type NewRoundResponse = z.infer<typeof newRoundResponseSchema>;
+export type NewRoundErrorResponse = z.infer<typeof newRoundErrorSchema>;
 
 /**
  * Dependencies required by the new round controller
@@ -61,10 +67,14 @@ export type Dependencies = {
 
 /**
  * Creates a controller for handling new round creation
+ *
+ * @param dependencies - Service dependencies
+ * @returns Express request handler
  */
 export const newRoundController = ({ createRound }: Dependencies) => {
   /**
    * Handles HTTP request to create a new round in a game
+   *
    * @param req - Express request with game ID
    * @param res - Express response object
    * @param next - Express error handling function
@@ -75,34 +85,34 @@ export const newRoundController = ({ createRound }: Dependencies) => {
     next: NextFunction,
   ): Promise<void> => {
     try {
-      // Validate the request
-      const validatedRequest = newRoundRequestSchema.parse({
+      const validationResult = newRoundRequestSchema.safeParse({
         params: req.params,
         auth: req.auth,
       });
 
-      // Call the service to create a new round
+      if (!validationResult.success) {
+        res.status(400).json({
+          success: false,
+          error: "Invalid request parameters",
+          details: {
+            code: "validation-error",
+            validationErrors: validationResult.error.errors.map((err) => ({
+              path: err.path.join("."),
+              message: err.message,
+            })),
+          },
+        });
+        return;
+      }
+
+      const { params, auth } = validationResult.data;
+
       const result = await createRound({
-        gameId: validatedRequest.params.gameId,
-        userId: validatedRequest.auth.userId,
+        gameId: params.gameId,
+        userId: auth.userId,
       });
 
-      if (result.success) {
-        // Format successful response
-        const response: NewRoundResponse = {
-          success: true,
-          data: {
-            round: {
-              id: result.data._roundId,
-              roundNumber: result.data.roundNumber,
-              gameId: result.data._gameId,
-              createdAt: result.data.createdAt,
-            },
-          },
-        };
-
-        res.status(201).json(response);
-      } else {
+      if (!result.success) {
         const errorResponse: NewRoundErrorResponse = {
           success: false,
           error: "Failed to create new round",
@@ -119,15 +129,31 @@ export const newRoundController = ({ createRound }: Dependencies) => {
             result.error.validationErrors;
         }
 
-        const statusCode =
-          result.error.status === "game-not-found"
-            ? 404
-            : result.error.status === "invalid-game-state"
-              ? 409
-              : 500;
+        if (result.error.status === "game-not-found") {
+          res.status(404).json(errorResponse);
+          return;
+        }
 
-        res.status(statusCode).json(errorResponse);
+        if (result.error.status === "invalid-game-state") {
+          res.status(409).json(errorResponse);
+          return;
+        }
+
+        res.status(500).json(errorResponse);
+        return;
       }
+
+      res.status(201).json({
+        success: true,
+        data: {
+          round: {
+            id: result.data._roundId,
+            roundNumber: result.data.roundNumber,
+            gameId: result.data._gameId,
+            createdAt: result.data.createdAt,
+          },
+        },
+      });
     } catch (error) {
       next(error);
     }
