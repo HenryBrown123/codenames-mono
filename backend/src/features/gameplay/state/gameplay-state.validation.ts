@@ -1,12 +1,10 @@
 import { z, ZodSchema } from "zod";
 
 /**
- * Represents a structured validation error in the gameplay feature
+ * Type utility to create a branded type from a schema that validates GameAggregate
  */
-export type GameplayValidationError = {
-  path: string;
-  message: string;
-  code?: string;
+export type ValidatedGameState<T extends ZodSchema> = z.infer<T> & {
+  readonly __brand: unique symbol;
 };
 
 /**
@@ -17,10 +15,12 @@ export type GameplayValidationResult<T> =
   | { valid: false; errors: GameplayValidationError[] };
 
 /**
- * Type utility to create a branded type from a schema that validates GameAggregate
+ * Represents a structured validation error in the gameplay feature
  */
-export type ValidatedGameState<T extends ZodSchema> = z.infer<T> & {
-  readonly __brand: unique symbol;
+export type GameplayValidationError = {
+  path: string;
+  message: string;
+  code?: string;
 };
 
 /**
@@ -32,17 +32,17 @@ export function validateGameState<T extends z.ZodType>(
 ): GameplayValidationResult<ValidatedGameState<T>> {
   const result = schema.safeParse(data);
 
-  if (result.success) {
-    return {
-      valid: true,
-      data: result.data as ValidatedGameState<T>,
-    };
-  } else {
+  if (!result.success) {
     return {
       valid: false,
       errors: convertZodErrors(result.error),
     };
   }
+
+  return {
+    valid: true,
+    data: result.data as ValidatedGameState<T>,
+  };
 }
 
 function convertZodErrors(error: z.ZodError): GameplayValidationError[] {
