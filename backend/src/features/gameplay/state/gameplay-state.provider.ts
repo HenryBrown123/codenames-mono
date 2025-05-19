@@ -16,7 +16,6 @@ import {
 } from "@backend/common/data-access/players.repository";
 
 import {
-  RoundResult,
   RoundFinder,
   RoundId,
   RoundFinderAll,
@@ -27,15 +26,11 @@ import {
   CardResult,
 } from "@backend/common/data-access/cards.repository";
 
-import {
-  TurnsFinder,
-  TurnResult,
-} from "@backend/common/data-access/turns.repository";
+import { TurnsFinder } from "@backend/common/data-access/turns.repository";
 
-import { PLAYER_ROLE, PlayerRole } from "@codenames/shared/types";
+import { PlayerRole } from "@codenames/shared/types";
 
-import { GameAggregate, HistoricalRound } from "./gameplay-state.types";
-import { UnexpectedGameplayError } from "../errors/gameplay.errors";
+import { GameAggregate } from "./gameplay-state.types";
 
 /**
  * Player context information for the current user
@@ -54,7 +49,7 @@ export type PlayerContext = {
  * Type representing the function returned by the provider
  */
 export type GameplayStateProvider = (
-  gameId: string,
+  gameId: PublicId,
   userId: number,
 ) => Promise<GameAggregate | null>;
 
@@ -98,14 +93,14 @@ export const gameplayStateProvider = (
     const latestRound = await getLatestRound(game._id);
     if (!latestRound) return null;
 
-    // Get player context first to verify authorization
     const playerContext = await getPlayerContext(
       game._id,
-      userId,
       latestRound._id,
+      userId,
     );
+
     if (!playerContext) {
-      return null; // User not authorized for this game
+      return null;
     }
 
     // Collect all data needed for the game state

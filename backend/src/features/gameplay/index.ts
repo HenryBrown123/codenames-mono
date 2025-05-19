@@ -13,11 +13,13 @@ import * as turnsRepository from "@backend/common/data-access/turns.repository";
 
 import newRound from "@backend/features/gameplay/new-round";
 import dealCards from "@backend/features/gameplay/deal-cards";
+import startRound from "@backend/features/gameplay/start-round";
 
 import { gameplayStateProvider } from "./state/gameplay-state.provider";
 import { gameplayErrorHandler } from "./errors/gameplay-errors.middleware";
 import { getGameStateService } from "./state/gameplay-state.service";
 import { getGameStateController } from "./state/gameplay-state.controller";
+
 /**
  * Initializes the gameplay feature module with all routes and dependencies
  */
@@ -28,56 +30,64 @@ export const initialize = (
 ) => {
   /** Initialize repository functions */
   const getGameById = gameRepository.findGameByPublicId(db);
+
   const getRounds = roundsRepository.getRoundsByGameId(db);
-  const getPlayers = playerRepository.findPlayersByGameId(db);
-  const getTeams = teamsRepository.getTeamsByGameId(db);
-  const getRandomWords = cardsRepository.getRandomWords(db);
-  const getCardsByRound = cardsRepository.getCardsByRoundId(db);
-  const getTurnsByRound = turnsRepository.getTurnsByRoundId(db);
   const getLatestRound = roundsRepository.getLatestRound(db);
-  const getPlayerContext = playerRepository.getPlayerContext(db);
-
-  const createCards = cardsRepository.createCards(db);
   const createRound = roundsRepository.createNewRound(db);
+  const updateRoundStatus = roundsRepository.updateRoundStatus(db);
+  const getPlayers = playerRepository.findPlayersByGameId(db);
+  const getPlayerContext = playerRepository.getPlayerContext(db);
+  const getTeams = teamsRepository.getTeamsByGameId(db);
+  const getCardsByRound = cardsRepository.getCardsByRoundId(db);
+  const getRandomWords = cardsRepository.getRandomWords(db);
+  const createCards = cardsRepository.createCards(db);
+  const getTurnsByRound = turnsRepository.getTurnsByRoundId(db);
 
-  /** Setup shared game state provider */
-  const getGameState = gameplayStateProvider(
+  const getGameplayState = gameplayStateProvider(
     getGameById,
     getTeams,
     getCardsByRound,
     getTurnsByRound,
     getPlayers,
     getLatestRound,
+    getRounds,
     getPlayerContext,
   );
 
   /** Initialize services */
   const gameStateService = getGameStateService({
-    getGameState,
+    getGameState: getGameplayState,
   });
 
   /** Initialize controllers */
+  const gameStateController = getGameStateController({
+    getGameState: gameStateService,
+  });
+
   const { controller: newRoundController } = newRound({
-    getGameState: getGameState,
+    getGameState: getGameplayState,
     createRound: createRound,
   });
 
   const { controller: dealCardsController } = dealCards({
-    getGameState: getGameState,
+    getGameState: getGameplayState,
     getRandomWords: getRandomWords,
     createCards: createCards,
   });
 
-  const gameStateController = getGameStateController({
-    getGameState: gameStateService,
+  const { controller: startRoundController } = startRound({
+    getGameState: getGameplayState,
+    updateRoundStatus: updateRoundStatus,
   });
 
   /** Setup routes */
   const router = Router();
 
-  // Gameplay actions
   router.post("/games/:gameId/rounds", auth, newRoundController);
+
+  // Gameplay action endpoints
   router.post("/games/:gameId/rounds/:id/deal", auth, dealCardsController);
+  router.post("/games/:gameId/rounds/:id/start", auth, startRoundController);
 
   // Game state endpoint
   router.get("/games/:gameId", auth, gameStateController);

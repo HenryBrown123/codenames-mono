@@ -1,6 +1,9 @@
 import type { Response, NextFunction } from "express";
 import type { Request } from "express-jwt";
-import type { GetGameStateResult } from "./gameplay-state.service";
+import type {
+  GetGameStateResult,
+  getGameStateService,
+} from "./gameplay-state.service";
 import { z } from "zod";
 
 /**
@@ -24,10 +27,7 @@ export type ValidatedGameStateRequest = z.infer<typeof gameStateRequestSchema>;
  * Dependencies required by the game state controller
  */
 export type Dependencies = {
-  getGameState: (input: {
-    gameId: string;
-    userId: number;
-  }) => Promise<GetGameStateResult>;
+  getGameState: ReturnType<typeof getGameStateService>;
 };
 
 /**
@@ -46,20 +46,17 @@ export const getGameStateController =
    */
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      // Validate the request
       const validatedRequest = gameStateRequestSchema.parse({
         params: req.params,
         auth: req.auth,
       });
 
-      // Call the service to get game state
       const result = await getGameState({
         gameId: validatedRequest.params.gameId,
         userId: validatedRequest.auth.userId,
       });
 
       if (result.success) {
-        // Return successful response with game state
         res.status(200).json({
           success: true,
           data: {
@@ -67,7 +64,6 @@ export const getGameStateController =
           },
         });
       } else {
-        // Handle different error cases
         if (result.error.status === "game-not-found") {
           res.status(404).json({
             success: false,
@@ -81,7 +77,6 @@ export const getGameStateController =
             details: { userId: result.error.userId },
           });
         } else {
-          // Fallback error response
           res.status(500).json({
             success: false,
             error: "An unexpected error occurred",
