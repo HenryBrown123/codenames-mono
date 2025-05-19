@@ -81,7 +81,7 @@ export function createGameplayPaths() {
         },
       },
     },
-    "/games/{gameId}/rounds/{roundId}/deal": {
+    "/games/{gameId}/rounds/{id}/deal": {
       post: {
         summary: "Deal cards for a round",
         description:
@@ -99,7 +99,7 @@ export function createGameplayPaths() {
             description: "Public ID of the game",
           },
           {
-            name: "roundId",
+            name: "id",
             in: "path",
             required: true,
             schema: {
@@ -156,6 +156,94 @@ export function createGameplayPaths() {
                       {
                         path: "rounds",
                         message: "Round must be in SETUP state to deal cards",
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+          "401": {
+            description: "Unauthorized",
+          },
+          "500": {
+            description: "Server error",
+          },
+        },
+      },
+    },
+    "/games/{gameId}/rounds/{id}/start": {
+      post: {
+        summary: "Start a round",
+        description:
+          "Transitions a round from SETUP to IN_PROGRESS state once cards have been dealt",
+        tags: ["Gameplay"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "gameId",
+            in: "path",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description: "Public ID of the game",
+          },
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description: "ID of the round",
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Round started successfully",
+            content: {
+              "application/json": {
+                example: {
+                  success: true,
+                  data: {
+                    round: {
+                      roundNumber: 1,
+                      status: "IN_PROGRESS",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "404": {
+            description: "Game or round not found",
+            content: {
+              "application/json": {
+                example: {
+                  success: false,
+                  error: "Failed to start round",
+                  details: {
+                    code: "round-not-found",
+                  },
+                },
+              },
+            },
+          },
+          "409": {
+            description: "Business rule violation - cannot start round",
+            content: {
+              "application/json": {
+                example: {
+                  success: false,
+                  error: "Failed to start round",
+                  details: {
+                    code: "invalid-game-state",
+                    validationErrors: [
+                      {
+                        path: ["currentRound", "cards"],
+                        message:
+                          "Cards must be dealt before starting the round",
                       },
                     ],
                   },
