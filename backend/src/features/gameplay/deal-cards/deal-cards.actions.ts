@@ -72,7 +72,9 @@ export const dealCardsToRound = (
    * @returns Laid out cards data with grid information
    */
   return async (gameState: DealCardsValidGameState) => {
-    // validated game state means there should always be a latest round.
+    // validated game state means there should always be a latest round...
+    // therefore throw as getLatestRound should always return a round given the
+    // DealCardsValidGameState
     const latestRound = complexProperties.getLatestRoundOrThrow(gameState);
     const [team1, team2] = gameState.teams;
 
