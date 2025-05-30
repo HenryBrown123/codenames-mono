@@ -1,35 +1,19 @@
-import { RoundStatusUpdater } from "@backend/common/data-access/rounds.repository";
-import { GameplayStateProvider } from "../state/gameplay-state.provider";
+// backend/src/features/gameplay/start-round/index.ts
+import type { GameplayStateProvider } from "../state/gameplay-state.provider";
+import { PlayerRole } from "@codenames/shared/types";
 
-import { startCurrentRound } from "./start-round.actions";
 import { startRoundService } from "./start-round.service";
 import { startRoundController } from "./start-round.controller";
 
-/**
- * Dependencies required by the start round feature module
- */
 export interface StartRoundDependencies {
   getGameState: GameplayStateProvider;
-  updateRoundStatus: RoundStatusUpdater;
+  createActionsForRole: (role: PlayerRole) => { execute: any };
 }
 
-/**
- * Feature module for starting rounds in a game
- *
- * This module encapsulates all the components needed for the start round feature:
- * - Actions: Domain logic for updating round status
- * - Services: Gameplay logic and orchestration
- * - Controllers: HTTP request handling
- *
- * @param dependencies - External dependencies required by this feature
- * @returns Object containing the assembled components of the feature
- */
 export const startRound = (dependencies: StartRoundDependencies) => {
-  const startRoundAction = startCurrentRound(dependencies.updateRoundStatus);
-
   const startRoundServiceInstance = startRoundService({
     getGameState: dependencies.getGameState,
-    startRoundFromValidState: startRoundAction,
+    createActionsForRole: dependencies.createActionsForRole,
   });
 
   const controller = startRoundController({

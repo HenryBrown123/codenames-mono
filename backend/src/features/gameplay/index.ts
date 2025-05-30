@@ -1,3 +1,4 @@
+// backend/src/features/gameplay/index.ts
 import { Express } from "express";
 import { Kysely } from "kysely";
 import { DB } from "@backend/common/db/db.types";
@@ -15,32 +16,28 @@ import newRound from "@backend/features/gameplay/new-round";
 import dealCards from "@backend/features/gameplay/deal-cards";
 import startRound from "@backend/features/gameplay/start-round";
 
+import { createGameplayActions } from "./actions/gameplay-actions";
 import { gameplayStateProvider } from "./state/gameplay-state.provider";
 import { gameplayErrorHandler } from "./errors/gameplay-errors.middleware";
 import { getGameStateService } from "./state/gameplay-state.service";
 import { getGameStateController } from "./state/gameplay-state.controller";
 
 /**
- * Initializes the gameplay feature module with all routes and dependencies
+ * Initializes the gameplay feature module
  */
 export const initialize = (
   app: Express,
   db: Kysely<DB>,
   auth: AuthMiddleware,
 ) => {
-  /** Initialize repository functions */
+  // Query repositories
   const getGameById = gameRepository.findGameByPublicId(db);
-
   const getRounds = roundsRepository.getRoundsByGameId(db);
   const getLatestRound = roundsRepository.getLatestRound(db);
-  const createRound = roundsRepository.createNewRound(db);
-  const updateRoundStatus = roundsRepository.updateRoundStatus(db);
   const getPlayers = playerRepository.findPlayersByGameId(db);
   const getPlayerContext = playerRepository.getPlayerContext(db);
   const getTeams = teamsRepository.getTeamsByGameId(db);
   const getCardsByRound = cardsRepository.getCardsByRoundId(db);
-  const getRandomWords = cardsRepository.getRandomWords(db);
-  const createCards = cardsRepository.createCards(db);
   const getTurnsByRound = turnsRepository.getTurnsByRoundId(db);
 
   const getGameplayState = gameplayStateProvider(
@@ -54,45 +51,42 @@ export const initialize = (
     getPlayerContext,
   );
 
-  /** Initialize services */
+  // Command actions with transaction support
+  const createActionsForRole = createGameplayActions(db);
+
+  // Services
   const gameStateService = getGameStateService({
     getGameState: getGameplayState,
   });
 
-  /** Initialize controllers */
+  // Controllers
   const gameStateController = getGameStateController({
     getGameState: gameStateService,
   });
 
   const { controller: newRoundController } = newRound({
     getGameState: getGameplayState,
-    createRound: createRound,
+    createActionsForRole,
   });
 
   const { controller: dealCardsController } = dealCards({
     getGameState: getGameplayState,
-    getRandomWords: getRandomWords,
-    createCards: createCards,
+    createActionsForRole,
   });
 
   const { controller: startRoundController } = startRound({
     getGameState: getGameplayState,
-    updateRoundStatus: updateRoundStatus,
+    createActionsForRole,
   });
 
-  /** Setup routes */
+  // Routes
   const router = Router();
 
   router.post("/games/:gameId/rounds", auth, newRoundController);
-
-  // Gameplay action endpoints
   router.post("/games/:gameId/rounds/:id/deal", auth, dealCardsController);
   router.post("/games/:gameId/rounds/:id/start", auth, startRoundController);
-
-  // Game state endpoint
   router.get("/games/:gameId", auth, gameStateController);
 
-  // Apply routes and error handlers
   app.use("/api", router);
   app.use("/api", gameplayErrorHandler);
 };
