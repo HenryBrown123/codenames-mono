@@ -32,12 +32,12 @@ export const newRound = (dependencies: NewRoundDependencies) => {
     createRoundFromValidState: createRoundAction,
   });
 
-  const controller = newRoundController({
+  const createRoundController = newRoundController({
     createRound,
   });
 
   return {
-    controller,
+    controller: createRoundController,
     service: createRound,
   };
 };
