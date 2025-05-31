@@ -16,7 +16,7 @@ import newRound from "@backend/features/gameplay/new-round";
 import dealCards from "@backend/features/gameplay/deal-cards";
 import startRound from "@backend/features/gameplay/start-round";
 
-import { createGameplayActions } from "./actions/gameplay-actions";
+import { createGameplayActions } from "./actions/";
 import { gameplayStateProvider } from "./state/gameplay-state.provider";
 import { gameplayErrorHandler } from "./errors/gameplay-errors.middleware";
 import { getGameStateService } from "./state/gameplay-state.service";

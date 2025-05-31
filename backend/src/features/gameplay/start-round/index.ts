@@ -1,4 +1,3 @@
-// backend/src/features/gameplay/start-round/index.ts
 import type { GameplayStateProvider } from "../state/gameplay-state.provider";
 import { PlayerRole } from "@codenames/shared/types";
 

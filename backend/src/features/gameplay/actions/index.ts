@@ -25,7 +25,3 @@ export const createGameplayActions = (db: Kysely<DB>) => {
   // Return the configured gameplay actions executor
   return gameplayActions(db, actionsBuilder);
 };
-
-// Re-export for testing
-export { gameplayActions, createPlayerActions } from "./gameplay-actions";
-export type { ActionsBuilder, GameplayRepositories } from "./gameplay-actions";
