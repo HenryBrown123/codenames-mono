@@ -8,7 +8,6 @@
     "module": "preserve",
     "moduleResolution": "bundler",
     "paths": {
-      "@backend/features/*": ["src/features/*"],
       "@backend/test/*": ["test/*"],
       "@backend/common/*": ["src/common/*"]
     }

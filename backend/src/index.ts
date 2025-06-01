@@ -10,10 +10,10 @@ import { createOpenApiSpec } from "@codenames/shared/api";
 import { loadEnvFromPackageDir } from "./common/config";
 import swaggerUi from "swagger-ui-express";
 
-import { initialize as initializeAuth } from "./features/auth";
-import { initialize as initializeGameSetup } from "./features/setup";
-import { initialize as initializeLobby } from "./features/lobby";
-import { initialize as initializeGameplay } from "./features/gameplay";
+import { initialize as initializeAuth } from "./auth";
+import { initialize as initializeGameSetup } from "./setup";
+import { initialize as initializeLobby } from "./lobby";
+import { initialize as initializeGameplay } from "./gameplay";
 import { authMiddleware } from "@backend/common/http-middleware/auth.middleware";
 import { refreshSystemData } from "./common/data/system-data-loader";
 

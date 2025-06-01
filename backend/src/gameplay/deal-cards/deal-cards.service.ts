@@ -1,16 +1,21 @@
 import type { GameplayStateProvider } from "../state/gameplay-state.provider";
 import type { GameplayValidationError } from "../state/gameplay-state.validation";
+import type { GameplayHandler } from "../actions/gameplay-actions.handler";
 import type { CardResult } from "@backend/common/data-access/cards.repository";
-import { PlayerRole } from "@codenames/shared/types";
 
 import { validate as checkCardDealingRules } from "./deal-cards.rules";
-import { CommonActions } from "../actions/gameplay-actions";
 
+/**
+ * Input parameters for dealing cards
+ */
 export type DealCardsInput = {
   gameId: string;
   userId: number;
 };
 
+/**
+ * Successful card dealing result
+ */
 export type DealCardsSuccess = {
   _roundId: number;
   roundNumber: number;
@@ -18,11 +23,17 @@ export type DealCardsSuccess = {
   cards: CardResult[];
 };
 
+/**
+ * Card dealing error types
+ */
 export const DEAL_CARDS_ERROR = {
   INVALID_GAME_STATE: "invalid-game-state",
   GAME_NOT_FOUND: "game-not-found",
 } as const;
 
+/**
+ * Card dealing failure details
+ */
 export type DealCardsFailure =
   | {
       status: typeof DEAL_CARDS_ERROR.INVALID_GAME_STATE;
@@ -34,15 +45,27 @@ export type DealCardsFailure =
       gameId: string;
     };
 
+/**
+ * Combined result type for card dealing
+ */
 export type DealCardsResult =
   | { success: true; data: DealCardsSuccess }
   | { success: false; error: DealCardsFailure };
 
+/**
+ * Dependencies required by the deal cards service
+ */
 export type DealCardsDependencies = {
   getGameState: GameplayStateProvider;
-  createActionsForRole: (role: PlayerRole) => { execute: any };
+  gameplayHandler: GameplayHandler;
 };
 
+/**
+ * Creates a service for handling card dealing with business rule validation
+ *
+ * @param dependencies - Required external dependencies
+ * @returns Service function for dealing cards
+ */
 export const dealCardsService = (dependencies: DealCardsDependencies) => {
   return async (input: DealCardsInput): Promise<DealCardsResult> => {
     const gameData = await dependencies.getGameState(
@@ -73,12 +96,8 @@ export const dealCardsService = (dependencies: DealCardsDependencies) => {
       };
     }
 
-    const { execute } = dependencies.createActionsForRole(
-      gameData.playerContext.role,
-    );
-
-    const dealtCards = await execute(async (actions: CommonActions) => {
-      return await actions.dealCards(validationResult.data);
+    const dealtCards = await dependencies.gameplayHandler(async (game) => {
+      return await game.dealCards(validationResult.data);
     });
 
     return {

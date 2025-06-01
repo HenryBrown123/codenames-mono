@@ -1,15 +1,20 @@
 import type { GameplayStateProvider } from "../state/gameplay-state.provider";
 import type { GameplayValidationError } from "../state/gameplay-state.validation";
-import { PlayerRole } from "@codenames/shared/types";
+import type { GameplayHandler } from "../actions/gameplay-actions.handler";
 
 import { validate as checkRoundCreationRules } from "./new-round.rules";
-import { CommonActions } from "../actions/gameplay-actions";
 
+/**
+ * Input parameters for round creation
+ */
 export type RoundCreationInput = {
   gameId: string;
   userId: number;
 };
 
+/**
+ * Successful round creation result
+ */
 export type RoundCreationSuccess = {
   _roundId: number;
   roundNumber: number;
@@ -17,11 +22,17 @@ export type RoundCreationSuccess = {
   createdAt: Date;
 };
 
+/**
+ * Round creation error types
+ */
 export const ROUND_CREATION_ERROR = {
   INVALID_GAME_STATE: "invalid-game-state",
   GAME_NOT_FOUND: "game-not-found",
 } as const;
 
+/**
+ * Round creation failure details
+ */
 export type RoundCreationFailure =
   | {
       status: typeof ROUND_CREATION_ERROR.INVALID_GAME_STATE;
@@ -33,15 +44,27 @@ export type RoundCreationFailure =
       gameId: string;
     };
 
+/**
+ * Combined result type for round creation
+ */
 export type RoundCreationResult =
   | { success: true; data: RoundCreationSuccess }
   | { success: false; error: RoundCreationFailure };
 
+/**
+ * Dependencies required by the round creation service
+ */
 export type RoundCreationDependencies = {
   getGameState: GameplayStateProvider;
-  createActionsForRole: (role: PlayerRole) => { execute: any };
+  gameplayHandler: GameplayHandler;
 };
 
+/**
+ * Creates a service for handling round creation with business rule validation
+ *
+ * @param dependencies - Required external dependencies
+ * @returns Service function for creating rounds
+ */
 export const roundCreationService = (
   dependencies: RoundCreationDependencies,
 ) => {
@@ -73,12 +96,8 @@ export const roundCreationService = (
       };
     }
 
-    const { execute } = dependencies.createActionsForRole(
-      gameData.playerContext.role,
-    );
-
-    const result = await execute(async (actions: CommonActions) => {
-      const newRound = await actions.createNextRound(validationResult.data);
+    const result = await dependencies.gameplayHandler(async (game) => {
+      const newRound = await game.createRound(validationResult.data);
 
       return {
         _roundId: newRound._id,

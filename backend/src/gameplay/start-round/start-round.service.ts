@@ -1,28 +1,38 @@
-// backend/src/features/gameplay/start-round/start-round.service.ts
 import type { GameplayStateProvider } from "../state/gameplay-state.provider";
 import type { GameplayValidationError } from "../state/gameplay-state.validation";
-import { PlayerRole } from "@codenames/shared/types";
+import type { GameplayHandler } from "../actions/gameplay-actions.handler";
 
 import { validate as checkRoundStartRules } from "./start-round.rules";
-import { CommonActions } from "../actions/gameplay-actions";
 
+/**
+ * Input parameters for starting a round
+ */
 export type StartRoundInput = {
   gameId: string;
   roundNumber: number;
   userId: number;
 };
 
+/**
+ * Successful round start result
+ */
 export type StartRoundSuccess = {
   roundNumber: number;
   status: string;
 };
 
+/**
+ * Round start error types
+ */
 export const START_ROUND_ERROR = {
   INVALID_GAME_STATE: "invalid-game-state",
   GAME_NOT_FOUND: "game-not-found",
   ROUND_NOT_FOUND: "round-not-found",
 } as const;
 
+/**
+ * Round start failure details
+ */
 export type StartRoundFailure =
   | {
       status: typeof START_ROUND_ERROR.INVALID_GAME_STATE;
@@ -38,15 +48,27 @@ export type StartRoundFailure =
       roundNumber: number;
     };
 
+/**
+ * Combined result type for round start
+ */
 export type StartRoundResult =
   | { success: true; data: StartRoundSuccess }
   | { success: false; error: StartRoundFailure };
 
+/**
+ * Dependencies required by the start round service
+ */
 export type StartRoundDependencies = {
   getGameState: GameplayStateProvider;
-  createActionsForRole: (role: PlayerRole) => { execute: any };
+  gameplayHandler: GameplayHandler;
 };
 
+/**
+ * Creates a service for handling round start with business rule validation
+ *
+ * @param dependencies - Required external dependencies
+ * @returns Service function for starting rounds
+ */
 export const startRoundService = (dependencies: StartRoundDependencies) => {
   return async (input: StartRoundInput): Promise<StartRoundResult> => {
     const gameData = await dependencies.getGameState(
@@ -98,12 +120,8 @@ export const startRoundService = (dependencies: StartRoundDependencies) => {
       };
     }
 
-    const { execute } = dependencies.createActionsForRole(
-      gameData.playerContext.role,
-    );
-
-    const updatedRound = await execute(async (actions: CommonActions) => {
-      return await actions.startRound(validationResult.data);
+    const updatedRound = await dependencies.gameplayHandler(async (game) => {
+      return await game.startRound(validationResult.data);
     });
 
     return {

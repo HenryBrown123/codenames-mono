@@ -1,24 +1,30 @@
-// backend/src/features/gameplay/new-round/index.ts
 import type { GameplayStateProvider } from "../state/gameplay-state.provider";
-import { PlayerRole } from "@codenames/shared/types";
+import type { GameplayHandler } from "../actions/gameplay-actions.handler";
 
 import { roundCreationService } from "./new-round.service";
 import { newRoundController } from "./new-round.controller";
 
+/**
+ * Dependencies required by the new round feature
+ */
 export interface NewRoundDependencies {
   getGameState: GameplayStateProvider;
-  createActionsForRole: (role: PlayerRole) => { execute: any };
+  gameplayHandler: GameplayHandler;
 }
 
+/**
+ * Initializes the new round feature with all dependencies
+ *
+ * @param dependencies - Required services and handlers
+ * @returns Feature components for use in route setup
+ */
 export const newRound = (dependencies: NewRoundDependencies) => {
   const createRound = roundCreationService({
     getGameState: dependencies.getGameState,
-    createActionsForRole: dependencies.createActionsForRole,
+    gameplayHandler: dependencies.gameplayHandler,
   });
 
-  const controller = newRoundController({
-    createRound,
-  });
+  const controller = newRoundController({ createRound });
 
   return {
     controller,
