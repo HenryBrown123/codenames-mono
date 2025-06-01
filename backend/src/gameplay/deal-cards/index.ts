@@ -1,19 +1,27 @@
-// backend/src/features/gameplay/deal-cards/index.ts
 import type { GameplayStateProvider } from "../state/gameplay-state.provider";
-import { PlayerRole } from "@codenames/shared/types";
+import type { GameplayHandler } from "../actions/gameplay-actions.handler";
 
 import { dealCardsService } from "./deal-cards.service";
 import { dealCardsController } from "./deal-cards.controller";
 
+/**
+ * Dependencies required by the deal cards feature
+ */
 export interface DealCardsDependencies {
   getGameState: GameplayStateProvider;
-  createActionsForRole: (role: PlayerRole) => { execute: any };
+  gameplayHandler: GameplayHandler;
 }
 
+/**
+ * Initializes the deal cards feature with all dependencies
+ *
+ * @param dependencies - Required services and handlers
+ * @returns Feature components for use in route setup
+ */
 export const dealCards = (dependencies: DealCardsDependencies) => {
   const dealCardsServiceInstance = dealCardsService({
     getGameState: dependencies.getGameState,
-    createActionsForRole: dependencies.createActionsForRole,
+    gameplayHandler: dependencies.gameplayHandler,
   });
 
   const controller = dealCardsController({
