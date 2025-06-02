@@ -209,8 +209,8 @@ export const getLatestRound =
 export const createNewRound =
   (db: Kysely<DB>): RoundCreator =>
   async ({ gameId, roundNumber }) => {
-    return await db.transaction().execute(async (trx) => {
-      const statusResult = await trx
+    try {
+      const statusResult = await db
         .selectFrom("round_status")
         .where("status_name", "=", ROUND_STATE.SETUP)
         .select(["id"])
@@ -223,7 +223,7 @@ export const createNewRound =
       }
 
       // Create the round
-      const result = await trx
+      const result = await db
         .insertInto("rounds")
         .values({
           game_id: gameId,
@@ -250,7 +250,15 @@ export const createNewRound =
         status: ROUND_STATE.SETUP,
         createdAt: result.created_at,
       };
-    });
+    } catch (error) {
+      if (error instanceof UnexpectedRepositoryError) {
+        throw error;
+      }
+      throw new UnexpectedRepositoryError(
+        `Failed to create round for game ${gameId}`,
+        { cause: error },
+      );
+    }
   };
 
 /**
@@ -260,59 +268,57 @@ export const updateRoundStatus =
   (db: Kysely<DB>): RoundStatusUpdater =>
   async ({ roundId, status }) => {
     try {
-      return await db.transaction().execute(async (trx) => {
-        // Get the status ID for the requested status
-        const statusResult = await trx
-          .selectFrom("round_status")
-          .where("status_name", "=", status)
-          .select(["id"])
+      // Get the status ID for the requested status
+      const statusResult = await db
+        .selectFrom("round_status")
+        .where("status_name", "=", status)
+        .select(["id"])
+        .executeTakeFirst();
+
+      if (!statusResult) {
+        throw new UnexpectedRepositoryError(
+          `Round status '${status}' not found in database`,
+        );
+      }
+
+      // Update the round's status
+      const updatedRound = await db
+        .updateTable("rounds")
+        .set({
+          status_id: statusResult.id,
+          updated_at: new Date(),
+        })
+        .where("id", "=", roundId)
+        .returning([
+          "id",
+          "game_id as gameId",
+          "round_number as roundNumber",
+          "winning_team_id as winningTeamId",
+          "created_at as createdAt",
+        ])
+        .executeTakeFirstOrThrow();
+
+      // Get the team name for the winning team if there is one
+      let winningTeamName = null;
+      if (updatedRound.winningTeamId) {
+        const team = await db
+          .selectFrom("teams")
+          .where("id", "=", updatedRound.winningTeamId)
+          .select(["team_name"])
           .executeTakeFirst();
 
-        if (!statusResult) {
-          throw new UnexpectedRepositoryError(
-            `Round status '${status}' not found in database`,
-          );
-        }
+        winningTeamName = team ? team.team_name : null;
+      }
 
-        // Update the round's status
-        const updatedRound = await trx
-          .updateTable("rounds")
-          .set({
-            status_id: statusResult.id,
-            updated_at: new Date(),
-          })
-          .where("id", "=", roundId)
-          .returning([
-            "id",
-            "game_id as gameId",
-            "round_number as roundNumber",
-            "winning_team_id as winningTeamId",
-            "created_at as createdAt",
-          ])
-          .executeTakeFirstOrThrow();
-
-        // Get the team name for the winning team if there is one
-        let winningTeamName = null;
-        if (updatedRound.winningTeamId) {
-          const team = await trx
-            .selectFrom("teams")
-            .where("id", "=", updatedRound.winningTeamId)
-            .select(["team_name"])
-            .executeTakeFirst();
-
-          winningTeamName = team ? team.team_name : null;
-        }
-
-        return {
-          _id: updatedRound.id,
-          _gameId: updatedRound.gameId,
-          _winningTeamId: updatedRound.winningTeamId,
-          winningTeamName,
-          roundNumber: updatedRound.roundNumber,
-          status: status,
-          createdAt: updatedRound.createdAt,
-        };
-      });
+      return {
+        _id: updatedRound.id,
+        _gameId: updatedRound.gameId,
+        _winningTeamId: updatedRound.winningTeamId,
+        winningTeamName,
+        roundNumber: updatedRound.roundNumber,
+        status: status,
+        createdAt: updatedRound.createdAt,
+      };
     } catch (error) {
       if (error instanceof UnexpectedRepositoryError) {
         throw error;

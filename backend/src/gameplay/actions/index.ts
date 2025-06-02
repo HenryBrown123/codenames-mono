@@ -22,7 +22,7 @@ export const gameplayActions = (dbContext: Kysely<DB>) => {
     // Command repositories
     createRound: roundsRepository.createNewRound,
     getRandomWords: cardsRepository.getRandomWords,
-    createCards: cardsRepository.createCards,
+    createCards: cardsRepository.replaceCards,
     updateRoundStatus: roundsRepository.updateRoundStatus,
   };
 

@@ -217,14 +217,12 @@ export const replaceCards =
    */
   async (roundId, cards) => {
     try {
-      return await db.transaction().execute(async (trx) => {
-        // Delete existing cards for this round
-        await trx.deleteFrom("cards").where("round_id", "=", roundId).execute();
+      await db
+        .deleteFrom("cards")
+        .where("round_id", "=", roundId)
+        .executeTakeFirst();
 
-        // Use the existing creator function but with the transaction
-        const cardCreator = createCards(trx);
-        return await cardCreator(roundId, cards);
-      });
+      return await createCards(db)(roundId, cards);
     } catch (error) {
       throw new UnexpectedRepositoryError(
         `Failed to replace cards for round ${roundId}`,

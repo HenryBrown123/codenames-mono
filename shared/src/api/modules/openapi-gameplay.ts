@@ -236,13 +236,13 @@ export function createGameplayPaths() {
             description: "Public ID of the game",
           },
           {
-            name: "id",
+            name: "roundNumber",
             in: "path",
             required: true,
             schema: {
               type: "string",
             },
-            description: "ID of the round",
+            description: "Round number within the game",
           },
         ],
         responses: {
@@ -309,7 +309,7 @@ export function createGameplayPaths() {
         },
       },
     },
-    "/games/{gameId}/rounds/{id}/start": {
+    "/games/{gameId}/rounds/{roundNumber}/start": {
       post: {
         summary: "Start a round",
         description:
@@ -327,13 +327,13 @@ export function createGameplayPaths() {
             description: "Public ID of the game",
           },
           {
-            name: "id",
+            name: "roundNumber",
             in: "path",
             required: true,
             schema: {
               type: "string",
             },
-            description: "ID of the round",
+            description: "Round number in game",
           },
         ],
         responses: {

@@ -88,40 +88,69 @@ export const gameplayStateProvider = (
     userId: number,
   ): Promise<GameAggregate | null> => {
     const game = await getGameById(gameId);
-    console.log(game);
     if (!game) return null;
 
-    const latestRound = await getLatestRound(game._id);
-    console.log();
-    if (!latestRound) return null;
-
-    const playerContext = await getPlayerContext(
-      game._id,
-      userId,
-      latestRound._id,
-    );
-
-    if (!playerContext) {
-      return null;
-    }
-
-    // Collect all data needed for the game state
-    const [teams, cards, turns, players, allRounds] = await Promise.all([
+    // Collect all game level state
+    const [teams, allRounds, latestRound] = await Promise.all([
       getTeams(game._id),
-      getCardsByRoundId(latestRound._id),
-      getTurnsByRoundId(latestRound._id),
-      getPlayersByRoundId(latestRound._id),
       getAllRounds(game._id),
+      getLatestRound(game._id),
     ]);
 
-    // Transform teams to include players array and proper property names
+    // Get player context - handle case where no round exists yet
+    const roundId = latestRound?._id || null;
+    const playerContext = await getPlayerContext(game._id, userId, roundId);
+    if (!playerContext) return null;
+
+    // Transform teams data
     const teamsWithPlayers = teams.map((team: TeamResult) => ({
       _id: team._id,
       _gameId: team._gameId,
       teamName: team.teamName,
-      players:
-        players.filter((player: PlayerResult) => player._teamId === team._id) ||
-        [],
+      players: [] as PlayerResult[], // Will be populated if round exists
+    }));
+
+    // Create historical rounds data
+    const historicalRounds = allRounds
+      .filter((round) => !latestRound || round._id !== latestRound._id)
+      .map((round) => ({
+        _id: round._id,
+        number: round.roundNumber,
+        status: round.status,
+        _winningTeamId: round._winningTeamId,
+        winningTeamName: round.winningTeamName,
+        createdAt: round.createdAt,
+      }));
+
+    // Base state for when no current round exists
+    if (!latestRound) {
+      return {
+        _id: game._id,
+        public_id: game.public_id,
+        status: game.status,
+        game_format: game.game_format,
+        teams: teamsWithPlayers,
+        currentRound: null,
+        historicalRounds,
+        playerContext,
+        createdAt: game.created_at,
+        updatedAt: game.updated_at,
+      };
+    }
+
+    // Collect all round level state
+    const [cards, turns, players] = await Promise.all([
+      getCardsByRoundId(latestRound._id),
+      getTurnsByRoundId(latestRound._id),
+      getPlayersByRoundId(latestRound._id),
+    ]);
+
+    // Add players to their respective teams
+    const teamsWithPlayersPopulated = teamsWithPlayers.map((team) => ({
+      ...team,
+      players: players.filter(
+        (player: PlayerResult) => player._teamId === team._id,
+      ),
     }));
 
     const cardsMapped = cards.map((card: CardResult) => ({
@@ -134,24 +163,12 @@ export const gameplayStateProvider = (
       selected: card.selected,
     }));
 
-    // Create historical rounds data - excluding the current round
-    const historicalRounds = allRounds
-      .filter((round) => round._id !== latestRound._id)
-      .map((round) => ({
-        _id: round._id,
-        number: round.roundNumber,
-        status: round.status,
-        _winningTeamId: round._winningTeamId,
-        winningTeamName: round.winningTeamName,
-        createdAt: round.createdAt,
-      }));
-
     return {
       _id: game._id,
       public_id: game.public_id,
       status: game.status,
       game_format: game.game_format,
-      teams: teamsWithPlayers,
+      teams: teamsWithPlayersPopulated,
       currentRound: {
         _id: latestRound._id,
         number: latestRound.roundNumber,
