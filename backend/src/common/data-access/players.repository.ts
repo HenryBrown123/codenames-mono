@@ -2,6 +2,7 @@ import { Kysely, Selectable, sql } from "kysely";
 import { DB, Players } from "../db/db.types";
 import { UnexpectedRepositoryError } from "./repository.errors";
 import { PLAYER_ROLE, PlayerRole } from "@codenames/shared/types";
+import { randomUUID } from "crypto";
 
 /**
  * ==================
@@ -11,6 +12,7 @@ import { PLAYER_ROLE, PlayerRole } from "@codenames/shared/types";
 
 /** Domain-specific identifier types */
 export type PlayerId = number;
+export type PublicPlayerId = string;
 export type UserId = number;
 export type GameId = number;
 export type TeamId = number;
@@ -19,6 +21,7 @@ export type RoundId = number;
 /** Common result type shared by repository functions */
 export type PlayerResult = {
   _id: number;
+  publicId: string;
   _userId: number;
   _gameId: number;
   _teamId: number;
@@ -41,6 +44,7 @@ export type PlayerContext = {
 /** Columns to use for PlayerResult type */
 const playerResultColumns = [
   "id",
+  "public_id",
   "user_id",
   "game_id",
   "team_id",
@@ -56,7 +60,7 @@ export type PlayerFinderAll<T extends GameId | UserId> = (
 ) => Promise<PlayerResult[]>;
 
 /** Repository function type for finding a player by ID */
-export type PlayerFinder<T extends PlayerId> = (
+export type PlayerFinder<T extends PlayerId | PublicPlayerId> = (
   identifier: T,
 ) => Promise<PlayerResult | null>;
 
@@ -80,16 +84,16 @@ const teamNameLookup =
  */
 
 /**
- * Creates a function for finding a player by ID
+ * Creates a function for finding a player by internal ID
  *
  * @param db - Database connection
  */
 export const findPlayerById =
   (db: Kysely<DB>): PlayerFinder<PlayerId> =>
   /**
-   * Retrieves player data using its ID
+   * Retrieves player data using its internal ID
    *
-   * @param playerId - The player's ID
+   * @param playerId - The player's internal ID
    * @returns Player data if found, null otherwise
    */
   async (playerId) => {
@@ -104,6 +108,43 @@ export const findPlayerById =
     return player
       ? {
           _id: player.id,
+          publicId: player.public_id,
+          _userId: player.user_id,
+          _gameId: player.game_id,
+          _teamId: player.team_id,
+          teamName: player.team_name,
+          statusId: player.status_id,
+          publicName: player.public_name,
+        }
+      : null;
+  };
+
+/**
+ * Creates a function for finding a player by public ID
+ *
+ * @param db - Database connection
+ */
+export const findPlayerByPublicId =
+  (db: Kysely<DB>): PlayerFinder<PublicPlayerId> =>
+  /**
+   * Retrieves player data using its public UUID
+   *
+   * @param publicPlayerId - The player's public UUID
+   * @returns Player data if found, null otherwise
+   */
+  async (publicPlayerId) => {
+    const player = await db
+      .selectFrom("players")
+      .innerJoin("teams", "players.team_id", "teams.id")
+      .where("players.public_id", "=", publicPlayerId)
+      .select(playerResultColumns)
+      .select(["teams.team_name"])
+      .executeTakeFirst();
+
+    return player
+      ? {
+          _id: player.id,
+          publicId: player.public_id,
           _userId: player.user_id,
           _gameId: player.game_id,
           _teamId: player.team_id,
@@ -143,6 +184,7 @@ export const findPlayersByGameId =
 
     return players.map((player) => ({
       _id: player.id,
+      publicId: player.public_id,
       _userId: player.user_id,
       _gameId: player.game_id,
       _teamId: player.team_id,
@@ -175,6 +217,7 @@ export const findPlayersByUserId =
 
     return players.map((player) => ({
       _id: player.id,
+      publicId: player.public_id,
       _userId: player.user_id,
       _gameId: player.game_id,
       _teamId: player.team_id,
@@ -300,6 +343,7 @@ export const addPlayers =
     }
 
     const values = playersData.map((player) => ({
+      public_id: randomUUID(),
       user_id: player.userId,
       game_id: player.gameId,
       public_name: player.publicName,
@@ -323,6 +367,7 @@ export const addPlayers =
 
     return newPlayers.map((player) => ({
       _id: player.id,
+      publicId: player.public_id,
       _userId: player.user_id,
       _gameId: player.game_id,
       _teamId: player.team_id,
@@ -351,7 +396,7 @@ export const removePlayer =
   /**
    * Deletes a specific player from the database
    *
-   * @param playerId - The ID of the player to remove
+   * @param playerId - The internal ID of the player to remove
    * @returns The removed player record
    * @throws If player not found
    */
@@ -365,6 +410,7 @@ export const removePlayer =
 
     return {
       _id: removedPlayer.id,
+      publicId: removedPlayer.public_id,
       _userId: removedPlayer.user_id,
       _gameId: removedPlayer.game_id,
       _teamId: removedPlayer.team_id,
@@ -383,7 +429,7 @@ export const removePlayer =
 /** Input type for modifying player data */
 export type ModifyPlayerInput = {
   gameId: number;
-  playerId: number;
+  publicPlayerId: string;
   publicName?: string;
   teamId?: number;
   userId?: number;
@@ -413,7 +459,7 @@ export const modifyPlayers =
       return [];
     }
 
-    // Filter to just players with updatable fields as not guaranteed with types
+    // Filter to just players with updatable fields
     const playersWithUpdates = playersData.filter(
       (player) =>
         player.publicName !== undefined ||
@@ -423,7 +469,7 @@ export const modifyPlayers =
 
     const repositoryResponse = await db.transaction().execute(async (trx) => {
       const updates = playersWithUpdates.map((player) => {
-        // produce object array of values with dynamic properies to prevent
+        // produce object array of values with dynamic properties to prevent
         // unnecessary updates.
         const updateValues = Object.fromEntries(
           Object.entries({
@@ -437,25 +483,29 @@ export const modifyPlayers =
         return trx
           .updateTable("players")
           .set(updateValues)
-          .where("players.id", "=", player.playerId)
+          .where("players.public_id", "=", player.publicPlayerId)
           .where("players.game_id", "=", player.gameId)
           .executeTakeFirstOrThrow();
       });
 
       await Promise.all(updates);
 
-      const allPlayerIdsToModify = playersData.map((player) => player.playerId);
+      const allPublicPlayerIds = playersData.map(
+        (player) => player.publicPlayerId,
+      );
 
       const modifiedPlayers = await trx
         .selectFrom("players")
-        .where("id", "in", allPlayerIdsToModify)
+        .where("public_id", "in", allPublicPlayerIds)
         .select(playerResultColumns)
         .select(teamNameLookup)
         .execute();
 
-      const missingPlayers = allPlayerIdsToModify.filter(
-        (playerId) =>
-          !modifiedPlayers.map((player) => player.id).includes(playerId),
+      const missingPlayers = allPublicPlayerIds.filter(
+        (publicPlayerId) =>
+          !modifiedPlayers
+            .map((player) => player.public_id)
+            .includes(publicPlayerId),
       );
 
       if (missingPlayers.length > 0) {
@@ -464,7 +514,7 @@ export const modifyPlayers =
           {
             cause: {
               expected: playersWithUpdates,
-              modified: modifiedPlayers.map((player) => player.id),
+              modified: modifiedPlayers.map((player) => player.public_id),
               missing: missingPlayers,
             },
           },
@@ -482,6 +532,7 @@ export const modifyPlayers =
     const mappedOutput = repositoryResponse.map((player) => {
       return {
         _id: player.id,
+        publicId: player.public_id,
         _userId: player.user_id,
         _gameId: player.game_id,
         _teamId: player.team_id,

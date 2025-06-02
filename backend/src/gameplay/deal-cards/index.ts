@@ -1,5 +1,5 @@
 import type { GameplayStateProvider } from "../state/gameplay-state.provider";
-import type { GameplayHandler } from "../actions/gameplay-actions.handler";
+import type { TransactionalGameplayHandler } from "../actions/gameplay-actions.handler";
 
 import { dealCardsService } from "./deal-cards.service";
 import { dealCardsController } from "./deal-cards.controller";
@@ -9,7 +9,7 @@ import { dealCardsController } from "./deal-cards.controller";
  */
 export interface DealCardsDependencies {
   getGameState: GameplayStateProvider;
-  gameplayHandler: GameplayHandler;
+  gameplayHandler: TransactionalGameplayHandler;
 }
 
 /**

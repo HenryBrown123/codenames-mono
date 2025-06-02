@@ -1,6 +1,6 @@
 import type { GameplayStateProvider } from "../state/gameplay-state.provider";
 import type { GameplayValidationError } from "../state/gameplay-state.validation";
-import type { GameplayHandler } from "../actions/gameplay-actions.handler";
+import type { TransactionalGameplayHandler } from "../actions/gameplay-actions.handler";
 
 import { validate as checkRoundStartRules } from "./start-round.rules";
 
@@ -60,7 +60,7 @@ export type StartRoundResult =
  */
 export type StartRoundDependencies = {
   getGameState: GameplayStateProvider;
-  gameplayHandler: GameplayHandler;
+  gameplayHandler: TransactionalGameplayHandler;
 };
 
 /**

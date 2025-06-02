@@ -1,5 +1,5 @@
 import { generate } from "kysely-codegen";
-import { Pool } from "pg";
+
 import dotenv from "dotenv";
 
 // Load environment variables

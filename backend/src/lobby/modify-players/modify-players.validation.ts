@@ -5,8 +5,8 @@ import { z } from "zod";
  * as the other fields can be optionally updated.
  */
 export const modifyPlayerSchema = z.object({
-  playerId: z.number(),
-  teamId: z.number().optional(),
+  playerId: z.string().uuid("Player ID must be a valid UUID"),
+  teamName: z.string().optional(),
   playerName: z.string().min(1).max(30).optional(),
 });
 
@@ -17,7 +17,7 @@ export const modifyPlayerSchema = z.object({
 export const modifySinglePlayerRequestSchema = z.object({
   params: z.object({
     gameId: z.string(),
-    playerId: z.number(),
+    playerId: z.string().uuid("Player ID must be a valid UUID"),
   }),
 
   body: modifyPlayerSchema,
@@ -49,8 +49,35 @@ export type ValidatedBatchPlayersRequest = z.infer<
   typeof modifyBatchPlayersRequestSchema
 >;
 
-export const singlePlayerResponseSchema = z.object({});
-export const batchPlayersResponseSchema = z.object({});
+/**
+ * Schema for a player in the response
+ */
+const playerResponseSchema = z.object({
+  id: z.string(),
+  playerName: z.string(),
+  username: z.string().optional(),
+  teamName: z.string(),
+  isActive: z.boolean(),
+});
+
+/**
+ * Response schemas for player modifications
+ */
+export const singlePlayerResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.object({
+    player: playerResponseSchema,
+    gameId: z.string(),
+  }),
+});
+
+export const batchPlayersResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.object({
+    players: z.array(playerResponseSchema),
+    gameId: z.string(),
+  }),
+});
 
 export type SinglePlayerResponse = z.infer<typeof singlePlayerResponseSchema>;
 export type BatchPlayersResponse = z.infer<typeof batchPlayersResponseSchema>;

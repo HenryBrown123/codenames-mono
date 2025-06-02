@@ -2,7 +2,7 @@ import { UnexpectedLobbyError } from "../errors/lobby.errors";
 import {
   PlayerFinder,
   PlayerRemover,
-  PlayerId,
+  PublicPlayerId,
 } from "@backend/common/data-access/players.repository";
 import {
   GameFinder,
@@ -12,16 +12,23 @@ import { GAME_STATE } from "@codenames/shared/types";
 
 /** Represents the result of a player removal operation */
 export type PlayerResult = {
-  _id: number;
-  _gameId: number;
-  _teamId: number;
+  publicId: string;
   playerName: string;
+  username?: string;
+  teamName: string;
+  statusId: number;
+};
+
+/** Service response including game context */
+export type RemovePlayersServiceResult = {
+  removedPlayer: PlayerResult;
+  gamePublicId: string;
 };
 
 /** Required dependencies for creating the RemovePlayersService */
 export type ServiceDependencies = {
   removePlayer: PlayerRemover;
-  getPlayer: PlayerFinder<PlayerId>;
+  getPlayer: PlayerFinder<PublicPlayerId>;
   getGameByPublicId: GameFinder<PublicId>;
 };
 
@@ -31,14 +38,14 @@ export const removePlayersService = (dependencies: ServiceDependencies) => {
    * Removes a specific player from a game
    * @param publicGameId - Public identifier of the game
    * @param userId - ID of the user attempting to remove the player
-   * @param playerIdToRemove - ID of the player to remove
-   * @returns Removed player details
+   * @param playerIdToRemove - Public UUID of the player to remove
+   * @returns Removed player details and game context
    */
   const removePlayerImpl = async (
     publicGameId: string,
     userId: number,
-    playerIdToRemove: number,
-  ): Promise<PlayerResult> => {
+    playerIdToRemove: string,
+  ): Promise<RemovePlayersServiceResult> => {
     const game = await dependencies.getGameByPublicId(publicGameId);
     if (!game) {
       throw new UnexpectedLobbyError(
@@ -65,7 +72,7 @@ export const removePlayersService = (dependencies: ServiceDependencies) => {
       );
     }
 
-    const removedPlayer = await dependencies.removePlayer(playerIdToRemove);
+    const removedPlayer = await dependencies.removePlayer(playerToRemove._id);
 
     if (!removedPlayer) {
       throw new UnexpectedLobbyError(
@@ -74,10 +81,14 @@ export const removePlayersService = (dependencies: ServiceDependencies) => {
     }
 
     return {
-      _id: removedPlayer._id,
-      _gameId: removedPlayer._gameId,
-      _teamId: removedPlayer._teamId,
-      playerName: removedPlayer.publicName,
+      removedPlayer: {
+        publicId: removedPlayer.publicId,
+        playerName: removedPlayer.publicName,
+        username: undefined, // Could be enriched with user data if needed
+        teamName: removedPlayer.teamName,
+        statusId: removedPlayer.statusId,
+      },
+      gamePublicId: game.public_id,
     };
   };
 

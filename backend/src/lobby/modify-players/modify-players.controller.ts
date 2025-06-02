@@ -7,6 +7,8 @@ import {
   modifyBatchPlayersRequestSchema,
   singlePlayerResponseSchema,
   batchPlayersResponseSchema,
+  SinglePlayerResponse,
+  BatchPlayersResponse,
 } from "./modify-players.validation";
 
 export interface ModifyPlayersController {
@@ -38,20 +40,33 @@ export const modifyPlayersController = ({
   ): Promise<void> => {
     try {
       const validatedReq = modifySinglePlayerRequestSchema.parse({
-        parms: req.params,
+        params: req.params,
         body: req.body,
         auth: req.auth,
       });
 
-      const modifiedPlayers = await modifyPlayersService.updatePlayers(
-        validatedReq.params.gameId,
-        [{ ...validatedReq.body }],
-      );
+      const { modifiedPlayers, gamePublicId } =
+        await modifyPlayersService.updatePlayers(validatedReq.params.gameId, [
+          { ...validatedReq.body },
+        ]);
 
-      const validatedResponse =
-        singlePlayerResponseSchema.parse(modifiedPlayers);
+      const response: SinglePlayerResponse = {
+        success: true,
+        data: {
+          player: {
+            id: modifiedPlayers[0].publicId,
+            playerName: modifiedPlayers[0].playerName,
+            username: modifiedPlayers[0].username,
+            teamName: modifiedPlayers[0].teamName,
+            isActive: modifiedPlayers[0].statusId === 1,
+          },
+          gameId: gamePublicId,
+        },
+      };
 
-      res.status(201).json(validatedResponse);
+      const validatedResponse = singlePlayerResponseSchema.parse(response);
+
+      res.status(200).json(validatedResponse);
     } catch (error) {
       next(error);
     }
@@ -65,20 +80,34 @@ export const modifyPlayersController = ({
   ): Promise<void> => {
     try {
       const validatedReq = modifyBatchPlayersRequestSchema.parse({
-        parms: req.params,
+        params: req.params,
         body: req.body,
         auth: req.auth,
       });
 
-      const modifiedPlayers = await modifyPlayersService.updatePlayers(
-        validatedReq.params.gameId,
-        validatedReq.body,
-      );
+      const { modifiedPlayers, gamePublicId } =
+        await modifyPlayersService.updatePlayers(
+          validatedReq.params.gameId,
+          validatedReq.body,
+        );
 
-      const validatedResponse =
-        batchPlayersResponseSchema.parse(modifiedPlayers);
+      const response: BatchPlayersResponse = {
+        success: true,
+        data: {
+          players: modifiedPlayers.map((player) => ({
+            id: player.publicId,
+            playerName: player.playerName,
+            username: player.username,
+            teamName: player.teamName,
+            isActive: player.statusId === 1,
+          })),
+          gameId: gamePublicId,
+        },
+      };
 
-      res.status(201).json(validatedResponse);
+      const validatedResponse = batchPlayersResponseSchema.parse(response);
+
+      res.status(200).json(validatedResponse);
     } catch (error) {
       next(error);
     }
