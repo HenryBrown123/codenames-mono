@@ -93,6 +93,7 @@ export type GetGameStateDependencies = {
  */
 export const getGameStateService = (dependencies: GetGameStateDependencies) => {
   return async (input: GetGameStateInput): Promise<GetGameStateResult> => {
+    console.log(input);
     const gameData = await dependencies.getGameState(
       input.gameId,
       input.userId,

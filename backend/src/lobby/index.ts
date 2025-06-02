@@ -9,6 +9,7 @@ import {
   findGameByPublicId,
   updateGameStatus,
 } from "@backend/common/data-access/games.repository";
+
 import {
   addPlayers,
   findPlayerByPublicId,
@@ -16,6 +17,7 @@ import {
   modifyPlayers,
   findPlayersByGameId,
 } from "@backend/common/data-access/players.repository";
+import { getTeamNameToIdMap } from "@backend/common/data-access/teams.repository";
 
 // Import feature components
 import { addPlayersService } from "./add-players/add-players.service";
@@ -47,11 +49,13 @@ export const initialize = (
   const playersUpdater = modifyPlayers(db);
   const playersByGameId = findPlayersByGameId(db);
   const gameStatusUpdater = updateGameStatus(db);
+  const teamNameMapper = getTeamNameToIdMap(db);
 
   // Create service functions
   const lobbyAddPlayersService = addPlayersService({
     getGameByPublicId: gameByPublicId,
     addPlayers: playersCreator,
+    getTeamNameToIdMap: teamNameMapper,
   });
 
   const lobbyModifyPlayersService = modifyPlayersService({

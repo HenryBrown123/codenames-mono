@@ -4,6 +4,7 @@ import {
   GameFinder,
 } from "@backend/common/data-access/games.repository";
 import { PlayersCreator } from "@backend/common/data-access/players.repository";
+import { TeamNameMapper } from "@backend/common/data-access/teams.repository";
 
 /** Represents the result of a player addition operation */
 export type PlayerResult = {
@@ -30,6 +31,7 @@ export type AddPlayersServiceResult = {
 export type ServiceDependencies = {
   addPlayers: PlayersCreator;
   getGameByPublicId: GameFinder<PublicId>;
+  getTeamNameToIdMap: TeamNameMapper;
 };
 
 /** Creates an implementation of the add players service */
@@ -69,12 +71,29 @@ export const addPlayersService = (dependencies: ServiceDependencies) => {
       );
     }
 
-    // TODO: Need to implement team name to team ID lookup
-    // For now, this will need repository layer changes to handle team names
+    // Get unique team names and map them to team IDs
+    const uniqueTeamNames = [...new Set(playersToAdd.map((p) => p.teamName))];
+    const teamNameToIdMap = await dependencies.getTeamNameToIdMap(
+      game._id,
+      uniqueTeamNames,
+    );
+
+    // Validate all team names exist
+    const missingTeams = uniqueTeamNames.filter(
+      (name) => !teamNameToIdMap.has(name),
+    );
+
+    if (missingTeams.length > 0) {
+      throw new UnexpectedLobbyError(
+        `Unknown team names: ${missingTeams.join(", ")}. Available teams: ${Array.from(teamNameToIdMap.keys()).join(", ")}`,
+      );
+    }
+
+    // Map players with their team IDs
     const repositoryRequest = playersToAdd.map((player) => ({
       userId,
       gameId: game._id,
-      teamId: 1, // TODO: Convert teamName to teamId via teams repository
+      teamId: teamNameToIdMap.get(player.teamName)!,
       publicName: player.playerName,
       statusId: 1,
     }));
