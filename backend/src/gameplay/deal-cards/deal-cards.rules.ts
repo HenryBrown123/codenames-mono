@@ -1,11 +1,12 @@
 import { GAME_STATE, ROUND_STATE } from "@codenames/shared/types";
 
-import { GameAggregate, roundSchema } from "../state/gameplay-state.types";
+import { GameAggregate } from "../state/gameplay-state.types";
 
 import {
   gameplayBaseSchema,
   currentRoundSchema,
 } from "../state/gameplay-state.types";
+
 import { complexProperties } from "../state/gameplay-state.helpers";
 
 import {

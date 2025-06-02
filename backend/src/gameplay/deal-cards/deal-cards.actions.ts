@@ -10,51 +10,6 @@ import { complexProperties } from "../state/gameplay-state.helpers";
 import type { TeamId } from "@backend/common/data-access/teams.repository";
 
 /**
- * Represents a position in the card grid with its assigned card type
- */
-type CardPosition = {
-  cardType: CardType;
-  teamId?: TeamId;
-};
-
-/**
- * Generic Fisher-Yates shuffle that works with any array type
- */
-const shuffleCards = <T>(items: T[]): T[] => {
-  const shuffled = [...items];
-
-  // Start from the last position and work backwards
-  for (let currentPos = shuffled.length - 1; currentPos > 0; currentPos--) {
-    // Pick a random position from 0 to currentPos (inclusive)
-    const swapPos = Math.floor(Math.random() * (currentPos + 1));
-    // Swap the cards at these positions
-    [shuffled[currentPos], shuffled[swapPos]] = [
-      shuffled[swapPos],
-      shuffled[currentPos],
-    ];
-  }
-
-  return shuffled;
-};
-
-/**
- * Allocates the initial card type distribution before shuffling
- * - Starting team: 9 cards
- * - Other team: 8 cards
- * - Assassin: 1 card
- * - Bystander: 7 cards
- * Total: 25 cards
- */
-const allocateInitialCardTypes = (
-  startingTeam: TeamId,
-  otherTeam: TeamId,
-): CardPosition[] => [
-  ...Array(9).fill({ cardType: CARD_TYPE.TEAM, teamId: startingTeam }),
-  ...Array(8).fill({ cardType: CARD_TYPE.TEAM, teamId: otherTeam }),
-  { cardType: CARD_TYPE.ASSASSIN },
-  ...Array(7).fill({ cardType: CARD_TYPE.BYSTANDER }),
-];
-/**
  * Factory function that creates a card dealing action with repository dependencies
  *
  * @param getRandomWords - Repository function for retrieving random words
@@ -105,5 +60,51 @@ export const dealCardsToRound = (
     };
   };
 };
+
+/**
+ * Represents a position in the card grid with its assigned card type
+ */
+type CardPosition = {
+  cardType: CardType;
+  teamId?: TeamId;
+};
+
+/**
+ * Generic Fisher-Yates shuffle that works with any array type
+ */
+const shuffleCards = <T>(items: T[]): T[] => {
+  const shuffled = [...items];
+
+  // Start from the last position and work backwards
+  for (let currentPos = shuffled.length - 1; currentPos > 0; currentPos--) {
+    // Pick a random position from 0 to currentPos (inclusive)
+    const swapPos = Math.floor(Math.random() * (currentPos + 1));
+    // Swap the cards at these positions
+    [shuffled[currentPos], shuffled[swapPos]] = [
+      shuffled[swapPos],
+      shuffled[currentPos],
+    ];
+  }
+
+  return shuffled;
+};
+
+/**
+ * Allocates the initial card type distribution before shuffling
+ * - Starting team: 9 cards
+ * - Other team: 8 cards
+ * - Assassin: 1 card
+ * - Bystander: 7 cards
+ * Total: 25 cards
+ */
+const allocateInitialCardTypes = (
+  startingTeam: TeamId,
+  otherTeam: TeamId,
+): CardPosition[] => [
+  ...Array(9).fill({ cardType: CARD_TYPE.TEAM, teamId: startingTeam }),
+  ...Array(8).fill({ cardType: CARD_TYPE.TEAM, teamId: otherTeam }),
+  { cardType: CARD_TYPE.ASSASSIN },
+  ...Array(7).fill({ cardType: CARD_TYPE.BYSTANDER }),
+];
 
 export type CardDealer = ReturnType<typeof dealCardsToRound>;
