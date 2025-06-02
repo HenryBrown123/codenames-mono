@@ -153,7 +153,7 @@ export const gameplayBaseSchema = z.object({
     GAME_FORMAT.ROUND_ROBIN,
   ]),
   teams: z.array(teamSchema),
-  currentRound: currentRoundSchema.optional(),
+  currentRound: currentRoundSchema.optional().nullable(),
   historicalRounds: z.array(historicalRoundSchema).optional().default([]),
   playerContext: playerContextSchema,
   createdAt: z.date(),

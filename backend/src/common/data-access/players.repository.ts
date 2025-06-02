@@ -68,7 +68,7 @@ export type PlayerFinder<T extends PlayerId | PublicPlayerId> = (
 export type PlayerContextFinder = (
   gameId: GameId,
   userId: UserId,
-  roundId: RoundId,
+  roundId: RoundId | null,
 ) => Promise<PlayerContext | null>;
 
 // SQL expression for team name lookup - kept simple and contained
@@ -274,7 +274,7 @@ export const getPlayerContext =
     // Parse role name or default to spectator
     const role = playerContext.roleName
       ? parseRoleName(playerContext.roleName)
-      : PLAYER_ROLE.SPECTATOR;
+      : PLAYER_ROLE.NONE;
 
     return {
       _userId: playerContext.userId,

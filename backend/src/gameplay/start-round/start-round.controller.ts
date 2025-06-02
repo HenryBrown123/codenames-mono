@@ -9,7 +9,10 @@ import { z } from "zod";
 export const startRoundRequestSchema = z.object({
   params: z.object({
     gameId: z.string().min(1, "Game ID is required"),
-    roundNumber: z.number().min(1, "Round ID is required"),
+    roundNumber: z
+      .string()
+      .transform(Number)
+      .refine((n) => n > 0, "Round number must be positive"),
   }),
   auth: z.object({
     userId: z.number().int().positive("User ID must be a positive integer"),
