@@ -28,7 +28,7 @@ export type PublicGameStateResponse = {
     name: string;
     score: number;
     players: {
-      id: number;
+      id: string;
       userId: number;
       name: string;
       isActive: boolean;
@@ -52,7 +52,7 @@ export type PublicGameStateResponse = {
       clue?: { word: string; number: number };
       guesses: {
         id: number;
-        playerId: number;
+        playerId: string;
         playerName: string;
         cardId: number;
         outcome: string | null;
@@ -144,7 +144,7 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
       name: team.teamName,
       score: 0, // Placeholder for score calculation
       players: team.players.map((player) => ({
-        id: player._id,
+        id: player.publicId,
         userId: player._userId,
         name: player.publicName,
         isActive: player.statusId === 1,
@@ -173,7 +173,7 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
               : undefined,
             guesses: turn.guesses.map((guess) => ({
               id: guess._id,
-              playerId: guess._playerId,
+              playerId: guess._playerId.toString(), // Convert to string for consistency
               playerName: guess.playerName,
               cardId: guess._cardId,
               outcome: guess.outcome,

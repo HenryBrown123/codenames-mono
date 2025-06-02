@@ -11,6 +11,7 @@ import {
  */
 export const playerSchema = z.object({
   _id: z.number().int().positive(),
+  publicId: z.string(),
   _userId: z.number().int().positive(),
   _gameId: z.number().int().positive(),
   _teamId: z.number().int().positive(),
