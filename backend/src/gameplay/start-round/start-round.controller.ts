@@ -69,7 +69,7 @@ export type Dependencies = {
 export const startRoundController = ({ startRound }: Dependencies) => {
   /**
    * Handles HTTP request to start a round in a game
-   * @param req - Express request with game ID and round ID
+   * @param req - Express request with game ID and round number
    * @param res - Express response object
    * @param next - Express error handling function
    */
@@ -130,6 +130,7 @@ export const startRoundController = ({ startRound }: Dependencies) => {
         return;
       }
 
+      // ✅ Fixed: Only expose round number and status, no internal IDs
       const response: StartRoundResponse = {
         success: true,
         data: {

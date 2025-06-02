@@ -34,38 +34,32 @@ export function createGameplayPaths() {
                       createdAt: "2024-01-01T00:00:00Z",
                       teams: [
                         {
-                          id: 1,
                           name: "Team Red",
                           score: 2,
                           players: [
                             {
-                              id: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-                              userId: 123,
+                              publicId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
                               name: "Alice",
                               isActive: true,
                             },
                             {
-                              id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-                              userId: 124,
+                              publicId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
                               name: "Bob",
                               isActive: true,
                             },
                           ],
                         },
                         {
-                          id: 2,
                           name: "Team Blue",
                           score: 1,
                           players: [
                             {
-                              id: "12345678-1234-1234-1234-123456789012",
-                              userId: 125,
+                              publicId: "12345678-1234-1234-1234-123456789012",
                               name: "Charlie",
                               isActive: true,
                             },
                             {
-                              id: "87654321-4321-4321-4321-210987654321",
-                              userId: 126,
+                              publicId: "87654321-4321-4321-4321-210987654321",
                               name: "Diana",
                               isActive: true,
                             },
@@ -89,8 +83,6 @@ export function createGameplayPaths() {
                         ],
                         turns: [
                           {
-                            id: 1,
-                            teamId: 1,
                             teamName: "Team Red",
                             status: "COMPLETED",
                             guessesRemaining: 0,
@@ -100,11 +92,7 @@ export function createGameplayPaths() {
                             },
                             guesses: [
                               {
-                                id: 1,
-                                playerId:
-                                  "f47ac10b-58cc-4372-a567-0e02b2c3d479",
                                 playerName: "Alice",
-                                cardId: 5,
                                 outcome: "CORRECT_TEAM_CARD",
                               },
                             ],
@@ -164,9 +152,8 @@ export function createGameplayPaths() {
                   success: true,
                   data: {
                     round: {
-                      id: 123,
                       roundNumber: 2,
-                      gameId: 456,
+                      status: "SETUP",
                       createdAt: "2024-01-01T00:00:00Z",
                     },
                   },
@@ -236,15 +223,41 @@ export function createGameplayPaths() {
             description: "Public ID of the game",
           },
           {
-            name: "roundNumber",
+            name: "id",
             in: "path",
             required: true,
             schema: {
               type: "string",
             },
-            description: "Round number within the game",
+            description: "Round identifier (currently unused but required)",
           },
         ],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  deck: {
+                    type: "string",
+                    default: "BASE",
+                    description: "Deck to draw words from",
+                  },
+                  languageCode: {
+                    type: "string",
+                    default: "en",
+                    description: "Language code for words",
+                  },
+                },
+              },
+              example: {
+                deck: "BASE",
+                languageCode: "en",
+              },
+            },
+          },
+        },
         responses: {
           "201": {
             description: "Cards dealt successfully",
@@ -253,13 +266,15 @@ export function createGameplayPaths() {
                 example: {
                   success: true,
                   data: {
-                    roundId: 123,
                     roundNumber: 1,
-                    startingTeamId: 1,
+                    status: "SETUP",
+                    cardCount: 25,
                     cards: [
                       { word: "apple", selected: false },
                       { word: "tree", selected: false },
-                      // ... additional cards
+                      { word: "house", selected: false },
+                      { word: "ocean", selected: false },
+                      { word: "mountain", selected: false },
                     ],
                   },
                 },
@@ -267,7 +282,7 @@ export function createGameplayPaths() {
             },
           },
           "404": {
-            description: "Game or round not found",
+            description: "Game not found",
             content: {
               "application/json": {
                 example: {
@@ -331,7 +346,8 @@ export function createGameplayPaths() {
             in: "path",
             required: true,
             schema: {
-              type: "string",
+              type: "integer",
+              minimum: 1,
             },
             description: "Round number in game",
           },
@@ -378,7 +394,7 @@ export function createGameplayPaths() {
                     code: "invalid-game-state",
                     validationErrors: [
                       {
-                        path: ["currentRound", "cards"],
+                        path: "currentRound.cards",
                         message:
                           "Cards must be dealt before starting the round",
                       },

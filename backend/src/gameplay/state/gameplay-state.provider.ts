@@ -60,7 +60,7 @@ export type GameplayStateProvider = (
  * @param getTeams - Function to retrieve teams for a game
  * @param getCardsByRoundId - Function to retrieve cards for a round
  * @param getTurnsByRoundId - Function to retrieve turns for a round
- * @param getPlayersByRoundId - Function to retrieve players for a round
+ * @param getPlayersByGameId - Function to retrieve players for a GAME (not round)
  * @param getLatestRound - Function to retrieve the latest round for a game
  * @param getAllRounds - Function to retrieve all rounds for a game
  * @param getPlayerContext - Function to retrieve player context info
@@ -71,7 +71,7 @@ export const gameplayStateProvider = (
   getTeams: TeamsFinder<InternalId>,
   getCardsByRoundId: CardsFinder<RoundId>,
   getTurnsByRoundId: TurnsFinder<RoundId>,
-  getPlayersByRoundId: PlayerFinderAll<RoundId>,
+  getPlayersByGameId: PlayerFinderAll<InternalId>,
   getLatestRound: RoundFinder<InternalId>,
   getAllRounds: RoundFinderAll<InternalId>,
   getPlayerContext: PlayerContextFinder,
@@ -90,11 +90,12 @@ export const gameplayStateProvider = (
     const game = await getGameById(gameId);
     if (!game) return null;
 
-    // Collect all game level state
-    const [teams, allRounds, latestRound] = await Promise.all([
+    // Collect all game level state - players belong to GAMES not rounds!
+    const [teams, allRounds, latestRound, players] = await Promise.all([
       getTeams(game._id),
       getAllRounds(game._id),
       getLatestRound(game._id),
+      getPlayersByGameId(game._id), // ✅ Fixed: fetch by game ID, not round ID
     ]);
 
     // Get player context - handle case where no round exists yet
@@ -102,12 +103,14 @@ export const gameplayStateProvider = (
     const playerContext = await getPlayerContext(game._id, userId, roundId);
     if (!playerContext) return null;
 
-    // Transform teams data
+    // Transform teams data and populate with players immediately
     const teamsWithPlayers = teams.map((team: TeamResult) => ({
       _id: team._id,
       _gameId: team._gameId,
       teamName: team.teamName,
-      players: [] as PlayerResult[], // Will be populated if round exists
+      players: players.filter(
+        (player: PlayerResult) => player._teamId === team._id,
+      ),
     }));
 
     // Create historical rounds data
@@ -138,20 +141,11 @@ export const gameplayStateProvider = (
       };
     }
 
-    // Collect all round level state
-    const [cards, turns, players] = await Promise.all([
+    // Collect round-specific state (cards and turns)
+    const [cards, turns] = await Promise.all([
       getCardsByRoundId(latestRound._id),
       getTurnsByRoundId(latestRound._id),
-      getPlayersByRoundId(latestRound._id),
     ]);
-
-    // Add players to their respective teams
-    const teamsWithPlayersPopulated = teamsWithPlayers.map((team) => ({
-      ...team,
-      players: players.filter(
-        (player: PlayerResult) => player._teamId === team._id,
-      ),
-    }));
 
     const cardsMapped = cards.map((card: CardResult) => ({
       _id: card._id,
@@ -168,12 +162,12 @@ export const gameplayStateProvider = (
       public_id: game.public_id,
       status: game.status,
       game_format: game.game_format,
-      teams: teamsWithPlayersPopulated,
+      teams: teamsWithPlayers, // ✅ Teams have players from game level
       currentRound: {
         _id: latestRound._id,
         number: latestRound.roundNumber,
         status: latestRound.status,
-        players,
+        players, // ✅ All game players available in round context too
         cards: cardsMapped,
         turns,
         createdAt: latestRound.createdAt,

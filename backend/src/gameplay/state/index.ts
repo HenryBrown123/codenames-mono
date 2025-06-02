@@ -23,7 +23,7 @@ const createGameplayStateProvider = (dbContext: Kysely<DB>) => {
     teamsRepository.getTeamsByGameId(dbContext),
     cardsRepository.getCardsByRoundId(dbContext),
     turnsRepository.getTurnsByRoundId(dbContext),
-    playerRepository.findPlayersByGameId(dbContext),
+    playerRepository.findPlayersByGameId(dbContext), // ✅ Fixed: use game ID, not round ID
     roundsRepository.getLatestRound(dbContext),
     roundsRepository.getRoundsByGameId(dbContext),
     playerRepository.getPlayerContext(dbContext),
