@@ -84,13 +84,15 @@ export const gameplayStateProvider = (
    * @returns Complete game state object or null if game not found or user not authorized
    */
   const getGameplayState = async (
-    gameId: string,
+    gameId: PublicId,
     userId: number,
   ): Promise<GameAggregate | null> => {
     const game = await getGameById(gameId);
+    console.log(game);
     if (!game) return null;
 
     const latestRound = await getLatestRound(game._id);
+    console.log();
     if (!latestRound) return null;
 
     const playerContext = await getPlayerContext(

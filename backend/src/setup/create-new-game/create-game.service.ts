@@ -70,7 +70,7 @@ export const createGameService = (dependencies: ServiceDependencies) => {
 
     const teams = await dependencies.createTeams({
       gameId: game._id,
-      teamNames: ["Team Red", "Team Green"],
+      teamNames: ["Team Red", "Team Blue"],
     });
 
     const uniqueTeamNames = [...new Set(teams.map((team) => team.teamName))];
