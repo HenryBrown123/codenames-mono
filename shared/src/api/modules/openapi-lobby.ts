@@ -24,11 +24,11 @@ export function createLobbyPaths() {
               example: [
                 {
                   playerName: "Player 1",
-                  teamId: 1,
+                  teamName: "Team Red",
                 },
                 {
                   playerName: "Player 2",
-                  teamId: 2,
+                  teamName: "Team Blue",
                 },
               ],
             },
@@ -44,11 +44,10 @@ export function createLobbyPaths() {
                   data: {
                     players: [
                       {
-                        playerId: 42,
-                        gameId: 123,
-                        teamId: 1,
+                        id: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
                         playerName: "Player 1",
-                        userId: 789,
+                        teamName: "Team Red",
+                        isActive: true,
                       },
                     ],
                     gameId: "abc123",
@@ -90,13 +89,13 @@ export function createLobbyPaths() {
             "application/json": {
               example: [
                 {
-                  playerId: 42,
-                  teamId: 2,
+                  playerId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+                  teamName: "Team Blue",
                   playerName: "Updated Name 1",
                 },
                 {
-                  playerId: 43,
-                  teamId: 1,
+                  playerId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                  teamName: "Team Red",
                 },
               ],
             },
@@ -112,18 +111,19 @@ export function createLobbyPaths() {
                   data: {
                     players: [
                       {
-                        playerId: 42,
-                        gameId: 123,
-                        teamId: 2,
+                        id: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
                         playerName: "Updated Name 1",
+                        teamName: "Team Blue",
+                        isActive: true,
                       },
                       {
-                        playerId: 43,
-                        gameId: 123,
-                        teamId: 1,
+                        id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
                         playerName: "Player 2",
+                        teamName: "Team Red",
+                        isActive: true,
                       },
                     ],
+                    gameId: "abc123",
                   },
                 },
               },
@@ -162,9 +162,10 @@ export function createLobbyPaths() {
             in: "path",
             required: true,
             schema: {
-              type: "integer",
+              type: "string",
+              format: "uuid",
             },
-            description: "ID of the player to modify",
+            description: "UUID of the player to modify",
           },
         ],
         requestBody: {
@@ -172,7 +173,7 @@ export function createLobbyPaths() {
           content: {
             "application/json": {
               example: {
-                teamId: 2,
+                teamName: "Team Blue",
                 playerName: "Updated Player Name",
               },
             },
@@ -187,11 +188,12 @@ export function createLobbyPaths() {
                   success: true,
                   data: {
                     player: {
-                      playerId: 42,
-                      gameId: 123,
-                      teamId: 2,
+                      id: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
                       playerName: "Updated Player Name",
+                      teamName: "Team Blue",
+                      isActive: true,
                     },
+                    gameId: "abc123",
                   },
                 },
               },
@@ -231,9 +233,10 @@ export function createLobbyPaths() {
             in: "path",
             required: true,
             schema: {
-              type: "integer",
+              type: "string",
+              format: "uuid",
             },
-            description: "ID of the player to remove",
+            description: "UUID of the player to remove",
           },
         ],
         responses: {
@@ -244,15 +247,12 @@ export function createLobbyPaths() {
                 example: {
                   success: true,
                   data: {
-                    players: [
-                      {
-                        playerId: 43,
-                        gameId: 123,
-                        teamId: 1,
-                        playerName: "Player 2",
-                        userId: 790,
-                      },
-                    ],
+                    removedPlayer: {
+                      id: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+                      playerName: "Player 1",
+                      teamName: "Team Red",
+                      isActive: true,
+                    },
                     gameId: "abc123",
                   },
                 },

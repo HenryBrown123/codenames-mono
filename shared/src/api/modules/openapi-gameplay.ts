@@ -1,5 +1,142 @@
 export function createGameplayPaths() {
   return {
+    "/games/{gameId}": {
+      get: {
+        summary: "Get game state",
+        description:
+          "Retrieves the current state of a game for the authenticated user",
+        tags: ["Gameplay"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "gameId",
+            in: "path",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description: "Public ID of the game",
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Game state retrieved successfully",
+            content: {
+              "application/json": {
+                example: {
+                  success: true,
+                  data: {
+                    game: {
+                      publicId: "abc123",
+                      status: "IN_PROGRESS",
+                      gameType: "SINGLE_DEVICE",
+                      gameFormat: "QUICK",
+                      createdAt: "2024-01-01T00:00:00Z",
+                      teams: [
+                        {
+                          id: 1,
+                          name: "Team Red",
+                          score: 2,
+                          players: [
+                            {
+                              id: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+                              userId: 123,
+                              name: "Alice",
+                              isActive: true,
+                            },
+                            {
+                              id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                              userId: 124,
+                              name: "Bob",
+                              isActive: true,
+                            },
+                          ],
+                        },
+                        {
+                          id: 2,
+                          name: "Team Blue",
+                          score: 1,
+                          players: [
+                            {
+                              id: "12345678-1234-1234-1234-123456789012",
+                              userId: 125,
+                              name: "Charlie",
+                              isActive: true,
+                            },
+                            {
+                              id: "87654321-4321-4321-4321-210987654321",
+                              userId: 126,
+                              name: "Diana",
+                              isActive: true,
+                            },
+                          ],
+                        },
+                      ],
+                      currentRound: {
+                        roundNumber: 1,
+                        status: "IN_PROGRESS",
+                        cards: [
+                          {
+                            word: "apple",
+                            selected: false,
+                          },
+                          {
+                            word: "tree",
+                            selected: true,
+                            teamName: "Team Red",
+                            cardType: "TEAM",
+                          },
+                        ],
+                        turns: [
+                          {
+                            id: 1,
+                            teamId: 1,
+                            teamName: "Team Red",
+                            status: "COMPLETED",
+                            guessesRemaining: 0,
+                            clue: {
+                              word: "nature",
+                              number: 2,
+                            },
+                            guesses: [
+                              {
+                                id: 1,
+                                playerId:
+                                  "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+                                playerName: "Alice",
+                                cardId: 5,
+                                outcome: "CORRECT_TEAM_CARD",
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                      playerContext: {
+                        playerName: "Alice",
+                        teamName: "Team Red",
+                        role: "CODEBREAKER",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "403": {
+            description: "User not authorized to view this game",
+          },
+          "404": {
+            description: "Game not found",
+          },
+          "401": {
+            description: "Unauthorized",
+          },
+          "500": {
+            description: "Server error",
+          },
+        },
+      },
+    },
     "/games/{gameId}/rounds": {
       post: {
         summary: "Create a new round",

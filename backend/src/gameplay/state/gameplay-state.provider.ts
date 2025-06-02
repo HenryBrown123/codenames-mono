@@ -95,8 +95,8 @@ export const gameplayStateProvider = (
 
     const playerContext = await getPlayerContext(
       game._id,
-      latestRound._id,
       userId,
+      latestRound._id,
     );
 
     if (!playerContext) {
