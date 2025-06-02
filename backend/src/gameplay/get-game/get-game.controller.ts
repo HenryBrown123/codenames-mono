@@ -65,13 +65,19 @@ export const getGameStateController =
           res.status(404).json({
             success: false,
             error: "Game not found",
-            details: { gameId: result.error.gameId },
+            details: {
+              code: "game-not-found",
+              gameId: result.error.gameId,
+            },
           });
         } else if (result.error.status === "unauthorized") {
           res.status(403).json({
             success: false,
             error: "You are not authorized to view this game",
-            details: { userId: result.error.userId },
+            details: {
+              code: "unauthorized",
+              userId: result.error.userId,
+            },
           });
         } else {
           res.status(500).json({

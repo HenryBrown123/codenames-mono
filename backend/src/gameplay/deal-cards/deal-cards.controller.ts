@@ -46,10 +46,10 @@ export type DealCardsErrorResponse = {
 export type DealCardsResponse = {
   success: boolean;
   data: {
-    roundId: number;
     roundNumber: number;
-    startingTeamId: number;
-    cards: { id?: number; word: string; selected: boolean }[];
+    status: string;
+    cardCount: number;
+    cards: { word: string; selected: boolean }[];
   };
 };
 
@@ -89,16 +89,13 @@ export const dealCardsController = ({ dealCards }: Dependencies) => {
       });
 
       if (result.success) {
-        // Format successful response - note we don't expose full card details
-        // to avoid revealing team assignments to all players
         const response: DealCardsResponse = {
           success: true,
           data: {
-            roundId: result.data._roundId,
             roundNumber: result.data.roundNumber,
-            startingTeamId: result.data._startingTeamId,
+            status: "SETUP", // Cards are dealt in SETUP state
+            cardCount: result.data.cards.length,
             cards: result.data.cards.map((card) => ({
-              id: card._id,
               word: card.word,
               selected: card.selected,
             })),

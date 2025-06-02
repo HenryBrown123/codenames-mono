@@ -22,9 +22,8 @@ export const newRoundResponseSchema = z.object({
   success: z.literal(true),
   data: z.object({
     round: z.object({
-      id: z.number(),
       roundNumber: z.number(),
-      gameId: z.number(),
+      status: z.string(),
       createdAt: z.date(),
     }),
   }),
@@ -147,9 +146,8 @@ export const newRoundController = ({ createRound }: Dependencies) => {
         success: true,
         data: {
           round: {
-            id: result.data._roundId,
             roundNumber: result.data.roundNumber,
-            gameId: result.data._gameId,
+            status: "SETUP",
             createdAt: result.data.createdAt,
           },
         },

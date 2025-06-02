@@ -24,12 +24,10 @@ export type PublicGameStateResponse = {
   gameFormat: string;
   createdAt: Date;
   teams: {
-    id: number;
     name: string;
     score: number;
     players: {
-      id: string;
-      userId: number;
+      publicId: string;
       name: string;
       isActive: boolean;
     }[];
@@ -44,17 +42,12 @@ export type PublicGameStateResponse = {
       cardType?: string;
     }[];
     turns: {
-      id: number;
-      teamId: number;
       teamName: string;
       status: string;
       guessesRemaining: number;
       clue?: { word: string; number: number };
       guesses: {
-        id: number;
-        playerId: string;
         playerName: string;
-        cardId: number;
         outcome: string | null;
       }[];
     }[];
@@ -93,7 +86,6 @@ export type GetGameStateDependencies = {
  */
 export const getGameStateService = (dependencies: GetGameStateDependencies) => {
   return async (input: GetGameStateInput): Promise<GetGameStateResult> => {
-    console.log(input);
     const gameData = await dependencies.getGameState(
       input.gameId,
       input.userId,
@@ -136,17 +128,15 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
   return {
     publicId: gameData.public_id,
     status: gameData.status,
-    gameType: "SINGLE_DEVICE", // This looks hardcoded, might want to get from gameData
+    gameType: "SINGLE_DEVICE", // This could come from gameData if you add it
     gameFormat: gameData.game_format,
     createdAt: gameData.createdAt,
 
     teams: gameData.teams.map((team) => ({
-      id: team._id,
       name: team.teamName,
       score: 0, // Placeholder for score calculation
       players: team.players.map((player) => ({
-        id: player.publicId,
-        userId: player._userId,
+        publicId: player.publicId,
         name: player.publicName,
         isActive: player.statusId === 1,
       })),
@@ -160,9 +150,8 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
           cards: gameData.currentRound.cards.map((card) =>
             applyCardVisibility(card, playerRole),
           ),
+
           turns: gameData.currentRound.turns.map((turn) => ({
-            id: turn._id,
-            teamId: turn._teamId,
             teamName: turn.teamName,
             status: turn.status,
             guessesRemaining: turn.guessesRemaining,
@@ -173,17 +162,13 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
                 }
               : undefined,
             guesses: turn.guesses.map((guess) => ({
-              id: guess._id,
-              playerId: guess._playerId.toString(), // Convert to string for consistency
               playerName: guess.playerName,
-              cardId: guess._cardId,
               outcome: guess.outcome,
             })),
           })),
         }
       : null,
 
-    // Use the player context directly from game state
     playerContext: {
       playerName: gameData.playerContext.playerName,
       teamName: gameData.playerContext.teamName,
