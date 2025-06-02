@@ -1,5 +1,3 @@
-// src/features/lobby/index.ts
-
 import { Express } from "express";
 import { Kysely } from "kysely";
 import { DB } from "@backend/common/db/db.types";

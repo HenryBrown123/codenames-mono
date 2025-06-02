@@ -6,7 +6,7 @@ import { AuthMiddleware } from "@backend/common/http-middleware/auth.middleware"
 
 // Import repositories
 import {
-  findGameByPublicId as getGameDataByPublicId,
+  findGameByPublicId,
   createGame,
 } from "@backend/common/data-access/games.repository";
 import { createTeams } from "@backend/common/data-access/teams.repository";
@@ -24,7 +24,7 @@ export const initialize = (
   db: Kysely<DB>,
   auth: AuthMiddleware,
 ) => {
-  const getGame = getGameDataByPublicId(db);
+  const getGame = findGameByPublicId(db);
   const newGame = createGame(db);
   const newTeam = createTeams(db);
 

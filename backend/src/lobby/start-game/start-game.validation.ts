@@ -88,7 +88,7 @@ export function validateGameCanBeStarted(
   }
 
   // Get unique team IDs and ensure we have at least two teams
-  const teamIds = [...new Set(players.map((player) => player.teamId))];
+  const teamIds = [...new Set(players.map((player) => player._teamId))];
   if (teamIds.length < 2) {
     return {
       valid: false,
@@ -98,7 +98,7 @@ export function validateGameCanBeStarted(
 
   // Ensure each team has at least 2 players
   const playersPerTeam = teamIds.map(
-    (teamId) => players.filter((player) => player.teamId === teamId).length,
+    (teamId) => players.filter((player) => player._teamId === teamId).length,
   );
 
   if (playersPerTeam.some((count) => count < 2)) {

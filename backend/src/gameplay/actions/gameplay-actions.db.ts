@@ -1,5 +1,5 @@
 import type { Kysely, Transaction } from "kysely";
-import { DB } from "@backend/common/db/db.types";
+import type { DB } from "@backend/common/db/db.types";
 import * as roundsRepository from "@backend/common/data-access/rounds.repository";
 import * as cardsRepository from "@backend/common/data-access/cards.repository";
 import type { GameplayStateProvider } from "../state/gameplay-state.provider";

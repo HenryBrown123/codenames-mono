@@ -71,16 +71,13 @@ export const handleGameplayActions = (
 ): GameplayHandler => {
   return async (operation) => {
     return await db.transaction().execute(async (trx) => {
-      const game: GameplayOperations = {
+      const game = {
         createRound: createNextRound(repos.createRound(trx)),
-
         dealCards: dealCardsToRound(
           repos.getRandomWords(trx),
           repos.createCards(trx),
         ),
-
         startRound: startCurrentRound(repos.updateRoundStatus(trx)),
-
         getCurrentGameState: repos.getCurrentState(trx),
       };
 

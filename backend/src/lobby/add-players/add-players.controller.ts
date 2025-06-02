@@ -39,9 +39,9 @@ export const addPlayersController =
         success: true,
         data: {
           players: playersData.map((player) => ({
-            playerId: player.playerId,
-            gameId: player.gameId,
-            teamId: player.teamId,
+            playerId: player._playerId,
+            gameId: player._gameId,
+            teamId: player._teamId,
             playerName: player.playerName,
           })),
         },
