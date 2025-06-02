@@ -38,7 +38,7 @@ export type GameplayOperations = {
  *
  * })
  */
-export type GameplayHandler = <TResult>(
+export type TransactionalGameplayHandler = <TResult>(
   operation: (game: GameplayOperations) => Promise<TResult>,
 ) => Promise<TResult>;
 
@@ -68,7 +68,7 @@ export type GameplayHandler = <TResult>(
 export const handleGameplayActions = (
   db: DbContext,
   repos: TransactionalRepositories,
-): GameplayHandler => {
+): TransactionalGameplayHandler => {
   return async (operation) => {
     return await db.transaction().execute(async (trx) => {
       const game = {

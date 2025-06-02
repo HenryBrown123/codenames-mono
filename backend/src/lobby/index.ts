@@ -6,15 +6,15 @@ import { AuthMiddleware } from "@backend/common/http-middleware/auth.middleware"
 
 // Import repositories
 import {
-  findGameByPublicId as getGameDataByPublicId,
+  findGameByPublicId,
   updateGameStatus,
 } from "@backend/common/data-access/games.repository";
 import {
   addPlayers,
-  findPlayerById as getPlayerById,
+  findPlayerByPublicId,
   removePlayer,
   modifyPlayers,
-  findPlayersByGameId as getPlayersByGameId,
+  findPlayersByGameId,
 } from "@backend/common/data-access/players.repository";
 
 // Import feature components
@@ -27,7 +27,6 @@ import { modifyPlayersController } from "./modify-players/modify-players.control
 import { removePlayersService } from "./remove-players/remove-players.service";
 import { removePlayersController } from "./remove-players/remove-players.controller";
 
-// Import new start game components
 import { startGameService } from "./start-game/start-game.service";
 import { startGameController } from "./start-game/start-game.controller";
 
@@ -41,36 +40,35 @@ export const initialize = (
   auth: AuthMiddleware,
 ) => {
   // Create repository functions
-  const getGetGameDataByPublicId = getGameDataByPublicId(db);
-  const getAddPlayers = addPlayers(db);
-  const getPlayers = getPlayerById(db);
-  const getRemovePlayer = removePlayer(db);
-  const getModifyPlayers = modifyPlayers(db);
-  const getPlayersByPrivateGameId = getPlayersByGameId(db);
-  const updateGameStatusFn = updateGameStatus(db);
+  const gameByPublicId = findGameByPublicId(db);
+  const playersCreator = addPlayers(db);
+  const playerByPublicId = findPlayerByPublicId(db);
+  const playerRemover = removePlayer(db);
+  const playersUpdater = modifyPlayers(db);
+  const playersByGameId = findPlayersByGameId(db);
+  const gameStatusUpdater = updateGameStatus(db);
 
   // Create service functions
   const lobbyAddPlayersService = addPlayersService({
-    getGameByPublicId: getGetGameDataByPublicId,
-    addPlayers: getAddPlayers,
+    getGameByPublicId: gameByPublicId,
+    addPlayers: playersCreator,
   });
 
   const lobbyModifyPlayersService = modifyPlayersService({
-    getGameByPublicId: getGetGameDataByPublicId,
-    modifyPlayers: getModifyPlayers,
+    getGameByPublicId: gameByPublicId,
+    modifyPlayers: playersUpdater,
   });
 
   const lobbyRemovePlayersService = removePlayersService({
-    getGameByPublicId: getGetGameDataByPublicId,
-    removePlayer: getRemovePlayer,
-    getPlayer: getPlayers,
+    getGameByPublicId: gameByPublicId,
+    removePlayer: playerRemover,
+    getPlayer: playerByPublicId,
   });
 
-  // Create the start game service
   const lobbyStartGameService = startGameService({
-    getGameByPublicId: getGetGameDataByPublicId,
-    updateGameStatus: updateGameStatusFn,
-    getPlayersByGameId: getPlayersByPrivateGameId,
+    getGameByPublicId: gameByPublicId,
+    updateGameStatus: gameStatusUpdater,
+    getPlayersByGameId: playersByGameId,
   });
 
   // Create controllers
@@ -86,7 +84,6 @@ export const initialize = (
     removePlayersService: lobbyRemovePlayersService,
   });
 
-  // Create the start game controller
   const lobbyStartGameController = startGameController({
     startGame: lobbyStartGameService,
   });

@@ -32,24 +32,23 @@ export const removePlayersController =
       const userId = validatedRequest.auth.userId;
       const playerIdToRemove = validatedRequest.params.playerId;
 
-      const removedPlayer = await removePlayersService(
+      const { removedPlayer, gamePublicId } = await removePlayersService(
         gameId,
         userId,
         playerIdToRemove,
       );
 
-      // Map from internal model (with underscore-prefixed IDs) to API response format
       const response: RemovePlayersResponse = {
         success: true,
         data: {
-          players: [
-            {
-              playerId: removedPlayer._id,
-              gameId: removedPlayer._gameId,
-              teamId: removedPlayer._teamId,
-              playerName: removedPlayer.playerName,
-            },
-          ],
+          removedPlayer: {
+            id: removedPlayer.publicId,
+            playerName: removedPlayer.playerName,
+            username: removedPlayer.username,
+            teamName: removedPlayer.teamName,
+            isActive: removedPlayer.statusId === 1,
+          },
+          gameId: gamePublicId,
         },
       };
 

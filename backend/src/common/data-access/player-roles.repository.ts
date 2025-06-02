@@ -12,6 +12,7 @@ import { PlayerRole, PLAYER_ROLE } from "@codenames/shared/types";
 
 /** Domain-specific identifier types */
 export type PlayerId = number;
+export type PublicPlayerId = string;
 export type RoundId = number;
 export type TeamId = number;
 export type RoleId = number;

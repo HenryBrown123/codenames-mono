@@ -33,17 +33,23 @@ export const addPlayersController =
       const userId = validatedRequest.auth.userId;
       const playersToAdd = validatedRequest.body;
 
-      const playersData = await addPlayers(gameId, userId, playersToAdd);
+      const { players, gamePublicId } = await addPlayers(
+        gameId,
+        userId,
+        playersToAdd,
+      );
 
       const response: AddPlayersResponse = {
         success: true,
         data: {
-          players: playersData.map((player) => ({
-            playerId: player._playerId,
-            gameId: player._gameId,
-            teamId: player._teamId,
+          players: players.map((player) => ({
+            id: player.publicId,
             playerName: player.playerName,
+            username: player.username,
+            teamName: player.teamName,
+            isActive: player.statusId === 1,
           })),
+          gameId: gamePublicId,
         },
       };
 

@@ -6,7 +6,7 @@ import { z } from "zod";
 export const playerSchema = z
   .object({
     playerName: z.string().min(1).max(30),
-    teamId: z.number(),
+    teamName: z.string().min(1),
   })
   .strict();
 
@@ -34,10 +34,11 @@ export type ValidatedAddPlayersRequest = z.infer<
  * Schema for a player in the response
  */
 const playerResponseSchema = z.object({
-  playerId: z.number(),
-  gameId: z.number(),
-  teamId: z.number().nullable(),
-  playerName: z.string().optional(),
+  id: z.string(),
+  playerName: z.string(),
+  username: z.string().optional(),
+  teamName: z.string(),
+  isActive: z.boolean(),
 });
 
 /**
@@ -48,6 +49,7 @@ export const addPlayersResponseSchema = z
     success: z.boolean(),
     data: z.object({
       players: z.array(playerResponseSchema),
+      gameId: z.string(),
     }),
   })
   .strict();

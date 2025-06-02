@@ -6,7 +6,7 @@ import { z } from "zod";
 export const removePlayersRequestSchema = z.object({
   params: z.object({
     gameId: z.string().min(1, "Game ID is required"),
-    playerId: z.string().transform(Number),
+    playerId: z.string().uuid("Player ID must be a valid UUID"),
   }),
   auth: z.object({
     userId: z.number().int().positive("User ID must be a positive integer"),
@@ -24,20 +24,22 @@ export type ValidatedRemovePlayersRequest = z.infer<
  * Schema for a player in the response
  */
 const playerResponseSchema = z.object({
-  playerId: z.number(),
-  gameId: z.number(),
-  teamId: z.number().nullable(),
-  playerName: z.string().optional(),
+  id: z.string(),
+  playerName: z.string(),
+  username: z.string().optional(),
+  teamName: z.string(),
+  isActive: z.boolean(),
 });
 
 /**
- * Response schema for adding players
+ * Response schema for removing players
  */
 export const removePlayersResponseSchema = z
   .object({
     success: z.boolean(),
     data: z.object({
-      players: z.array(playerResponseSchema),
+      removedPlayer: playerResponseSchema,
+      gameId: z.string(),
     }),
   })
   .strict();

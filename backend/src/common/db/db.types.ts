@@ -82,6 +82,10 @@ export interface Players {
   game_id: number;
   id: Generated<number>;
   /**
+   * Public UUID identifier for API responses
+   */
+  public_id: Generated<string>;
+  /**
    * Public-facing name shown to other players
    */
   public_name: string;
