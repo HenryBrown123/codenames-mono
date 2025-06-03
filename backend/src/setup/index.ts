@@ -8,8 +8,8 @@ import { AuthMiddleware } from "@backend/common/http-middleware/auth.middleware"
 import {
   findGameByPublicId,
   createGame,
-} from "@backend/common/data-access/games.repository";
-import { createTeams } from "@backend/common/data-access/teams.repository";
+} from "@backend/common/data-access/repositories/games.repository";
+import { createTeams } from "@backend/common/data-access/repositories/teams.repository";
 
 // Import feature components
 import { createGameService } from "./create-new-game/create-game.service";

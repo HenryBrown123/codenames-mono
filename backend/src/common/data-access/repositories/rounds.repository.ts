@@ -1,5 +1,5 @@
 import { Kysely } from "kysely";
-import { DB } from "../db/db.types";
+import { DB } from "../../db/db.types";
 import { ROUND_STATE, RoundState } from "@codenames/shared/types";
 import { z } from "zod";
 import { UnexpectedRepositoryError } from "./repository.errors";

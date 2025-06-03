@@ -8,7 +8,7 @@ import { AuthMiddleware } from "@backend/common/http-middleware/auth.middleware"
 import {
   findGameByPublicId,
   updateGameStatus,
-} from "@backend/common/data-access/games.repository";
+} from "@backend/common/data-access/repositories/games.repository";
 
 import {
   addPlayers,
@@ -16,8 +16,8 @@ import {
   removePlayer,
   modifyPlayers,
   findPlayersByGameId,
-} from "@backend/common/data-access/players.repository";
-import { getTeamNameToIdMap } from "@backend/common/data-access/teams.repository";
+} from "@backend/common/data-access/repositories/players.repository";
+import { getTeamNameToIdMap } from "@backend/common/data-access/repositories/teams.repository";
 
 // Import feature components
 import { addPlayersService } from "./add-players/add-players.service";

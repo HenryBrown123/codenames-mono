@@ -3,11 +3,11 @@ import {
   PlayerFinder,
   PlayerRemover,
   PublicPlayerId,
-} from "@backend/common/data-access/players.repository";
+} from "@backend/common/data-access/repositories/players.repository";
 import {
   GameFinder,
   PublicId,
-} from "@backend/common/data-access/games.repository";
+} from "@backend/common/data-access/repositories/games.repository";
 import { GAME_STATE } from "@codenames/shared/types";
 
 /** Represents the result of a player removal operation */

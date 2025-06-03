@@ -4,10 +4,10 @@ import {
   CardInput,
   CARD_TYPE,
   CardType,
-} from "@backend/common/data-access/cards.repository";
+} from "@backend/common/data-access/repositories/cards.repository";
 import type { DealCardsValidGameState } from "./deal-cards.rules";
 import { complexProperties } from "../state/gameplay-state.helpers";
-import type { TeamId } from "@backend/common/data-access/teams.repository";
+import type { TeamId } from "@backend/common/data-access/repositories/teams.repository";
 
 /**
  * Factory function that creates a card dealing action with repository dependencies

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PlayerResult } from "@backend/common/data-access/players.repository";
+import { PlayerResult } from "@backend/common/data-access/repositories/players.repository";
 
 /**
  * Schema for starting a game

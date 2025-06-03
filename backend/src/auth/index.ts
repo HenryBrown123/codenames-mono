@@ -9,8 +9,8 @@ import { authErrorHandler } from "./errors/auth-errors.middleware";
 import {
   findByUsername,
   createUser,
-} from "@backend/common/data-access/users.repository";
-import { storeSession } from "@backend/common/data-access/sessions.repository";
+} from "@backend/common/data-access/repositories/users.repository";
+import { storeSession } from "@backend/common/data-access/repositories/sessions.repository";
 
 import { createGuestUserService } from "./create-guest-session/create-guest-user.service";
 import { guestLoginService } from "./create-guest-session/guest-login.service";

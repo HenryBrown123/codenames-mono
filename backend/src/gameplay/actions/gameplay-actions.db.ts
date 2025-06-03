@@ -1,7 +1,7 @@
 import type { Kysely, Transaction } from "kysely";
 import type { DB } from "@backend/common/db/db.types";
-import * as roundsRepository from "@backend/common/data-access/rounds.repository";
-import * as cardsRepository from "@backend/common/data-access/cards.repository";
+import * as roundsRepository from "@backend/common/data-access/repositories/rounds.repository";
+import * as cardsRepository from "@backend/common/data-access/repositories/cards.repository";
 import type { GameplayStateProvider } from "../state/gameplay-state.provider";
 
 /**
@@ -14,6 +14,7 @@ export type DbContext = Kysely<DB> | Transaction<DB>;
  */
 export type GameplayQueryRepositories = {
   getCurrentState: (dbContext: DbContext) => GameplayStateProvider;
+  getRandomWords: (dbContext: DbContext) => cardsRepository.RandomWordsSelector;
 };
 
 /**
@@ -21,7 +22,6 @@ export type GameplayQueryRepositories = {
  */
 export type GameplayCommandRepositories = {
   createRound: (dbContext: DbContext) => roundsRepository.RoundCreator;
-  getRandomWords: (dbContext: DbContext) => cardsRepository.RandomWordsSelector;
   createCards: (dbContext: DbContext) => cardsRepository.CardsCreator;
   updateRoundStatus: (
     dbContext: DbContext,

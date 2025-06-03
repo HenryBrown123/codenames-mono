@@ -1,23 +1,9 @@
-import {
-  PublicId,
-  InternalId,
-  GameFinder,
-  GameStatusUpdater,
-} from "@backend/common/data-access/games.repository";
-
-import { PlayerFinderAll } from "@backend/common/data-access/players.repository";
-
+import type { LobbyOperations } from "../actions";
+import type { LobbyStateProvider } from "../state/lobby-state.provider";
+import { lobbyHelpers } from "../state/lobby-state.helpers";
 import { GAME_STATE } from "@codenames/shared/types";
-import { validateGameCanBeStarted } from "./start-game.validation";
+import { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 
-/** Required dependencies for creating the StartGameService */
-export type ServiceDependencies = {
-  getGameByPublicId: GameFinder<PublicId>;
-  updateGameStatus: GameStatusUpdater;
-  getPlayersByGameId: PlayerFinderAll<InternalId>;
-};
-
-/** Game start success result */
 export type GameStartSuccess = {
   _id: number;
   success: true;
@@ -25,52 +11,78 @@ export type GameStartSuccess = {
   status: string;
 };
 
-/** Game start error result */
 export type GameStartError = {
   success: false;
   error: string;
 };
 
-/** Combined game start result type */
 export type GameStartResult = GameStartSuccess | GameStartError;
 
-/** Creates an implementation of the start game service */
+export type ServiceDependencies = {
+  lobbyHandler: TransactionalHandler<LobbyOperations, GameStartResult>;
+  getLobbyState: LobbyStateProvider;
+};
+
 export const startGameService = (dependencies: ServiceDependencies) => {
-  /**
-   * Attempts to start a game by updating its status
-   * @param publicGameId - Public identifier of the game
-   * @returns Result object indicating success or failure with details
-   */
   const startGame = async (publicGameId: string): Promise<GameStartResult> => {
-    const game = await dependencies.getGameByPublicId(publicGameId);
-    if (!game) {
+    const lobby = await dependencies.getLobbyState(publicGameId, 0);
+    if (!lobby) {
       return {
         success: false,
         error: `Game with public ID ${publicGameId} not found`,
       };
     }
 
-    const players = await dependencies.getPlayersByGameId(game._id);
+    const totalPlayers = lobbyHelpers.getTotalPlayerCount(lobby);
+    const teamCounts = lobbyHelpers.getTeamPlayerCounts(lobby);
 
-    const validationResult = validateGameCanBeStarted(game.status, players);
-    if (!validationResult.valid) {
+    if (lobby.status !== "LOBBY") {
       return {
         success: false,
-        error: validationResult.reason,
+        error: `Cannot start game in '${lobby.status}' state`,
       };
     }
 
-    const updatedGame = await dependencies.updateGameStatus(
-      game._id,
-      GAME_STATE.IN_PROGRESS,
-    );
+    if (totalPlayers < 4) {
+      return {
+        success: false,
+        error: "Cannot start game with less than 4 players",
+      };
+    }
 
-    return {
-      success: true,
-      _id: updatedGame._id,
-      publicId: updatedGame.public_id,
-      status: updatedGame.status,
-    };
+    if (teamCounts.length < 2) {
+      return {
+        success: false,
+        error: "Cannot start game with less than 2 teams",
+      };
+    }
+
+    if (teamCounts.some((count) => count < 2)) {
+      return {
+        success: false,
+        error: "Each team must have at least 2 players",
+      };
+    }
+
+    return await dependencies.lobbyHandler(async (lobbyOps) => {
+      const updatedGame = await lobbyOps.updateGameStatus(
+        lobby._gameId,
+        GAME_STATE.IN_PROGRESS,
+      );
+
+      if (updatedGame.status !== GAME_STATE.IN_PROGRESS) {
+        throw new Error(
+          `Failed to start game. Expected status '${GAME_STATE.IN_PROGRESS}', got '${updatedGame.status}'`,
+        );
+      }
+
+      return {
+        success: true,
+        _id: updatedGame._id,
+        publicId: updatedGame.public_id,
+        status: updatedGame.status,
+      };
+    });
   };
 
   return startGame;
