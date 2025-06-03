@@ -6,6 +6,7 @@ import { lobbyHelpers } from "../state/lobby-state.helpers";
 
 /** Represents the result of a player removal operation */
 export type PlayerResult = {
+  _id: number;
   publicId: string;
   playerName: string;
   username?: string;
@@ -16,12 +17,11 @@ export type PlayerResult = {
 /** Service response including game context */
 export type RemovePlayersServiceResult = {
   removedPlayer: PlayerResult;
-  gamePublicId: string;
 };
 
 /** Required dependencies for creating the RemovePlayersService */
 export type ServiceDependencies = {
-  lobbyHandler: TransactionalHandler<LobbyOperations, any>;
+  lobbyHandler: TransactionalHandler<LobbyOperations>;
   getLobbyState: LobbyStateProvider;
 };
 

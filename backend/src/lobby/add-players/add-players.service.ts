@@ -23,7 +23,7 @@ export type AddPlayersServiceResult = {
 };
 
 export type ServiceDependencies = {
-  lobbyHandler: TransactionalHandler<LobbyOperations, any>;
+  lobbyHandler: TransactionalHandler<LobbyOperations>;
   getLobbyState: LobbyStateProvider;
 };
 
