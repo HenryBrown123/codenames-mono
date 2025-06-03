@@ -1,10 +1,10 @@
 import type { Response, NextFunction } from "express";
 import type { Request } from "express-jwt";
+
 import { startGameService } from "./start-game.service";
 import {
   startGameRequestSchema,
   startGameResponseSchema,
-  StartGameResponse,
 } from "./start-game.validation";
 
 /** Dependencies required by the start game controller */

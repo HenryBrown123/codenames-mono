@@ -4,20 +4,7 @@ import { DB } from "@backend/common/db/db.types";
 import { Router } from "express";
 import { AuthMiddleware } from "@backend/common/http-middleware/auth.middleware";
 
-// Import repositories
-import {
-  findGameByPublicId,
-  updateGameStatus,
-} from "@backend/common/data-access/repositories/games.repository";
-
-import {
-  addPlayers,
-  findPlayerByPublicId,
-  removePlayer,
-  modifyPlayers,
-  findPlayersByGameId,
-} from "@backend/common/data-access/repositories/players.repository";
-import { getTeamNameToIdMap } from "@backend/common/data-access/repositories/teams.repository";
+import { createTransactionalHandler } from "@backend/common/data-access/transaction-handler";
 
 // Import feature components
 import { addPlayersService } from "./add-players/add-players.service";
@@ -32,7 +19,8 @@ import { removePlayersController } from "./remove-players/remove-players.control
 import { startGameService } from "./start-game/start-game.service";
 import { startGameController } from "./start-game/start-game.controller";
 
-// Import error handlers
+import { lobbyState } from "./state";
+import { lobbyOperations } from "./lobby-actions";
 import { lobbyErrorHandler } from "./errors/lobby-errors.middleware";
 
 /** Initializes the lobby feature module with all routes and dependencies */
@@ -41,38 +29,31 @@ export const initialize = (
   db: Kysely<DB>,
   auth: AuthMiddleware,
 ) => {
-  // Create repository functions
-  const gameByPublicId = findGameByPublicId(db);
-  const playersCreator = addPlayers(db);
-  const playerByPublicId = findPlayerByPublicId(db);
-  const playerRemover = removePlayer(db);
-  const playersUpdater = modifyPlayers(db);
-  const playersByGameId = findPlayersByGameId(db);
-  const gameStatusUpdater = updateGameStatus(db);
-  const teamNameMapper = getTeamNameToIdMap(db);
+  // State provider
+  const { provider: getLobbyState } = lobbyState(db);
+
+  // Transaction handler with lobby operations
+  const lobbyHandler = createTransactionalHandler(db, lobbyOperations);
 
   // Create service functions
   const lobbyAddPlayersService = addPlayersService({
-    getGameByPublicId: gameByPublicId,
-    addPlayers: playersCreator,
-    getTeamNameToIdMap: teamNameMapper,
+    lobbyHandler,
+    getLobbyState,
   });
 
   const lobbyModifyPlayersService = modifyPlayersService({
-    getGameByPublicId: gameByPublicId,
-    modifyPlayers: playersUpdater,
+    lobbyHandler,
+    getLobbyState,
   });
 
   const lobbyRemovePlayersService = removePlayersService({
-    getGameByPublicId: gameByPublicId,
-    removePlayer: playerRemover,
-    getPlayer: playerByPublicId,
+    lobbyHandler,
+    getLobbyState,
   });
 
   const lobbyStartGameService = startGameService({
-    getGameByPublicId: gameByPublicId,
-    updateGameStatus: gameStatusUpdater,
-    getPlayersByGameId: playersByGameId,
+    lobbyHandler,
+    getLobbyState,
   });
 
   // Create controllers
@@ -80,9 +61,11 @@ export const initialize = (
     addPlayers: lobbyAddPlayersService,
   });
 
-  const lobbyModifyPlayersController = modifyPlayersController({
-    modifyPlayersService: lobbyModifyPlayersService,
-  });
+  const { controllers: lobbyModifyPlayersController } = modifyPlayersController(
+    {
+      modifyPlayersService: lobbyModifyPlayersService,
+    },
+  );
 
   const lobbyRemovePlayersController = removePlayersController({
     removePlayersService: lobbyRemovePlayersService,
@@ -100,13 +83,13 @@ export const initialize = (
   router.patch(
     "/games/:gameId/players",
     auth,
-    lobbyModifyPlayersController.handleBatch,
+    lobbyModifyPlayersController.batch,
   );
 
   router.patch(
     "/games/:gameId/players/:playerId",
     auth,
-    lobbyModifyPlayersController.handleSingle,
+    lobbyModifyPlayersController.single,
   );
 
   router.delete(

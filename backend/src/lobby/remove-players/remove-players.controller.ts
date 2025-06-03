@@ -4,7 +4,6 @@ import { removePlayersService } from "./remove-players.service";
 import {
   removePlayersRequestSchema,
   removePlayersResponseSchema,
-  RemovePlayersResponse,
 } from "./remove-players.validation";
 
 /** Dependencies required by the remove players controller */
@@ -32,13 +31,13 @@ export const removePlayersController =
       const userId = validatedRequest.auth.userId;
       const playerIdToRemove = validatedRequest.params.playerId;
 
-      const { removedPlayer, gamePublicId } = await removePlayersService(
+      const { removedPlayer } = await removePlayersService(
         gameId,
         userId,
         playerIdToRemove,
       );
 
-      const response: RemovePlayersResponse = {
+      const response = {
         success: true,
         data: {
           removedPlayer: {
@@ -48,7 +47,7 @@ export const removePlayersController =
             teamName: removedPlayer.teamName,
             isActive: removedPlayer.statusId === 1,
           },
-          gameId: gamePublicId,
+          gameId,
         },
       };
 

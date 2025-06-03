@@ -1,6 +1,6 @@
 import { UnexpectedLobbyError } from "../errors/lobby.errors";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
-import type { LobbyOperations } from "../actions";
+import type { LobbyOperations } from "../lobby-actions";
 import type { LobbyStateProvider } from "../state/lobby-state.provider";
 import { lobbyHelpers } from "../state/lobby-state.helpers";
 
@@ -23,21 +23,12 @@ export type ModifyPlayersServiceResult = {
   gamePublicId: string;
 };
 
-export interface ModifyPlayersService {
-  updatePlayers: (
-    publicGameId: string,
-    playersToModify: PlayerUpdateData,
-  ) => Promise<ModifyPlayersServiceResult>;
-}
-
 export type ServiceDependencies = {
   lobbyHandler: TransactionalHandler<LobbyOperations, any>;
   getLobbyState: LobbyStateProvider;
 };
 
-export const modifyPlayersService = (
-  dependencies: ServiceDependencies,
-): ModifyPlayersService => {
+export const modifyPlayersService = (dependencies: ServiceDependencies) => {
   const updatePlayers = async (
     publicGameId: string,
     playersToModify: PlayerUpdateData,
@@ -96,16 +87,16 @@ export const modifyPlayersService = (
 
       return {
         modifiedPlayers: modifiedPlayers.map((player) => ({
+          _id: player._id,
           publicId: player.publicId,
           playerName: player.publicName,
           username: undefined,
           teamName: player.teamName,
           statusId: player.statusId,
         })),
-        gamePublicId: lobby.publicId,
       };
     });
   };
 
-  return { updatePlayers };
+  return updatePlayers;
 };

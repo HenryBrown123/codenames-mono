@@ -1,6 +1,6 @@
 import { UnexpectedLobbyError } from "../errors/lobby.errors";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
-import type { LobbyOperations } from "../actions";
+import type { LobbyOperations } from "../lobby-actions";
 import type { LobbyStateProvider } from "../state/lobby-state.provider";
 import { lobbyHelpers } from "../state/lobby-state.helpers";
 
