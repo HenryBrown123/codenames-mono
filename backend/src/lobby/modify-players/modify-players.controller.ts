@@ -1,32 +1,23 @@
 import type { Response, NextFunction } from "express";
 import type { Request } from "express-jwt";
-import type { ModifyPlayersService } from "./modify-players.service";
 
 import {
   modifySinglePlayerRequestSchema,
   modifyBatchPlayersRequestSchema,
-  singlePlayerResponseSchema,
-  batchPlayersResponseSchema,
-  SinglePlayerResponse,
-  BatchPlayersResponse,
 } from "./modify-players.validation";
 
+import { modifyPlayersService } from "./modify-players.service";
+
 export interface ModifyPlayersController {
-  handleSingle: (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) => Promise<void>;
-  handleBatch: (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) => Promise<void>;
+  controllers: {
+    single: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+    batch: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+  };
 }
 
 // Dependencies interface
 export interface Dependencies {
-  modifyPlayersService: ModifyPlayersService;
+  modifyPlayersService: ReturnType<typeof modifyPlayersService>;
 }
 
 // Controller factory
@@ -45,12 +36,12 @@ export const modifyPlayersController = ({
         auth: req.auth,
       });
 
-      const { modifiedPlayers, gamePublicId } =
-        await modifyPlayersService.updatePlayers(validatedReq.params.gameId, [
-          { ...validatedReq.body },
-        ]);
+      const { modifiedPlayers, gamePublicId } = await modifyPlayersService(
+        validatedReq.params.gameId,
+        [{ ...validatedReq.body }],
+      );
 
-      const response: SinglePlayerResponse = {
+      const response = {
         success: true,
         data: {
           player: {
@@ -64,9 +55,7 @@ export const modifyPlayersController = ({
         },
       };
 
-      const validatedResponse = singlePlayerResponseSchema.parse(response);
-
-      res.status(200).json(validatedResponse);
+      res.status(200).json(response);
     } catch (error) {
       next(error);
     }
@@ -85,13 +74,15 @@ export const modifyPlayersController = ({
         auth: req.auth,
       });
 
-      const { modifiedPlayers, gamePublicId } =
-        await modifyPlayersService.updatePlayers(
-          validatedReq.params.gameId,
-          validatedReq.body,
-        );
+      const gameId = validatedReq.params.gameId;
+      const playersToModify = validatedReq.body;
 
-      const response: BatchPlayersResponse = {
+      const { modifiedPlayers } = await modifyPlayersService(
+        gameId,
+        playersToModify,
+      );
+
+      const response = {
         success: true,
         data: {
           players: modifiedPlayers.map((player) => ({
@@ -101,20 +92,17 @@ export const modifyPlayersController = ({
             teamName: player.teamName,
             isActive: player.statusId === 1,
           })),
-          gameId: gamePublicId,
+          gameId,
         },
       };
 
-      const validatedResponse = batchPlayersResponseSchema.parse(response);
-
-      res.status(200).json(validatedResponse);
+      res.status(200).json(response);
     } catch (error) {
       next(error);
     }
   };
 
   return {
-    handleSingle,
-    handleBatch,
+    controllers: { single: handleSingle, batch: handleBatch },
   };
 };
