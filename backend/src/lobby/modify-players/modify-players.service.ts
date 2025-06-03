@@ -5,6 +5,7 @@ import type { LobbyStateProvider } from "../state/lobby-state.provider";
 import { lobbyHelpers } from "../state/lobby-state.helpers";
 
 export type PlayerResult = {
+  _id: number;
   publicId: string;
   playerName: string;
   username?: string;
@@ -20,11 +21,10 @@ export type PlayerUpdateData = {
 
 export type ModifyPlayersServiceResult = {
   modifiedPlayers: PlayerResult[];
-  gamePublicId: string;
 };
 
 export type ServiceDependencies = {
-  lobbyHandler: TransactionalHandler<LobbyOperations, any>;
+  lobbyHandler: TransactionalHandler<LobbyOperations>;
   getLobbyState: LobbyStateProvider;
 };
 
@@ -34,7 +34,7 @@ export const modifyPlayersService = (dependencies: ServiceDependencies) => {
     playersToModify: PlayerUpdateData,
   ): Promise<ModifyPlayersServiceResult> => {
     if (!playersToModify.length) {
-      return { modifiedPlayers: [], gamePublicId: publicGameId };
+      return { modifiedPlayers: [] };
     }
 
     const lobby = await dependencies.getLobbyState(publicGameId, 0);

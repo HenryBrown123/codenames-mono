@@ -19,7 +19,7 @@ export type GameStartError = {
 export type GameStartResult = GameStartSuccess | GameStartError;
 
 export type ServiceDependencies = {
-  lobbyHandler: TransactionalHandler<LobbyOperations, GameStartResult>;
+  lobbyHandler: TransactionalHandler<LobbyOperations>;
   getLobbyState: LobbyStateProvider;
 };
 

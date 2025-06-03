@@ -1,11 +1,8 @@
-import {
-  GameCreator,
-  GameFinder,
-  PublicId,
-} from "@backend/common/data-access/repositories/games.repository";
-import { TeamsCreator } from "@backend/common/data-access/repositories/teams.repository";
-import { GameType, GameFormat } from "@codenames/shared/types";
 import shortid from "shortid";
+import { UnexpectedSetupError } from "../errors/setup.errors";
+import type { GameType, GameFormat } from "@codenames/shared/types";
+import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
+import type { SetupOperations } from "../setup-actions";
 
 /** Result of game creation */
 export type GameCreationResult = {
@@ -17,16 +14,13 @@ export type GameCreationResult = {
 
 /** Dependencies for the create game service */
 export type ServiceDependencies = {
-  getGame: GameFinder<PublicId>;
-  createGame: GameCreator;
-  createTeams: TeamsCreator;
+  setupHandler: TransactionalHandler<SetupOperations>;
 };
 
 /** Creates a game creation service */
 export const createGameService = (dependencies: ServiceDependencies) => {
   /**
    * Generates a unique public ID for the game
-   * @param getGameDataByPublicId - Function to check existing game IDs
    */
   const generateUniquePublicId = async (): Promise<string> => {
     const MAX_COLLISIONS = 10;
@@ -37,16 +31,10 @@ export const createGameService = (dependencies: ServiceDependencies) => {
       collisionCount++
     ) {
       const publicId = shortid.generate();
-      const existingGame = await dependencies.getGame(publicId);
-
-      if (!existingGame) {
-        return publicId;
-      }
-
-      console.log(`Public game id collision detected: ${publicId}`);
+      return publicId;
     }
 
-    throw new Error(
+    throw new UnexpectedSetupError(
       `Failed to generate unique game ID after ${MAX_COLLISIONS} attempts`,
     );
   };
@@ -62,24 +50,34 @@ export const createGameService = (dependencies: ServiceDependencies) => {
   ): Promise<GameCreationResult> => {
     const publicId = await generateUniquePublicId();
 
-    const game = await dependencies.createGame({
-      publicId,
-      gameType,
-      gameFormat,
+    return await dependencies.setupHandler(async (setupOps) => {
+      // Check for collisions within the transaction
+      const existingGame = await setupOps.getGame(publicId);
+      if (existingGame) {
+        throw new UnexpectedSetupError(
+          `Game ID collision detected: ${publicId}`,
+        );
+      }
+
+      const game = await setupOps.createGame({
+        publicId,
+        gameType,
+        gameFormat,
+      });
+
+      const teams = await setupOps.createTeams({
+        gameId: game._id,
+        teamNames: ["Team Red", "Team Blue"],
+      });
+
+      const uniqueTeamNames = [...new Set(teams.map((team) => team.teamName))];
+
+      return {
+        _id: game._id,
+        publicId,
+        createdAt: game.created_at,
+        teams: uniqueTeamNames,
+      };
     });
-
-    const teams = await dependencies.createTeams({
-      gameId: game._id,
-      teamNames: ["Team Red", "Team Blue"],
-    });
-
-    const uniqueTeamNames = [...new Set(teams.map((team) => team.teamName))];
-
-    return {
-      _id: game._id,
-      publicId,
-      createdAt: game.created_at,
-      teams: uniqueTeamNames,
-    };
   };
 };
