@@ -1,6 +1,7 @@
 import type { GameplayStateProvider } from "../state/gameplay-state.provider";
 import type { GameplayValidationError } from "../state/gameplay-state.validation";
-import type { TransactionalGameplayHandler } from "../actions/gameplay-actions.handler";
+import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
+import type { GameplayOperations } from "../gameplay-actions";
 
 import { validate as checkRoundCreationRules } from "./new-round.rules";
 
@@ -56,7 +57,7 @@ export type RoundCreationResult =
  */
 export type RoundCreationDependencies = {
   getGameState: GameplayStateProvider;
-  gameplayHandler: TransactionalGameplayHandler;
+  gameplayHandler: TransactionalHandler<GameplayOperations>;
 };
 
 /**
@@ -96,8 +97,8 @@ export const roundCreationService = (
       };
     }
 
-    const result = await dependencies.gameplayHandler(async (game) => {
-      const newRound = await game.createRound(validationResult.data);
+    const result = await dependencies.gameplayHandler(async (ops) => {
+      const newRound = await ops.createRound(validationResult.data);
 
       return {
         _roundId: newRound._id,

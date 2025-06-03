@@ -5,7 +5,7 @@ import { Router } from "express";
 import { AuthMiddleware } from "@backend/common/http-middleware/auth.middleware";
 
 import { gameplayState } from "./state";
-import { gameplayActions } from "./actions";
+import { gameplayActions } from "./gameplay-actions";
 
 import newRound from "./new-round";
 import dealCards from "./deal-cards";

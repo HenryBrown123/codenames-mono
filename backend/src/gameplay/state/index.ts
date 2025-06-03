@@ -1,5 +1,7 @@
-import { Kysely } from "kysely";
-import { DB } from "@backend/common/db/db.types";
+import {
+  DbContext,
+  TransactionContext,
+} from "@backend/common/data-access/transaction-handler";
 
 import * as gameRepository from "@backend/common/data-access/repositories/games.repository";
 import * as roundsRepository from "@backend/common/data-access/repositories/rounds.repository";
@@ -17,7 +19,9 @@ import { gameplayStateProvider } from "./gameplay-state.provider";
  * @param dbContext - Database connection or transaction context
  * @returns Gameplay state provider that uses the given context
  */
-const createGameplayStateProvider = (dbContext: Kysely<DB>) => {
+const createGameplayStateProvider = (
+  dbContext: DbContext | TransactionContext,
+) => {
   return gameplayStateProvider(
     gameRepository.findGameByPublicId(dbContext),
     teamsRepository.getTeamsByGameId(dbContext),
@@ -36,7 +40,7 @@ const createGameplayStateProvider = (dbContext: Kysely<DB>) => {
  * @param dbContext - Database connection or transaction context
  * @returns Object containing configured state components
  */
-export const gameplayState = (dbContext: Kysely<DB>) => {
+export const gameplayState = (dbContext: DbContext | TransactionContext) => {
   return {
     provider: createGameplayStateProvider(dbContext),
   };

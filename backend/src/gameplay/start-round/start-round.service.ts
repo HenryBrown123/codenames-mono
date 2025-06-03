@@ -1,6 +1,7 @@
 import type { GameplayStateProvider } from "../state/gameplay-state.provider";
 import type { GameplayValidationError } from "../state/gameplay-state.validation";
-import type { TransactionalGameplayHandler } from "../actions/gameplay-actions.handler";
+import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
+import type { GameplayOperations } from "../gameplay-actions";
 
 import { validate as checkRoundStartRules } from "./start-round.rules";
 
@@ -60,7 +61,7 @@ export type StartRoundResult =
  */
 export type StartRoundDependencies = {
   getGameState: GameplayStateProvider;
-  gameplayHandler: TransactionalGameplayHandler;
+  gameplayHandler: TransactionalHandler<GameplayOperations>;
 };
 
 /**
@@ -120,8 +121,8 @@ export const startRoundService = (dependencies: StartRoundDependencies) => {
       };
     }
 
-    const updatedRound = await dependencies.gameplayHandler(async (game) => {
-      return await game.startRound(validationResult.data);
+    const updatedRound = await dependencies.gameplayHandler(async (ops) => {
+      return await ops.startRound(validationResult.data);
     });
 
     return {

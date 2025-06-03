@@ -1,5 +1,6 @@
 import type { GameplayStateProvider } from "../state/gameplay-state.provider";
-import type { TransactionalGameplayHandler } from "../actions/gameplay-actions.handler";
+import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
+import type { GameplayOperations } from "../gameplay-actions";
 
 import { startRoundService } from "./start-round.service";
 import { startRoundController } from "./start-round.controller";
@@ -9,7 +10,7 @@ import { startRoundController } from "./start-round.controller";
  */
 export interface StartRoundDependencies {
   getGameState: GameplayStateProvider;
-  gameplayHandler: TransactionalGameplayHandler;
+  gameplayHandler: TransactionalHandler<GameplayOperations>;
 }
 
 /**
