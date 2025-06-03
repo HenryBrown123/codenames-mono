@@ -2,8 +2,8 @@ import {
   GameCreator,
   GameFinder,
   PublicId,
-} from "@backend/common/data-access/games.repository";
-import { TeamsCreator } from "@backend/common/data-access/teams.repository";
+} from "@backend/common/data-access/repositories/games.repository";
+import { TeamsCreator } from "@backend/common/data-access/repositories/teams.repository";
 import { GameType, GameFormat } from "@codenames/shared/types";
 import shortid from "shortid";
 

@@ -1,4 +1,4 @@
-import { RoundStatusUpdater } from "@backend/common/data-access/rounds.repository";
+import { RoundStatusUpdater } from "@backend/common/data-access/repositories/rounds.repository";
 import { StartRoundValidGameState } from "./start-round.rules";
 import { complexProperties } from "../state/gameplay-state.helpers";
 import { ROUND_STATE } from "@codenames/shared/types";

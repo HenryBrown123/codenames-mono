@@ -3,7 +3,7 @@ import {
   UserFinder,
   UserCreator,
   Username,
-} from "@backend/common/data-access/users.repository";
+} from "@backend/common/data-access/repositories/users.repository";
 import { generateUsername } from "./username-generator";
 
 type ServiceDependencies = {

@@ -8,7 +8,7 @@ import * as teamsRepository from "@backend/common/data-access/repositories/teams
 import * as cardsRepository from "@backend/common/data-access/repositories/cards.repository";
 import * as turnsRepository from "@backend/common/data-access/repositories/turns.repository";
 
-import { gameplayStateProvider } from "./gameplay-state.provider";
+import { lobbyStateProvider } from "./lobby-state.provider";
 
 /**
  * Creates a gameplay state provider with the given database context
@@ -17,18 +17,15 @@ import { gameplayStateProvider } from "./gameplay-state.provider";
  * @param dbContext - Database connection or transaction context
  * @returns Gameplay state provider that uses the given context
  */
-const createGameplayStateProvider = (dbContext: Kysely<DB>) => {
-  return gameplayStateProvider(
+export const createLobbyStateProvider = (dbContext: Kysely<DB>) => {
+  return lobbyStateProvider(
     gameRepository.findGameByPublicId(dbContext),
     teamsRepository.getTeamsByGameId(dbContext),
-    cardsRepository.getCardsByRoundId(dbContext),
-    turnsRepository.getTurnsByRoundId(dbContext),
     playerRepository.findPlayersByGameId(dbContext),
-    roundsRepository.getLatestRound(dbContext),
-    roundsRepository.getRoundsByGameId(dbContext),
-    playerRepository.getPlayerContext(dbContext),
   );
 };
+
+export type LobbyStateProvider = ReturnType<typeof createLobbyStateProvider>;
 
 /**
  * Creates gameplay state components with all repository dependencies pre-wired
@@ -36,8 +33,8 @@ const createGameplayStateProvider = (dbContext: Kysely<DB>) => {
  * @param dbContext - Database connection or transaction context
  * @returns Object containing configured state components
  */
-export const gameplayState = (dbContext: Kysely<DB>) => {
+export const lobbyState = (dbContext: Kysely<DB>) => {
   return {
-    provider: createGameplayStateProvider(dbContext),
+    provider: createLobbyStateProvider(dbContext),
   };
 };

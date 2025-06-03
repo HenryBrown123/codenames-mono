@@ -1,5 +1,5 @@
 import { Kysely } from "kysely";
-import { DB } from "../db/db.types";
+import { DB } from "../../db/db.types";
 import { UnexpectedRepositoryError } from "./repository.errors";
 
 /**

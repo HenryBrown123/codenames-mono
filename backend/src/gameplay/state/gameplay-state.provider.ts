@@ -2,31 +2,31 @@ import {
   PublicId,
   InternalId,
   GameFinder,
-} from "@backend/common/data-access/games.repository";
+} from "@backend/common/data-access/repositories/games.repository";
 
 import {
   TeamsFinder,
   TeamResult,
-} from "@backend/common/data-access/teams.repository";
+} from "@backend/common/data-access/repositories/teams.repository";
 
 import {
   PlayerFinderAll,
   PlayerResult,
   PlayerContextFinder,
-} from "@backend/common/data-access/players.repository";
+} from "@backend/common/data-access/repositories/players.repository";
 
 import {
   RoundFinder,
   RoundId,
   RoundFinderAll,
-} from "@backend/common/data-access/rounds.repository";
+} from "@backend/common/data-access/repositories/rounds.repository";
 
 import {
   CardsFinder,
   CardResult,
-} from "@backend/common/data-access/cards.repository";
+} from "@backend/common/data-access/repositories/cards.repository";
 
-import { TurnsFinder } from "@backend/common/data-access/turns.repository";
+import { TurnsFinder } from "@backend/common/data-access/repositories/turns.repository";
 
 import { PlayerRole } from "@codenames/shared/types";
 

@@ -1,7 +1,7 @@
 import type { GameplayStateProvider } from "../state/gameplay-state.provider";
 import type { GameplayValidationError } from "../state/gameplay-state.validation";
 import type { TransactionalGameplayHandler } from "../actions/gameplay-actions.handler";
-import type { CardResult } from "@backend/common/data-access/cards.repository";
+import type { CardResult } from "@backend/common/data-access/repositories/cards.repository";
 
 import { validate as checkCardDealingRules } from "./deal-cards.rules";
 

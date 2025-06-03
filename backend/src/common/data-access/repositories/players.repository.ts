@@ -1,5 +1,5 @@
 import { Kysely, Selectable, sql } from "kysely";
-import { DB, Players } from "../db/db.types";
+import { DB, Players } from "../../db/db.types";
 import { UnexpectedRepositoryError } from "./repository.errors";
 import { PLAYER_ROLE, PlayerRole } from "@codenames/shared/types";
 import { randomUUID } from "crypto";

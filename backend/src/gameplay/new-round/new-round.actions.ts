@@ -1,4 +1,4 @@
-import { RoundCreator } from "@backend/common/data-access/rounds.repository";
+import { RoundCreator } from "@backend/common/data-access/repositories/rounds.repository";
 import { NewRoundValidGameState } from "./new-round.rules";
 import { complexProperties } from "../state/gameplay-state.helpers";
 
