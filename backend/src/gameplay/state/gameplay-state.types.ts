@@ -18,6 +18,7 @@ export const playerSchema = z.object({
   teamName: z.string(),
   statusId: z.number().int().positive(),
   publicName: z.string(),
+  role: z.string(),
 });
 
 /**
@@ -105,10 +106,10 @@ export const roundSchema = z.object({
  */
 export const playerContextSchema = z.object({
   _userId: z.number().int().positive(),
-  _playerId: z.number().int().positive(),
+  _id: z.number().int().positive(),
   _teamId: z.number().int().positive(),
-  username: z.string(),
-  playerName: z.string(),
+  username: z.string().optional().nullable(),
+  publicName: z.string(),
   teamName: z.string(),
   role: z.enum([
     PLAYER_ROLE.SPECTATOR,

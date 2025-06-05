@@ -36,13 +36,16 @@ import { GameAggregate } from "./gameplay-state.types";
  * Player context information for the current user
  */
 export type PlayerContext = {
+  _id: number;
+  publicId: string;
   _userId: number;
-  _playerId: number;
+  _gameId: number;
   _teamId: number;
-  username: string;
-  playerName: string;
   teamName: string;
+  statusId: number;
+  publicName: string;
   role: PlayerRole;
+  username?: string;
 };
 
 /**
@@ -95,7 +98,7 @@ export const gameplayStateProvider = (
       getTeams(game._id),
       getAllRounds(game._id),
       getLatestRound(game._id),
-      getPlayersByGameId(game._id), // ✅ Fixed: fetch by game ID, not round ID
+      getPlayersByGameId(game._id),
     ]);
 
     // Get player context - handle case where no round exists yet
@@ -162,12 +165,12 @@ export const gameplayStateProvider = (
       public_id: game.public_id,
       status: game.status,
       game_format: game.game_format,
-      teams: teamsWithPlayers, // ✅ Teams have players from game level
+      teams: teamsWithPlayers,
       currentRound: {
         _id: latestRound._id,
         number: latestRound.roundNumber,
         status: latestRound.status,
-        players, // ✅ All game players available in round context too
+        players,
         cards: cardsMapped,
         turns,
         createdAt: latestRound.createdAt,
