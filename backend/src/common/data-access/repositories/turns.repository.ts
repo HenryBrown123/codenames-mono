@@ -2,6 +2,7 @@ import { Kysely } from "kysely";
 import { DB } from "../../db/db.types";
 import { CODEBREAKER_OUTCOME, TurnOutcome } from "@codenames/shared/types";
 import { z } from "zod";
+import { UnexpectedRepositoryError } from "./repository.errors";
 
 /**
  * ==================
@@ -56,6 +57,12 @@ export type TurnResult = {
   guesses: GuessResult[];
 };
 
+/** Input types */
+export type ClueInput = {
+  word: string;
+  targetCardCount: number;
+};
+
 /** Repository function types */
 export type TurnsFinder<T extends RoundId> = (
   identifier: T,
@@ -65,197 +72,80 @@ export type TurnFinder<T extends TurnId> = (
   identifier: T,
 ) => Promise<TurnResult | null>;
 
-/**
- * Creates a function for retrieving turns by round ID
- */
-export const getTurnsByRoundId =
-  (db: Kysely<DB>): TurnsFinder<RoundId> =>
-  /**
-   * Fetches all turns for a given round with their clues and guesses
-   *
-   * @param roundId - The round's ID
-   * @returns List of turns with clues and guesses
-   */
-  async (roundId) => {
-    const turns = await db
-      .selectFrom("turns")
-      .innerJoin("teams", "turns.team_id", "teams.id")
-      .where("turns.round_id", "=", roundId)
-      .select([
-        "turns.id as turnId",
-        "turns.round_id as roundId",
-        "turns.team_id as teamId",
-        "teams.team_name as teamName",
-        "turns.status",
-        "turns.guesses_remaining as guessesRemaining",
-        "turns.created_at as createdAt",
-        "turns.completed_at as completedAt",
-      ])
-      .orderBy("turns.created_at", "asc")
-      .execute();
+export type ClueCreator = (
+  turnId: TurnId,
+  clue: ClueInput,
+) => Promise<ClueResult>;
 
-    const turnIds = turns.map((turn) => turn.turnId);
-
-    if (turnIds.length === 0) {
-      return [];
-    }
-
-    const [clues, guesses] = await Promise.all([
-      db
-        .selectFrom("clues")
-        .where("turn_id", "in", turnIds)
-        .select(["id", "turn_id", "word", "number", "created_at"])
-        .execute(),
-
-      db
-        .selectFrom("guesses")
-        .innerJoin("players", "guesses.player_id", "players.id")
-        .where("guesses.turn_id", "in", turnIds)
-        .select([
-          "guesses.id",
-          "guesses.turn_id",
-          "guesses.player_id",
-          "guesses.card_id",
-          "guesses.outcome",
-          "guesses.created_at",
-          "players.public_name as playerName",
-        ])
-        .orderBy("guesses.created_at", "asc")
-        .execute(),
-    ]);
-
-    // Create a lookup object indexed by turn ID... related objects can be
-    // easily grouped and attached to the response object in 1 pass.
-    const relatedTurnData: Record<number, TurnResult> = {};
-
-    turns.forEach((turn) => {
-      relatedTurnData[turn.turnId] = {
-        _id: turn.turnId,
-        _roundId: turn.roundId,
-        _teamId: turn.teamId,
-        teamName: turn.teamName,
-        status: turn.status,
-        guessesRemaining: turn.guessesRemaining,
-        createdAt: turn.createdAt,
-        completedAt: turn.completedAt,
-        guesses: [],
-      };
-    });
-
-    clues.forEach((clue) => {
-      const turn = relatedTurnData[clue.turn_id];
-      if (turn) {
-        turn.clue = {
-          _id: clue.id,
-          _turnId: clue.turn_id,
-          word: clue.word,
-          number: clue.number,
-          createdAt: clue.created_at,
-        };
-      }
-    });
-
-    guesses.forEach((guess) => {
-      const turn = relatedTurnData[guess.turn_id];
-      if (turn) {
-        turn.guesses.push({
-          _id: guess.id,
-          _turnId: guess.turn_id,
-          _playerId: guess.player_id,
-          _cardId: guess.card_id,
-          playerName: guess.playerName,
-          outcome: outcomeSchema.parse(guess.outcome),
-          createdAt: guess.created_at,
-        });
-      }
-    });
-
-    // Return results in original turn order
-    return turns.map((turn) => relatedTurnData[turn.turnId]);
-  };
+export type TurnGuessUpdater = (
+  turnId: TurnId,
+  guessesRemaining: number,
+) => Promise<TurnResult>;
 
 /**
- * Creates a function for retrieving a turn by ID
+ * ==================
+ * SHARED HELPERS
+ * ==================
  */
-export const getTurnById =
-  (db: Kysely<DB>): TurnFinder<TurnId> =>
-  /**
-   * Fetches a specific turn with its clues and guesses
-   *
-   * @param turnId - The turn's ID
-   * @returns Turn data with clues and guesses or null if not found
-   */
-  async (turnId) => {
-    // Get the basic turn data
-    const turn = await db
-      .selectFrom("turns")
-      .innerJoin("teams", "turns.team_id", "teams.id")
-      .where("turns.id", "=", turnId)
+
+/**
+ * Fetches clues and guesses for given turn IDs and returns structured data
+ */
+const fetchTurnRelatedData = async (
+  db: Kysely<DB>,
+  turnIds: number[],
+): Promise<Record<number, { clue?: ClueResult; guesses: GuessResult[] }>> => {
+  if (turnIds.length === 0) {
+    return {};
+  }
+
+  const [clues, guesses] = await Promise.all([
+    db
+      .selectFrom("clues")
+      .where("turn_id", "in", turnIds)
+      .select(["id", "turn_id", "word", "number", "created_at"])
+      .execute(),
+
+    db
+      .selectFrom("guesses")
+      .innerJoin("players", "guesses.player_id", "players.id")
+      .where("guesses.turn_id", "in", turnIds)
       .select([
-        "turns.id as turnId",
-        "turns.round_id as roundId",
-        "turns.team_id as teamId",
-        "teams.team_name as teamName",
-        "turns.status",
-        "turns.guesses_remaining as guessesRemaining",
-        "turns.created_at as createdAt",
-        "turns.completed_at as completedAt",
+        "guesses.id",
+        "guesses.turn_id",
+        "guesses.player_id",
+        "guesses.card_id",
+        "guesses.outcome",
+        "guesses.created_at",
+        "players.public_name as playerName",
       ])
-      .executeTakeFirst();
+      .orderBy("guesses.created_at", "asc")
+      .execute(),
+  ]);
 
-    if (!turn) return null;
+  // Initialize lookup with empty guesses arrays
+  const relatedData: Record<
+    number,
+    { clue?: ClueResult; guesses: GuessResult[] }
+  > = {};
+  turnIds.forEach((turnId) => {
+    relatedData[turnId] = { guesses: [] };
+  });
 
-    // Prepare the result structure
-    const result: TurnResult = {
-      _id: turn.turnId,
-      _roundId: turn.roundId,
-      _teamId: turn.teamId,
-      teamName: turn.teamName,
-      status: turn.status,
-      guessesRemaining: turn.guessesRemaining,
-      createdAt: turn.createdAt,
-      completedAt: turn.completedAt,
-      guesses: [],
+  // Map clues
+  clues.forEach((clue) => {
+    relatedData[clue.turn_id].clue = {
+      _id: clue.id,
+      _turnId: clue.turn_id,
+      word: clue.word,
+      number: clue.number,
+      createdAt: clue.created_at,
     };
+  });
 
-    // Fetch clue and guesses in parallel
-    const [clue, guesses] = await Promise.all([
-      // Get the clue for this turn
-      db
-        .selectFrom("clues")
-        .where("turn_id", "=", turnId)
-        .select(["id", "turn_id", "word", "number", "created_at"])
-        .executeTakeFirst(),
-
-      // Get guesses with player names
-      db
-        .selectFrom("guesses")
-        .innerJoin("players", "guesses.player_id", "players.id")
-        .where("guesses.turn_id", "=", turnId)
-        .select([
-          "guesses.id",
-          "guesses.turn_id",
-          "guesses.player_id",
-          "guesses.card_id",
-          "guesses.outcome",
-          "guesses.created_at",
-          "players.public_name as playerName",
-        ])
-        .orderBy("guesses.created_at", "asc")
-        .execute(),
-    ]);
-
-    if (clue) {
-      result.clue = {
-        _id: clue.id,
-        _turnId: clue.turn_id,
-        word: clue.word,
-        number: clue.number,
-        createdAt: clue.created_at,
-      };
-    }
-
-    result.guesses = guesses.map((guess) => ({
+  // Map guesses
+  guesses.forEach((guess) => {
+    relatedData[guess.turn_id].guesses.push({
       _id: guess.id,
       _turnId: guess.turn_id,
       _playerId: guess.player_id,
@@ -263,7 +153,146 @@ export const getTurnById =
       playerName: guess.playerName,
       outcome: outcomeSchema.parse(guess.outcome),
       createdAt: guess.created_at,
-    }));
+    });
+  });
 
-    return result;
+  return relatedData;
+};
+
+/**
+ * Standard query for fetching turn base data with correct field names
+ */
+const getTurnBaseData = (db: Kysely<DB>) =>
+  db
+    .selectFrom("turns")
+    .innerJoin("teams", "turns.team_id", "teams.id")
+    .select([
+      "turns.id as _id",
+      "turns.round_id as _roundId",
+      "turns.team_id as _teamId",
+      "teams.team_name as teamName",
+      "turns.status",
+      "turns.guesses_remaining as guessesRemaining",
+      "turns.created_at as createdAt",
+      "turns.completed_at as completedAt",
+    ]);
+
+/**
+ * ==================
+ * REPOSITORY FUNCTIONS
+ * ==================
+ */
+
+/**
+ * Creates a function for adding clues to turns
+ */
+export const createClue =
+  (db: Kysely<DB>): ClueCreator =>
+  async (turnId, { word, targetCardCount }) => {
+    try {
+      const clue = await db
+        .insertInto("clues")
+        .values({
+          turn_id: turnId,
+          word,
+          number: targetCardCount,
+          created_at: new Date(),
+        })
+        .returning(["id", "turn_id", "word", "number", "created_at"])
+        .executeTakeFirstOrThrow();
+
+      return {
+        _id: clue.id,
+        _turnId: clue.turn_id,
+        word: clue.word,
+        number: clue.number,
+        createdAt: clue.created_at,
+      };
+    } catch (error) {
+      throw new UnexpectedRepositoryError(
+        `Failed to create clue for turn ${turnId}`,
+        { cause: error },
+      );
+    }
+  };
+
+/**
+ * Creates a function for updating turn guess counts
+ */
+export const updateTurnGuesses =
+  (db: Kysely<DB>): TurnGuessUpdater =>
+  async (turnId, guessesRemaining) => {
+    try {
+      // Update the turn
+      await db
+        .updateTable("turns")
+        .set({
+          guesses_remaining: guessesRemaining,
+          updated_at: new Date(),
+        })
+        .where("id", "=", turnId)
+        .execute();
+
+      // Get the updated turn data using shared query
+      const turn = await getTurnBaseData(db)
+        .where("turns.id", "=", turnId)
+        .executeTakeFirstOrThrow();
+
+      // Fetch related data
+      const relatedData = await fetchTurnRelatedData(db, [turnId]);
+
+      return {
+        ...turn,
+        ...relatedData[turnId],
+      };
+    } catch (error) {
+      throw new UnexpectedRepositoryError(
+        `Failed to update guesses for turn ${turnId}`,
+        { cause: error },
+      );
+    }
+  };
+
+/**
+ * Creates a function for retrieving turns by round ID
+ */
+export const getTurnsByRoundId =
+  (db: Kysely<DB>): TurnsFinder<RoundId> =>
+  async (roundId) => {
+    const turns = await getTurnBaseData(db)
+      .where("turns.round_id", "=", roundId)
+      .orderBy("turns.created_at", "asc")
+      .execute();
+
+    if (turns.length === 0) {
+      return [];
+    }
+
+    const turnIds = turns.map((turn) => turn._id);
+    const relatedData = await fetchTurnRelatedData(db, turnIds);
+
+    return turns.map((turn) => ({
+      ...turn,
+      ...relatedData[turn._id],
+    }));
+  };
+
+/**
+ * Creates a function for retrieving a turn by ID
+ */
+export const getTurnById =
+  (db: Kysely<DB>): TurnFinder<TurnId> =>
+  async (turnId) => {
+    const turn = await getTurnBaseData(db)
+      .where("turns.id", "=", turnId)
+      .executeTakeFirst();
+
+    if (!turn) return null;
+
+    const relatedData = await fetchTurnRelatedData(db, [turnId]);
+
+    return {
+      ...turn,
+      ...relatedData[turnId],
+    };
   };

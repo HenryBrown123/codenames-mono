@@ -36,9 +36,13 @@ const cardDealingRules = {
    * @returns true if the latest round exists and is in SETUP state
    */
   isLatestRoundInSetupState(game: GameAggregate): boolean {
-    const latestRound = complexProperties.getLatestRound(game);
+    const latestRound = game.currentRound;
     // If there are rounds, there must be a latest round
-    return latestRound !== null && latestRound.status === ROUND_STATE.SETUP;
+    return (
+      latestRound !== undefined &&
+      latestRound !== null &&
+      latestRound.status === ROUND_STATE.SETUP
+    );
   },
 
   /**
