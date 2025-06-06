@@ -36,7 +36,7 @@ export const modifyPlayersController = ({
         auth: req.auth,
       });
 
-      const { modifiedPlayers, gamePublicId } = await modifyPlayersService(
+      const { modifiedPlayers } = await modifyPlayersService(
         validatedReq.params.gameId,
         [{ ...validatedReq.body }],
       );
@@ -51,7 +51,7 @@ export const modifyPlayersController = ({
             teamName: modifiedPlayers[0].teamName,
             isActive: modifiedPlayers[0].statusId === 1,
           },
-          gameId: gamePublicId,
+          gameId: validatedReq.params.gameId,
         },
       };
 

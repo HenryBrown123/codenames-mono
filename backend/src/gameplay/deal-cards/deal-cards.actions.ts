@@ -5,9 +5,10 @@ import {
   CARD_TYPE,
   CardType,
 } from "@backend/common/data-access/repositories/cards.repository";
+import type { TeamId } from "@backend/common/data-access/repositories/teams.repository";
+
 import type { DealCardsValidGameState } from "./deal-cards.rules";
 import { complexProperties } from "../state/gameplay-state.helpers";
-import type { TeamId } from "@backend/common/data-access/repositories/teams.repository";
 
 /**
  * Factory function that creates a card dealing action with repository dependencies
@@ -27,10 +28,6 @@ export const dealCardsToRound = (
    * @returns Laid out cards data with grid information
    */
   return async (gameState: DealCardsValidGameState) => {
-    // validated game state means there should always be a latest round...
-    // therefore throw as getLatestRound should always return a round given the
-    // DealCardsValidGameState
-    const latestRound = complexProperties.getLatestRoundOrThrow(gameState);
     const [team1, team2] = gameState.teams;
 
     const startsFirst = Math.random() > 0.5;
@@ -49,11 +46,11 @@ export const dealCardsToRound = (
       teamId: shuffledCards[position].teamId,
     }));
 
-    const cards = await replaceCards(latestRound._id, cardInputs);
+    const cards = await replaceCards(gameState.currentRound._id, cardInputs);
 
     return {
-      _roundId: latestRound._id,
-      roundNumber: latestRound.number,
+      _roundId: gameState.currentRound._id,
+      roundNumber: gameState.currentRound.number,
       startingTeam,
       otherTeam,
       cards,
@@ -64,7 +61,7 @@ export const dealCardsToRound = (
 /**
  * Represents a position in the card grid with its assigned card type
  */
-type CardPosition = {
+type CardInfo = {
   cardType: CardType;
   teamId?: TeamId;
 };
@@ -100,7 +97,7 @@ const shuffleCards = <T>(items: T[]): T[] => {
 const allocateInitialCardTypes = (
   startingTeam: TeamId,
   otherTeam: TeamId,
-): CardPosition[] => [
+): CardInfo[] => [
   ...Array(9).fill({ cardType: CARD_TYPE.TEAM, teamId: startingTeam }),
   ...Array(8).fill({ cardType: CARD_TYPE.TEAM, teamId: otherTeam }),
   { cardType: CARD_TYPE.ASSASSIN },

@@ -4,6 +4,8 @@ import type { TransactionalHandler } from "@backend/common/data-access/transacti
 import type { GameplayOperations } from "../gameplay-actions";
 
 import { validate as checkRoundCreationRules } from "./new-round.rules";
+import { validate as checkRoleAssignmentRules } from "../assign-roles/assign-roles.rules";
+import { UnexpectedGameplayError } from "../errors/gameplay.errors";
 
 /**
  * Input parameters for round creation
@@ -17,7 +19,7 @@ export type RoundCreationInput = {
  * Successful round creation result
  */
 export type RoundCreationSuccess = {
-  _roundId: number;
+  _id: number;
   roundNumber: number;
   _gameId: number;
   createdAt: Date;
@@ -86,6 +88,7 @@ export const roundCreationService = (
     }
 
     const validationResult = checkRoundCreationRules(gameData);
+
     if (!validationResult.valid) {
       return {
         success: false,
@@ -100,8 +103,25 @@ export const roundCreationService = (
     const result = await dependencies.gameplayHandler(async (ops) => {
       const newRound = await ops.createRound(validationResult.data);
 
+      const stateAfterRoundCreation = await ops.getCurrentGameState(
+        input.gameId,
+        input.userId,
+      );
+
+      const validatedForRoles = checkRoleAssignmentRules(
+        stateAfterRoundCreation,
+      );
+
+      if (!validatedForRoles.valid) {
+        throw new UnexpectedGameplayError(
+          "Unable to create roles after round creation",
+        );
+      }
+
+      await ops.assignPlayerRoles(validatedForRoles.data);
+
       return {
-        _roundId: newRound._id,
+        _id: newRound._id,
         roundNumber: newRound.roundNumber,
         _gameId: newRound._gameId,
         createdAt: newRound.createdAt,

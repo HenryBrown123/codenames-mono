@@ -8,8 +8,10 @@ import { GameAggregate } from "../state/gameplay-state.types";
 import { gameplayBaseSchema } from "../state/gameplay-state.types";
 import { complexProperties } from "../state/gameplay-state.helpers";
 
+import { roleAssignmentAllowedSchema } from "../assign-roles/assign-roles.rules";
+
 import {
-  validateGameState,
+  validateWithZodSchema,
   ValidatedGameState,
   GameplayValidationResult,
 } from "../state/gameplay-state.validation";
@@ -76,7 +78,7 @@ export type NewRoundValidGameState = ValidatedGameState<
  * @returns Validation result containing either valid game state or validation errors
  */
 export function validate(
-  data: unknown,
+  data: GameAggregate,
 ): GameplayValidationResult<NewRoundValidGameState> {
-  return validateGameState(roundCreationAllowedSchema, data);
+  return validateWithZodSchema(roundCreationAllowedSchema, data);
 }
