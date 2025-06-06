@@ -1,5 +1,10 @@
 import { UnexpectedGameplayError } from "../errors/gameplay.errors";
-import { GameAggregate, Round, HistoricalRound } from "./gameplay-state.types";
+import {
+  GameAggregate,
+  Round,
+  HistoricalRound,
+  Turn,
+} from "./gameplay-state.types";
 
 /**
  * Collection of pure accessor functions for retrieving derived game state
@@ -81,5 +86,28 @@ export const complexProperties = {
       _winningTeamId: winner._winningTeamId,
       winningTeamName: winner.winningTeamName,
     };
+  },
+
+  /**
+   * @returns The current active turn or null if it doesn't exist
+   */
+  getCurrentTurn(game: GameAggregate): Turn | null {
+    if (!game.currentRound?.turns) return null;
+
+    const activeTurn = game.currentRound.turns.find(
+      (turn) => turn.status === "ACTIVE",
+    );
+    return activeTurn || null;
+  },
+
+  /**
+   * @returns The current turn or throws if it doesn't exist
+   */
+  getCurrentTurnOrThrow(game: GameAggregate): Turn {
+    const currentTurn = this.getCurrentTurn(game);
+    if (!currentTurn) {
+      throw new UnexpectedGameplayError("No active turn found");
+    }
+    return currentTurn;
   },
 };

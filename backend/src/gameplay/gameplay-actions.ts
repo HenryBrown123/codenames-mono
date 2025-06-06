@@ -9,12 +9,15 @@ import {
 import * as roundsRepository from "@backend/common/data-access/repositories/rounds.repository";
 import * as cardsRepository from "@backend/common/data-access/repositories/cards.repository";
 import * as playerRepository from "@backend/common/data-access/repositories/players.repository";
+import * as turnRepository from "@backend/common/data-access/repositories/turns.repository";
 
 import { gameplayState } from "./state";
 import { createNextRound } from "./new-round/new-round.actions";
 import { dealCardsToRound } from "./deal-cards/deal-cards.actions";
 import { startCurrentRound } from "./start-round/start-round.actions";
 import { assignRolesRandomly } from "./assign-roles/assign-roles.actions";
+import { giveClueToTurn } from "./give-clue/give-clue.actions";
+
 import { UnexpectedGameplayError } from "./errors/gameplay.errors";
 
 /**
@@ -59,6 +62,10 @@ export const gameplayOperations = (trx: TransactionContext) => ({
 
   /** queries */
   getCurrentGameState: getGameStateOrThrow(trx),
+  giveClue: giveClueToTurn(
+    turnRepository.createClue(trx),
+    turnRepository.updateTurnGuesses(trx),
+  ),
 });
 
 /**

@@ -28,7 +28,7 @@ const roundCreationRules = {
    * @returns true if there is no previous round or if the previous round is completed
    */
   isPreviousRoundCompleted(game: GameAggregate): boolean {
-    const latestRound = complexProperties.getLatestRound(game);
+    const latestRound = game.currentRound;
     if (!latestRound) return true;
     return latestRound.status === ROUND_STATE.COMPLETED;
   },
