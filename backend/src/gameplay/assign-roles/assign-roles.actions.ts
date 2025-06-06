@@ -42,7 +42,7 @@ export const assignRolesRandomly = (
         assignments.push({
           playerId: player._id,
           roundId: gameState.currentRound!._id,
-          roleId: player._id === selectedCodemaster._id ? 1 : 2,
+          roleId: player._id === selectedCodemaster._id ? 1 : 2, //TODO: Fix lookup from role code -> role name
           teamId: player._teamId,
         });
       });

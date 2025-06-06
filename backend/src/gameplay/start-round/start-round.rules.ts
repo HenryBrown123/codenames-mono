@@ -9,7 +9,7 @@ import {
 import { complexProperties } from "../state/gameplay-state.helpers";
 
 import {
-  validateGameState,
+  validateWithZodSchema,
   ValidatedGameState,
   GameplayValidationResult,
 } from "../state/gameplay-state.validation";
@@ -98,5 +98,5 @@ export type StartRoundValidGameState = ValidatedGameState<
 export function validate(
   data: unknown,
 ): GameplayValidationResult<StartRoundValidGameState> {
-  return validateGameState(roundStartAllowedSchema, data);
+  return validateWithZodSchema(roundStartAllowedSchema, data);
 }

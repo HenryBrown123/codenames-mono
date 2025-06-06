@@ -5,7 +5,7 @@ import {
   roundSchema,
 } from "../state/gameplay-state.types";
 import {
-  validateGameState,
+  validateWithZodSchema,
   ValidatedGameState,
   GameplayValidationResult,
 } from "../state/gameplay-state.validation";
@@ -19,7 +19,7 @@ const roleAssignmentRules = {
    * Checks if the round is in SETUP state and ready for role assignment
    */
   isRoundInSetupState(game: GameAggregate): boolean {
-    return game.currentRound?.status === ROUND_STATE.SETUP;
+    return game.currentRound?.status === ROUND_STATE.IN_PROGRESS;
   },
 
   /**
@@ -43,7 +43,7 @@ const roleAssignmentRules = {
 /**
  * Base schema for role assignment validation - use the full round schema
  */
-const roleAssignmentSchema = gameplayBaseSchema.extend({
+export const roleAssignmentSchema = gameplayBaseSchema.extend({
   status: z.literal(GAME_STATE.IN_PROGRESS),
   currentRound: roundSchema
     .extend({
@@ -55,7 +55,7 @@ const roleAssignmentSchema = gameplayBaseSchema.extend({
 /**
  * Enhanced schema that includes rules for role assignment validation
  */
-const roleAssignmentAllowedSchema = roleAssignmentSchema
+export const roleAssignmentAllowedSchema = roleAssignmentSchema
   .refine(roleAssignmentRules.isRoundInSetupState, {
     message: "Round must be in SETUP state to assign roles",
     path: ["currentRound", "status"],
@@ -80,7 +80,7 @@ export type AssignRolesValidGameState = ValidatedGameState<
  * Validates the game state for role assignment
  */
 export function validate(
-  data: unknown,
+  data: GameAggregate,
 ): GameplayValidationResult<AssignRolesValidGameState> {
-  return validateGameState(roleAssignmentAllowedSchema, data);
+  return validateWithZodSchema(roleAssignmentAllowedSchema, data);
 }

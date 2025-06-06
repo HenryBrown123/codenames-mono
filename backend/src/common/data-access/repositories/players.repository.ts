@@ -41,7 +41,6 @@ export type PlayerRoleInput = {
 export type RoleAssignmentResult = {
   _playerId: number;
   _roundId: number;
-  _teamId: number;
   role: PlayerRole;
 };
 
@@ -320,10 +319,17 @@ export const getPlayerContext =
     };
   };
 
-/**
+/*
  * ==================
  * ROLE QUERIES
  * ==================
+ */
+
+/**
+ * Finds player ids for a given role within a game.. returns player Ids for all rounds
+ *
+ * @param db
+ * @returns
  */
 
 export const getRoleHistory =
@@ -357,30 +363,26 @@ export const assignPlayerRoles =
     const inputArray = Array.isArray(input) ? input : [input];
     if (inputArray.length === 0) return [];
 
-    try {
-      const values = inputArray.map((assignment) => ({
-        player_id: assignment.playerId,
-        round_id: assignment.roundId,
-        role_id: assignment.roleId,
-        assigned_at: new Date(),
-      }));
+    const values = inputArray.map((assignment) => ({
+      player_id: assignment.playerId,
+      round_id: assignment.roundId,
+      role_id: assignment.roleId,
+      assigned_at: new Date(),
+    }));
 
-      await db.insertInto("player_round_roles").values(values).execute();
+    const result = await db
+      .insertInto("player_round_roles")
+      .values(values)
+      .returningAll()
+      .returning(teamNameLookup)
+      .execute();
 
-      return inputArray.map((assignment) => ({
-        _playerId: assignment.playerId,
-        _roundId: assignment.roundId,
-        _teamId: assignment.teamId,
-        role:
-          assignment.roleId === 1
-            ? PLAYER_ROLE.CODEMASTER
-            : PLAYER_ROLE.CODEBREAKER,
-      }));
-    } catch (error) {
-      throw new UnexpectedRepositoryError("Failed to assign player roles", {
-        cause: error,
-      });
-    }
+    return result.map((rec) => ({
+      _playerId: rec.player_id,
+      _roundId: rec.round_id,
+      role:
+        rec.role_id === 1 ? PLAYER_ROLE.CODEMASTER : PLAYER_ROLE.CODEBREAKER,
+    }));
   };
 
 export const addPlayers =

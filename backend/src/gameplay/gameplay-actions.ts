@@ -8,11 +8,30 @@ import {
 
 import * as roundsRepository from "@backend/common/data-access/repositories/rounds.repository";
 import * as cardsRepository from "@backend/common/data-access/repositories/cards.repository";
+import * as playerRepository from "@backend/common/data-access/repositories/players.repository";
 
 import { gameplayState } from "./state";
 import { createNextRound } from "./new-round/new-round.actions";
 import { dealCardsToRound } from "./deal-cards/deal-cards.actions";
 import { startCurrentRound } from "./start-round/start-round.actions";
+import { assignRolesRandomly } from "./assign-roles/assign-roles.actions";
+import { UnexpectedGameplayError } from "./errors/gameplay.errors";
+
+/**
+ * Wrapper around gameplay state provider to throw if not found... this should not be possible
+ * within a gameplay transactional context.
+ *
+ * @param (trx)(gameId: string, userId: number)
+ * @returns GameAggregate
+ */
+const getGameStateOrThrow =
+  (trx: TransactionContext) => async (gameId: string, userId: number) => {
+    const game = await gameplayState(trx).provider(gameId, userId);
+
+    if (!game) throw new UnexpectedGameplayError("Game not found");
+
+    return game;
+  };
 
 /**
  * Creates gameplay operations for use within a transaction context
@@ -21,13 +40,25 @@ import { startCurrentRound } from "./start-round/start-round.actions";
  * @returns Object containing all gameplay operations
  */
 export const gameplayOperations = (trx: TransactionContext) => ({
+  /** round management */
   createRound: createNextRound(roundsRepository.createNewRound(trx)),
+  assignPlayerRoles: assignRolesRandomly(
+    playerRepository.assignPlayerRoles(trx),
+    (gameId: number) =>
+      playerRepository.getRoleHistory(trx)(gameId, "CODEMASTER"),
+  ),
   dealCards: dealCardsToRound(
     cardsRepository.getRandomWords(trx),
     cardsRepository.replaceCards(trx),
   ),
   startRound: startCurrentRound(roundsRepository.updateRoundStatus(trx)),
-  getCurrentGameState: gameplayState(trx).provider,
+
+  /** codemaster moves */
+
+  /** codebreaker moves */
+
+  /** queries */
+  getCurrentGameState: getGameStateOrThrow(trx),
 });
 
 /**

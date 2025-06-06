@@ -10,7 +10,7 @@ import {
 import { complexProperties } from "../state/gameplay-state.helpers";
 
 import {
-  validateGameState,
+  validateWithZodSchema,
   ValidatedGameState,
   GameplayValidationResult,
 } from "../state/gameplay-state.validation";
@@ -106,7 +106,7 @@ export type DealCardsValidGameState = ValidatedGameState<
  * @returns Validation result containing either valid game state or validation errors
  */
 export function validate(
-  data: unknown,
+  data: GameAggregate,
 ): GameplayValidationResult<DealCardsValidGameState> {
-  return validateGameState(cardDealingAllowedSchema, data);
+  return validateWithZodSchema(cardDealingAllowedSchema, data);
 }
