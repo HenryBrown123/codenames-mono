@@ -205,7 +205,7 @@ export function createGameplayPaths() {
         },
       },
     },
-    "/games/{gameId}/rounds/{id}/deal": {
+    "/games/{gameId}/rounds/{roundNumber}/deal": {
       post: {
         summary: "Deal cards for a round",
         description:
