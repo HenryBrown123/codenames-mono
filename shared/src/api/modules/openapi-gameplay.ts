@@ -413,5 +413,142 @@ export function createGameplayPaths() {
         },
       },
     },
+    "/games/{gameId}/rounds/{roundNumber}/clues": {
+      post: {
+        summary: "Give a clue",
+        description:
+          "Allows a codemaster to give a clue to their team during their turn in the specified round",
+        tags: ["Gameplay"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "gameId",
+            in: "path",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description: "Public ID of the game",
+          },
+          {
+            name: "roundNumber",
+            in: "path",
+            required: true,
+            schema: {
+              type: "integer",
+              minimum: 1,
+            },
+            description: "Round number in game",
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["word", "targetCardCount"],
+                properties: {
+                  word: {
+                    type: "string",
+                    minLength: 1,
+                    maxLength: 50,
+                    description: "The clue word",
+                  },
+                  targetCardCount: {
+                    type: "integer",
+                    minimum: 1,
+                    maximum: 25,
+                    description: "Number of cards this clue relates to",
+                  },
+                },
+              },
+              example: {
+                word: "nature",
+                targetCardCount: 2,
+              },
+            },
+          },
+        },
+        responses: {
+          "201": {
+            description: "Clue given successfully",
+            content: {
+              "application/json": {
+                example: {
+                  success: true,
+                  data: {
+                    clue: {
+                      word: "nature",
+                      targetCardCount: 2,
+                      createdAt: "2024-01-01T00:00:00Z",
+                    },
+                    turn: {
+                      teamName: "Team Red",
+                      guessesRemaining: 3,
+                      status: "ACTIVE",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "400": {
+            description: "Invalid clue word or parameters",
+            content: {
+              "application/json": {
+                example: {
+                  success: false,
+                  error: 'Clue word "tree" matches a card word on the board',
+                  details: {
+                    code: "invalid-clue-word",
+                  },
+                },
+              },
+            },
+          },
+          "404": {
+            description: "Game not found",
+            content: {
+              "application/json": {
+                example: {
+                  success: false,
+                  error: "Failed to give clue",
+                  details: {
+                    code: "game-not-found",
+                  },
+                },
+              },
+            },
+          },
+          "409": {
+            description: "Business rule violation - cannot give clue",
+            content: {
+              "application/json": {
+                example: {
+                  success: false,
+                  error: "Failed to give clue",
+                  details: {
+                    code: "invalid-game-state",
+                    validationErrors: [
+                      {
+                        path: "playerContext.role",
+                        message: "Only codemasters can give clues",
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+          "401": {
+            description: "Unauthorized",
+          },
+          "500": {
+            description: "Server error",
+          },
+        },
+      },
+    },
   };
 }

@@ -11,6 +11,7 @@ import newRound from "./new-round";
 import dealCards from "./deal-cards";
 import startRound from "./start-round";
 import getGame from "./get-game";
+import giveClue from "./give-clue";
 
 import { gameplayErrorHandler } from "./errors/gameplay-errors.middleware";
 
@@ -50,6 +51,11 @@ export const initialize = (
     getGameState,
   });
 
+  const { controller: giveClueController } = giveClue({
+    getGameState,
+    gameplayHandler,
+  });
+
   // Routes setup
   const router = Router();
 
@@ -61,6 +67,11 @@ export const initialize = (
     startRoundController,
   );
   router.get("/games/:gameId", auth, getGameController);
+  router.post(
+    "/games/:gameId/rounds/:roundNumber/clues",
+    auth,
+    giveClueController,
+  );
 
   app.use("/api", router);
   app.use("/api", gameplayErrorHandler);
