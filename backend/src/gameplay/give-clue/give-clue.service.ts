@@ -13,6 +13,7 @@ import {
  */
 export type GiveClueInput = {
   gameId: string;
+  roundNumber: number;
   userId: number;
   word: string;
   targetCardCount: number;
@@ -41,6 +42,8 @@ export const GIVE_CLUE_ERROR = {
   INVALID_GAME_STATE: "invalid-game-state",
   INVALID_CLUE_WORD: "invalid-clue-word",
   GAME_NOT_FOUND: "game-not-found",
+  ROUND_NOT_FOUND: "round-not-found",
+  ROUND_NOT_CURRENT: "round-not-current",
 } as const;
 
 /**
@@ -60,6 +63,15 @@ export type GiveClueFailure =
   | {
       status: typeof GIVE_CLUE_ERROR.GAME_NOT_FOUND;
       gameId: string;
+    }
+  | {
+      status: typeof GIVE_CLUE_ERROR.ROUND_NOT_FOUND;
+      roundNumber: number;
+    }
+  | {
+      status: typeof GIVE_CLUE_ERROR.ROUND_NOT_CURRENT;
+      requestedRound: number;
+      currentRound: number;
     };
 
 /**
@@ -93,6 +105,28 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
         error: {
           status: GIVE_CLUE_ERROR.GAME_NOT_FOUND,
           gameId: input.gameId,
+        },
+      };
+    }
+
+    // Validate round exists
+    if (!gameData.currentRound) {
+      return {
+        success: false,
+        error: {
+          status: GIVE_CLUE_ERROR.ROUND_NOT_FOUND,
+          roundNumber: input.roundNumber,
+        },
+      };
+    }
+
+    if (gameData.currentRound.number !== input.roundNumber) {
+      return {
+        success: false,
+        error: {
+          status: GIVE_CLUE_ERROR.ROUND_NOT_CURRENT,
+          requestedRound: input.roundNumber,
+          currentRound: gameData.currentRound.number,
         },
       };
     }
