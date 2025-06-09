@@ -46,14 +46,7 @@ export const makeGuessResponseSchema = z.object({
       guessesRemaining: z.number(),
       status: z.string(),
     }),
-    transition: z
-      .object({
-        type: z.enum(["TURN_END", "ROUND_END"]),
-        nextTeam: z.string().optional(),
-        winner: z.string().optional(),
-        reason: z.string(),
-      })
-      .optional(),
+    gameState: z.any(), // The updated game state
   }),
 });
 
@@ -87,9 +80,6 @@ export type Dependencies = {
 export const makeGuessController = ({ makeGuess }: Dependencies) => {
   /**
    * Handles HTTP request to make a guess in a game
-   * @param req - Express request with game ID, round number and card word
-   * @param res - Express response object
-   * @param next - Express error handling function
    */
   return async (
     req: Request,
@@ -194,7 +184,7 @@ export const makeGuessController = ({ makeGuess }: Dependencies) => {
             guessesRemaining: result.data.turn.guessesRemaining,
             status: result.data.turn.status,
           },
-          transition: result.data.transition,
+          gameState: result.data.gameState,
         },
       });
     } catch (error) {

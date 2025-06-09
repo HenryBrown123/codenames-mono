@@ -2,9 +2,12 @@ import type { GameplayStateProvider } from "../state/gameplay-state.provider";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 import type { GameplayOperations } from "../gameplay-actions";
 import { complexProperties } from "../state/gameplay-state.helpers";
-import { validateGuessCard, validateMakeGuess } from "./make-guess.rules";
+import { validateMakeGuess } from "./make-guess.rules";
 import { getGuessOutcomeHandler } from "./guess-outcomes";
 
+/**
+ * Input parameters for making a guess
+ */
 export type MakeGuessInput = {
   gameId: string;
   roundNumber: number;
@@ -12,6 +15,9 @@ export type MakeGuessInput = {
   cardWord: string;
 };
 
+/**
+ * Successful guess result
+ */
 export type MakeGuessSuccess = {
   guess: {
     cardWord: string;
@@ -23,14 +29,12 @@ export type MakeGuessSuccess = {
     guessesRemaining: number;
     status: string;
   };
-  transition?: {
-    type: "TURN_END" | "ROUND_END";
-    nextTeam?: string;
-    winner?: string;
-    reason: string;
-  } | null;
+  gameState: any; // The updated game state after all transitions
 };
 
+/**
+ * Guess error types
+ */
 export const MAKE_GUESS_ERROR = {
   INVALID_GAME_STATE: "invalid-game-state",
   INVALID_CARD: "invalid-card",
@@ -39,10 +43,44 @@ export const MAKE_GUESS_ERROR = {
   ROUND_NOT_CURRENT: "round-not-current",
 } as const;
 
+/**
+ * Guess failure details
+ */
+export type MakeGuessFailure =
+  | {
+      status: typeof MAKE_GUESS_ERROR.INVALID_GAME_STATE;
+      currentState: string;
+      validationErrors: any[];
+    }
+  | {
+      status: typeof MAKE_GUESS_ERROR.INVALID_CARD;
+      cardWord: string;
+      reason: string;
+    }
+  | {
+      status: typeof MAKE_GUESS_ERROR.GAME_NOT_FOUND;
+      gameId: string;
+    }
+  | {
+      status: typeof MAKE_GUESS_ERROR.ROUND_NOT_FOUND;
+      roundNumber: number;
+    }
+  | {
+      status: typeof MAKE_GUESS_ERROR.ROUND_NOT_CURRENT;
+      requestedRound: number;
+      currentRound: number;
+    };
+
+/**
+ * Combined result type for guess making
+ */
 export type MakeGuessResult =
   | { success: true; data: MakeGuessSuccess }
-  | { success: false; error: any };
+  | { success: false; error: MakeGuessFailure };
 
+/**
+ * Dependencies required by the make guess service
+ */
 export type MakeGuessDependencies = {
   getGameState: GameplayStateProvider;
   gameplayHandler: TransactionalHandler<GameplayOperations>;
@@ -68,7 +106,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
       };
     }
 
-    // Validate round
+    // Validate round exists and is current
     if (!gameData.currentRound) {
       return {
         success: false,
@@ -90,20 +128,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
       };
     }
 
-    // Validate card
-    const cardValidation = validateGuessCard(gameData, input.cardWord);
-    if (!cardValidation.valid) {
-      return {
-        success: false,
-        error: {
-          status: MAKE_GUESS_ERROR.INVALID_CARD,
-          cardWord: input.cardWord,
-          reason: cardValidation.error!,
-        },
-      };
-    }
-
-    // Validate game state for making guess
+    // Validate game state for making guess (before transaction)
     const validationResult = validateMakeGuess(gameData);
     if (!validationResult.valid) {
       return {
@@ -120,26 +145,22 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
     const result = await dependencies.gameplayHandler(async (ops) => {
       const currentTurn = complexProperties.getCurrentTurnOrThrow(gameData);
 
-      // 1. Make the guess - action handles all guess logic
+      // 1. Make the guess - action handles validation and guess logic
       const guessResult = await ops.makeGuess(
         validationResult.data,
-        cardValidation.cardId!,
+        input.cardWord,
       );
 
-      // 2. Determine outcome and execute appropriate handler
-      const handleOutcome = getGuessOutcomeHandler(
-        guessResult.outcome,
-        guessResult.shouldContinue,
-        validationResult.data,
-      );
-
-      const transition = await handleOutcome({
-        gameState: validationResult.data,
+      // 2. Handle outcome with appropriate transitions
+      const outcomeHandler = getGuessOutcomeHandler(guessResult.outcome);
+      const finalGameState = await outcomeHandler({
         currentTurn,
         ops,
+        gameId: input.gameId,
+        userId: input.userId,
       });
 
-      return { guessResult, transition };
+      return { guessResult, finalGameState };
     });
 
     return {
@@ -155,7 +176,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
           guessesRemaining: result.guessResult.turn.guessesRemaining,
           status: result.guessResult.turn.status,
         },
-        transition: result.transition,
+        gameState: result.finalGameState,
       },
     };
   };
