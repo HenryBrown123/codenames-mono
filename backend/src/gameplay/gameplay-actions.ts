@@ -17,15 +17,17 @@ import { dealCardsToRound } from "./deal-cards/deal-cards.actions";
 import { startCurrentRound } from "./start-round/start-round.actions";
 import { assignRolesRandomly } from "./assign-roles/assign-roles.actions";
 import { giveClueToTurn } from "./give-clue/give-clue.actions";
+import {
+  createMakeGuessAction,
+  createEndTurnAction,
+  createStartTurnAction,
+  createEndRoundAction,
+} from "./make-guess/make-guess.actions";
 
 import { UnexpectedGameplayError } from "./errors/gameplay.errors";
 
 /**
- * Wrapper around gameplay state provider to throw if not found... this should not be possible
- * within a gameplay transactional context.
- *
- * @param (trx)(gameId: string, userId: number)
- * @returns GameAggregate
+ * Wrapper around gameplay state provider to throw if not found
  */
 const getGameStateOrThrow =
   (trx: TransactionContext) => async (gameId: string, userId: number) => {
@@ -38,9 +40,6 @@ const getGameStateOrThrow =
 
 /**
  * Creates gameplay operations for use within a transaction context
- *
- * @param trx - Database transaction context
- * @returns Object containing all gameplay operations
  */
 export const gameplayOperations = (trx: TransactionContext) => ({
   /** round management */
@@ -57,15 +56,34 @@ export const gameplayOperations = (trx: TransactionContext) => ({
   startRound: startCurrentRound(roundsRepository.updateRoundStatus(trx)),
 
   /** codemaster moves */
-
-  /** codebreaker moves */
-
-  /** queries */
-  getCurrentGameState: getGameStateOrThrow(trx),
   giveClue: giveClueToTurn(
     turnRepository.createClue(trx),
     turnRepository.updateTurnGuesses(trx),
   ),
+
+  /** codebreaker moves */
+  makeGuess: createMakeGuessAction({
+    updateCards: cardsRepository.updateCards(trx),
+    createGuess: turnRepository.createGuess(trx),
+    updateTurnGuesses: turnRepository.updateTurnGuesses(trx),
+  }),
+
+  /** turn/round transitions */
+  endTurn: createEndTurnAction({
+    updateTurnStatus: turnRepository.updateTurnStatus(trx),
+  }),
+
+  startTurn: createStartTurnAction({
+    createTurn: turnRepository.createTurn(trx),
+  }),
+
+  endRound: createEndRoundAction({
+    updateRoundStatus: roundsRepository.updateRoundStatus(trx),
+    updateRoundWinner: roundsRepository.updateRoundWinner(trx),
+  }),
+
+  /** queries */
+  getCurrentGameState: getGameStateOrThrow(trx),
 });
 
 /**
@@ -75,9 +93,6 @@ export type GameplayOperations = ReturnType<typeof gameplayOperations>;
 
 /**
  * Creates gameplay action components with transactional handler
- *
- * @param dbContext - Database connection for transaction management
- * @returns Object containing configured action components
  */
 export const gameplayActions = (dbContext: Kysely<DB>) => {
   return {
