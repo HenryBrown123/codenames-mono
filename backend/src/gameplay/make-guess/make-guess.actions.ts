@@ -1,14 +1,13 @@
-import { ROUND_STATE } from "@codenames/shared/types";
+import { ROUND_STATE, CODEBREAKER_OUTCOME } from "@codenames/shared/types";
+import { GameplayValidationError } from "../errors/gameplay.errors";
+import { GameAggregate } from "../state/gameplay-state.types";
 import type {
-  MakeGuessValidGameState,
-  EndTurnValidGameState,
-  StartTurnValidGameState,
-  EndRoundValidGameState,
+  validateMakeGuess,
+  validateEndTurn,
+  validateStartTurn,
+  validateEndRound,
 } from "./make-guess.rules";
-import {
-  CardUpdater,
-  CardId,
-} from "@backend/common/data-access/repositories/cards.repository";
+import { CardUpdater } from "@backend/common/data-access/repositories/cards.repository";
 import {
   GuessCreator,
   TurnGuessUpdater,
@@ -20,7 +19,35 @@ import {
   RoundWinnerUpdater,
 } from "@backend/common/data-access/repositories/rounds.repository";
 import { complexProperties } from "../state/gameplay-state.helpers";
-import { CODEBREAKER_OUTCOME } from "@codenames/shared/types";
+
+/**
+ * Validates a specific card can be guessed
+ */
+function validateGuessCard(
+  game: GameAggregate,
+  cardWord: string,
+): { valid: boolean; error?: string; cardId?: number } {
+  if (!game.currentRound?.cards) {
+    return { valid: false, error: "No cards available to guess" };
+  }
+
+  const targetCard = game.currentRound.cards.find(
+    (card) => card.word.toLowerCase() === cardWord.toLowerCase().trim(),
+  );
+
+  if (!targetCard) {
+    return { valid: false, error: `Card "${cardWord}" not found on the board` };
+  }
+
+  if (targetCard.selected) {
+    return {
+      valid: false,
+      error: `Card "${cardWord}" has already been selected`,
+    };
+  }
+
+  return { valid: true, cardId: targetCard._id };
+}
 
 /**
  * Helper for determining guess outcome based on card and team
@@ -47,38 +74,43 @@ export const createMakeGuessAction = (deps: {
   updateCards: CardUpdater;
   createGuess: GuessCreator;
   updateTurnGuesses: TurnGuessUpdater;
+  validateMakeGuess: typeof validateMakeGuess;
 }) => {
-  return async (
-    validatedGameState: MakeGuessValidGameState,
-    cardId: number,
-  ) => {
-    const currentTurn =
-      complexProperties.getCurrentTurnOrThrow(validatedGameState);
+  return async (gameState: GameAggregate, cardWord: string) => {
+    const validation = deps.validateMakeGuess(gameState);
+    if (!validation.valid) {
+      throw new GameplayValidationError("make guess", validation.errors);
+    }
 
-    // Update card as selected and get card data
-    const [card] = await deps.updateCards([cardId], { selected: true });
+    // Validate card can be guessed
+    const cardValidation = validateGuessCard(gameState, cardWord);
+    if (!cardValidation.valid) {
+      throw new GameplayValidationError("guess card", [
+        {
+          path: "cardWord",
+          message: cardValidation.error!,
+        },
+      ]);
+    }
 
-    // Determine outcome based on card and team
-    const outcome = determineOutcome(
-      card,
-      validatedGameState.playerContext._teamId,
-    );
+    const currentTurn = complexProperties.getCurrentTurnOrThrow(gameState);
+    const [card] = await deps.updateCards([cardValidation.cardId!], {
+      selected: true,
+    });
 
-    // Calculate new guess count based on outcome
+    const outcome = determineOutcome(card, gameState.playerContext._teamId);
     const shouldContinue = outcome === CODEBREAKER_OUTCOME.CORRECT_TEAM_CARD;
     const newGuessesRemaining = shouldContinue
       ? Math.max(0, currentTurn.guessesRemaining - 1)
       : 0;
 
-    // Create guess record
     const guess = await deps.createGuess({
       turnId: currentTurn._id,
-      playerId: validatedGameState.playerContext._id,
-      cardId,
+      playerId: gameState.playerContext._id,
+      cardId: cardValidation.cardId!,
       outcome,
     });
 
-    // Update turn with new guess count
     const updatedTurn = await deps.updateTurnGuesses(
       currentTurn._id,
       newGuessesRemaining,
@@ -100,8 +132,14 @@ export const createMakeGuessAction = (deps: {
  */
 export const createEndTurnAction = (deps: {
   updateTurnStatus: TurnStatusUpdater;
+  validateEndTurn: typeof validateEndTurn;
 }) => {
-  return async (validatedGameState: EndTurnValidGameState, turnId: number) => {
+  return async (gameState: GameAggregate, turnId: number) => {
+    const validation = deps.validateEndTurn(gameState);
+    if (!validation.valid) {
+      throw new GameplayValidationError("end turn", validation.errors);
+    }
+
     return await deps.updateTurnStatus(turnId, "COMPLETED");
   };
 };
@@ -109,12 +147,16 @@ export const createEndTurnAction = (deps: {
 /**
  * Creates the start turn action
  */
-export const createStartTurnAction = (deps: { createTurn: TurnCreator }) => {
-  return async (
-    validatedGameState: StartTurnValidGameState,
-    roundId: number,
-    teamId: number,
-  ) => {
+export const createStartTurnAction = (deps: {
+  createTurn: TurnCreator;
+  validateStartTurn: typeof validateStartTurn;
+}) => {
+  return async (gameState: GameAggregate, roundId: number, teamId: number) => {
+    const validation = deps.validateStartTurn(gameState);
+    if (!validation.valid) {
+      throw new GameplayValidationError("start turn", validation.errors);
+    }
+
     return await deps.createTurn({
       roundId,
       teamId,
@@ -124,17 +166,23 @@ export const createStartTurnAction = (deps: { createTurn: TurnCreator }) => {
 };
 
 /**
- * Creates the end round action - can be called regardless of turn status
+ * Creates the end round action
  */
 export const createEndRoundAction = (deps: {
   updateRoundStatus: RoundStatusUpdater;
   updateRoundWinner: RoundWinnerUpdater;
+  validateEndRound: typeof validateEndRound;
 }) => {
   return async (
-    validatedGameState: EndRoundValidGameState,
+    gameState: GameAggregate,
     roundId: number,
     winningTeamId: number,
   ) => {
+    const validation = deps.validateEndRound(gameState);
+    if (!validation.valid) {
+      throw new GameplayValidationError("end round", validation.errors);
+    }
+
     await deps.updateRoundStatus({
       roundId,
       status: ROUND_STATE.COMPLETED,

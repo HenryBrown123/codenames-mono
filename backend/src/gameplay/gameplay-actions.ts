@@ -23,6 +23,12 @@ import {
   createStartTurnAction,
   createEndRoundAction,
 } from "./make-guess/make-guess.actions";
+import {
+  validateMakeGuess,
+  validateEndTurn,
+  validateStartTurn,
+  validateEndRound,
+} from "./make-guess/make-guess.rules";
 
 import { UnexpectedGameplayError } from "./errors/gameplay.errors";
 
@@ -66,21 +72,31 @@ export const gameplayOperations = (trx: TransactionContext) => ({
     updateCards: cardsRepository.updateCards(trx),
     createGuess: turnRepository.createGuess(trx),
     updateTurnGuesses: turnRepository.updateTurnGuesses(trx),
+    validateMakeGuess,
   }),
 
   /** turn/round transitions */
   endTurn: createEndTurnAction({
     updateTurnStatus: turnRepository.updateTurnStatus(trx),
+    validateEndTurn,
   }),
 
   startTurn: createStartTurnAction({
     createTurn: turnRepository.createTurn(trx),
+    validateStartTurn,
   }),
 
   endRound: createEndRoundAction({
     updateRoundStatus: roundsRepository.updateRoundStatus(trx),
     updateRoundWinner: roundsRepository.updateRoundWinner(trx),
+    validateEndRound,
   }),
+
+  /** TODO: Add endGame action when you implement it */
+  endGame: async (gameState: any, winningTeamId: number) => {
+    // Placeholder - implement when you add game completion
+    console.log(`Game ended, winner: ${winningTeamId}`);
+  },
 
   /** queries */
   getCurrentGameState: getGameStateOrThrow(trx),

@@ -110,4 +110,15 @@ export const complexProperties = {
     }
     return currentTurn;
   },
+
+  /**
+   * @returns The other team ID (assumes 2-team game)
+   */
+  getOtherTeamId(game: GameAggregate, currentTeamId: number): number {
+    const otherTeam = game.teams.find((team) => team._id !== currentTeamId);
+    if (!otherTeam) {
+      throw new UnexpectedGameplayError("No other team found");
+    }
+    return otherTeam._id;
+  },
 };

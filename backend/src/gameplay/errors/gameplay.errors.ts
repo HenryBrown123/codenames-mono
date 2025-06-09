@@ -10,3 +10,20 @@ export class UnexpectedGameplayError extends Error {
     Object.setPrototypeOf(this, UnexpectedGameplayError.prototype);
   }
 }
+
+/**
+ * Thrown when an action's business rule validation fails
+ * Indicates the game state doesn't allow this action
+ */
+export class GameplayValidationError extends UnexpectedGameplayError {
+  constructor(
+    action: string,
+    validationErrors: { path: string; message: string }[],
+    options?: ErrorOptions,
+  ) {
+    const errorSummary = validationErrors.map((e) => e.message).join(", ");
+    super(`Cannot ${action}: ${errorSummary}`, options);
+    this.name = "GameplayValidationError";
+    Object.setPrototypeOf(this, GameplayValidationError.prototype);
+  }
+}
