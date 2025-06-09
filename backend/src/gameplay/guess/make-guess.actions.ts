@@ -99,10 +99,11 @@ export const createMakeGuessAction = (deps: {
     });
 
     const outcome = determineOutcome(card, gameState.playerContext._teamId);
-    const shouldContinue = outcome === CODEBREAKER_OUTCOME.CORRECT_TEAM_CARD;
-    const newGuessesRemaining = shouldContinue
-      ? Math.max(0, currentTurn.guessesRemaining - 1)
-      : 0;
+
+    const newGuessesRemaining =
+      outcome === CODEBREAKER_OUTCOME.CORRECT_TEAM_CARD
+        ? Math.max(0, currentTurn.guessesRemaining - 1)
+        : 0;
 
     const guess = await deps.createGuess({
       turnId: currentTurn._id,
@@ -121,7 +122,6 @@ export const createMakeGuessAction = (deps: {
       guess,
       turn: updatedTurn,
       outcome,
-      shouldContinue,
       createdAt: guess.createdAt,
     };
   };

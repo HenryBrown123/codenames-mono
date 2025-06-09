@@ -2,7 +2,6 @@ import {
   GAME_STATE,
   ROUND_STATE,
   PLAYER_ROLE,
-  CODEBREAKER_OUTCOME,
   GameFormat,
 } from "@codenames/shared/types";
 import {
@@ -109,8 +108,13 @@ export const gameRules = {
   /**
    * Gets current score for each team based on completed rounds
    */
-  getTeamScores(historicalRounds: HistoricalRound[]): Record<number, number> {
-    const scores: Record<number, number> = {};
+  getTeamScores(
+    historicalRounds: HistoricalRound[],
+    team1Id: number,
+    team2Id: number,
+  ): { team1Wins: number; team2Wins: number } {
+    let team1Wins = 0;
+    let team2Wins = 0;
 
     historicalRounds
       .filter(
@@ -118,11 +122,11 @@ export const gameRules = {
           round.status === ROUND_STATE.COMPLETED && round._winningTeamId,
       )
       .forEach((round) => {
-        const teamId = round._winningTeamId!;
-        scores[teamId] = (scores[teamId] || 0) + 1;
+        if (round._winningTeamId === team1Id) team1Wins++;
+        if (round._winningTeamId === team2Id) team2Wins++;
       });
 
-    return scores;
+    return { team1Wins, team2Wins };
   },
 
   /**
@@ -171,21 +175,44 @@ export const gameRules = {
   checkGameWinner(
     historicalRounds: HistoricalRound[],
     gameFormat: GameFormat,
+    team1Id: number,
+    team2Id: number,
   ): number | null {
-    const teamScores = this.getTeamScores(historicalRounds);
+    const { team1Wins, team2Wins } = this.getTeamScores(
+      historicalRounds,
+      team1Id,
+      team2Id,
+    );
 
     switch (gameFormat) {
       case "QUICK":
-        return historicalRounds[0]?._winningTeamId || null;
+        return team1Wins > 0 ? team1Id : team2Wins > 0 ? team2Id : null;
       case "BEST_OF_THREE":
-        const winningEntry = Object.entries(teamScores).find(
-          ([_, wins]) => wins >= 2,
-        );
-        return winningEntry ? Number(winningEntry[0]) : null;
+        return team1Wins >= 2 ? team1Id : team2Wins >= 2 ? team2Id : null;
       case "ROUND_ROBIN":
-        return null; // Not implemented yet
+        return team1Wins >= 3 ? team1Id : team2Wins >= 3 ? team2Id : null;
       default:
         return null;
     }
+  },
+
+  /**
+   * Determines if another round should be created based on game format and current state
+   */
+  canCreateNextRound(
+    historicalRounds: HistoricalRound[],
+    gameFormat: GameFormat,
+  ): boolean {
+    const maxRounds = {
+      QUICK: 1,
+      BEST_OF_THREE: 3,
+      ROUND_ROBIN: 5,
+    }[gameFormat];
+
+    const completedRounds = historicalRounds.filter(
+      (round) => round.status === ROUND_STATE.COMPLETED,
+    ).length;
+
+    return completedRounds < maxRounds;
   },
 };

@@ -27,13 +27,10 @@ export const giveClueToTurn = (
       throw new UnexpectedGameplayError("No active turn found");
     }
 
-    // Create the clue
     const clue = await createClue(currentTurn._id, { word, targetCardCount });
 
-    // Domain rule: In Codenames, players get target count + 1 guesses
     const allowedGuesses = targetCardCount + 1;
 
-    // Validate against remaining cards (business rule enforcement in action)
     const unselectedCards = gameState.currentRound.cards.filter(
       (card) => !card.selected,
     );
