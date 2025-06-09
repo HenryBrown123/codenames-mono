@@ -163,38 +163,9 @@ export function createGameplayPaths() {
           },
           "404": {
             description: "Game not found",
-            content: {
-              "application/json": {
-                example: {
-                  success: false,
-                  error: "Failed to create new round",
-                  details: {
-                    code: "game-not-found",
-                  },
-                },
-              },
-            },
           },
           "409": {
             description: "Business rule violation - cannot create round",
-            content: {
-              "application/json": {
-                example: {
-                  success: false,
-                  error: "Failed to create new round",
-                  details: {
-                    code: "invalid-game-state",
-                    validationErrors: [
-                      {
-                        path: "rounds",
-                        message:
-                          "Previous round must be completed before creating a new round",
-                      },
-                    ],
-                  },
-                },
-              },
-            },
           },
           "401": {
             description: "Unauthorized",
@@ -209,7 +180,7 @@ export function createGameplayPaths() {
       post: {
         summary: "Deal cards for a round",
         description:
-          "Deals 25 random cards to a round and distributes them among teams. Can be called multiple times to re-deal cards as long as the round is in the correct state.",
+          "Deals 25 random cards to a round and distributes them among teams",
         tags: ["Gameplay"],
         security: [{ bearerAuth: [] }],
         parameters: [
@@ -229,91 +200,18 @@ export function createGameplayPaths() {
             schema: {
               type: "string",
             },
-            description: "Round identifier (currently unused but required)",
+            description: "Round identifier",
           },
         ],
-        requestBody: {
-          required: false,
-          content: {
-            "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  deck: {
-                    type: "string",
-                    default: "BASE",
-                    description: "Deck to draw words from",
-                  },
-                  languageCode: {
-                    type: "string",
-                    default: "en",
-                    description: "Language code for words",
-                  },
-                },
-              },
-              example: {
-                deck: "BASE",
-                languageCode: "en",
-              },
-            },
-          },
-        },
         responses: {
           "201": {
             description: "Cards dealt successfully",
-            content: {
-              "application/json": {
-                example: {
-                  success: true,
-                  data: {
-                    roundNumber: 1,
-                    status: "SETUP",
-                    cardCount: 25,
-                    cards: [
-                      { word: "apple", selected: false },
-                      { word: "tree", selected: false },
-                      { word: "house", selected: false },
-                      { word: "ocean", selected: false },
-                      { word: "mountain", selected: false },
-                    ],
-                  },
-                },
-              },
-            },
           },
           "404": {
             description: "Game not found",
-            content: {
-              "application/json": {
-                example: {
-                  success: false,
-                  error: "Failed to deal cards",
-                  details: {
-                    code: "game-not-found",
-                  },
-                },
-              },
-            },
           },
           "409": {
             description: "Business rule violation - cannot deal cards",
-            content: {
-              "application/json": {
-                example: {
-                  success: false,
-                  error: "Failed to deal cards",
-                  details: {
-                    code: "invalid-game-state",
-                    validationErrors: [
-                      {
-                        path: "rounds",
-                        message: "Round must be in SETUP state to deal cards",
-                      },
-                    ],
-                  },
-                },
-              },
-            },
           },
           "401": {
             description: "Unauthorized",
@@ -355,54 +253,12 @@ export function createGameplayPaths() {
         responses: {
           "200": {
             description: "Round started successfully",
-            content: {
-              "application/json": {
-                example: {
-                  success: true,
-                  data: {
-                    round: {
-                      roundNumber: 1,
-                      status: "IN_PROGRESS",
-                    },
-                  },
-                },
-              },
-            },
           },
           "404": {
             description: "Game or round not found",
-            content: {
-              "application/json": {
-                example: {
-                  success: false,
-                  error: "Failed to start round",
-                  details: {
-                    code: "round-not-found",
-                  },
-                },
-              },
-            },
           },
           "409": {
             description: "Business rule violation - cannot start round",
-            content: {
-              "application/json": {
-                example: {
-                  success: false,
-                  error: "Failed to start round",
-                  details: {
-                    code: "invalid-game-state",
-                    validationErrors: [
-                      {
-                        path: "currentRound.cards",
-                        message:
-                          "Cards must be dealt before starting the round",
-                      },
-                    ],
-                  },
-                },
-              },
-            },
           },
           "401": {
             description: "Unauthorized",
@@ -417,7 +273,7 @@ export function createGameplayPaths() {
       post: {
         summary: "Give a clue",
         description:
-          "Allows a codemaster to give a clue to their team during their turn in the specified round",
+          "Allows a codemaster to give a clue to their team during their turn",
         tags: ["Gameplay"],
         security: [{ bearerAuth: [] }],
         parameters: [
@@ -495,45 +351,141 @@ export function createGameplayPaths() {
           },
           "400": {
             description: "Invalid clue word or parameters",
+          },
+          "404": {
+            description: "Game not found",
+          },
+          "409": {
+            description: "Business rule violation - cannot give clue",
+          },
+          "401": {
+            description: "Unauthorized",
+          },
+          "500": {
+            description: "Server error",
+          },
+        },
+      },
+    },
+    "/games/{gameId}/rounds/{roundNumber}/guesses": {
+      post: {
+        summary: "Make a guess",
+        description:
+          "Allows a codebreaker to guess a card during their team's turn. Handles all game state transitions including turn ends, round ends, and victory conditions.",
+        tags: ["Gameplay"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "gameId",
+            in: "path",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description: "Public ID of the game",
+          },
+          {
+            name: "roundNumber",
+            in: "path",
+            required: true,
+            schema: {
+              type: "integer",
+              minimum: 1,
+            },
+            description: "Round number in game",
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["cardWord"],
+                properties: {
+                  cardWord: {
+                    type: "string",
+                    minLength: 1,
+                    maxLength: 50,
+                    description: "The word on the card to guess",
+                  },
+                },
+              },
+              example: {
+                cardWord: "tree",
+              },
+            },
+          },
+        },
+        responses: {
+          "201": {
+            description: "Guess made successfully",
+            content: {
+              "application/json": {
+                example: {
+                  success: true,
+                  data: {
+                    guess: {
+                      cardWord: "tree",
+                      outcome: "CORRECT_TEAM_CARD",
+                      createdAt: "2024-01-01T00:00:00Z",
+                    },
+                    turn: {
+                      teamName: "Team Red",
+                      guessesRemaining: 2,
+                      status: "ACTIVE",
+                    },
+                    transition: {
+                      type: "TURN_END",
+                      nextTeam: "Team Blue",
+                      reason: "normal-transition",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "400": {
+            description: "Invalid card word or card not available",
             content: {
               "application/json": {
                 example: {
                   success: false,
-                  error: 'Clue word "tree" matches a card word on the board',
+                  error: 'Card "invalidword" not found on the board',
                   details: {
-                    code: "invalid-clue-word",
+                    code: "invalid-card",
                   },
                 },
               },
             },
           },
           "404": {
-            description: "Game not found",
+            description: "Game or round not found",
             content: {
               "application/json": {
                 example: {
                   success: false,
-                  error: "Failed to give clue",
+                  error: "Round 2 is not the current round (current: 1)",
                   details: {
-                    code: "game-not-found",
+                    code: "round-not-current",
                   },
                 },
               },
             },
           },
           "409": {
-            description: "Business rule violation - cannot give clue",
+            description: "Business rule violation - cannot make guess",
             content: {
               "application/json": {
                 example: {
                   success: false,
-                  error: "Failed to give clue",
+                  error: "Failed to make guess",
                   details: {
                     code: "invalid-game-state",
                     validationErrors: [
                       {
                         path: "playerContext.role",
-                        message: "Only codemasters can give clues",
+                        message: "Only codebreakers can make guesses",
                       },
                     ],
                   },
