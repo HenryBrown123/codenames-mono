@@ -12,6 +12,7 @@ import dealCards from "./deal-cards";
 import startRound from "./start-round";
 import getGame from "./get-game";
 import giveClue from "./give-clue";
+import makeGuess from "./make-guess";
 
 import { gameplayErrorHandler } from "./errors/gameplay-errors.middleware";
 
@@ -56,6 +57,11 @@ export const initialize = (
     gameplayHandler,
   });
 
+  const { controller: makeGuessController } = makeGuess({
+    getGameState,
+    gameplayHandler,
+  });
+
   // Routes setup
   const router = Router();
 
@@ -71,6 +77,12 @@ export const initialize = (
     "/games/:gameId/rounds/:roundNumber/clues",
     auth,
     giveClueController,
+  );
+
+  router.post(
+    "/games/:gameId/rounds/:roundNumber/guesses",
+    auth,
+    makeGuessController,
   );
 
   app.use("/api", router);

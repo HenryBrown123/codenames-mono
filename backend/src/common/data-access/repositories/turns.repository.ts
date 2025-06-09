@@ -14,6 +14,8 @@ import { UnexpectedRepositoryError } from "./repository.errors";
 export type TurnId = number;
 export type RoundId = number;
 export type TeamId = number;
+export type PlayerId = number;
+export type CardId = number;
 
 /** Zod schema for validating outcome values from database */
 export const outcomeSchema = z
@@ -63,6 +65,19 @@ export type ClueInput = {
   targetCardCount: number;
 };
 
+export type GuessInput = {
+  turnId: number;
+  playerId: number;
+  cardId: number;
+  outcome: string;
+};
+
+export type TurnInput = {
+  roundId: number;
+  teamId: number;
+  guessesRemaining: number;
+};
+
 /** Repository function types */
 export type TurnsFinder<T extends RoundId> = (
   identifier: T,
@@ -77,9 +92,18 @@ export type ClueCreator = (
   clue: ClueInput,
 ) => Promise<ClueResult>;
 
+export type GuessCreator = (input: GuessInput) => Promise<GuessResult>;
+
+export type TurnCreator = (input: TurnInput) => Promise<TurnResult>;
+
 export type TurnGuessUpdater = (
   turnId: TurnId,
   guessesRemaining: number,
+) => Promise<TurnResult>;
+
+export type TurnStatusUpdater = (
+  turnId: TurnId,
+  status: string,
 ) => Promise<TurnResult>;
 
 /**
@@ -128,6 +152,7 @@ const fetchTurnRelatedData = async (
     number,
     { clue?: ClueResult; guesses: GuessResult[] }
   > = {};
+
   turnIds.forEach((turnId) => {
     relatedData[turnId] = { guesses: [] };
   });
@@ -217,6 +242,109 @@ export const createClue =
   };
 
 /**
+ * Creates a function for creating guesses
+ */
+export const createGuess =
+  (db: Kysely<DB>): GuessCreator =>
+  async ({ turnId, playerId, cardId, outcome }) => {
+    try {
+      const guess = await db
+        .insertInto("guesses")
+        .values({
+          turn_id: turnId,
+          player_id: playerId,
+          card_id: cardId,
+          outcome,
+          created_at: new Date(),
+        })
+        .returning([
+          "id",
+          "turn_id",
+          "player_id",
+          "card_id",
+          "outcome",
+          "created_at",
+        ])
+        .executeTakeFirstOrThrow();
+
+      // Get player name
+      const player = await db
+        .selectFrom("players")
+        .where("id", "=", playerId)
+        .select("public_name")
+        .executeTakeFirstOrThrow();
+
+      return {
+        _id: guess.id,
+        _turnId: guess.turn_id,
+        _playerId: guess.player_id,
+        _cardId: guess.card_id,
+        playerName: player.public_name,
+        outcome: outcomeSchema.parse(guess.outcome),
+        createdAt: guess.created_at,
+      };
+    } catch (error) {
+      throw new UnexpectedRepositoryError(
+        `Failed to create guess for turn ${turnId}`,
+        { cause: error },
+      );
+    }
+  };
+
+/**
+ * Creates a function for creating new turns
+ */
+export const createTurn =
+  (db: Kysely<DB>): TurnCreator =>
+  async ({ roundId, teamId, guessesRemaining }) => {
+    try {
+      const turn = await db
+        .insertInto("turns")
+        .values({
+          round_id: roundId,
+          team_id: teamId,
+          guesses_remaining: guessesRemaining,
+          status: "ACTIVE",
+          created_at: new Date(),
+        })
+        .returning([
+          "id",
+          "round_id",
+          "team_id",
+          "guesses_remaining",
+          "status",
+          "created_at",
+          "completed_at",
+        ])
+        .executeTakeFirstOrThrow();
+
+      // Get team name
+      const team = await db
+        .selectFrom("teams")
+        .where("id", "=", teamId)
+        .select("team_name")
+        .executeTakeFirstOrThrow();
+
+      return {
+        _id: turn.id,
+        _roundId: turn.round_id,
+        _teamId: turn.team_id,
+        teamName: team.team_name,
+        status: turn.status,
+        guessesRemaining: turn.guesses_remaining,
+        createdAt: turn.created_at,
+        completedAt: turn.completed_at,
+        guesses: [],
+      };
+    } catch (error) {
+      throw new UnexpectedRepositoryError(
+        `Failed to create turn for round ${roundId}`,
+        { cause: error },
+      );
+    }
+  };
+
+/**
  * Creates a function for updating turn guess counts
  */
 export const updateTurnGuesses =
@@ -248,6 +376,46 @@ export const updateTurnGuesses =
     } catch (error) {
       throw new UnexpectedRepositoryError(
         `Failed to update guesses for turn ${turnId}`,
+        { cause: error },
+      );
+    }
+  };
+
+/**
+ * Creates a function for updating turn status
+ */
+export const updateTurnStatus =
+  (db: Kysely<DB>): TurnStatusUpdater =>
+  async (turnId, status) => {
+    try {
+      const now = new Date();
+
+      // Update the turn with new status and completion time if completing
+      await db
+        .updateTable("turns")
+        .set({
+          status,
+          completed_at: status === "COMPLETED" ? now : null,
+          updated_at: now,
+        })
+        .where("id", "=", turnId)
+        .execute();
+
+      // Get the updated turn data using shared query
+      const turn = await getTurnBaseData(db)
+        .where("turns.id", "=", turnId)
+        .executeTakeFirstOrThrow();
+
+      // Fetch related data
+      const relatedData = await fetchTurnRelatedData(db, [turnId]);
+
+      return {
+        ...turn,
+        ...relatedData[turnId],
+      };
+    } catch (error) {
+      throw new UnexpectedRepositoryError(
+        `Failed to update status for turn ${turnId}`,
         { cause: error },
       );
     }
