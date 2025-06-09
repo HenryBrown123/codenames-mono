@@ -46,7 +46,6 @@ export const makeGuessResponseSchema = z.object({
       guessesRemaining: z.number(),
       status: z.string(),
     }),
-    gameState: z.any(), // The updated game state
   }),
 });
 
@@ -184,7 +183,6 @@ export const makeGuessController = ({ makeGuess }: Dependencies) => {
             guessesRemaining: result.data.turn.guessesRemaining,
             status: result.data.turn.status,
           },
-          gameState: result.data.gameState,
         },
       });
     } catch (error) {

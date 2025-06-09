@@ -166,6 +166,23 @@ export function createGameplayPaths() {
           },
           "409": {
             description: "Business rule violation - cannot create round",
+            content: {
+              "application/json": {
+                example: {
+                  success: false,
+                  error: "Failed to create new round",
+                  details: {
+                    code: "invalid-game-state",
+                    validationErrors: [
+                      {
+                        path: "rounds",
+                        message: "Maximum of 1 rounds allowed for QUICK format",
+                      },
+                    ],
+                  },
+                },
+              },
+            },
           },
           "401": {
             description: "Unauthorized",
@@ -176,11 +193,11 @@ export function createGameplayPaths() {
         },
       },
     },
-    "/games/{gameId}/rounds/{roundNumber}/deal": {
+    "/games/{gameId}/rounds/{id}/deal": {
       post: {
         summary: "Deal cards for a round",
         description:
-          "Deals 25 random cards to a round and distributes them among teams",
+          "Deals 25 random cards to a round and distributes them among teams. Can be called multiple times before round starts.",
         tags: ["Gameplay"],
         security: [{ bearerAuth: [] }],
         parameters: [
@@ -203,9 +220,57 @@ export function createGameplayPaths() {
             description: "Round identifier",
           },
         ],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  deck: {
+                    type: "string",
+                    default: "BASE",
+                    description: "Deck to use for word selection",
+                  },
+                  languageCode: {
+                    type: "string",
+                    default: "en",
+                    description: "Language code for words",
+                  },
+                },
+              },
+              example: {
+                deck: "BASE",
+                languageCode: "en",
+              },
+            },
+          },
+        },
         responses: {
           "201": {
             description: "Cards dealt successfully",
+            content: {
+              "application/json": {
+                example: {
+                  success: true,
+                  data: {
+                    roundNumber: 1,
+                    status: "SETUP",
+                    cardCount: 25,
+                    cards: [
+                      {
+                        word: "apple",
+                        selected: false,
+                      },
+                      {
+                        word: "tree",
+                        selected: false,
+                      },
+                    ],
+                  },
+                },
+              },
+            },
           },
           "404": {
             description: "Game not found",
@@ -253,6 +318,19 @@ export function createGameplayPaths() {
         responses: {
           "200": {
             description: "Round started successfully",
+            content: {
+              "application/json": {
+                example: {
+                  success: true,
+                  data: {
+                    round: {
+                      roundNumber: 1,
+                      status: "IN_PROGRESS",
+                    },
+                  },
+                },
+              },
+            },
           },
           "404": {
             description: "Game or round not found",
@@ -351,12 +429,40 @@ export function createGameplayPaths() {
           },
           "400": {
             description: "Invalid clue word or parameters",
+            content: {
+              "application/json": {
+                example: {
+                  success: false,
+                  error: 'Clue word "tree" matches a card word on the board',
+                  details: {
+                    code: "invalid-clue-word",
+                  },
+                },
+              },
+            },
           },
           "404": {
-            description: "Game not found",
+            description: "Game or round not found",
           },
           "409": {
             description: "Business rule violation - cannot give clue",
+            content: {
+              "application/json": {
+                example: {
+                  success: false,
+                  error: "Failed to give clue",
+                  details: {
+                    code: "invalid-game-state",
+                    validationErrors: [
+                      {
+                        path: "playerContext.role",
+                        message: "Only codemasters can give clues",
+                      },
+                    ],
+                  },
+                },
+              },
+            },
           },
           "401": {
             description: "Unauthorized",
@@ -434,11 +540,6 @@ export function createGameplayPaths() {
                       teamName: "Team Red",
                       guessesRemaining: 2,
                       status: "ACTIVE",
-                    },
-                    transition: {
-                      type: "TURN_END",
-                      nextTeam: "Team Blue",
-                      reason: "normal-transition",
                     },
                   },
                 },

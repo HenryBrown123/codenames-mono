@@ -12,7 +12,7 @@ import dealCards from "./deal-cards";
 import startRound from "./start-round";
 import getGame from "./get-game";
 import giveClue from "./give-clue";
-import makeGuess from "./make-guess";
+import makeGuess from "./guess";
 
 import { gameplayErrorHandler } from "./errors/gameplay-errors.middleware";
 

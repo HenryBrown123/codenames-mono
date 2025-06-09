@@ -11,25 +11,15 @@ import * as cardsRepository from "@backend/common/data-access/repositories/cards
 import * as playerRepository from "@backend/common/data-access/repositories/players.repository";
 import * as turnRepository from "@backend/common/data-access/repositories/turns.repository";
 
-import { gameplayState } from "./state";
-import { createNextRound } from "./new-round/new-round.actions";
-import { dealCardsToRound } from "./deal-cards/deal-cards.actions";
-import { startCurrentRound } from "./start-round/start-round.actions";
-import { assignRolesRandomly } from "./assign-roles/assign-roles.actions";
-import { giveClueToTurn } from "./give-clue/give-clue.actions";
-import {
-  createMakeGuessAction,
-  createEndTurnAction,
-  createStartTurnAction,
-  createEndRoundAction,
-} from "./make-guess/make-guess.actions";
-import {
-  validateMakeGuess,
-  validateEndTurn,
-  validateStartTurn,
-  validateEndRound,
-} from "./make-guess/make-guess.rules";
+import * as newRoundActions from "./new-round/new-round.actions";
+import * as dealCardsActions from "./deal-cards/deal-cards.actions";
+import * as startRoundActions from "./start-round/start-round.actions";
+import * as assignRolesActions from "./assign-roles/assign-roles.actions";
+import * as giveClueActions from "./give-clue/give-clue.actions";
+import * as makeGuessActions from "./guess/make-guess.actions";
+import * as makeGuessRules from "./guess/make-guess.rules";
 
+import { gameplayState } from "./state";
 import { UnexpectedGameplayError } from "./errors/gameplay.errors";
 
 /**
@@ -49,52 +39,56 @@ const getGameStateOrThrow =
  */
 export const gameplayOperations = (trx: TransactionContext) => ({
   /** round management */
-  createRound: createNextRound(roundsRepository.createNewRound(trx)),
-  assignPlayerRoles: assignRolesRandomly(
+  createRound: newRoundActions.createNextRound(
+    roundsRepository.createNewRound(trx),
+  ),
+  assignPlayerRoles: assignRolesActions.assignRolesRandomly(
     playerRepository.assignPlayerRoles(trx),
     (gameId: number) =>
       playerRepository.getRoleHistory(trx)(gameId, "CODEMASTER"),
   ),
-  dealCards: dealCardsToRound(
+  dealCards: dealCardsActions.dealCardsToRound(
     cardsRepository.getRandomWords(trx),
     cardsRepository.replaceCards(trx),
   ),
-  startRound: startCurrentRound(roundsRepository.updateRoundStatus(trx)),
+  startRound: startRoundActions.startCurrentRound(
+    roundsRepository.updateRoundStatus(trx),
+  ),
 
   /** codemaster moves */
-  giveClue: giveClueToTurn(
+  giveClue: giveClueActions.giveClueToTurn(
     turnRepository.createClue(trx),
     turnRepository.updateTurnGuesses(trx),
   ),
 
   /** codebreaker moves */
-  makeGuess: createMakeGuessAction({
+  makeGuess: makeGuessActions.createMakeGuessAction({
     updateCards: cardsRepository.updateCards(trx),
     createGuess: turnRepository.createGuess(trx),
     updateTurnGuesses: turnRepository.updateTurnGuesses(trx),
-    validateMakeGuess,
+    validateMakeGuess: makeGuessRules.validateMakeGuess,
   }),
 
   /** turn/round transitions */
-  endTurn: createEndTurnAction({
+  endTurn: makeGuessActions.createEndTurnAction({
     updateTurnStatus: turnRepository.updateTurnStatus(trx),
-    validateEndTurn,
+    validateEndTurn: makeGuessRules.validateEndTurn,
   }),
 
-  startTurn: createStartTurnAction({
+  startTurn: makeGuessActions.createStartTurnAction({
     createTurn: turnRepository.createTurn(trx),
-    validateStartTurn,
+    validateStartTurn: makeGuessRules.validateStartTurn,
   }),
 
-  endRound: createEndRoundAction({
+  endRound: makeGuessActions.createEndRoundAction({
     updateRoundStatus: roundsRepository.updateRoundStatus(trx),
     updateRoundWinner: roundsRepository.updateRoundWinner(trx),
-    validateEndRound,
+    validateEndRound: makeGuessRules.validateEndRound,
   }),
 
-  /** TODO: Add endGame action when you implement it */
+  /** game completion */
   endGame: async (gameState: any, winningTeamId: number) => {
-    // Placeholder - implement when you add game completion
+    // TODO: Implement when you add game completion
     console.log(`Game ended, winner: ${winningTeamId}`);
   },
 
