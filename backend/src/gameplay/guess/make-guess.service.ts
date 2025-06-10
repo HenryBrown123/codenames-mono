@@ -111,20 +111,42 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
 
     if (roundWinner) {
       await ops.endTurn(gameState, guessResult.turn._id);
-      await ops.endRound(gameState, gameState.currentRound!._id, roundWinner);
 
+      const stateAfterTurnEnd = await ops.getCurrentGameState(
+        input.gameId,
+        input.userId,
+      );
+      await ops.endRound(
+        stateAfterTurnEnd,
+        stateAfterTurnEnd.currentRound!._id,
+        roundWinner,
+      );
+
+      const updatedGameState = await ops.getCurrentGameState(
+        input.gameId,
+        input.userId,
+      );
       const gameWinner = gameRules.checkGameWinner(
-        gameState.historicalRounds,
-        gameState.game_format,
-        gameState.teams[0]._id,
-        gameState.teams[1]._id,
+        updatedGameState.historicalRounds,
+        updatedGameState.game_format,
+        updatedGameState.teams[0]._id,
+        updatedGameState.teams[1]._id,
       );
       if (gameWinner) {
-        await ops.endGame(gameState, gameWinner);
+        await ops.endGame(updatedGameState, gameWinner);
       }
     } else if (guessResult.turn.guessesRemaining === 0) {
       await ops.endTurn(gameState, guessResult.turn._id);
-      await ops.startTurn(gameState, gameState.currentRound!._id, otherTeamId);
+
+      const updatedGameState = await ops.getCurrentGameState(
+        input.gameId,
+        input.userId,
+      );
+      await ops.startTurn(
+        updatedGameState,
+        updatedGameState.currentRound!._id,
+        otherTeamId,
+      );
     }
 
     return await ops.getCurrentGameState(input.gameId, input.userId);
@@ -141,31 +163,47 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
     const gameState = await ops.getCurrentGameState(input.gameId, input.userId);
     await ops.endTurn(gameState, guessResult.turn._id);
 
+    const updatedGameState = await ops.getCurrentGameState(
+      input.gameId,
+      input.userId,
+    );
     const otherTeamId = complexProperties.getOtherTeamId(
-      gameState,
+      updatedGameState,
       guessResult.turn._teamId,
     );
 
     const roundWinner = gameRules.checkRoundWinner(
-      gameState.currentRound!.cards,
+      updatedGameState.currentRound!.cards,
       guessResult.turn._teamId,
       otherTeamId,
     );
 
     if (roundWinner) {
-      await ops.endRound(gameState, gameState.currentRound!._id, roundWinner);
+      await ops.endRound(
+        updatedGameState,
+        updatedGameState.currentRound!._id,
+        roundWinner,
+      );
 
+      const stateAfterRoundEnd = await ops.getCurrentGameState(
+        input.gameId,
+        input.userId,
+      );
       const gameWinner = gameRules.checkGameWinner(
-        gameState.historicalRounds,
-        gameState.game_format,
-        gameState.teams[0]._id,
-        gameState.teams[1]._id,
+        stateAfterRoundEnd.historicalRounds,
+        stateAfterRoundEnd.game_format,
+        stateAfterRoundEnd.teams[0]._id,
+        stateAfterRoundEnd.teams[1]._id,
       );
       if (gameWinner) {
-        await ops.endGame(gameState, gameWinner);
+        await ops.endGame(stateAfterRoundEnd, gameWinner);
       }
     } else {
-      await ops.startTurn(gameState, gameState.currentRound!._id, otherTeamId);
+      await ops.startTurn(
+        updatedGameState,
+        updatedGameState.currentRound!._id,
+        otherTeamId,
+      );
     }
 
     return await ops.getCurrentGameState(input.gameId, input.userId);
@@ -182,11 +220,19 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
     const gameState = await ops.getCurrentGameState(input.gameId, input.userId);
     await ops.endTurn(gameState, guessResult.turn._id);
 
+    const updatedGameState = await ops.getCurrentGameState(
+      input.gameId,
+      input.userId,
+    );
     const otherTeamId = complexProperties.getOtherTeamId(
-      gameState,
+      updatedGameState,
       guessResult.turn._teamId,
     );
-    await ops.startTurn(gameState, gameState.currentRound!._id, otherTeamId);
+    await ops.startTurn(
+      updatedGameState,
+      updatedGameState.currentRound!._id,
+      otherTeamId,
+    );
 
     return await ops.getCurrentGameState(input.gameId, input.userId);
   };
@@ -202,20 +248,32 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
     const gameState = await ops.getCurrentGameState(input.gameId, input.userId);
     await ops.endTurn(gameState, guessResult.turn._id);
 
+    const updatedGameState = await ops.getCurrentGameState(
+      input.gameId,
+      input.userId,
+    );
     const otherTeamId = complexProperties.getOtherTeamId(
-      gameState,
+      updatedGameState,
       guessResult.turn._teamId,
     );
-    await ops.endRound(gameState, gameState.currentRound!._id, otherTeamId);
+    await ops.endRound(
+      updatedGameState,
+      updatedGameState.currentRound!._id,
+      otherTeamId,
+    );
 
+    const stateAfterRoundEnd = await ops.getCurrentGameState(
+      input.gameId,
+      input.userId,
+    );
     const gameWinner = gameRules.checkGameWinner(
-      gameState.historicalRounds,
-      gameState.game_format,
-      gameState.teams[0]._id,
-      gameState.teams[1]._id,
+      stateAfterRoundEnd.historicalRounds,
+      stateAfterRoundEnd.game_format,
+      stateAfterRoundEnd.teams[0]._id,
+      stateAfterRoundEnd.teams[1]._id,
     );
     if (gameWinner) {
-      await ops.endGame(gameState, gameWinner);
+      await ops.endGame(stateAfterRoundEnd, gameWinner);
     }
 
     return await ops.getCurrentGameState(input.gameId, input.userId);
