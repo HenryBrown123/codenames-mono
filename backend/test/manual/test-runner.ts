@@ -76,7 +76,7 @@ export async function runGameTest(
     // === STRATEGIC GAMEPLAY ===
     let gameState: any;
     let roundComplete = false;
-    const maxTurns = 30;
+    const maxTurns = 100;
     let turnCount = 0;
 
     // Show initial board analysis

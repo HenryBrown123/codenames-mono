@@ -1,4 +1,8 @@
-import { ROUND_STATE, CODEBREAKER_OUTCOME } from "@codenames/shared/types";
+import {
+  ROUND_STATE,
+  CODEBREAKER_OUTCOME,
+  GAME_STATE,
+} from "@codenames/shared/types";
 import { GameplayValidationError } from "../errors/gameplay.errors";
 import { GameAggregate } from "../state/gameplay-state.types";
 import type {
@@ -18,6 +22,9 @@ import {
   RoundStatusUpdater,
   RoundWinnerUpdater,
 } from "@backend/common/data-access/repositories/rounds.repository";
+
+import { GameStatusUpdater } from "@backend/common/data-access/repositories/games.repository";
+
 import { complexProperties } from "../state/gameplay-state.helpers";
 
 /**
@@ -192,6 +199,22 @@ export const createEndRoundAction = (deps: {
       roundId,
       winningTeamId,
     });
+  };
+};
+
+/**
+ * Creates the end game action that transitions game to completed state
+ */
+export const createEndGameAction = (updateGameStatus: GameStatusUpdater) => {
+  /**
+   * Ends the game by updating its status to COMPLETED
+   *
+   * @param gameState - Current game state
+   * @param winningTeamId - ID of the team that won
+   * @returns Updated game data with COMPLETED status
+   */
+  return async (gameState: GameAggregate, winningTeamId: number) => {
+    return await updateGameStatus(gameState._id, GAME_STATE.COMPLETED);
   };
 };
 

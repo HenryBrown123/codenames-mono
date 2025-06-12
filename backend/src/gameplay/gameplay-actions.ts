@@ -10,6 +10,7 @@ import * as roundsRepository from "@backend/common/data-access/repositories/roun
 import * as cardsRepository from "@backend/common/data-access/repositories/cards.repository";
 import * as playerRepository from "@backend/common/data-access/repositories/players.repository";
 import * as turnRepository from "@backend/common/data-access/repositories/turns.repository";
+import * as gameRepository from "@backend/common/data-access/repositories/games.repository";
 
 import * as newRoundActions from "./new-round/new-round.actions";
 import * as dealCardsActions from "./deal-cards/deal-cards.actions";
@@ -89,8 +90,10 @@ export const gameplayOperations = (trx: TransactionContext) => ({
 
   /** game completion */
   endGame: async (gameState: any, winningTeamId: number) => {
-    // TODO: Implement when you add game completion
-    console.log(`Game ended, winner: ${winningTeamId}`);
+    makeGuessActions.createEndGameAction(gameRepository.updateGameStatus(trx))(
+      gameState,
+      winningTeamId,
+    );
   },
 
   /** queries */
