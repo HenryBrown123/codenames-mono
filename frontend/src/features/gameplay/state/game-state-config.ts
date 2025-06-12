@@ -1,5 +1,4 @@
-import { STAGE } from "@codenames/shared/src/game/game-constants";
-import { Stage } from "@codenames/shared/src/types/game-types";
+import { Stage, STAGE } from "@codenames/shared/types";
 
 /**
  * The central UI configuration for the game.

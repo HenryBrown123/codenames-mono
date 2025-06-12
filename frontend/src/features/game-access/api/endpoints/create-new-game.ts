@@ -4,7 +4,7 @@ import {
   Settings,
   GameData,
   GameType,
-} from "@codenames/shared/src/types/game-types";
+} from "@frontend/shared-types/game-types";
 
 export type CreateGamePayload = {
   gameType: GameType;

@@ -170,7 +170,7 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
       : null,
 
     playerContext: {
-      playerName: gameData.playerContext.playerName,
+      playerName: gameData.playerContext.publicName,
       teamName: gameData.playerContext.teamName,
       role: playerRole,
     },

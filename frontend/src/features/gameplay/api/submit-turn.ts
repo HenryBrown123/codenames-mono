@@ -1,6 +1,6 @@
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
-import { GameState } from "@codenames/shared/src/types/game-types";
+import { GameState } from "@frontend/shared-types/game-types";
 
 type SubmitTurnResponse = {
   success: boolean;

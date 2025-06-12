@@ -11,7 +11,7 @@ import {
   CodemasterStageBoard,
   CodebreakerStageBoard,
 } from "@frontend/game/ui/game-board/game-board-views";
-import { GameData } from "@codenames/shared/src/types/game-types";
+import { GameData } from "@frontend/shared-types/game-types";
 
 /**
  * A collection of dynamic messages for each stage and scene in the game.

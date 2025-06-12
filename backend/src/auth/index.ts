@@ -1,6 +1,6 @@
 import { Express } from "express";
 import { Kysely } from "kysely";
-import { DB } from "../../common/db/db.types";
+import { DB } from "@backend/common/db/db.types";
 import { Router } from "express";
 import { JwtConfig } from "src/common/config/jwt.config";
 

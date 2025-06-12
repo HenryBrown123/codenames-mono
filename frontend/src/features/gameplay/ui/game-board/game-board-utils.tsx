@@ -1,5 +1,5 @@
-import { Card, Stage, Team } from "@codenames/shared/src/types/game-types";
-import { TEAM, STAGE } from "@codenames/shared/src/game/game-constants";
+import { Card, Stage, Team, TEAM } from "@frontend/shared-types";
+import { STAGE } from "@codenames/shared/types";
 import { GameCardProps } from "./game-card";
 import styled from "styled-components";
 import GameCard from "./game-card";
@@ -50,7 +50,7 @@ export const RenderCards: React.FC<RenderCardsProps> = ({
  * @param {Team} team - The team whose color is needed.
  * @returns {string} - The hex color code for the team.
  */
-export const getCardColor = (team: Team): string => {
+export const getCardColor = (team: Team | undefined): string => {
   switch (team) {
     case TEAM.ASSASSIN:
       return "#1d2023";

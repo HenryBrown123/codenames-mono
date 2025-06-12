@@ -5,12 +5,8 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { LoadingSpinner } from "@frontend/game/ui";
 import { ActionButton } from "@frontend/game/ui/action-button";
-import {
-  GameType,
-  Settings,
-  Team,
-} from "@codenames/shared/src/types/game-types";
-import { GAME_TYPE } from "@codenames/shared/src/game/game-constants";
+import { Settings, Team } from "@frontend/shared-types";
+import { GAME_TYPE, GameType } from "@codenames/shared/types";
 
 const CreateGamePageContent: React.FC = () => {
   const [error, setError] = useState<string | null>(null);

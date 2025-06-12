@@ -1,5 +1,5 @@
 import { useContext, createContext, ReactNode } from "react";
-import { GameData } from "@codenames/shared/src/types/game-types";
+import { GameData } from "@frontend/shared-types/game-types";
 
 /**
  * GameContextProvider component to wrap around the application's component tree.
