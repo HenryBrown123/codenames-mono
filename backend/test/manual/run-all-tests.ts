@@ -3,11 +3,10 @@
  * Provides summary reporting and handles both individual and batch execution
  */
 
-import { colors, type TestResult } from "./test-common";
+import { colors, type TestResult, printApiTimingStats } from "./test-common";
 import { runQuickVictoryTest } from "./test-quick-victory";
 import { runAssassinDefeatTest } from "./test-assassin-defeat";
 import { runMixedStrategyTest } from "./test-mixed-strategy";
-import { runRandomPlayTest } from "./test-random-play";
 
 /**
  * All available test scenarios
@@ -16,7 +15,6 @@ const ALL_SCENARIOS = [
   { name: "quick", runner: runQuickVictoryTest },
   { name: "assassin", runner: runAssassinDefeatTest },
   { name: "mixed", runner: runMixedStrategyTest },
-  { name: "random", runner: runRandomPlayTest },
 ];
 
 /**
@@ -78,6 +76,9 @@ function printSummary(results: TestResult[], totalDuration: number) {
       `\n${colors.yellow}⚠️  Some tests failed. Check the error details above.${colors.reset}`,
     );
   }
+
+  // Add API timing stats
+  printApiTimingStats();
 }
 
 /**
