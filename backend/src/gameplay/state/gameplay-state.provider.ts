@@ -28,7 +28,7 @@ import {
 
 import { TurnsFinder } from "@backend/common/data-access/repositories/turns.repository";
 
-import { PlayerRole } from "@codenames/shared/types";
+import { PlayerRole, PLAYER_ROLE, GAME_TYPE } from "@codenames/shared/types";
 
 import { GameAggregate } from "./gameplay-state.types";
 
@@ -55,6 +55,72 @@ export type GameplayStateProvider = (
   gameId: PublicId,
   userId: number,
 ) => Promise<GameAggregate | null>;
+
+/**
+ * Pure function to determine which role should be active for current turn
+ */
+const deriveActiveRoleForTurn = (currentTurn: any | null): PlayerRole => {
+  if (!currentTurn) return PLAYER_ROLE.NONE;
+  if (!currentTurn.clue) return PLAYER_ROLE.CODEMASTER;
+  return PLAYER_ROLE.CODEBREAKER;
+};
+
+/**
+ * Pure function to determine which team should be active for current turn
+ */
+const deriveActiveTeamForTurn = (currentTurn: any | null): number | null => {
+  if (!currentTurn) return null;
+  return currentTurn._teamId;
+};
+
+/**
+ * Pure function to select the appropriate player from user's players
+ */
+const selectPlayerForRole = (
+  userPlayers: PlayerResult[],
+  targetRole: PlayerRole,
+  targetTeamId?: number | null,
+): PlayerResult | null => {
+  if (userPlayers.length === 0) return null;
+
+  // Filter by team if specified
+  const eligiblePlayers = targetTeamId
+    ? userPlayers.filter((p) => p._teamId === targetTeamId)
+    : userPlayers;
+
+  // Find first player with target role on the right team
+  const playerWithRole = eligiblePlayers.find((p) => p.role === targetRole);
+
+  // Fallback to first eligible player on the team, or any user player
+  return playerWithRole || eligiblePlayers[0] || userPlayers[0];
+};
+
+/**
+ * Determines the appropriate player context based on game mode and current turn
+ */
+const determinePlayerContext = (
+  userPlayers: PlayerResult[],
+  currentTurn: any,
+  gameType: string,
+): PlayerContext | null => {
+  if (userPlayers.length === 0) return null;
+
+  // Multi-device: Return user's specific player (validation will handle permissions)
+  if (gameType === GAME_TYPE.MULTI_DEVICE) {
+    return userPlayers[0]; // User should only have one player in multi-device
+  }
+
+  // Single-device: Return contextually appropriate player
+  if (gameType === GAME_TYPE.SINGLE_DEVICE) {
+    const activeRole = deriveActiveRoleForTurn(currentTurn);
+    const activeTeamId = deriveActiveTeamForTurn(currentTurn);
+
+    return selectPlayerForRole(userPlayers, activeRole, activeTeamId);
+  }
+
+  // Fallback
+  return userPlayers[0];
+};
 
 /**
  * Creates a provider that assembles the complete game state from different data sources
@@ -101,10 +167,10 @@ export const gameplayStateProvider = (
       getPlayersByGameId(game._id),
     ]);
 
-    // Get player context - handle case where no round exists yet
+    // Get user's players for this game/round
     const roundId = latestRound?._id || null;
-    const playerContext = await getPlayerContext(game._id, userId, roundId);
-    if (!playerContext) return null;
+    const userPlayers = await getPlayerContext(game._id, userId, roundId);
+    if (!userPlayers || userPlayers.length === 0) return null;
 
     // Transform teams data and populate with players immediately
     const teamsWithPlayers = teams.map((team: TeamResult) => ({
@@ -130,6 +196,14 @@ export const gameplayStateProvider = (
 
     // Base state for when no current round exists
     if (!latestRound) {
+      const playerContext = determinePlayerContext(
+        userPlayers,
+        null,
+        game.game_type,
+      );
+
+      if (!playerContext) return null;
+
       return {
         _id: game._id,
         public_id: game.public_id,
@@ -159,6 +233,18 @@ export const gameplayStateProvider = (
       cardType: card.cardType,
       selected: card.selected,
     }));
+
+    // Get current turn for context determination
+    const currentTurn = turns.find((turn) => turn.status === "ACTIVE") || null;
+
+    // Determine appropriate player context based on game mode and current state
+    const playerContext = determinePlayerContext(
+      userPlayers,
+      currentTurn,
+      game.game_type,
+    );
+
+    if (!playerContext) return null;
 
     return {
       _id: game._id,

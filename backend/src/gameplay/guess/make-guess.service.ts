@@ -3,7 +3,7 @@ import type { TransactionalHandler } from "@backend/common/data-access/transacti
 import type { GameplayOperations } from "../gameplay-actions";
 import { CODEBREAKER_OUTCOME } from "@codenames/shared/types";
 import { complexProperties } from "../state/gameplay-state.helpers";
-import { validateMakeGuess, gameRules } from "./make-guess.rules";
+import { validateMakeGuess, winningConditions } from "./make-guess.rules";
 
 /**
  * Input parameters for making a guess
@@ -103,7 +103,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
       guessResult.turn._teamId,
     );
 
-    const roundWinner = gameRules.checkRoundWinner(
+    const roundWinner = winningConditions.checkRoundWinner(
       gameState.currentRound!.cards,
       guessResult.turn._teamId,
       otherTeamId,
@@ -126,11 +126,9 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
         input.gameId,
         input.userId,
       );
-      const gameWinner = gameRules.checkGameWinner(
+      const gameWinner = winningConditions.checkGameWinner(
         updatedGameState.historicalRounds,
         updatedGameState.game_format,
-        updatedGameState.teams[0]._id,
-        updatedGameState.teams[1]._id,
       );
       if (gameWinner) {
         await ops.endGame(updatedGameState, gameWinner);
@@ -172,7 +170,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
       guessResult.turn._teamId,
     );
 
-    const roundWinner = gameRules.checkRoundWinner(
+    const roundWinner = winningConditions.checkRoundWinner(
       updatedGameState.currentRound!.cards,
       guessResult.turn._teamId,
       otherTeamId,
@@ -189,11 +187,9 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
         input.gameId,
         input.userId,
       );
-      const gameWinner = gameRules.checkGameWinner(
+      const gameWinner = winningConditions.checkGameWinner(
         stateAfterRoundEnd.historicalRounds,
         stateAfterRoundEnd.game_format,
-        stateAfterRoundEnd.teams[0]._id,
-        stateAfterRoundEnd.teams[1]._id,
       );
       if (gameWinner) {
         await ops.endGame(stateAfterRoundEnd, gameWinner);
@@ -266,11 +262,9 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
       input.gameId,
       input.userId,
     );
-    const gameWinner = gameRules.checkGameWinner(
+    const gameWinner = winningConditions.checkGameWinner(
       stateAfterRoundEnd.historicalRounds,
       stateAfterRoundEnd.game_format,
-      stateAfterRoundEnd.teams[0]._id,
-      stateAfterRoundEnd.teams[1]._id,
     );
     if (gameWinner) {
       await ops.endGame(stateAfterRoundEnd, gameWinner);

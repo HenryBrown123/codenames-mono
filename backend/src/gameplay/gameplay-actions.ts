@@ -53,6 +53,7 @@ export const gameplayOperations = (trx: TransactionContext) => ({
   ),
   startRound: startRoundActions.startCurrentRound(
     roundsRepository.updateRoundStatus(trx),
+    turnRepository.createTurn(trx),
   ),
 
   /** codemaster moves */

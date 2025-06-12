@@ -81,7 +81,7 @@ export type PlayerContextFinder = (
   gameId: GameId,
   userId: UserId,
   roundId: RoundId | null,
-) => Promise<PlayerResult | null>;
+) => Promise<PlayerResult[] | null>;
 
 /** Repository function types for role operations */
 export type RoleHistoryFinder = (
@@ -299,11 +299,11 @@ export const getPlayerContext =
         "users.username",
         "player_roles.role_name",
       ])
-      .executeTakeFirst();
+      .execute();
 
     if (!player) return null;
 
-    return {
+    const result = player.map((player) => ({
       _id: player.id,
       publicId: player.public_id,
       _userId: player.user_id,
@@ -316,7 +316,9 @@ export const getPlayerContext =
       role: player.role_name
         ? parseRoleName(player.role_name)
         : PLAYER_ROLE.NONE,
-    };
+    }));
+
+    return result;
   };
 
 /*
@@ -356,7 +358,6 @@ export const getRoleHistory =
  * PLAYER MUTATIONS
  * ==================
  */
-
 export const assignPlayerRoles =
   (db: Kysely<DB>): RoleAssignmentCreator =>
   async (input) => {
@@ -370,19 +371,35 @@ export const assignPlayerRoles =
       assigned_at: new Date(),
     }));
 
-    const result = await db
+    // Insert the role assignments
+    const insertResult = await db
       .insertInto("player_round_roles")
       .values(values)
       .returningAll()
-      .returning(teamNameLookup)
       .execute();
 
-    return result.map((rec) => ({
-      _playerId: rec.player_id,
-      _roundId: rec.round_id,
-      role:
-        rec.role_id === 1 ? PLAYER_ROLE.CODEMASTER : PLAYER_ROLE.CODEBREAKER,
-    }));
+    // Fetch additional data needed for the response
+    const playerResults = await Promise.all(
+      insertResult.map(async (assignment) => {
+        const playerData = await db
+          .selectFrom("players")
+          .where("id", "=", assignment.player_id)
+          .select("team_id")
+          .executeTakeFirst();
+
+        return {
+          _playerId: assignment.player_id,
+          _roundId: assignment.round_id,
+          _teamId: playerData?.team_id || 0,
+          role:
+            assignment.role_id === 1
+              ? PLAYER_ROLE.CODEMASTER
+              : PLAYER_ROLE.CODEBREAKER,
+        };
+      }),
+    );
+
+    return playerResults;
   };
 
 export const addPlayers =
