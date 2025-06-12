@@ -2,5 +2,7 @@
   "search.exclude": {
     "**/node_modules": false
   },
-  "explorer.excludeGitIgnore": false
+  "explorer.excludeGitIgnore": false,
+  "typescript.validate.enable": true,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": true
 }
