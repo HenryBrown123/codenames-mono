@@ -70,11 +70,74 @@ export type TestResult = {
 };
 
 /**
+ * API timing tracker
+ */
+class ApiTimingTracker {
+  private static instance: ApiTimingTracker;
+  private timings: Map<string, number[]> = new Map();
+
+  static getInstance(): ApiTimingTracker {
+    if (!ApiTimingTracker.instance) {
+      ApiTimingTracker.instance = new ApiTimingTracker();
+    }
+    return ApiTimingTracker.instance;
+  }
+
+  private normalizeEndpoint(endpoint: string): string {
+    // Split into method and path
+    const [method, ...pathParts] = endpoint.split(" ");
+    const path = pathParts.join(" ");
+
+    // Replace obvious ID patterns with :id
+    const normalizedPath = path
+      .replace(/\/[a-z0-9]{8,}/gi, "/:id") // Replace long alphanumeric strings (likely IDs)
+      .replace(/\/\d+/g, "/:id") // Replace pure numbers
+      .replace(
+        /\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi,
+        "/:id",
+      ) // UUIDs
+      .replace(/\/[a-zA-Z0-9_-]{10,}/g, "/:id"); // Other likely ID formats
+
+    return `${method} ${path}`;
+  }
+
+  recordTiming(endpoint: string, duration: number) {
+    const normalizedEndpoint = this.normalizeEndpoint(endpoint);
+    if (!this.timings.has(normalizedEndpoint)) {
+      this.timings.set(normalizedEndpoint, []);
+    }
+    this.timings.get(normalizedEndpoint)!.push(duration);
+  }
+
+  getStats() {
+    const stats = new Map<
+      string,
+      { count: number; avg: number; min: number; max: number }
+    >();
+
+    for (const [endpoint, times] of this.timings.entries()) {
+      const count = times.length;
+      const avg = Math.round(times.reduce((a, b) => a + b, 0) / count);
+      const min = Math.min(...times);
+      const max = Math.max(...times);
+      stats.set(endpoint, { count, avg, min, max });
+    }
+
+    return stats;
+  }
+
+  reset() {
+    this.timings.clear();
+  }
+}
+
+/**
  * HTTP client for API calls
  */
 export class ApiClient {
   private authToken?: string;
   private verbose: boolean;
+  private timingTracker = ApiTimingTracker.getInstance();
 
   constructor(verbose = false) {
     this.verbose = verbose;
@@ -104,11 +167,19 @@ export class ApiClient {
       }
     }
 
+    const startTime = performance.now();
+
     const response = await fetch(`${API_BASE}${url}`, {
       method,
       headers,
       body: data ? JSON.stringify(data) : undefined,
     });
+
+    const endTime = performance.now();
+    const requestTime = Math.round(endTime - startTime);
+
+    // Track timing for aggregation
+    this.timingTracker.recordTiming(`${method} ${url}`, requestTime);
 
     const responseData = await response.json();
 
@@ -151,6 +222,14 @@ export class ApiClient {
   }
   async delete(url: string) {
     return this.request("DELETE", url);
+  }
+
+  static getTimingStats() {
+    return ApiTimingTracker.getInstance().getStats();
+  }
+
+  static resetTimings() {
+    ApiTimingTracker.getInstance().reset();
   }
 }
 
@@ -396,4 +475,38 @@ export const logGameState = (gameState: any, verbose: boolean) => {
     );
   }
   console.log("");
+};
+
+/**
+ * Print API timing statistics
+ */
+export const printApiTimingStats = () => {
+  const stats = ApiClient.getTimingStats();
+
+  if (stats.size === 0) {
+    console.log(`${colors.yellow}No API timing data collected${colors.reset}`);
+    return;
+  }
+
+  console.log(`\n${colors.bright}📡 API Performance Summary${colors.reset}`);
+  console.log(`${"=".repeat(60)}`);
+
+  // Sort by average response time descending
+  const sortedStats = Array.from(stats.entries()).sort(
+    (a, b) => b[1].avg - a[1].avg,
+  );
+
+  for (const [endpoint, timing] of sortedStats) {
+    const { count, avg, min, max } = timing;
+    console.log(
+      `${colors.cyan}${endpoint.padEnd(30)}${colors.reset} ${colors.bright}${avg}ms${colors.reset} avg (${min}-${max}ms, ${count}x)`,
+    );
+  }
+};
+
+/**
+ * Reset API timing statistics
+ */
+export const resetApiTimings = () => {
+  ApiClient.resetTimings();
 };
