@@ -2,6 +2,7 @@ import {
   GAME_STATE,
   ROUND_STATE,
   PLAYER_ROLE,
+  CODEBREAKER_OUTCOME,
   GameFormat,
 } from "@codenames/shared/types";
 import {
@@ -102,19 +103,14 @@ export const validateEndRound = (
 };
 
 /**
- * Pure domain functions for game state evaluation
+ * Pure domain functions for determining winning conditions
  */
-export const gameRules = {
+export const winningConditions = {
   /**
    * Gets current score for each team based on completed rounds
    */
-  getTeamScores(
-    historicalRounds: HistoricalRound[],
-    team1Id: number,
-    team2Id: number,
-  ): { team1Wins: number; team2Wins: number } {
-    let team1Wins = 0;
-    let team2Wins = 0;
+  getTeamScores(historicalRounds: HistoricalRound[]): Record<number, number> {
+    const scores: Record<number, number> = {};
 
     historicalRounds
       .filter(
@@ -122,11 +118,11 @@ export const gameRules = {
           round.status === ROUND_STATE.COMPLETED && round._winningTeamId,
       )
       .forEach((round) => {
-        if (round._winningTeamId === team1Id) team1Wins++;
-        if (round._winningTeamId === team2Id) team2Wins++;
+        const teamId = round._winningTeamId!;
+        scores[teamId] = (scores[teamId] || 0) + 1;
       });
 
-    return { team1Wins, team2Wins };
+    return scores;
   },
 
   /**
@@ -175,44 +171,21 @@ export const gameRules = {
   checkGameWinner(
     historicalRounds: HistoricalRound[],
     gameFormat: GameFormat,
-    team1Id: number,
-    team2Id: number,
   ): number | null {
-    const { team1Wins, team2Wins } = this.getTeamScores(
-      historicalRounds,
-      team1Id,
-      team2Id,
-    );
+    const teamScores = this.getTeamScores(historicalRounds);
 
     switch (gameFormat) {
       case "QUICK":
-        return team1Wins > 0 ? team1Id : team2Wins > 0 ? team2Id : null;
+        return historicalRounds[0]?._winningTeamId || null;
       case "BEST_OF_THREE":
-        return team1Wins >= 2 ? team1Id : team2Wins >= 2 ? team2Id : null;
+        const winningEntry = Object.entries(teamScores).find(
+          ([_, wins]) => wins >= 2,
+        );
+        return winningEntry ? Number(winningEntry[0]) : null;
       case "ROUND_ROBIN":
-        return team1Wins >= 3 ? team1Id : team2Wins >= 3 ? team2Id : null;
+        return null; // Not implemented yet
       default:
         return null;
     }
-  },
-
-  /**
-   * Determines if another round should be created based on game format and current state
-   */
-  canCreateNextRound(
-    historicalRounds: HistoricalRound[],
-    gameFormat: GameFormat,
-  ): boolean {
-    const maxRounds = {
-      QUICK: 1,
-      BEST_OF_THREE: 3,
-      ROUND_ROBIN: 5,
-    }[gameFormat];
-
-    const completedRounds = historicalRounds.filter(
-      (round) => round.status === ROUND_STATE.COMPLETED,
-    ).length;
-
-    return completedRounds < maxRounds;
   },
 };

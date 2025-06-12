@@ -19,7 +19,7 @@ const roleAssignmentRules = {
    * Checks if the round is in SETUP state and ready for role assignment
    */
   isRoundInSetupState(game: GameAggregate): boolean {
-    return game.currentRound?.status === ROUND_STATE.IN_PROGRESS;
+    return game.currentRound?.status === ROUND_STATE.SETUP;
   },
 
   /**

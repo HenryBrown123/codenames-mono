@@ -97,17 +97,9 @@ export const gameStateSchema = z.enum([
 
 /**
  * Creates a function for finding games by public ID
- *
- * @param db - Database connection
  */
 export const findGameByPublicId =
   (db: Kysely<DB>): GameFinder<PublicId> =>
-  /**
-   * Retrieves game data using its public identifier
-   *
-   * @param publicId - The game's public-facing ID
-   * @returns Game data if found, null otherwise
-   */
   async (publicId) => {
     const game = await db
       .selectFrom("games")
@@ -139,17 +131,9 @@ export const findGameByPublicId =
 
 /**
  * Creates a function for finding games by internal ID
- *
- * @param db - Database connection
  */
 export const findGameById =
   (db: Kysely<DB>): GameFinder<InternalId> =>
-  /**
-   * Retrieves game data using its internal ID
-   *
-   * @param gameId - The game's internal ID
-   * @returns Game data if found, null otherwise
-   */
   async (gameId) => {
     const game = await db
       .selectFrom("games")
@@ -168,9 +152,9 @@ export const findGameById =
 
     return game
       ? {
-          _id: game.id, // Changed from id to _id
+          _id: game.id,
           created_at: game.created_at,
-          updated_at: game.updated_at, // Added updated_at
+          updated_at: game.updated_at,
           public_id: game.public_id,
           status: gameStateSchema.parse(game.status),
           game_type: gameTypeSchema.parse(game.game_type),
@@ -181,17 +165,9 @@ export const findGameById =
 
 /**
  * Creates a function for creating new games
- *
- * @param db - Database connection
  */
 export const createGame =
   (db: Kysely<DB>): GameCreator =>
-  /**
-   * Inserts a new game into the database
-   *
-   * @param gameInput - Game creation parameters
-   * @returns Created game's ID and timestamp
-   */
   async (gameInput) => {
     const now = new Date();
     const insertedGame = await db
@@ -200,65 +176,53 @@ export const createGame =
         public_id: gameInput.publicId,
         status_id: 1, // SETUP status
         created_at: now,
-        updated_at: now, // Added updated_at
+        updated_at: now,
         game_type: gameInput.gameType,
         game_format: gameInput.gameFormat,
       })
-      .returning(["id", "created_at", "updated_at"]) // Added updated_at
+      .returning(["id", "created_at", "updated_at"])
       .executeTakeFirstOrThrow();
 
     return {
-      _id: insertedGame.id, // Changed from id to _id
+      _id: insertedGame.id,
       created_at: insertedGame.created_at,
-      updated_at: insertedGame.updated_at || null, // Added updated_at
+      updated_at: insertedGame.updated_at || null,
     };
   };
 
 /**
  * Creates a function for updating a game's status
- *
- * @param db - Database connection
  */
 export const updateGameStatus =
   (db: Kysely<DB>): GameStatusUpdater =>
-  /**
-   * Changes a game's status to a new value
-   *
-   * @param gameId - The game's internal ID
-   * @param statusName - The new status to apply
-   * @returns Updated game data
-   * @throws If game not found or status is invalid
-   */
   async (gameId, statusName) => {
     // Get the status_id corresponding to the status name
-    const updatedGame = await db.transaction().execute(async (trx) => {
-      const status = await trx
-        .selectFrom("game_status")
-        .where("status_name", "=", statusName)
-        .select(["id"])
-        .executeTakeFirstOrThrow();
+    const status = await db
+      .selectFrom("game_status")
+      .where("status_name", "=", statusName)
+      .select(["id"])
+      .executeTakeFirstOrThrow();
 
-      const now = new Date();
-      return await db
-        .updateTable("games")
-        .set({
-          status_id: status.id,
-          updated_at: now,
-        })
-        .where("id", "=", gameId)
-        .returning([
-          "id",
-          "created_at",
-          "updated_at",
-          "public_id",
-          "game_type",
-          "game_format",
-        ])
-        .executeTakeFirstOrThrow();
-    });
+    const now = new Date();
+    const updatedGame = await db
+      .updateTable("games")
+      .set({
+        status_id: status.id,
+        updated_at: now,
+      })
+      .where("id", "=", gameId)
+      .returning([
+        "id",
+        "created_at",
+        "updated_at",
+        "public_id",
+        "game_type",
+        "game_format",
+      ])
+      .executeTakeFirstOrThrow();
 
     const gameWithStatus = {
-      _id: updatedGame.id, // Changed from id to _id
+      _id: updatedGame.id,
       created_at: updatedGame.created_at,
       updated_at: updatedGame.updated_at || null,
       public_id: updatedGame.public_id,
