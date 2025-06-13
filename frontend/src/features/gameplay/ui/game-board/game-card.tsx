@@ -1,4 +1,3 @@
-// frontend/src/features/gameplay/ui/game-board/game-card.tsx
 import React, { useState, memo } from "react";
 import styled, { keyframes } from "styled-components";
 import { FaStar, FaLeaf, FaSkull, FaPeace } from "react-icons/fa";

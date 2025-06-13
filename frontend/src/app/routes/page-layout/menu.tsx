@@ -1,4 +1,3 @@
-// frontend/src/app/routes/page-layout/menu.tsx
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import { useGameContext } from "@frontend/game/state";

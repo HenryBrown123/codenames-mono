@@ -1,4 +1,3 @@
-// frontend/src/features/gameplay/state/game-state-mappings.tsx
 import React from "react";
 import {
   LobbyDashboardView,

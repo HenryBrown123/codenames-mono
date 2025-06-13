@@ -1,4 +1,3 @@
-// frontend/src/features/gameplay/ui/game-scene/game-scene.tsx
 import React from "react";
 import { useGameplayContext, useGameContext } from "@frontend/game/state";
 import { uiConfig } from "@frontend/game/state/game-state-config";
