@@ -1,4 +1,3 @@
-// frontend/src/features/gameplay/state/use-game-context.tsx
 import { useContext, createContext, ReactNode } from "react";
 import { GameData } from "@frontend/shared-types";
 

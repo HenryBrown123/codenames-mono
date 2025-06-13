@@ -1,4 +1,3 @@
-// frontend/src/features/gameplay/ui/dashboard/dashboard-views.tsx
 import React, { useState } from "react";
 import styled from "styled-components";
 import ActionButton from "../action-button/action-button";

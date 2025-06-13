@@ -1,4 +1,3 @@
-// frontend/src/features/gameplay/ui/dashboard/codemaster-input.tsx
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import ActionButton from "../action-button/action-button";

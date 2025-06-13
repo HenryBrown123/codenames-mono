@@ -1,4 +1,3 @@
-// frontend/src/features/gameplay/ui/game-board/game-board-views.tsx
 import React, { useCallback, useState, memo } from "react";
 import { useGameplayContext } from "@frontend/game/state";
 import { GameData, Card } from "@frontend/shared-types";

@@ -1,4 +1,3 @@
-// frontend/src/features/gameplay/state/game-state-config.ts
 import {
   PlayerRole,
   PLAYER_ROLE,
