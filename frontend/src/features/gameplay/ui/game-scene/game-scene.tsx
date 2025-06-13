@@ -1,3 +1,4 @@
+// frontend/src/features/gameplay/ui/game-scene/game-scene.tsx
 import React from "react";
 import { useGameplayContext, useGameContext } from "@frontend/game/state";
 import { uiConfig } from "@frontend/game/state/game-state-config";
@@ -48,11 +49,18 @@ const DashboardContainer = styled.div`
 `;
 
 export const GameScene: React.FC = () => {
-  const { uiStage, currentScene } = useGameplayContext();
+  const { currentStage, currentScene } = useGameplayContext();
   const { gameData } = useGameContext();
-  const stageConfig = uiConfig[uiStage];
-  const sceneConfig = stageConfig.scenes[currentScene];
 
+  // Get configuration for current stage and scene
+  const stageConfig = uiConfig[currentStage];
+  const sceneConfig = stageConfig?.scenes[currentScene];
+
+  if (!sceneConfig) {
+    return <div>Loading game scene...</div>;
+  }
+
+  // Get components for current scene
   const message = sceneConfig.message ? messages[sceneConfig.message] : null;
   const BoardComponent = sceneConfig.gameBoard
     ? gameBoards[sceneConfig.gameBoard]

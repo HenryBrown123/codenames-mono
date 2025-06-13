@@ -1,8 +1,9 @@
+// frontend/src/features/gameplay/ui/dashboard/codemaster-input.tsx
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import ActionButton from "../action-button/action-button";
 import { useGameContext } from "@frontend/game/state";
-import { Round, Card } from "@frontend/shared-types/game-types";
+import { Card } from "@frontend/shared-types";
 
 const Container = styled.div`
   display: flex;
@@ -20,7 +21,8 @@ const InputContainer = styled.div`
   width: 100%;
   text-align: center;
   font-size: clamp(0.9rem, 2.5vw, 2.5rem);
-  background-color: ${({ theme }) => theme.inputBackground};
+  background-color: ${({ theme }) =>
+    theme.inputBackground || "rgba(0,0,0,0.1)"};
   border-radius: 8px;
   padding: 1rem;
 
@@ -93,18 +95,20 @@ type CodeWordInputProps = {
   codeWord?: string;
   numberOfCards?: number;
   isEditable?: boolean;
-  onSubmit?: (updatedRounds: Round[]) => void;
+  isLoading?: boolean;
+  onSubmit?: (word: string, targetCardCount: number) => void;
 };
 
 const CodeWordInput: React.FC<CodeWordInputProps> = ({
   codeWord = "",
   numberOfCards = 0,
   isEditable = false,
+  isLoading = false,
   onSubmit,
 }) => {
   const { gameData } = useGameContext();
 
-  // local component state...
+  // Local component state
   const [displayedWord, setDisplayedWord] = useState(codeWord);
   const [displayedNumber, setDisplayedNumber] = useState(numberOfCards);
   const [displaySubmit, setDisplaySubmit] = useState(isEditable);
@@ -131,26 +135,30 @@ const CodeWordInput: React.FC<CodeWordInputProps> = ({
     }
   };
 
-  /* useEffect to focus the cursor on the input text field as the component becomes editable */
-
+  // Focus the cursor on the input text field as the component becomes editable
   useEffect(() => {
     if (isEditable && textInputRef.current) {
       textInputRef.current.focus();
     }
   }, [isEditable]);
 
-  /* useEffect calls for input validation as the user types */
-
+  // Auto-resize input field
   useEffect(() => {
     if (textInputRef.current) {
-      textInputRef.current.style.width = `
-        ${Math.max(displayedWord.length, 10) + 2}ch`;
+      textInputRef.current.style.width = `${Math.max(displayedWord.length, 10) + 2}ch`;
     }
   }, [displayedWord]);
 
+  // Input validation
   useEffect(() => {
-    const wordsInGameData =
-      gameData.state.cards.map((card: Card) => card.word.toLowerCase()) || [];
+    if (!gameData.currentRound?.cards) {
+      validationSuccess();
+      return;
+    }
+
+    const wordsInGameData = gameData.currentRound.cards.map((card: Card) =>
+      card.word.toLowerCase(),
+    );
     const isSingleWord = !/\s/.test(displayedWord);
     const isUnique = !wordsInGameData.some((word: string) =>
       displayedWord.toLowerCase().includes(word),
@@ -165,29 +173,14 @@ const CodeWordInput: React.FC<CodeWordInputProps> = ({
     } else {
       validationSuccess();
     }
-  }, [displayedWord]);
+  }, [displayedWord, gameData.currentRound?.cards]);
 
-  /* function called to submit the codeword and number of guesses to the parent onSubmit callback. */
-
+  // Submit the codeword and number of guesses
   const handleClick = () => {
-    if (!error) {
+    if (!error && onSubmit) {
       setDisplaySubmit(false);
       setCanEdit(false);
-
-      const updatedRounds = [...gameData.state.rounds];
-      const lastRound = updatedRounds.at(-1);
-
-      if (lastRound) {
-        const updatedRound = {
-          ...lastRound,
-          codeword: displayedWord,
-          guessesAllowed: displayedNumber,
-        };
-
-        updatedRounds[updatedRounds.length - 1] = updatedRound;
-      }
-
-      onSubmit(updatedRounds);
+      onSubmit(displayedWord, displayedNumber);
     }
   };
 
@@ -201,7 +194,7 @@ const CodeWordInput: React.FC<CodeWordInputProps> = ({
             value={displayedWord}
             onChange={(e) => updatedDisplayedWord(e.target.value)}
             placeholder="codeword"
-            disabled={!canEdit}
+            disabled={!canEdit || isLoading}
             isError={!!error}
           />
           <InlineText>links</InlineText>
@@ -215,7 +208,7 @@ const CodeWordInput: React.FC<CodeWordInputProps> = ({
             min={1}
             max={9}
             placeholder="0"
-            disabled={!canEdit}
+            disabled={!canEdit || isLoading}
             isError={!!error}
           />
           <InlineText>cards</InlineText>
@@ -227,9 +220,14 @@ const CodeWordInput: React.FC<CodeWordInputProps> = ({
       {displaySubmit && (
         <ButtonWrapper>
           <StyledActionButton
-            text="Submit"
+            text={isLoading ? "Submitting..." : "Submit"}
             onClick={handleClick}
-            enabled={!error && displayedWord.length > 0 && displayedNumber > 0}
+            enabled={
+              !error &&
+              !isLoading &&
+              displayedWord.length > 0 &&
+              displayedNumber > 0
+            }
           />
         </ButtonWrapper>
       )}

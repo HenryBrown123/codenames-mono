@@ -1,35 +1,35 @@
-import { Card, Stage, Team, TEAM } from "@frontend/shared-types";
-import { STAGE } from "@codenames/shared/types";
+import { Card } from "@frontend/shared-types";
+import { PlayerRole, PLAYER_ROLE } from "@codenames/shared/types";
 import { GameCardProps } from "./game-card";
 import styled from "styled-components";
 import GameCard from "./game-card";
 
 /**
  * RenderCards component renders a grid of game cards based on the provided props.
- *
- * @param {RenderCardsProps} props - The props for rendering cards, including the list of cards, current stage, read-only status, and click handler.
  */
-
 type RenderCardsProps = {
   cards: Card[];
-  stage: Stage;
+  stage: PlayerRole;
   readOnly?: boolean;
+  showCodemasterView?: boolean;
   handleCardClick?: (cardData: Card) => void;
 };
 
 export const RenderCards: React.FC<RenderCardsProps> = ({
   cards,
   stage,
-  readOnly,
+  readOnly = false,
+  showCodemasterView = false,
   handleCardClick,
 }) => (
-  <CardsContainer aria-label="game board container with 25 cards">
+  <CardsContainer aria-label="game board container with cards">
     {cards.map((cardData, index) => {
       const gameCardProps = getGameCardProps(
         cardData,
         stage,
         index,
         readOnly,
+        showCodemasterView,
         () => handleCardClick && handleCardClick(cardData),
       );
       return (
@@ -45,49 +45,55 @@ export const RenderCards: React.FC<RenderCardsProps> = ({
 );
 
 /**
- * Get the color associated with a team.
- *
- * @param {Team} team - The team whose color is needed.
- * @returns {string} - The hex color code for the team.
+ * Get the color associated with a team/card type.
  */
-export const getCardColor = (team: Team | undefined): string => {
-  switch (team) {
-    case TEAM.ASSASSIN:
-      return "#1d2023";
-    case TEAM.BYSTANDER:
-      return "#4169E1";
-    case TEAM.RED:
-      return "#B22222";
-    case TEAM.GREEN:
-      return "#228B22";
+export const getCardColor = (
+  teamName?: string | null,
+  cardType?: string,
+): string => {
+  // Use cardType if available, fall back to teamName
+  const type = cardType || teamName;
+
+  switch (type?.toLowerCase()) {
+    case "assassin":
+      return "#1d2023"; // Black
+    case "bystander":
+      return "#4169E1"; // Blue
+    case "team":
+      // For team cards, use teamName to determine color
+      if (teamName?.toLowerCase().includes("red")) return "#B22222";
+      if (teamName?.toLowerCase().includes("blue")) return "#4169E1";
+      if (teamName?.toLowerCase().includes("green")) return "#228B22";
+      return "#B22222"; // Default to red
     default:
-      return "#4b7fb3";
+      return "#4b7fb3"; // Default gray
   }
 };
 
 /**
- * Generate the properties for a game card component based on the provided card data, game stage, and read-only status.
- *
- * @param {Card} cardData - The data for the card.
- * @param {Stage} gameStage - The current stage of the game.
- * @param {boolean} [readOnly] - Whether the game is in read-only mode.
- * @param {() => void} [handleClick] - The click handler for the card.
- * @returns {GameCardProps} - The properties for the GameCard component.
+ * Generate the properties for a game card component based on the provided card data and game context.
  */
 export const getGameCardProps = (
   cardData: Card,
-  gameStage: Stage,
+  gameStage: PlayerRole,
   cardIndex?: number,
   readOnly?: boolean,
+  showCodemasterView?: boolean,
   handleClick?: () => void,
 ): GameCardProps => {
+  // Determine if colors should be shown
+  const shouldShowColors =
+    showCodemasterView ||
+    gameStage === PLAYER_ROLE.CODEMASTER ||
+    cardData.selected;
+
   return {
     cardText: cardData.word,
-    cardColor: getCardColor(cardData.team),
+    cardColor: getCardColor(cardData.teamName, cardData.cardType),
     clickable:
-      gameStage === STAGE.CODEBREAKER && !cardData.selected && !readOnly,
+      gameStage === PLAYER_ROLE.CODEBREAKER && !cardData.selected && !readOnly,
     selected: cardData.selected,
-    showTeamColorAsBackground: !readOnly && gameStage === STAGE.CODEMASTER,
+    showTeamColorAsBackground: shouldShowColors,
     onClick: handleClick,
     cardIndex: cardIndex,
   };

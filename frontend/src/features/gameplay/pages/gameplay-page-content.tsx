@@ -4,9 +4,7 @@ import {
   GameContextProvider,
   GameplayContextProvider,
 } from "@frontend/game/state";
-
 import { LoadingSpinner, GameScene } from "@frontend/game/ui";
-
 import styled from "styled-components";
 
 const LoadingContainer = styled.div`
@@ -68,12 +66,13 @@ const GameplayPageContent: React.FC<GameplayPageContentProps> = ({
       <ErrorContainer>
         <h2>Something went wrong :(</h2>
         <p>Please try refreshing the page.</p>
+        {error && <p>Error: {error.message}</p>}
       </ErrorContainer>
     );
   }
 
   return (
-    <GameplayContextProvider currentGameStage={gameData.state.stage}>
+    <GameplayContextProvider gameId={gameId} gameData={gameData}>
       <GameContextProvider value={{ gameData }}>
         <GameScene />
       </GameContextProvider>
