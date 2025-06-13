@@ -1,41 +1,38 @@
 import React, { useState } from "react";
 import { useCreateNewGame } from "@frontend/game-access/api";
-
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { LoadingSpinner } from "@frontend/game/ui";
 import { ActionButton } from "@frontend/game/ui/action-button";
-import { Settings, Team } from "@frontend/shared-types";
-import { GAME_TYPE, GameType } from "@codenames/shared/types";
+import {
+  GAME_TYPE,
+  GAME_FORMAT,
+  GameType,
+  GameFormat,
+} from "@codenames/shared/types";
 
 const CreateGamePageContent: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
-
   const { mutate: createNewGame, isPending: isCreatingGame } =
     useCreateNewGame();
-
   const navigate = useNavigate();
 
-  // theses are the default game settings
-  const [numberOfCards, setNumberOfCards] = useState(25);
-  const [startingTeam, setStartingTeam] = useState<Team>("red");
-  const [numberOfAssassins, setNumberOfAssassins] = useState(1);
+  // Game settings - simplified to match backend
+  const [gameType, setGameType] = useState<GameType>(GAME_TYPE.SINGLE_DEVICE);
+  const [gameFormat, setGameFormat] = useState<GameFormat>(GAME_FORMAT.QUICK);
 
   const handleCreateGame = () => {
     const payload = {
-      settings: {
-        numberOfCards,
-        startingTeam,
-        numberOfAssassins,
-      },
-      gameType: GAME_TYPE.SINGLE_DEVICE,
+      gameType,
+      gameFormat,
     };
 
     createNewGame(payload, {
       onSuccess: (newGameData) => {
-        navigate(`/game/${newGameData._id}`);
+        navigate(`/game/${newGameData.publicId}`);
       },
       onError: (err) => {
+        console.error("Game creation error:", err);
         setError("Failed to create a new game. Please try again.");
       },
     });
@@ -52,86 +49,53 @@ const CreateGamePageContent: React.FC = () => {
             words while avoiding the assassin. It's a game of strategy, wit, and
             deduction!
           </p>
+
           <SettingsContainer>
             <SettingItem>
-              <label>Number of Cards</label>
-              <div className="input-wrapper">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setNumberOfCards((prev) => Math.max(10, prev - 1))
-                  }
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  value={numberOfCards}
-                  onChange={(e) => setNumberOfCards(Number(e.target.value))}
-                  min="10"
-                  max="50"
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    setNumberOfCards((prev) => Math.min(50, prev + 1))
-                  }
-                >
-                  +
-                </button>
-              </div>
-            </SettingItem>
-            <hr className="divider" />
-            <SettingItem>
-              <label>Starting Team</label>
+              <label>Game Type</label>
               <div className="button-group">
                 <Button
-                  isSelected={startingTeam === "red"}
-                  onClick={() => setStartingTeam("red")}
-                  themeColor={(props) => props.theme.team1}
+                  isSelected={gameType === GAME_TYPE.SINGLE_DEVICE}
+                  onClick={() => setGameType(GAME_TYPE.SINGLE_DEVICE)}
+                  themeColor={(props) => props.theme.primary}
                 >
-                  Red
+                  Single Device
                 </Button>
                 <Button
-                  isSelected={startingTeam === "green"}
-                  onClick={() => setStartingTeam("green")}
-                  themeColor={(props) => props.theme.team2}
+                  isSelected={gameType === GAME_TYPE.MULTI_DEVICE}
+                  onClick={() => setGameType(GAME_TYPE.MULTI_DEVICE)}
+                  themeColor={(props) => props.theme.secondary}
                 >
-                  Green
+                  Multi Device
                 </Button>
               </div>
             </SettingItem>
+
             <hr className="divider" />
+
             <SettingItem>
-              <label>Number of Assassins</label>
-              <div className="input-wrapper">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setNumberOfAssassins((prev) => Math.max(0, prev - 1))
-                  }
+              <label>Game Format</label>
+              <div className="button-group">
+                <Button
+                  isSelected={gameFormat === GAME_FORMAT.QUICK}
+                  onClick={() => setGameFormat(GAME_FORMAT.QUICK)}
+                  themeColor={(props) => props.theme.team1}
                 >
-                  -
-                </button>
-                <input
-                  type="number"
-                  value={numberOfAssassins}
-                  onChange={(e) => setNumberOfAssassins(Number(e.target.value))}
-                  min="0"
-                  max="3"
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    setNumberOfAssassins((prev) => Math.min(3, prev + 1))
-                  }
+                  Quick
+                </Button>
+                <Button
+                  isSelected={gameFormat === GAME_FORMAT.BEST_OF_THREE}
+                  onClick={() => setGameFormat(GAME_FORMAT.BEST_OF_THREE)}
+                  themeColor={(props) => props.theme.team2}
                 >
-                  +
-                </button>
+                  Best of 3
+                </Button>
               </div>
             </SettingItem>
+
             <hr className="divider" />
           </SettingsContainer>
+
           {isCreatingGame ? (
             <LoadingSpinner displayText={"Creating Game..."} />
           ) : (
@@ -139,7 +103,7 @@ const CreateGamePageContent: React.FC = () => {
               onClick={handleCreateGame}
               enabled={!isCreatingGame}
               text={"Start New Game"}
-            ></ActionButton>
+            />
           )}
           {error && <ErrorText>{error}</ErrorText>}
         </WelcomeContainer>
@@ -150,7 +114,7 @@ const CreateGamePageContent: React.FC = () => {
 
 export default CreateGamePageContent;
 
-// Styled Components with similar styling to the game page
+// Styled Components
 const CreateGameLayout = styled.div`
   position: relative;
   left: 0;
@@ -226,37 +190,11 @@ const SettingItem = styled.div`
     margin-bottom: 0.5rem;
   }
 
-  .input-wrapper,
   .button-group {
     display: flex;
     justify-content: center;
     gap: 0.5rem;
     width: 100%;
-  }
-
-  .input-wrapper button {
-    background-color: #ffffff10;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 0.5rem;
-    cursor: pointer;
-    transition:
-      background-color 0.3s,
-      transform 0.1s;
-  }
-
-  .input-wrapper button:hover {
-    background-color: #ffffff20;
-  }
-
-  .input-wrapper button:active {
-    transform: scale(0.95);
-  }
-
-  input[type="number"] {
-    width: 3rem;
-    text-align: center;
   }
 `;
 

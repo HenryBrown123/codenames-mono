@@ -1,51 +1,47 @@
+// frontend/src/features/gameplay/ui/game-board/game-board-views.tsx
 import React, { useCallback, useState, memo } from "react";
-import { useProcessTurn } from "@frontend/game/api";
 import { useGameplayContext } from "@frontend/game/state";
-import { GameData, Card } from "@frontend/shared-types/game-types";
+import { GameData, Card } from "@frontend/shared-types";
 import { RenderCards } from "./game-board-utils";
 
 /**
- * CodebreakerStageBoard component now just updates the rounds and calls handleProcessTurn.
- * The state machine transitions are controlled in the gameplay context's onSuccess handler.
+ * CodebreakerStageBoard - allows card interactions for guessing
  */
 export const CodebreakerStageBoard: React.FC<{ gameData: GameData }> = memo(
   ({ gameData }) => {
-    const { handleTurnSubmission, uiStage } = useGameplayContext();
+    const { handleMakeGuess, handleSceneTransition, currentStage, isLoading } =
+      useGameplayContext();
     const [isProcessing, setIsProcessing] = useState(false);
-
-    console.log("Rendering codebreaker board");
 
     const handleCardClick = useCallback(
       (cardData: Card) => {
-        if (!cardData.selected && !isProcessing) {
+        if (!cardData.selected && !isProcessing && !isLoading.makeGuess) {
+          if (!gameData.currentRound) return;
+
           setIsProcessing(true);
 
-          const updatedRounds = [...gameData.state.rounds];
-          const lastRound = updatedRounds.at(-1);
+          // Make the guess - this will trigger scene transition in the mutation's onSuccess
+          handleMakeGuess(gameData.currentRound.roundNumber, cardData.word);
 
-          if (lastRound) {
-            lastRound.turns = [
-              ...(lastRound.turns || []),
-              { guessedWord: cardData.word },
-            ];
-          }
+          // Manually trigger UI transition to outcome scene
+          handleSceneTransition("GUESS_MADE");
 
-          const updatedGameState = {
-            ...gameData.state,
-            rounds: updatedRounds,
-          };
-
-          handleTurnSubmission(gameData._id, updatedGameState);
           setIsProcessing(false);
         }
       },
-      [gameData, isProcessing, handleTurnSubmission],
+      [
+        gameData.currentRound,
+        isProcessing,
+        isLoading.makeGuess,
+        handleMakeGuess,
+        handleSceneTransition,
+      ],
     );
 
     return (
       <RenderCards
-        cards={gameData.state.cards}
-        stage={uiStage}
+        cards={gameData.currentRound?.cards || []}
+        stage={currentStage}
         handleCardClick={handleCardClick}
       />
     );
@@ -53,51 +49,37 @@ export const CodebreakerStageBoard: React.FC<{ gameData: GameData }> = memo(
 );
 
 /**
- * CodemasterStageBoard component renders the game board for the codemaster stage.
- * It does not allow card interactions but does show the actual colour of the cards.
+ * CodemasterStageBoard - shows all card colors for giving clues
  */
 export const CodemasterStageBoard: React.FC<{ gameData: GameData }> = memo(
   ({ gameData }) => {
-    console.log("Rendering codemaster view");
+    const { currentStage } = useGameplayContext();
 
     return (
       <RenderCards
-        cards={gameData.state.cards}
-        stage={gameData.state.stage}
-        handleCardClick={() => {}}
+        cards={gameData.currentRound?.cards || []}
+        stage={currentStage}
+        showCodemasterView={true}
+        handleCardClick={() => {}} // No interaction for codemasters
       />
     );
   },
 );
 
 /**
- * ReadOnlyBoard component renders the game board in a read-only state.
- * It does not allow any interactions with the cards.
+ * ReadOnlyBoard - no interactions, just display
  */
 export const ReadOnlyBoard: React.FC<{ gameData: GameData }> = memo(
   ({ gameData }) => {
-    console.log("Rendering readonly view");
+    const { currentStage } = useGameplayContext();
 
     return (
       <RenderCards
-        cards={gameData.state.cards}
-        stage={gameData.state.stage}
+        cards={gameData.currentRound?.cards || []}
+        stage={currentStage}
         readOnly={true}
         handleCardClick={() => {}}
       />
     );
   },
-);
-
-/**
- * DefaultStageBoard component renders the game board for stages that do not have specific interactions.
- */
-export const DefaultStageBoard: React.FC<{ gameData: GameData }> = memo(
-  ({ gameData }) => (
-    <RenderCards
-      cards={gameData.state.cards}
-      stage={gameData.state.stage}
-      handleCardClick={() => {}}
-    />
-  ),
 );

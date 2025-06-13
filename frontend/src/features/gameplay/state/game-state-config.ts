@@ -1,21 +1,42 @@
-import { Stage, STAGE } from "@codenames/shared/types";
+// frontend/src/features/gameplay/state/game-state-config.ts
+import {
+  PlayerRole,
+  PLAYER_ROLE,
+  GameState,
+  GAME_STATE,
+} from "@codenames/shared/types";
 
 /**
  * The central UI configuration for the game.
- * Defines all stages, their scenes, and the transitions between them.
+ * Now based on player role + game context instead of legacy game stages.
  */
 export const uiConfig: UIConfig = {
-  [STAGE.INTRO]: {
-    initial: "main",
+  // When player has no role or game is in lobby
+  [PLAYER_ROLE.NONE]: {
+    initial: "lobby",
     scenes: {
-      main: {
-        message: "intro.main",
+      lobby: {
+        message: "lobby.waiting",
         gameBoard: "readOnlyBoard",
-        dashboard: "introDashboard",
+        dashboard: "lobbyDashboard",
       },
     },
   },
-  [STAGE.CODEMASTER]: {
+
+  // When player is a spectator
+  [PLAYER_ROLE.SPECTATOR]: {
+    initial: "watching",
+    scenes: {
+      watching: {
+        message: "spectator.watching",
+        gameBoard: "readOnlyBoard",
+        dashboard: "spectatorDashboard",
+      },
+    },
+  },
+
+  // When player is the codemaster
+  [PLAYER_ROLE.CODEMASTER]: {
     initial: "preparation",
     scenes: {
       preparation: {
@@ -30,10 +51,23 @@ export const uiConfig: UIConfig = {
         message: "codemaster.main",
         gameBoard: "codemasterBoard",
         dashboard: "codemasterDashboard",
+        on: {
+          CLUE_SUBMITTED: { type: "scene", target: "waiting" },
+        },
+      },
+      waiting: {
+        message: "codemaster.waiting",
+        gameBoard: "codemasterBoard",
+        dashboard: "waitingDashboard",
+        on: {
+          TURN_CHANGED: { type: "scene", target: "preparation" },
+        },
       },
     },
   },
-  [STAGE.CODEBREAKER]: {
+
+  // When player is a codebreaker
+  [PLAYER_ROLE.CODEBREAKER]: {
     initial: "preparation",
     scenes: {
       preparation: {
@@ -49,7 +83,7 @@ export const uiConfig: UIConfig = {
         gameBoard: "codebreakerBoard",
         dashboard: "codebreakerDashboard",
         on: {
-          TURN_PROCESSED: { type: "scene", target: "outcome" },
+          GUESS_MADE: { type: "scene", target: "outcome" },
         },
       },
       outcome: {
@@ -58,20 +92,15 @@ export const uiConfig: UIConfig = {
         dashboard: "transitionDashboard",
         on: {
           next: { type: "scene", target: "main" },
+          TURN_ENDED: { type: "scene", target: "waiting" },
         },
       },
-    },
-  },
-  [STAGE.GAMEOVER]: {
-    initial: "main",
-    scenes: {
-      main: {
-        message: "gameover.main",
+      waiting: {
+        message: "codebreaker.waiting",
         gameBoard: "readOnlyBoard",
-        dashboard: "gameoverDashboard",
+        dashboard: "waitingDashboard",
         on: {
-          // "restart" is a user-triggered event, not a turn processed event
-          restart: { type: "stage", target: STAGE.INTRO },
+          TURN_CHANGED: { type: "scene", target: "preparation" },
         },
       },
     },
@@ -79,14 +108,31 @@ export const uiConfig: UIConfig = {
 };
 
 /**
- * Represents the configuration of a single scene within a stage.
- * Each scene defines its associated UI components and the transitions available from that scene.
+ * Determines the appropriate UI stage based on backend game state
+ * Use this manually when you want to sync UI with backend
+ */
+export function determineUIStage(
+  gameStatus: GameState,
+  playerRole: PlayerRole,
+  currentRound: any,
+): PlayerRole {
+  // If game is not in progress, everyone sees lobby/waiting
+  if (gameStatus !== GAME_STATE.IN_PROGRESS) {
+    return PLAYER_ROLE.NONE;
+  }
+
+  // Return the player's actual role - this drives the UI
+  return playerRole;
+}
+
+/**
+ * Scene configuration interface
  */
 interface SceneConfig {
   message: string;
   gameBoard: string;
   dashboard: string;
-  on?: Record<string, { type: "scene" | "stage"; target: string | Stage }>;
+  on?: Record<string, { type: "scene"; target: string }>;
 }
 
 interface StageConfig {
@@ -94,4 +140,4 @@ interface StageConfig {
   scenes: Record<string, SceneConfig>;
 }
 
-type UIConfig = Record<Stage, StageConfig>;
+type UIConfig = Record<PlayerRole, StageConfig>;

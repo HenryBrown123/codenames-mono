@@ -5,95 +5,156 @@ import React, {
   useReducer,
   useCallback,
 } from "react";
-import { Stage, GameState } from "@frontend/shared-types/game-types";
+import { PlayerRole } from "@codenames/shared/types";
+import { GameData } from "@frontend/shared-types";
 import { uiConfig } from "@frontend/game/state/game-state-config";
-import { useProcessTurn } from "@frontend/game/api";
+import {
+  useGiveClue,
+  useMakeGuess,
+  useCreateRound,
+  useStartRound,
+  useDealCards,
+} from "@frontend/game/api";
 
-// Create a context to share gamesplay state and event handlers
+// Create a context to share gameplay state and event handlers
 export const GameplayContext = createContext<GameplayContextProps | null>(null);
 
 /**
- * GameplayContextProvider component.
- * Manages gameplay UI state and transitions using a reducer.
- * Synchronizes the UI stage with the backend game stage.
- *
- * @param {GameplayProviderProps} props - Props including children components and the current backend game stage.
- * @returns {JSX.Element} - The provider wrapping children components with the context value.
+ * Hybrid GameplayContextProvider.
+ * Combines UI state machine for presentation flow with specific API actions.
  */
 export const GameplayContextProvider = ({
   children,
-  currentGameStage,
+  gameId,
+  gameData,
 }: GameplayProviderProps): JSX.Element => {
-  // State reducer for managing UI stage and scene
-  const [state, dispatch] = useReducer(gameReducer, {
-    ...initialState,
-    uiStage: currentGameStage,
-    currentScene: uiConfig[currentGameStage]?.initial || "",
+  // UI State machine for scene management
+  const [uiState, dispatch] = useReducer(uiReducer, {
+    currentStage: gameData.playerContext.role,
+    currentScene: uiConfig[gameData.playerContext.role]?.initial || "main",
   });
 
-  /**
-   * Handles backend turn submission.
-   * Dispatches a "TRIGGER_TRANSITION" event upon successful turn processing.
-   */
-  const { mutate: processTurn } = useProcessTurn({
-    onSuccess: () => {
-      dispatch({
-        type: "TRIGGER_TRANSITION",
-        payload: { event: "next" },
-      });
-    },
-  });
+  // API mutation hooks
+  const giveClue = useGiveClue(gameId);
+  const makeGuess = useMakeGuess(gameId);
+  const createRound = useCreateRound(gameId);
+  const startRound = useStartRound(gameId);
+  const dealCards = useDealCards(gameId);
+
+  // Simple manual stage setting when needed
+  const setUIStage = useCallback((stage: PlayerRole) => {
+    dispatch({
+      type: "SET_STAGE",
+      payload: { stage },
+    });
+  }, []);
 
   /**
-   * Submits a turn to the backend and triggers UI transitions if successful.
-   *
-   * @param {string} gameId - The unique identifier for the game.
-   * @param {GameState} updatedGameState - The updated game state to submit.
+   * Handle UI scene transitions
    */
-  const handleTurnSubmission = useCallback(
-    (gameId: string, updatedGameState: GameState) => {
-      processTurn({ gameId, gameState: updatedGameState });
+  const handleSceneTransition = useCallback((event: string) => {
+    dispatch({
+      type: "TRIGGER_TRANSITION",
+      payload: { event },
+    });
+  }, []);
+
+  /**
+   * Give a clue as codemaster
+   */
+  const handleGiveClue = useCallback(
+    (roundNumber: number, word: string, targetCardCount: number) => {
+      giveClue.mutate(
+        { roundNumber, word, targetCardCount },
+        {
+          onSuccess: () => {
+            // Trigger UI transition to waiting state
+            handleSceneTransition("CLUE_SUBMITTED");
+          },
+        },
+      );
     },
-    [processTurn],
+    [giveClue, handleSceneTransition],
   );
 
   /**
-   * Handles gameplay events to transition UI state based on `uiConfig`.
-   * Ensures the UI stage is synchronized with the backend game stage.
-   *
-   * @param {string} event - The event name triggering the transition (e.g., "next").
+   * Make a guess as codebreaker
    */
-  const handleGameplayEvent = useCallback(
-    (event: string) => {
-      const { uiStage, currentScene } = state;
-      const stageConfig = uiConfig[uiStage];
-      const sceneConfig = stageConfig.scenes[currentScene];
-
-      const transition = sceneConfig.on?.[event];
-
-      if (transition?.type === "scene") {
-        if (stageConfig.scenes[transition.target]) {
-          dispatch({ type: "TRIGGER_TRANSITION", payload: { event } });
-        } else {
-          console.warn(`No valid scene '${transition.target}' found.`);
-        }
-      } else if (currentGameStage !== uiStage) {
-        dispatch({ type: "SET_STAGE", payload: { stage: currentGameStage } });
-      } else {
-        console.warn(`No transition or stage difference for event '${event}'.`);
-      }
+  const handleMakeGuess = useCallback(
+    (roundNumber: number, cardWord: string) => {
+      makeGuess.mutate(
+        { roundNumber, cardWord },
+        {
+          onSuccess: () => {
+            // Trigger UI transition to outcome scene
+            handleSceneTransition("GUESS_MADE");
+          },
+        },
+      );
     },
-    [state, currentGameStage],
+    [makeGuess, handleSceneTransition],
+  );
+
+  /**
+   * Create a new round
+   */
+  const handleCreateRound = useCallback(() => {
+    createRound.mutate();
+  }, [createRound]);
+
+  /**
+   * Start a round
+   */
+  const handleStartRound = useCallback(
+    (roundNumber: number) => {
+      startRound.mutate({ roundNumber });
+    },
+    [startRound],
+  );
+
+  /**
+   * Deal cards to a round
+   */
+  const handleDealCards = useCallback(
+    (roundId: string) => {
+      dealCards.mutate({ roundId });
+    },
+    [dealCards],
   );
 
   return (
     <GameplayContext.Provider
       value={{
-        uiStage: state.uiStage,
-        currentScene: state.currentScene,
-        dispatch,
-        handleGameplayEvent,
-        handleTurnSubmission,
+        // UI State Machine
+        currentStage: uiState.currentStage,
+        currentScene: uiState.currentScene,
+        handleSceneTransition,
+        setUIStage,
+
+        // API Actions
+        handleGiveClue,
+        handleMakeGuess,
+        handleCreateRound,
+        handleStartRound,
+        handleDealCards,
+
+        // Loading States
+        isLoading: {
+          giveClue: giveClue.isPending,
+          makeGuess: makeGuess.isPending,
+          createRound: createRound.isPending,
+          startRound: startRound.isPending,
+          dealCards: dealCards.isPending,
+        },
+
+        // Errors
+        errors: {
+          giveClue: giveClue.error,
+          makeGuess: makeGuess.error,
+          createRound: createRound.error,
+          startRound: startRound.error,
+          dealCards: dealCards.error,
+        },
       }}
     >
       {children}
@@ -103,32 +164,27 @@ export const GameplayContextProvider = ({
 
 /**
  * Custom hook to access the GameplayContext.
- * Ensures the hook is used within a GameplayContextProvider.
- *
- * @returns {GameplayContextProps} - Context value containing UI state and event handlers.
- * @throws {Error} - If the hook is used outside of a GameplayContextProvider.
  */
 export const useGameplayContext = (): GameplayContextProps => {
   const context = useContext(GameplayContext);
   if (!context) {
     throw new Error(
-      "useGameplayContext must be used within a GameplayProvider",
+      "useGameplayContext must be used within a GameplayContextProvider",
     );
   }
   return context;
 };
 
-// Reducer for managing gameplay state transitions
-const gameReducer = (
-  state: GameplayScene,
-  action: GameplayAction,
-): GameplayScene => {
-  const currentStageConfig = uiConfig[state.uiStage];
-  const currentSceneConfig = currentStageConfig.scenes[state.currentScene];
-
+// UI State Reducer
+const uiReducer = (state: UIState, action: UIAction): UIState => {
   switch (action.type) {
     case "TRIGGER_TRANSITION": {
-      const transition = currentSceneConfig.on?.[action.payload.event];
+      const currentStageConfig = uiConfig[state.currentStage];
+      if (!currentStageConfig) return state;
+
+      const currentSceneConfig = currentStageConfig.scenes[state.currentScene];
+      const transition = currentSceneConfig?.on?.[action.payload.event];
+
       if (
         transition?.type === "scene" &&
         currentStageConfig.scenes[transition.target]
@@ -138,24 +194,16 @@ const gameReducer = (
           currentScene: transition.target,
         };
       }
-      console.warn(
-        `No valid scene transition for event '${action.payload.event}'`,
-      );
-
-      return {
-        ...state,
-        currentScene: transition.target,
-      };
+      return state;
     }
     case "SET_STAGE": {
       const newStage = action.payload.stage;
       if (uiConfig[newStage]) {
         return {
-          uiStage: newStage,
-          currentScene: uiConfig[newStage].initial || "",
+          currentStage: newStage,
+          currentScene: uiConfig[newStage].initial || "main",
         };
       }
-      console.error(`Invalid stage '${newStage}' received from backend.`);
       return state;
     }
     default:
@@ -163,37 +211,53 @@ const gameReducer = (
   }
 };
 
-// Initial state for the gameplay reducer
-const initialState: GameplayScene = {
-  uiStage: null,
-  currentScene: "",
-};
-
 // Types
-type GameplayAction =
-  | {
-      type: "TRIGGER_TRANSITION";
-      payload: { event: string };
-    }
-  | {
-      type: "SET_STAGE";
-      payload: { stage: Stage };
-    };
+type UIAction =
+  | { type: "TRIGGER_TRANSITION"; payload: { event: string } }
+  | { type: "SET_STAGE"; payload: { stage: PlayerRole } };
 
-interface GameplayScene {
-  uiStage: Stage;
+interface UIState {
+  currentStage: PlayerRole;
   currentScene: string;
 }
 
 interface GameplayContextProps {
-  dispatch: React.Dispatch<GameplayAction>;
-  uiStage: Stage;
+  // UI State Machine
+  currentStage: PlayerRole;
   currentScene: string;
-  handleGameplayEvent(event: string): void;
-  handleTurnSubmission(gameId: string, updatedGameState: GameState): void;
+  handleSceneTransition: (event: string) => void;
+  setUIStage: (stage: PlayerRole) => void;
+
+  // API Actions
+  handleGiveClue: (
+    roundNumber: number,
+    word: string,
+    targetCardCount: number,
+  ) => void;
+  handleMakeGuess: (roundNumber: number, cardWord: string) => void;
+  handleCreateRound: () => void;
+  handleStartRound: (roundNumber: number) => void;
+  handleDealCards: (roundId: string) => void;
+
+  // States
+  isLoading: {
+    giveClue: boolean;
+    makeGuess: boolean;
+    createRound: boolean;
+    startRound: boolean;
+    dealCards: boolean;
+  };
+  errors: {
+    giveClue: Error | null;
+    makeGuess: Error | null;
+    createRound: Error | null;
+    startRound: Error | null;
+    dealCards: Error | null;
+  };
 }
 
 interface GameplayProviderProps {
   children: ReactNode;
-  currentGameStage: Stage;
+  gameId: string;
+  gameData: GameData;
 }

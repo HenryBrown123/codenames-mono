@@ -1,8 +1,8 @@
+// frontend/src/app/routes/page-layout/menu.tsx
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import { useGameContext } from "@frontend/game/state";
-import { Stage } from "@frontend/shared-types/game-types";
-import { STAGE } from "src/shared-types/game-constants";
+import { PlayerRole, PLAYER_ROLE } from "@codenames/shared/types";
 
 interface OverlayProps {
   isOpen: boolean;
@@ -130,6 +130,9 @@ export const Menu: React.FC = () => {
   const menuRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
+  // Only access game context if it exists (when in a game)
+  const gameContext = useGameContext();
+
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
@@ -145,8 +148,9 @@ export const Menu: React.FC = () => {
     }
   };
 
-  const changeGameStage = (newStage: Stage) => {
+  const changeGameStage = (newStage: PlayerRole) => {
     console.log("Changing to stage: " + newStage);
+    // This is a dev tool - in real app you wouldn't manually change stages
   };
 
   useEffect(() => {
@@ -170,14 +174,22 @@ export const Menu: React.FC = () => {
       <Overlay isOpen={isOpen} onClick={toggleMenu} />
       <Sidebar ref={sidebarRef} className={isOpen ? "open" : ""}>
         <h2>Dev Panel</h2>
-        <ul>
-          <li onClick={() => changeGameStage(STAGE.INTRO)}>Intro</li>
-          <li onClick={() => changeGameStage(STAGE.CODEMASTER)}>Codemaster</li>
-          <li onClick={() => changeGameStage(STAGE.CODEBREAKER)}>
-            Codebreaker
-          </li>
-          <li onClick={() => changeGameStage(STAGE.GAMEOVER)}>Game over</li>
-        </ul>
+        {gameContext ? (
+          <ul>
+            <li onClick={() => changeGameStage(PLAYER_ROLE.NONE)}>Lobby</li>
+            <li onClick={() => changeGameStage(PLAYER_ROLE.CODEMASTER)}>
+              Codemaster
+            </li>
+            <li onClick={() => changeGameStage(PLAYER_ROLE.CODEBREAKER)}>
+              Codebreaker
+            </li>
+            <li onClick={() => changeGameStage(PLAYER_ROLE.SPECTATOR)}>
+              Spectator
+            </li>
+          </ul>
+        ) : (
+          <div>Not in a game</div>
+        )}
       </Sidebar>
     </>
   );

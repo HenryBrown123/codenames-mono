@@ -1,3 +1,4 @@
+// frontend/src/features/gameplay/ui/game-board/game-card.tsx
 import React, { useState, memo } from "react";
 import styled, { keyframes } from "styled-components";
 import { FaStar, FaLeaf, FaSkull, FaPeace } from "react-icons/fa";
@@ -38,7 +39,7 @@ const slideInAnimation = keyframes`
 const sharedCardStyles = `
   height: 100%;
   width: 100%;
-  border-radius: 12px; /* Rounded corners */
+  border-radius: 12px;
   color: white;
   font-family: sans-serif;
   font-size: clamp(0.3rem, 2.5vw, 2rem);
@@ -121,17 +122,16 @@ const CoverCard = styled.div<{
   background-color: ${(props) => props.backgroundColour || FRONT_CARD_COLOUR};
   opacity: 1;
   animation: ${slideInAnimation} 0.8s ease-out;
-  animation-delay: ${(props) => props.animationDelay};
+  animation-delay: ${(props) => props.animationDelay || 0}s;
 `;
 
 const CornerIcon = styled.div`
   position: absolute;
   top: 8px;
   left: 8px;
-  color: rgba(255, 255, 255, 0.8); /* Slightly transparent white */
+  color: rgba(255, 255, 255, 0.8);
   font-size: clamp(0.5rem, 1vw, 2rem);
 
-  /* Duplicate icon for bottom-right corner */
   &::after {
     content: "";
     position: absolute;
@@ -162,8 +162,7 @@ const GameCard: React.FC<GameCardProps> = memo((props) => {
     onClick,
   } = props;
 
-  // set immediately on the card whilst turn is being processed. Only controls whether the word has strike through text
-  // cover cards are only rendered if the prop is set to "selected"
+  // Set immediately on the card whilst turn is being processed
   const [cardPicked, setCardPicked] = useState(selected);
 
   const handleClick = () => {
@@ -189,7 +188,7 @@ const GameCard: React.FC<GameCardProps> = memo((props) => {
       </Card>
       {selected && (
         <CoverCard
-          animationDelay={cardIndex * 0.1}
+          animationDelay={(cardIndex || 0) * 0.1}
           backgroundColour={cardColor}
           aria-label={`Selected card`}
         >

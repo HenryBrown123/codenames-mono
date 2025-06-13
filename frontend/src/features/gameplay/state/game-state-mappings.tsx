@@ -1,9 +1,12 @@
+// frontend/src/features/gameplay/state/game-state-mappings.tsx
 import React from "react";
 import {
-  IntroDashboardView,
+  LobbyDashboardView,
+  SpectatorDashboardView,
   TransitionDashboardView,
   CodemasterDashboardView,
   CodebreakerDashboardView,
+  WaitingDashboardView,
   GameoverDashboardView,
 } from "@frontend/game/ui/dashboard";
 import {
@@ -11,46 +14,70 @@ import {
   CodemasterStageBoard,
   CodebreakerStageBoard,
 } from "@frontend/game/ui/game-board/game-board-views";
-import { GameData } from "@frontend/shared-types/game-types";
+import { GameData } from "@frontend/shared-types";
 
 /**
- * A collection of dynamic messages for each stage and scene in the game.
- * Messages are keyed by stage.scene and generated based on the provided game data.
+ * Dynamic messages based on player role and game state
  */
 export const messages: Record<string, (gameData: GameData) => string> = {
-  "intro.main": (gameData) =>
-    `Welcome to the game! The codemaster for the ${gameData?.settings.startingTeam} team should prepare. They will be responsible for giving clues to help their team find their agents while avoiding the assassin and the opposing agents.`,
+  // Lobby/Waiting messages
+  "lobby.waiting": (gameData) =>
+    `Welcome to the game! Waiting for the game to start...`,
 
+  // Spectator messages
+  "spectator.watching": (gameData) => {
+    const activeTurn = gameData.currentRound?.turns?.find(
+      (t) => t.status === "ACTIVE",
+    );
+    return `You are watching the game. Current turn: ${activeTurn?.teamName || "No active turn"}`;
+  },
+
+  // Codemaster messages
   "codemaster.preparation": (gameData) =>
-    `Codemaster of the ${
-      gameData.state.rounds.at(-1)?.team
-    } team, your turn is starting. Get ready to give your clue...`,
+    `Codemaster of ${gameData.playerContext.teamName}, your turn is starting. Get ready to give your clue...`,
 
   "codemaster.main": (gameData) =>
-    `Codemaster of the ${
-      gameData.state.rounds.at(-1)?.team
-    }, enter your codeword and the number of associated guesses. Remember, your clue must help your team find their agents without revealing the assassin or opposing agents.`,
+    `Codemaster of ${gameData.playerContext.teamName}, enter your codeword and the number of associated guesses. Remember, your clue must help your team find their agents without revealing the assassin or opposing agents.`,
 
+  "codemaster.waiting": (gameData) =>
+    `Clue given! Waiting for ${gameData.playerContext.teamName} codebreakers to make their guesses...`,
+
+  // Codebreaker messages
   "codebreaker.preparation": (gameData) =>
-    `Codebreakers of the ${
-      gameData.state.rounds.at(-1)?.team
-    }, get ready for your turn. You'll soon be guessing words based on your codemaster's clue.`,
+    `Codebreakers of ${gameData.playerContext.teamName}, get ready for your turn. You'll soon be guessing words based on your codemaster's clue.`,
 
-  "codebreaker.main": (gameData) =>
-    `Codebreakers of the ${
-      gameData.state.rounds.at(-1)?.team
-    }, pick your cards based on the clue given by your codemaster! Try to find all of your agents without picking a bystander, opposing agent, or the assassin.`,
+  "codebreaker.main": (gameData) => {
+    const activeTurn = gameData.currentRound?.turns?.find(
+      (t) => t.status === "ACTIVE",
+    );
+    const clue = activeTurn?.clue;
+    if (clue) {
+      return `Codebreakers of ${gameData.playerContext.teamName}, your clue is "${clue.word}" for ${clue.number} cards. Pick your cards carefully!`;
+    }
+    return `Codebreakers of ${gameData.playerContext.teamName}, waiting for your codemaster's clue...`;
+  },
 
-  "codebreaker.outcome": () =>
-    `Turn outcome: Review the results of the last move.`,
+  "codebreaker.outcome": (gameData) => {
+    const activeTurn = gameData.currentRound?.turns?.find(
+      (t) => t.status === "ACTIVE",
+    );
+    const lastGuess = activeTurn?.guesses?.at(-1);
 
+    if (lastGuess) {
+      return `You guessed a card - Result: ${lastGuess.outcome || "Processing..."}`;
+    }
+    return `Turn outcome: Review the results of the last move.`;
+  },
+
+  "codebreaker.waiting": (gameData) => `Waiting for the other team's turn...`,
+
+  // Game over
   "gameover.main": (gameData) =>
-    `Game over! The ${gameData.state.winner} team has won! Congratulations to the winning team on finding all of your agents while avoiding the assassin.`,
+    `Game over! Congratulations to the winning team!`,
 };
 
 /**
- * A mapping of game board keys to their corresponding React components.
- * Each component renders the appropriate game board view based on the current scene.
+ * Game board component mappings
  */
 export const gameBoards: Record<string, React.FC<{ gameData: GameData }>> = {
   readOnlyBoard: ReadOnlyBoard,
@@ -59,13 +86,14 @@ export const gameBoards: Record<string, React.FC<{ gameData: GameData }>> = {
 };
 
 /**
- * A mapping of dashboard keys to their corresponding React components.
- * Each component renders the appropriate dashboard view for the current stage and scene.
+ * Dashboard component mappings
  */
 export const dashboards: Record<string, React.FC> = {
-  introDashboard: IntroDashboardView,
+  lobbyDashboard: LobbyDashboardView,
+  spectatorDashboard: SpectatorDashboardView,
   transitionDashboard: TransitionDashboardView,
   codemasterDashboard: CodemasterDashboardView,
   codebreakerDashboard: CodebreakerDashboardView,
+  waitingDashboard: WaitingDashboardView,
   gameoverDashboard: GameoverDashboardView,
 };
