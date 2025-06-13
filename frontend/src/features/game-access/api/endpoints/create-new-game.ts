@@ -1,33 +1,35 @@
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
-import {
-  Settings,
-  GameData,
-  GameType,
-} from "@frontend/shared-types/game-types";
+import { GameType, GameFormat } from "@codenames/shared/types";
 
-export type CreateGamePayload = {
+export interface CreateGamePayload {
   gameType: GameType;
-  settings: Settings;
-};
+  gameFormat: GameFormat;
+}
 
-type NewGameResponse = {
+interface CreateGameApiResponse {
   success: boolean;
-  game: GameData;
-};
+  data: {
+    game: {
+      publicId: string;
+      gameType: GameType;
+      gameFormat: GameFormat;
+      createdAt: string;
+    };
+  };
+}
 
 export const createNewGame = async (
   payload: CreateGamePayload,
-): Promise<GameData> => {
-  const response: AxiosResponse<NewGameResponse> = await api.post(
+): Promise<CreateGameApiResponse["data"]["game"]> => {
+  const response: AxiosResponse<CreateGameApiResponse> = await api.post(
     "/games",
     payload,
   );
 
   if (!response.data.success) {
-    console.error("Failed to create a new game", response.data);
     throw new Error("Failed to create a new game");
   }
 
-  return response.data.game;
+  return response.data.data.game;
 };

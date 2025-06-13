@@ -1,18 +1,26 @@
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
-import { GameData } from "@frontend/shared-types/game-types";
+import {
+  GameData,
+  GameStateApiResponse,
+  transformApiResponseToGameData,
+} from "@frontend/shared-types";
 
-type FetchGameResponse = {
-  success: boolean;
-  game: GameData;
-};
-
+/**
+ * Fetches game state from the new backend API
+ * GET /games/{gameId}
+ */
 const fetchGame = async (gameId: string): Promise<GameData> => {
-  const response: AxiosResponse<FetchGameResponse> = await api.get(
+  const response: AxiosResponse<GameStateApiResponse> = await api.get(
     `/games/${gameId}`,
   );
-  console.log(response);
-  return response.data.game;
+
+  if (!response.data.success) {
+    throw new Error("Failed to fetch game data");
+  }
+
+  // Transform API response to UI-friendly format
+  return transformApiResponseToGameData(response.data);
 };
 
 export default fetchGame;

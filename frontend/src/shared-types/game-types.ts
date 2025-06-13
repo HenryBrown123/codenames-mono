@@ -1,58 +1,253 @@
-import { TEAM, STAGE, CODEBREAKER_OUTCOME, GAME_TYPE } from "./game-constants";
+import {
+  GameState,
+  GameFormat,
+  GameType,
+  PlayerRole,
+  RoundState,
+} from "@codenames/shared/types";
 
-export type Team = (typeof TEAM)[keyof typeof TEAM];
-export type Stage = (typeof STAGE)[keyof typeof STAGE];
-export type TurnOutcome =
-  (typeof CODEBREAKER_OUTCOME)[keyof typeof CODEBREAKER_OUTCOME];
+// ==========================================
+// API RESPONSE TYPES (what comes from backend)
+// ==========================================
 
-export type GameType = (typeof GAME_TYPE)[keyof typeof GAME_TYPE];
-
-// Settings type
-export interface Settings {
-  numberOfCards: number;
-  startingTeam: Team; // Should be one of TEAM.RED or TEAM.GREEN
-  numberOfAssassins: number;
+export interface GameStateApiResponse {
+  success: boolean;
+  data: {
+    game: ApiGameData;
+  };
 }
 
-// Card type
-export interface Card {
+export interface ApiGameData {
+  publicId: string;
+  status: GameState;
+  gameType: GameType;
+  gameFormat: GameFormat;
+  createdAt: string;
+  teams: ApiTeam[];
+  currentRound: ApiRound | null;
+  playerContext: ApiPlayerContext;
+}
+
+export interface ApiTeam {
+  name: string;
+  score: number;
+  players: ApiPlayer[];
+}
+
+export interface ApiPlayer {
+  publicId: string;
+  name: string;
+  isActive: boolean;
+}
+
+export interface ApiRound {
+  roundNumber: number;
+  status: RoundState;
+  cards: ApiCard[];
+  turns: ApiTurn[];
+}
+
+export interface ApiCard {
   word: string;
-  team?: Team; // Should be one of TEAM.RED, TEAM.GREEN, TEAM.ASSASSIN, or TEAM.BYSTANDER
-  selected?: boolean;
+  selected: boolean;
+  teamName?: string | null;
+  cardType?: string;
 }
 
-// Turn type
-export interface Turn {
-  guessedWord: string;
-  outcome?: TurnOutcome; // Should be one of TURN_OUTCOMES (e.g., ASSASSIN_CARD, CORRECT_TEAM_CARD, etc.)
+export interface ApiTurn {
+  teamName: string;
+  status: string;
+  guessesRemaining: number;
+  clue?: {
+    word: string;
+    number: number;
+  };
+  guesses: ApiGuess[];
 }
 
-// Round type
-export interface Round {
-  team: Team; // Should be one of TEAM.RED, TEAM.GREEN, etc.
-  codeword?: string;
-  guessesAllowed?: number;
-  turns?: Turn[]; // Array of individual turns in the round
+export interface ApiGuess {
+  playerName: string;
+  outcome: string | null;
+}
+
+export interface ApiPlayerContext {
+  playerName: string;
+  teamName: string;
+  role: PlayerRole;
+}
+
+// ==========================================
+// UI TYPES (what components use)
+// ==========================================
+
+export interface GameData {
+  publicId: string;
+  status: GameState;
+  gameType: GameType;
+  gameFormat: GameFormat;
+  createdAt: Date;
+  teams: Team[];
+  currentRound: Round | null;
+  playerContext: PlayerContext;
+}
+
+export interface Team {
+  name: string;
+  score: number;
+  players: Player[];
 }
 
 export interface Player {
-  role: "codemaster" | "codebreaker";
-  userId: string;
-  active: boolean;
+  publicId: string;
+  name: string;
+  isActive: boolean;
 }
 
-// GameState type
-export interface GameState {
-  stage: Stage; // Should be one of STAGE.INTRO, STAGE.CODEMASTER, etc.
-  winner?: Team; // Winning team
-  cards: Card[]; // Array of cards for the game
-  rounds: Round[]; // Array of rounds in the game
+export interface Round {
+  roundNumber: number;
+  status: RoundState;
+  cards: Card[];
+  turns: Turn[];
 }
 
-// GameData type
-export interface GameData {
-  _id?: string;
-  state: GameState; // The current state of the game
-  settings: Settings; // Game settings
+export interface Card {
+  word: string;
+  selected: boolean;
+  teamName?: string | null;
+  cardType?: string;
+  // UI helpers
+  team?: string; // For backward compatibility with existing components
+}
+
+export interface Turn {
+  teamName: string;
+  status: string;
+  guessesRemaining: number;
+  clue?: Clue;
+  guesses: Guess[];
+}
+
+export interface Clue {
+  word: string;
+  number: number;
+}
+
+export interface Guess {
+  playerName: string;
+  outcome: string | null;
+}
+
+export interface PlayerContext {
+  playerName: string;
+  teamName: string;
+  role: PlayerRole;
+}
+
+// ==========================================
+// API REQUEST TYPES
+// ==========================================
+
+export interface CreateGameRequest {
   gameType: GameType;
+  gameFormat: GameFormat;
+}
+
+export interface GiveClueRequest {
+  word: string;
+  targetCardCount: number;
+}
+
+export interface MakeGuessRequest {
+  cardWord: string;
+}
+
+// ==========================================
+// TRANSFORM FUNCTIONS
+// ==========================================
+
+export function transformApiResponseToGameData(
+  apiResponse: GameStateApiResponse,
+): GameData {
+  const game = apiResponse.data.game;
+
+  return {
+    publicId: game.publicId,
+    status: game.status,
+    gameType: game.gameType,
+    gameFormat: game.gameFormat,
+    createdAt: new Date(game.createdAt),
+    teams: game.teams.map(transformApiTeam),
+    currentRound: game.currentRound
+      ? transformApiRound(game.currentRound)
+      : null,
+    playerContext: transformApiPlayerContext(game.playerContext),
+  };
+}
+
+function transformApiTeam(apiTeam: ApiTeam): Team {
+  return {
+    name: apiTeam.name,
+    score: apiTeam.score,
+    players: apiTeam.players.map(transformApiPlayer),
+  };
+}
+
+function transformApiPlayer(apiPlayer: ApiPlayer): Player {
+  return {
+    publicId: apiPlayer.publicId,
+    name: apiPlayer.name,
+    isActive: apiPlayer.isActive,
+  };
+}
+
+function transformApiRound(apiRound: ApiRound): Round {
+  return {
+    roundNumber: apiRound.roundNumber,
+    status: apiRound.status,
+    cards: apiRound.cards.map(transformApiCard),
+    turns: apiRound.turns.map(transformApiTurn),
+  };
+}
+
+function transformApiCard(apiCard: ApiCard): Card {
+  return {
+    word: apiCard.word,
+    selected: apiCard.selected,
+    teamName: apiCard.teamName,
+    cardType: apiCard.cardType,
+    // For backward compatibility - map teamName to team
+    team: apiCard.teamName?.toLowerCase(),
+  };
+}
+
+function transformApiTurn(apiTurn: ApiTurn): Turn {
+  return {
+    teamName: apiTurn.teamName,
+    status: apiTurn.status,
+    guessesRemaining: apiTurn.guessesRemaining,
+    clue: apiTurn.clue
+      ? {
+          word: apiTurn.clue.word,
+          number: apiTurn.clue.number,
+        }
+      : undefined,
+    guesses: apiTurn.guesses.map(transformApiGuess),
+  };
+}
+
+function transformApiGuess(apiGuess: ApiGuess): Guess {
+  return {
+    playerName: apiGuess.playerName,
+    outcome: apiGuess.outcome,
+  };
+}
+
+function transformApiPlayerContext(
+  apiContext: ApiPlayerContext,
+): PlayerContext {
+  return {
+    playerName: apiContext.playerName,
+    teamName: apiContext.teamName,
+    role: apiContext.role,
+  };
 }
