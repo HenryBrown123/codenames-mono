@@ -16,10 +16,15 @@ export default defineConfig({
       test: "/test",
       "@": "/src",
       "@lib": "/src/lib",
+      "@frontend/lib": "/src/lib", // Add this
+      "@frontend/game": "/src/features/gameplay", // Add this
+      "@frontend/game-access": "/src/features/game-access", // Add this
+      "@frontend/shared-types": "/src/shared-types", // Add this
+      "@frontend/style": "/src/style", // Add this
       "@game": "/src/features/gameplay",
       "@game-access": "/src/features/game-access",
-      "@codenames/shared/src-types": "/src/shared-types", // Add alias for style
-      "@style": "/src/style", // Add alias for style
+      // "@codenames/shared/src-types": "/src/shared-types",
+      "@style": "/src/style",
       "@test": "/test",
     },
   },
