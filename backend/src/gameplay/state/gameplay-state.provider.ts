@@ -49,12 +49,20 @@ export type PlayerContext = {
 };
 
 /**
+ * Result types for game state lookup
+ */
+export type GameStateResult =
+  | { status: "found"; data: GameAggregate }
+  | { status: "game-not-found"; gameId: string }
+  | { status: "user-not-player"; gameId: string; userId: number };
+
+/**
  * Type representing the function returned by the provider
  */
 export type GameplayStateProvider = (
   gameId: PublicId,
   userId: number,
-) => Promise<GameAggregate | null>;
+) => Promise<GameStateResult>;
 
 /**
  * Pure function to determine which role should be active for current turn
@@ -150,14 +158,14 @@ export const gameplayStateProvider = (
    *
    * @param gameId - Public identifier of the game
    * @param userId - ID of the user requesting the state
-   * @returns Complete game state object or null if game not found or user not authorized
+   * @returns Complete game state object or error status
    */
   const getGameplayState = async (
     gameId: PublicId,
     userId: number,
-  ): Promise<GameAggregate | null> => {
+  ): Promise<GameStateResult> => {
     const game = await getGameById(gameId);
-    if (!game) return null;
+    if (!game) return { status: "game-not-found", gameId };
 
     // Collect all game level state - players belong to GAMES not rounds!
     const [teams, allRounds, latestRound, players] = await Promise.all([
@@ -170,7 +178,9 @@ export const gameplayStateProvider = (
     // Get user's players for this game/round
     const roundId = latestRound?._id || null;
     const userPlayers = await getPlayerContext(game._id, userId, roundId);
-    if (!userPlayers || userPlayers.length === 0) return null;
+    if (!userPlayers || userPlayers.length === 0) {
+      return { status: "user-not-player", gameId, userId };
+    }
 
     // Transform teams data and populate with players immediately
     const teamsWithPlayers = teams.map((team: TeamResult) => ({
@@ -202,19 +212,22 @@ export const gameplayStateProvider = (
         game.game_type,
       );
 
-      if (!playerContext) return null;
+      if (!playerContext) return { status: "user-not-player", gameId, userId };
 
       return {
-        _id: game._id,
-        public_id: game.public_id,
-        status: game.status,
-        game_format: game.game_format,
-        teams: teamsWithPlayers,
-        currentRound: null,
-        historicalRounds,
-        playerContext,
-        createdAt: game.created_at,
-        updatedAt: game.updated_at,
+        status: "found",
+        data: {
+          _id: game._id,
+          public_id: game.public_id,
+          status: game.status,
+          game_format: game.game_format,
+          teams: teamsWithPlayers,
+          currentRound: null,
+          historicalRounds,
+          playerContext,
+          createdAt: game.created_at,
+          updatedAt: game.updated_at,
+        },
       };
     }
 
@@ -244,27 +257,30 @@ export const gameplayStateProvider = (
       game.game_type,
     );
 
-    if (!playerContext) return null;
+    if (!playerContext) return { status: "user-not-player", gameId, userId };
 
     return {
-      _id: game._id,
-      public_id: game.public_id,
-      status: game.status,
-      game_format: game.game_format,
-      teams: teamsWithPlayers,
-      currentRound: {
-        _id: latestRound._id,
-        number: latestRound.roundNumber,
-        status: latestRound.status,
-        players,
-        cards: cardsMapped,
-        turns,
-        createdAt: latestRound.createdAt,
+      status: "found",
+      data: {
+        _id: game._id,
+        public_id: game.public_id,
+        status: game.status,
+        game_format: game.game_format,
+        teams: teamsWithPlayers,
+        currentRound: {
+          _id: latestRound._id,
+          number: latestRound.roundNumber,
+          status: latestRound.status,
+          players,
+          cards: cardsMapped,
+          turns,
+          createdAt: latestRound.createdAt,
+        },
+        historicalRounds,
+        playerContext,
+        createdAt: game.created_at,
+        updatedAt: game.updated_at,
       },
-      historicalRounds,
-      playerContext,
-      createdAt: game.created_at,
-      updatedAt: game.updated_at,
     };
   };
 

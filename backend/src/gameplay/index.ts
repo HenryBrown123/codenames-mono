@@ -72,7 +72,19 @@ export const initialize = (
     auth,
     startRoundController,
   );
-  router.get("/games/:gameId", auth, getGameController);
+  router.get(
+    "/games/:gameId",
+    (req, res, next) => {
+      console.log("🎯 GET /games/:gameId hit!", {
+        gameId: req.params.gameId,
+        userAgent: req.headers["user-agent"],
+        cookie: req.headers.cookie,
+      });
+      next();
+    },
+    auth,
+    getGameController,
+  );
   router.post(
     "/games/:gameId/rounds/:roundNumber/clues",
     auth,
