@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { createServer } from "http";
+import cookieParser from "cookie-parser";
 import {
   errorHandler,
   notFoundHandler,
@@ -45,8 +46,31 @@ try {
   console.error("Exiting process as failed to refresh system data");
 }
 
+// CORS configuration that allows credentials
+const corsOptions = {
+  origin: [
+    "http://localhost:8000", // Your frontend dev server
+    "http://127.0.0.1:8000",
+    "http://localhost:3000", // In case you run frontend on 3000
+    "http://127.0.0.1:3000",
+  ],
+  credentials: true, // Essential for cookies
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: [
+    "Origin",
+    "X-Requested-With",
+    "Content-Type",
+    "Accept",
+    "Authorization",
+    "Cookie",
+  ],
+  exposedHeaders: ["Set-Cookie"],
+};
+
 // Configure general middleware
-app.use(cors());
+app.use(cors(corsOptions));
+app.use(cookieParser());
+app.options("*", cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -55,9 +79,7 @@ const swaggerSpec = createOpenApiSpec();
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // this is the auth middleware handlers to be injected into features
-const authHandlers = authMiddleware({
-  jwtSecret: env.JWT_SECRET,
-});
+const authHandlers = authMiddleware(env.JWT_SECRET);
 
 // Initialize auth feature with JWT options
 const auth = initializeAuth(app, dbInstance, {

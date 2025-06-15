@@ -9,7 +9,7 @@ interface CreateGuestSessionResponse extends Response {
 export const createGuestSession =
   async (): Promise<CreateGuestSessionResponse> => {
     const response: AxiosResponse<CreateGuestSessionResponse> =
-      await api.post("/auth/guest");
+      await api.post("/auth/guests");
     if (!response.data.success) {
       console.error("Failed to create a new session", response.data);
     }

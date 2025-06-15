@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
-import { useGameContext } from "@frontend/game/state";
 import { PlayerRole, PLAYER_ROLE } from "@codenames/shared/types";
 
 interface OverlayProps {
@@ -22,14 +21,14 @@ const BurgerMenu = styled.div`
   div {
     width: 30px;
     height: 3px;
-    background-color: #2f2e2e; /* White color for contrast */
+    background-color: #2f2e2e;
     transition: all 0.3s ease;
   }
 
   &.open div:nth-child(1) {
     transform: rotate(45deg);
     transform-origin: 5% 50%;
-    background-color: #dbd2d2; /* White color for contrast */
+    background-color: #dbd2d2;
   }
 
   &.open div:nth-child(2) {
@@ -39,7 +38,7 @@ const BurgerMenu = styled.div`
   &.open div:nth-child(3) {
     transform: rotate(-45deg);
     transform-origin: 5% 50%;
-    background-color: #dbd2d2; /* White color for contrast */
+    background-color: #dbd2d2;
   }
 `;
 
@@ -49,7 +48,7 @@ const Sidebar = styled.div`
   left: 0;
   width: 250px;
   min-height: 100%;
-  background-color: #1d2023; /* Dark background */
+  background-color: #1d2023;
   transform: translateX(-100%);
   transition: transform 0.3s ease;
   display: flex;
@@ -67,7 +66,7 @@ const Sidebar = styled.div`
     font-size: 24px;
     font-weight: bold;
     text-align: left;
-    color: #ffffff; /* White text */
+    color: #ffffff;
   }
 
   ul {
@@ -81,7 +80,7 @@ const Sidebar = styled.div`
     cursor: pointer;
     padding: 12px;
     font-size: 18px;
-    color: #e0e0e0; /* Light text */
+    color: #e0e0e0;
     border-radius: 8px;
     transition:
       background-color 0.2s ease-in-out,
@@ -89,8 +88,8 @@ const Sidebar = styled.div`
   }
 
   li:hover {
-    background-color: #333; /* Darker hover background */
-    color: #fff; /* White text on hover */
+    background-color: #333;
+    color: #fff;
   }
 
   @media (max-width: 768px) {
@@ -117,20 +116,32 @@ const Overlay = styled.div<OverlayProps>`
   left: 0;
   height: 100%;
   width: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* Dark overlay */
+  background-color: rgba(0, 0, 0, 0.5);
   z-index: 4;
   opacity: ${({ isOpen }) => (isOpen ? "1" : "0")};
   pointer-events: ${({ isOpen }) => (isOpen ? "all" : "none")};
   transition: opacity 0.3s ease;
 `;
 
+// Create a safe hook that doesn't throw when outside the provider
+const useSafeGameContext = () => {
+  try {
+    // Dynamically import to avoid circular dependencies
+    const { useGameContext } = require("@frontend/game/state");
+    return useGameContext();
+  } catch (error) {
+    // Return null if not within a GameContextProvider
+    return null;
+  }
+};
+
 export const Menu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
-  // Only access game context if it exists (when in a game)
-  const gameContext = useGameContext();
+  // Safely access game context - will be null if not in a game
+  const gameContext = useSafeGameContext();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -150,6 +161,7 @@ export const Menu: React.FC = () => {
   const changeGameStage = (newStage: PlayerRole) => {
     console.log("Changing to stage: " + newStage);
     // This is a dev tool - in real app you wouldn't manually change stages
+    // You could implement actual stage changing logic here if needed
   };
 
   useEffect(() => {

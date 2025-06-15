@@ -29,6 +29,15 @@ export const createGuestUserController =
       const user = await createGuestUser();
       const session = await login(user.username);
 
+      // Set JWT token as HTTP-only cookie
+      res.cookie("authToken", session.token, {
+        httpOnly: true, // Prevents JavaScript access (security)
+        secure: process.env.NODE_ENV === "production", // HTTPS only in production
+        sameSite: "lax", // CSRF protection
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+        path: "/", // Available for all routes
+      });
+
       const response: CreateGuestResponse = {
         success: true,
         data: {
@@ -37,7 +46,7 @@ export const createGuestUserController =
           },
           session: {
             username: user.username,
-            token: session.token,
+            token: session.token, // Keep this for debugging, remove in production
           },
         },
       };
