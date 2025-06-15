@@ -1,4 +1,3 @@
-// backend/src/gameplay/get-game/get-game.service.ts
 import { GameplayStateProvider } from "../state/gameplay-state.provider";
 import { GameAggregate } from "../state/gameplay-state.types";
 import { PLAYER_ROLE, PlayerRole } from "@codenames/shared/types";
