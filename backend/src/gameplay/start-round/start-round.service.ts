@@ -28,6 +28,7 @@ export type StartRoundSuccess = {
 export const START_ROUND_ERROR = {
   INVALID_GAME_STATE: "invalid-game-state",
   GAME_NOT_FOUND: "game-not-found",
+  USER_NOT_PLAYER: "user-not-player",
   ROUND_NOT_FOUND: "round-not-found",
 } as const;
 
@@ -43,6 +44,11 @@ export type StartRoundFailure =
   | {
       status: typeof START_ROUND_ERROR.GAME_NOT_FOUND;
       gameId: string;
+    }
+  | {
+      status: typeof START_ROUND_ERROR.USER_NOT_PLAYER;
+      gameId: string;
+      userId: number;
     }
   | {
       status: typeof START_ROUND_ERROR.ROUND_NOT_FOUND;
@@ -72,12 +78,9 @@ export type StartRoundDependencies = {
  */
 export const startRoundService = (dependencies: StartRoundDependencies) => {
   return async (input: StartRoundInput): Promise<StartRoundResult> => {
-    const gameData = await dependencies.getGameState(
-      input.gameId,
-      input.userId,
-    );
+    const result = await dependencies.getGameState(input.gameId, input.userId);
 
-    if (!gameData) {
+    if (result.status === "game-not-found") {
       return {
         success: false,
         error: {
@@ -86,6 +89,19 @@ export const startRoundService = (dependencies: StartRoundDependencies) => {
         },
       };
     }
+
+    if (result.status === "user-not-player") {
+      return {
+        success: false,
+        error: {
+          status: START_ROUND_ERROR.USER_NOT_PLAYER,
+          gameId: input.gameId,
+          userId: input.userId,
+        },
+      };
+    }
+
+    const gameData = result.data;
 
     if (!gameData.currentRound) {
       return {

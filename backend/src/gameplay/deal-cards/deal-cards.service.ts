@@ -30,6 +30,7 @@ export type DealCardsSuccess = {
 export const DEAL_CARDS_ERROR = {
   INVALID_GAME_STATE: "invalid-game-state",
   GAME_NOT_FOUND: "game-not-found",
+  USER_NOT_PLAYER: "user-not-player",
 } as const;
 
 /**
@@ -44,6 +45,11 @@ export type DealCardsFailure =
   | {
       status: typeof DEAL_CARDS_ERROR.GAME_NOT_FOUND;
       gameId: string;
+    }
+  | {
+      status: typeof DEAL_CARDS_ERROR.USER_NOT_PLAYER;
+      gameId: string;
+      userId: number;
     };
 
 /**
@@ -69,12 +75,9 @@ export type DealCardsDependencies = {
  */
 export const dealCardsService = (dependencies: DealCardsDependencies) => {
   return async (input: DealCardsInput): Promise<DealCardsResult> => {
-    const gameData = await dependencies.getGameState(
-      input.gameId,
-      input.userId,
-    );
+    const result = await dependencies.getGameState(input.gameId, input.userId);
 
-    if (!gameData) {
+    if (result.status === "game-not-found") {
       return {
         success: false,
         error: {
@@ -83,6 +86,19 @@ export const dealCardsService = (dependencies: DealCardsDependencies) => {
         },
       };
     }
+
+    if (result.status === "user-not-player") {
+      return {
+        success: false,
+        error: {
+          status: DEAL_CARDS_ERROR.USER_NOT_PLAYER,
+          gameId: input.gameId,
+          userId: input.userId,
+        },
+      };
+    }
+
+    const gameData = result.data;
 
     const validationResult = checkCardDealingRules(gameData);
 

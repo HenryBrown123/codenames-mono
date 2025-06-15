@@ -31,6 +31,7 @@ export type RoundCreationSuccess = {
 export const ROUND_CREATION_ERROR = {
   INVALID_GAME_STATE: "invalid-game-state",
   GAME_NOT_FOUND: "game-not-found",
+  USER_NOT_PLAYER: "user-not-player",
 } as const;
 
 /**
@@ -45,6 +46,11 @@ export type RoundCreationFailure =
   | {
       status: typeof ROUND_CREATION_ERROR.GAME_NOT_FOUND;
       gameId: string;
+    }
+  | {
+      status: typeof ROUND_CREATION_ERROR.USER_NOT_PLAYER;
+      gameId: string;
+      userId: number;
     };
 
 /**
@@ -72,12 +78,9 @@ export const roundCreationService = (
   dependencies: RoundCreationDependencies,
 ) => {
   return async (input: RoundCreationInput): Promise<RoundCreationResult> => {
-    const gameData = await dependencies.getGameState(
-      input.gameId,
-      input.userId,
-    );
+    const result = await dependencies.getGameState(input.gameId, input.userId);
 
-    if (!gameData) {
+    if (result.status === "game-not-found") {
       return {
         success: false,
         error: {
@@ -86,6 +89,19 @@ export const roundCreationService = (
         },
       };
     }
+
+    if (result.status === "user-not-player") {
+      return {
+        success: false,
+        error: {
+          status: ROUND_CREATION_ERROR.USER_NOT_PLAYER,
+          gameId: input.gameId,
+          userId: input.userId,
+        },
+      };
+    }
+
+    const gameData = result.data;
 
     const validationResult = checkRoundCreationRules(gameData);
 
@@ -100,13 +116,14 @@ export const roundCreationService = (
       };
     }
 
-    const result = await dependencies.gameplayHandler(async (ops) => {
+    const operationResult = await dependencies.gameplayHandler(async (ops) => {
       const newRound = await ops.createRound(validationResult.data);
 
-      const stateAfterRoundCreation = await ops.getCurrentGameState(
+      const stateAfterRoundCreationResult = await ops.getCurrentGameState(
         input.gameId,
         input.userId,
       );
+      const stateAfterRoundCreation = stateAfterRoundCreationResult;
 
       const validatedForRoles = checkRoleAssignmentRules(
         stateAfterRoundCreation,
@@ -130,7 +147,7 @@ export const roundCreationService = (
 
     return {
       success: true,
-      data: result,
+      data: operationResult,
     };
   };
 };
