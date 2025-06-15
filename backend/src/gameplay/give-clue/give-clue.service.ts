@@ -42,6 +42,7 @@ export const GIVE_CLUE_ERROR = {
   INVALID_GAME_STATE: "invalid-game-state",
   INVALID_CLUE_WORD: "invalid-clue-word",
   GAME_NOT_FOUND: "game-not-found",
+  USER_NOT_PLAYER: "user-not-player",
   ROUND_NOT_FOUND: "round-not-found",
   ROUND_NOT_CURRENT: "round-not-current",
 } as const;
@@ -63,6 +64,11 @@ export type GiveClueFailure =
   | {
       status: typeof GIVE_CLUE_ERROR.GAME_NOT_FOUND;
       gameId: string;
+    }
+  | {
+      status: typeof GIVE_CLUE_ERROR.USER_NOT_PLAYER;
+      gameId: string;
+      userId: number;
     }
   | {
       status: typeof GIVE_CLUE_ERROR.ROUND_NOT_FOUND;
@@ -94,12 +100,9 @@ export type GiveClueDependencies = {
  */
 export const giveClueService = (dependencies: GiveClueDependencies) => {
   return async (input: GiveClueInput): Promise<GiveClueResult> => {
-    const gameData = await dependencies.getGameState(
-      input.gameId,
-      input.userId,
-    );
+    const result = await dependencies.getGameState(input.gameId, input.userId);
 
-    if (!gameData) {
+    if (result.status === "game-not-found") {
       return {
         success: false,
         error: {
@@ -108,6 +111,19 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
         },
       };
     }
+
+    if (result.status === "user-not-player") {
+      return {
+        success: false,
+        error: {
+          status: GIVE_CLUE_ERROR.USER_NOT_PLAYER,
+          gameId: input.gameId,
+          userId: input.userId,
+        },
+      };
+    }
+
+    const gameData = result.data;
 
     // Validate round exists
     if (!gameData.currentRound) {
@@ -157,7 +173,7 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
       };
     }
 
-    const result = await dependencies.gameplayHandler(async (ops) => {
+    const operationResult = await dependencies.gameplayHandler(async (ops) => {
       return await ops.giveClue(
         validationResult.data,
         input.word,
@@ -169,14 +185,14 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
       success: true,
       data: {
         clue: {
-          word: result.clue.word,
-          targetCardCount: result.clue.number,
-          createdAt: result.clue.createdAt,
+          word: operationResult.clue.word,
+          targetCardCount: operationResult.clue.number,
+          createdAt: operationResult.clue.createdAt,
         },
         turn: {
-          teamName: result.turn.teamName,
-          guessesRemaining: result.turn.guessesRemaining,
-          status: result.turn.status,
+          teamName: operationResult.turn.teamName,
+          guessesRemaining: operationResult.turn.guessesRemaining,
+          status: operationResult.turn.status,
         },
       },
     };

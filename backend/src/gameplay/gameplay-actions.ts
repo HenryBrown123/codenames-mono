@@ -30,9 +30,10 @@ const getGameStateOrThrow =
   (trx: TransactionContext) => async (gameId: string, userId: number) => {
     const game = await gameplayState(trx).provider(gameId, userId);
 
-    if (!game) throw new UnexpectedGameplayError("Game not found");
+    if (game.status !== "found")
+      throw new UnexpectedGameplayError("Game not found");
 
-    return game;
+    return game.data;
   };
 
 /**

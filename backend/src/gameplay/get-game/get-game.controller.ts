@@ -35,12 +35,6 @@ export type Dependencies = {
  */
 export const getGameStateController =
   ({ getGameState }: Dependencies) =>
-  /**
-   * Handles HTTP request to retrieve game state
-   * @param req - Express request with game ID
-   * @param res - Express response object
-   * @param next - Express error handling function
-   */
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const validatedRequest = gameStateRequestSchema.parse({
@@ -64,18 +58,21 @@ export const getGameStateController =
         if (result.error.status === "game-not-found") {
           res.status(404).json({
             success: false,
-            error: "Game not found",
+            error: "Game not found or you are not a player in this game",
             details: {
               code: "game-not-found",
+              message:
+                "The game may not exist, or you may need to join the game first",
               gameId: result.error.gameId,
             },
           });
         } else if (result.error.status === "unauthorized") {
           res.status(403).json({
             success: false,
-            error: "You are not authorized to view this game",
+            error: "You are not a player in this game",
             details: {
-              code: "unauthorized",
+              code: "not-a-player",
+              message: "You need to join this game before you can view it",
               userId: result.error.userId,
             },
           });

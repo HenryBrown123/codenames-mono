@@ -1,3 +1,4 @@
+// backend/src/gameplay/get-game/get-game.service.ts
 import { GameplayStateProvider } from "../state/gameplay-state.provider";
 import { GameAggregate } from "../state/gameplay-state.types";
 import { PLAYER_ROLE, PlayerRole } from "@codenames/shared/types";
@@ -86,12 +87,10 @@ export type GetGameStateDependencies = {
  */
 export const getGameStateService = (dependencies: GetGameStateDependencies) => {
   return async (input: GetGameStateInput): Promise<GetGameStateResult> => {
-    const gameData = await dependencies.getGameState(
-      input.gameId,
-      input.userId,
-    );
+    const result = await dependencies.getGameState(input.gameId, input.userId);
 
-    if (!gameData) {
+    if (result.status === "game-not-found") {
+      console.log(`Game not found: gameId=${input.gameId}`);
       return {
         success: false,
         error: {
@@ -101,7 +100,10 @@ export const getGameStateService = (dependencies: GetGameStateDependencies) => {
       };
     }
 
-    if (!gameData.playerContext) {
+    if (result.status === "user-not-player") {
+      console.log(
+        `User not a player: gameId=${input.gameId}, userId=${input.userId}`,
+      );
       return {
         success: false,
         error: {
@@ -111,10 +113,10 @@ export const getGameStateService = (dependencies: GetGameStateDependencies) => {
       };
     }
 
-    // Build the simplified response
+    // result.status === 'found'
     return {
       success: true,
-      data: transformGameState(gameData),
+      data: transformGameState(result.data),
     };
   };
 };

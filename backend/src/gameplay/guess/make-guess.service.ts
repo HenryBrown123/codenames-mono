@@ -38,6 +38,7 @@ export const MAKE_GUESS_ERROR = {
   INVALID_GAME_STATE: "invalid-game-state",
   INVALID_CARD: "invalid-card",
   GAME_NOT_FOUND: "game-not-found",
+  USER_NOT_PLAYER: "user-not-player",
   ROUND_NOT_FOUND: "round-not-found",
   ROUND_NOT_CURRENT: "round-not-current",
 } as const;
@@ -59,6 +60,11 @@ export type MakeGuessFailure =
   | {
       status: typeof MAKE_GUESS_ERROR.GAME_NOT_FOUND;
       gameId: string;
+    }
+  | {
+      status: typeof MAKE_GUESS_ERROR.USER_NOT_PLAYER;
+      gameId: string;
+      userId: number;
     }
   | {
       status: typeof MAKE_GUESS_ERROR.ROUND_NOT_FOUND;
@@ -274,12 +280,9 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
   };
 
   return async (input: MakeGuessInput): Promise<MakeGuessResult> => {
-    const gameData = await dependencies.getGameState(
-      input.gameId,
-      input.userId,
-    );
+    const result = await dependencies.getGameState(input.gameId, input.userId);
 
-    if (!gameData) {
+    if (result.status === "game-not-found") {
       return {
         success: false,
         error: {
@@ -288,6 +291,19 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
         },
       };
     }
+
+    if (result.status === "user-not-player") {
+      return {
+        success: false,
+        error: {
+          status: MAKE_GUESS_ERROR.USER_NOT_PLAYER,
+          gameId: input.gameId,
+          userId: input.userId,
+        },
+      };
+    }
+
+    const gameData = result.data;
 
     // Validate round exists and is current
     if (!gameData.currentRound) {
@@ -325,7 +341,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
     }
 
     // Execute within transaction
-    const result = await dependencies.gameplayHandler(async (ops) => {
+    const operationResult = await dependencies.gameplayHandler(async (ops) => {
       // Make the guess
       const guessResult = await ops.makeGuess(
         validationResult.data,
@@ -359,13 +375,13 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
       data: {
         guess: {
           cardWord: input.cardWord,
-          outcome: result.guessResult.outcome,
-          createdAt: result.guessResult.createdAt,
+          outcome: operationResult.guessResult.outcome,
+          createdAt: operationResult.guessResult.createdAt,
         },
         turn: {
-          teamName: result.guessResult.turn.teamName,
-          guessesRemaining: result.guessResult.turn.guessesRemaining,
-          status: result.guessResult.turn.status,
+          teamName: operationResult.guessResult.turn.teamName,
+          guessesRemaining: operationResult.guessResult.turn.guessesRemaining,
+          status: operationResult.guessResult.turn.status,
         },
       },
     };
