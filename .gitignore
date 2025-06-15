@@ -81,3 +81,5 @@ branch_changes.sh
 .DS_Store
 Thumbs.db
 rebase-script.sh
+package-lock.json
+frontend/package-lock.json
