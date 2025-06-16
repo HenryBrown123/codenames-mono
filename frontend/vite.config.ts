@@ -20,6 +20,7 @@ export default defineConfig({
       "@frontend/*": "./src/*",
       "@frontend/lib": "/src/lib",
       "@frontend/game": "/src/features/gameplay",
+      "@frontend/features/gameplay": "/src/features/gameplay",
       "@frontend/game-access": "/src/features/game-access",
       "@frontend/features/lobby": "/src/features/lobby",
       "@frontend/shared-types": "/src/shared-types",

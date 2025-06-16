@@ -12,12 +12,21 @@ const ButtonWrapper = styled.div`
   margin: 0 auto;
 `;
 
-// New dashboard for lobby/game setup
+// Enhanced lobby dashboard with logging
 export const LobbyDashboardView: React.FC = () => {
+  console.log("Rendering LobbyDashboardView");
+
   const { gameData } = useGameContext();
   const { handleCreateRound, isLoading } = useGameplayContext();
 
+  console.log("Lobby Dashboard State:", {
+    gameStatus: gameData?.status,
+    isLoading: isLoading.createRound,
+    hasCurrentRound: !!gameData?.currentRound,
+  });
+
   const handleClick = () => {
+    console.log("Lobby: Start Game clicked");
     handleCreateRound();
   };
 
@@ -32,8 +41,10 @@ export const LobbyDashboardView: React.FC = () => {
   );
 };
 
-// New dashboard for spectators
+// Enhanced spectator dashboard with logging
 export const SpectatorDashboardView: React.FC = () => {
+  console.log("Rendering SpectatorDashboardView");
+
   return (
     <ButtonWrapper>
       <div>Watching the game...</div>
@@ -41,9 +52,17 @@ export const SpectatorDashboardView: React.FC = () => {
   );
 };
 
-// Dashboard for waiting states
+// Enhanced waiting dashboard with logging
 export const WaitingDashboardView: React.FC = () => {
+  console.log("Rendering WaitingDashboardView");
+
   const { gameData } = useGameContext();
+
+  console.log("Waiting Dashboard State:", {
+    gameStatus: gameData?.status,
+    currentRound: gameData?.currentRound?.roundNumber,
+    playerRole: gameData?.playerContext?.role,
+  });
 
   return (
     <ButtonWrapper>
@@ -52,8 +71,10 @@ export const WaitingDashboardView: React.FC = () => {
   );
 };
 
-// Updated transition dashboard with scene transitions
+// Enhanced transition dashboard with logging
 export const TransitionDashboardView: React.FC = () => {
+  console.log("Rendering TransitionDashboardView");
+
   const { gameData } = useGameContext();
   const {
     handleSceneTransition,
@@ -63,9 +84,19 @@ export const TransitionDashboardView: React.FC = () => {
   } = useGameplayContext();
   const [actionButtonEnabled, setActionButtonEnabled] = useState(true);
 
+  console.log("Transition Dashboard State:", {
+    hasCurrentRound: !!gameData.currentRound,
+    roundNumber: gameData.currentRound?.roundNumber,
+    roundStatus: gameData.currentRound?.status,
+    cardCount: gameData.currentRound?.cards?.length,
+    isLoading: isLoading,
+  });
+
   const handleClick = () => {
+    console.log("Transition: Continue clicked");
+
     if (!gameData.currentRound) {
-      // If no round, just transition UI
+      console.log("No round - triggering scene transition");
       handleSceneTransition("next");
       return;
     }
@@ -77,12 +108,16 @@ export const TransitionDashboardView: React.FC = () => {
       !gameData.currentRound.cards ||
       gameData.currentRound.cards.length === 0
     ) {
+      console.log(
+        "Dealing cards for round:",
+        gameData.currentRound.roundNumber,
+      );
       handleDealCards(gameData.currentRound.roundNumber.toString());
     } else if (gameData.currentRound.status === "SETUP") {
-      // If round needs to be started
+      console.log("Starting round:", gameData.currentRound.roundNumber);
       handleStartRound(gameData.currentRound.roundNumber);
     } else {
-      // Otherwise just transition UI scene
+      console.log("Transitioning to next scene");
       handleSceneTransition("next");
     }
 
@@ -102,8 +137,10 @@ export const TransitionDashboardView: React.FC = () => {
   );
 };
 
-// Updated codemaster dashboard with scene transitions
+// Enhanced codemaster dashboard with logging
 export const CodemasterDashboardView: React.FC = () => {
+  console.log("Rendering CodemasterDashboardView");
+
   const { gameData } = useGameContext();
   const { handleGiveClue, handleSceneTransition, isLoading } =
     useGameplayContext();
@@ -115,13 +152,28 @@ export const CodemasterDashboardView: React.FC = () => {
   const codeWord = activeTurn?.clue?.word || "";
   const numberOfGuesses = activeTurn?.clue?.number || 0;
 
+  console.log("Codemaster Dashboard State:", {
+    currentRound: currentRound?.roundNumber,
+    activeTurn: !!activeTurn,
+    hasClue: !!activeTurn?.clue,
+    codeWord,
+    numberOfGuesses,
+    isLoading: isLoading.giveClue,
+  });
+
   const handleSubmit = (word: string, targetCardCount: number) => {
-    if (!currentRound) return;
+    console.log("Codemaster: Submitting clue", { word, targetCardCount });
+
+    if (!currentRound) {
+      console.error("No current round available");
+      return;
+    }
 
     // Give the clue
     handleGiveClue(currentRound.roundNumber, word, targetCardCount);
 
     // Manually trigger UI transition to waiting state
+    console.log("Triggering scene transition: CLUE_SUBMITTED");
     handleSceneTransition("CLUE_SUBMITTED");
   };
 
@@ -136,8 +188,10 @@ export const CodemasterDashboardView: React.FC = () => {
   );
 };
 
-// Updated codebreaker dashboard with scene transitions
+// Enhanced codebreaker dashboard with logging
 export const CodebreakerDashboardView: React.FC = () => {
+  console.log("Rendering CodebreakerDashboardView");
+
   const { gameData } = useGameContext();
   const { handleSceneTransition } = useGameplayContext();
 
@@ -148,8 +202,17 @@ export const CodebreakerDashboardView: React.FC = () => {
   const codeWord = activeTurn?.clue?.word || "";
   const numberOfGuesses = activeTurn?.clue?.number || 0;
 
+  console.log("Codebreaker Dashboard State:", {
+    currentRound: currentRound?.roundNumber,
+    activeTurn: !!activeTurn,
+    hasClue: !!activeTurn?.clue,
+    codeWord,
+    numberOfGuesses,
+  });
+
   const handleClick = () => {
-    // Trigger scene transition to end turn
+    console.log("Codebreaker: End Turn clicked");
+    console.log("Triggering scene transition: TURN_ENDED");
     handleSceneTransition("TURN_ENDED");
   };
 
@@ -167,11 +230,18 @@ export const CodebreakerDashboardView: React.FC = () => {
   );
 };
 
-// Updated gameover dashboard
+// Enhanced gameover dashboard with logging
 export const GameoverDashboardView: React.FC = () => {
+  console.log("Rendering GameoverDashboardView");
+
   const { handleCreateRound, isLoading } = useGameplayContext();
 
+  console.log("Gameover Dashboard State:", {
+    isLoading: isLoading.createRound,
+  });
+
   const handleClick = () => {
+    console.log("Gameover: Play again clicked");
     handleCreateRound(); // Start a new round/game
   };
 

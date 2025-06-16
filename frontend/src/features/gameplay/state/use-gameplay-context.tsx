@@ -16,12 +16,10 @@ import {
   useDealCards,
 } from "@frontend/game/api";
 
-// Create a context to share gameplay state and event handlers
 export const GameplayContext = createContext<GameplayContextProps | null>(null);
 
 /**
- * Hybrid GameplayContextProvider.
- * Combines UI state machine for presentation flow with specific API actions.
+ * GameplayContextProvider - handles UI state machine and API actions
  */
 export const GameplayContextProvider = ({
   children,
@@ -41,7 +39,6 @@ export const GameplayContextProvider = ({
   const startRound = useStartRound(gameId);
   const dealCards = useDealCards(gameId);
 
-  // Simple manual stage setting when needed
   const setUIStage = useCallback((stage: PlayerRole) => {
     dispatch({
       type: "SET_STAGE",
@@ -68,7 +65,6 @@ export const GameplayContextProvider = ({
         { roundNumber, word, targetCardCount },
         {
           onSuccess: () => {
-            // Trigger UI transition to waiting state
             handleSceneTransition("CLUE_SUBMITTED");
           },
         },
@@ -78,7 +74,7 @@ export const GameplayContextProvider = ({
   );
 
   /**
-   * Make a guess as codebreaker
+   * Make a guess as codebreaker - optimistic updates handled in mutation
    */
   const handleMakeGuess = useCallback(
     (roundNumber: number, cardWord: string) => {
@@ -86,7 +82,6 @@ export const GameplayContextProvider = ({
         { roundNumber, cardWord },
         {
           onSuccess: () => {
-            // Trigger UI transition to outcome scene
             handleSceneTransition("GUESS_MADE");
           },
         },
@@ -163,7 +158,7 @@ export const GameplayContextProvider = ({
 };
 
 /**
- * Custom hook to access the GameplayContext.
+ * Custom hook to access the GameplayContext
  */
 export const useGameplayContext = (): GameplayContextProps => {
   const context = useContext(GameplayContext);

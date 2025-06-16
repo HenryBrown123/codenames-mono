@@ -1,3 +1,4 @@
+import React, { memo, useCallback } from "react";
 import { Card } from "@frontend/shared-types";
 import { PlayerRole, PLAYER_ROLE } from "@codenames/shared/types";
 import { GameCardProps } from "./game-card";
@@ -6,52 +7,89 @@ import GameCard from "./game-card";
 
 /**
  * RenderCards component renders a grid of game cards based on the provided props.
+ * OPTIMIZED: Stable props, memoized card components, simplified callback pattern
  */
 type RenderCardsProps = {
   cards: Card[];
   stage: PlayerRole;
   readOnly?: boolean;
   showCodemasterView?: boolean;
-  handleCardClick?: (cardData: Card) => void;
+  onCardClick?: (cardWord: string) => void; // 🎯 SIMPLIFIED: Just pass the word
+  disabled?: boolean;
 };
 
-export const RenderCards: React.FC<RenderCardsProps> = ({
-  cards,
-  stage,
-  readOnly = false,
-  showCodemasterView = false,
-  handleCardClick,
-}) => (
-  <CardsContainer aria-label="game board container with cards">
-    {cards.map((cardData, index) => {
-      const gameCardProps = getGameCardProps(
-        cardData,
-        stage,
-        index,
-        readOnly,
-        showCodemasterView,
-        () => handleCardClick && handleCardClick(cardData),
-      );
-      return (
-        <GameCardContainer
-          aria-label={`card for word: ${cardData.word}`}
-          key={cardData.word}
-        >
-          <GameCard {...gameCardProps} />
-        </GameCardContainer>
-      );
-    })}
-  </CardsContainer>
+/**
+ * Individual card wrapper with stable props
+ * CRITICAL: This prevents every card from re-rendering when one card changes
+ */
+const MemoizedCardWrapper: React.FC<{
+  card: Card;
+  cardIndex: number;
+  gameCardProps: GameCardProps;
+  onCardClick?: (cardWord: string) => void;
+}> = memo(({ card, cardIndex, gameCardProps, onCardClick }) => {
+  // 🎯 STABLE CALLBACK: Only depends on card.word, not the entire card object
+  const handleClick = useCallback(() => {
+    if (onCardClick && gameCardProps.clickable && !gameCardProps.selected) {
+      onCardClick(card.word);
+    }
+  }, [onCardClick, card.word, gameCardProps.clickable, gameCardProps.selected]);
+
+  return (
+    <GameCardContainer
+      aria-label={`card for word: ${card.word}`}
+      key={card.word}
+    >
+      <GameCard
+        {...gameCardProps}
+        onClick={gameCardProps.clickable ? handleClick : undefined}
+      />
+    </GameCardContainer>
+  );
+});
+
+export const RenderCards: React.FC<RenderCardsProps> = memo(
+  ({
+    cards,
+    stage,
+    readOnly = false,
+    showCodemasterView = false,
+    onCardClick,
+    disabled = false,
+  }) => (
+    <CardsContainer aria-label="game board container with cards">
+      {cards.map((card, index) => {
+        const gameCardProps = getGameCardProps(
+          card,
+          stage,
+          index,
+          readOnly,
+          showCodemasterView,
+          disabled,
+        );
+
+        return (
+          <MemoizedCardWrapper
+            key={card.word} // STABLE KEY
+            card={card}
+            cardIndex={index}
+            gameCardProps={gameCardProps}
+            onCardClick={onCardClick}
+          />
+        );
+      })}
+    </CardsContainer>
+  ),
 );
 
 /**
  * Get the color associated with a team/card type.
+ * OPTIMIZATION: This function is pure, no changes needed
  */
 export const getCardColor = (
   teamName?: string | null,
   cardType?: string,
 ): string => {
-  // Use cardType if available, fall back to teamName
   const type = cardType || teamName;
 
   switch (type?.toLowerCase()) {
@@ -60,7 +98,6 @@ export const getCardColor = (
     case "bystander":
       return "#4169E1"; // Blue
     case "team":
-      // For team cards, use teamName to determine color
       if (teamName?.toLowerCase().includes("red")) return "#B22222";
       if (teamName?.toLowerCase().includes("blue")) return "#4169E1";
       if (teamName?.toLowerCase().includes("green")) return "#228B22";
@@ -71,7 +108,8 @@ export const getCardColor = (
 };
 
 /**
- * Generate the properties for a game card component based on the provided card data and game context.
+ * Generate the properties for a game card component.
+ * OPTIMIZED: Removed handleClick param, simplified logic
  */
 export const getGameCardProps = (
   cardData: Card,
@@ -79,7 +117,7 @@ export const getGameCardProps = (
   cardIndex?: number,
   readOnly?: boolean,
   showCodemasterView?: boolean,
-  handleClick?: () => void,
+  disabled?: boolean,
 ): GameCardProps => {
   // Determine if colors should be shown
   const shouldShowColors =
@@ -91,11 +129,14 @@ export const getGameCardProps = (
     cardText: cardData.word,
     cardColor: getCardColor(cardData.teamName, cardData.cardType),
     clickable:
-      gameStage === PLAYER_ROLE.CODEBREAKER && !cardData.selected && !readOnly,
+      !disabled &&
+      gameStage === PLAYER_ROLE.CODEBREAKER &&
+      !cardData.selected &&
+      !readOnly,
     selected: cardData.selected,
     showTeamColorAsBackground: shouldShowColors,
-    onClick: handleClick,
     cardIndex: cardIndex,
+    // onClick will be handled by MemoizedCardWrapper
   };
 };
 

@@ -110,6 +110,7 @@ export const getCardsByRoundId =
         "cards.selected",
         "teams.team_name",
       ])
+      .orderBy("cards.id", "asc")
       .execute();
 
     return cards.map((card) => ({

@@ -1,4 +1,4 @@
-import React, { useState, memo } from "react";
+import React, { memo } from "react";
 import styled, { keyframes } from "styled-components";
 import { FaStar, FaLeaf, FaSkull, FaPeace } from "react-icons/fa";
 
@@ -95,7 +95,7 @@ const Card = styled.button<CardProps>`
   }
 `;
 
-const CardContent = styled.div<{ cardPicked?: boolean }>`
+const CardContent = styled.div<{ selected?: boolean }>`
   position: relative;
   display: flex;
   justify-content: center;
@@ -107,7 +107,7 @@ const CardContent = styled.div<{ cardPicked?: boolean }>`
   overflow-wrap: break-word;
   margin: 0;
   padding: 0;
-  text-decoration: ${(props) => (props.cardPicked ? "line-through" : "none")};
+  text-decoration: ${(props) => (props.selected ? "line-through" : "none")};
 `;
 
 const CoverCard = styled.div<{
@@ -156,17 +156,13 @@ const GameCard: React.FC<GameCardProps> = memo((props) => {
     cardColor,
     showTeamColorAsBackground,
     clickable = false,
-    selected,
+    selected = false,
     cardIndex,
     onClick,
   } = props;
 
-  // Set immediately on the card whilst turn is being processed
-  const [cardPicked, setCardPicked] = useState(selected);
-
   const handleClick = () => {
-    if (clickable && onClick) {
-      setCardPicked(true);
+    if (clickable && onClick && !selected) {
       onClick();
     }
   };
@@ -174,16 +170,14 @@ const GameCard: React.FC<GameCardProps> = memo((props) => {
   return (
     <CardContainer>
       <Card
-        onClick={
-          clickable && !selected && !cardPicked ? handleClick : undefined
-        }
+        onClick={clickable && !selected ? handleClick : undefined}
         clickable={clickable}
         backgroundColour={
           showTeamColorAsBackground ? cardColor : FRONT_CARD_COLOUR
         }
         aria-label={`Card with text ${cardText}`}
       >
-        <CardContent cardPicked={cardPicked}>{cardText}</CardContent>
+        <CardContent selected={selected}>{cardText}</CardContent>
       </Card>
       {selected && (
         <CoverCard

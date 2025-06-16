@@ -1,47 +1,39 @@
-import React, { useCallback, useState, memo } from "react";
+import React, { useCallback, useMemo, memo } from "react";
 import { useGameplayContext } from "@frontend/game/state";
 import { GameData, Card } from "@frontend/shared-types";
 import { RenderCards } from "./game-board-utils";
 
 /**
  * CodebreakerStageBoard - allows card interactions for guessing
+ * OPTIMIZED: Fixed callback dependencies and memoized cards array
  */
 export const CodebreakerStageBoard: React.FC<{ gameData: GameData }> = memo(
   ({ gameData }) => {
-    const { handleMakeGuess, handleSceneTransition, currentStage, isLoading } =
-      useGameplayContext();
-    const [isProcessing, setIsProcessing] = useState(false);
+    const { handleMakeGuess, currentStage, isLoading } = useGameplayContext();
 
+    // 🎯 FIX 1: Memoize the cards array to prevent new references
+    const cards = useMemo(() => {
+      return gameData.currentRound?.cards || [];
+    }, [gameData.currentRound?.cards]);
+
+    // 🎯 FIX 2: Simplified callback with stable dependencies
     const handleCardClick = useCallback(
-      (cardData: Card) => {
-        if (!cardData.selected && !isProcessing && !isLoading.makeGuess) {
-          if (!gameData.currentRound) return;
+      (cardWord: string) => {
+        const roundNumber = gameData.currentRound?.roundNumber;
+        if (!roundNumber) return;
 
-          setIsProcessing(true);
-
-          // Make the guess - this will trigger scene transition in the mutation's onSuccess
-          handleMakeGuess(gameData.currentRound.roundNumber, cardData.word);
-
-          // Manually trigger UI transition to outcome scene
-          handleSceneTransition("GUESS_MADE");
-
-          setIsProcessing(false);
-        }
+        handleMakeGuess(roundNumber, cardWord);
       },
-      [
-        gameData.currentRound,
-        isProcessing,
-        isLoading.makeGuess,
-        handleMakeGuess,
-        handleSceneTransition,
-      ],
+      [handleMakeGuess, gameData.currentRound?.roundNumber],
     );
 
+    // 🎯 FIX 3: Don't pass the entire card object, just the word
     return (
       <RenderCards
-        cards={gameData.currentRound?.cards || []}
+        cards={cards}
         stage={currentStage}
-        handleCardClick={handleCardClick}
+        onCardClick={handleCardClick}
+        disabled={isLoading.makeGuess}
       />
     );
   },
@@ -49,17 +41,24 @@ export const CodebreakerStageBoard: React.FC<{ gameData: GameData }> = memo(
 
 /**
  * CodemasterStageBoard - shows all card colors for giving clues
+ * OPTIMIZED: Memoized cards array, no callbacks needed
  */
 export const CodemasterStageBoard: React.FC<{ gameData: GameData }> = memo(
   ({ gameData }) => {
     const { currentStage } = useGameplayContext();
 
+    // 🎯 FIX 1: Memoize the cards array
+    const cards = useMemo(() => {
+      return gameData.currentRound?.cards || [];
+    }, [gameData.currentRound?.cards]);
+
     return (
       <RenderCards
-        cards={gameData.currentRound?.cards || []}
+        cards={cards}
         stage={currentStage}
         showCodemasterView={true}
-        handleCardClick={() => {}} // No interaction for codemasters
+        onCardClick={undefined} // No interaction for codemasters
+        disabled={false}
       />
     );
   },
@@ -67,17 +66,24 @@ export const CodemasterStageBoard: React.FC<{ gameData: GameData }> = memo(
 
 /**
  * ReadOnlyBoard - no interactions, just display
+ * OPTIMIZED: Memoized cards array, no callbacks
  */
 export const ReadOnlyBoard: React.FC<{ gameData: GameData }> = memo(
   ({ gameData }) => {
     const { currentStage } = useGameplayContext();
 
+    // 🎯 FIX 1: Memoize the cards array
+    const cards = useMemo(() => {
+      return gameData.currentRound?.cards || [];
+    }, [gameData.currentRound?.cards]);
+
     return (
       <RenderCards
-        cards={gameData.currentRound?.cards || []}
+        cards={cards}
         stage={currentStage}
         readOnly={true}
-        handleCardClick={() => {}}
+        onCardClick={undefined}
+        disabled={false}
       />
     );
   },

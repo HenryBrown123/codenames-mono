@@ -51,11 +51,34 @@ export const GameScene: React.FC = () => {
   const { currentStage, currentScene } = useGameplayContext();
   const { gameData } = useGameContext();
 
+  console.group("GameScene Render");
+  console.log("Current State:", { currentStage, currentScene });
+  console.log("Game Data:", {
+    gameStatus: gameData?.status,
+    playerRole: gameData?.playerContext?.role,
+    roundNumber: gameData?.currentRound?.roundNumber,
+    roundStatus: gameData?.currentRound?.status,
+  });
+
   // Get configuration for current stage and scene
   const stageConfig = uiConfig[currentStage];
+  console.log("Stage Config:", stageConfig ? "Found" : "Missing", {
+    stage: currentStage,
+    availableScenes: stageConfig ? Object.keys(stageConfig.scenes) : [],
+  });
+
   const sceneConfig = stageConfig?.scenes[currentScene];
+  console.log("Scene Config:", sceneConfig ? "Found" : "Missing", {
+    scene: currentScene,
+    config: sceneConfig,
+  });
 
   if (!sceneConfig) {
+    console.error("ERROR: No scene config found!", {
+      currentStage,
+      currentScene,
+    });
+    console.groupEnd();
     return <div>Loading game scene...</div>;
   }
 
@@ -68,6 +91,24 @@ export const GameScene: React.FC = () => {
     ? dashboards[sceneConfig.dashboard]
     : null;
 
+  console.log("Component Resolution:", {
+    messageKey: sceneConfig.message,
+    messageFound: !!message,
+    boardKey: sceneConfig.gameBoard,
+    boardFound: !!BoardComponent,
+    dashboardKey: sceneConfig.dashboard,
+    dashboardFound: !!DashboardComponent,
+  });
+
+  // Log which components will actually render
+  console.log("Rendering Elements:", {
+    instructions: !!message,
+    gameBoard: !!BoardComponent,
+    dashboard: !!DashboardComponent,
+  });
+
+  console.groupEnd();
+
   return (
     <>
       {message && (
@@ -76,10 +117,20 @@ export const GameScene: React.FC = () => {
         </InstructionsContainer>
       )}
       <GameBoardContainer>
-        {BoardComponent && <BoardComponent gameData={gameData} />}
+        {BoardComponent && (
+          <>
+            {console.log("Rendering Game Board:", sceneConfig.gameBoard)}
+            <BoardComponent gameData={gameData} />
+          </>
+        )}
       </GameBoardContainer>
       <DashboardContainer>
-        {DashboardComponent && <DashboardComponent />}
+        {DashboardComponent && (
+          <>
+            {console.log("Rendering Dashboard:", sceneConfig.dashboard)}
+            <DashboardComponent />
+          </>
+        )}
       </DashboardContainer>
     </>
   );
