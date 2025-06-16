@@ -1,5 +1,5 @@
 import React from "react";
-import { useGameplayContext, useGameContext } from "@frontend/game/state";
+import { useGameplayContext } from "@frontend/game/state";
 import { uiConfig } from "@frontend/features/gameplay/state/ui-state-config";
 import {
   messages,
@@ -49,8 +49,7 @@ const DashboardContainer = styled.div`
 `;
 
 export const GameScene: React.FC = () => {
-  const { currentStage, currentScene } = useGameplayContext();
-  const { gameData } = useGameContext();
+  const { currentStage, currentScene, gameData } = useGameplayContext();
 
   const stageConfig = uiConfig[currentStage];
   const sceneConfig = stageConfig?.scenes[currentScene];

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import ActionButton from "../action-button/action-button";
-import { useGameContext } from "@frontend/game/state";
+import { useGameplayContext as useGameContext } from "@frontend/game/state";
 import { Card } from "@frontend/shared-types";
 
 const Container = styled.div`

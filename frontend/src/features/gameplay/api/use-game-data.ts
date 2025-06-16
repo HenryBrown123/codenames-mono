@@ -143,7 +143,8 @@ export const useMakeGuess = (
     },
     onSuccess: () => {
       // Refetch to get the authoritative server state
-      queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
+      console.log("Successfully called useMakeGuess");
+      //queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
     },
   });
 };

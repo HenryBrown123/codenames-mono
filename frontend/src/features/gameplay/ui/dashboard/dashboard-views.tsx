@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import ActionButton from "../action-button/action-button";
 import CodeWordInput from "./codemaster-input";
-import { useGameContext, useGameplayContext } from "@frontend/game/state";
+import { useGameplayContext } from "@frontend/game/state";
 import { Turn } from "@frontend/shared-types";
 
 const ButtonWrapper = styled.div`
@@ -16,8 +16,7 @@ const ButtonWrapper = styled.div`
 export const LobbyDashboardView: React.FC = () => {
   console.log("Rendering LobbyDashboardView");
 
-  const { gameData } = useGameContext();
-  const { handleCreateRound, isLoading } = useGameplayContext();
+  const { gameData, handleCreateRound, isLoading } = useGameplayContext();
 
   console.log("Lobby Dashboard State:", {
     gameStatus: gameData?.status,
@@ -56,7 +55,7 @@ export const SpectatorDashboardView: React.FC = () => {
 export const WaitingDashboardView: React.FC = () => {
   console.log("Rendering WaitingDashboardView");
 
-  const { gameData } = useGameContext();
+  const { gameData } = useGameplayContext();
 
   console.log("Waiting Dashboard State:", {
     gameStatus: gameData?.status,
@@ -73,24 +72,14 @@ export const WaitingDashboardView: React.FC = () => {
 
 // Enhanced transition dashboard with logging
 export const TransitionDashboardView: React.FC = () => {
-  console.log("Rendering TransitionDashboardView");
-
-  const { gameData } = useGameContext();
   const {
+    gameData,
     handleSceneTransition,
     handleStartRound,
     handleDealCards,
     isLoading,
   } = useGameplayContext();
   const [actionButtonEnabled, setActionButtonEnabled] = useState(true);
-
-  console.log("Transition Dashboard State:", {
-    hasCurrentRound: !!gameData.currentRound,
-    roundNumber: gameData.currentRound?.roundNumber,
-    roundStatus: gameData.currentRound?.status,
-    cardCount: gameData.currentRound?.cards?.length,
-    isLoading: isLoading,
-  });
 
   const handleClick = () => {
     console.log("Transition: Continue clicked");
@@ -141,8 +130,7 @@ export const TransitionDashboardView: React.FC = () => {
 export const CodemasterDashboardView: React.FC = () => {
   console.log("Rendering CodemasterDashboardView");
 
-  const { gameData } = useGameContext();
-  const { handleGiveClue, handleSceneTransition, isLoading } =
+  const { gameData, handleGiveClue, handleSceneTransition, isLoading } =
     useGameplayContext();
 
   const currentRound = gameData.currentRound;
@@ -190,10 +178,7 @@ export const CodemasterDashboardView: React.FC = () => {
 
 // Enhanced codebreaker dashboard with logging
 export const CodebreakerDashboardView: React.FC = () => {
-  console.log("Rendering CodebreakerDashboardView");
-
-  const { gameData } = useGameContext();
-  const { handleSceneTransition } = useGameplayContext();
+  const { gameData, handleSceneTransition } = useGameplayContext();
 
   const currentRound = gameData.currentRound;
   const activeTurn = currentRound?.turns?.find(
