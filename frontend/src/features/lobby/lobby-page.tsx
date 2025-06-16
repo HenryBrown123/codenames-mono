@@ -10,7 +10,6 @@ import {
   getLobbyState,
   type LobbyData,
   type LobbyPlayer,
-  type LobbyTeam,
 } from "@frontend/features/lobby/api/lobby-api";
 
 // Interface for props
@@ -18,29 +17,9 @@ interface LobbyInterfaceProps {
   gameId: string;
 }
 
-// // Use your actual API types
-// interface LobbyPlayer {
-//   publicId: string;
-//   playerName: string; // Your API uses 'playerName'
-//   teamName: string; // Your API uses 'teamName'
-// }
-
-// interface LobbyTeam {
-//   teamName: string; // Your API uses 'teamName'
-//   players: LobbyPlayer[];
-// }
-
-// interface LobbyData {
-//   publicId: string;
-//   status: string;
-//   gameType: string;
-//   teams: LobbyTeam[];
-//   canModifyGame: boolean;
-// }
-
 // Mock data structure as fallback with proper typing
 const mockLobbyData: LobbyData = {
-  publicId: "game-123",
+  publicId: "unknown",
   status: "LOBBY",
   gameType: "SINGLE_DEVICE",
   canModifyGame: true,
@@ -135,7 +114,7 @@ const TeamsGrid = styled.div`
   }
 `;
 
-const TeamTile = styled.div<{ teamColor: string }>`
+const TeamTile = styled.div<{ teamColor: string; isDragOver?: boolean }>`
   background: linear-gradient(
     145deg,
     rgba(255, 255, 255, 0.1),
@@ -147,6 +126,19 @@ const TeamTile = styled.div<{ teamColor: string }>`
   min-height: 300px;
   position: relative;
   backdrop-filter: blur(10px);
+  transition: all 0.2s;
+
+  ${(props) =>
+    props.isDragOver &&
+    `
+    border-color: ${props.teamColor}CC;
+    background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.2),
+      rgba(255, 255, 255, 0.1)
+    );
+    transform: scale(1.02);
+  `}
 `;
 
 const TeamHeader = styled.div<{ teamColor: string }>`
@@ -177,7 +169,7 @@ const PlayersArea = styled.div`
   margin-bottom: 1.5rem;
 `;
 
-const PlayerTile = styled.div`
+const PlayerTile = styled.div<{ isDragging?: boolean }>`
   background: rgba(255, 255, 255, 0.15);
   border-radius: 10px;
   padding: 1rem;
@@ -186,11 +178,13 @@ const PlayerTile = styled.div`
   align-items: center;
   justify-content: space-between;
   transition: all 0.2s;
-  cursor: grab;
+  cursor: ${(props) => (props.isDragging ? "grabbing" : "grab")};
+  opacity: ${(props) => (props.isDragging ? 0.5 : 1)};
+  user-select: none;
 
   &:hover {
     background: rgba(255, 255, 255, 0.25);
-    transform: translateY(-2px);
+    transform: ${(props) => (props.isDragging ? "none" : "translateY(-2px)")};
   }
 
   &:active {
@@ -391,6 +385,13 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
   const [teamRedInput, setTeamRedInput] = useState("");
   const [teamBlueInput, setTeamBlueInput] = useState("");
 
+  // Drag and drop state
+  const [draggedPlayer, setDraggedPlayer] = useState<{
+    player: LobbyPlayer;
+    fromTeam: string;
+  } | null>(null);
+  const [dragOverTeam, setDragOverTeam] = useState<string | null>(null);
+
   // Load lobby state on component mount
   useEffect(() => {
     const loadLobbyState = async () => {
@@ -400,7 +401,7 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
         const response = await getLobbyState(gameId);
         console.log("Raw API response:", response);
 
-        // Your API returns { game: LobbyData }
+        // Your API returns LobbyData directly
         const lobbyData = response;
         console.log("Extracted lobby data:", lobbyData);
         console.log(
@@ -545,6 +546,66 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
     }
   };
 
+  // Drag and drop handlers
+  const handleDragStart = (
+    e: React.DragEvent,
+    player: LobbyPlayer,
+    fromTeam: string,
+  ) => {
+    setDraggedPlayer({ player, fromTeam });
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent, teamName: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverTeam(teamName);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only clear if we're leaving the team tile entirely
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragOverTeam(null);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent, toTeam: string) => {
+    e.preventDefault();
+    setDragOverTeam(null);
+
+    if (!draggedPlayer || draggedPlayer.fromTeam === toTeam) {
+      setDraggedPlayer(null);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Use your actual API to move player to new team
+      await modifyPlayer(gameId, draggedPlayer.player.publicId, {
+        playerId: draggedPlayer.player.publicId,
+        teamName: toTeam,
+      });
+
+      // Reload lobby state after moving player
+      const response = await getLobbyState(gameId);
+      const lobbyData = response;
+      setLobbyData(lobbyData);
+
+      setError(null);
+    } catch (err) {
+      console.error("Failed to move player:", err);
+      setError("Failed to move player");
+    } finally {
+      setIsLoading(false);
+      setDraggedPlayer(null);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedPlayer(null);
+    setDragOverTeam(null);
+  };
+
   // Show current state for debugging
   if (error) {
     return (
@@ -610,6 +671,10 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
               teamColor={
                 teamColors[team.name as keyof typeof teamColors] || "#6b7280"
               }
+              isDragOver={dragOverTeam === team.name}
+              onDragOver={(e) => handleDragOver(e, team.name)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, team.name)}
             >
               <TeamHeader
                 teamColor={
@@ -629,7 +694,15 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
 
               <PlayersArea>
                 {team?.players?.map((player) => (
-                  <PlayerTile key={player.publicId}>
+                  <PlayerTile
+                    key={player.publicId}
+                    draggable
+                    isDragging={
+                      draggedPlayer?.player.publicId === player.publicId
+                    }
+                    onDragStart={(e) => handleDragStart(e, player, team.name)}
+                    onDragEnd={handleDragEnd}
+                  >
                     {editingPlayer === player.publicId ? (
                       <EditableInput
                         value={editName}
