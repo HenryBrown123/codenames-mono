@@ -29,7 +29,7 @@ const CreateGamePageContent: React.FC = () => {
 
     createNewGame(payload, {
       onSuccess: (newGameData) => {
-        navigate(`/game/${newGameData.publicId}`);
+        navigate(`/game/${newGameData.publicId}/lobby`);
       },
       onError: (err) => {
         console.error("Game creation error:", err);

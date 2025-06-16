@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
+import type { Request as JWTRequest } from "express-jwt";
 import { createGameService } from "./create-game.service";
 import {
   createGameRequestSchema,
@@ -16,28 +17,35 @@ export const createGameController =
   ({ createGame }: Dependencies) =>
   /**
    * Handles HTTP request to create a new game
-   * @param req - Express request with game creation details
+   * @param req - Express request with game creation details and user auth
    * @param res - Express response object
    * @param next - Express error handling function
    */
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  async (req: JWTRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       // Runtime validation of request object
       const parsedReq = createGameRequestSchema.parse(req.body);
 
-      const { publicId, createdAt } = await createGame(
+      // Get user ID from JWT auth
+      const userId = req.auth?.userId;
+      if (!userId) {
+        throw new Error("User authentication required");
+      }
+
+      const gameCreationResult = await createGame(
         parsedReq.gameType,
         parsedReq.gameFormat,
+        userId, // Pass user ID to create admin player
       );
 
       const response: CreateGameResponse = {
         success: true,
         data: {
           game: {
-            publicId: publicId,
+            publicId: gameCreationResult.publicId,
             gameFormat: parsedReq.gameFormat,
             gameType: parsedReq.gameType,
-            createdAt: createdAt,
+            createdAt: gameCreationResult.createdAt,
           },
         },
       };
