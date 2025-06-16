@@ -4,6 +4,7 @@ import React, {
   ReactNode,
   useReducer,
   useCallback,
+  useState,
 } from "react";
 import { PlayerRole } from "@codenames/shared/types";
 import { GameData } from "@frontend/shared-types";
@@ -32,6 +33,9 @@ export const GameplayContextProvider = ({
     currentScene: uiConfig[gameData.playerContext.role]?.initial || "main",
   });
 
+  // Card animation state
+  const [animatingCard, setAnimatingCard] = useState<string | null>(null);
+
   // API mutation hooks
   const giveClue = useGiveClue(gameId);
   const makeGuess = useMakeGuess(gameId);
@@ -44,6 +48,15 @@ export const GameplayContextProvider = ({
       type: "SET_STAGE",
       payload: { stage },
     });
+  }, []);
+
+  /**
+   * Trigger card animation for specific card
+   */
+  const triggerCardAnimation = useCallback((cardWord: string) => {
+    setAnimatingCard(cardWord);
+    // Clear after animation duration
+    setTimeout(() => setAnimatingCard(null), 800);
   }, []);
 
   /**
@@ -82,12 +95,13 @@ export const GameplayContextProvider = ({
         { roundNumber, cardWord },
         {
           onSuccess: () => {
+            triggerCardAnimation(cardWord);
             handleSceneTransition("GUESS_MADE");
           },
         },
       );
     },
-    [makeGuess, handleSceneTransition],
+    [makeGuess, handleSceneTransition, triggerCardAnimation],
   );
 
   /**
@@ -125,6 +139,10 @@ export const GameplayContextProvider = ({
         currentScene: uiState.currentScene,
         handleSceneTransition,
         setUIStage,
+
+        // Card Animation
+        animatingCard,
+        triggerCardAnimation,
 
         // API Actions
         handleGiveClue,
@@ -222,6 +240,10 @@ interface GameplayContextProps {
   currentScene: string;
   handleSceneTransition: (event: string) => void;
   setUIStage: (stage: PlayerRole) => void;
+
+  // Card Animation
+  animatingCard: string | null;
+  triggerCardAnimation: (cardWord: string) => void;
 
   // API Actions
   handleGiveClue: (

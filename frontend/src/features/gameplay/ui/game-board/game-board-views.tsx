@@ -3,6 +3,8 @@ import { useGameplayContext } from "@frontend/game/state";
 import { GameData, Card } from "@frontend/shared-types";
 import { RenderCards } from "./game-board-utils";
 
+const EMPTY_CARDS: Card[] = [];
+
 /**
  * CodebreakerStageBoard - allows card interactions for guessing
  * OPTIMIZED: Fixed callback dependencies and memoized cards array
@@ -11,12 +13,11 @@ export const CodebreakerStageBoard: React.FC<{ gameData: GameData }> = memo(
   ({ gameData }) => {
     const { handleMakeGuess, currentStage, isLoading } = useGameplayContext();
 
-    // 🎯 FIX 1: Memoize the cards array to prevent new references
+    // STABLE EMPTY ARRAY: Prevents new references on every render
     const cards = useMemo(() => {
-      return gameData.currentRound?.cards || [];
+      return gameData.currentRound?.cards ?? EMPTY_CARDS;
     }, [gameData.currentRound?.cards]);
 
-    // 🎯 FIX 2: Simplified callback with stable dependencies
     const handleCardClick = useCallback(
       (cardWord: string) => {
         const roundNumber = gameData.currentRound?.roundNumber;
@@ -27,7 +28,6 @@ export const CodebreakerStageBoard: React.FC<{ gameData: GameData }> = memo(
       [handleMakeGuess, gameData.currentRound?.roundNumber],
     );
 
-    // 🎯 FIX 3: Don't pass the entire card object, just the word
     return (
       <RenderCards
         cards={cards}
@@ -41,15 +41,14 @@ export const CodebreakerStageBoard: React.FC<{ gameData: GameData }> = memo(
 
 /**
  * CodemasterStageBoard - shows all card colors for giving clues
- * OPTIMIZED: Memoized cards array, no callbacks needed
  */
 export const CodemasterStageBoard: React.FC<{ gameData: GameData }> = memo(
   ({ gameData }) => {
     const { currentStage } = useGameplayContext();
 
-    // 🎯 FIX 1: Memoize the cards array
+    // STABLE EMPTY ARRAY: Prevents new references on every render
     const cards = useMemo(() => {
-      return gameData.currentRound?.cards || [];
+      return gameData.currentRound?.cards ?? EMPTY_CARDS;
     }, [gameData.currentRound?.cards]);
 
     return (
@@ -57,7 +56,7 @@ export const CodemasterStageBoard: React.FC<{ gameData: GameData }> = memo(
         cards={cards}
         stage={currentStage}
         showCodemasterView={true}
-        onCardClick={undefined} // No interaction for codemasters
+        onCardClick={undefined}
         disabled={false}
       />
     );
@@ -66,15 +65,14 @@ export const CodemasterStageBoard: React.FC<{ gameData: GameData }> = memo(
 
 /**
  * ReadOnlyBoard - no interactions, just display
- * OPTIMIZED: Memoized cards array, no callbacks
  */
 export const ReadOnlyBoard: React.FC<{ gameData: GameData }> = memo(
   ({ gameData }) => {
     const { currentStage } = useGameplayContext();
 
-    // 🎯 FIX 1: Memoize the cards array
+    // STABLE EMPTY ARRAY: Prevents new references on every render
     const cards = useMemo(() => {
-      return gameData.currentRound?.cards || [];
+      return gameData.currentRound?.cards ?? EMPTY_CARDS;
     }, [gameData.currentRound?.cards]);
 
     return (

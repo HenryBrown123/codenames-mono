@@ -5,6 +5,8 @@ import { GameCardProps } from "./game-card";
 import styled from "styled-components";
 import GameCard from "./game-card";
 
+const EMPTY_CARDS: Card[] = [];
+
 /**
  * RenderCards component renders a grid of game cards based on the provided props.
  * OPTIMIZED: Stable props, memoized card components, simplified callback pattern
@@ -14,7 +16,7 @@ type RenderCardsProps = {
   stage: PlayerRole;
   readOnly?: boolean;
   showCodemasterView?: boolean;
-  onCardClick?: (cardWord: string) => void; // 🎯 SIMPLIFIED: Just pass the word
+  onCardClick?: (cardWord: string) => void;
   disabled?: boolean;
 };
 
@@ -28,7 +30,7 @@ const MemoizedCardWrapper: React.FC<{
   gameCardProps: GameCardProps;
   onCardClick?: (cardWord: string) => void;
 }> = memo(({ card, cardIndex, gameCardProps, onCardClick }) => {
-  // 🎯 STABLE CALLBACK: Only depends on card.word, not the entire card object
+  // STABLE CALLBACK: Only depends on card.word, not the entire card object
   const handleClick = useCallback(() => {
     if (onCardClick && gameCardProps.clickable && !gameCardProps.selected) {
       onCardClick(card.word);
@@ -70,7 +72,7 @@ export const RenderCards: React.FC<RenderCardsProps> = memo(
 
         return (
           <MemoizedCardWrapper
-            key={card.word} // STABLE KEY
+            key={card.word}
             card={card}
             cardIndex={index}
             gameCardProps={gameCardProps}
@@ -94,16 +96,16 @@ export const getCardColor = (
 
   switch (type?.toLowerCase()) {
     case "assassin":
-      return "#1d2023"; // Black
+      return "#1d2023";
     case "bystander":
-      return "#4169E1"; // Blue
+      return "#4169E1";
     case "team":
       if (teamName?.toLowerCase().includes("red")) return "#B22222";
       if (teamName?.toLowerCase().includes("blue")) return "#4169E1";
       if (teamName?.toLowerCase().includes("green")) return "#228B22";
-      return "#B22222"; // Default to red
+      return "#B22222";
     default:
-      return "#4b7fb3"; // Default gray
+      return "#4b7fb3";
   }
 };
 
@@ -136,7 +138,6 @@ export const getGameCardProps = (
     selected: cardData.selected,
     showTeamColorAsBackground: shouldShowColors,
     cardIndex: cardIndex,
-    // onClick will be handled by MemoizedCardWrapper
   };
 };
 

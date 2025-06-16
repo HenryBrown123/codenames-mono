@@ -1,6 +1,7 @@
 import React, { memo } from "react";
 import styled, { keyframes } from "styled-components";
 import { FaStar, FaLeaf, FaSkull, FaPeace } from "react-icons/fa";
+import { useGameplayContext } from "@frontend/features/gameplay/state";
 
 const FRONT_CARD_COLOUR = "#494646";
 
@@ -113,6 +114,7 @@ const CardContent = styled.div<{ selected?: boolean }>`
 const CoverCard = styled.div<{
   backgroundColour?: string;
   animationDelay?: number;
+  animate?: boolean;
 }>`
   ${sharedCardStyles}
   position: absolute;
@@ -120,8 +122,10 @@ const CoverCard = styled.div<{
   left: 0;
   background-color: ${(props) => props.backgroundColour || FRONT_CARD_COLOUR};
   opacity: 1;
-  animation: ${slideInAnimation} 0.8s ease-out;
-  animation-delay: ${(props) => props.animationDelay || 0}s;
+  animation: ${(props) =>
+    props.animate
+      ? `${slideInAnimation} 0.8s ease-out ${props.animationDelay || 0}s`
+      : "none"};
 `;
 
 const CornerIcon = styled.div`
@@ -150,6 +154,9 @@ export interface GameCardProps {
   onClick?: () => void;
 }
 
+/**
+ * GameCard component with animation triggered by gameplay context
+ */
 const GameCard: React.FC<GameCardProps> = memo((props) => {
   const {
     cardText,
@@ -160,6 +167,11 @@ const GameCard: React.FC<GameCardProps> = memo((props) => {
     cardIndex,
     onClick,
   } = props;
+
+  const { animatingCard } = useGameplayContext();
+
+  // Only animate if this specific card is the one being animated
+  const shouldAnimate = animatingCard === cardText && selected;
 
   const handleClick = () => {
     if (clickable && onClick && !selected) {
@@ -183,7 +195,8 @@ const GameCard: React.FC<GameCardProps> = memo((props) => {
         <CoverCard
           animationDelay={(cardIndex || 0) * 0.1}
           backgroundColour={cardColor}
-          aria-label={`Selected card`}
+          animate={shouldAnimate}
+          aria-label="Selected card"
         >
           <CornerIcon>{getIcon(cardColor)}</CornerIcon>
         </CoverCard>
