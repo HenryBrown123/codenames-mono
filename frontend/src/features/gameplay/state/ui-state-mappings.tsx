@@ -11,6 +11,7 @@ import {
 import { GameBoardView } from "@frontend/features/gameplay/ui/game-board/game-board-views";
 import { GameData } from "@frontend/shared-types";
 import { BoardMode, BOARD_MODE } from "../ui/game-board/game-board";
+import { GAME_TYPE } from "@codenames/shared/types";
 
 /**
  * Dynamic messages based on player role and game state
@@ -19,6 +20,13 @@ export const messages: Record<string, (gameData: GameData) => string> = {
   // Lobby/Waiting messages
   "lobby.waiting": (gameData) =>
     `Welcome to the game! Waiting for the game to start...`,
+
+  // Entry messages for role transitions
+  "codemaster.entry": (gameData) =>
+    `Welcome, ${gameData.playerContext.teamName} Codemaster! You'll be giving clues to help your team find their agents.`,
+
+  "codebreaker.entry": (gameData) =>
+    `Welcome, ${gameData.playerContext.teamName} Codebreakers! You'll be guessing words based on your codemaster's clues.`,
 
   // Spectator messages
   "spectator.watching": (gameData) => {
@@ -102,6 +110,14 @@ export const conditions: Record<string, (gameData: GameData) => boolean> = {
 
   gameEnded: (gameData) => {
     return gameData.status === "COMPLETED";
+  },
+
+  singleDeviceMode: (gameData) => {
+    return gameData.gameType === GAME_TYPE.SINGLE_DEVICE;
+  },
+
+  "!singleDeviceMode": (gameData) => {
+    return gameData.gameType !== GAME_TYPE.SINGLE_DEVICE;
   },
 };
 
