@@ -1,5 +1,5 @@
 import React from "react";
-import { GameplayContextProvider } from "@frontend/game/state";
+import { GameplayContextProvider } from "@frontend/features/gameplay/state";
 import { GameScene } from "@frontend/game/ui";
 import styled from "styled-components";
 

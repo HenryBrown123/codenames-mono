@@ -29,12 +29,8 @@ export const GameplayContextProvider = ({
   children,
   gameId,
 }: GameplayProviderProps): JSX.Element => {
-  // ALL HOOKS MUST COME FIRST - BEFORE ANY CONDITIONS OR EARLY RETURNS
-
-  // Get gameData inside the provider to avoid prop changes causing re-creation
   const { data: gameData } = useGameData(gameId);
 
-  // Query client for data invalidation
   const queryClient = useQueryClient();
 
   // API mutation hooks
@@ -44,10 +40,9 @@ export const GameplayContextProvider = ({
   const startRound = useStartRound(gameId);
   const dealCards = useDealCards(gameId);
 
-  // Card animation state
-  const [animatingCard, setAnimatingCard] = useState<string | null>(null);
-
-  // UI State machine for scene management - with fallback for loading state
+  // UI State machine for scene management - with fallback for loading state...
+  // auto run only on first mount to prevent forced UI state changes if player role
+  // changes in server state... UI state changes otherwise triggered via explicit dispatch.
   const [uiState, dispatch] = useReducer(
     (state: UIState, action: UIAction) =>
       uiReducer(state, action, gameData || ({} as GameData)),
@@ -67,11 +62,15 @@ export const GameplayContextProvider = ({
     });
   }, []);
 
+  // Card animation state & trigger
+  const [animatingCard, setAnimatingCard] = useState<string | null>(null);
+
   const triggerCardAnimation = useCallback((cardWord: string) => {
     setAnimatingCard(cardWord);
     setTimeout(() => setAnimatingCard(null), 800);
   }, []);
 
+  /** trigger scene change */
   const handleSceneTransition = useCallback((event: string) => {
     dispatch({
       type: "TRIGGER_TRANSITION",
@@ -141,8 +140,18 @@ export const GameplayContextProvider = ({
     [dealCards],
   );
 
-  // NOW we can do early returns - all hooks have been called
-  if (!gameData) {
+  /** Trigger stage change when the data loads and a role is available */
+  if (
+    gameData?.playerContext?.role &&
+    uiState.currentStage === PLAYER_ROLE.NONE
+  ) {
+    dispatch({
+      type: "SET_STAGE",
+      payload: { stage: gameData.playerContext.role },
+    });
+  }
+
+  if (!gameData?.playerContext?.role) {
     return <div>Loading game data...</div>;
   }
 
