@@ -12,18 +12,20 @@ export default defineConfig({
   json: { namedExports: true, stringify: false },
   resolve: {
     alias: {
+      baseUrl: ".",
       src: "/src",
       test: "/test",
       "@": "/src",
       "@lib": "/src/lib",
-      "@frontend/lib": "/src/lib", // Add this
-      "@frontend/game": "/src/features/gameplay", // Add this
-      "@frontend/game-access": "/src/features/game-access", // Add this
-      "@frontend/shared-types": "/src/shared-types", // Add this
-      "@frontend/style": "/src/style", // Add this
+      "@frontend/*": "./src/*",
+      "@frontend/lib": "/src/lib",
+      "@frontend/game": "/src/features/gameplay",
+      "@frontend/game-access": "/src/features/game-access",
+      "@frontend/features/lobby": "/src/features/lobby",
+      "@frontend/shared-types": "/src/shared-types",
+      "@frontend/style": "/src/style",
       "@game": "/src/features/gameplay",
       "@game-access": "/src/features/game-access",
-      // "@codenames/shared/src-types": "/src/shared-types",
       "@style": "/src/style",
       "@test": "/test",
     },

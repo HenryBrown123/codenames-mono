@@ -29,6 +29,7 @@ export default defineConfig({
       src: "/src",
       test: "/test",
       "@": "/src",
+      "@frontend/*": "/src/*",
       "@game": "/src/features/gameplay",
       "@game-access": "/src/features/access",
       "@pages": "/src/pages",
