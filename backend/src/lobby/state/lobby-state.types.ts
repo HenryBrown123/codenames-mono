@@ -21,7 +21,7 @@ export const teamSchema = z.object({
 
 export const userContextSchema = z.object({
   _userId: z.number().int().positive(),
-  canModifyGame: z.boolean(),
+  canModifyGame: z.boolean().default(true),
 });
 
 export const lobbyBaseSchema = z.object({

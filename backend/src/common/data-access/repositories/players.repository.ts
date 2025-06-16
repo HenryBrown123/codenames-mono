@@ -3,6 +3,7 @@ import { DB } from "../../db/db.types";
 import { UnexpectedRepositoryError } from "./repository.errors";
 import { PLAYER_ROLE, PlayerRole } from "@codenames/shared/types";
 import { randomUUID } from "crypto";
+import type { DbContext, TransactionContext } from "../transaction-handler";
 
 /**
  * ==================
@@ -128,7 +129,7 @@ const teamNameLookup =
     "team_name",
   );
 
-/** */
+/** Parse role name from database */
 function parseRoleName(roleName: string | null): PlayerRole {
   if (!roleName) return PLAYER_ROLE.NONE;
 
@@ -154,7 +155,7 @@ function parseRoleName(roleName: string | null): PlayerRole {
  * Find players by game ID with latest role information
  */
 export const findPlayersByGameId =
-  (db: Kysely<DB>): PlayerFinderAll<GameId> =>
+  (db: DbContext | TransactionContext): PlayerFinderAll<GameId> =>
   async (gameId) => {
     const players = await db
       .selectFrom("players")
@@ -196,7 +197,7 @@ export const findPlayersByGameId =
  * Find players by round ID with their round-specific roles
  */
 export const findPlayersByRoundId =
-  (db: Kysely<DB>): PlayerFinderAll<RoundId> =>
+  (db: DbContext | TransactionContext): PlayerFinderAll<RoundId> =>
   async (roundId) => {
     const players = await db
       .selectFrom("players")
@@ -230,11 +231,12 @@ export const findPlayersByRoundId =
       role: parseRoleName(player.role_name),
     }));
   };
+
 /**
  * Find player by public ID
  */
 export const findPlayerByPublicId =
-  (db: Kysely<DB>): PlayerFinderByPublicId =>
+  (db: DbContext | TransactionContext): PlayerFinderByPublicId =>
   async (publicId) => {
     const player = await db
       .selectFrom("players")
@@ -245,7 +247,7 @@ export const findPlayerByPublicId =
           .on("latest_prr.round_id", "=", (eb) =>
             eb
               .selectFrom("rounds")
-              .where("rounds.game_id", "=", eb.ref("players.game_id")) // ← Fix: use ref for correlation
+              .where("rounds.game_id", "=", eb.ref("players.game_id"))
               .select("rounds.id")
               .orderBy("rounds.round_number", "desc")
               .limit(1),
@@ -279,9 +281,9 @@ export const findPlayerByPublicId =
  * Get player context with username included
  */
 export const getPlayerContext =
-  (db: Kysely<DB>): PlayerContextFinder =>
+  (db: DbContext | TransactionContext): PlayerContextFinder =>
   async (gameId, userId, roundId) => {
-    const player = await db
+    const players = await db
       .selectFrom("players")
       .innerJoin("users", "players.user_id", "users.id")
       .innerJoin("teams", "players.team_id", "teams.id")
@@ -301,9 +303,9 @@ export const getPlayerContext =
       ])
       .execute();
 
-    if (!player) return null;
+    if (!players || players.length === 0) return null;
 
-    const result = player.map((player) => ({
+    return players.map((player) => ({
       _id: player.id,
       publicId: player.public_id,
       _userId: player.user_id,
@@ -317,11 +319,9 @@ export const getPlayerContext =
         ? parseRoleName(player.role_name)
         : PLAYER_ROLE.NONE,
     }));
-
-    return result;
   };
 
-/*
+/**
  * ==================
  * ROLE QUERIES
  * ==================
@@ -329,13 +329,9 @@ export const getPlayerContext =
 
 /**
  * Finds player ids for a given role within a game.. returns player Ids for all rounds
- *
- * @param db
- * @returns
  */
-
 export const getRoleHistory =
-  (db: Kysely<DB>): RoleHistoryFinder =>
+  (db: DbContext | TransactionContext): RoleHistoryFinder =>
   async (gameId, role) => {
     const history = await db
       .selectFrom("player_round_roles")
@@ -358,8 +354,12 @@ export const getRoleHistory =
  * PLAYER MUTATIONS
  * ==================
  */
+
+/**
+ * Assign roles to players for a specific round
+ */
 export const assignPlayerRoles =
-  (db: Kysely<DB>): RoleAssignmentCreator =>
+  (db: DbContext | TransactionContext): RoleAssignmentCreator =>
   async (input) => {
     const inputArray = Array.isArray(input) ? input : [input];
     if (inputArray.length === 0) return [];
@@ -402,8 +402,11 @@ export const assignPlayerRoles =
     return playerResults;
   };
 
+/**
+ * Add new players to a game
+ */
 export const addPlayers =
-  (db: Kysely<DB>): PlayersCreator =>
+  (db: DbContext | TransactionContext): PlayersCreator =>
   async (playersData) => {
     if (playersData.length === 0) return [];
 
@@ -436,8 +439,11 @@ export const addPlayers =
     }));
   };
 
+/**
+ * Remove a player from the game
+ */
 export const removePlayer =
-  (db: Kysely<DB>): PlayerRemover =>
+  (db: DbContext | TransactionContext): PlayerRemover =>
   async (playerId) => {
     const removedPlayer = await db
       .deleteFrom("players")
@@ -458,8 +464,11 @@ export const removePlayer =
     };
   };
 
+/**
+ * Modify existing players (update name, team, etc.)
+ */
 export const modifyPlayers =
-  (db: Kysely<DB>): PlayersUpdater =>
+  (db: DbContext | TransactionContext): PlayersUpdater =>
   async (playersData) => {
     if (!playersData.length) return [];
 
@@ -470,8 +479,16 @@ export const modifyPlayers =
         player.userId !== undefined,
     );
 
-    const repositoryResponse = await db.transaction().execute(async (trx) => {
-      const updates = playersWithUpdates.map((player) => {
+    if (playersWithUpdates.length === 0) return [];
+
+    console.log(
+      "Players with updates:",
+      JSON.stringify(playersWithUpdates, null, 2),
+    );
+
+    // Perform all updates
+    const updateResults = await Promise.all(
+      playersWithUpdates.map(async (player) => {
         const updateValues = Object.fromEntries(
           Object.entries({
             user_id: player.userId,
@@ -481,46 +498,73 @@ export const modifyPlayers =
           }).filter(([_, value]) => value !== undefined),
         );
 
-        return trx
+        console.log(
+          `Updating player ${player.publicPlayerId} with:`,
+          updateValues,
+        );
+
+        const result = await db
           .updateTable("players")
           .set(updateValues)
           .where("players.public_id", "=", player.publicPlayerId)
           .where("players.game_id", "=", player.gameId)
-          .executeTakeFirstOrThrow();
-      });
+          .executeTakeFirst();
 
-      await Promise.all(updates);
+        console.log(`Update result for ${player.publicPlayerId}:`, result);
+        return result;
+      }),
+    );
 
-      const allPublicPlayerIds = playersData.map(
-        (player) => player.publicPlayerId,
+    // Check if all updates succeeded
+    const updatedCount = updateResults.filter(
+      (result) => result.numUpdatedRows && result.numUpdatedRows > 0,
+    ).length;
+    console.log(
+      `Updated ${updatedCount} out of ${playersWithUpdates.length} players`,
+    );
+
+    if (updatedCount !== playersWithUpdates.length) {
+      console.error(
+        "Some players were not updated. Update results:",
+        updateResults,
       );
-      return await trx
-        .selectFrom("players")
-        .where("public_id", "in", allPublicPlayerIds)
-        .innerJoin("teams", "players.team_id", "teams.id")
-        .leftJoin("player_round_roles as latest_prr", (join) =>
-          join
-            .onRef("latest_prr.player_id", "=", "players.id")
-            .on("latest_prr.round_id", "=", (eb) =>
-              eb
-                .selectFrom("rounds")
-                .where("rounds.game_id", "=", eb.ref("players.game_id"))
-                .select("rounds.id")
-                .orderBy("rounds.round_number", "desc")
-                .limit(1),
-            ),
-        )
-        .leftJoin("player_roles", "latest_prr.role_id", "player_roles.id")
-        .where("players.public_id", "in", allPublicPlayerIds)
-        .select([
-          ...playerResultColumns,
-          "teams.team_name",
-          "player_roles.role_name",
-        ])
-        .execute();
-    });
+      // Don't throw here, let the service handle the validation
+    }
 
-    return repositoryResponse.map((player) => ({
+    // Fetch and return updated players
+    const allPublicPlayerIds = playersData.map(
+      (player) => player.publicPlayerId,
+    );
+
+    console.log("Fetching updated players with IDs:", allPublicPlayerIds);
+
+    const updatedPlayers = await db
+      .selectFrom("players")
+      .innerJoin("teams", "players.team_id", "teams.id")
+      .leftJoin("player_round_roles as latest_prr", (join) =>
+        join
+          .onRef("latest_prr.player_id", "=", "players.id")
+          .on("latest_prr.round_id", "=", (eb) =>
+            eb
+              .selectFrom("rounds")
+              .where("rounds.game_id", "=", eb.ref("players.game_id"))
+              .select("rounds.id")
+              .orderBy("rounds.round_number", "desc")
+              .limit(1),
+          ),
+      )
+      .leftJoin("player_roles", "latest_prr.role_id", "player_roles.id")
+      .where("players.public_id", "in", allPublicPlayerIds)
+      .select([
+        ...playerResultColumns,
+        "teams.team_name",
+        "player_roles.role_name",
+      ])
+      .execute();
+
+    console.log("Final fetched players:", updatedPlayers.length);
+
+    return updatedPlayers.map((player) => ({
       _id: player.id,
       publicId: player.public_id,
       _userId: player.user_id,
