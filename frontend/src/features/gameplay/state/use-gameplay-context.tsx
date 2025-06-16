@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { PlayerRole } from "@codenames/shared/types";
 import { GameData } from "@frontend/shared-types";
-import { uiConfig } from "@frontend/game/state/game-state-config";
+import { uiConfig } from "@frontend/features/gameplay/state/ui-state-config";
 import {
   useGiveClue,
   useMakeGuess,
