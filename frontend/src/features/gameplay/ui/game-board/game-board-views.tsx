@@ -16,13 +16,7 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
 }) => {
   const { handleMakeGuess } = useGameplayContext();
 
-  const handleCardClick = interactive
-    ? (cardWord: string) => {
-        const roundNumber = gameData.currentRound?.roundNumber;
-        if (!roundNumber) return;
-        handleMakeGuess(roundNumber, cardWord);
-      }
-    : undefined;
+  const handleCardClick = interactive ? handleMakeGuess : undefined;
 
   return (
     <GameBoard

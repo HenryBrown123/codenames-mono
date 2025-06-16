@@ -62,7 +62,10 @@ export const useGiveClue = (
     },
   });
 };
-
+/**
+ * Hook for making a guess with optimistic updates
+ * POST /games/{gameId}/rounds/{roundNumber}/guesses
+ */
 /**
  * Hook for making a guess with optimistic updates
  * POST /games/{gameId}/rounds/{roundNumber}/guesses
@@ -101,15 +104,27 @@ export const useMakeGuess = (
       queryClient.setQueryData<GameData>(["gameData", gameId], (old) => {
         if (!old?.currentRound?.cards) return old;
 
+        // Find the card that needs to be updated
+        const cardIndex = old.currentRound.cards.findIndex(
+          (card: Card) => card.word === variables.cardWord,
+        );
+
+        if (cardIndex === -1) return old; // Card not found, no update needed
+
+        const targetCard = old.currentRound.cards[cardIndex];
+
+        // If card is already selected, no update needed
+        if (targetCard.selected) return old;
+
+        // Create new cards array with only the target card replaced
+        const newCards = [...old.currentRound.cards];
+        newCards[cardIndex] = { ...targetCard, selected: true };
+
         return {
           ...old,
           currentRound: {
             ...old.currentRound,
-            cards: old.currentRound.cards.map((card: Card) =>
-              card.word === variables.cardWord
-                ? { ...card, selected: true }
-                : card,
-            ),
+            cards: newCards,
           },
         };
       });

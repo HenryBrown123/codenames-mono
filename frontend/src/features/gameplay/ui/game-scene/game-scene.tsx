@@ -5,6 +5,7 @@ import {
   messages,
   gameBoards,
   dashboards,
+  boardModeInteractivity,
 } from "@frontend/features/gameplay/state/ui-state-mappings";
 import { GameInstructions } from "@frontend/game/ui";
 import styled from "styled-components";
@@ -50,20 +51,18 @@ const DashboardContainer = styled.div`
 export const GameScene: React.FC = () => {
   const { currentStage, currentScene } = useGameplayContext();
   const { gameData } = useGameContext();
-  // Get configuration for current stage and scene
+
   const stageConfig = uiConfig[currentStage];
   const sceneConfig = stageConfig?.scenes[currentScene];
 
   if (!sceneConfig) {
-    console.error("ERROR: No scene config found!", {
+    console.error("No scene config found", {
       currentStage,
       currentScene,
     });
-    console.groupEnd();
     return <div>Loading game scene...</div>;
   }
 
-  // Get components for current scene
   const message = sceneConfig.message ? messages[sceneConfig.message] : null;
   const BoardComponent = sceneConfig.gameBoard
     ? gameBoards[sceneConfig.gameBoard]
@@ -71,6 +70,9 @@ export const GameScene: React.FC = () => {
   const DashboardComponent = sceneConfig.dashboard
     ? dashboards[sceneConfig.dashboard]
     : null;
+
+  const boardMode = sceneConfig.boardMode;
+  const interactive = boardModeInteractivity[boardMode];
 
   return (
     <>
@@ -81,19 +83,15 @@ export const GameScene: React.FC = () => {
       )}
       <GameBoardContainer>
         {BoardComponent && (
-          <>
-            {console.log("Rendering Game Board:", sceneConfig.gameBoard)}
-            <BoardComponent gameData={gameData} />
-          </>
+          <BoardComponent
+            gameData={gameData}
+            boardMode={boardMode}
+            interactive={interactive}
+          />
         )}
       </GameBoardContainer>
       <DashboardContainer>
-        {DashboardComponent && (
-          <>
-            {console.log("Rendering Dashboard:", sceneConfig.dashboard)}
-            <DashboardComponent />
-          </>
-        )}
+        {DashboardComponent && <DashboardComponent />}
       </DashboardContainer>
     </>
   );
