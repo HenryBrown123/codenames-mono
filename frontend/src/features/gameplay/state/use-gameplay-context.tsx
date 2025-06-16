@@ -6,7 +6,7 @@ import React, {
   useCallback,
   useState,
 } from "react";
-import { PlayerRole } from "@codenames/shared/types";
+import { PlayerRole, PLAYER_ROLE } from "@codenames/shared/types";
 import { GameData } from "@frontend/shared-types";
 import { uiConfig } from "@frontend/features/gameplay/state/ui-state-config";
 import { conditions } from "@frontend/features/gameplay/state/ui-state-mappings";
@@ -16,7 +16,9 @@ import {
   useCreateRound,
   useStartRound,
   useDealCards,
+  useGameData,
 } from "@frontend/game/api";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const GameplayContext = createContext<GameplayContextProps | null>(null);
 
@@ -26,20 +28,12 @@ export const GameplayContext = createContext<GameplayContextProps | null>(null);
 export const GameplayContextProvider = ({
   children,
   gameId,
-  gameData,
 }: GameplayProviderProps): JSX.Element => {
-  // UI State machine for scene management
-  const [uiState, dispatch] = useReducer(
-    (state: UIState, action: UIAction) => uiReducer(state, action, gameData),
-    null,
-    () => ({
-      currentStage: gameData.playerContext.role,
-      currentScene: uiConfig[gameData.playerContext.role]?.initial || "main",
-    }),
-  );
+  // Get gameData inside the provider to avoid prop changes causing re-creation
+  const { data: gameData } = useGameData(gameId);
 
-  // Card animation state
-  const [animatingCard, setAnimatingCard] = useState<string | null>(null);
+  // Query client for data invalidation
+  const queryClient = useQueryClient();
 
   // API mutation hooks
   const giveClue = useGiveClue(gameId);
@@ -47,6 +41,27 @@ export const GameplayContextProvider = ({
   const createRound = useCreateRound(gameId);
   const startRound = useStartRound(gameId);
   const dealCards = useDealCards(gameId);
+
+  // Card animation state
+  const [animatingCard, setAnimatingCard] = useState<string | null>(null);
+
+  // UI State machine for scene management - with fallback for loading state
+  const [uiState, dispatch] = useReducer(
+    (state: UIState, action: UIAction) =>
+      uiReducer(state, action, gameData || ({} as GameData)),
+    null,
+    () => ({
+      currentStage: gameData?.playerContext.role || PLAYER_ROLE.NONE,
+      currentScene:
+        uiConfig[gameData?.playerContext.role || PLAYER_ROLE.NONE]?.initial ||
+        "main",
+    }),
+  );
+
+  // Early return AFTER all hooks
+  if (!gameData) {
+    return <div>Loading game data...</div>;
+  }
 
   const setUIStage = useCallback((stage: PlayerRole) => {
     dispatch({
@@ -102,8 +117,15 @@ export const GameplayContextProvider = ({
       makeGuess.mutate(
         { roundNumber, cardWord },
         {
-          onSuccess: () => {
+          onSuccess: async () => {
             triggerCardAnimation(cardWord);
+
+            // Refetch and wait for fresh gameData
+            await queryClient.invalidateQueries({
+              queryKey: ["gameData", gameId],
+            });
+
+            // Now conditions will evaluate with fresh server state
             handleSceneTransition("GUESS_MADE");
           },
         },
@@ -114,6 +136,8 @@ export const GameplayContextProvider = ({
       handleSceneTransition,
       triggerCardAnimation,
       gameData.currentRound?.roundNumber,
+      gameId,
+      queryClient,
     ],
   );
 
@@ -147,6 +171,9 @@ export const GameplayContextProvider = ({
   return (
     <GameplayContext.Provider
       value={{
+        // Game Data
+        gameData,
+
         // UI State Machine
         currentStage: uiState.currentStage,
         currentScene: uiState.currentScene,
@@ -269,6 +296,9 @@ interface UIState {
 }
 
 interface GameplayContextProps {
+  // Game Data
+  gameData: GameData;
+
   // UI State Machine
   currentStage: PlayerRole;
   currentScene: string;
@@ -310,5 +340,4 @@ interface GameplayContextProps {
 interface GameplayProviderProps {
   children: ReactNode;
   gameId: string;
-  gameData: GameData;
 }
