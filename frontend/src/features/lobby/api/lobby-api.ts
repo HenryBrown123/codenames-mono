@@ -11,6 +11,7 @@ export interface PlayerAddData {
 }
 
 export interface PlayerUpdateData {
+  playerId: string;
   playerName?: string;
   teamName?: string;
 }
@@ -216,7 +217,7 @@ export const movePlayerToTeam = async (
   playerId: string,
   newTeamName: string,
 ): Promise<ModifyPlayerResponse> => {
-  return modifyPlayer(gameId, playerId, { teamName: newTeamName });
+  return modifyPlayer(gameId, playerId, { playerId, teamName: newTeamName });
 };
 
 /**
@@ -227,5 +228,8 @@ export const renamePlayer = async (
   playerId: string,
   newPlayerName: string,
 ): Promise<ModifyPlayerResponse> => {
-  return modifyPlayer(gameId, playerId, { playerName: newPlayerName });
+  return modifyPlayer(gameId, playerId, {
+    playerId,
+    playerName: newPlayerName,
+  });
 };

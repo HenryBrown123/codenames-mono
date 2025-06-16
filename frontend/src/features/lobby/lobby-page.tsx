@@ -8,6 +8,9 @@ import {
   modifyPlayer,
   startGame,
   getLobbyState,
+  type LobbyData as ApiLobbyData,
+  type LobbyPlayer as ApiLobbyPlayer,
+  type LobbyTeam as ApiLobbyTeam,
 } from "@frontend/features/lobby/api/lobby-api";
 
 // Interface for props
@@ -15,7 +18,7 @@ interface LobbyInterfaceProps {
   gameId: string;
 }
 
-// Define types locally to match API
+// Define types to match the ACTUAL API response (not the API file types)
 interface LobbyPlayer {
   publicId: string;
   name: string; // API uses 'name', not 'playerName'
@@ -32,15 +35,20 @@ interface LobbyData {
   publicId: string;
   status: string;
   gameType: string;
-  gameFormat?: string; // Make optional
-  createdAt?: string; // Make optional
+  gameFormat?: string;
+  createdAt?: string;
   teams: LobbyTeam[];
-  currentRound?: any; // Make optional
+  currentRound?: any;
   playerContext?: {
     playerName: string;
     teamName: string;
     role: string;
-  }; // Make optional
+  };
+}
+
+// API Response wrapper (what actually comes from the server)
+interface ApiResponse {
+  game: LobbyData;
 }
 
 // Styled Components
@@ -414,26 +422,18 @@ const mockLobbyData: LobbyData = {
   publicId: "game-123",
   status: "LOBBY",
   gameType: "SINGLE_DEVICE",
-  gameFormat: "QUICK",
-  createdAt: new Date().toISOString(),
   teams: [
     {
-      name: "Team Red", // Match API structure
+      name: "Team Red", // Match actual API structure
       score: 0,
       players: [] as LobbyPlayer[],
     },
     {
-      name: "Team Blue", // Match API structure
+      name: "Team Blue", // Match actual API structure
       score: 0,
       players: [] as LobbyPlayer[],
     },
   ],
-  currentRound: null,
-  playerContext: {
-    playerName: "",
-    teamName: "",
-    role: "NONE",
-  },
 };
 
 const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
@@ -453,35 +453,25 @@ const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
       try {
         console.log("Loading lobby state for game:", gameId);
         setInitialLoading(true);
-        const data = await getLobbyState(gameId);
-        console.log("Lobby state loaded:", data);
+        const apiResponse = (await getLobbyState(gameId)) as any; // Type as any since API types are wrong
+        console.log("Lobby state loaded:", apiResponse);
 
         // Handle the nested response structure
-        let gameData;
-        if (data.game && data.game.teams) {
-          gameData = data.game;
-        } else if (data.teams) {
-          gameData = data;
-        } else {
-          console.warn("Received invalid lobby data structure:", data);
-          setError("Invalid lobby data received from server");
-          return;
-        }
-
-        setLobbyData(gameData);
+        const data = apiResponse.game || apiResponse;
+        setLobbyData(data);
 
         // Update selectedTeam to match actual team names from backend
         if (
-          gameData.teams.length > 0 &&
-          !gameData.teams.some((team) => team.name === selectedTeam)
+          data.teams.length > 0 &&
+          !data.teams.some((team: LobbyTeam) => team.name === selectedTeam)
         ) {
           console.log(
             "Updating selectedTeam from",
             selectedTeam,
             "to",
-            gameData.teams[0].name,
+            data.teams[0].name,
           );
-          setSelectedTeam(gameData.teams[0].name);
+          setSelectedTeam(data.teams[0].name);
         }
       } catch (err) {
         console.error("Failed to load lobby state:", err);
@@ -537,17 +527,11 @@ const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
       console.log("Add player response:", response);
 
       console.log("Refreshing lobby state...");
-      const updatedData = await getLobbyState(gameId);
-      console.log("Updated lobby data:", updatedData);
+      const apiResponse = (await getLobbyState(gameId)) as any;
+      console.log("Updated lobby data:", apiResponse);
 
-      // Handle nested response structure
-      const gameData = updatedData.game || updatedData;
-      // Merge with existing data to preserve all properties
-      setLobbyData((prevData) => ({
-        ...prevData,
-        ...gameData,
-        teams: gameData.teams || prevData.teams,
-      }));
+      const data = apiResponse.game || apiResponse;
+      setLobbyData(data);
       setNewPlayerName("");
     } catch (error) {
       console.error("Failed to add player:", error);
@@ -568,14 +552,10 @@ const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
       console.log("Player removed successfully");
 
       console.log("Refreshing lobby state...");
-      const updatedData = await getLobbyState(gameId);
-      console.log("Updated lobby data:", updatedData);
-      const gameData = updatedData.game || updatedData;
-      setLobbyData((prevData) => ({
-        ...prevData,
-        ...gameData,
-        teams: gameData.teams || prevData.teams,
-      }));
+      const apiResponse = (await getLobbyState(gameId)) as any;
+      console.log("Updated lobby data:", apiResponse);
+      const data = apiResponse.game || apiResponse;
+      setLobbyData(data);
     } catch (error) {
       console.error("Failed to remove player:", error);
       setError("Failed to remove player. Please try again.");
@@ -587,7 +567,7 @@ const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
   // Edit player name
   const handleEditPlayer = (player: LobbyPlayer) => {
     setEditingPlayer(player.publicId);
-    setEditName(player.name);
+    setEditName(player.name); // Use 'name' not 'playerName'
   };
 
   const handleSaveEdit = async (playerId: string) => {
@@ -603,18 +583,17 @@ const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
     setError(null);
     try {
       console.log("Calling modifyPlayer API...");
-      await modifyPlayer(gameId, playerId, { playerName: editName.trim() });
+      await modifyPlayer(gameId, playerId, {
+        playerId,
+        playerName: editName.trim(),
+      });
       console.log("Player modified successfully");
 
       console.log("Refreshing lobby state...");
-      const updatedData = await getLobbyState(gameId);
-      console.log("Updated lobby data:", updatedData);
-      const gameData = updatedData.game || updatedData;
-      setLobbyData((prevData) => ({
-        ...prevData,
-        ...gameData,
-        teams: gameData.teams || prevData.teams,
-      }));
+      const apiResponse = (await getLobbyState(gameId)) as any;
+      console.log("Updated lobby data:", apiResponse);
+      const data = apiResponse.game || apiResponse;
+      setLobbyData(data);
 
       setEditingPlayer(null);
       setEditName("");
@@ -638,18 +617,14 @@ const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
     setError(null);
     try {
       console.log("Calling modifyPlayer API...");
-      await modifyPlayer(gameId, playerId, { teamName: newTeamName });
+      await modifyPlayer(gameId, playerId, { playerId, teamName: newTeamName });
       console.log("Player moved successfully");
 
       console.log("Refreshing lobby state...");
-      const updatedData = await getLobbyState(gameId);
-      console.log("Updated lobby data:", updatedData);
-      const gameData = updatedData.game || updatedData;
-      setLobbyData((prevData) => ({
-        ...prevData,
-        ...gameData,
-        teams: gameData.teams || prevData.teams,
-      }));
+      const apiResponse = (await getLobbyState(gameId)) as any;
+      console.log("Updated lobby data:", apiResponse);
+      const data = apiResponse.game || apiResponse;
+      setLobbyData(data);
     } catch (error) {
       console.error("Failed to move player:", error);
       setError("Failed to move player. Please try again.");

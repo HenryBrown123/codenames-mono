@@ -44,19 +44,21 @@ export const modifyPlayersService = (dependencies: ServiceDependencies) => {
       );
     }
 
-    if (lobby.status !== "LOBBY" || !lobby.userContext.canModifyGame) {
+    if (lobby.status !== "LOBBY") {
       throw new UnexpectedLobbyError(
         `Cannot modify players in game state '${lobby.status}'`,
       );
     }
 
+    // Validate team names if any are provided
     const teamNamesInRequest = playersToModify
       .map((p) => p.teamName)
       .filter((name): name is string => name !== undefined);
 
+    const teamNameToIdMap = lobbyHelpers.getTeamNameToIdMap(lobby);
+
     if (teamNamesInRequest.length > 0) {
       const uniqueTeamNames = [...new Set(teamNamesInRequest)];
-      const teamNameToIdMap = lobbyHelpers.getTeamNameToIdMap(lobby);
       const missingTeams = uniqueTeamNames.filter(
         (name) => !teamNameToIdMap.has(name),
       );
@@ -69,13 +71,40 @@ export const modifyPlayersService = (dependencies: ServiceDependencies) => {
     }
 
     return await dependencies.lobbyHandler(async (lobbyOps) => {
+      // Build the repository request with proper team ID mapping
       const repositoryRequest = playersToModify.map((player) => {
-        return {
+        const updateData: {
+          gameId: number;
+          publicPlayerId: string;
+          publicName?: string;
+          teamId?: number;
+        } = {
           gameId: lobby._gameId,
           publicPlayerId: player.playerId,
-          publicName: player.playerName,
         };
+
+        // Add optional fields only if they're provided
+        if (player.playerName !== undefined) {
+          updateData.publicName = player.playerName;
+        }
+
+        if (player.teamName !== undefined) {
+          const teamId = teamNameToIdMap.get(player.teamName);
+          if (teamId === undefined) {
+            throw new UnexpectedLobbyError(
+              `Team '${player.teamName}' not found in game`,
+            );
+          }
+          updateData.teamId = teamId;
+        }
+
+        return updateData;
       });
+
+      console.log(
+        "Repository request:",
+        JSON.stringify(repositoryRequest, null, 2),
+      );
 
       const modifiedPlayers = await lobbyOps.modifyPlayers(repositoryRequest);
 
