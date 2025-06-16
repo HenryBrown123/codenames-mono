@@ -11,6 +11,7 @@ import {
   GameData,
   GiveClueRequest,
   MakeGuessRequest,
+  Card,
 } from "@frontend/shared-types";
 import fetchGame from "./fetch-game";
 
@@ -28,7 +29,7 @@ export const useGameData = (
       }
       return fetchGame(gameId);
     },
-    enabled: !!gameId, // Only run query if gameId exists
+    enabled: !!gameId,
   });
 };
 
@@ -57,14 +58,13 @@ export const useGiveClue = (
       }
     },
     onSuccess: () => {
-      // Invalidate game data to trigger refetch
       queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
     },
   });
 };
 
 /**
- * Hook for making a guess
+ * Hook for making a guess with optimistic updates
  * POST /games/{gameId}/rounds/{roundNumber}/guesses
  */
 export const useMakeGuess = (
@@ -87,8 +87,47 @@ export const useMakeGuess = (
         throw new Error(response.data.error || "Failed to make guess");
       }
     },
+    onMutate: async (variables) => {
+      // Cancel outgoing refetches so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: ["gameData", gameId] });
+
+      // Snapshot the previous value
+      const previousGameData = queryClient.getQueryData<GameData>([
+        "gameData",
+        gameId,
+      ]);
+
+      // Optimistically update the card as selected
+      queryClient.setQueryData<GameData>(["gameData", gameId], (old) => {
+        if (!old?.currentRound?.cards) return old;
+
+        return {
+          ...old,
+          currentRound: {
+            ...old.currentRound,
+            cards: old.currentRound.cards.map((card: Card) =>
+              card.word === variables.cardWord
+                ? { ...card, selected: true }
+                : card,
+            ),
+          },
+        };
+      });
+
+      // Return context for potential rollback
+      return { previousGameData };
+    },
+    onError: (err, variables, context) => {
+      // Rollback to previous state on error
+      if (context?.previousGameData) {
+        queryClient.setQueryData(
+          ["gameData", gameId],
+          context.previousGameData,
+        );
+      }
+    },
     onSuccess: () => {
-      // Invalidate game data to trigger refetch
+      // Refetch to get the authoritative server state
       queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
     },
   });

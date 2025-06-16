@@ -19,6 +19,12 @@ export const uiConfig: UIConfig = {
         gameBoard: "readOnlyBoard",
         dashboard: "lobbyDashboard",
       },
+      // ADDED: Gameover scene for when rounds/games finish
+      gameover: {
+        message: "gameover.main",
+        gameBoard: "readOnlyBoard",
+        dashboard: "gameoverDashboard",
+      },
     },
   },
 
