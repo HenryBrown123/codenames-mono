@@ -1,7 +1,7 @@
-import React, { memo } from "react";
+import React, { memo, useCallback } from "react";
 import styled, { keyframes } from "styled-components";
 import { FaStar, FaLeaf, FaSkull, FaPeace } from "react-icons/fa";
-import { useGameplayContext } from "@frontend/features/gameplay/state";
+import { Card } from "@frontend/shared-types";
 
 const FRONT_CARD_COLOUR = "#494646";
 
@@ -9,30 +9,47 @@ interface CardProps {
   backgroundColour?: string;
   children: React.ReactNode;
   clickable?: boolean;
-  codemasterView?: boolean;
 }
 
-const getIcon = (color?: string) => {
-  switch (color) {
-    case "red":
-      return <FaStar />;
-    case "green":
-      return <FaLeaf />;
-    case "blue":
-      return <FaPeace />;
-    case "black":
-      return <FaSkull />;
+const getIcon = (cardColor?: string) => {
+  if (!cardColor) return null;
+
+  if (cardColor.includes("#B22222")) return <FaStar />;
+  if (cardColor.includes("#228B22")) return <FaLeaf />;
+  if (cardColor.includes("#4169E1")) return <FaPeace />;
+  if (cardColor.includes("#1d2023")) return <FaSkull />;
+  return null;
+};
+
+export const getCardColor = (
+  teamName?: string | null,
+  cardType?: string,
+): string => {
+  const type = cardType || teamName;
+
+  switch (type?.toLowerCase()) {
+    case "assassin":
+      return "#1d2023";
+    case "bystander":
+      return "#4169E1";
+    case "team":
+      if (teamName?.toLowerCase().includes("red")) return "#B22222";
+      if (teamName?.toLowerCase().includes("blue")) return "#4169E1";
+      if (teamName?.toLowerCase().includes("green")) return "#228B22";
+      return "#B22222";
     default:
-      return null;
+      return "#4b7fb3";
   }
 };
 
 const slideInAnimation = keyframes`
   0% {
     transform: translate(-2000px, -2000px);
+    opacity: 0;
   }
   100% {
     transform: translate(0, 0);
+    opacity: 1;
   }
 `;
 
@@ -81,18 +98,18 @@ const CardContainer = styled.div`
   margin: auto;
 `;
 
-const Card = styled.button<CardProps>`
+const CardButton = styled.button<CardProps>`
   ${sharedCardStyles}
-  background-color: ${(props) =>
-    props.backgroundColour ? props.backgroundColour : FRONT_CARD_COLOUR};
+  background-color: ${(props) => props.backgroundColour || FRONT_CARD_COLOUR};
   transition: transform 0.2s;
+  cursor: ${(props) => (props.clickable ? "pointer" : "default")};
 
   &:hover {
-    transform: translateY(-4px);
+    transform: ${(props) => (props.clickable ? "translateY(-4px)" : "none")};
   }
 
   &:active {
-    transform: translateY(1px);
+    transform: ${(props) => (props.clickable ? "translateY(1px)" : "none")};
   }
 `;
 
@@ -121,10 +138,10 @@ const CoverCard = styled.div<{
   top: 0;
   left: 0;
   background-color: ${(props) => props.backgroundColour || FRONT_CARD_COLOUR};
-  opacity: 1;
+  opacity: ${(props) => (props.animate ? 0 : 1)};
   animation: ${(props) =>
     props.animate
-      ? `${slideInAnimation} 0.8s ease-out ${props.animationDelay || 0}s`
+      ? `${slideInAnimation} 0.8s ease-out ${props.animationDelay || 0}s forwards`
       : "none"};
 `;
 
@@ -134,75 +151,65 @@ const CornerIcon = styled.div`
   left: 8px;
   color: rgba(255, 255, 255, 0.8);
   font-size: clamp(0.5rem, 1vw, 2rem);
-
-  &::after {
-    content: "";
-    position: absolute;
-    bottom: 8px;
-    right: 8px;
-    color: rgba(255, 255, 255, 0.8);
-  }
 `;
 
 export interface GameCardProps {
-  cardText: string;
-  cardColor?: string;
-  showTeamColorAsBackground: boolean;
+  card: Card;
+  cardIndex: number;
+  showTeamColors: boolean;
   clickable: boolean;
-  selected?: boolean;
-  cardIndex?: number;
-  onClick?: () => void;
+  isAnimating: boolean;
+  onCardClick: (cardWord: string) => void;
 }
 
-/**
- * GameCard component with animation triggered by gameplay context
- */
-const GameCard: React.FC<GameCardProps> = memo((props) => {
-  const {
-    cardText,
-    cardColor,
-    showTeamColorAsBackground,
-    clickable = false,
-    selected = false,
+export const GameCard = memo<GameCardProps>(
+  ({
+    card,
     cardIndex,
-    onClick,
-  } = props;
+    showTeamColors,
+    clickable,
+    isAnimating,
+    onCardClick,
+  }) => {
+    const cardColor = getCardColor(card.teamName, card.cardType);
 
-  const { animatingCard } = useGameplayContext();
+    const handleClick = useCallback(() => {
+      if (clickable && !card.selected) {
+        onCardClick(card.word);
+      }
+    }, [clickable, card.selected, card.word, onCardClick]);
 
-  // Only animate if this specific card is the one being animated
-  const shouldAnimate = animatingCard === cardText && selected;
-
-  const handleClick = () => {
-    if (clickable && onClick && !selected) {
-      onClick();
-    }
-  };
-
-  return (
-    <CardContainer>
-      <Card
-        onClick={clickable && !selected ? handleClick : undefined}
-        clickable={clickable}
-        backgroundColour={
-          showTeamColorAsBackground ? cardColor : FRONT_CARD_COLOUR
-        }
-        aria-label={`Card with text ${cardText}`}
-      >
-        <CardContent selected={selected}>{cardText}</CardContent>
-      </Card>
-      {selected && (
-        <CoverCard
-          animationDelay={(cardIndex || 0) * 0.1}
-          backgroundColour={cardColor}
-          animate={shouldAnimate}
-          aria-label="Selected card"
+    return (
+      <CardContainer>
+        <CardButton
+          onClick={clickable && !card.selected ? handleClick : undefined}
+          clickable={clickable && !card.selected}
+          backgroundColour={showTeamColors ? cardColor : FRONT_CARD_COLOUR}
+          aria-label={`Card with text ${card.word}`}
         >
-          <CornerIcon>{getIcon(cardColor)}</CornerIcon>
-        </CoverCard>
-      )}
-    </CardContainer>
-  );
-});
-
-export default GameCard;
+          <CardContent selected={card.selected}>{card.word}</CardContent>
+        </CardButton>
+        {card.selected && (
+          <CoverCard
+            animationDelay={cardIndex * 0.1}
+            backgroundColour={cardColor}
+            animate={isAnimating}
+            aria-label="Selected card"
+          >
+            <CornerIcon>{getIcon(cardColor)}</CornerIcon>
+          </CoverCard>
+        )}
+      </CardContainer>
+    );
+  },
+  (prevProps, nextProps) => {
+    return (
+      prevProps.card.word === nextProps.card.word &&
+      prevProps.card.selected === nextProps.card.selected &&
+      prevProps.card.teamName === nextProps.card.teamName &&
+      prevProps.showTeamColors === nextProps.showTeamColors &&
+      prevProps.clickable === nextProps.clickable &&
+      prevProps.isAnimating === nextProps.isAnimating
+    );
+  },
+);

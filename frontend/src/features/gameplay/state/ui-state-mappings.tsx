@@ -7,13 +7,10 @@ import {
   CodebreakerDashboardView,
   WaitingDashboardView,
   GameoverDashboardView,
-} from "@frontend/game/ui/dashboard";
-import {
-  ReadOnlyBoard,
-  CodemasterStageBoard,
-  CodebreakerStageBoard,
-} from "@frontend/game/ui/game-board/game-board-views";
+} from "@frontend/features/gameplay/ui/dashboard";
+import { GameBoardView } from "@frontend/features/gameplay/ui/game-board/game-board-views";
 import { GameData } from "@frontend/shared-types";
+import { BoardMode } from "../ui/game-board/game-board";
 
 /**
  * Dynamic messages based on player role and game state
@@ -76,12 +73,34 @@ export const messages: Record<string, (gameData: GameData) => string> = {
 };
 
 /**
+ * Board mode configuration for different game states
+ */
+export const boardModes = {
+  "codemaster.preparation": "CODEMASTER_READONLY",
+  "codemaster.main": "CODEMASTER_ACTIVE",
+  "codemaster.waiting": "CODEMASTER_ACTIVE",
+  "codebreaker.preparation": "CODEMASTER_READONLY",
+  "codebreaker.main": "CODEBREAKER",
+  "codebreaker.outcome": "CODEBREAKER",
+  "codebreaker.waiting": "CODEMASTER_READONLY",
+  "spectator.watching": "SPECTATOR",
+  "lobby.waiting": "SPECTATOR",
+  "gameover.main": "SPECTATOR",
+} as const;
+
+/**
+ * Scenes that allow card interaction
+ */
+export const interactiveScenes = new Set(["codebreaker.main"]);
+
+/**
  * Game board component mappings
  */
-export const gameBoards: Record<string, React.FC<{ gameData: GameData }>> = {
-  readOnlyBoard: ReadOnlyBoard,
-  codemasterBoard: CodemasterStageBoard,
-  codebreakerBoard: CodebreakerStageBoard,
+export const gameBoards: Record<
+  string,
+  React.FC<{ boardMode: BoardMode; gameData: GameData }>
+> = {
+  main: GameBoardView,
 };
 
 /**
