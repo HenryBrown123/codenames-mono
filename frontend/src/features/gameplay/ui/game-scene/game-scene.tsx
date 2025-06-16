@@ -1,11 +1,11 @@
 import React from "react";
 import { useGameplayContext, useGameContext } from "@frontend/game/state";
-import { uiConfig } from "@frontend/game/state/game-state-config";
+import { uiConfig } from "@frontend/features/gameplay/state/ui-state-config";
 import {
   messages,
   gameBoards,
   dashboards,
-} from "@frontend/game/state/game-state-mappings";
+} from "@frontend/features/gameplay/state/ui-state-mappings";
 import { GameInstructions } from "@frontend/game/ui";
 import styled from "styled-components";
 
