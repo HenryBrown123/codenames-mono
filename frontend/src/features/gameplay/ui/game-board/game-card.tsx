@@ -1,15 +1,9 @@
 import React, { memo, useCallback } from "react";
-import styled, { keyframes, css } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 import { FaStar, FaLeaf, FaSkull, FaPeace } from "react-icons/fa";
 import { Card } from "@frontend/shared-types";
 
 const FRONT_CARD_COLOUR = "#494646";
-
-interface CardProps {
-  backgroundColour?: string;
-  children: React.ReactNode;
-  clickable?: boolean;
-}
 
 const getIcon = (cardColor?: string) => {
   if (!cardColor) return null;
@@ -19,27 +13,6 @@ const getIcon = (cardColor?: string) => {
   if (cardColor.includes("#4169E1")) return <FaPeace />;
   if (cardColor.includes("#1d2023")) return <FaSkull />;
   return null;
-};
-
-export const getCardColor = (
-  teamName?: string | null,
-  cardType?: string,
-): string => {
-  const type = cardType || teamName;
-
-  switch (type?.toLowerCase()) {
-    case "assassin":
-      return "#1d2023";
-    case "bystander":
-      return "#697188";
-    case "team":
-      if (teamName?.toLowerCase().includes("red")) return "#B22222";
-      if (teamName?.toLowerCase().includes("blue")) return "#4169E1";
-      if (teamName?.toLowerCase().includes("green")) return "#228B22";
-      return "#B22222";
-    default:
-      return "#4b7fb3";
-  }
 };
 
 const slideInAnimation = keyframes`
@@ -87,6 +60,12 @@ const sharedCardStyles = `
   background-size: 10px 10px, 10px 10px;
   background-blend-mode: overlay;
 `;
+
+interface CardProps {
+  backgroundColour?: string;
+  children: React.ReactNode;
+  clickable?: boolean;
+}
 
 const CardContainer = styled.div`
   height: 100%;
@@ -155,6 +134,28 @@ const CornerIcon = styled.div`
   font-size: clamp(0.5rem, 1vw, 2rem);
 `;
 
+// Helper functions (your original ones)
+export const getCardColor = (
+  teamName?: string | null,
+  cardType?: string,
+): string => {
+  const type = cardType || teamName;
+
+  switch (type?.toLowerCase()) {
+    case "assassin":
+      return "#1d2023";
+    case "bystander":
+      return "#697188";
+    case "team":
+      if (teamName?.toLowerCase().includes("red")) return "#B22222";
+      if (teamName?.toLowerCase().includes("blue")) return "#4169E1";
+      if (teamName?.toLowerCase().includes("green")) return "#228B22";
+      return "#B22222";
+    default:
+      return "#4b7fb3";
+  }
+};
+
 export interface GameCardProps {
   card: Card;
   cardIndex: number;
@@ -164,6 +165,9 @@ export interface GameCardProps {
   onCardClick: (cardWord: string) => void;
 }
 
+/**
+ * Simplified GameCard - just handles display and calls parent callback
+ */
 export const GameCard = memo<GameCardProps>(
   ({
     card,
@@ -212,26 +216,6 @@ export const GameCard = memo<GameCardProps>(
       prevProps.showTeamColors === nextProps.showTeamColors &&
       prevProps.clickable === nextProps.clickable &&
       prevProps.isAnimating === nextProps.isAnimating;
-
-    if (!same) {
-      console.log("GameCard re-render:", prevProps.card.word, {
-        cardRefChanged: prevProps.card !== nextProps.card,
-        selectedChanged: prevProps.card.selected !== nextProps.card.selected,
-        teamNameChanged: prevProps.card.teamName !== nextProps.card.teamName,
-        showTeamColorsChanged:
-          prevProps.showTeamColors !== nextProps.showTeamColors,
-        clickableChanged: prevProps.clickable !== nextProps.clickable,
-        animatingChanged: prevProps.isAnimating !== nextProps.isAnimating,
-        onCardClickChanged: prevProps.onCardClick !== nextProps.onCardClick,
-      });
-    }
-
-    if (!same && prevProps.card.word !== "THE_CLICKED_CARD") {
-      console.log("Unrelated card re-rendered:", prevProps.card.word, {
-        cardRefChanged: prevProps.card !== nextProps.card,
-        selectedChanged: prevProps.card.selected !== nextProps.card.selected,
-      });
-    }
 
     return same;
   },

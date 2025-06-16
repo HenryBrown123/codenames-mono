@@ -11,7 +11,7 @@ import {
 
 /**
  * The central UI configuration for the game.
- * Now based on player role + game context instead of legacy game stages.
+ * Enhanced with role transitions for single device mode using array conditions.
  */
 export const uiConfig: UIConfig = {
   // When player has no role or game is in lobby
@@ -23,6 +23,20 @@ export const uiConfig: UIConfig = {
         gameBoard: "main",
         dashboard: "lobbyDashboard",
         boardMode: BOARD_MODE.SPECTATOR,
+        on: {
+          GAME_STARTED: [
+            {
+              condition: ["singleDeviceMode"],
+              type: "role",
+              target: PLAYER_ROLE.CODEMASTER,
+            },
+            {
+              condition: ["!singleDeviceMode"],
+              type: "role",
+              target: "serverRole",
+            },
+          ],
+        },
       },
       gameover: {
         message: "gameover.main",
@@ -48,8 +62,17 @@ export const uiConfig: UIConfig = {
 
   // When player is the codemaster
   [PLAYER_ROLE.CODEMASTER]: {
-    initial: "preparation",
+    initial: "entry",
     scenes: {
+      entry: {
+        message: "codemaster.entry",
+        gameBoard: "main",
+        dashboard: "transitionDashboard",
+        boardMode: BOARD_MODE.CODEMASTER_READONLY,
+        on: {
+          next: { type: "scene", target: "preparation" },
+        },
+      },
       preparation: {
         message: "codemaster.preparation",
         gameBoard: "main",
@@ -65,7 +88,22 @@ export const uiConfig: UIConfig = {
         dashboard: "codemasterDashboard",
         boardMode: BOARD_MODE.CODEMASTER_ACTIVE,
         on: {
-          CLUE_SUBMITTED: { type: "scene", target: "waiting" },
+          CLUE_SUBMITTED: [
+            {
+              condition: ["singleDeviceMode"],
+              type: "role",
+              target: PLAYER_ROLE.CODEBREAKER,
+            },
+            {
+              condition: ["!singleDeviceMode"],
+              type: "role",
+              target: "serverRole",
+            },
+            {
+              type: "scene",
+              target: "waiting",
+            },
+          ],
         },
       },
       waiting: {
@@ -74,7 +112,22 @@ export const uiConfig: UIConfig = {
         dashboard: "waitingDashboard",
         boardMode: BOARD_MODE.CODEMASTER_ACTIVE,
         on: {
-          TURN_CHANGED: { type: "scene", target: "preparation" },
+          TURN_CHANGED: [
+            {
+              condition: ["singleDeviceMode"],
+              type: "role",
+              target: PLAYER_ROLE.CODEMASTER,
+            },
+            {
+              condition: ["!singleDeviceMode"],
+              type: "role",
+              target: "serverRole",
+            },
+            {
+              type: "scene",
+              target: "preparation",
+            },
+          ],
         },
       },
     },
@@ -82,8 +135,17 @@ export const uiConfig: UIConfig = {
 
   // When player is a codebreaker
   [PLAYER_ROLE.CODEBREAKER]: {
-    initial: "preparation",
+    initial: "entry",
     scenes: {
+      entry: {
+        message: "codebreaker.entry",
+        gameBoard: "main",
+        dashboard: "transitionDashboard",
+        boardMode: BOARD_MODE.CODEMASTER_READONLY,
+        on: {
+          next: { type: "scene", target: "preparation" },
+        },
+      },
       preparation: {
         message: "codebreaker.preparation",
         gameBoard: "main",
@@ -110,14 +172,34 @@ export const uiConfig: UIConfig = {
         on: {
           next: [
             {
-              condition: "turnEnded",
+              condition: ["turnEnded", "!singleDeviceMode"],
               type: "scene",
               target: "waiting",
             },
             {
-              condition: "opponentTurn",
+              condition: ["opponentTurn", "!singleDeviceMode"],
               type: "scene",
               target: "waiting",
+            },
+            {
+              condition: ["turnEnded", "singleDeviceMode"],
+              type: "role",
+              target: PLAYER_ROLE.CODEMASTER,
+            },
+            {
+              condition: ["opponentTurn", "singleDeviceMode"],
+              type: "role",
+              target: PLAYER_ROLE.CODEMASTER,
+            },
+            {
+              condition: ["singleDeviceMode"],
+              type: "role",
+              target: PLAYER_ROLE.CODEMASTER,
+            },
+            {
+              condition: ["!singleDeviceMode"],
+              type: "role",
+              target: "serverRole",
             },
             {
               type: "scene",
@@ -132,7 +214,22 @@ export const uiConfig: UIConfig = {
         dashboard: "waitingDashboard",
         boardMode: BOARD_MODE.CODEMASTER_READONLY,
         on: {
-          TURN_CHANGED: { type: "scene", target: "preparation" },
+          TURN_CHANGED: [
+            {
+              condition: ["singleDeviceMode"],
+              type: "role",
+              target: PLAYER_ROLE.CODEBREAKER,
+            },
+            {
+              condition: ["!singleDeviceMode"],
+              type: "role",
+              target: "serverRole",
+            },
+            {
+              type: "scene",
+              target: "preparation",
+            },
+          ],
         },
       },
     },
@@ -158,12 +255,12 @@ export function determineUIStage(
 }
 
 /**
- * Transition configuration interface
+ * Enhanced transition configuration interface with array condition support
  */
-interface TransitionConfig {
-  condition?: string;
-  type: "scene";
-  target: string;
+export interface TransitionConfig {
+  condition?: string | string[];
+  type: "scene" | "role";
+  target: string | PlayerRole | "serverRole";
 }
 
 /**

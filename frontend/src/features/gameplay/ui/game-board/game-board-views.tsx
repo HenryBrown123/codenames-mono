@@ -1,28 +1,26 @@
 import React from "react";
-import { useGameplayContext } from "@frontend/features/gameplay/state";
 import GameBoard, { BoardMode } from "./game-board";
 import { GameData } from "@frontend/shared-types";
 
 interface GameBoardViewProps {
   gameData: GameData;
   boardMode: BoardMode;
-  interactive?: boolean;
+  interactive?: boolean; // Keep for API compatibility, but not used
 }
 
+/**
+ * Simplified GameBoardView - no more prop drilling needed!
+ * GameBoard handles its own interactions via useGameActions
+ */
 export const GameBoardView: React.FC<GameBoardViewProps> = ({
   gameData,
   boardMode,
-  interactive = false,
+  interactive = false, // Kept for backwards compatibility
 }) => {
-  const { handleMakeGuess } = useGameplayContext();
-
-  const handleCardClick = interactive ? handleMakeGuess : undefined;
-
   return (
     <GameBoard
       cards={gameData.currentRound?.cards || []}
       boardMode={boardMode}
-      onCardClick={handleCardClick}
     />
   );
 };

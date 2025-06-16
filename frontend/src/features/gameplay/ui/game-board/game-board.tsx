@@ -1,7 +1,8 @@
-import React, { memo, useState, useCallback } from "react";
+import React, { memo, useState } from "react";
 import styled from "styled-components";
 import { GameCard } from "./game-card";
 import { Card } from "@frontend/shared-types";
+import { useGameActions } from "@frontend/features/gameplay/state";
 
 export const BOARD_MODE = {
   CODEMASTER_ACTIVE: "codemaster-active",
@@ -26,44 +27,66 @@ const CardsContainer = styled.div`
 export interface GameBoardProps {
   cards: Card[];
   boardMode: BoardMode;
-  onCardClick?: (cardWord: string) => void;
 }
 
-export const GameBoard = memo<GameBoardProps>(
-  ({ cards, boardMode, onCardClick }) => {
-    const [animatingCard, setAnimatingCard] = useState<string | null>(null);
+/**
+ * Refactored GameBoard - no more prop drilling, uses callbacks for animations
+ */
+export const GameBoard = memo<GameBoardProps>(({ cards, boardMode }) => {
+  // Track multiple animating cards using Set<string>
+  const [animatingCards, setAnimatingCards] = useState<Set<string>>(new Set());
+  const { handleMakeGuess } = useGameActions();
 
-    const showTeamColors = boardMode === BOARD_MODE.CODEMASTER_ACTIVE;
-    const clickable = boardMode === BOARD_MODE.CODEBREAKER;
+  const showTeamColors = boardMode === BOARD_MODE.CODEMASTER_ACTIVE;
+  const clickable = boardMode === BOARD_MODE.CODEBREAKER;
 
-    const handleCardClick = useCallback(
-      (cardWord: string) => {
-        if (!onCardClick) return;
+  const handleCardClick = (cardWord: string) => {
+    if (!clickable) return;
 
-        setAnimatingCard(cardWord);
-        onCardClick(cardWord);
+    // Start animation immediately on click
+    setAnimatingCards((prev) => new Set(prev).add(cardWord));
 
-        setTimeout(() => setAnimatingCard(null), 1000);
+    // Use callbacks to control animation lifecycle
+    handleMakeGuess(cardWord, {
+      onSuccess: (data) => {
+        // Remove from animating set on success
+        setAnimatingCards((prev) => {
+          const next = new Set(prev);
+          next.delete(cardWord);
+          return next;
+        });
+        console.log(`Card ${cardWord} guessed successfully:`, data);
       },
-      [onCardClick],
-    );
+      onError: (error) => {
+        // Remove from animating set on error
+        setAnimatingCards((prev) => {
+          const next = new Set(prev);
+          next.delete(cardWord);
+          return next;
+        });
+        console.error(`Card ${cardWord} guess failed:`, error.message);
+      },
+      onSettled: () => {
+        console.log(`Guess attempt for ${cardWord} completed`);
+      },
+    });
+  };
 
-    return (
-      <CardsContainer aria-label="game board container with cards">
-        {cards.map((card, index) => (
-          <GameCard
-            key={card.word}
-            card={card}
-            cardIndex={index}
-            showTeamColors={showTeamColors}
-            clickable={clickable}
-            isAnimating={animatingCard === card.word}
-            onCardClick={handleCardClick}
-          />
-        ))}
-      </CardsContainer>
-    );
-  },
-);
+  return (
+    <CardsContainer aria-label="game board container with cards">
+      {cards.map((card, index) => (
+        <GameCard
+          key={card.word}
+          card={card}
+          cardIndex={index}
+          showTeamColors={showTeamColors}
+          clickable={clickable && !card.selected}
+          isAnimating={animatingCards.has(card.word)}
+          onCardClick={handleCardClick}
+        />
+      ))}
+    </CardsContainer>
+  );
+});
 
 export default GameBoard;

@@ -16,24 +16,48 @@ const ButtonWrapper = styled.div`
 export const LobbyDashboardView: React.FC = () => {
   console.log("Rendering LobbyDashboardView");
 
-  const { gameData, handleCreateRound, isLoading } = useGameplayContext();
+  const { gameData, handleCreateRound, handleSceneTransition, isLoading } =
+    useGameplayContext();
 
   console.log("Lobby Dashboard State:", {
     gameStatus: gameData?.status,
     isLoading: isLoading.createRound,
     hasCurrentRound: !!gameData?.currentRound,
+    playerRole: gameData?.playerContext?.role,
   });
 
   const handleClick = () => {
-    console.log("Lobby: Start Game clicked");
-    handleCreateRound();
+    // If game already has a round but player has no role, try to transition
+    if (gameData?.currentRound && gameData?.status === "IN_PROGRESS") {
+      console.log(
+        "Game in progress with existing round - transitioning to gameplay",
+      );
+      handleSceneTransition("next");
+      return;
+    }
+
+    // Only create round if there isn't one
+    if (!gameData?.currentRound) {
+      console.log("Lobby: Creating new round");
+      handleCreateRound();
+    } else {
+      console.log("Round already exists, not creating another");
+    }
+  };
+
+  // Determine button text based on game state
+  const getButtonText = () => {
+    if (gameData?.currentRound && gameData?.status === "IN_PROGRESS") {
+      return "Join Game";
+    }
+    return "Start Game";
   };
 
   return (
     <ButtonWrapper>
       <ActionButton
         onClick={handleClick}
-        text="Start Game"
+        text={getButtonText()}
         enabled={!isLoading.createRound}
       />
     </ButtonWrapper>
