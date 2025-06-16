@@ -4,6 +4,10 @@ import {
   GameState,
   GAME_STATE,
 } from "@codenames/shared/types";
+import {
+  BoardMode,
+  BOARD_MODE,
+} from "@frontend/features/gameplay/ui/game-board/game-board";
 
 /**
  * The central UI configuration for the game.
@@ -16,14 +20,15 @@ export const uiConfig: UIConfig = {
     scenes: {
       lobby: {
         message: "lobby.waiting",
-        gameBoard: "readOnlyBoard",
+        gameBoard: "main",
         dashboard: "lobbyDashboard",
+        boardMode: BOARD_MODE.SPECTATOR,
       },
-      // ADDED: Gameover scene for when rounds/games finish
       gameover: {
         message: "gameover.main",
-        gameBoard: "readOnlyBoard",
+        gameBoard: "main",
         dashboard: "gameoverDashboard",
+        boardMode: BOARD_MODE.SPECTATOR,
       },
     },
   },
@@ -34,8 +39,9 @@ export const uiConfig: UIConfig = {
     scenes: {
       watching: {
         message: "spectator.watching",
-        gameBoard: "readOnlyBoard",
+        gameBoard: "main",
         dashboard: "spectatorDashboard",
+        boardMode: BOARD_MODE.SPECTATOR,
       },
     },
   },
@@ -46,24 +52,27 @@ export const uiConfig: UIConfig = {
     scenes: {
       preparation: {
         message: "codemaster.preparation",
-        gameBoard: "readOnlyBoard",
+        gameBoard: "main",
         dashboard: "transitionDashboard",
+        boardMode: BOARD_MODE.CODEMASTER_READONLY,
         on: {
           next: { type: "scene", target: "main" },
         },
       },
       main: {
         message: "codemaster.main",
-        gameBoard: "codemasterBoard",
+        gameBoard: "main",
         dashboard: "codemasterDashboard",
+        boardMode: BOARD_MODE.CODEMASTER_ACTIVE,
         on: {
           CLUE_SUBMITTED: { type: "scene", target: "waiting" },
         },
       },
       waiting: {
         message: "codemaster.waiting",
-        gameBoard: "codemasterBoard",
+        gameBoard: "main",
         dashboard: "waitingDashboard",
+        boardMode: BOARD_MODE.CODEMASTER_ACTIVE,
         on: {
           TURN_CHANGED: { type: "scene", target: "preparation" },
         },
@@ -77,33 +86,51 @@ export const uiConfig: UIConfig = {
     scenes: {
       preparation: {
         message: "codebreaker.preparation",
-        gameBoard: "readOnlyBoard",
+        gameBoard: "main",
         dashboard: "transitionDashboard",
+        boardMode: BOARD_MODE.CODEMASTER_READONLY,
         on: {
           next: { type: "scene", target: "main" },
         },
       },
       main: {
         message: "codebreaker.main",
-        gameBoard: "codebreakerBoard",
+        gameBoard: "main",
         dashboard: "codebreakerDashboard",
+        boardMode: BOARD_MODE.CODEBREAKER,
         on: {
           GUESS_MADE: { type: "scene", target: "outcome" },
         },
       },
       outcome: {
         message: "codebreaker.outcome",
-        gameBoard: "codebreakerBoard",
+        gameBoard: "main",
         dashboard: "transitionDashboard",
+        boardMode: BOARD_MODE.CODEBREAKER,
         on: {
-          next: { type: "scene", target: "main" },
-          TURN_ENDED: { type: "scene", target: "waiting" },
+          next: [
+            {
+              condition: "turnEnded",
+              type: "scene",
+              target: "waiting",
+            },
+            {
+              condition: "opponentTurn",
+              type: "scene",
+              target: "waiting",
+            },
+            {
+              type: "scene",
+              target: "main",
+            },
+          ],
         },
       },
       waiting: {
         message: "codebreaker.waiting",
-        gameBoard: "readOnlyBoard",
+        gameBoard: "main",
         dashboard: "waitingDashboard",
+        boardMode: BOARD_MODE.CODEMASTER_READONLY,
         on: {
           TURN_CHANGED: { type: "scene", target: "preparation" },
         },
@@ -131,13 +158,23 @@ export function determineUIStage(
 }
 
 /**
+ * Transition configuration interface
+ */
+interface TransitionConfig {
+  condition?: string;
+  type: "scene";
+  target: string;
+}
+
+/**
  * Scene configuration interface
  */
 interface SceneConfig {
   message: string;
   gameBoard: string;
   dashboard: string;
-  on?: Record<string, { type: "scene"; target: string }>;
+  boardMode: BoardMode;
+  on?: Record<string, TransitionConfig | TransitionConfig[]>;
 }
 
 interface StageConfig {

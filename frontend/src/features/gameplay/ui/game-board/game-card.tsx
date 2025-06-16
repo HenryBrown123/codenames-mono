@@ -1,5 +1,5 @@
 import React, { memo, useCallback } from "react";
-import styled, { keyframes } from "styled-components";
+import styled, { keyframes, css } from "styled-components";
 import { FaStar, FaLeaf, FaSkull, FaPeace } from "react-icons/fa";
 import { Card } from "@frontend/shared-types";
 
@@ -31,7 +31,7 @@ export const getCardColor = (
     case "assassin":
       return "#1d2023";
     case "bystander":
-      return "#4169E1";
+      return "#697188";
     case "team":
       if (teamName?.toLowerCase().includes("red")) return "#B22222";
       if (teamName?.toLowerCase().includes("blue")) return "#4169E1";
@@ -139,10 +139,12 @@ const CoverCard = styled.div<{
   left: 0;
   background-color: ${(props) => props.backgroundColour || FRONT_CARD_COLOUR};
   opacity: ${(props) => (props.animate ? 0 : 1)};
-  animation: ${(props) =>
-    props.animate
-      ? `${slideInAnimation} 0.8s ease-out ${props.animationDelay || 0}s forwards`
-      : "none"};
+  ${(props) =>
+    props.animate &&
+    css`
+      animation: ${slideInAnimation} 0.8s ease-out ${props.animationDelay || 0}s
+        forwards;
+    `};
 `;
 
 const CornerIcon = styled.div`
@@ -203,13 +205,34 @@ export const GameCard = memo<GameCardProps>(
     );
   },
   (prevProps, nextProps) => {
-    return (
+    const same =
       prevProps.card.word === nextProps.card.word &&
       prevProps.card.selected === nextProps.card.selected &&
       prevProps.card.teamName === nextProps.card.teamName &&
       prevProps.showTeamColors === nextProps.showTeamColors &&
       prevProps.clickable === nextProps.clickable &&
-      prevProps.isAnimating === nextProps.isAnimating
-    );
+      prevProps.isAnimating === nextProps.isAnimating;
+
+    if (!same) {
+      console.log("GameCard re-render:", prevProps.card.word, {
+        cardRefChanged: prevProps.card !== nextProps.card,
+        selectedChanged: prevProps.card.selected !== nextProps.card.selected,
+        teamNameChanged: prevProps.card.teamName !== nextProps.card.teamName,
+        showTeamColorsChanged:
+          prevProps.showTeamColors !== nextProps.showTeamColors,
+        clickableChanged: prevProps.clickable !== nextProps.clickable,
+        animatingChanged: prevProps.isAnimating !== nextProps.isAnimating,
+        onCardClickChanged: prevProps.onCardClick !== nextProps.onCardClick,
+      });
+    }
+
+    if (!same && prevProps.card.word !== "THE_CLICKED_CARD") {
+      console.log("Unrelated card re-rendered:", prevProps.card.word, {
+        cardRefChanged: prevProps.card !== nextProps.card,
+        selectedChanged: prevProps.card.selected !== nextProps.card.selected,
+      });
+    }
+
+    return same;
   },
 );

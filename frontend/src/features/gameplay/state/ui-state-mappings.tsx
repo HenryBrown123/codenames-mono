@@ -10,7 +10,7 @@ import {
 } from "@frontend/features/gameplay/ui/dashboard";
 import { GameBoardView } from "@frontend/features/gameplay/ui/game-board/game-board-views";
 import { GameData } from "@frontend/shared-types";
-import { BoardMode } from "../ui/game-board/game-board";
+import { BoardMode, BOARD_MODE } from "../ui/game-board/game-board";
 
 /**
  * Dynamic messages based on player role and game state
@@ -73,32 +73,44 @@ export const messages: Record<string, (gameData: GameData) => string> = {
 };
 
 /**
- * Board mode configuration for different game states
+ * Interactivity mapping based on board mode
  */
-export const boardModes = {
-  "codemaster.preparation": "CODEMASTER_READONLY",
-  "codemaster.main": "CODEMASTER_ACTIVE",
-  "codemaster.waiting": "CODEMASTER_ACTIVE",
-  "codebreaker.preparation": "CODEMASTER_READONLY",
-  "codebreaker.main": "CODEBREAKER",
-  "codebreaker.outcome": "CODEBREAKER",
-  "codebreaker.waiting": "CODEMASTER_READONLY",
-  "spectator.watching": "SPECTATOR",
-  "lobby.waiting": "SPECTATOR",
-  "gameover.main": "SPECTATOR",
+export const boardModeInteractivity = {
+  [BOARD_MODE.CODEMASTER_ACTIVE]: false,
+  [BOARD_MODE.CODEMASTER_READONLY]: false,
+  [BOARD_MODE.CODEBREAKER]: true,
+  [BOARD_MODE.SPECTATOR]: false,
 } as const;
 
 /**
- * Scenes that allow card interaction
+ * Conditional logic for state machine transitions
  */
-export const interactiveScenes = new Set(["codebreaker.main"]);
+export const conditions: Record<string, (gameData: GameData) => boolean> = {
+  turnEnded: (gameData) => {
+    const activeTurn = gameData.currentRound?.turns?.find(
+      (t) => t.status === "ACTIVE",
+    );
+    return !activeTurn || activeTurn.guessesRemaining <= 0;
+  },
+
+  opponentTurn: (gameData) => {
+    const activeTurn = gameData.currentRound?.turns?.find(
+      (t) => t.status === "ACTIVE",
+    );
+    return activeTurn?.teamName !== gameData.playerContext.teamName;
+  },
+
+  gameEnded: (gameData) => {
+    return gameData.status === "COMPLETED";
+  },
+};
 
 /**
  * Game board component mappings
  */
 export const gameBoards: Record<
   string,
-  React.FC<{ boardMode: BoardMode; gameData: GameData }>
+  React.FC<{ boardMode: BoardMode; gameData: GameData; interactive?: boolean }>
 > = {
   main: GameBoardView,
 };

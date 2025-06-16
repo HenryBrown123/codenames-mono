@@ -9,6 +9,7 @@ import React, {
 import { PlayerRole } from "@codenames/shared/types";
 import { GameData } from "@frontend/shared-types";
 import { uiConfig } from "@frontend/features/gameplay/state/ui-state-config";
+import { conditions } from "@frontend/features/gameplay/state/ui-state-mappings";
 import {
   useGiveClue,
   useMakeGuess,
@@ -28,10 +29,14 @@ export const GameplayContextProvider = ({
   gameData,
 }: GameplayProviderProps): JSX.Element => {
   // UI State machine for scene management
-  const [uiState, dispatch] = useReducer(uiReducer, {
-    currentStage: gameData.playerContext.role,
-    currentScene: uiConfig[gameData.playerContext.role]?.initial || "main",
-  });
+  const [uiState, dispatch] = useReducer(
+    (state: UIState, action: UIAction) => uiReducer(state, action, gameData),
+    null,
+    () => ({
+      currentStage: gameData.playerContext.role,
+      currentScene: uiConfig[gameData.playerContext.role]?.initial || "main",
+    }),
+  );
 
   // Card animation state
   const [animatingCard, setAnimatingCard] = useState<string | null>(null);
@@ -90,7 +95,10 @@ export const GameplayContextProvider = ({
    * Make a guess as codebreaker - optimistic updates handled in mutation
    */
   const handleMakeGuess = useCallback(
-    (roundNumber: number, cardWord: string) => {
+    (cardWord: string) => {
+      const roundNumber = gameData.currentRound?.roundNumber;
+      if (!roundNumber) return;
+
       makeGuess.mutate(
         { roundNumber, cardWord },
         {
@@ -101,7 +109,12 @@ export const GameplayContextProvider = ({
         },
       );
     },
-    [makeGuess, handleSceneTransition, triggerCardAnimation],
+    [
+      makeGuess,
+      handleSceneTransition,
+      triggerCardAnimation,
+      gameData.currentRound?.roundNumber,
+    ],
   );
 
   /**
@@ -189,24 +202,45 @@ export const useGameplayContext = (): GameplayContextProps => {
 };
 
 // UI State Reducer
-const uiReducer = (state: UIState, action: UIAction): UIState => {
+const uiReducer = (
+  state: UIState,
+  action: UIAction,
+  gameData: GameData,
+): UIState => {
   switch (action.type) {
     case "TRIGGER_TRANSITION": {
       const currentStageConfig = uiConfig[state.currentStage];
       if (!currentStageConfig) return state;
 
       const currentSceneConfig = currentStageConfig.scenes[state.currentScene];
-      const transition = currentSceneConfig?.on?.[action.payload.event];
+      const transitions = currentSceneConfig?.on?.[action.payload.event];
 
-      if (
-        transition?.type === "scene" &&
-        currentStageConfig.scenes[transition.target]
-      ) {
-        return {
-          ...state,
-          currentScene: transition.target,
-        };
+      // Handle conditional transitions (array of conditions)
+      if (Array.isArray(transitions)) {
+        const transition = transitions.find(
+          (t) => !t.condition || conditions[t.condition]?.(gameData),
+        );
+        if (transition && currentStageConfig.scenes[transition.target]) {
+          return {
+            ...state,
+            currentScene: transition.target,
+          };
+        }
       }
+
+      // Handle simple transitions
+      if (transitions && !Array.isArray(transitions)) {
+        if (
+          transitions.type === "scene" &&
+          currentStageConfig.scenes[transitions.target]
+        ) {
+          return {
+            ...state,
+            currentScene: transitions.target,
+          };
+        }
+      }
+
       return state;
     }
     case "SET_STAGE": {
@@ -251,7 +285,7 @@ interface GameplayContextProps {
     word: string,
     targetCardCount: number,
   ) => void;
-  handleMakeGuess: (roundNumber: number, cardWord: string) => void;
+  handleMakeGuess: (cardWord: string) => void;
   handleCreateRound: () => void;
   handleStartRound: (roundNumber: number) => void;
   handleDealCards: (roundId: string) => void;
