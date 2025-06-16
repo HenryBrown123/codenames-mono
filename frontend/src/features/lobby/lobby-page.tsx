@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import { Plus, X, Users, Play, Edit2, Save } from "lucide-react";
+import { Plus, X, Users, Play, Edit2, Check } from "lucide-react";
 import {
   addPlayer,
   removePlayer,
   modifyPlayer,
   startGame,
   getLobbyState,
-  type LobbyData as ApiLobbyData,
-  type LobbyPlayer as ApiLobbyPlayer,
-  type LobbyTeam as ApiLobbyTeam,
+  type LobbyData,
+  type LobbyPlayer,
+  type LobbyTeam,
 } from "@frontend/features/lobby/api/lobby-api";
 
 // Interface for props
@@ -18,434 +18,378 @@ interface LobbyInterfaceProps {
   gameId: string;
 }
 
-// Define types to match the ACTUAL API response (not the API file types)
-interface LobbyPlayer {
-  publicId: string;
-  name: string; // API uses 'name', not 'playerName'
-  isActive: boolean;
-}
+// // Use your actual API types
+// interface LobbyPlayer {
+//   publicId: string;
+//   playerName: string; // Your API uses 'playerName'
+//   teamName: string; // Your API uses 'teamName'
+// }
 
-interface LobbyTeam {
-  name: string; // API uses 'name', not 'teamName'
-  score: number;
-  players: LobbyPlayer[];
-}
+// interface LobbyTeam {
+//   teamName: string; // Your API uses 'teamName'
+//   players: LobbyPlayer[];
+// }
 
-interface LobbyData {
-  publicId: string;
-  status: string;
-  gameType: string;
-  gameFormat?: string;
-  createdAt?: string;
-  teams: LobbyTeam[];
-  currentRound?: any;
-  playerContext?: {
-    playerName: string;
-    teamName: string;
-    role: string;
-  };
-}
-
-// API Response wrapper (what actually comes from the server)
-interface ApiResponse {
-  game: LobbyData;
-}
-
-// Styled Components
-const Container = styled.div`
-  min-height: 100vh;
-  background: linear-gradient(135deg, #1e1b4b 0%, #581c87 50%, #be185d 100%);
-  padding: 1rem;
-`;
-
-const MainContent = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-`;
-
-const Header = styled.div`
-  text-align: center;
-  margin-bottom: 2rem;
-`;
-
-const Title = styled.h1`
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: white;
-  margin-bottom: 0.5rem;
-`;
-
-const Subtitle = styled.p`
-  color: #c7d2fe;
-  margin-bottom: 1rem;
-`;
-
-const StatsContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-  font-size: 0.875rem;
-  color: #c7d2fe;
-  margin-top: 1rem;
-`;
-
-const StatItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-`;
-
-const StatusDot = styled.span<{ ready: boolean }>`
-  width: 0.75rem;
-  height: 0.75rem;
-  border-radius: 50%;
-  background-color: ${(props) => (props.ready ? "#10b981" : "#eab308")};
-`;
-
-const Card = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(16px);
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-`;
-
-const SectionTitle = styled.h2`
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: white;
-  margin-bottom: 1rem;
-`;
-
-const AddPlayerForm = styled.div`
-  display: flex;
-  gap: 1rem;
-  align-items: end;
-
-  @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: stretch;
-  }
-`;
-
-const InputGroup = styled.div`
-  flex: 1;
-`;
-
-const Label = styled.label`
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #c7d2fe;
-  margin-bottom: 0.5rem;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  color: white;
-  font-size: 1rem;
-
-  &::placeholder {
-    color: rgba(255, 255, 255, 0.5);
-  }
-
-  &:focus {
-    outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-const Select = styled.select`
-  width: 100%;
-  padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  color: white;
-  font-size: 1rem;
-
-  &:focus {
-    outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  option {
-    background-color: #374151;
-    color: white;
-  }
-`;
-
-const Button = styled.button<{ variant?: string; large?: boolean }>`
-  padding: 0.5rem 1.5rem;
-  background: ${(props) =>
-    props.variant === "primary"
-      ? "#4f46e5"
-      : props.variant === "success"
-        ? "linear-gradient(to right, #059669, #047857)"
-        : props.variant === "danger"
-          ? "#dc2626"
-          : "#6b7280"};
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: ${(props) => (props.large ? "1.125rem" : "1rem")};
-  padding: ${(props) => (props.large ? "1rem 2rem" : "0.5rem 1.5rem")};
-
-  &:hover:not(:disabled) {
-    background: ${(props) =>
-      props.variant === "primary"
-        ? "#4338ca"
-        : props.variant === "success"
-          ? "linear-gradient(to right, #047857, #065f46)"
-          : props.variant === "danger"
-            ? "#b91c1c"
-            : "#4b5563"};
-    transform: ${(props) => (props.large ? "scale(1.05)" : "none")};
-  }
-
-  &:disabled {
-    background: #6b7280;
-    cursor: not-allowed;
-    transform: none;
-  }
-`;
-
-const TeamsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-`;
-
-const TeamCard = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(16px);
-  border-radius: 12px;
-  padding: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-`;
-
-const TeamHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-`;
-
-const TeamName = styled.h3<{ teamName: string }>`
-  font-size: 1.25rem;
-  font-weight: bold;
-  color: ${(props) => (props.teamName === "Team Red" ? "#f87171" : "#60a5fa")};
-`;
-
-const PlayerCount = styled.span`
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.875rem;
-`;
-
-const PlayersContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-`;
-
-const EmptyState = styled.div`
-  color: rgba(255, 255, 255, 0.5);
-  text-align: center;
-  padding: 1rem;
-  border: 2px dashed rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-`;
-
-const PlayerRow = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-`;
-
-const PlayerInfo = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex: 1;
-`;
-
-const TeamDot = styled.div<{ teamName: string }>`
-  width: 0.75rem;
-  height: 0.75rem;
-  border-radius: 50%;
-  background-color: ${(props) =>
-    props.teamName === "Team Red" ? "#ef4444" : "#3b82f6"};
-`;
-
-const PlayerName = styled.span`
-  color: white;
-  font-weight: 500;
-`;
-
-const PlayerActions = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-`;
-
-const SmallSelect = styled(Select)`
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  min-width: 80px;
-`;
-
-const IconButton = styled.button<{ variant?: string }>`
-  padding: 0.25rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: color 0.2s;
-  color: ${(props) =>
-    props.variant === "edit"
-      ? "#60a5fa"
-      : props.variant === "save"
-        ? "#10b981"
-        : "#f87171"};
-
-  &:hover:not(:disabled) {
-    color: ${(props) =>
-      props.variant === "edit"
-        ? "#3b82f6"
-        : props.variant === "save"
-          ? "#059669"
-          : "#dc2626"};
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-const EditInput = styled(Input)`
-  flex: 1;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
-`;
-
-const EditContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1;
-`;
-
-const RequirementsCard = styled(Card)``;
-
-const RequirementsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  font-size: 0.875rem;
-`;
-
-const RequirementItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-`;
-
-const RequirementDot = styled.span<{ met: boolean }>`
-  width: 0.75rem;
-  height: 0.75rem;
-  border-radius: 50%;
-  background-color: ${(props) => (props.met ? "#10b981" : "#ef4444")};
-`;
-
-const RequirementText = styled.span`
-  color: rgba(255, 255, 255, 0.8);
-`;
-
-const StartGameContainer = styled.div`
-  text-align: center;
-`;
-
-const StartGameButton = styled(Button)`
-  box-shadow: ${(props) =>
-    props.variant === "success"
-      ? "0 10px 25px rgba(16, 185, 129, 0.25)"
-      : "none"};
-`;
-
-const HelpText = styled.p`
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
-`;
-
-const ErrorMessage = styled.div`
-  color: #ef4444;
-  margin-top: 1rem;
-  font-size: 0.875rem;
-  text-align: center;
-  padding: 0.5rem;
-  background: rgba(239, 68, 68, 0.1);
-  border-radius: 8px;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-`;
+// interface LobbyData {
+//   publicId: string;
+//   status: string;
+//   gameType: string;
+//   teams: LobbyTeam[];
+//   canModifyGame: boolean;
+// }
 
 // Mock data structure as fallback with proper typing
 const mockLobbyData: LobbyData = {
   publicId: "game-123",
   status: "LOBBY",
   gameType: "SINGLE_DEVICE",
+  canModifyGame: true,
   teams: [
     {
-      name: "Team Red", // Match actual API structure
-      score: 0,
+      name: "Team Red",
       players: [] as LobbyPlayer[],
     },
     {
-      name: "Team Blue", // Match actual API structure
-      score: 0,
+      name: "Team Blue",
       players: [] as LobbyPlayer[],
     },
   ],
 };
 
-const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
+// Styled Components - Simple tile-based design
+const Container = styled.div`
+  position: relative;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: auto;
+  margin-top: 30px;
+
+  @media (max-width: 768px) {
+    margin-top: 30px;
+  }
+`;
+
+const MainContent = styled.div`
+  width: 90%;
+  margin: 1rem auto;
+  padding: 2rem;
+  background-color: rgba(65, 63, 63, 0.8);
+  border-radius: 16px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+`;
+
+const Header = styled.div`
+  text-align: center;
+  margin-bottom: 3rem;
+`;
+
+const Title = styled.h1`
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: bold;
+  color: white;
+  margin-bottom: 1rem;
+`;
+
+const GameInfo = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+`;
+
+const InfoItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const StatusBadge = styled.div<{ ready: boolean }>`
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  background-color: ${(props) => (props.ready ? "#10b981" : "#f59e0b")};
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+`;
+
+const TeamsGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  margin: 3rem 0;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+`;
+
+const TeamTile = styled.div<{ teamColor: string }>`
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05)
+  );
+  border: 3px solid ${(props) => props.teamColor};
+  border-radius: 20px;
+  padding: 2rem;
+  min-height: 300px;
+  position: relative;
+  backdrop-filter: blur(10px);
+`;
+
+const TeamHeader = styled.div<{ teamColor: string }>`
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid ${(props) => props.teamColor}40;
+`;
+
+const TeamName = styled.h2<{ teamColor: string }>`
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: bold;
+  color: ${(props) => props.teamColor};
+  margin-bottom: 0.5rem;
+`;
+
+const PlayerCount = styled.div`
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 15px;
+  font-size: 0.9rem;
+  display: inline-block;
+`;
+
+const PlayersArea = styled.div`
+  min-height: 150px;
+  margin-bottom: 1.5rem;
+`;
+
+const PlayerTile = styled.div`
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s;
+  cursor: grab;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const PlayerName = styled.span`
+  color: white;
+  font-weight: 500;
+  font-size: 1.1rem;
+  flex: 1;
+`;
+
+const PlayerActions = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
+
+const ActionIcon = styled.button`
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const AddPlayerArea = styled.div`
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+`;
+
+const AddInput = styled.input`
+  flex: 1;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  color: white;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+`;
+
+const AddButton = styled.button<{ teamColor: string }>`
+  background: ${(props) => props.teamColor};
+  border: none;
+  border-radius: 10px;
+  padding: 0.8rem;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 45px;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    transform: scale(1.05);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const StartSection = styled.div`
+  text-align: center;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
+`;
+
+const Requirements = styled.p`
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 2rem;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+`;
+
+const StartButton = styled.button<{ canStart: boolean }>`
+  background: ${(props) =>
+    props.canStart
+      ? "linear-gradient(135deg, #10b981, #059669)"
+      : "linear-gradient(135deg, #6b7280, #4b5563)"};
+  border: none;
+  border-radius: 15px;
+  padding: 1rem 3rem;
+  color: white;
+  font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+  font-weight: bold;
+  cursor: ${(props) => (props.canStart ? "pointer" : "not-allowed")};
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 0 auto;
+  transition: all 0.2s;
+  opacity: ${(props) => (props.canStart ? 1 : 0.7)};
+
+  &:hover {
+    transform: ${(props) => (props.canStart ? "scale(1.05)" : "none")};
+  }
+`;
+
+const ErrorMessage = styled.div`
+  color: #ef4444;
+  margin-top: 1rem;
+  font-size: 1rem;
+  text-align: center;
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 10px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+`;
+
+const LoadingSpinner = styled.div`
+  text-align: center;
+
+  p {
+    color: white;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+const EditableInput = styled.input`
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  font-weight: 500;
+  font-size: 1.1rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  width: 100%;
+
+  &:focus {
+    outline: none;
+    border-color: white;
+  }
+`;
+
+export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
   const navigate = useNavigate();
   const [lobbyData, setLobbyData] = useState<LobbyData>(mockLobbyData);
-  const [newPlayerName, setNewPlayerName] = useState("");
-  const [selectedTeam, setSelectedTeam] = useState("Team Red"); // Fixed: Match backend team names
   const [editingPlayer, setEditingPlayer] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
+
+  // Separate input state for each team
+  const [teamRedInput, setTeamRedInput] = useState("");
+  const [teamBlueInput, setTeamBlueInput] = useState("");
 
   // Load lobby state on component mount
   useEffect(() => {
@@ -453,218 +397,188 @@ const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
       try {
         console.log("Loading lobby state for game:", gameId);
         setInitialLoading(true);
-        const apiResponse = (await getLobbyState(gameId)) as any; // Type as any since API types are wrong
-        console.log("Lobby state loaded:", apiResponse);
+        const response = await getLobbyState(gameId);
+        console.log("Raw API response:", response);
 
-        // Handle the nested response structure
-        const data = apiResponse.game || apiResponse;
-        setLobbyData(data);
+        // Your API returns { game: LobbyData }
+        const lobbyData = response;
+        console.log("Extracted lobby data:", lobbyData);
+        console.log(
+          "Available teams:",
+          lobbyData?.teams?.map((t) => t.name),
+        );
 
-        // Update selectedTeam to match actual team names from backend
-        if (
-          data.teams.length > 0 &&
-          !data.teams.some((team: LobbyTeam) => team.name === selectedTeam)
-        ) {
-          console.log(
-            "Updating selectedTeam from",
-            selectedTeam,
-            "to",
-            data.teams[0].name,
-          );
-          setSelectedTeam(data.teams[0].name);
+        if (lobbyData && lobbyData.teams) {
+          setLobbyData(lobbyData);
+        } else {
+          console.error("No game data or teams in response:", response);
+          setError("Invalid game data received");
         }
       } catch (err) {
         console.error("Failed to load lobby state:", err);
-        setError("Failed to load lobby data. Using mock data for now.");
-        // Keep mock data as fallback
+        setError(`Failed to load lobby data`);
       } finally {
         setInitialLoading(false);
       }
     };
 
-    if (gameId) {
-      loadLobbyState();
-    }
-  }, [gameId, selectedTeam]);
+    loadLobbyState();
+  }, [gameId]);
 
-  // Calculate total players and team counts - with null safety
+  // Add debugging info to see what data we have
+  console.log("Current lobbyData:", lobbyData);
+  console.log("Teams:", lobbyData?.teams);
+
+  const teamColors = {
+    "Team Red": "#ef4444",
+    "Team Blue": "#3b82f6",
+  };
+
+  // Calculate stats - add safety checks
   const totalPlayers =
     lobbyData?.teams?.reduce(
-      (total, team) => total + (team.players?.length || 0),
+      (sum, team) => sum + (team?.players?.length || 0),
       0,
     ) || 0;
-  const teamCounts =
-    lobbyData?.teams?.map((team) => team.players?.length || 0) || [];
-  const minPlayersPerTeam = teamCounts.length > 0 ? Math.min(...teamCounts) : 0;
   const canStartGame =
-    totalPlayers >= 4 && teamCounts.length >= 2 && minPlayersPerTeam >= 2;
+    totalPlayers >= 4 &&
+    (lobbyData?.teams?.every((team) => (team?.players?.length || 0) >= 2) ||
+      false);
 
-  // Add player function
-  const handleAddPlayer = async () => {
-    if (!newPlayerName.trim()) return;
+  const handleQuickAdd = async (teamName: string) => {
+    // Get the correct input value based on team
+    const playerName =
+      teamName === "Team Red" ? teamRedInput.trim() : teamBlueInput.trim();
+    if (!playerName) return;
 
-    console.log("About to send to API:", {
-      gameId,
-      playerName: newPlayerName.trim(),
-      teamName: selectedTeam,
-    });
-
-    console.log(
-      "Starting to add player:",
-      newPlayerName.trim(),
-      "to team:",
-      selectedTeam,
-    );
     setIsLoading(true);
-    setError(null);
     try {
-      console.log("Calling addPlayer API...");
-      const response = await addPlayer(
-        gameId,
-        newPlayerName.trim(),
-        selectedTeam,
-      );
-      console.log("Add player response:", response);
+      // Debug what we're sending
+      console.log("Adding player with:", { gameId, playerName, teamName });
 
-      console.log("Refreshing lobby state...");
-      const apiResponse = (await getLobbyState(gameId)) as any;
-      console.log("Updated lobby data:", apiResponse);
+      // Use your actual API - addPlayer expects (gameId, playerName, teamName)
+      const result = await addPlayer(gameId, playerName, teamName);
+      console.log("Add player result:", result);
 
-      const data = apiResponse.game || apiResponse;
-      setLobbyData(data);
-      setNewPlayerName("");
-    } catch (error) {
-      console.error("Failed to add player:", error);
-      setError("Failed to add player. Please try again.");
+      // Reload lobby state after adding player
+      const response = await getLobbyState(gameId);
+      const lobbyData = response;
+      console.log("Refreshed lobby data after add:", lobbyData);
+      setLobbyData(lobbyData);
+
+      // Clear the correct input
+      if (teamName === "Team Red") {
+        setTeamRedInput("");
+      } else {
+        setTeamBlueInput("");
+      }
+
+      setError(null);
+    } catch (err) {
+      console.error("Failed to add player:", err);
+      setError("Failed to add player");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Remove player function
   const handleRemovePlayer = async (playerId: string) => {
-    console.log("Starting to remove player:", playerId);
     setIsLoading(true);
-    setError(null);
     try {
-      console.log("Calling removePlayer API...");
       await removePlayer(gameId, playerId);
-      console.log("Player removed successfully");
 
-      console.log("Refreshing lobby state...");
-      const apiResponse = (await getLobbyState(gameId)) as any;
-      console.log("Updated lobby data:", apiResponse);
-      const data = apiResponse.game || apiResponse;
-      setLobbyData(data);
-    } catch (error) {
-      console.error("Failed to remove player:", error);
-      setError("Failed to remove player. Please try again.");
+      const response = await getLobbyState(gameId);
+      const lobbyData = response;
+      setLobbyData(lobbyData);
+
+      setError(null);
+    } catch (err) {
+      console.error("Failed to remove player:", err);
+      setError("Failed to remove player");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Edit player name
   const handleEditPlayer = (player: LobbyPlayer) => {
     setEditingPlayer(player.publicId);
-    setEditName(player.name); // Use 'name' not 'playerName'
+    setEditName(player.name);
   };
 
-  const handleSaveEdit = async (playerId: string) => {
-    if (!editName.trim()) return;
+  const handleSaveEdit = async () => {
+    if (!editingPlayer || !editName.trim()) return;
 
-    console.log(
-      "Starting to edit player:",
-      playerId,
-      "new name:",
-      editName.trim(),
-    );
     setIsLoading(true);
-    setError(null);
     try {
-      console.log("Calling modifyPlayer API...");
-      await modifyPlayer(gameId, playerId, {
-        playerId,
+      await modifyPlayer(gameId, editingPlayer, {
+        playerId: editingPlayer,
         playerName: editName.trim(),
       });
-      console.log("Player modified successfully");
 
-      console.log("Refreshing lobby state...");
-      const apiResponse = (await getLobbyState(gameId)) as any;
-      console.log("Updated lobby data:", apiResponse);
-      const data = apiResponse.game || apiResponse;
-      setLobbyData(data);
+      const response = await getLobbyState(gameId);
+      const lobbyData = response;
+      setLobbyData(lobbyData);
 
       setEditingPlayer(null);
       setEditName("");
-    } catch (error) {
-      console.error("Failed to edit player:", error);
-      setError("Failed to update player name. Please try again.");
+      setError(null);
+    } catch (err) {
+      console.error("Failed to update player name:", err);
+      setError("Failed to update player name");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Move player between teams
-  const handleMovePlayer = async (playerId: string, newTeamName: string) => {
-    const currentTeam = (lobbyData?.teams || []).find((team) =>
-      (team.players || []).some((p) => p.publicId === playerId),
-    );
-    if (!currentTeam || currentTeam.name === newTeamName) return;
-
-    console.log("Starting to move player:", playerId, "to team:", newTeamName);
-    setIsLoading(true);
-    setError(null);
-    try {
-      console.log("Calling modifyPlayer API...");
-      await modifyPlayer(gameId, playerId, { playerId, teamName: newTeamName });
-      console.log("Player moved successfully");
-
-      console.log("Refreshing lobby state...");
-      const apiResponse = (await getLobbyState(gameId)) as any;
-      console.log("Updated lobby data:", apiResponse);
-      const data = apiResponse.game || apiResponse;
-      setLobbyData(data);
-    } catch (error) {
-      console.error("Failed to move player:", error);
-      setError("Failed to move player. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Start game function
   const handleStartGame = async () => {
     if (!canStartGame) return;
 
-    console.log("Starting game with players:", lobbyData?.teams || []);
     setIsLoading(true);
-    setError(null);
     try {
-      console.log("Calling startGame API...");
-      const response = await startGame(gameId);
-      console.log("Game started successfully:", response);
-
-      // Navigate to the actual gameplay
-      navigate(`/game/${gameId}`);
-    } catch (error) {
-      console.error("Failed to start game:", error);
-      setError(
-        "Failed to start game. Please check that all requirements are met.",
-      );
+      await startGame(gameId);
+      navigate(`/game/${gameId}/play`);
+    } catch (err) {
+      console.error("Failed to start game:", err);
+      setError("Failed to start game");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Show current state for debugging
+  if (error) {
+    return (
+      <Container>
+        <MainContent>
+          <div style={{ color: "white", textAlign: "center", padding: "2rem" }}>
+            <h2>Error Loading Lobby</h2>
+            <p>{error}</p>
+            <pre
+              style={{
+                textAlign: "left",
+                background: "rgba(0,0,0,0.5)",
+                padding: "1rem",
+                borderRadius: "8px",
+                marginTop: "1rem",
+              }}
+            >
+              {JSON.stringify(lobbyData, null, 2)}
+            </pre>
+          </div>
+        </MainContent>
+      </Container>
+    );
+  }
+
+  // Show loading spinner during initial load
   if (initialLoading) {
     return (
       <Container>
         <MainContent>
-          <Header>
-            <Title>Loading Lobby...</Title>
-            <Subtitle>Please wait while we load the game data</Subtitle>
-          </Header>
+          <LoadingSpinner>
+            <p>Loading lobby...</p>
+            <div className="spinner"></div>
+          </LoadingSpinner>
         </MainContent>
       </Container>
     );
@@ -673,228 +587,155 @@ const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
   return (
     <Container>
       <MainContent>
-        {/* Header */}
         <Header>
-          <Title>Codenames Lobby</Title>
-          <Subtitle>Set up your teams for single device play</Subtitle>
-          <StatsContainer>
-            <StatItem>
-              <Users size={16} />
-              <span>{totalPlayers} players total</span>
-            </StatItem>
-            <StatItem>
-              <StatusDot ready={canStartGame} />
-              <span>
-                {canStartGame
-                  ? "Ready to start!"
-                  : "Need 4+ players, 2+ per team"}
-              </span>
-            </StatItem>
-          </StatsContainer>
-          {error && <ErrorMessage>{error}</ErrorMessage>}
+          <Title>Game Lobby</Title>
+          <GameInfo>
+            <InfoItem>
+              <strong>Game ID:</strong> {lobbyData?.publicId || "Loading..."}
+            </InfoItem>
+            <InfoItem>
+              <Users size={20} />
+              <span>{totalPlayers} Players</span>
+            </InfoItem>
+            <StatusBadge ready={canStartGame}>
+              {canStartGame ? "Ready to Start" : "Need More Players"}
+            </StatusBadge>
+          </GameInfo>
         </Header>
 
-        {/* Debug: Show raw data */}
-        <Card style={{ marginBottom: "1rem" }}>
-          <SectionTitle>Debug Info</SectionTitle>
-          <div
-            style={{
-              color: "white",
-              fontSize: "12px",
-              backgroundColor: "rgba(0,0,0,0.3)",
-              padding: "10px",
-              borderRadius: "5px",
-              maxHeight: "200px",
-              overflow: "auto",
-            }}
-          >
-            <div>
-              <strong>Selected Team:</strong> "{selectedTeam}"
-            </div>
-            <div>
-              <strong>Teams Available:</strong>{" "}
-              {(lobbyData?.teams || [])
-                .map((t, index) => `"${t.name}"`)
-                .join(", ")}
-            </div>
-            <div>
-              <strong>Raw Lobby Data:</strong>
-            </div>
-            <pre style={{ fontSize: "10px", whiteSpace: "pre-wrap" }}>
-              {JSON.stringify(lobbyData, null, 2)}
-            </pre>
-          </div>
-        </Card>
-
-        {/* Add Player Section */}
-        <Card>
-          <SectionTitle>Add New Player</SectionTitle>
-          <AddPlayerForm>
-            <InputGroup>
-              <Label>Player Name</Label>
-              <Input
-                type="text"
-                value={newPlayerName}
-                onChange={(e) => setNewPlayerName(e.target.value)}
-                placeholder="Enter player name"
-                onKeyPress={(e) => e.key === "Enter" && handleAddPlayer()}
-                disabled={isLoading}
-              />
-            </InputGroup>
-            <InputGroup>
-              <Label>Team</Label>
-              <Select
-                value={selectedTeam}
-                onChange={(e) => setSelectedTeam(e.target.value)}
-                disabled={isLoading}
-              >
-                {(lobbyData?.teams || []).map((team) => (
-                  <option key={team.name} value={team.name}>
-                    {team.name}
-                  </option>
-                ))}
-              </Select>
-            </InputGroup>
-            <Button
-              variant="primary"
-              onClick={handleAddPlayer}
-              disabled={!newPlayerName.trim() || isLoading}
-            >
-              <Plus size={16} />
-              Add Player
-            </Button>
-          </AddPlayerForm>
-        </Card>
-
-        {/* Teams Display */}
         <TeamsGrid>
-          {(lobbyData?.teams || []).map((team) => (
-            <TeamCard key={team.name}>
-              <TeamHeader>
-                <TeamName teamName={team.name}>{team.name}</TeamName>
-                <PlayerCount>
-                  {(team.players || []).length} player
-                  {(team.players || []).length !== 1 ? "s" : ""}
-                </PlayerCount>
+          {lobbyData?.teams?.map((team) => (
+            <TeamTile
+              key={team.name}
+              teamColor={
+                teamColors[team.name as keyof typeof teamColors] || "#6b7280"
+              }
+            >
+              <TeamHeader
+                teamColor={
+                  teamColors[team.name as keyof typeof teamColors] || "#6b7280"
+                }
+              >
+                <TeamName
+                  teamColor={
+                    teamColors[team.name as keyof typeof teamColors] ||
+                    "#6b7280"
+                  }
+                >
+                  {team.name}
+                </TeamName>
+                <PlayerCount>{team?.players?.length || 0} players</PlayerCount>
               </TeamHeader>
 
-              <PlayersContainer>
-                {(team.players || []).length === 0 ? (
-                  <EmptyState>No players yet</EmptyState>
-                ) : (
-                  (team.players || []).map((player) => (
-                    <PlayerRow key={player.publicId}>
+              <PlayersArea>
+                {team?.players?.map((player) => (
+                  <PlayerTile key={player.publicId}>
+                    {editingPlayer === player.publicId ? (
+                      <EditableInput
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        onBlur={handleSaveEdit}
+                        onKeyDown={(e) => e.key === "Enter" && handleSaveEdit()}
+                        autoFocus
+                      />
+                    ) : (
+                      <PlayerName>
+                        {player?.name || "Unknown Player"}
+                      </PlayerName>
+                    )}
+
+                    <PlayerActions>
                       {editingPlayer === player.publicId ? (
-                        <EditContainer>
-                          <EditInput
-                            type="text"
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                            onKeyPress={(e) =>
-                              e.key === "Enter" &&
-                              handleSaveEdit(player.publicId)
-                            }
-                            autoFocus
-                          />
-                          <IconButton
-                            variant="save"
-                            onClick={() => handleSaveEdit(player.publicId)}
-                            disabled={isLoading}
-                          >
-                            <Save size={16} />
-                          </IconButton>
-                        </EditContainer>
+                        <ActionIcon
+                          onClick={handleSaveEdit}
+                          disabled={isLoading}
+                        >
+                          <Check size={16} />
+                        </ActionIcon>
                       ) : (
-                        <>
-                          <PlayerInfo>
-                            <TeamDot teamName={team.name} />
-                            <PlayerName>{player.name}</PlayerName>
-                          </PlayerInfo>
-                          <PlayerActions>
-                            <SmallSelect
-                              onChange={(e) =>
-                                handleMovePlayer(
-                                  player.publicId,
-                                  e.target.value,
-                                )
-                              }
-                              value={team.name}
-                              disabled={isLoading}
-                            >
-                              {(lobbyData?.teams || []).map((t) => (
-                                <option key={t.name} value={t.name}>
-                                  {t.name}
-                                </option>
-                              ))}
-                            </SmallSelect>
-                            <IconButton
-                              variant="edit"
-                              onClick={() => handleEditPlayer(player)}
-                              disabled={isLoading}
-                            >
-                              <Edit2 size={12} />
-                            </IconButton>
-                            <IconButton
-                              variant="danger"
-                              onClick={() =>
-                                handleRemovePlayer(player.publicId)
-                              }
-                              disabled={isLoading}
-                            >
-                              <X size={12} />
-                            </IconButton>
-                          </PlayerActions>
-                        </>
+                        <ActionIcon
+                          onClick={() => handleEditPlayer(player)}
+                          disabled={isLoading}
+                        >
+                          <Edit2 size={16} />
+                        </ActionIcon>
                       )}
-                    </PlayerRow>
-                  ))
-                )}
-              </PlayersContainer>
-            </TeamCard>
-          ))}
+                      <ActionIcon
+                        onClick={() =>
+                          handleRemovePlayer(player?.publicId || "")
+                        }
+                        disabled={isLoading}
+                      >
+                        <X size={16} />
+                      </ActionIcon>
+                    </PlayerActions>
+                  </PlayerTile>
+                )) || []}
+              </PlayersArea>
+
+              <AddPlayerArea>
+                <AddInput
+                  placeholder="Enter player name..."
+                  value={
+                    team.name === "Team Red" ? teamRedInput : teamBlueInput
+                  }
+                  onChange={(e) => {
+                    if (team.name === "Team Red") {
+                      setTeamRedInput(e.target.value);
+                    } else {
+                      setTeamBlueInput(e.target.value);
+                    }
+                  }}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && handleQuickAdd(team.name)
+                  }
+                  disabled={isLoading}
+                />
+                <AddButton
+                  teamColor={
+                    teamColors[team.name as keyof typeof teamColors] ||
+                    "#6b7280"
+                  }
+                  onClick={() => handleQuickAdd(team.name)}
+                  disabled={
+                    isLoading ||
+                    (team.name === "Team Red"
+                      ? !teamRedInput.trim()
+                      : !teamBlueInput.trim())
+                  }
+                >
+                  <Plus size={20} />
+                </AddButton>
+              </AddPlayerArea>
+            </TeamTile>
+          )) || []}
         </TeamsGrid>
 
-        {/* Game Rules Reminder */}
-        <RequirementsCard>
-          <SectionTitle>Game Setup Requirements</SectionTitle>
-          <RequirementsGrid>
-            <RequirementItem>
-              <RequirementDot met={totalPlayers >= 4} />
-              <RequirementText>Minimum 4 players total</RequirementText>
-            </RequirementItem>
-            <RequirementItem>
-              <RequirementDot met={teamCounts.length >= 2} />
-              <RequirementText>At least 2 teams</RequirementText>
-            </RequirementItem>
-            <RequirementItem>
-              <RequirementDot met={minPlayersPerTeam >= 2} />
-              <RequirementText>2+ players per team</RequirementText>
-            </RequirementItem>
-          </RequirementsGrid>
-        </RequirementsCard>
+        <StartSection>
+          <Requirements>
+            {canStartGame
+              ? "All teams ready! You can start the game now."
+              : "Need at least 2 players per team and 4 players total to start."}
+          </Requirements>
 
-        {/* Start Game Button */}
-        <StartGameContainer>
-          <StartGameButton
-            variant={canStartGame ? "success" : ""}
-            large
-            onClick={handleStartGame}
-            disabled={!canStartGame || isLoading}
-          >
-            <Play size={20} />
-            {isLoading ? "Starting..." : "Start Game"}
-          </StartGameButton>
-
-          {!canStartGame && (
-            <HelpText>
-              {totalPlayers < 4
-                ? `Add ${4 - totalPlayers} more player${4 - totalPlayers !== 1 ? "s" : ""} to start`
-                : minPlayersPerTeam < 2
-                  ? "Each team needs at least 2 players"
-                  : "Ready to start!"}
-            </HelpText>
+          {isLoading ? (
+            <LoadingSpinner>
+              <p>Processing...</p>
+              <div className="spinner"></div>
+            </LoadingSpinner>
+          ) : (
+            <StartButton
+              canStart={canStartGame}
+              onClick={handleStartGame}
+              disabled={!canStartGame || isLoading}
+            >
+              <Play size={24} />
+              Start Game
+            </StartButton>
           )}
-        </StartGameContainer>
+
+          {error && <ErrorMessage>{error}</ErrorMessage>}
+        </StartSection>
       </MainContent>
     </Container>
   );

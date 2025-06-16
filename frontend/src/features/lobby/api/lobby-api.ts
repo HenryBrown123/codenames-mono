@@ -18,12 +18,12 @@ export interface PlayerUpdateData {
 
 export interface LobbyPlayer {
   publicId: string;
-  playerName: string;
+  name: string;
   teamName: string;
 }
 
 export interface LobbyTeam {
-  teamName: string;
+  name: string;
   players: LobbyPlayer[];
 }
 
@@ -65,7 +65,7 @@ interface StartGameResponse {
 
 interface GetLobbyStateResponse {
   success: boolean;
-  data: LobbyData;
+  data: { game: LobbyData };
 }
 
 // ==========================================
@@ -90,7 +90,7 @@ export const getLobbyState = async (gameId: string): Promise<LobbyData> => {
   }
 
   console.log("Lobby state retrieved!");
-  return response.data.data;
+  return response.data.data.game;
 };
 
 /**
