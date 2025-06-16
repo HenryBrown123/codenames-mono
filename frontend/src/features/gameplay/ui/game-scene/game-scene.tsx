@@ -54,7 +54,7 @@ export const GameScene: React.FC = () => {
   const stageConfig = uiConfig[currentStage];
   const sceneConfig = stageConfig?.scenes[currentScene];
 
-  if (!sceneConfig) {
+  if (!sceneConfig || !gameData.playerContext) {
     console.error("No scene config found", {
       currentStage,
       currentScene,
