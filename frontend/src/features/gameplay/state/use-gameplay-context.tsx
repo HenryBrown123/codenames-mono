@@ -48,6 +48,32 @@ interface GameplayProviderProps {
 const GameplayContext = createContext<GameplayContextProps | null>(null);
 
 /**
+ * Internal provider that aggregates all contexts for the legacy interface
+ */
+const GameplayContextAggregator = ({
+  children,
+  gameData,
+}: {
+  children: ReactNode;
+  gameData: GameData;
+}): JSX.Element => {
+  const uiState = useUIState();
+  const gameActions = useGameActions();
+
+  return (
+    <GameplayContext.Provider
+      value={{
+        gameData,
+        ...uiState,
+        ...gameActions,
+      }}
+    >
+      {children}
+    </GameplayContext.Provider>
+  );
+};
+
+/**
  * Main Gameplay Context Provider - composes all sub-providers
  */
 export const GameplayContextProvider = ({
@@ -63,7 +89,9 @@ export const GameplayContextProvider = ({
   return (
     <UIStateProvider gameData={gameData}>
       <GameActionsProvider gameId={gameId} gameData={gameData}>
-        {children}
+        <GameplayContextAggregator gameData={gameData}>
+          {children}
+        </GameplayContextAggregator>
       </GameActionsProvider>
     </UIStateProvider>
   );
