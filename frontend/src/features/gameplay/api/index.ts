@@ -1,2 +1,2 @@
-export * from "./use-game-data";
-export * from "./fetch-game";
+export * from "./queries";
+export * from "./mutations";

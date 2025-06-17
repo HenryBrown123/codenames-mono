@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import ActionButton from "../action-button/action-button";
-import { useGameplayContext as useGameContext } from "@frontend/game/state";
+import { useGameData } from "@frontend/game/state";
 import { Card } from "@frontend/shared-types";
 
 const Container = styled.div`
@@ -95,143 +95,113 @@ type CodeWordInputProps = {
   numberOfCards?: number;
   isEditable?: boolean;
   isLoading?: boolean;
-  onSubmit?: (word: string, targetCardCount: number) => void;
+  onSubmit?: (codeWord: string, numberOfCards: number) => void;
 };
 
-const CodeWordInput: React.FC<CodeWordInputProps> = ({
+export default function CodeWordInput({
   codeWord = "",
-  numberOfCards = 0,
-  isEditable = false,
+  numberOfCards = 1,
+  isEditable = true,
   isLoading = false,
   onSubmit,
-}) => {
-  const { gameData } = useGameContext();
-
-  // Local component state
-  const [displayedWord, setDisplayedWord] = useState(codeWord);
-  const [displayedNumber, setDisplayedNumber] = useState(numberOfCards);
-  const [displaySubmit, setDisplaySubmit] = useState(isEditable);
-  const [error, setError] = useState<string | null>(null);
-  const [canEdit, setCanEdit] = useState(isEditable);
-
+}: CodeWordInputProps) {
+  const { gameData } = useGameData();
+  const [inputCodeWord, setInputCodeWord] = useState(codeWord);
+  const [inputNumberOfCards, setInputNumberOfCards] = useState(numberOfCards);
+  const [errorMessage, setErrorMessage] = useState("");
   const textInputRef = useRef<HTMLInputElement>(null);
 
-  const validationError = (errorMsg: string): void => {
-    setDisplaySubmit(false);
-    setError(errorMsg);
-  };
-
-  const validationSuccess = (): void => {
-    setDisplaySubmit(canEdit);
-    setError(null);
-  };
-
-  const updatedDisplayedWord = (updatedWord: string) => {
-    if (updatedWord.length >= 30) {
-      validationError("Maximum number of characters reached...");
-    } else {
-      setDisplayedWord(updatedWord);
-    }
-  };
-
-  // Focus the cursor on the input text field as the component becomes editable
   useEffect(() => {
     if (isEditable && textInputRef.current) {
       textInputRef.current.focus();
     }
   }, [isEditable]);
 
-  // Auto-resize input field
   useEffect(() => {
-    if (textInputRef.current) {
-      textInputRef.current.style.width = `${Math.max(displayedWord.length, 10) + 2}ch`;
-    }
-  }, [displayedWord]);
+    setInputCodeWord(codeWord);
+    setInputNumberOfCards(numberOfCards);
+  }, [codeWord, numberOfCards]);
 
-  // Input validation
-  useEffect(() => {
-    if (!gameData.currentRound?.cards) {
-      validationSuccess();
+  const handleSubmit = () => {
+    if (!onSubmit) return;
+
+    // Validation
+    if (!inputCodeWord.trim()) {
+      setErrorMessage("Please enter a clue word");
       return;
     }
 
-    const wordsInGameData = gameData.currentRound.cards.map((card: Card) =>
-      card.word.toLowerCase(),
-    );
-    const isSingleWord = !/\s/.test(displayedWord);
-    const isUnique = !wordsInGameData.some((word: string) =>
-      displayedWord.toLowerCase().includes(word),
-    );
-
-    if (!isSingleWord) {
-      validationError("The codeword must be a single word.");
-    } else if (!isUnique) {
-      validationError(
-        "The codeword cannot contain any part of an existing word in the game.",
-      );
-    } else {
-      validationSuccess();
+    if (inputNumberOfCards < 1 || inputNumberOfCards > 9) {
+      setErrorMessage("Number of cards must be between 1 and 9");
+      return;
     }
-  }, [displayedWord, gameData.currentRound?.cards]);
 
-  // Submit the codeword and number of guesses
-  const handleClick = () => {
-    if (!error && onSubmit) {
-      setDisplaySubmit(false);
-      setCanEdit(false);
-      onSubmit(displayedWord, displayedNumber);
+    // Check if word exists on board
+    const cards: Card[] = gameData.currentRound?.cards || [];
+    const wordExists = cards.some(
+      (card) => card.word.toLowerCase() === inputCodeWord.toLowerCase(),
+    );
+
+    if (wordExists) {
+      setErrorMessage("Clue word cannot be a word on the board");
+      return;
+    }
+
+    setErrorMessage("");
+    onSubmit(inputCodeWord, inputNumberOfCards);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && isEditable && !isLoading) {
+      handleSubmit();
     }
   };
 
+  const hasError = errorMessage.length > 0;
+
   return (
-    <Container id="cm-input-outer-container">
-      <InputContainer id="cm-input-inner-container">
-        <InlineGroup className="cm-input-inline-group">
+    <Container>
+      <InputContainer>
+        <InlineGroup>
+          <InlineText>My clue is</InlineText>
           <UnderlinedTextInput
             ref={textInputRef}
             type="text"
-            value={displayedWord}
-            onChange={(e) => updatedDisplayedWord(e.target.value)}
-            placeholder="codeword"
-            disabled={!canEdit || isLoading}
-            isError={!!error}
+            value={inputCodeWord}
+            onChange={(e) => setInputCodeWord(e.target.value)}
+            onKeyPress={handleKeyPress}
+            disabled={!isEditable || isLoading}
+            isError={hasError}
+            placeholder="word"
           />
-          <InlineText>links</InlineText>
         </InlineGroup>
-
-        <InlineGroup className="cm-input-inline-group">
+        <InlineGroup>
+          <InlineText>for</InlineText>
           <UnderlinedNumberInput
             type="number"
-            value={displayedNumber}
-            onChange={(e) => setDisplayedNumber(parseInt(e.target.value))}
-            min={1}
-            max={9}
-            placeholder="0"
-            disabled={!canEdit || isLoading}
-            isError={!!error}
+            min="1"
+            max="9"
+            value={inputNumberOfCards}
+            onChange={(e) => setInputNumberOfCards(Number(e.target.value))}
+            onKeyPress={handleKeyPress}
+            disabled={!isEditable || isLoading}
+            isError={hasError}
           />
           <InlineText>cards</InlineText>
         </InlineGroup>
-
-        {error && <ErrorMessage>{error}</ErrorMessage>}
       </InputContainer>
 
-      {displaySubmit && (
+      {hasError && <ErrorMessage>{errorMessage}</ErrorMessage>}
+
+      {isEditable && (
         <ButtonWrapper>
           <StyledActionButton
-            text={isLoading ? "Submitting..." : "Submit"}
-            onClick={handleClick}
-            enabled={
-              !error &&
-              !isLoading &&
-              displayedWord.length > 0 &&
-              displayedNumber > 0
-            }
+            onClick={handleSubmit}
+            text={isLoading ? "Submitting..." : "Submit Clue"}
+            enabled={!isLoading}
           />
         </ButtonWrapper>
       )}
     </Container>
   );
-};
-
-export default CodeWordInput;
+}

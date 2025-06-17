@@ -5,11 +5,11 @@ import React, {
   useReducer,
   useCallback,
 } from "react";
-import { PlayerRole, PLAYER_ROLE } from "@codenames/shared/types";
-import { GameData } from "@frontend/shared-types";
-import { UIState, uiReducer, createInitialUIState } from "./ui-state-helpers";
+import { PlayerRole } from "@codenames/shared/types";
+import { useGameData } from "./game-data-provider";
+import { uiReducer, createInitialUIState } from "./ui-state-helpers";
 
-interface UIStateContextProps {
+interface UIState {
   currentStage: PlayerRole;
   currentScene: string;
   showDeviceHandoff: boolean;
@@ -17,52 +17,46 @@ interface UIStateContextProps {
     stage: PlayerRole;
     scene: string;
   } | null;
+}
+
+interface UISceneContextValue {
+  currentStage: PlayerRole;
+  currentScene: string;
+  showDeviceHandoff: boolean;
+  pendingTransition: UIState["pendingTransition"];
   handleSceneTransition: (event: string) => void;
   setUIStage: (stage: PlayerRole) => void;
   completeHandoff: () => void;
 }
 
-interface UIStateProviderProps {
+const UISceneContext = createContext<UISceneContextValue | null>(null);
+
+interface UISceneProviderProps {
   children: ReactNode;
-  gameData: GameData;
 }
 
-const UIStateContext = createContext<UIStateContextProps | null>(null);
+export const UISceneProvider = ({ children }: UISceneProviderProps) => {
+  const { gameData } = useGameData();
 
-/**
- * UI State Provider - manages scene transitions and stage changes with device handoff
- */
-export const UIStateProvider = ({
-  children,
-  gameData,
-}: UIStateProviderProps): JSX.Element => {
   const [uiState, dispatch] = useReducer(
     (state: UIState, action: any) => uiReducer(state, action, gameData),
     createInitialUIState(gameData),
   );
 
   const handleSceneTransition = useCallback((event: string) => {
-    dispatch({
-      type: "TRIGGER_TRANSITION",
-      payload: { event },
-    });
+    dispatch({ type: "TRIGGER_TRANSITION", payload: { event } });
   }, []);
 
   const setUIStage = useCallback((stage: PlayerRole) => {
-    dispatch({
-      type: "SET_STAGE",
-      payload: { stage },
-    });
+    dispatch({ type: "SET_STAGE", payload: { stage } });
   }, []);
 
   const completeHandoff = useCallback(() => {
-    dispatch({
-      type: "COMPLETE_HANDOFF",
-    });
+    dispatch({ type: "COMPLETE_HANDOFF" });
   }, []);
 
   return (
-    <UIStateContext.Provider
+    <UISceneContext.Provider
       value={{
         currentStage: uiState.currentStage,
         currentScene: uiState.currentScene,
@@ -74,17 +68,17 @@ export const UIStateProvider = ({
       }}
     >
       {children}
-    </UIStateContext.Provider>
+    </UISceneContext.Provider>
   );
 };
 
 /**
- * Hook to access UI state context
+ * Hook to access UI scene state and actions
  */
-export const useUIState = (): UIStateContextProps => {
-  const context = useContext(UIStateContext);
+export const useUIScene = () => {
+  const context = useContext(UISceneContext);
   if (!context) {
-    throw new Error("useUIState must be used within a UIStateProvider");
+    throw new Error("useUIScene must be used within UISceneProvider");
   }
   return context;
 };

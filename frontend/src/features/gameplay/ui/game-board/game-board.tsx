@@ -1,9 +1,11 @@
-import React, { memo, useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import styled from "styled-components";
 import { GameCard } from "./game-card";
-import { Card } from "@frontend/shared-types";
-import { useGameActions } from "@frontend/features/gameplay/state";
+import { useGameData, useGameActions } from "@frontend/game/state";
 
+/**
+ * Board display modes that control card visibility and interactivity
+ */
 export const BOARD_MODE = {
   CODEMASTER_ACTIVE: "codemaster-active",
   CODEMASTER_READONLY: "codemaster-readonly",
@@ -13,80 +15,76 @@ export const BOARD_MODE = {
 
 export type BoardMode = (typeof BOARD_MODE)[keyof typeof BOARD_MODE];
 
-const CardsContainer = styled.div`
-  display: grid;
+const BoardWrapper = styled.div`
+  display: flex;
   width: 100%;
   height: 100%;
-  grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(5, 1fr);
-  grid-gap: 0.2em;
-  align-items: stretch;
-  justify-items: stretch;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 `;
 
-export interface GameBoardProps {
-  cards: Card[];
-  boardMode: BoardMode;
+const BoardContainer = styled.div`
+  width: 100%;
+  max-width: 900px;
+  aspect-ratio: 5 / 5;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: clamp(0.5rem, 1vw, 1rem);
+  margin: auto;
+  padding: clamp(0.5rem, 1vw, 1rem);
+`;
+
+interface GameBoardViewProps {
+  boardMode?: BoardMode;
 }
 
-/**
- * Refactored GameBoard - no more prop drilling, uses callbacks for animations
- */
-export const GameBoard = memo<GameBoardProps>(({ cards, boardMode }) => {
-  // Track multiple animating cards using Set<string>
-  const [animatingCards, setAnimatingCards] = useState<Set<string>>(new Set());
-  const { handleMakeGuess } = useGameActions();
+export const GameBoardView: React.FC<GameBoardViewProps> = ({ boardMode }) => {
+  const { gameData } = useGameData();
+  const { makeGuess, actionState } = useGameActions();
+  const [isAnimating, setIsAnimating] = useState(true);
 
-  const showTeamColors = boardMode === BOARD_MODE.CODEMASTER_ACTIVE;
-  const clickable = boardMode === BOARD_MODE.CODEBREAKER;
+  const cards = gameData.currentRound?.cards || [];
 
-  const handleCardClick = (cardWord: string) => {
-    if (!clickable) return;
+  const handleCardClick = useCallback(
+    (cardWord: string) => {
+      console.log(`Card clicked: ${cardWord}`);
+      makeGuess(cardWord);
+    },
+    [makeGuess],
+  );
 
-    // Start animation immediately on click
-    setAnimatingCards((prev) => new Set(prev).add(cardWord));
+  const showTeamColors = useMemo(() => {
+    return (
+      boardMode === BOARD_MODE.CODEMASTER_ACTIVE ||
+      boardMode === BOARD_MODE.CODEMASTER_READONLY
+    );
+  }, [boardMode]);
 
-    // Use callbacks to control animation lifecycle
-    handleMakeGuess(cardWord, {
-      onSuccess: (data) => {
-        // Remove from animating set on success
-        setAnimatingCards((prev) => {
-          const next = new Set(prev);
-          next.delete(cardWord);
-          return next;
-        });
-        console.log(`Card ${cardWord} guessed successfully:`, data);
-      },
-      onError: (error) => {
-        // Remove from animating set on error
-        setAnimatingCards((prev) => {
-          const next = new Set(prev);
-          next.delete(cardWord);
-          return next;
-        });
-        console.error(`Card ${cardWord} guess failed:`, error.message);
-      },
-      onSettled: () => {
-        console.log(`Guess attempt for ${cardWord} completed`);
-      },
-    });
-  };
+  const isLoading = actionState.status === "loading";
+
+  const clickable = useMemo(() => {
+    return boardMode === BOARD_MODE.CODEBREAKER && !isLoading;
+  }, [boardMode, isLoading]);
 
   return (
-    <CardsContainer aria-label="game board container with cards">
-      {cards.map((card, index) => (
-        <GameCard
-          key={card.word}
-          card={card}
-          cardIndex={index}
-          showTeamColors={showTeamColors}
-          clickable={clickable && !card.selected}
-          isAnimating={animatingCards.has(card.word)}
-          onCardClick={handleCardClick}
-        />
-      ))}
-    </CardsContainer>
+    <BoardWrapper>
+      <BoardContainer>
+        {cards.map((card, index) => (
+          <GameCard
+            key={card.word}
+            card={card}
+            cardIndex={index}
+            showTeamColors={showTeamColors}
+            clickable={clickable}
+            isAnimating={isAnimating}
+            onCardClick={handleCardClick}
+          />
+        ))}
+      </BoardContainer>
+    </BoardWrapper>
   );
-});
-
-export default GameBoard;
+};

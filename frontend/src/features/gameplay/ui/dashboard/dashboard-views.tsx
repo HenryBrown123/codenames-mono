@@ -2,11 +2,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import ActionButton from "../action-button/action-button";
 import CodeWordInput from "./codemaster-input";
-import {
-  useGameActions,
-  useGameplayContext,
-  useUIState,
-} from "@frontend/game/state";
+import { useGameData, useUIScene, useGameActions } from "@frontend/game/state";
 import { Turn } from "@frontend/shared-types";
 
 const ButtonWrapper = styled.div`
@@ -16,29 +12,37 @@ const ButtonWrapper = styled.div`
   margin: 0 auto;
 `;
 
-// Enhanced lobby dashboard with logging
+// Lobby dashboard
 export const LobbyDashboardView: React.FC = () => {
-  const { gameData, isLoading } = useGameplayContext();
-  const { handleSceneTransition } = useUIState();
-  const { handleCreateRound } = useGameActions();
+  console.log("Rendering LobbyDashboardView");
+
+  const { gameData } = useGameData();
+  const { handleSceneTransition } = useUIScene();
+  const { createRound, actionState } = useGameActions();
+
+  console.log("Lobby Dashboard State:", {
+    gameStatus: gameData?.status,
+    isLoading: actionState.status === "loading",
+    hasCurrentRound: !!gameData?.currentRound,
+    playerRole: gameData?.playerContext?.role,
+  });
 
   const handleClick = () => {
-    // join current game
+    // If game already has a round but player has no role, try to transition
     if (gameData?.currentRound && gameData?.status === "IN_PROGRESS") {
       console.log(
         "Game in progress with existing round - transitioning to gameplay",
       );
-      handleSceneTransition("GAME_STARTED");
+      handleSceneTransition("next");
       return;
     }
-    // .... or create new round
+
+    // Only create round if there isn't one
     if (!gameData?.currentRound) {
-      handleCreateRound({
-        onSuccess: () => {
-          handleSceneTransition("GAME_STARTED");
-        },
-      });
-      return;
+      console.log("Lobby: Creating new round");
+      createRound();
+    } else {
+      console.log("Round already exists, not creating another");
     }
   };
 
@@ -47,7 +51,7 @@ export const LobbyDashboardView: React.FC = () => {
     if (gameData?.currentRound && gameData?.status === "IN_PROGRESS") {
       return "Join Game";
     }
-    return "Start Round";
+    return "Start Game";
   };
 
   return (
@@ -55,41 +59,37 @@ export const LobbyDashboardView: React.FC = () => {
       <ActionButton
         onClick={handleClick}
         text={getButtonText()}
-        enabled={!isLoading.createRound}
+        enabled={actionState.status !== "loading"}
       />
     </ButtonWrapper>
   );
 };
 
-// Enhanced spectator dashboard with logging
+// Spectator dashboard
 export const SpectatorDashboardView: React.FC = () => {
   return (
-    <ButtonWrapper>
-      <div>Watching the game...</div>
-    </ButtonWrapper>
+    <Container>
+      <InfoText>Watching the game...</InfoText>
+    </Container>
   );
 };
 
-// Enhanced waiting dashboard with logging
+// Waiting dashboard
 export const WaitingDashboardView: React.FC = () => {
-  const { gameData } = useGameplayContext();
+  const { gameData } = useGameData();
 
   return (
-    <ButtonWrapper>
-      <div>Waiting for other players...</div>
-    </ButtonWrapper>
+    <Container>
+      <InfoText>Waiting for the other team...</InfoText>
+    </Container>
   );
 };
 
-// Enhanced transition dashboard with logging
+// Transition dashboard
 export const TransitionDashboardView: React.FC = () => {
-  const {
-    gameData,
-    handleSceneTransition,
-    handleStartRound,
-    handleDealCards,
-    isLoading,
-  } = useGameplayContext();
+  const { gameData } = useGameData();
+  const { handleSceneTransition } = useUIScene();
+  const { startRound, dealCards, actionState } = useGameActions();
   const [actionButtonEnabled, setActionButtonEnabled] = useState(true);
 
   const handleClick = () => {
@@ -112,10 +112,10 @@ export const TransitionDashboardView: React.FC = () => {
         "Dealing cards for round:",
         gameData.currentRound.roundNumber,
       );
-      handleDealCards(gameData.currentRound.roundNumber.toString());
+      dealCards();
     } else if (gameData.currentRound.status === "SETUP") {
       console.log("Starting round:", gameData.currentRound.roundNumber);
-      handleStartRound(gameData.currentRound.roundNumber);
+      startRound();
     } else {
       console.log("Transitioning to next scene");
       handleSceneTransition("next");
@@ -124,25 +124,25 @@ export const TransitionDashboardView: React.FC = () => {
     setActionButtonEnabled(true);
   };
 
-  const isLoading_ = isLoading.startRound || isLoading.dealCards;
+  const isLoading = actionState.status === "loading";
 
   return (
     <ButtonWrapper>
       <ActionButton
         onClick={handleClick}
         text="Continue"
-        enabled={actionButtonEnabled && !isLoading_}
+        enabled={actionButtonEnabled && !isLoading}
       />
     </ButtonWrapper>
   );
 };
 
-// Enhanced codemaster dashboard with logging
+// Codemaster dashboard
 export const CodemasterDashboardView: React.FC = () => {
   console.log("Rendering CodemasterDashboardView");
 
-  const { gameData, handleGiveClue, handleSceneTransition, isLoading } =
-    useGameplayContext();
+  const { gameData } = useGameData();
+  const { giveClue, handleSceneTransition, actionState } = useGameActions();
 
   const currentRound = gameData.currentRound;
   const activeTurn = currentRound?.turns?.find(
@@ -155,99 +155,104 @@ export const CodemasterDashboardView: React.FC = () => {
     currentRound: currentRound?.roundNumber,
     activeTurn: !!activeTurn,
     hasClue: !!activeTurn?.clue,
-    codeWord,
-    numberOfGuesses,
-    isLoading: isLoading.giveClue,
   });
 
-  const handleSubmit = (word: string, targetCardCount: number) => {
-    console.log("Codemaster: Submitting clue", { word, targetCardCount });
-
-    if (!currentRound) {
-      console.error("No current round available");
-      return;
-    }
-
-    // Give the clue
-    handleGiveClue(currentRound.roundNumber, word, targetCardCount);
-
-    // Manually trigger UI transition to waiting state
-    console.log("Triggering scene transition: CLUE_SUBMITTED");
-    handleSceneTransition("CLUE_SUBMITTED");
+  const handleSubmitClue = (word: string, count: number) => {
+    console.log("Submitting clue:", { word, count });
+    giveClue(word, count);
   };
 
   return (
     <CodeWordInput
-      isEditable={true}
-      onSubmit={handleSubmit}
       codeWord={codeWord}
       numberOfCards={numberOfGuesses}
-      isLoading={isLoading.giveClue}
+      isEditable={!activeTurn?.clue}
+      isLoading={actionState.status === "loading"}
+      onSubmit={handleSubmitClue}
     />
   );
 };
 
-// Enhanced codebreaker dashboard with logging
+// Codebreaker dashboard
 export const CodebreakerDashboardView: React.FC = () => {
-  const { gameData, handleSceneTransition } = useGameplayContext();
+  console.log("Rendering CodebreakerDashboardView");
+
+  const { gameData } = useGameData();
+  const { endTurn, actionState } = useGameActions();
 
   const currentRound = gameData.currentRound;
   const activeTurn = currentRound?.turns?.find(
     (t: Turn) => t.status === "ACTIVE",
   );
-  const codeWord = activeTurn?.clue?.word || "";
-  const numberOfGuesses = activeTurn?.clue?.number || 0;
 
   console.log("Codebreaker Dashboard State:", {
     currentRound: currentRound?.roundNumber,
     activeTurn: !!activeTurn,
-    hasClue: !!activeTurn?.clue,
-    codeWord,
-    numberOfGuesses,
+    guessesRemaining: activeTurn?.guessesRemaining,
   });
 
-  const handleClick = () => {
-    console.log("Codebreaker: End Turn clicked");
-    console.log("Triggering scene transition: TURN_ENDED");
-    handleSceneTransition("TURN_ENDED");
+  const handleEndTurn = () => {
+    console.log("Ending turn");
+    endTurn();
   };
 
-  return (
-    <>
-      <CodeWordInput
-        codeWord={codeWord}
-        numberOfCards={numberOfGuesses}
-        isEditable={false}
-      />
-      <ButtonWrapper>
-        <ActionButton onClick={handleClick} text="End Turn" />
-      </ButtonWrapper>
-    </>
-  );
-};
-
-// Enhanced gameover dashboard with logging
-export const GameoverDashboardView: React.FC = () => {
-  console.log("Rendering GameoverDashboardView");
-
-  const { handleCreateRound, isLoading } = useGameplayContext();
-
-  console.log("Gameover Dashboard State:", {
-    isLoading: isLoading.createRound,
-  });
-
-  const handleClick = () => {
-    console.log("Gameover: Play again clicked");
-    handleCreateRound(); // Start a new round/game
-  };
+  const hasClue = !!activeTurn?.clue;
+  const canEndTurn = hasClue && activeTurn.guessesRemaining > 0;
 
   return (
     <ButtonWrapper>
-      <ActionButton
-        onClick={handleClick}
-        text="Play again"
-        enabled={!isLoading.createRound}
-      />
+      {hasClue ? (
+        <ActionButton
+          onClick={handleEndTurn}
+          text="End Turn"
+          enabled={canEndTurn && actionState.status !== "loading"}
+        />
+      ) : (
+        <div>Waiting for clue...</div>
+      )}
     </ButtonWrapper>
+  );
+};
+
+// Gameover dashboard
+export const GameoverDashboardView: React.FC = () => {
+  const { gameData } = useGameData();
+  const { actionState, createRound } = useGameActions();
+  const { handleSceneTransition } = useUIScene();
+
+  const handleNewGame = () => {
+    createRound();
+  };
+
+  const handleBackToLobby = () => {
+    handleSceneTransition("BACK_TO_LOBBY");
+  };
+
+  return (
+    <Container>
+      <h2 style={{ color: "#4dabf7", marginBottom: "2rem" }}>Game Over!</h2>
+
+      <InfoText style={{ fontSize: "1.5rem", marginBottom: "2rem" }}>
+        Winner: {gameData.winner || "Unknown"}
+      </InfoText>
+
+      <div style={{ display: "flex", gap: "1rem" }}>
+        <ActionButton
+          onClick={handleNewGame}
+          text={
+            actionState.status === "loading"
+              ? "Creating new game..."
+              : "New Game"
+          }
+          enabled={actionState.status !== "loading"}
+        />
+
+        <ActionButton
+          onClick={handleBackToLobby}
+          text="Back to Lobby"
+          enabled={actionState.status !== "loading"}
+        />
+      </div>
+    </Container>
   );
 };
