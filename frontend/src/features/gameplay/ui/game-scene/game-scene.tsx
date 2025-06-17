@@ -8,6 +8,7 @@ import {
   boardModeInteractivity,
 } from "@frontend/features/gameplay/state/ui-state-mappings";
 import { GameInstructions } from "@frontend/game/ui";
+import { PLAYER_ROLE } from "@codenames/shared/types";
 import styled from "styled-components";
 
 const InstructionsContainer = styled.div`
@@ -51,8 +52,10 @@ const DashboardContainer = styled.div`
 export const GameScene: React.FC = () => {
   const { currentStage, currentScene, gameData } = useGameplayContext();
 
-  const stageConfig = uiConfig[currentStage];
-  const sceneConfig = stageConfig?.scenes[currentScene];
+  const sceneConfig =
+    gameData.currentRound?.status === "COMPLETED"
+      ? uiConfig[PLAYER_ROLE.NONE]?.scenes["gameover"]
+      : uiConfig[currentStage]?.scenes[currentScene];
 
   if (!sceneConfig || !gameData.playerContext) {
     console.error("No scene config found", {
@@ -63,6 +66,7 @@ export const GameScene: React.FC = () => {
   }
 
   const message = sceneConfig.message ? messages[sceneConfig.message] : null;
+
   const BoardComponent = sceneConfig.gameBoard
     ? gameBoards[sceneConfig.gameBoard]
     : null;

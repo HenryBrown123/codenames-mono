@@ -171,63 +171,54 @@ export const uiConfig: UIConfig = {
         boardMode: BOARD_MODE.CODEBREAKER,
         on: {
           next: [
+            // Handle round completed cases first
             {
-              condition: ["turnEnded", "!singleDeviceMode"],
+              condition: ["roundCompleted", "gameEnded"],
+              type: "role",
+              target: PLAYER_ROLE.NONE, // Takes them to gameover scene
+            },
+            {
+              condition: ["roundCompleted", "!gameEnded"],
+              type: "role",
+              target: PLAYER_ROLE.NONE, // Takes them back to lobby for next round
+            },
+
+            // Handle turn ended (but round continues)
+            {
+              condition: ["turnEnded", "!roundCompleted", "singleDeviceMode"],
+              type: "role",
+              target: PLAYER_ROLE.CODEMASTER,
+            },
+            {
+              condition: ["turnEnded", "!roundCompleted", "!singleDeviceMode"],
               type: "scene",
               target: "waiting",
             },
+
+            // Handle opponent turn (but round continues)
             {
-              condition: ["opponentTurn", "!singleDeviceMode"],
+              condition: [
+                "opponentTurn",
+                "!roundCompleted",
+                "singleDeviceMode",
+              ],
+              type: "role",
+              target: PLAYER_ROLE.CODEMASTER,
+            },
+            {
+              condition: [
+                "opponentTurn",
+                "!roundCompleted",
+                "!singleDeviceMode",
+              ],
               type: "scene",
               target: "waiting",
             },
-            {
-              condition: ["turnEnded", "singleDeviceMode"],
-              type: "role",
-              target: PLAYER_ROLE.CODEMASTER,
-            },
-            {
-              condition: ["opponentTurn", "singleDeviceMode"],
-              type: "role",
-              target: PLAYER_ROLE.CODEMASTER,
-            },
-            {
-              condition: ["singleDeviceMode"],
-              type: "role",
-              target: PLAYER_ROLE.CODEMASTER,
-            },
-            {
-              condition: ["!singleDeviceMode"],
-              type: "role",
-              target: "serverRole",
-            },
+
+            // Default: continue guessing (same team, turn not ended, round not completed)
             {
               type: "scene",
               target: "main",
-            },
-          ],
-        },
-      },
-      waiting: {
-        message: "codebreaker.waiting",
-        gameBoard: "main",
-        dashboard: "waitingDashboard",
-        boardMode: BOARD_MODE.CODEMASTER_READONLY,
-        on: {
-          TURN_CHANGED: [
-            {
-              condition: ["singleDeviceMode"],
-              type: "role",
-              target: PLAYER_ROLE.CODEBREAKER,
-            },
-            {
-              condition: ["!singleDeviceMode"],
-              type: "role",
-              target: "serverRole",
-            },
-            {
-              type: "scene",
-              target: "preparation",
             },
           ],
         },
