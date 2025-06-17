@@ -2,7 +2,11 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import ActionButton from "../action-button/action-button";
 import CodeWordInput from "./codemaster-input";
-import { useGameplayContext } from "@frontend/game/state";
+import {
+  useGameActions,
+  useGameplayContext,
+  useUIState,
+} from "@frontend/game/state";
 import { Turn } from "@frontend/shared-types";
 
 const ButtonWrapper = styled.div`
@@ -14,34 +18,27 @@ const ButtonWrapper = styled.div`
 
 // Enhanced lobby dashboard with logging
 export const LobbyDashboardView: React.FC = () => {
-  console.log("Rendering LobbyDashboardView");
-
-  const { gameData, handleCreateRound, handleSceneTransition, isLoading } =
-    useGameplayContext();
-
-  console.log("Lobby Dashboard State:", {
-    gameStatus: gameData?.status,
-    isLoading: isLoading.createRound,
-    hasCurrentRound: !!gameData?.currentRound,
-    playerRole: gameData?.playerContext?.role,
-  });
+  const { gameData, isLoading } = useGameplayContext();
+  const { handleSceneTransition } = useUIState();
+  const { handleCreateRound } = useGameActions();
 
   const handleClick = () => {
-    // If game already has a round but player has no role, try to transition
+    // join current game
     if (gameData?.currentRound && gameData?.status === "IN_PROGRESS") {
       console.log(
         "Game in progress with existing round - transitioning to gameplay",
       );
-      handleSceneTransition("next");
+      handleSceneTransition("GAME_STARTED");
       return;
     }
-
-    // Only create round if there isn't one
+    // .... or create new round
     if (!gameData?.currentRound) {
-      console.log("Lobby: Creating new round");
-      handleCreateRound();
-    } else {
-      console.log("Round already exists, not creating another");
+      handleCreateRound({
+        onSuccess: () => {
+          handleSceneTransition("GAME_STARTED");
+        },
+      });
+      return;
     }
   };
 
@@ -50,7 +47,7 @@ export const LobbyDashboardView: React.FC = () => {
     if (gameData?.currentRound && gameData?.status === "IN_PROGRESS") {
       return "Join Game";
     }
-    return "Start Game";
+    return "Start Round";
   };
 
   return (
@@ -66,8 +63,6 @@ export const LobbyDashboardView: React.FC = () => {
 
 // Enhanced spectator dashboard with logging
 export const SpectatorDashboardView: React.FC = () => {
-  console.log("Rendering SpectatorDashboardView");
-
   return (
     <ButtonWrapper>
       <div>Watching the game...</div>
@@ -77,15 +72,7 @@ export const SpectatorDashboardView: React.FC = () => {
 
 // Enhanced waiting dashboard with logging
 export const WaitingDashboardView: React.FC = () => {
-  console.log("Rendering WaitingDashboardView");
-
   const { gameData } = useGameplayContext();
-
-  console.log("Waiting Dashboard State:", {
-    gameStatus: gameData?.status,
-    currentRound: gameData?.currentRound?.roundNumber,
-    playerRole: gameData?.playerContext?.role,
-  });
 
   return (
     <ButtonWrapper>

@@ -98,7 +98,7 @@ export const conditions: Record<string, (gameData: GameData) => boolean> = {
     const activeTurn = gameData.currentRound?.turns?.find(
       (t) => t.status === "ACTIVE",
     );
-    return !activeTurn || activeTurn.guessesRemaining <= 0;
+    return !activeTurn || activeTurn.guessesRemaining === 0;
   },
 
   opponentTurn: (gameData) => {
