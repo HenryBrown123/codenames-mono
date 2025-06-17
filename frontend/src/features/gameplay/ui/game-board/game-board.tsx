@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo } from "react";
 import styled from "styled-components";
 import { GameCard } from "./game-card";
 import { useGameData, useGameActions } from "@frontend/features/gameplay/state";
-import { GameData } from "@frontend/shared-types";
+import { GameData, Card } from "@frontend/shared-types";
 
 /**
  * Board display modes that control card visibility and interactivity
@@ -16,27 +16,15 @@ export const BOARD_MODE = {
 
 export type BoardMode = (typeof BOARD_MODE)[keyof typeof BOARD_MODE];
 
-const BoardWrapper = styled.div`
-  display: flex;
+const CardsContainer = styled.div`
+  display: grid;
   width: 100%;
   height: 100%;
-  justify-content: center;
-  align-items: center;
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-`;
-
-const BoardContainer = styled.div`
-  width: 100%;
-  max-width: 900px;
-  aspect-ratio: 5 / 5;
-  display: grid;
   grid-template-columns: repeat(5, 1fr);
   grid-template-rows: repeat(5, 1fr);
-  gap: clamp(0.5rem, 1vw, 1rem);
-  margin: auto;
-  padding: clamp(0.5rem, 1vw, 1rem);
+  grid-gap: 0.2em;
+  align-items: stretch;
+  justify-items: stretch;
 `;
 
 interface GameBoardViewProps {
@@ -58,14 +46,29 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
   const gameData = propGameData || hookGameData;
 
   const { makeGuess, actionState } = useGameActions();
-  const [isAnimating, setIsAnimating] = useState(true);
+
+  // Track multiple animating cards using Set<string> (from working version)
+  const [animatingCards, setAnimatingCards] = useState<Set<string>>(new Set());
 
   const cards = gameData.currentRound?.cards || [];
 
   const handleCardClick = useCallback(
     (cardWord: string) => {
       console.log(`Card clicked: ${cardWord}`);
+
+      // Start animation immediately on click (from working version)
+      setAnimatingCards((prev) => new Set(prev).add(cardWord));
+
       makeGuess(cardWord);
+
+      // Remove from animating set after action completes
+      setTimeout(() => {
+        setAnimatingCards((prev) => {
+          const next = new Set(prev);
+          next.delete(cardWord);
+          return next;
+        });
+      }, 1000);
     },
     [makeGuess],
   );
@@ -88,20 +91,18 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
   }, [boardMode, isLoading, interactive]);
 
   return (
-    <BoardWrapper>
-      <BoardContainer>
-        {cards.map((card, index) => (
-          <GameCard
-            key={card.word}
-            card={card}
-            cardIndex={index}
-            showTeamColors={showTeamColors}
-            clickable={clickable}
-            isAnimating={isAnimating}
-            onCardClick={handleCardClick}
-          />
-        ))}
-      </BoardContainer>
-    </BoardWrapper>
+    <CardsContainer aria-label="game board container with cards">
+      {cards.map((card: Card, index: number) => (
+        <GameCard
+          key={card.word}
+          card={card}
+          cardIndex={index}
+          showTeamColors={showTeamColors}
+          clickable={clickable && !card.selected}
+          isAnimating={animatingCards.has(card.word)}
+          onCardClick={handleCardClick}
+        />
+      ))}
+    </CardsContainer>
   );
 };

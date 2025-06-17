@@ -11,7 +11,16 @@ import { GameInstructions } from "@frontend/features/gameplay/ui/game-instructio
 import { PLAYER_ROLE } from "@codenames/shared/types";
 import styled from "styled-components";
 
+const GameSceneContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+`;
+
 const InstructionsContainer = styled.div`
+  flex: 0 0 auto;
   width: 90%;
   height: 20vh;
   display: flex;
@@ -20,7 +29,7 @@ const InstructionsContainer = styled.div`
   font-size: clamp(0.7rem, 2vw, 2rem);
   text-align: center;
   padding: 1rem;
-  margin: 1rem auto;
+  margin: 1rem auto 0;
   background-color: rgba(65, 63, 63, 0.8);
   border-radius: 16px;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
@@ -28,30 +37,38 @@ const InstructionsContainer = styled.div`
 `;
 
 const GameBoardContainer = styled.div`
-  flex: 4;
+  flex: 1;
   display: flex;
   justify-content: center;
-  flex-direction: column;
+  align-items: center;
   padding: 1rem;
-  overflow: auto;
+  overflow: hidden;
 `;
 
 const DashboardContainer = styled.div`
+  flex: 0 0 auto;
   width: 90%;
   height: 20vh;
   display: flex;
   justify-content: center;
-  flex-direction: column;
-  overflow: auto;
+  align-items: center;
   padding: 1rem;
-  margin: 1rem auto;
+  margin: 0 auto 1rem;
   background-color: rgba(65, 63, 63, 0.8);
   border-radius: 16px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 `;
 
 export const GameScene: React.FC = () => {
   const { gameData } = useGameData();
   const { currentStage, currentScene } = useUIScene();
+
+  console.log("GameScene render:", {
+    currentStage,
+    currentScene,
+    gameStatus: gameData?.status,
+    playerRole: gameData?.playerContext?.role,
+  });
 
   const sceneConfig =
     gameData.currentRound?.status === "COMPLETED"
@@ -62,6 +79,8 @@ export const GameScene: React.FC = () => {
     console.error("No scene config found", {
       currentStage,
       currentScene,
+      sceneConfig,
+      playerContext: gameData?.playerContext,
     });
     return <div>Loading game scene...</div>;
   }
@@ -75,11 +94,17 @@ export const GameScene: React.FC = () => {
     ? dashboards[sceneConfig.dashboard]
     : null;
 
+  console.log("Dashboard lookup:", {
+    dashboardKey: sceneConfig.dashboard,
+    DashboardComponent: !!DashboardComponent,
+    availableDashboards: Object.keys(dashboards),
+  });
+
   const boardMode = sceneConfig.boardMode;
   const interactive = boardModeInteractivity[boardMode];
 
   return (
-    <>
+    <GameSceneContainer>
       {message && (
         <InstructionsContainer>
           <GameInstructions messageText={message(gameData)} />
@@ -95,8 +120,14 @@ export const GameScene: React.FC = () => {
         )}
       </GameBoardContainer>
       <DashboardContainer>
-        {DashboardComponent && <DashboardComponent />}
+        {DashboardComponent ? (
+          <DashboardComponent />
+        ) : (
+          <div style={{ color: "red", padding: "1rem" }}>
+            Dashboard not found: {sceneConfig.dashboard}
+          </div>
+        )}
       </DashboardContainer>
-    </>
+    </GameSceneContainer>
   );
 };

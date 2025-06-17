@@ -5,11 +5,13 @@ import { GameScene } from "@frontend/features/gameplay/ui/game-scene";
 import { DeviceHandoffOverlay } from "../device-handoff";
 
 const PageContainer = styled.div`
+  display: flex;
+  flex-direction: column;
   position: relative;
   width: 100%;
   height: 100vh;
-  background-color: #2a2a2a;
   overflow: hidden;
+  background-color: transparent;
 `;
 
 const BlurredBackground = styled.div`

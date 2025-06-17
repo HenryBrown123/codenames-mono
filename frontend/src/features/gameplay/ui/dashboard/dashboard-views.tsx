@@ -12,8 +12,9 @@ import { Turn } from "@frontend/shared-types";
 const ButtonWrapper = styled.div`
   display: flex;
   justify-content: center;
-  max-width: 30vw;
-  margin: 0 auto;
+  align-items: center;
+  width: 100%;
+  height: 100%;
 `;
 
 const Container = styled.div`
@@ -21,6 +22,7 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: 100%;
   height: 100%;
   padding: 1rem;
 `;
@@ -183,13 +185,15 @@ export const CodemasterDashboardView: React.FC = () => {
   };
 
   return (
-    <CodeWordInput
-      codeWord={codeWord}
-      numberOfCards={numberOfGuesses}
-      isEditable={!activeTurn?.clue}
-      isLoading={actionState.status === "loading"}
-      onSubmit={handleSubmitClue}
-    />
+    <Container>
+      <CodeWordInput
+        codeWord={codeWord}
+        numberOfCards={numberOfGuesses}
+        isEditable={!activeTurn?.clue}
+        isLoading={actionState.status === "loading"}
+        onSubmit={handleSubmitClue}
+      />
+    </Container>
   );
 };
 
@@ -228,7 +232,9 @@ export const CodebreakerDashboardView: React.FC = () => {
           enabled={canEndTurn && actionState.status !== "loading"}
         />
       ) : (
-        <div>Waiting for clue...</div>
+        <Container>
+          <InfoText>Waiting for clue...</InfoText>
+        </Container>
       )}
     </ButtonWrapper>
   );
