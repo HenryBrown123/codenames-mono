@@ -62,17 +62,8 @@ export const uiConfig: UIConfig = {
 
   // When player is the codemaster
   [PLAYER_ROLE.CODEMASTER]: {
-    initial: "entry",
+    initial: "preparation",
     scenes: {
-      entry: {
-        message: "codemaster.entry",
-        gameBoard: "main",
-        dashboard: "transitionDashboard",
-        boardMode: BOARD_MODE.CODEMASTER_READONLY,
-        on: {
-          next: { type: "scene", target: "preparation" },
-        },
-      },
       preparation: {
         message: "codemaster.preparation",
         gameBoard: "main",
@@ -135,17 +126,8 @@ export const uiConfig: UIConfig = {
 
   // When player is a codebreaker
   [PLAYER_ROLE.CODEBREAKER]: {
-    initial: "entry",
+    initial: "preparation",
     scenes: {
-      entry: {
-        message: "codebreaker.entry",
-        gameBoard: "main",
-        dashboard: "transitionDashboard",
-        boardMode: BOARD_MODE.CODEMASTER_READONLY,
-        on: {
-          next: { type: "scene", target: "preparation" },
-        },
-      },
       preparation: {
         message: "codebreaker.preparation",
         gameBoard: "main",
