@@ -8,7 +8,7 @@ import {
   WaitingDashboardView,
   GameoverDashboardView,
 } from "@frontend/features/gameplay/ui/dashboard";
-import { GameBoardView } from "@frontend/features/gameplay/ui/game-board/game-board-views";
+import { GameBoardView } from "@frontend/features/gameplay/ui/game-board/game-board";
 import { GameData } from "@frontend/shared-types";
 import { BoardMode, BOARD_MODE } from "../ui/game-board/game-board";
 import { GAME_TYPE, PLAYER_ROLE } from "@codenames/shared/types";
