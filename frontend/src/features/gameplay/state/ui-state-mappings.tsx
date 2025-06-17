@@ -11,7 +11,7 @@ import {
 import { GameBoardView } from "@frontend/features/gameplay/ui/game-board/game-board-views";
 import { GameData } from "@frontend/shared-types";
 import { BoardMode, BOARD_MODE } from "../ui/game-board/game-board";
-import { GAME_TYPE } from "@codenames/shared/types";
+import { GAME_TYPE, PLAYER_ROLE } from "@codenames/shared/types";
 
 /**
  * Dynamic messages based on player role and game state
@@ -94,11 +94,20 @@ export const boardModeInteractivity = {
  * Conditional logic for state machine transitions
  */
 export const conditions: Record<string, (gameData: GameData) => boolean> = {
-  turnEnded: (gameData) => {
+  codebreakerTurnEnded: (gameData) => {
+    const activeTurn = gameData.currentRound?.turns?.find(
+      (t) => t.status === "ACTIVE" && t.clue?.word,
+    );
+    console.log("Checking condition", gameData, activeTurn);
+    const conditionResult = activeTurn ? false : true;
+    console.log(conditionResult);
+    return conditionResult;
+  },
+  "!codebreakerTurnEnded": (gameData) => {
     const activeTurn = gameData.currentRound?.turns?.find(
       (t) => t.status === "ACTIVE",
     );
-    return !activeTurn || activeTurn.guessesRemaining === 0;
+    return activeTurn?.clue?.word ? true : false;
   },
 
   opponentTurn: (gameData) => {
@@ -113,11 +122,20 @@ export const conditions: Record<string, (gameData: GameData) => boolean> = {
   },
 
   singleDeviceMode: (gameData) => {
-    return gameData.gameType === GAME_TYPE.SINGLE_DEVICE;
+    const isSingleDevice = gameData.gameType === GAME_TYPE.SINGLE_DEVICE;
+    console.log("device check", isSingleDevice);
+    return isSingleDevice;
   },
 
   "!singleDeviceMode": (gameData) => {
     return gameData.gameType !== GAME_TYPE.SINGLE_DEVICE;
+  },
+  "!roundCompleted": (gameData) => {
+    return gameData.currentRound?.status !== "COMPLETED";
+  },
+
+  roundCompleted: (gameData) => {
+    return gameData.currentRound?.status === "COMPLETED";
   },
 };
 

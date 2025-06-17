@@ -164,23 +164,10 @@ export const uiConfig: UIConfig = {
               type: "role",
               target: PLAYER_ROLE.NONE, // Takes them back to lobby for next round
             },
-
             // Handle turn ended (but round continues)
             {
-              condition: ["turnEnded", "!roundCompleted", "singleDeviceMode"],
-              type: "role",
-              target: PLAYER_ROLE.CODEMASTER,
-            },
-            {
-              condition: ["turnEnded", "!roundCompleted", "!singleDeviceMode"],
-              type: "scene",
-              target: "waiting",
-            },
-
-            // Handle opponent turn (but round continues)
-            {
               condition: [
-                "opponentTurn",
+                "codebreakerTurnEnded",
                 "!roundCompleted",
                 "singleDeviceMode",
               ],
@@ -189,7 +176,7 @@ export const uiConfig: UIConfig = {
             },
             {
               condition: [
-                "opponentTurn",
+                "codebreakerTurnEnded",
                 "!roundCompleted",
                 "!singleDeviceMode",
               ],
