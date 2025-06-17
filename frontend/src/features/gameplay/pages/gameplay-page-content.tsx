@@ -1,42 +1,45 @@
 import React from "react";
-import { useGameData } from "@frontend/game/api";
-import {
-  GameplayContextProvider,
-  useUIState,
-} from "@frontend/features/gameplay/state";
+import styled from "styled-components";
+import { useGameData, useUIScene } from "@frontend/features/gameplay/state";
 import { GameScene } from "@frontend/features/gameplay/ui/game-scene";
-import { DeviceHandoffOverlay } from "@frontend/features/gameplay/device-handoff";
+import { DeviceHandoffOverlay } from "../device-handoff";
 
-interface GameplayPageContentProps {
-  gameId: string;
-}
+const PageContainer = styled.div`
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background-color: #2a2a2a;
+  overflow: hidden;
+`;
+
+const BlurredBackground = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.3;
+  filter: blur(4px);
+  pointer-events: none;
+`;
 
 /**
- * Internal component that renders the appropriate UI based on state machine
+ * Gameplay page content
+ * Handles device handoff overlay and main game scene rendering
  */
-const GameplayContent: React.FC<{ gameData: any }> = ({ gameData }) => {
+export const GameplayPageContent: React.FC = () => {
+  const { gameData } = useGameData();
   const { showDeviceHandoff, pendingTransition, completeHandoff } =
-    useUIState();
+    useUIScene();
 
   // Show device handoff overlay when state machine requests it
   if (showDeviceHandoff && pendingTransition) {
     return (
-      <>
+      <PageContainer>
         {/* Render faded game board in background */}
-        <div
-          style={{
-            opacity: 0.3,
-            filter: "blur(4px)",
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            pointerEvents: "none",
-          }}
-        >
+        <BlurredBackground>
           <GameScene />
-        </div>
+        </BlurredBackground>
 
         {/* Device handoff overlay */}
         <DeviceHandoffOverlay
@@ -44,32 +47,14 @@ const GameplayContent: React.FC<{ gameData: any }> = ({ gameData }) => {
           pendingTransition={pendingTransition}
           onContinue={completeHandoff}
         />
-      </>
+      </PageContainer>
     );
   }
 
-  // Normal gameplay when no handoff needed
-  return <GameScene />;
-};
-
-/**
- * Main gameplay page content with integrated device handoff
- */
-const GameplayPageContent: React.FC<GameplayPageContentProps> = ({
-  gameId,
-}) => {
-  const { data: gameData } = useGameData(gameId);
-
-  // Show loading state while game data loads
-  if (!gameData?.playerContext?.role) {
-    return <div>Loading game data...</div>;
-  }
-
+  // Normal gameplay
   return (
-    <GameplayContextProvider gameId={gameId}>
-      <GameplayContent gameData={gameData} />
-    </GameplayContextProvider>
+    <PageContainer>
+      <GameScene />
+    </PageContainer>
   );
 };
-
-export default GameplayPageContent;
