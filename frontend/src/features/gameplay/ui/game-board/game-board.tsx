@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useMemo } from "react";
 import styled from "styled-components";
 import { GameCard } from "./game-card";
-import { useGameData, useGameActions } from "@frontend/game/state";
+import { useGameData, useGameActions } from "@frontend/features/gameplay/state";
+import { GameData } from "@frontend/shared-types";
 
 /**
  * Board display modes that control card visibility and interactivity
@@ -39,11 +40,23 @@ const BoardContainer = styled.div`
 `;
 
 interface GameBoardViewProps {
-  boardMode?: BoardMode;
+  boardMode: BoardMode;
+  gameData: GameData;
+  interactive?: boolean;
 }
 
-export const GameBoardView: React.FC<GameBoardViewProps> = ({ boardMode }) => {
-  const { gameData } = useGameData();
+/**
+ * GameBoardView component that accepts props from the UI state mappings
+ */
+export const GameBoardView: React.FC<GameBoardViewProps> = ({
+  boardMode,
+  gameData: propGameData,
+  interactive,
+}) => {
+  // Use gameData from props if provided, otherwise fall back to hook
+  const { gameData: hookGameData } = useGameData();
+  const gameData = propGameData || hookGameData;
+
   const { makeGuess, actionState } = useGameActions();
   const [isAnimating, setIsAnimating] = useState(true);
 
@@ -67,8 +80,12 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({ boardMode }) => {
   const isLoading = actionState.status === "loading";
 
   const clickable = useMemo(() => {
+    // Use the interactive prop if provided, otherwise use board mode logic
+    if (interactive !== undefined) {
+      return interactive && !isLoading;
+    }
     return boardMode === BOARD_MODE.CODEBREAKER && !isLoading;
-  }, [boardMode, isLoading]);
+  }, [boardMode, isLoading, interactive]);
 
   return (
     <BoardWrapper>

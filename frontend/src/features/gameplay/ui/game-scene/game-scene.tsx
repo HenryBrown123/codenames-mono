@@ -1,5 +1,5 @@
 import React from "react";
-import { useGameplayContext } from "@frontend/game/state";
+import { useGameData, useUIScene } from "@frontend/features/gameplay/state";
 import { uiConfig } from "@frontend/features/gameplay/state/ui-state-config";
 import {
   messages,
@@ -7,7 +7,7 @@ import {
   dashboards,
   boardModeInteractivity,
 } from "@frontend/features/gameplay/state/ui-state-mappings";
-import { GameInstructions } from "@frontend/game/ui";
+import { GameInstructions } from "@frontend/features/gameplay/ui/game-instructions";
 import { PLAYER_ROLE } from "@codenames/shared/types";
 import styled from "styled-components";
 
@@ -50,7 +50,8 @@ const DashboardContainer = styled.div`
 `;
 
 export const GameScene: React.FC = () => {
-  const { currentStage, currentScene, gameData } = useGameplayContext();
+  const { gameData } = useGameData();
+  const { currentStage, currentScene } = useUIScene();
 
   const sceneConfig =
     gameData.currentRound?.status === "COMPLETED"

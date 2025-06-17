@@ -2,7 +2,11 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import ActionButton from "../action-button/action-button";
 import CodeWordInput from "./codemaster-input";
-import { useGameData, useUIScene, useGameActions } from "@frontend/game/state";
+import {
+  useGameData,
+  useUIScene,
+  useGameActions,
+} from "@frontend/features/gameplay/state";
 import { Turn } from "@frontend/shared-types";
 
 const ButtonWrapper = styled.div`
@@ -10,6 +14,22 @@ const ButtonWrapper = styled.div`
   justify-content: center;
   max-width: 30vw;
   margin: 0 auto;
+`;
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 1rem;
+`;
+
+const InfoText = styled.div`
+  color: ${({ theme }) => theme.text};
+  font-size: 1.2rem;
+  text-align: center;
+  margin: 0.5rem 0;
 `;
 
 // Lobby dashboard
@@ -142,7 +162,7 @@ export const CodemasterDashboardView: React.FC = () => {
   console.log("Rendering CodemasterDashboardView");
 
   const { gameData } = useGameData();
-  const { giveClue, handleSceneTransition, actionState } = useGameActions();
+  const { giveClue, actionState } = useGameActions();
 
   const currentRound = gameData.currentRound;
   const activeTurn = currentRound?.turns?.find(
@@ -228,12 +248,21 @@ export const GameoverDashboardView: React.FC = () => {
     handleSceneTransition("BACK_TO_LOBBY");
   };
 
+  // Get winner information - you might need to adjust this based on your actual data structure
+  const getWinnerText = () => {
+    // Check if there's a winner in the current round or game data
+    if (gameData.currentRound?.status === "COMPLETED") {
+      return "Game completed!";
+    }
+    return "Game over!";
+  };
+
   return (
     <Container>
       <h2 style={{ color: "#4dabf7", marginBottom: "2rem" }}>Game Over!</h2>
 
       <InfoText style={{ fontSize: "1.5rem", marginBottom: "2rem" }}>
-        Winner: {gameData.winner || "Unknown"}
+        {getWinnerText()}
       </InfoText>
 
       <div style={{ display: "flex", gap: "1rem" }}>
