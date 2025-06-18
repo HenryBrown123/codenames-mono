@@ -122,7 +122,7 @@ export const conditions: Record<string, (gameData: GameData) => boolean> = {
  */
 export const gameBoards: Record<
   string,
-  React.FC<{ boardMode: BoardMode; gameData: GameData; interactive?: boolean }>
+  React.FC<{ boardMode: BoardMode; interactive?: boolean }>
 > = {
   main: GameBoardView,
 };
