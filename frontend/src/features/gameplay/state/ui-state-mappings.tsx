@@ -76,17 +76,11 @@ export const boardModeInteractivity = {
  */
 export const conditions: Record<string, (gameData: GameData) => boolean> = {
   codebreakerTurnEnded: (gameData) => {
-    const activeTurn = gameData.currentRound?.turns?.find(
-      (t) => t.status === "ACTIVE",
-    );
-    return activeTurn?.teamName !== gameData.playerContext.teamName;
+    return gameData.playerContext.role !== PLAYER_ROLE.CODEBREAKER;
   },
 
   "!codebreakerTurnEnded": (gameData) => {
-    const activeTurn = gameData.currentRound?.turns?.find(
-      (t) => t.status === "ACTIVE",
-    );
-    return activeTurn?.teamName === gameData.playerContext.teamName;
+    return gameData.playerContext.role === PLAYER_ROLE.CODEBREAKER;
   },
 
   opponentTurn: (gameData) => {

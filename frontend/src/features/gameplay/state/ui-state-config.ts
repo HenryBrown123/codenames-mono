@@ -51,8 +51,8 @@ export const uiConfig: UIConfig = {
         on: {
           CARDS_DEALT: [
             {
-              type: "scene",
-              target: "lobby",
+              type: "role",
+              target: PLAYER_ROLE.CODEMASTER,
             },
           ],
         },

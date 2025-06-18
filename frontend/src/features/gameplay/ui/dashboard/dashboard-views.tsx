@@ -54,7 +54,7 @@ const LoadingSpinner = styled.div`
 export const LobbyDashboardView: React.FC = () => {
   const { gameData } = useGameData();
   const { handleSceneTransition } = useUIScene();
-  const { createRound, startRound, actionState } = useGameActions();
+  const { createRound, startRound, dealCards, actionState } = useGameActions();
 
   const handleClick = () => {
     // Case 2: Round exists with cards - start the round
@@ -64,6 +64,14 @@ export const LobbyDashboardView: React.FC = () => {
       gameData.currentRound.cards.length > 0
     ) {
       startRound();
+      return;
+    }
+
+    if (
+      gameData?.currentRound?.status === "SETUP" &&
+      gameData.currentRound.cards.length === 0
+    ) {
+      dealCards();
       return;
     }
 
@@ -83,6 +91,13 @@ export const LobbyDashboardView: React.FC = () => {
       gameData?.status === "IN_PROGRESS"
     ) {
       return "Join Game";
+    }
+
+    if (
+      gameData?.currentRound?.status === "SETUP" &&
+      gameData.currentRound.cards.length === 0
+    ) {
+      return "Deal Cards";
     }
 
     if (
