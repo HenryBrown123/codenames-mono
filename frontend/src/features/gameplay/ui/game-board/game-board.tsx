@@ -29,7 +29,6 @@ const CardsContainer = styled.div`
 
 interface GameBoardViewProps {
   boardMode: BoardMode;
-  gameData: GameData;
   interactive?: boolean;
 }
 
@@ -38,12 +37,10 @@ interface GameBoardViewProps {
  */
 export const GameBoardView: React.FC<GameBoardViewProps> = ({
   boardMode,
-  gameData: propGameData,
   interactive,
 }) => {
   // Use gameData from props if provided, otherwise fall back to hook
-  const { gameData: hookGameData } = useGameData();
-  const gameData = propGameData || hookGameData;
+  const { gameData } = useGameData();
 
   const { makeGuess, actionState } = useGameActions();
 

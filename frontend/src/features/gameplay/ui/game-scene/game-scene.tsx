@@ -112,11 +112,7 @@ export const GameScene: React.FC = () => {
       )}
       <GameBoardContainer>
         {BoardComponent && (
-          <BoardComponent
-            gameData={gameData}
-            boardMode={boardMode}
-            interactive={interactive}
-          />
+          <BoardComponent boardMode={boardMode} interactive={interactive} />
         )}
       </GameBoardContainer>
       <DashboardContainer>
