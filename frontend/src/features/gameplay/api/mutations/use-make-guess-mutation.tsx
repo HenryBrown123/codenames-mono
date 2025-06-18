@@ -32,7 +32,7 @@ export const useMakeGuessMutation = (
       }
     },
     onSuccess: () => {
-      //queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
+      queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
     },
   });
 };

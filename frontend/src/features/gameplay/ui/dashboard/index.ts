@@ -1,1 +1,9 @@
-export * from "./dashboard-views";
+export {
+  LobbyDashboardView,
+  DealingDashboardView,
+  SpectatorDashboardView,
+  CodemasterDashboardView,
+  CodebreakerDashboardView,
+  WaitingDashboardView,
+  GameoverDashboardView,
+} from "./dashboard-views";

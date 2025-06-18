@@ -15,7 +15,6 @@ import {
 } from "@frontend/game/api/mutations";
 import { useGameData } from "./game-data-provider";
 import { useUIScene } from "./ui-scene-provider";
-import { useQueryClient } from "@tanstack/react-query";
 
 export type ActionName =
   | "giveClue"
@@ -61,7 +60,6 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
 
   const { gameData, gameId } = useGameData();
   const { handleSceneTransition } = useUIScene();
-  const queryClient = useQueryClient();
 
   const giveClueMutation = useGiveClueMutation(gameId);
   const makeGuessMutation = useMakeGuessMutation(gameId);
@@ -88,10 +86,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       makeGuessMutation.mutate(
         { roundNumber, cardWord: word },
         {
-          onSuccess: async () => {
-            await queryClient.invalidateQueries({
-              queryKey: ["gameData", gameId],
-            });
+          onSuccess: () => {
             setActionState({
               name: "makeGuess",
               status: "success",
