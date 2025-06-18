@@ -87,6 +87,14 @@ export const LobbyDashboardView: React.FC = () => {
 
   const getButtonText = () => {
     if (
+      gameData?.currentRound?.status === "COMPLETED" ||
+      !gameData?.currentRound
+    ) {
+      return "Deal Cards";
+    }
+
+    if (
+      gameData.currentRound &&
       gameData?.currentRound?.status !== "SETUP" &&
       gameData?.status === "IN_PROGRESS"
     ) {
@@ -105,7 +113,7 @@ export const LobbyDashboardView: React.FC = () => {
       gameData.currentRound.cards &&
       gameData.currentRound.cards.length > 0
     ) {
-      return "Start Game";
+      return "Start Round";
     }
 
     return "Create Game";
