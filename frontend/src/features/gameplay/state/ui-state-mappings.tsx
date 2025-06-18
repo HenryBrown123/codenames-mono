@@ -73,20 +73,13 @@ export const boardModeInteractivity = {
  */
 export const conditions: Record<string, (gameData: GameData) => boolean> = {
   codebreakerTurnEnded: (gameData) => {
-    const activeTurn = gameData.currentRound?.turns?.find(
-      (t) => t.status === "ACTIVE",
-    );
-    // Turn ended if no guesses remaining or if turn status changed
-    return !activeTurn || activeTurn.guessesRemaining <= 0;
+    console.log(gameData);
+    return gameData.playerContext.role !== PLAYER_ROLE.CODEBREAKER;
   },
 
   "!codebreakerTurnEnded": (gameData) => {
-    const activeTurn = gameData.currentRound?.turns?.find(
-      (t) => t.status === "ACTIVE",
-    );
-    return activeTurn?.guessesRemaining
-      ? activeTurn?.guessesRemaining > 0
-      : true;
+    console.log(gameData);
+    return gameData.playerContext.role === PLAYER_ROLE.CODEBREAKER;
   },
 
   opponentTurn: (gameData) => {
