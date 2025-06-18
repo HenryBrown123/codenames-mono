@@ -74,10 +74,7 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
   );
 
   const showTeamColors = useMemo(() => {
-    return (
-      boardMode === BOARD_MODE.CODEMASTER_ACTIVE ||
-      boardMode === BOARD_MODE.CODEMASTER_READONLY
-    );
+    return boardMode === BOARD_MODE.CODEMASTER_ACTIVE;
   }, [boardMode]);
 
   const isLoading = actionState.status === "loading";
