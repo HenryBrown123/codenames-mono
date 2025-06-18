@@ -31,8 +31,8 @@ export const useGiveClueMutation = (
         throw new Error(response.data.error || "Failed to give clue");
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
     },
   });
 };

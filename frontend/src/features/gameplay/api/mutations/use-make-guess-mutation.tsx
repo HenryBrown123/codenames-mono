@@ -31,8 +31,8 @@ export const useMakeGuessMutation = (
         throw new Error(response.data.error || "Failed to make guess");
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
     },
   });
 };

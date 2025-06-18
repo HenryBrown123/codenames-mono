@@ -23,8 +23,8 @@ export const useCreateRoundMutation = (
         throw new Error(response.data.error || "Failed to create round");
       }
     },
-    onSuccess: () => {
-      //queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
     },
   });
 };
