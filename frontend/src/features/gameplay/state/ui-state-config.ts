@@ -3,6 +3,7 @@ import {
   PLAYER_ROLE,
   GameState,
   GAME_STATE,
+  ROUND_STATE,
 } from "@codenames/shared/types";
 import {
   BoardMode,
@@ -198,9 +199,14 @@ export function determineUIStage(
   if (gameStatus !== GAME_STATE.IN_PROGRESS) {
     return PLAYER_ROLE.NONE;
   }
+
+  // If round is not in progress, stay in lobby regardless of player role
+  if (!currentRound || currentRound.status !== ROUND_STATE.IN_PROGRESS) {
+    return PLAYER_ROLE.NONE;
+  }
+
   return playerRole;
 }
-
 /**
  * Enhanced transition configuration interface with array condition support
  */
