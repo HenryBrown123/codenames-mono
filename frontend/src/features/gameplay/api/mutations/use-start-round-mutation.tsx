@@ -29,8 +29,8 @@ export const useStartRoundMutation = (
         throw new Error(response.data.error || "Failed to start round");
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
     },
   });
 };

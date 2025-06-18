@@ -29,8 +29,8 @@ export const useDealCardsMutation = (
         throw new Error(response.data.error || "Failed to deal cards");
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
     },
   });
 };

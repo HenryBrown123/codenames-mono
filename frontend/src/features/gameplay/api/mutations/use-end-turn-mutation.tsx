@@ -29,8 +29,8 @@ export const useEndTurnMutation = (
         throw new Error(response.data.error || "Failed to end turn");
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
     },
   });
 };
