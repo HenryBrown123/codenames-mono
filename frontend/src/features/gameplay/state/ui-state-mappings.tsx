@@ -14,70 +14,48 @@ import { BoardMode, BOARD_MODE } from "../ui/game-board/game-board";
 import { GAME_TYPE, PLAYER_ROLE } from "@codenames/shared/types";
 
 /**
- * Dynamic messages based on player role and game state
+ * Streamlined messages - shorter and more direct
  */
 export const messages: Record<string, (gameData: GameData) => string> = {
-  // Lobby/Waiting messages
-  "lobby.waiting": (gameData) =>
-    `Welcome to the game! Waiting for the game to start...`,
+  // Lobby
+  "lobby.waiting": () => `Welcome! Ready to start?`,
 
-  // Entry messages for role transitions
-  "codemaster.entry": (gameData) =>
-    `Welcome, ${gameData.playerContext.teamName} Codemaster! You'll be giving clues to help your team find their agents.`,
-
-  "codebreaker.entry": (gameData) =>
-    `Welcome, ${gameData.playerContext.teamName} Codebreakers! You'll be guessing words based on your codemaster's clues.`,
-
-  // Spectator messages
+  // Spectator
   "spectator.watching": (gameData) => {
     const activeTurn = gameData.currentRound?.turns?.find(
       (t) => t.status === "ACTIVE",
     );
-    return `You are watching the game. Current turn: ${activeTurn?.teamName || "No active turn"}`;
+    return `Watching • ${activeTurn?.teamName || "No active turn"}`;
   },
 
-  // Codemaster messages
-  "codemaster.preparation": (gameData) =>
-    `Codemaster of ${gameData.playerContext.teamName}, your turn is starting. Get ready to give your clue...`,
-
+  // Codemaster - much shorter
   "codemaster.main": (gameData) =>
-    `Codemaster of ${gameData.playerContext.teamName}, enter your codeword and the number of associated guesses. Remember, your clue must help your team find their agents without revealing the assassin or opposing agents.`,
+    `${gameData.playerContext.teamName} Codemaster • Give your clue`,
 
   "codemaster.waiting": (gameData) =>
-    `Clue given! Waiting for ${gameData.playerContext.teamName} codebreakers to make their guesses...`,
+    `Waiting for ${gameData.playerContext.teamName} to guess...`,
 
-  // Codebreaker messages
-  "codebreaker.preparation": (gameData) =>
-    `Codebreakers of ${gameData.playerContext.teamName}, get ready for your turn. You'll soon be guessing words based on your codemaster's clue.`,
-
+  // Codebreaker - show guesses remaining prominently
   "codebreaker.main": (gameData) => {
     const activeTurn = gameData.currentRound?.turns?.find(
       (t) => t.status === "ACTIVE",
     );
     const clue = activeTurn?.clue;
-    if (clue) {
-      return `Codebreakers of ${gameData.playerContext.teamName}, your clue is "${clue.word}" for ${clue.number} cards. Pick your cards carefully!`;
+
+    if (!clue) {
+      return `${gameData.playerContext.teamName} • Waiting for clue...`;
     }
-    return `Codebreakers of ${gameData.playerContext.teamName}, waiting for your codemaster's clue...`;
+
+    const remaining = activeTurn.guessesRemaining || 0;
+    const guessText = remaining === 1 ? "guess" : "guesses";
+
+    return `"${clue.word}" for ${clue.number} • ${remaining} ${guessText} left`;
   },
 
-  "codebreaker.outcome": (gameData) => {
-    const activeTurn = gameData.currentRound?.turns?.find(
-      (t) => t.status === "ACTIVE",
-    );
-    const lastGuess = activeTurn?.guesses?.at(-1);
-
-    if (lastGuess) {
-      return `You guessed a card - Result: ${lastGuess.outcome || "Processing..."}`;
-    }
-    return `Turn outcome: Review the results of the last move.`;
-  },
-
-  "codebreaker.waiting": (gameData) => `Waiting for the other team's turn...`,
+  "codebreaker.waiting": () => `Waiting for other team...`,
 
   // Game over
-  "gameover.main": (gameData) =>
-    `Game over! Congratulations to the winning team!`,
+  "gameover.main": () => `Game Over!`,
 };
 
 /**
@@ -96,18 +74,19 @@ export const boardModeInteractivity = {
 export const conditions: Record<string, (gameData: GameData) => boolean> = {
   codebreakerTurnEnded: (gameData) => {
     const activeTurn = gameData.currentRound?.turns?.find(
-      (t) => t.status === "ACTIVE" && t.clue?.word,
+      (t) => t.status === "ACTIVE",
     );
-    console.log("Checking condition", gameData, activeTurn);
-    const conditionResult = activeTurn ? false : true;
-    console.log(conditionResult);
-    return conditionResult;
+    // Turn ended if no guesses remaining or if turn status changed
+    return !activeTurn || activeTurn.guessesRemaining <= 0;
   },
+
   "!codebreakerTurnEnded": (gameData) => {
     const activeTurn = gameData.currentRound?.turns?.find(
       (t) => t.status === "ACTIVE",
     );
-    return activeTurn?.clue?.word ? true : false;
+    return activeTurn?.guessesRemaining
+      ? activeTurn?.guessesRemaining > 0
+      : true;
   },
 
   opponentTurn: (gameData) => {
@@ -122,14 +101,13 @@ export const conditions: Record<string, (gameData: GameData) => boolean> = {
   },
 
   singleDeviceMode: (gameData) => {
-    const isSingleDevice = gameData.gameType === GAME_TYPE.SINGLE_DEVICE;
-    console.log("device check", isSingleDevice);
-    return isSingleDevice;
+    return gameData.gameType === GAME_TYPE.SINGLE_DEVICE;
   },
 
   "!singleDeviceMode": (gameData) => {
     return gameData.gameType !== GAME_TYPE.SINGLE_DEVICE;
   },
+
   "!roundCompleted": (gameData) => {
     return gameData.currentRound?.status !== "COMPLETED";
   },
