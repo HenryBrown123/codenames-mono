@@ -10,8 +10,7 @@ import {
 } from "@frontend/features/gameplay/ui/game-board/game-board";
 
 /**
- * The central UI configuration for the game.
- * Enhanced with role transitions for single device mode using array conditions.
+ * Streamlined UI configuration - removed unnecessary preparation scenes
  */
 export const uiConfig: UIConfig = {
   // When player has no role or game is in lobby
@@ -60,19 +59,10 @@ export const uiConfig: UIConfig = {
     },
   },
 
-  // When player is the codemaster
+  // When player is the codemaster - STREAMLINED
   [PLAYER_ROLE.CODEMASTER]: {
-    initial: "preparation",
+    initial: "main", // Skip preparation, go straight to main
     scenes: {
-      preparation: {
-        message: "codemaster.preparation",
-        gameBoard: "main",
-        dashboard: "transitionDashboard",
-        boardMode: BOARD_MODE.CODEMASTER_READONLY,
-        on: {
-          next: { type: "scene", target: "main" },
-        },
-      },
       main: {
         message: "codemaster.main",
         gameBoard: "main",
@@ -87,10 +77,6 @@ export const uiConfig: UIConfig = {
             },
             {
               condition: ["!singleDeviceMode"],
-              type: "role",
-              target: "serverRole",
-            },
-            {
               type: "scene",
               target: "waiting",
             },
@@ -101,7 +87,7 @@ export const uiConfig: UIConfig = {
         message: "codemaster.waiting",
         gameBoard: "main",
         dashboard: "waitingDashboard",
-        boardMode: BOARD_MODE.CODEMASTER_ACTIVE,
+        boardMode: BOARD_MODE.CODEMASTER_READONLY, // Changed to readonly while waiting
         on: {
           TURN_CHANGED: [
             {
@@ -116,7 +102,7 @@ export const uiConfig: UIConfig = {
             },
             {
               type: "scene",
-              target: "preparation",
+              target: "main",
             },
           ],
         },
@@ -124,47 +110,29 @@ export const uiConfig: UIConfig = {
     },
   },
 
-  // When player is a codebreaker
+  // When player is a codebreaker - MASSIVELY STREAMLINED
   [PLAYER_ROLE.CODEBREAKER]: {
-    initial: "preparation",
+    initial: "main", // Skip preparation, go straight to main
     scenes: {
-      preparation: {
-        message: "codebreaker.preparation",
-        gameBoard: "main",
-        dashboard: "transitionDashboard",
-        boardMode: BOARD_MODE.CODEMASTER_READONLY,
-        on: {
-          next: { type: "scene", target: "main" },
-        },
-      },
       main: {
         message: "codebreaker.main",
         gameBoard: "main",
         dashboard: "codebreakerDashboard",
         boardMode: BOARD_MODE.CODEBREAKER,
         on: {
-          GUESS_MADE: { type: "scene", target: "outcome" },
-        },
-      },
-      outcome: {
-        message: "codebreaker.outcome",
-        gameBoard: "main",
-        dashboard: "transitionDashboard",
-        boardMode: BOARD_MODE.CODEBREAKER,
-        on: {
-          next: [
-            // Handle round completed cases first
+          GUESS_MADE: [
+            // Handle round/game end first
             {
               condition: ["roundCompleted", "gameEnded"],
               type: "role",
-              target: PLAYER_ROLE.NONE, // Takes them to gameover scene
+              target: PLAYER_ROLE.NONE,
             },
             {
               condition: ["roundCompleted", "!gameEnded"],
               type: "role",
-              target: PLAYER_ROLE.NONE, // Takes them back to lobby for next round
+              target: PLAYER_ROLE.NONE,
             },
-            // Handle turn ended (but round continues)
+            // Handle turn ended (switch roles)
             {
               condition: [
                 "codebreakerTurnEnded",
@@ -183,8 +151,31 @@ export const uiConfig: UIConfig = {
               type: "scene",
               target: "waiting",
             },
-
-            // Default: continue guessing (same team, turn not ended, round not completed)
+            // Default: stay in main (continue guessing)
+            {
+              type: "scene",
+              target: "main",
+            },
+          ],
+        },
+      },
+      waiting: {
+        message: "codebreaker.waiting",
+        gameBoard: "main",
+        dashboard: "waitingDashboard",
+        boardMode: BOARD_MODE.SPECTATOR,
+        on: {
+          TURN_CHANGED: [
+            {
+              condition: ["singleDeviceMode"],
+              type: "role",
+              target: PLAYER_ROLE.CODEBREAKER,
+            },
+            {
+              condition: ["!singleDeviceMode"],
+              type: "role",
+              target: "serverRole",
+            },
             {
               type: "scene",
               target: "main",
@@ -198,19 +189,15 @@ export const uiConfig: UIConfig = {
 
 /**
  * Determines the appropriate UI stage based on backend game state
- * Use this manually when you want to sync UI with backend
  */
 export function determineUIStage(
   gameStatus: GameState,
   playerRole: PlayerRole,
   currentRound: any,
 ): PlayerRole {
-  // If game is not in progress, everyone sees lobby/waiting
   if (gameStatus !== GAME_STATE.IN_PROGRESS) {
     return PLAYER_ROLE.NONE;
   }
-
-  // Return the player's actual role - this drives the UI
   return playerRole;
 }
 
