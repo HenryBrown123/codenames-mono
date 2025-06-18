@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import ActionButton from "../action-button/action-button";
 import CodeWordInput from "./codemaster-input";
@@ -34,56 +34,136 @@ const InfoText = styled.div`
   margin: 0.5rem 0;
 `;
 
-// Lobby dashboard
-export const LobbyDashboardView: React.FC = () => {
-  console.log("Rendering LobbyDashboardView");
+const LoadingSpinner = styled.div`
+  width: 3rem;
+  height: 3rem;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #4dabf7;
+  animation: spin 1s ease-in-out infinite;
+  margin: 1rem 0;
 
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+// Lobby dashboard with enhanced state handling
+export const LobbyDashboardView: React.FC = () => {
   const { gameData } = useGameData();
   const { handleSceneTransition } = useUIScene();
-  const { createRound, actionState } = useGameActions();
-
-  console.log("Lobby Dashboard State:", {
-    gameStatus: gameData?.status,
-    isLoading: actionState.status === "loading",
-    hasCurrentRound: !!gameData?.currentRound,
-    playerRole: gameData?.playerContext?.role,
-  });
+  const { createRound, startRound, actionState } = useGameActions();
 
   const handleClick = () => {
-    // If game already has a round but player has no role, try to transition
-    if (gameData?.currentRound && gameData?.status === "IN_PROGRESS") {
-      console.log(
-        "Game in progress with existing round - transitioning to gameplay",
-      );
-      handleSceneTransition("next");
+    // Case 2: Round exists with cards - start the round
+    if (
+      gameData?.currentRound?.status === "SETUP" &&
+      gameData.currentRound.cards &&
+      gameData.currentRound.cards.length > 0
+    ) {
+      startRound();
       return;
     }
 
-    // Only create round if there isn't one
+    // Case 3: No round exists - create new round (will auto-deal cards)
     if (!gameData?.currentRound) {
-      console.log("Lobby: Creating new round");
       createRound();
-    } else {
-      console.log("Round already exists, not creating another");
+      return;
     }
+
+    // Case 4: Round exists but no cards - should not happen with auto-dealing
+    console.warn("Unexpected state: round exists but no cards");
   };
 
-  // Determine button text based on game state
   const getButtonText = () => {
-    if (gameData?.currentRound && gameData?.status === "IN_PROGRESS") {
+    if (
+      gameData?.currentRound?.status !== "SETUP" &&
+      gameData?.status === "IN_PROGRESS"
+    ) {
       return "Join Game";
     }
-    return "Start Game";
+
+    if (
+      gameData?.currentRound?.status === "SETUP" &&
+      gameData.currentRound.cards &&
+      gameData.currentRound.cards.length > 0
+    ) {
+      return "Start Game";
+    }
+
+    return "Create Game";
+  };
+
+  const getInfoText = () => {
+    if (
+      gameData?.currentRound &&
+      gameData.currentRound.cards &&
+      gameData.currentRound.cards.length > 0
+    ) {
+      return "Cards are ready! Review the board and start when ready.";
+    }
+    return null;
+  };
+
+  const infoText = getInfoText();
+
+  return (
+    <Container>
+      {infoText && <InfoText>{infoText}</InfoText>}
+      <ButtonWrapper>
+        <ActionButton
+          onClick={handleClick}
+          text={getButtonText()}
+          enabled={actionState.status !== "loading"}
+        />
+      </ButtonWrapper>
+    </Container>
+  );
+};
+
+// Simplified dealing dashboard - just shows loading, no transition logic
+export const DealingDashboardView: React.FC = () => {
+  const { gameData } = useGameData();
+  const { dealCards, actionState } = useGameActions();
+  const hasDealtRef = React.useRef(false);
+
+  useEffect(() => {
+    // Auto-deal cards when this dashboard mounts (only once)
+    if (
+      !hasDealtRef.current &&
+      gameData?.currentRound &&
+      (!gameData.currentRound.cards || gameData.currentRound.cards.length === 0)
+    ) {
+      hasDealtRef.current = true;
+      dealCards();
+    }
+  }, [gameData?.currentRound, dealCards]);
+
+  const getStatusText = () => {
+    switch (actionState.status) {
+      case "loading":
+        return "Dealing cards...";
+      case "success":
+        return "Cards dealt! Returning to lobby...";
+      case "error":
+        return "Error dealing cards";
+      default:
+        return "Preparing to deal cards...";
+    }
   };
 
   return (
-    <ButtonWrapper>
-      <ActionButton
-        onClick={handleClick}
-        text={getButtonText()}
-        enabled={actionState.status !== "loading"}
-      />
-    </ButtonWrapper>
+    <Container>
+      <LoadingSpinner />
+      <InfoText>{getStatusText()}</InfoText>
+      {actionState.status === "error" && actionState.error && (
+        <InfoText style={{ color: "#ff6b6b", fontSize: "1rem" }}>
+          {actionState.error.message}
+        </InfoText>
+      )}
+    </Container>
   );
 };
 
@@ -98,8 +178,6 @@ export const SpectatorDashboardView: React.FC = () => {
 
 // Waiting dashboard
 export const WaitingDashboardView: React.FC = () => {
-  const { gameData } = useGameData();
-
   return (
     <Container>
       <InfoText>Waiting for the other team...</InfoText>
@@ -107,62 +185,8 @@ export const WaitingDashboardView: React.FC = () => {
   );
 };
 
-// Transition dashboard
-export const TransitionDashboardView: React.FC = () => {
-  const { gameData } = useGameData();
-  const { handleSceneTransition } = useUIScene();
-  const { startRound, dealCards, actionState } = useGameActions();
-  const [actionButtonEnabled, setActionButtonEnabled] = useState(true);
-
-  const handleClick = () => {
-    console.log("Transition: Continue clicked");
-
-    if (!gameData.currentRound) {
-      console.log("No round - triggering scene transition");
-      handleSceneTransition("next");
-      return;
-    }
-
-    setActionButtonEnabled(false);
-
-    // If round needs cards, deal them first
-    if (
-      !gameData.currentRound.cards ||
-      gameData.currentRound.cards.length === 0
-    ) {
-      console.log(
-        "Dealing cards for round:",
-        gameData.currentRound.roundNumber,
-      );
-      dealCards();
-    } else if (gameData.currentRound.status === "SETUP") {
-      console.log("Starting round:", gameData.currentRound.roundNumber);
-      startRound();
-    } else {
-      console.log("Transitioning to next scene");
-      handleSceneTransition("next");
-    }
-
-    setActionButtonEnabled(true);
-  };
-
-  const isLoading = actionState.status === "loading";
-
-  return (
-    <ButtonWrapper>
-      <ActionButton
-        onClick={handleClick}
-        text="Continue"
-        enabled={actionButtonEnabled && !isLoading}
-      />
-    </ButtonWrapper>
-  );
-};
-
 // Codemaster dashboard
 export const CodemasterDashboardView: React.FC = () => {
-  console.log("Rendering CodemasterDashboardView");
-
   const { gameData } = useGameData();
   const { giveClue, actionState } = useGameActions();
 
@@ -173,14 +197,7 @@ export const CodemasterDashboardView: React.FC = () => {
   const codeWord = activeTurn?.clue?.word || "";
   const numberOfGuesses = activeTurn?.clue?.number || 0;
 
-  console.log("Codemaster Dashboard State:", {
-    currentRound: currentRound?.roundNumber,
-    activeTurn: !!activeTurn,
-    hasClue: !!activeTurn?.clue,
-  });
-
   const handleSubmitClue = (word: string, count: number) => {
-    console.log("Submitting clue:", { word, count });
     giveClue(word, count);
   };
 
@@ -199,8 +216,6 @@ export const CodemasterDashboardView: React.FC = () => {
 
 // Codebreaker dashboard
 export const CodebreakerDashboardView: React.FC = () => {
-  console.log("Rendering CodebreakerDashboardView");
-
   const { gameData } = useGameData();
   const { endTurn, actionState } = useGameActions();
 
@@ -209,14 +224,7 @@ export const CodebreakerDashboardView: React.FC = () => {
     (t: Turn) => t.status === "ACTIVE",
   );
 
-  console.log("Codebreaker Dashboard State:", {
-    currentRound: currentRound?.roundNumber,
-    activeTurn: !!activeTurn,
-    guessesRemaining: activeTurn?.guessesRemaining,
-  });
-
   const handleEndTurn = () => {
-    console.log("Ending turn");
     endTurn();
   };
 
@@ -254,9 +262,7 @@ export const GameoverDashboardView: React.FC = () => {
     handleSceneTransition("BACK_TO_LOBBY");
   };
 
-  // Get winner information - you might need to adjust this based on your actual data structure
   const getWinnerText = () => {
-    // Check if there's a winner in the current round or game data
     if (gameData.currentRound?.status === "COMPLETED") {
       return "Game completed!";
     }

@@ -2,7 +2,7 @@ import React from "react";
 import {
   LobbyDashboardView,
   SpectatorDashboardView,
-  TransitionDashboardView,
+  DealingDashboardView,
   CodemasterDashboardView,
   CodebreakerDashboardView,
   WaitingDashboardView,
@@ -14,11 +14,14 @@ import { BoardMode, BOARD_MODE } from "../ui/game-board/game-board";
 import { GAME_TYPE, PLAYER_ROLE } from "@codenames/shared/types";
 
 /**
- * Streamlined messages - shorter and more direct
+ * Messages including dealing scene
  */
 export const messages: Record<string, (gameData: GameData) => string> = {
   // Lobby
   "lobby.waiting": () => `Welcome! Ready to start?`,
+
+  // Dealing
+  "dealing.inProgress": () => `Dealing cards...`,
 
   // Spectator
   "spectator.watching": (gameData) => {
@@ -28,14 +31,14 @@ export const messages: Record<string, (gameData: GameData) => string> = {
     return `Watching • ${activeTurn?.teamName || "No active turn"}`;
   },
 
-  // Codemaster - much shorter
+  // Codemaster
   "codemaster.main": (gameData) =>
     `${gameData.playerContext.teamName} Codemaster • Give your clue`,
 
   "codemaster.waiting": (gameData) =>
     `Waiting for ${gameData.playerContext.teamName} to guess...`,
 
-  // Codebreaker - show guesses remaining prominently
+  // Codebreaker
   "codebreaker.main": (gameData) => {
     const activeTurn = gameData.currentRound?.turns?.find(
       (t) => t.status === "ACTIVE",
@@ -73,13 +76,17 @@ export const boardModeInteractivity = {
  */
 export const conditions: Record<string, (gameData: GameData) => boolean> = {
   codebreakerTurnEnded: (gameData) => {
-    console.log(gameData);
-    return gameData.playerContext.role !== PLAYER_ROLE.CODEBREAKER;
+    const activeTurn = gameData.currentRound?.turns?.find(
+      (t) => t.status === "ACTIVE",
+    );
+    return activeTurn?.teamName !== gameData.playerContext.teamName;
   },
 
   "!codebreakerTurnEnded": (gameData) => {
-    console.log(gameData);
-    return gameData.playerContext.role === PLAYER_ROLE.CODEBREAKER;
+    const activeTurn = gameData.currentRound?.turns?.find(
+      (t) => t.status === "ACTIVE",
+    );
+    return activeTurn?.teamName === gameData.playerContext.teamName;
   },
 
   opponentTurn: (gameData) => {
@@ -125,8 +132,8 @@ export const gameBoards: Record<
  */
 export const dashboards: Record<string, React.FC> = {
   lobbyDashboard: LobbyDashboardView,
+  dealingDashboard: DealingDashboardView,
   spectatorDashboard: SpectatorDashboardView,
-  transitionDashboard: TransitionDashboardView,
   codemasterDashboard: CodemasterDashboardView,
   codebreakerDashboard: CodebreakerDashboardView,
   waitingDashboard: WaitingDashboardView,

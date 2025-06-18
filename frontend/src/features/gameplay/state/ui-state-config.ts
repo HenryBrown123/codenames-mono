@@ -3,7 +3,6 @@ import {
   PLAYER_ROLE,
   GameState,
   GAME_STATE,
-  ROUND_STATE,
 } from "@codenames/shared/types";
 import {
   BoardMode,
@@ -11,7 +10,7 @@ import {
 } from "@frontend/features/gameplay/ui/game-board/game-board";
 
 /**
- * Streamlined UI configuration - removed unnecessary preparation scenes
+ * UI configuration with card dealing flow that returns to lobby
  */
 export const uiConfig: UIConfig = {
   // When player has no role or game is in lobby
@@ -26,6 +25,12 @@ export const uiConfig: UIConfig = {
         on: {
           GAME_STARTED: [
             {
+              type: "scene",
+              target: "dealing",
+            },
+          ],
+          ROUND_STARTED: [
+            {
               condition: ["singleDeviceMode"],
               type: "role",
               target: PLAYER_ROLE.CODEMASTER,
@@ -34,6 +39,20 @@ export const uiConfig: UIConfig = {
               condition: ["!singleDeviceMode"],
               type: "role",
               target: "serverRole",
+            },
+          ],
+        },
+      },
+      dealing: {
+        message: "dealing.inProgress",
+        gameBoard: "main",
+        dashboard: "dealingDashboard",
+        boardMode: BOARD_MODE.SPECTATOR,
+        on: {
+          CARDS_DEALT: [
+            {
+              type: "scene",
+              target: "lobby",
             },
           ],
         },
@@ -60,9 +79,9 @@ export const uiConfig: UIConfig = {
     },
   },
 
-  // When player is the codemaster - STREAMLINED
+  // When player is the codemaster
   [PLAYER_ROLE.CODEMASTER]: {
-    initial: "main", // Skip preparation, go straight to main
+    initial: "main",
     scenes: {
       main: {
         message: "codemaster.main",
@@ -88,7 +107,7 @@ export const uiConfig: UIConfig = {
         message: "codemaster.waiting",
         gameBoard: "main",
         dashboard: "waitingDashboard",
-        boardMode: BOARD_MODE.CODEMASTER_READONLY, // Changed to readonly while waiting
+        boardMode: BOARD_MODE.CODEMASTER_READONLY,
         on: {
           TURN_CHANGED: [
             {
@@ -111,9 +130,9 @@ export const uiConfig: UIConfig = {
     },
   },
 
-  // When player is a codebreaker - MASSIVELY STREAMLINED
+  // When player is a codebreaker
   [PLAYER_ROLE.CODEBREAKER]: {
-    initial: "main", // Skip preparation, go straight to main
+    initial: "main",
     scenes: {
       main: {
         message: "codebreaker.main",
@@ -201,12 +220,13 @@ export function determineUIStage(
   }
 
   // If round is not in progress, stay in lobby regardless of player role
-  if (!currentRound || currentRound.status !== ROUND_STATE.IN_PROGRESS) {
+  if (!currentRound || currentRound.status !== "IN_PROGRESS") {
     return PLAYER_ROLE.NONE;
   }
 
   return playerRole;
 }
+
 /**
  * Enhanced transition configuration interface with array condition support
  */
