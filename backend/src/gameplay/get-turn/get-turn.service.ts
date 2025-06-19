@@ -4,7 +4,7 @@ import { TurnStateProvider } from "../state/turn-state.provider";
  * API response turn data (sanitized - no internal IDs)
  */
 export interface ApiTurnData {
-  publicId: string;
+  id: string;
   teamName: string;
   status: "ACTIVE" | "COMPLETED";
   guessesRemaining: number;
@@ -31,9 +31,7 @@ export interface ApiTurnData {
 }
 
 export type GetTurnService = (
-  publicId: string,
-  gameId: number,
-  userId: number,
+  publicTurnId: string,
 ) => Promise<ApiTurnData | null>;
 
 class UnauthorizedTurnAccessError extends Error {
@@ -48,23 +46,17 @@ class UnauthorizedTurnAccessError extends Error {
  */
 export const getTurnService =
   (getTurnState: TurnStateProvider): GetTurnService =>
-  async (publicId, gameId, userId) => {
+  async (publicTurnId) => {
     // Get turn data with computed fields from provider
-    const turnData = await getTurnState(publicId);
+    const turnData = await getTurnState(publicTurnId);
 
     if (!turnData) {
       return null;
     }
 
-    // Auth check: turn must belong to the authorized game.... the users ability to access the game
-    // has already been auth'ed via middleware.
-    if (turnData._gameId !== gameId) {
-      throw new UnauthorizedTurnAccessError();
-    }
-
-    // Return sanitized data for API response (manually constructed for type safety)
+    // Return sanitized data for API response (manually constructed for type & data safety)
     return {
-      publicId: turnData.publicId,
+      id: turnData.publicId,
       teamName: turnData.teamName,
       status: turnData.status,
       guessesRemaining: turnData.guessesRemaining,

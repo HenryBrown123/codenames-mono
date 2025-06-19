@@ -19,6 +19,92 @@ import {
 } from "./test-common";
 
 /**
+ * Validates turn data by fetching from get-turn endpoint
+ * Mimics frontend useTurn hook behavior
+ */
+async function validateTurnData(
+  api: ApiClient,
+  turnPublicId: string,
+  expectedOutcome: string,
+  verbose: boolean,
+): Promise<void> {
+  if (verbose) {
+    console.log(
+      `    ${colors.blue}→ GET /turns/${turnPublicId}${colors.reset}`,
+    );
+  }
+
+  const turnResponse = await api.get(`/turns/${turnPublicId}`);
+
+  if (!turnResponse.data.success) {
+    throw new Error(
+      `Failed to fetch turn ${turnPublicId}: ${turnResponse.data.error}`,
+    );
+  }
+
+  const turn = turnResponse.data.data.turn;
+
+  // Validate turn structure
+  if (!turn.id || !turn.teamName || !turn.status) {
+    throw new Error(`Invalid turn structure for ${turnPublicId}`);
+  }
+
+  // Validate based on expected outcome
+  if (expectedOutcome === "ASSASSIN_CARD") {
+    if (
+      turn.status !== "COMPLETED" ||
+      !turn.lastGuess ||
+      turn.lastGuess.outcome !== "ASSASSIN_CARD"
+    ) {
+      throw new Error(
+        `Expected assassin outcome but got: ${turn.lastGuess?.outcome}`,
+      );
+    }
+  } else if (expectedOutcome === "OTHER_TEAM_CARD") {
+    if (
+      turn.status !== "COMPLETED" ||
+      !turn.lastGuess ||
+      turn.lastGuess.outcome !== "OTHER_TEAM_CARD"
+    ) {
+      throw new Error(
+        `Expected other team card but got: ${turn.lastGuess?.outcome}`,
+      );
+    }
+  } else if (expectedOutcome === "BYSTANDER_CARD") {
+    if (
+      turn.status !== "COMPLETED" ||
+      !turn.lastGuess ||
+      turn.lastGuess.outcome !== "BYSTANDER_CARD"
+    ) {
+      throw new Error(`Expected bystander but got: ${turn.lastGuess?.outcome}`);
+    }
+  } else if (expectedOutcome === "CORRECT_TEAM_CARD") {
+    if (!turn.lastGuess || turn.lastGuess.outcome !== "CORRECT_TEAM_CARD") {
+      throw new Error(
+        `Expected correct team card but got: ${turn.lastGuess?.outcome}`,
+      );
+    }
+  }
+
+  if (verbose) {
+    logStep(
+      `✓ Turn ${turnPublicId} validated - ${turn.status} with ${turn.guessesRemaining} guesses remaining`,
+      verbose,
+    );
+  }
+}
+
+/**
+ * Gets the current active turn's publicId from game state
+ */
+function getCurrentTurnPublicId(gameState: any): string | null {
+  const activeTurn = gameState.currentRound?.turns?.find(
+    (t: any) => t.status === "ACTIVE",
+  );
+  return activeTurn?.id || null;
+}
+
+/**
  * Runs a complete strategic game test for the given scenario
  */
 export async function runGameTest(
@@ -153,6 +239,9 @@ export async function runGameTest(
           throw error;
         }
       } else if (activeTurn.clue && activeTurn.guessesRemaining > 0) {
+        // 1. Get current turn publicId BEFORE making the guess
+        const currentTurnPublicId = getCurrentTurnPublicId(gameState);
+
         // Strategic guess based on scenario
         const desiredOutcome =
           scenario.strategy[strategyIndex % scenario.strategy.length];
@@ -171,12 +260,34 @@ export async function runGameTest(
           }
 
           try {
+            // 2. Make the guess
             const guessResponse = await api.post(
               `/games/${gameId}/rounds/1/guesses`,
               {
                 cardWord: targetCard,
               },
             );
+
+            // 3. Validate turn data via get-turn endpoint using the previously saved turn ID
+            if (currentTurnPublicId) {
+              if (verbose) {
+                console.log(
+                  `    ${colors.blue}🔍 Calling get-turn endpoint for: ${currentTurnPublicId}${colors.reset}`,
+                );
+              }
+              await validateTurnData(
+                api,
+                currentTurnPublicId,
+                desiredOutcome,
+                verbose,
+              );
+            } else {
+              if (verbose) {
+                console.log(
+                  `    ${colors.yellow}⚠ No current turn publicId found to validate${colors.reset}`,
+                );
+              }
+            }
 
             const guessResult = guessResponse.data.data;
             if (verbose) {
@@ -222,9 +333,23 @@ export async function runGameTest(
             "RANDOM",
           );
           if (fallbackCard) {
+            // Get current turn ID before fallback guess too
+            const fallbackTurnPublicId = getCurrentTurnPublicId(gameState);
+
             await api.post(`/games/${gameId}/rounds/1/guesses`, {
               cardWord: fallbackCard,
             });
+
+            // Validate fallback guess
+            if (fallbackTurnPublicId) {
+              await validateTurnData(
+                api,
+                fallbackTurnPublicId,
+                "RANDOM",
+                verbose,
+              );
+            }
+
             strategyIndex++;
           } else {
             break;
@@ -283,7 +408,9 @@ export async function runGameTest(
         `${colors.bright}Expected:${colors.reset} ${scenario.expectedOutcome}`,
       );
       console.log(
-        `${colors.bright}Actual:${colors.reset} ${testResult.roundCompleted ? "Round completed" : "Round in progress"}`,
+        `${colors.bright}Actual:${colors.reset} ${
+          testResult.roundCompleted ? "Round completed" : "Round in progress"
+        }`,
       );
       console.log(
         `${colors.bright}Duration:${colors.reset} ${testResult.duration}ms`,
