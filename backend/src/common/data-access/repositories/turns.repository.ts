@@ -12,6 +12,7 @@ import { UnexpectedRepositoryError } from "./repository.errors";
 
 /** Domain-specific identifier types */
 export type TurnId = number;
+export type PublicId = string;
 export type RoundId = number;
 export type TeamId = number;
 export type PlayerId = number;
@@ -41,6 +42,7 @@ export type GuessResult = {
   _turnId: number;
   _playerId: number;
   _cardId: number;
+  cardWord: string; // ENHANCED: Added card word
   playerName: string;
   outcome: TurnOutcome | null;
   createdAt: Date;
@@ -48,8 +50,10 @@ export type GuessResult = {
 
 export type TurnResult = {
   _id: number;
+  publicId: string; // ENHANCED: Added public ID
   _roundId: number;
   _teamId: number;
+  _gameId: number; // ENHANCED: Added game ID for auth
   teamName: string;
   status: string;
   guessesRemaining: number;
@@ -83,7 +87,7 @@ export type TurnsFinder<T extends RoundId> = (
   identifier: T,
 ) => Promise<TurnResult[]>;
 
-export type TurnFinder<T extends TurnId> = (
+export type TurnFinder<T extends TurnId | PublicId> = (
   identifier: T,
 ) => Promise<TurnResult | null>;
 
@@ -113,7 +117,7 @@ export type TurnStatusUpdater = (
  */
 
 /**
- * Fetches clues and guesses for given turn IDs and returns structured data
+ * ENHANCED: Fetches clues and guesses with card words for given turn IDs
  */
 const fetchTurnRelatedData = async (
   db: Kysely<DB>,
@@ -130,9 +134,11 @@ const fetchTurnRelatedData = async (
       .select(["id", "turn_id", "word", "number", "created_at"])
       .execute(),
 
+    // ENHANCED: Added join with cards table to get card words
     db
       .selectFrom("guesses")
       .innerJoin("players", "guesses.player_id", "players.id")
+      .innerJoin("cards", "guesses.card_id", "cards.id") // ENHANCED: Added this join
       .where("guesses.turn_id", "in", turnIds)
       .select([
         "guesses.id",
@@ -142,6 +148,7 @@ const fetchTurnRelatedData = async (
         "guesses.outcome",
         "guesses.created_at",
         "players.public_name as playerName",
+        "cards.word as cardWord", // ENHANCED: Added card word
       ])
       .orderBy("guesses.created_at", "asc")
       .execute(),
@@ -168,13 +175,14 @@ const fetchTurnRelatedData = async (
     };
   });
 
-  // Map guesses
+  // Map guesses (now with card words)
   guesses.forEach((guess) => {
     relatedData[guess.turn_id].guesses.push({
       _id: guess.id,
       _turnId: guess.turn_id,
       _playerId: guess.player_id,
       _cardId: guess.card_id,
+      cardWord: guess.cardWord, // ENHANCED: Now included
       playerName: guess.playerName,
       outcome: outcomeSchema.parse(guess.outcome),
       createdAt: guess.created_at,
@@ -185,16 +193,19 @@ const fetchTurnRelatedData = async (
 };
 
 /**
- * Standard query for fetching turn base data with correct field names
+ * ENHANCED: Standard query for fetching turn base data with publicId and gameId
  */
 const getTurnBaseData = (db: Kysely<DB>) =>
   db
     .selectFrom("turns")
     .innerJoin("teams", "turns.team_id", "teams.id")
+    .innerJoin("rounds", "turns.round_id", "rounds.id") // ENHANCED: Added join for gameId
     .select([
       "turns.id as _id",
+      "turns.public_id as publicId", // ENHANCED: Added public ID
       "turns.round_id as _roundId",
       "turns.team_id as _teamId",
+      "rounds.game_id as _gameId", // ENHANCED: Added game ID for auth
       "teams.team_name as teamName",
       "turns.status",
       "turns.guesses_remaining as guessesRemaining",
@@ -267,18 +278,26 @@ export const createGuess =
         ])
         .executeTakeFirstOrThrow();
 
-      // Get player name
-      const player = await db
-        .selectFrom("players")
-        .where("id", "=", playerId)
-        .select("public_name")
-        .executeTakeFirstOrThrow();
+      // Get player name and card word
+      const [player, card] = await Promise.all([
+        db
+          .selectFrom("players")
+          .where("id", "=", playerId)
+          .select("public_name")
+          .executeTakeFirstOrThrow(),
+        db
+          .selectFrom("cards")
+          .where("id", "=", cardId)
+          .select("word")
+          .executeTakeFirstOrThrow(),
+      ]);
 
       return {
         _id: guess.id,
         _turnId: guess.turn_id,
         _playerId: guess.player_id,
         _cardId: guess.card_id,
+        cardWord: card.word, // ENHANCED: Now included
         playerName: player.public_name,
         outcome: outcomeSchema.parse(guess.outcome),
         createdAt: guess.created_at,
@@ -309,6 +328,7 @@ export const createTurn =
         })
         .returning([
           "id",
+          "public_id", // ENHANCED: Include public_id
           "round_id",
           "team_id",
           "guesses_remaining",
@@ -318,17 +338,26 @@ export const createTurn =
         ])
         .executeTakeFirstOrThrow();
 
-      // Get team name
-      const team = await db
-        .selectFrom("teams")
-        .where("id", "=", teamId)
-        .select("team_name")
-        .executeTakeFirstOrThrow();
+      // Get team name and game ID
+      const [team, round] = await Promise.all([
+        db
+          .selectFrom("teams")
+          .where("id", "=", teamId)
+          .select("team_name")
+          .executeTakeFirstOrThrow(),
+        db
+          .selectFrom("rounds")
+          .where("id", "=", roundId)
+          .select("game_id")
+          .executeTakeFirstOrThrow(),
+      ]);
 
       return {
         _id: turn.id,
+        publicId: turn.public_id,
         _roundId: turn.round_id,
         _teamId: turn.team_id,
+        _gameId: round.game_id,
         teamName: team.team_name,
         status: turn.status,
         guessesRemaining: turn.guesses_remaining,
@@ -446,7 +475,27 @@ export const getTurnsByRoundId =
   };
 
 /**
- * Creates a function for retrieving a turn by ID
+ * Creates a function for retrieving a turn by public ID
+ */
+export const getTurnByPublicId =
+  (db: Kysely<DB>): TurnFinder<PublicId> =>
+  async (publicId: string) => {
+    const turn = await getTurnBaseData(db)
+      .where("turns.public_id", "=", publicId)
+      .executeTakeFirst();
+
+    if (!turn) return null;
+
+    const relatedData = await fetchTurnRelatedData(db, [turn._id]);
+
+    return {
+      ...turn,
+      ...relatedData[turn._id],
+    };
+  };
+
+/**
+ * Creates a function for retrieving a turn by internal ID
  */
 export const getTurnById =
   (db: Kysely<DB>): TurnFinder<TurnId> =>
