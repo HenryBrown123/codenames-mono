@@ -7,7 +7,7 @@ import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
 
 interface DealCardsVariables {
-  roundId: string;
+  roundNumber: number;
 }
 
 /**
@@ -20,9 +20,9 @@ export const useDealCardsMutation = (
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ roundId }) => {
+    mutationFn: async ({ roundNumber }) => {
       const response: AxiosResponse = await api.post(
-        `/games/${gameId}/rounds/${roundId}/deal`,
+        `/games/${gameId}/rounds/${roundNumber}/deal`,
       );
 
       if (!response.data.success) {

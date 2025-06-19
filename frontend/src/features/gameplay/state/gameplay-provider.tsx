@@ -2,6 +2,7 @@ import React, { ReactNode } from "react";
 import { GameDataProvider } from "./game-data-provider";
 import { UISceneProvider } from "./ui-scene-provider";
 import { GameActionsProvider } from "./game-actions-provider";
+import { TurnProvider } from "./active-turn-provider";
 
 interface GameplayProviderProps {
   gameId: string;
@@ -11,7 +12,7 @@ interface GameplayProviderProps {
 /**
  * Composition level component that wires up all gameplay dependencies
  * Follows the dependency chain:
- * GameData (async boundary) → UIScene (uses gameData) → GameActions (uses both)
+ * GameData (async boundary) → Turn (shared state) → UIScene (uses both) → GameActions (uses all)
  */
 export const GameplayProvider = ({
   gameId,
@@ -19,9 +20,11 @@ export const GameplayProvider = ({
 }: GameplayProviderProps) => {
   return (
     <GameDataProvider gameId={gameId}>
-      <UISceneProvider>
-        <GameActionsProvider>{children}</GameActionsProvider>
-      </UISceneProvider>
+      <TurnProvider>
+        <UISceneProvider>
+          <GameActionsProvider>{children}</GameActionsProvider>
+        </UISceneProvider>
+      </TurnProvider>
     </GameDataProvider>
   );
 };

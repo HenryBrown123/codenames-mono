@@ -41,9 +41,5 @@ export const useGameDataQuery = (
       return fetchGame(gameId);
     },
     enabled: !!gameId,
-    // Consider adding these options based on your needs:
-    // staleTime: 30 * 1000, // Consider data stale after 30 seconds
-    // refetchInterval: 5000, // Poll every 5 seconds for real-time updates
-    // refetchOnWindowFocus: true, // Refetch when user returns to tab
   });
 };
