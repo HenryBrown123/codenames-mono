@@ -54,13 +54,8 @@ export function createGameplayPaths() {
                           score: 1,
                           players: [
                             {
-                              publicId: "12345678-1234-1234-1234-123456789012",
+                              publicId: "b2c3d4e5-f6g7-8901-bcde-f23456789012",
                               name: "Charlie",
-                              isActive: true,
-                            },
-                            {
-                              publicId: "87654321-4321-4321-4321-210987654321",
-                              name: "Diana",
                               isActive: true,
                             },
                           ],
@@ -71,13 +66,15 @@ export function createGameplayPaths() {
                         status: "IN_PROGRESS",
                         cards: [
                           {
-                            word: "apple",
+                            word: "cat",
                             selected: false,
+                            teamName: "Team Red",
+                            cardType: "TEAM",
                           },
                           {
-                            word: "tree",
+                            word: "dog",
                             selected: true,
-                            teamName: "Team Red",
+                            teamName: "Team Blue",
                             cardType: "TEAM",
                           },
                         ],
@@ -87,7 +84,7 @@ export function createGameplayPaths() {
                             status: "COMPLETED",
                             guessesRemaining: 0,
                             clue: {
-                              word: "nature",
+                              word: "animals",
                               number: 2,
                             },
                             guesses: [
@@ -110,9 +107,6 @@ export function createGameplayPaths() {
               },
             },
           },
-          "403": {
-            description: "User not authorized to view this game",
-          },
           "404": {
             description: "Game not found",
           },
@@ -128,8 +122,7 @@ export function createGameplayPaths() {
     "/games/{gameId}/rounds": {
       post: {
         summary: "Create a new round",
-        description:
-          "Creates a new round in a game if all business rules are met",
+        description: "Creates a new round for the specified game",
         tags: ["Gameplay"],
         security: [{ bearerAuth: [] }],
         parameters: [
@@ -154,7 +147,6 @@ export function createGameplayPaths() {
                     round: {
                       roundNumber: 2,
                       status: "SETUP",
-                      createdAt: "2024-01-01T00:00:00Z",
                     },
                   },
                 },
@@ -166,23 +158,6 @@ export function createGameplayPaths() {
           },
           "409": {
             description: "Business rule violation - cannot create round",
-            content: {
-              "application/json": {
-                example: {
-                  success: false,
-                  error: "Failed to create new round",
-                  details: {
-                    code: "invalid-game-state",
-                    validationErrors: [
-                      {
-                        path: "rounds",
-                        message: "Maximum of 1 rounds allowed for QUICK format",
-                      },
-                    ],
-                  },
-                },
-              },
-            },
           },
           "401": {
             description: "Unauthorized",
@@ -195,9 +170,9 @@ export function createGameplayPaths() {
     },
     "/games/{gameId}/rounds/{id}/deal": {
       post: {
-        summary: "Deal cards for a round",
+        summary: "Deal cards to a round",
         description:
-          "Deals 25 random cards to a round and distributes them among teams. Can be called multiple times before round starts.",
+          "Randomly assigns cards to teams and positions for the specified round",
         tags: ["Gameplay"],
         security: [{ bearerAuth: [] }],
         parameters: [
@@ -217,28 +192,13 @@ export function createGameplayPaths() {
             schema: {
               type: "string",
             },
-            description: "Round identifier",
+            description: "Round ID",
           },
         ],
         requestBody: {
           required: false,
           content: {
             "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  deck: {
-                    type: "string",
-                    default: "BASE",
-                    description: "Deck to use for word selection",
-                  },
-                  languageCode: {
-                    type: "string",
-                    default: "en",
-                    description: "Language code for words",
-                  },
-                },
-              },
               example: {
                 deck: "BASE",
                 languageCode: "en",
@@ -247,23 +207,24 @@ export function createGameplayPaths() {
           },
         },
         responses: {
-          "201": {
+          "200": {
             description: "Cards dealt successfully",
             content: {
               "application/json": {
                 example: {
                   success: true,
                   data: {
-                    roundNumber: 1,
-                    status: "SETUP",
-                    cardCount: 25,
                     cards: [
                       {
-                        word: "apple",
+                        word: "cat",
+                        teamName: "Team Red",
+                        cardType: "TEAM",
                         selected: false,
                       },
                       {
                         word: "tree",
+                        teamName: null,
+                        cardType: "BYSTANDER",
                         selected: false,
                       },
                     ],
@@ -350,8 +311,7 @@ export function createGameplayPaths() {
     "/games/{gameId}/rounds/{roundNumber}/clues": {
       post: {
         summary: "Give a clue",
-        description:
-          "Allows a codemaster to give a clue to their team during their turn",
+        description: "Allows a codemaster to provide a clue for their team",
         tags: ["Gameplay"],
         security: [{ bearerAuth: [] }],
         parameters: [
@@ -379,33 +339,15 @@ export function createGameplayPaths() {
           required: true,
           content: {
             "application/json": {
-              schema: {
-                type: "object",
-                required: ["word", "targetCardCount"],
-                properties: {
-                  word: {
-                    type: "string",
-                    minLength: 1,
-                    maxLength: 50,
-                    description: "The clue word",
-                  },
-                  targetCardCount: {
-                    type: "integer",
-                    minimum: 1,
-                    maximum: 25,
-                    description: "Number of cards this clue relates to",
-                  },
-                },
-              },
               example: {
-                word: "nature",
+                word: "animals",
                 targetCardCount: 2,
               },
             },
           },
         },
         responses: {
-          "201": {
+          "200": {
             description: "Clue given successfully",
             content: {
               "application/json": {
@@ -413,29 +355,26 @@ export function createGameplayPaths() {
                   success: true,
                   data: {
                     clue: {
-                      word: "nature",
-                      targetCardCount: 2,
-                      createdAt: "2024-01-01T00:00:00Z",
+                      word: "animals",
+                      number: 2,
+                      createdAt: "2024-01-01T12:00:00Z",
                     },
                     turn: {
-                      teamName: "Team Red",
-                      guessesRemaining: 3,
+                      publicId: "turn-abc123-def456",
+                      teamName: "Red Team",
                       status: "ACTIVE",
+                      guessesRemaining: 3,
+                      createdAt: "2024-01-01T12:00:00Z",
+                      completedAt: null,
+                      clue: {
+                        word: "animals",
+                        number: 2,
+                        createdAt: "2024-01-01T12:00:00Z",
+                      },
+                      hasGuesses: false,
+                      lastGuess: null,
+                      prevGuesses: [],
                     },
-                  },
-                },
-              },
-            },
-          },
-          "400": {
-            description: "Invalid clue word or parameters",
-            content: {
-              "application/json": {
-                example: {
-                  success: false,
-                  error: 'Clue word "tree" matches a card word on the board',
-                  details: {
-                    code: "invalid-clue-word",
                   },
                 },
               },
@@ -446,23 +385,6 @@ export function createGameplayPaths() {
           },
           "409": {
             description: "Business rule violation - cannot give clue",
-            content: {
-              "application/json": {
-                example: {
-                  success: false,
-                  error: "Failed to give clue",
-                  details: {
-                    code: "invalid-game-state",
-                    validationErrors: [
-                      {
-                        path: "playerContext.role",
-                        message: "Only codemasters can give clues",
-                      },
-                    ],
-                  },
-                },
-              },
-            },
           },
           "401": {
             description: "Unauthorized",
@@ -476,8 +398,7 @@ export function createGameplayPaths() {
     "/games/{gameId}/rounds/{roundNumber}/guesses": {
       post: {
         summary: "Make a guess",
-        description:
-          "Allows a codebreaker to guess a card during their team's turn. Handles all game state transitions including turn ends, round ends, and victory conditions.",
+        description: "Allows a codebreaker to guess a card",
         tags: ["Gameplay"],
         security: [{ bearerAuth: [] }],
         parameters: [
@@ -505,26 +426,14 @@ export function createGameplayPaths() {
           required: true,
           content: {
             "application/json": {
-              schema: {
-                type: "object",
-                required: ["cardWord"],
-                properties: {
-                  cardWord: {
-                    type: "string",
-                    minLength: 1,
-                    maxLength: 50,
-                    description: "The word on the card to guess",
-                  },
-                },
-              },
               example: {
-                cardWord: "tree",
+                cardWord: "dog",
               },
             },
           },
         },
         responses: {
-          "201": {
+          "200": {
             description: "Guess made successfully",
             content: {
               "application/json": {
@@ -532,36 +441,38 @@ export function createGameplayPaths() {
                   success: true,
                   data: {
                     guess: {
-                      cardWord: "tree",
+                      cardWord: "dog",
                       outcome: "CORRECT_TEAM_CARD",
-                      createdAt: "2024-01-01T00:00:00Z",
+                      createdAt: "2024-01-01T12:03:00Z",
                     },
                     turn: {
-                      teamName: "Team Red",
-                      guessesRemaining: 2,
+                      publicId: "turn-abc123-def456",
+                      teamName: "Red Team",
                       status: "ACTIVE",
+                      guessesRemaining: 2,
+                      createdAt: "2024-01-01T12:00:00Z",
+                      completedAt: null,
+                      clue: {
+                        word: "animals",
+                        number: 2,
+                        createdAt: "2024-01-01T12:00:00Z",
+                      },
+                      hasGuesses: true,
+                      lastGuess: {
+                        cardWord: "dog",
+                        playerName: "John",
+                        outcome: "CORRECT_TEAM_CARD",
+                        createdAt: "2024-01-01T12:03:00Z",
+                      },
+                      prevGuesses: [],
                     },
-                  },
-                },
-              },
-            },
-          },
-          "400": {
-            description: "Invalid card word or card not available",
-            content: {
-              "application/json": {
-                example: {
-                  success: false,
-                  error: 'Card "invalidword" not found on the board',
-                  details: {
-                    code: "invalid-card",
                   },
                 },
               },
             },
           },
           "404": {
-            description: "Game or round not found",
+            description: "Game, round, or card not found",
             content: {
               "application/json": {
                 example: {
@@ -590,6 +501,117 @@ export function createGameplayPaths() {
                       },
                     ],
                   },
+                },
+              },
+            },
+          },
+          "401": {
+            description: "Unauthorized",
+          },
+          "500": {
+            description: "Server error",
+          },
+        },
+      },
+    },
+    "/turns/{turnId}": {
+      get: {
+        summary: "Get turn details",
+        description:
+          "Retrieves detailed information about a specific turn including clues, guesses, and computed fields for UI state management",
+        tags: ["Gameplay"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "turnId",
+            in: "path",
+            required: true,
+            schema: {
+              type: "string",
+              format: "uuid",
+            },
+            description: "UUID of the turn",
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Turn details retrieved successfully",
+            content: {
+              "application/json": {
+                example: {
+                  success: true,
+                  data: {
+                    turn: {
+                      publicId: "turn-abc123-def456",
+                      teamName: "Red Team",
+                      status: "ACTIVE",
+                      guessesRemaining: 2,
+                      createdAt: "2024-01-01T12:00:00Z",
+                      completedAt: null,
+                      clue: {
+                        word: "animals",
+                        number: 3,
+                        createdAt: "2024-01-01T12:00:00Z",
+                      },
+                      hasGuesses: true,
+                      lastGuess: {
+                        cardWord: "dog",
+                        playerName: "John",
+                        outcome: "CORRECT_TEAM_CARD",
+                        createdAt: "2024-01-01T12:03:00Z",
+                      },
+                      prevGuesses: [
+                        {
+                          cardWord: "cat",
+                          playerName: "John",
+                          outcome: "CORRECT_TEAM_CARD",
+                          createdAt: "2024-01-01T12:01:00Z",
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "404": {
+            description: "Turn not found",
+            content: {
+              "application/json": {
+                example: {
+                  success: false,
+                  error: "Turn not found",
+                },
+              },
+            },
+          },
+          "403": {
+            description:
+              "Access denied - turn does not belong to authorized game",
+            content: {
+              "application/json": {
+                example: {
+                  success: false,
+                  error: "Access denied to this turn",
+                },
+              },
+            },
+          },
+          "400": {
+            description: "Invalid request parameters",
+            content: {
+              "application/json": {
+                example: {
+                  success: false,
+                  error: "Invalid request parameters",
+                  details: [
+                    {
+                      code: "invalid_string",
+                      expected: "uuid",
+                      message: "Turn ID must be a valid UUID",
+                      path: ["params", "turnId"],
+                    },
+                  ],
                 },
               },
             },

@@ -91,7 +91,7 @@ export const initialize = (
   );
 
   // Turn routes
-  router.get("/turns/:publicId", auth, getTurnController);
+  router.get("/turns/:turnId", auth, getTurnController);
 
   app.use("/api", router);
   app.use("/api", gameplayErrorHandler);
