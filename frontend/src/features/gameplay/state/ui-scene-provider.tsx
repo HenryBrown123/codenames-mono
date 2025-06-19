@@ -39,7 +39,7 @@ export const UISceneProvider = ({ children }: UISceneProviderProps) => {
   const { gameData } = useGameData();
 
   const [uiState, dispatch] = useReducer(
-    (state: UIState, action: any) => uiReducer(state, action, gameData),
+    (state: UIState, action: any) => uiReducer(state, action, gameData, null),
     createInitialUIState(gameData),
   );
 
