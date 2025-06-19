@@ -1,4 +1,6 @@
 import React from "react";
+import styled from "styled-components";
+
 import { useGameData, useUIScene } from "@frontend/features/gameplay/state";
 import { useTurn } from "@frontend/features/gameplay/state/active-turn-provider";
 import { uiConfig } from "@frontend/features/gameplay/state/ui-state-config";
@@ -10,7 +12,6 @@ import {
 } from "@frontend/features/gameplay/state/ui-state-mappings";
 import { GameInstructions } from "@frontend/features/gameplay/ui/game-instructions";
 import { PLAYER_ROLE } from "@codenames/shared/types";
-import styled from "styled-components";
 
 const GameSceneContainer = styled.div`
   display: flex;
@@ -80,7 +81,8 @@ export const GameScene: React.FC = () => {
     return <div>Loading game scene...</div>;
   }
 
-  const message = sceneConfig.message
+  // Orchestrate message derivation here
+  const messageText = sceneConfig.message
     ? messages[sceneConfig.message](gameData, activeTurn)
     : null;
 
@@ -97,9 +99,9 @@ export const GameScene: React.FC = () => {
 
   return (
     <GameSceneContainer>
-      {message && (
+      {messageText && (
         <InstructionsContainer>
-          <GameInstructions messageText={message} />
+          <GameInstructions messageText={messageText} />
         </InstructionsContainer>
       )}
       <GameBoardContainer>
