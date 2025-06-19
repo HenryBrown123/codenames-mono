@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import ActionButton from "../action-button/action-button";
-import CodeWordInput from "./codemaster-input";
+import { CodeWordInput } from "./codemaster-input";
 import {
   useGameData,
   useUIScene,
@@ -267,6 +267,21 @@ export const CodebreakerDashboardView: React.FC = () => {
           <InfoText>Waiting for clue...</InfoText>
         </Container>
       )}
+    </ButtonWrapper>
+  );
+};
+
+// Outcome dashboard - simple continue button to move to next scene
+export const OutcomeDashboardView: React.FC = () => {
+  const { handleSceneTransition } = useUIScene();
+
+  const handleContinue = () => {
+    handleSceneTransition("OUTCOME_ACKNOWLEDGED");
+  };
+
+  return (
+    <ButtonWrapper>
+      <ActionButton onClick={handleContinue} text="Continue" enabled={true} />
     </ButtonWrapper>
   );
 };

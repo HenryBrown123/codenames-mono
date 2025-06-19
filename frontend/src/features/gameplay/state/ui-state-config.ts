@@ -152,29 +152,36 @@ export const uiConfig: UIConfig = {
               type: "role",
               target: PLAYER_ROLE.NONE,
             },
-            // Handle turn ended (switch roles)
+            // Show outcome scene when turn ends
             {
-              condition: [
-                "codebreakerTurnEnded",
-                "!roundCompleted",
-                "singleDeviceMode",
-              ],
-              type: "role",
-              target: PLAYER_ROLE.CODEMASTER,
-            },
-            {
-              condition: [
-                "codebreakerTurnEnded",
-                "!roundCompleted",
-                "!singleDeviceMode",
-              ],
+              condition: ["codebreakerTurnEnded", "!roundCompleted"],
               type: "scene",
-              target: "waiting",
+              target: "outcome",
             },
             // Default: stay in main (continue guessing)
             {
               type: "scene",
               target: "main",
+            },
+          ],
+        },
+      },
+      outcome: {
+        message: "codebreaker.outcome",
+        gameBoard: "main",
+        dashboard: "outcomeDashboard",
+        boardMode: BOARD_MODE.SPECTATOR,
+        on: {
+          OUTCOME_ACKNOWLEDGED: [
+            {
+              condition: ["singleDeviceMode"],
+              type: "role",
+              target: PLAYER_ROLE.CODEMASTER,
+            },
+            {
+              condition: ["!singleDeviceMode"],
+              type: "scene",
+              target: "waiting",
             },
           ],
         },

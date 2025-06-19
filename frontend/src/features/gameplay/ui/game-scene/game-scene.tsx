@@ -90,6 +90,7 @@ export const GameScene: React.FC = () => {
   const BoardComponent = sceneConfig.gameBoard
     ? gameBoards[sceneConfig.gameBoard]
     : null;
+
   const DashboardComponent = sceneConfig.dashboard
     ? dashboards[sceneConfig.dashboard]
     : null;

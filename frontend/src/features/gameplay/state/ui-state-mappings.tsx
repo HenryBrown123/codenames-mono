@@ -7,11 +7,16 @@ import {
   CodebreakerDashboardView,
   WaitingDashboardView,
   GameoverDashboardView,
+  OutcomeDashboardView,
 } from "@frontend/features/gameplay/ui/dashboard";
 import { GameBoardView } from "@frontend/features/gameplay/ui/game-board/game-board";
 import { GameData } from "@frontend/shared-types";
 import { BoardMode, BOARD_MODE } from "../ui/game-board/game-board";
-import { GAME_TYPE, PLAYER_ROLE } from "@codenames/shared/types";
+import {
+  GAME_TYPE,
+  PLAYER_ROLE,
+  CODEBREAKER_OUTCOME,
+} from "@codenames/shared/types";
 
 /**
  * Messages including dealing scene
@@ -52,13 +57,70 @@ export const messages: Record<string, (gameData: GameData) => string> = {
     const remaining = activeTurn.guessesRemaining || 0;
     const guessText = remaining === 1 ? "guess" : "guesses";
 
+    // Check if there's a recent guess to show outcome feedback
+    const recentGuess =
+      activeTurn?.guesses && activeTurn.guesses.length > 0
+        ? activeTurn.guesses[activeTurn.guesses.length - 1]
+        : null;
+
+    if (recentGuess?.outcome && remaining > 0) {
+      const outcomeMessage = getOutcomeMessage(recentGuess.outcome);
+      return `${outcomeMessage} • "${clue.word}" for ${clue.number} • ${remaining} ${guessText} left`;
+    }
+
     return `"${clue.word}" for ${clue.number} • ${remaining} ${guessText} left`;
+  },
+
+  "codebreaker.outcome": (gameData) => {
+    const lastGuess = getLastGuess(gameData);
+    if (!lastGuess?.outcome) {
+      return "Turn ended";
+    }
+
+    const outcomeMessage = getOutcomeMessage(lastGuess.outcome);
+    return `${outcomeMessage} • Your turn is over`;
   },
 
   "codebreaker.waiting": () => `Waiting for other team...`,
 
   // Game over
   "gameover.main": () => `Game Over!`,
+};
+
+/**
+ * Helper to get the last guess made
+ */
+const getLastGuess = (gameData: GameData) => {
+  const activeTurn = gameData.currentRound?.turns?.find(
+    (t) => t.status === "ACTIVE" || t.status === "COMPLETED",
+  );
+
+  if (!activeTurn?.guesses || activeTurn.guesses.length === 0) {
+    return null;
+  }
+
+  return activeTurn.guesses[activeTurn.guesses.length - 1];
+};
+
+/**
+ * Helper to get outcome message based on guess result
+ */
+const getOutcomeMessage = (outcome: string): string => {
+  console.log("Outcome received:", outcome, "Type:", typeof outcome);
+
+  switch (outcome) {
+    case CODEBREAKER_OUTCOME.CORRECT_TEAM_CARD:
+      return "Good guess!";
+    case CODEBREAKER_OUTCOME.OTHER_TEAM_CARD:
+      return "Oops! That's the other team's card";
+    case CODEBREAKER_OUTCOME.BYSTANDER_CARD:
+      return "Neutral card - turn over";
+    case CODEBREAKER_OUTCOME.ASSASSIN_CARD:
+      return "Assassin! Game over";
+    default:
+      console.log("Unknown outcome, falling back to default");
+      return "Turn ended";
+  }
 };
 
 /**
@@ -132,4 +194,5 @@ export const dashboards: Record<string, React.FC> = {
   codebreakerDashboard: CodebreakerDashboardView,
   waitingDashboard: WaitingDashboardView,
   gameoverDashboard: GameoverDashboardView,
+  outcomeDashboard: OutcomeDashboardView,
 };

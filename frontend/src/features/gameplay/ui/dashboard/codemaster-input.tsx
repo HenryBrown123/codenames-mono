@@ -98,7 +98,7 @@ type CodeWordInputProps = {
   onSubmit?: (codeWord: string, numberOfCards: number) => void;
 };
 
-export default function CodeWordInput({
+export function CodeWordInput({
   codeWord = "",
   numberOfCards = 1,
   isEditable = true,

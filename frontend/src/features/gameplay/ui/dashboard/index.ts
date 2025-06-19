@@ -6,4 +6,5 @@ export {
   CodebreakerDashboardView,
   WaitingDashboardView,
   GameoverDashboardView,
+  OutcomeDashboardView,
 } from "./dashboard-views";
