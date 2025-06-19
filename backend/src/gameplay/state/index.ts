@@ -10,7 +10,33 @@ import * as teamsRepository from "@backend/common/data-access/repositories/teams
 import * as cardsRepository from "@backend/common/data-access/repositories/cards.repository";
 import * as turnsRepository from "@backend/common/data-access/repositories/turns.repository";
 
+import { turnStateProvider } from "./turn-state.provider";
 import { gameplayStateProvider } from "./gameplay-state.provider";
+
+/**
+ * Creates a turn state provider with the given database context
+ * Works with both regular db connections and transaction contexts
+ *
+ * @param dbContext - Database connection or transaction context
+ * @returns Turn state provider that uses the given context
+ */
+export const createTurnStateProvider = (dbContext: DbContext) => {
+  return turnStateProvider(turnsRepository.getTurnByPublicId(dbContext));
+};
+
+export type TurnStateProvider = ReturnType<typeof createTurnStateProvider>;
+
+/**
+ * Creates turn state components with all repository dependencies pre-wired
+ *
+ * @param dbContext - Database connection or transaction context
+ * @returns Object containing configured state components
+ */
+export const turnState = (dbContext: DbContext) => {
+  return {
+    provider: createTurnStateProvider(dbContext),
+  };
+};
 
 /**
  * Creates a gameplay state provider with the given database context

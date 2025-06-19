@@ -6,6 +6,7 @@ import { AuthMiddleware } from "@backend/common/http-middleware/auth.middleware"
 
 import { gameplayState } from "./state";
 import { gameplayActions } from "./gameplay-actions";
+import { turnState } from "./state";
 
 import newRound from "./new-round";
 import dealCards from "./deal-cards";
@@ -13,23 +14,23 @@ import startRound from "./start-round";
 import getGame from "./get-game";
 import giveClue from "./give-clue";
 import makeGuess from "./guess";
+import getTurn from "./get-turn";
 
 import { gameplayErrorHandler } from "./errors/gameplay-errors.middleware";
 
 /**
  * Initializes the gameplay feature module with all routes and dependencies
- *
- * @param app - Express application instance
- * @param db - Database connection
- * @param auth - Authentication middleware
  */
 export const initialize = (
   app: Express,
   db: Kysely<DB>,
   auth: AuthMiddleware,
 ) => {
-  // Configure state and action components with context-appropriate aliases
+  // State "providers"
   const { provider: getGameState } = gameplayState(db);
+  const { provider: getTurnState } = turnState(db);
+
+  // Gameplay actions
   const { handler: gameplayHandler } = gameplayActions(db);
 
   // Feature modules - each gets both read and write capabilities
@@ -62,6 +63,10 @@ export const initialize = (
     gameplayHandler,
   });
 
+  const { controller: getTurnController } = getTurn({
+    getTurnState,
+  });
+
   // Routes setup
   const router = Router();
 
@@ -84,6 +89,9 @@ export const initialize = (
     auth,
     makeGuessController,
   );
+
+  // Turn routes
+  router.get("/turns/:publicId", auth, getTurnController);
 
   app.use("/api", router);
   app.use("/api", gameplayErrorHandler);
