@@ -15,6 +15,7 @@ import {
 } from "@frontend/game/api/mutations";
 import { useGameData } from "./game-data-provider";
 import { useUIScene } from "./ui-scene-provider";
+import { useTurn } from "./active-turn-provider";
 
 export type ActionName =
   | "giveClue"
@@ -60,6 +61,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
 
   const { gameData, gameId } = useGameData();
   const { handleSceneTransition } = useUIScene();
+  const { setLastActionTurnId } = useTurn();
 
   const giveClueMutation = useGiveClueMutation(gameId);
   const makeGuessMutation = useMakeGuessMutation(gameId);
@@ -86,7 +88,12 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       makeGuessMutation.mutate(
         { roundNumber, cardWord: word },
         {
-          onSuccess: () => {
+          onSuccess: (res) => {
+            // Check if backend returned turn data
+            if (res.success) {
+              setLastActionTurnId(res.data.turn.id);
+            }
+
             setActionState({
               name: "makeGuess",
               status: "success",
@@ -100,7 +107,12 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         },
       );
     },
-    [makeGuessMutation, gameData.currentRound, handleSceneTransition],
+    [
+      makeGuessMutation,
+      gameData.currentRound,
+      handleSceneTransition,
+      setLastActionTurnId,
+    ],
   );
 
   const giveClue = useCallback(
@@ -117,7 +129,12 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       giveClueMutation.mutate(
         { roundNumber, word, targetCardCount: count },
         {
-          onSuccess: () => {
+          onSuccess: (res) => {
+            if (!res.success)
+              throw new Error("Unhandled give clue mutation failure ");
+
+            // ensure the turn Id of the submitted clue is being tracked by the UI
+            setLastActionTurnId(res.data.turn.id);
             setActionState({
               name: "giveClue",
               status: "success",
@@ -131,7 +148,12 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         },
       );
     },
-    [giveClueMutation, gameData.currentRound, handleSceneTransition],
+    [
+      giveClueMutation,
+      gameData.currentRound,
+      handleSceneTransition,
+      setLastActionTurnId,
+    ],
   );
 
   const createRound = useCallback(() => {
@@ -139,8 +161,12 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
 
     createRoundMutation.mutate(undefined, {
       onSuccess: () => {
-        setActionState({ name: "createRound", status: "success", error: null });
-        handleSceneTransition("GAME_STARTED");
+        setActionState({
+          name: "createRound",
+          status: "success",
+          error: null,
+        });
+        handleSceneTransition("ROUND_CREATED");
       },
       onError: (error) => {
         setActionState({ name: "createRound", status: "error", error });
@@ -150,7 +176,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
 
   const startRound = useCallback(() => {
     if (!gameData.currentRound) {
-      console.error("Cannot start round - no active round");
+      console.error("Cannot start round - no current round");
       return;
     }
 
@@ -178,19 +204,23 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
 
   const dealCards = useCallback(() => {
     if (!gameData.currentRound) {
-      console.error("Cannot deal cards - no active round");
+      console.error("Cannot deal cards - no current round");
       return;
     }
 
-    const roundId = gameData.currentRound.roundNumber.toString();
+    const roundNumber = gameData.currentRound.roundNumber;
 
     setActionState({ name: "dealCards", status: "loading", error: null });
 
     dealCardsMutation.mutate(
-      { roundId },
+      { roundNumber },
       {
         onSuccess: () => {
-          setActionState({ name: "dealCards", status: "success", error: null });
+          setActionState({
+            name: "dealCards",
+            status: "success",
+            error: null,
+          });
           handleSceneTransition("CARDS_DEALT");
         },
         onError: (error) => {
