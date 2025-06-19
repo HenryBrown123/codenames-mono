@@ -28,11 +28,8 @@ async function validateTurnData(
   expectedOutcome: string,
   verbose: boolean,
 ): Promise<void> {
-  if (verbose) {
-    console.log(
-      `    ${colors.blue}→ GET /turns/${turnPublicId}${colors.reset}`,
-    );
-  }
+  // Always log get-turn calls to track endpoint usage
+  // console.log(`    ${colors.blue}→ GET /turns/${turnPublicId}${colors.reset}`);
 
   const turnResponse = await api.get(`/turns/${turnPublicId}`);
 
@@ -44,7 +41,6 @@ async function validateTurnData(
 
   const turn = turnResponse.data.data.turn;
 
-  // Validate turn structure
   if (!turn.id || !turn.teamName || !turn.status) {
     throw new Error(`Invalid turn structure for ${turnPublicId}`);
   }
@@ -86,12 +82,9 @@ async function validateTurnData(
     }
   }
 
-  if (verbose) {
-    logStep(
-      `✓ Turn ${turnPublicId} validated - ${turn.status} with ${turn.guessesRemaining} guesses remaining`,
-      verbose,
-    );
-  }
+  // console.log(
+  //   `    ${colors.green}✓ Turn validated - ${turn.status}${colors.reset}`,
+  //);
 }
 
 /**
@@ -167,9 +160,13 @@ export async function runGameTest(
 
     // Show initial board analysis
     logStep("Initial Board Analysis", verbose);
+    // Get initial game state for analysis
+    const initialStateResponse = await api.get(`/games/${gameId}`);
+    const initialGameState = initialStateResponse.data.data.game;
     const initialAnalysis = await strategy.analyzeBoardState(
       gameId,
       currentUserId!,
+      initialGameState, // Pass game state
     );
     if (initialAnalysis && verbose) {
       console.log(`    ${colors.cyan}📊 Board State:${colors.reset}`);
@@ -186,8 +183,9 @@ export async function runGameTest(
 
     while (
       !roundComplete &&
-      turnCount < maxTurns &&
-      strategyIndex < scenario.strategy.length
+      turnCount < maxTurns
+      // Removed: && strategyIndex < scenario.strategy.length
+      // Let the test continue until round is actually complete
     ) {
       turnCount++;
 
@@ -242,13 +240,17 @@ export async function runGameTest(
         // 1. Get current turn publicId BEFORE making the guess
         const currentTurnPublicId = getCurrentTurnPublicId(gameState);
 
-        // Strategic guess based on scenario
+        // Strategic guess based on scenario - cycle through strategy or continue with last strategy
         const desiredOutcome =
-          scenario.strategy[strategyIndex % scenario.strategy.length];
+          strategyIndex < scenario.strategy.length
+            ? scenario.strategy[strategyIndex]
+            : scenario.strategy[scenario.strategy.length - 1]; // Use last strategy item when array is exhausted
+
         const targetCard = await strategy.selectCardForOutcome(
           gameId,
           currentUserId!,
           desiredOutcome,
+          gameState, // Pass game state instead of doing separate DB queries
         );
 
         if (targetCard) {
@@ -270,23 +272,12 @@ export async function runGameTest(
 
             // 3. Validate turn data via get-turn endpoint using the previously saved turn ID
             if (currentTurnPublicId) {
-              if (verbose) {
-                console.log(
-                  `    ${colors.blue}🔍 Calling get-turn endpoint for: ${currentTurnPublicId}${colors.reset}`,
-                );
-              }
               await validateTurnData(
                 api,
                 currentTurnPublicId,
                 desiredOutcome,
                 verbose,
               );
-            } else {
-              if (verbose) {
-                console.log(
-                  `    ${colors.yellow}⚠ No current turn publicId found to validate${colors.reset}`,
-                );
-              }
             }
 
             const guessResult = guessResponse.data.data;
@@ -331,6 +322,7 @@ export async function runGameTest(
             gameId,
             currentUserId!,
             "RANDOM",
+            gameState, // Pass game state for fallback too
           );
           if (fallbackCard) {
             // Get current turn ID before fallback guess too
@@ -374,6 +366,7 @@ export async function runGameTest(
     const finalAnalysis = await strategy.analyzeBoardState(
       gameId,
       currentUserId!,
+      finalState, // Pass final game state
     );
 
     const endTime = Date.now();
