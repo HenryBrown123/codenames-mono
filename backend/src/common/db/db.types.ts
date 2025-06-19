@@ -138,6 +138,10 @@ export interface Turns {
   created_at: Generated<Timestamp>;
   guesses_remaining: Generated<number>;
   id: Generated<number>;
+  /**
+   * Public UUID identifier for API responses
+   */
+  public_id: Generated<string>;
   round_id: number;
   status: Generated<string>;
   team_id: number;
