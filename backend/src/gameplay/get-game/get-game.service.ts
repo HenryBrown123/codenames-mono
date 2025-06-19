@@ -42,6 +42,7 @@ export type PublicGameStateResponse = {
       cardType?: string;
     }[];
     turns: {
+      id: string;
       teamName: string;
       status: string;
       guessesRemaining: number;
@@ -153,6 +154,7 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
           ),
 
           turns: gameData.currentRound.turns.map((turn) => ({
+            id: turn.publicId,
             teamName: turn.teamName,
             status: turn.status,
             guessesRemaining: turn.guessesRemaining,

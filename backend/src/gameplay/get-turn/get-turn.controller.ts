@@ -8,11 +8,10 @@ import { GetTurnService, ApiTurnData } from "./get-turn.service";
  */
 const getTurnRequestSchema = z.object({
   params: z.object({
-    publicId: z.string().uuid("Turn ID must be a valid UUID"),
+    turnId: z.string().uuid("Turn ID must be a valid UUID"),
   }),
   auth: z.object({
     userId: z.number().int().positive("User ID must be a positive integer"),
-    gameId: z.number().int().positive("Game ID must be a positive integer"),
   }),
 });
 
@@ -53,11 +52,7 @@ export const controller =
       const { params, auth }: ValidatedGetTurnRequest = validationResult.data;
 
       // Get sanitized turn data
-      const turnData = await getTurnService(
-        params.publicId,
-        auth.gameId,
-        auth.userId,
-      );
+      const turnData = await getTurnService(params.turnId);
 
       if (!turnData) {
         res.status(404).json({

@@ -73,6 +73,7 @@ export const clueSchema = z.object({
  */
 export const turnSchema = z.object({
   _id: z.number().int().positive(),
+  publicId: z.string().uuid(),
   _roundId: z.number().int().positive(),
   _teamId: z.number().int().positive(),
   teamName: z.string(),
