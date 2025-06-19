@@ -1,5 +1,6 @@
 import React from "react";
 import { useGameData, useUIScene } from "@frontend/features/gameplay/state";
+import { useTurn } from "@frontend/features/gameplay/state/active-turn-provider";
 import { uiConfig } from "@frontend/features/gameplay/state/ui-state-config";
 import {
   messages,
@@ -62,13 +63,7 @@ const DashboardContainer = styled.div`
 export const GameScene: React.FC = () => {
   const { gameData } = useGameData();
   const { currentStage, currentScene } = useUIScene();
-
-  console.log("GameScene render:", {
-    currentStage,
-    currentScene,
-    gameStatus: gameData?.status,
-    playerRole: gameData?.playerContext?.role,
-  });
+  const { activeTurn } = useTurn();
 
   const sceneConfig =
     gameData.currentRound?.status === "COMPLETED"
@@ -85,7 +80,9 @@ export const GameScene: React.FC = () => {
     return <div>Loading game scene...</div>;
   }
 
-  const message = sceneConfig.message ? messages[sceneConfig.message] : null;
+  const message = sceneConfig.message
+    ? messages[sceneConfig.message](gameData, activeTurn)
+    : null;
 
   const BoardComponent = sceneConfig.gameBoard
     ? gameBoards[sceneConfig.gameBoard]
@@ -95,12 +92,6 @@ export const GameScene: React.FC = () => {
     ? dashboards[sceneConfig.dashboard]
     : null;
 
-  console.log("Dashboard lookup:", {
-    dashboardKey: sceneConfig.dashboard,
-    DashboardComponent: !!DashboardComponent,
-    availableDashboards: Object.keys(dashboards),
-  });
-
   const boardMode = sceneConfig.boardMode;
   const interactive = boardModeInteractivity[boardMode];
 
@@ -108,7 +99,7 @@ export const GameScene: React.FC = () => {
     <GameSceneContainer>
       {message && (
         <InstructionsContainer>
-          <GameInstructions messageText={message(gameData)} />
+          <GameInstructions messageText={message} />
         </InstructionsContainer>
       )}
       <GameBoardContainer>
