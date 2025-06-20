@@ -99,6 +99,8 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
               status: "success",
               error: null,
             });
+            console.log("About to transition schene - GUESS_MADE");
+
             handleSceneTransition("GUESS_MADE");
           },
           onError: (error) => {

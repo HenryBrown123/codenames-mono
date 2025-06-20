@@ -1,7 +1,11 @@
 import { PlayerRole, PLAYER_ROLE, GAME_TYPE } from "@codenames/shared/types";
 import { GameData } from "@frontend/shared-types";
 import { TurnData } from "../api/queries/use-turn-query";
-import { uiConfig, TransitionConfig } from "./ui-state-config";
+import {
+  uiConfig,
+  TransitionConfig,
+  determineUIStage,
+} from "./ui-state-config";
 import { conditions } from "./ui-state-mappings";
 
 /**
@@ -54,7 +58,7 @@ const requiresDeviceHandoff = (
 };
 
 /**
- * Condition evaluation with activeTurn support
+ * Condition evaluation with comprehensive logging
  */
 const evaluateCondition = (
   conditionKey: string,
@@ -63,47 +67,101 @@ const evaluateCondition = (
 ): boolean => {
   const conditionFunc = conditions[conditionKey];
   if (!conditionFunc) {
-    console.warn(`Unknown condition: ${conditionKey}`);
+    console.warn(`[STATE_MACHINE] Unknown condition: ${conditionKey}`);
     return false;
   }
 
-  return conditionFunc(gameData, activeTurn);
+  const result = conditionFunc(gameData, activeTurn);
+  console.log(`[STATE_MACHINE] Condition "${conditionKey}": ${result}`);
+  return result;
 };
 
 /**
- * Find matching transition with activeTurn support
+ * Find matching transition with detailed decision logging
  */
 const findMatchingTransition = (
   transitions: TransitionConfig | TransitionConfig[],
   gameData: GameData,
   activeTurn: TurnData | null,
 ): TransitionConfig | null => {
+  console.log(`[STATE_MACHINE] Evaluating transitions:`, transitions);
+
   if (Array.isArray(transitions)) {
-    for (const transition of transitions) {
+    console.log(
+      `[STATE_MACHINE] Checking ${transitions.length} transition options`,
+    );
+
+    for (let i = 0; i < transitions.length; i++) {
+      const transition = transitions[i];
+      console.log(`[STATE_MACHINE] Option ${i + 1}:`, transition);
+
       if (transition.condition) {
         const conditionsArray = Array.isArray(transition.condition)
           ? transition.condition
           : [transition.condition];
 
-        const allPass = conditionsArray.every((conditionKey) =>
-          evaluateCondition(conditionKey, gameData, activeTurn),
+        console.log(
+          `[STATE_MACHINE] Evaluating conditions: ${conditionsArray.join(", ")}`,
         );
 
+        const results = conditionsArray.map((conditionKey) => ({
+          condition: conditionKey,
+          result: evaluateCondition(conditionKey, gameData, activeTurn),
+        }));
+
+        const allPass = results.every((r) => r.result);
+
         if (allPass) {
+          console.log(
+            `[STATE_MACHINE] ✅ All conditions passed, selecting transition:`,
+            transition,
+          );
           return transition;
+        } else {
+          const failed = results
+            .filter((r) => !r.result)
+            .map((r) => r.condition);
+          console.log(
+            `[STATE_MACHINE] ❌ Failed conditions: ${failed.join(", ")}`,
+          );
         }
       } else {
+        console.warn(
+          `[STATE_MACHINE] ✅ No conditions, selecting unconditional transition:`,
+          transition,
+          gameData,
+          activeTurn,
+        );
         return transition;
       }
     }
 
+    console.log(
+      `[STATE_MACHINE] ❌ No matching transitions found, all options failed`,
+    );
     return null;
   } else {
-    const passes = transitions.condition
-      ? evaluateCondition(transitions.condition as string, gameData, activeTurn)
-      : true;
+    console.log(`[STATE_MACHINE] Single transition option:`, transitions);
 
-    return passes ? transitions : null;
+    if (transitions.condition) {
+      const conditionKey = transitions.condition as string;
+      const passes = evaluateCondition(conditionKey, gameData, activeTurn);
+
+      if (passes) {
+        console.log(
+          `[STATE_MACHINE] ✅ Condition passed, selecting transition`,
+        );
+        return transitions;
+      } else {
+        console.log(`[STATE_MACHINE] ❌ Condition failed, no transition`);
+        return null;
+      }
+    } else {
+      console.log(
+        `[STATE_MACHINE] ✅ No conditions, selecting unconditional transition`,
+      );
+      return transitions;
+    }
   }
 };
 
@@ -118,7 +176,7 @@ const isValidSceneTarget = (
 };
 
 /**
- * Scene transition handler with activeTurn support
+ * Scene transition handler with comprehensive logging
  */
 const handleSceneTransition = (
   state: UIState,
@@ -126,20 +184,31 @@ const handleSceneTransition = (
   gameData: GameData,
   activeTurn: TurnData | null,
 ): UIState => {
+  console.log(
+    `[STATE_MACHINE] Handling transition: event="${event}" from ${state.currentStage}/${state.currentScene}`,
+  );
+
   const currentStageConfig = uiConfig[state.currentStage];
   if (!currentStageConfig) {
-    console.warn(`No config found for stage: ${state.currentStage}`);
+    console.warn(
+      `[STATE_MACHINE] No config found for stage: ${state.currentStage}`,
+    );
     return state;
   }
 
   const currentSceneConfig = currentStageConfig.scenes[state.currentScene];
   if (!currentSceneConfig) {
-    console.warn(`No config found for scene: ${state.currentScene}`);
+    console.warn(
+      `[STATE_MACHINE] No config found for scene: ${state.currentScene}`,
+    );
     return state;
   }
 
   const transitions = currentSceneConfig?.on?.[event];
   if (!transitions) {
+    console.log(
+      `[STATE_MACHINE] No transitions defined for event "${event}" in scene ${state.currentScene}`,
+    );
     return state;
   }
 
@@ -150,8 +219,13 @@ const handleSceneTransition = (
   );
 
   if (!matchingTransition) {
+    console.log(
+      `[STATE_MACHINE] No valid transition found, staying in current state`,
+    );
     return state;
   }
+
+  console.log(`[STATE_MACHINE] Executing transition:`, matchingTransition);
 
   // Handle role transitions
   if (matchingTransition.type === "role") {
@@ -159,30 +233,45 @@ const handleSceneTransition = (
 
     if (matchingTransition.target === "serverRole") {
       nextStage = gameData.playerContext?.role || PLAYER_ROLE.NONE;
+      console.log(
+        `[STATE_MACHINE] Role transition to server role: ${nextStage}`,
+      );
     } else {
       nextStage = matchingTransition.target as PlayerRole;
+      console.log(`[STATE_MACHINE] Role transition to: ${nextStage}`);
     }
 
     const nextStageConfig = uiConfig[nextStage];
     if (!nextStageConfig) {
-      console.warn(`No config found for target stage: ${nextStage}`);
+      console.warn(
+        `[STATE_MACHINE] No config found for target stage: ${nextStage}`,
+      );
       return state;
     }
 
     const nextScene = nextStageConfig.initial || "main";
+    console.log(`[STATE_MACHINE] Initial scene for ${nextStage}: ${nextScene}`);
 
     // Check if device handoff is needed for role transition
-    if (requiresDeviceHandoff(state.currentStage, nextStage, gameData)) {
+    const needsHandoff = requiresDeviceHandoff(
+      state.currentStage,
+      nextStage,
+      gameData,
+    );
+    if (needsHandoff) {
+      console.log(
+        `[STATE_MACHINE] Device handoff required for ${state.currentStage} → ${nextStage}`,
+      );
       return {
         ...state,
         showDeviceHandoff: true,
-        pendingTransition: {
-          stage: nextStage,
-          scene: nextScene,
-        },
+        pendingTransition: { stage: nextStage, scene: nextScene },
       };
     }
 
+    console.log(
+      `[STATE_MACHINE] Direct role transition: ${state.currentStage}/${state.currentScene} → ${nextStage}/${nextScene}`,
+    );
     return {
       ...state,
       currentStage: nextStage,
@@ -198,11 +287,14 @@ const handleSceneTransition = (
 
     if (!isValidSceneTarget(currentStageConfig, nextScene)) {
       console.warn(
-        `Invalid scene target: ${nextScene} for stage: ${state.currentStage}`,
+        `[STATE_MACHINE] Invalid scene target: ${nextScene} for stage: ${state.currentStage}`,
       );
       return state;
     }
 
+    console.log(
+      `[STATE_MACHINE] Scene transition: ${state.currentScene} → ${nextScene}`,
+    );
     return {
       ...state,
       currentScene: nextScene,
@@ -211,7 +303,9 @@ const handleSceneTransition = (
     };
   }
 
-  console.warn(`Unknown transition type: ${matchingTransition.type}`);
+  console.warn(
+    `[STATE_MACHINE] Unknown transition type: ${matchingTransition.type}`,
+  );
   return state;
 };
 
@@ -219,9 +313,18 @@ const handleSceneTransition = (
  * Creates initial UI state based on game data
  */
 export const createInitialUIState = (gameData: GameData): UIState => {
-  const stage = gameData.playerContext?.role || PLAYER_ROLE.NONE;
+  const playerRole = gameData.playerContext?.role || PLAYER_ROLE.NONE;
+  const stage = determineUIStage(
+    gameData.status,
+    playerRole,
+    gameData.currentRound,
+  );
   const stageConfig = uiConfig[stage];
   const initialScene = stageConfig?.initial || "main";
+
+  console.log(
+    `[STATE_MACHINE] Creating initial UI state: player=${playerRole}, determined=${stage}, scene=${initialScene}`,
+  );
 
   return {
     currentStage: stage,
@@ -232,7 +335,7 @@ export const createInitialUIState = (gameData: GameData): UIState => {
 };
 
 /**
- * UI state reducer with activeTurn support
+ * UI state reducer with comprehensive logging
  */
 export const uiReducer = (
   state: UIState,
@@ -240,6 +343,11 @@ export const uiReducer = (
   gameData: GameData,
   activeTurn: TurnData | null,
 ): UIState => {
+  console.log(`[STATE_MACHINE] Action dispatched:`, action);
+  console.log(
+    `[STATE_MACHINE] Current state: ${state.currentStage}/${state.currentScene}`,
+  );
+
   switch (action.type) {
     case "TRIGGER_TRANSITION":
       return handleSceneTransition(
@@ -251,26 +359,36 @@ export const uiReducer = (
 
     case "SET_STAGE": {
       const nextStage = action.payload.stage;
+      console.log(`[STATE_MACHINE] Setting stage to: ${nextStage}`);
+
       const nextStageConfig = uiConfig[nextStage];
 
       if (!nextStageConfig) {
-        console.warn(`No config found for stage: ${nextStage}`);
+        console.warn(`[STATE_MACHINE] No config found for stage: ${nextStage}`);
         return state;
       }
 
       const nextScene = nextStageConfig.initial || "main";
 
-      if (requiresDeviceHandoff(state.currentStage, nextStage, gameData)) {
+      const needsHandoff = requiresDeviceHandoff(
+        state.currentStage,
+        nextStage,
+        gameData,
+      );
+      if (needsHandoff) {
+        console.log(
+          `[STATE_MACHINE] Device handoff required for stage change: ${state.currentStage} → ${nextStage}`,
+        );
         return {
           ...state,
           showDeviceHandoff: true,
-          pendingTransition: {
-            stage: nextStage,
-            scene: nextScene,
-          },
+          pendingTransition: { stage: nextStage, scene: nextScene },
         };
       }
 
+      console.log(
+        `[STATE_MACHINE] Direct stage change: ${state.currentStage}/${state.currentScene} → ${nextStage}/${nextScene}`,
+      );
       return {
         ...state,
         currentStage: nextStage,
@@ -281,7 +399,11 @@ export const uiReducer = (
     }
 
     case "COMPLETE_HANDOFF":
+      console.log(`[STATE_MACHINE] Completing handoff`);
       if (state.pendingTransition) {
+        console.log(
+          `[STATE_MACHINE] Applying pending transition: ${state.pendingTransition.stage}/${state.pendingTransition.scene}`,
+        );
         return {
           ...state,
           currentStage: state.pendingTransition.stage,
@@ -290,9 +412,11 @@ export const uiReducer = (
           pendingTransition: null,
         };
       }
+      console.log(`[STATE_MACHINE] No pending transition to complete`);
       return state;
 
     default:
+      console.warn(`[STATE_MACHINE] Unknown action type:`, action);
       return state;
   }
 };

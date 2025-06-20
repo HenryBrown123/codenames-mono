@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { PlayerRole } from "@codenames/shared/types";
 import { useGameData } from "./game-data-provider";
+import { useTurn } from "./active-turn-provider";
 import { uiReducer, createInitialUIState } from "./ui-state-helpers";
 
 interface UIState {
@@ -37,10 +38,13 @@ interface UISceneProviderProps {
 
 export const UISceneProvider = ({ children }: UISceneProviderProps) => {
   const { gameData } = useGameData();
+  const { activeTurn } = useTurn();
 
   const [uiState, dispatch] = useReducer(
-    (state: UIState, action: any) => uiReducer(state, action, gameData, null),
-    createInitialUIState(gameData),
+    (state: UIState, action: any) =>
+      uiReducer(state, action, gameData, activeTurn),
+    gameData,
+    createInitialUIState,
   );
 
   const handleSceneTransition = useCallback((event: string) => {

@@ -36,7 +36,7 @@ export const giveClueRequestSchema = z.object({
 export type ValidatedGiveClueRequest = z.infer<typeof giveClueRequestSchema>;
 
 /**
- * Response schema for giving clues
+ * Updated response schema with complete turn data
  */
 export const giveClueResponseSchema = z.object({
   success: z.boolean(),
@@ -47,9 +47,36 @@ export const giveClueResponseSchema = z.object({
       createdAt: z.date(),
     }),
     turn: z.object({
+      id: z.string(),
       teamName: z.string(),
+      status: z.enum(["ACTIVE", "COMPLETED"]),
       guessesRemaining: z.number(),
-      status: z.string(),
+      createdAt: z.date(),
+      completedAt: z.date().nullable().optional(),
+      clue: z
+        .object({
+          word: z.string(),
+          number: z.number(),
+          createdAt: z.date(),
+        })
+        .optional(),
+      hasGuesses: z.boolean(),
+      lastGuess: z
+        .object({
+          cardWord: z.string(),
+          playerName: z.string(),
+          outcome: z.string().nullable(),
+          createdAt: z.date(),
+        })
+        .optional(),
+      prevGuesses: z.array(
+        z.object({
+          cardWord: z.string(),
+          playerName: z.string(),
+          outcome: z.string().nullable(),
+          createdAt: z.date(),
+        }),
+      ),
     }),
   }),
 });
@@ -117,6 +144,7 @@ export const giveClueController = ({ giveClue }: Dependencies) => {
 
       const { params, auth, body } = validationResult.data;
 
+      // Call give clue service
       const result = await giveClue({
         gameId: params.gameId,
         roundNumber: params.roundNumber,
@@ -126,76 +154,84 @@ export const giveClueController = ({ giveClue }: Dependencies) => {
       });
 
       if (!result.success) {
-        const errorResponse: GiveClueErrorResponse = {
-          success: false,
-          error: "Failed to give clue",
-          details: {
-            code: result.error.status,
-          },
-        };
+        // Handle specific error types with appropriate HTTP status codes
+        switch (result.error.status) {
+          case "game-not-found":
+            res.status(404).json({
+              success: false,
+              error: "Game not found",
+              details: { code: result.error.status },
+            });
+            return;
 
-        if (
-          result.error.status === "invalid-game-state" &&
-          result.error.validationErrors
-        ) {
-          errorResponse.details!.validationErrors =
-            result.error.validationErrors;
+          case "user-not-player":
+            res.status(403).json({
+              success: false,
+              error: "You are not a player in this game",
+              details: { code: result.error.status },
+            });
+            return;
+
+          case "round-not-found":
+            res.status(404).json({
+              success: false,
+              error: "Round not found",
+              details: { code: result.error.status },
+            });
+            return;
+
+          case "round-not-current":
+            res.status(409).json({
+              success: false,
+              error: "Round is not current",
+              details: { code: result.error.status },
+            });
+            return;
+
+          case "invalid-game-state":
+            res.status(409).json({
+              success: false,
+              error: "Invalid game state for giving clue",
+              details: {
+                code: result.error.status,
+                validationErrors: result.error.validationErrors,
+              },
+            });
+            return;
+
+          case "invalid-clue-word":
+            res.status(400).json({
+              success: false,
+              error: "Invalid clue word",
+              details: { code: result.error.status },
+            });
+            return;
+
+          default:
+            res.status(500).json({
+              success: false,
+              error: "Unknown error occurred",
+              details: { code: "unknown-error" },
+            });
+            return;
         }
-
-        if (result.error.status === "invalid-clue-word") {
-          errorResponse.error = result.error.reason;
-          errorResponse.details!.code = "invalid-clue-word";
-        }
-
-        if (result.error.status === "round-not-current") {
-          errorResponse.error = `Round ${result.error.requestedRound} is not the current round (current: ${result.error.currentRound})`;
-          errorResponse.details!.code = "round-not-current";
-        }
-
-        if (result.error.status === "game-not-found") {
-          res.status(404).json(errorResponse);
-          return;
-        }
-
-        if (
-          result.error.status === "round-not-found" ||
-          result.error.status === "round-not-current"
-        ) {
-          res.status(404).json(errorResponse);
-          return;
-        }
-
-        if (result.error.status === "invalid-clue-word") {
-          res.status(400).json(errorResponse);
-          return;
-        }
-
-        if (result.error.status === "invalid-game-state") {
-          res.status(409).json(errorResponse);
-          return;
-        }
-
-        res.status(500).json(errorResponse);
-        return;
       }
 
-      res.status(201).json({
+      // Success response with complete turn data
+      res.status(200).json({
         success: true,
         data: {
-          clue: {
-            word: result.data.clue.word,
-            targetCardCount: result.data.clue.targetCardCount,
-            createdAt: result.data.clue.createdAt,
-          },
-          turn: {
-            teamName: result.data.turn.teamName,
-            guessesRemaining: result.data.turn.guessesRemaining,
-            status: result.data.turn.status,
-          },
+          clue: result.data.clue,
+          turn: result.data.turn, // ← Now includes complete turn data
         },
       });
     } catch (error) {
-      next(error);
+      console.error("Error in giveClue controller:", error);
+      res.status(500).json({
+        success: false,
+        error: "Internal server error",
+        details: { code: "internal-error" },
+      });
     }
   };
 };

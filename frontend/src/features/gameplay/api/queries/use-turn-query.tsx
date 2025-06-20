@@ -66,11 +66,11 @@ export const useTurnDataQuery = (
 ): UseQueryResult<TurnData, Error> => {
   return useQuery<TurnData>({
     queryKey: ["turn", publicId],
-    queryFn: () => {
+    queryFn: async () => {
       if (!publicId) {
         throw new Error("Turn public ID is required");
       }
-      return fetchTurn(publicId);
+      return await fetchTurn(publicId);
     },
     enabled: !!publicId,
     staleTime: 1000 * 60 * 5, // 5 minutes - turn data is relatively stable
