@@ -31,7 +31,7 @@ export const makeGuessRequestSchema = z.object({
 export type ValidatedMakeGuessRequest = z.infer<typeof makeGuessRequestSchema>;
 
 /**
- * Response schema for making guesses
+ * Updated response schema with complete turn data
  */
 export const makeGuessResponseSchema = z.object({
   success: z.boolean(),
@@ -42,9 +42,36 @@ export const makeGuessResponseSchema = z.object({
       createdAt: z.date(),
     }),
     turn: z.object({
+      id: z.string(),
       teamName: z.string(),
+      status: z.enum(["ACTIVE", "COMPLETED"]),
       guessesRemaining: z.number(),
-      status: z.string(),
+      createdAt: z.date(),
+      completedAt: z.date().nullable().optional(),
+      clue: z
+        .object({
+          word: z.string(),
+          number: z.number(),
+          createdAt: z.date(),
+        })
+        .optional(),
+      hasGuesses: z.boolean(),
+      lastGuess: z
+        .object({
+          cardWord: z.string(),
+          playerName: z.string(),
+          outcome: z.string().nullable(),
+          createdAt: z.date(),
+        })
+        .optional(),
+      prevGuesses: z.array(
+        z.object({
+          cardWord: z.string(),
+          playerName: z.string(),
+          outcome: z.string().nullable(),
+          createdAt: z.date(),
+        }),
+      ),
     }),
   }),
 });
@@ -109,6 +136,7 @@ export const makeGuessController = ({ makeGuess }: Dependencies) => {
 
       const { params, auth, body } = validationResult.data;
 
+      // Call make guess service
       const result = await makeGuess({
         gameId: params.gameId,
         roundNumber: params.roundNumber,
@@ -117,76 +145,84 @@ export const makeGuessController = ({ makeGuess }: Dependencies) => {
       });
 
       if (!result.success) {
-        const errorResponse: MakeGuessErrorResponse = {
-          success: false,
-          error: "Failed to make guess",
-          details: {
-            code: result.error.status,
-          },
-        };
+        // Handle specific error types with appropriate HTTP status codes
+        switch (result.error.status) {
+          case "game-not-found":
+            res.status(404).json({
+              success: false,
+              error: "Game not found",
+              details: { code: result.error.status },
+            });
+            return;
 
-        if (
-          result.error.status === "invalid-game-state" &&
-          result.error.validationErrors
-        ) {
-          errorResponse.details!.validationErrors =
-            result.error.validationErrors;
+          case "user-not-player":
+            res.status(403).json({
+              success: false,
+              error: "You are not a player in this game",
+              details: { code: result.error.status },
+            });
+            return;
+
+          case "round-not-found":
+            res.status(404).json({
+              success: false,
+              error: "Round not found",
+              details: { code: result.error.status },
+            });
+            return;
+
+          case "round-not-current":
+            res.status(409).json({
+              success: false,
+              error: "Round is not current",
+              details: { code: result.error.status },
+            });
+            return;
+
+          case "invalid-game-state":
+            res.status(409).json({
+              success: false,
+              error: "Invalid game state for making guess",
+              details: {
+                code: result.error.status,
+                validationErrors: result.error.validationErrors,
+              },
+            });
+            return;
+
+          case "invalid-card":
+            res.status(400).json({
+              success: false,
+              error: "Invalid card selection",
+              details: { code: result.error.status },
+            });
+            return;
+
+          default:
+            res.status(500).json({
+              success: false,
+              error: "Unknown error occurred",
+              details: { code: "unknown-error" },
+            });
+            return;
         }
-
-        if (result.error.status === "invalid-card") {
-          errorResponse.error = result.error.reason;
-          errorResponse.details!.code = "invalid-card";
-        }
-
-        if (result.error.status === "round-not-current") {
-          errorResponse.error = `Round ${result.error.requestedRound} is not the current round (current: ${result.error.currentRound})`;
-          errorResponse.details!.code = "round-not-current";
-        }
-
-        if (result.error.status === "game-not-found") {
-          res.status(404).json(errorResponse);
-          return;
-        }
-
-        if (
-          result.error.status === "round-not-found" ||
-          result.error.status === "round-not-current"
-        ) {
-          res.status(404).json(errorResponse);
-          return;
-        }
-
-        if (result.error.status === "invalid-card") {
-          res.status(400).json(errorResponse);
-          return;
-        }
-
-        if (result.error.status === "invalid-game-state") {
-          res.status(409).json(errorResponse);
-          return;
-        }
-
-        res.status(500).json(errorResponse);
-        return;
       }
 
-      res.status(201).json({
+      // Success response with complete turn data
+      res.status(200).json({
         success: true,
         data: {
-          guess: {
-            cardWord: result.data.guess.cardWord,
-            outcome: result.data.guess.outcome,
-            createdAt: result.data.guess.createdAt,
-          },
-          turn: {
-            teamName: result.data.turn.teamName,
-            guessesRemaining: result.data.turn.guessesRemaining,
-            status: result.data.turn.status,
-          },
+          guess: result.data.guess,
+          turn: result.data.turn, // ← Now includes complete turn data
         },
       });
     } catch (error) {
-      next(error);
+      console.error("Error in makeGuess controller:", error);
+      res.status(500).json({
+        success: false,
+        error: "Internal server error",
+        details: { code: "internal-error" },
+      });
     }
   };
 };

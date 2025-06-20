@@ -1,4 +1,5 @@
 import type { GameplayStateProvider } from "../state/gameplay-state.provider";
+import type { TurnStateProvider } from "../state/turn-state.provider";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 import type { GameplayOperations } from "../gameplay-actions";
 import { CODEBREAKER_OUTCOME } from "@codenames/shared/types";
@@ -16,7 +17,37 @@ export type MakeGuessInput = {
 };
 
 /**
- * Successful guess result
+ * Complete turn data that matches frontend TurnData interface
+ */
+export type CompleteTurnData = {
+  id: string;
+  teamName: string;
+  status: "ACTIVE" | "COMPLETED";
+  guessesRemaining: number;
+  createdAt: Date;
+  completedAt?: Date | null;
+  clue?: {
+    word: string;
+    number: number;
+    createdAt: Date;
+  };
+  hasGuesses: boolean;
+  lastGuess?: {
+    cardWord: string;
+    playerName: string;
+    outcome: string | null;
+    createdAt: Date;
+  };
+  prevGuesses: {
+    cardWord: string;
+    playerName: string;
+    outcome: string | null;
+    createdAt: Date;
+  }[];
+};
+
+/**
+ * Successful guess result with complete turn data
  */
 export type MakeGuessSuccess = {
   guess: {
@@ -24,11 +55,7 @@ export type MakeGuessSuccess = {
     outcome: string;
     createdAt: Date;
   };
-  turn: {
-    teamName: string;
-    guessesRemaining: number;
-    status: string;
-  };
+  turn: CompleteTurnData;
 };
 
 /**
@@ -89,12 +116,38 @@ export type MakeGuessResult =
 export type MakeGuessDependencies = {
   getGameState: GameplayStateProvider;
   gameplayHandler: TransactionalHandler<GameplayOperations>;
+  getTurnState: TurnStateProvider; // ← Add turn state provider
 };
 
 /**
  * Creates the make guess service
  */
 export const makeGuessService = (dependencies: MakeGuessDependencies) => {
+  /**
+   * Helper to get complete turn data for API response
+   */
+  const getCompleteTurnData = async (
+    turnPublicId: string,
+  ): Promise<CompleteTurnData> => {
+    const turnData = await dependencies.getTurnState(turnPublicId);
+    if (!turnData) {
+      throw new Error(`Failed to fetch turn data for ${turnPublicId}`);
+    }
+
+    return {
+      id: turnData.publicId,
+      teamName: turnData.teamName,
+      status: turnData.status,
+      guessesRemaining: turnData.guessesRemaining,
+      createdAt: turnData.createdAt,
+      completedAt: turnData.completedAt,
+      clue: turnData.clue,
+      hasGuesses: turnData.hasGuesses,
+      lastGuess: turnData.lastGuess,
+      prevGuesses: turnData.prevGuesses,
+    };
+  };
+
   /**
    * Handles correct team card outcome
    */
@@ -370,6 +423,10 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
       return { guessResult };
     });
 
+    // ← CRITICAL FIX: Fetch complete turn data after transaction completes
+    const currentTurn = complexProperties.getCurrentTurnOrThrow(gameData);
+    const completeTurnData = await getCompleteTurnData(currentTurn.publicId);
+
     return {
       success: true,
       data: {
@@ -378,11 +435,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
           outcome: operationResult.guessResult.outcome,
           createdAt: operationResult.guessResult.createdAt,
         },
-        turn: {
-          teamName: operationResult.guessResult.turn.teamName,
-          guessesRemaining: operationResult.guessResult.turn.guessesRemaining,
-          status: operationResult.guessResult.turn.status,
-        },
+        turn: completeTurnData, // ← Return complete enriched turn data
       },
     };
   };

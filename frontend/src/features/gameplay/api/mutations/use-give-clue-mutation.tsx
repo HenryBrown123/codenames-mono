@@ -59,7 +59,7 @@ export const useGiveClueMutation = (
       queryClient.setQueryData(["turn", turnData.id], turnData);
 
       // Invalidate game data to refetch game state
-      await queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
+      await queryClient.refetchQueries({ queryKey: ["gameData", gameId] });
     },
   });
 };

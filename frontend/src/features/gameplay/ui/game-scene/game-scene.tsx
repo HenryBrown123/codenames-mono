@@ -66,6 +66,13 @@ export const GameScene: React.FC = () => {
   const { currentStage, currentScene } = useUIScene();
   const { activeTurn } = useTurn();
 
+  console.log("Rendering scene with: ", {
+    currentStage,
+    currentScene,
+    gameData,
+    activeTurn,
+  });
+
   const sceneConfig =
     gameData.currentRound?.status === "COMPLETED"
       ? uiConfig[PLAYER_ROLE.NONE]?.scenes["gameover"]

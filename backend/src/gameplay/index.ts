@@ -56,11 +56,13 @@ export const initialize = (
   const { controller: giveClueController } = giveClue({
     getGameState,
     gameplayHandler,
+    getTurnState, // ← Pass turn state provider to give clue
   });
 
   const { controller: makeGuessController } = makeGuess({
     getGameState,
     gameplayHandler,
+    getTurnState, // ← Pass turn state provider to make guess
   });
 
   const { controller: getTurnController } = getTurn({

@@ -54,12 +54,11 @@ export const useMakeGuessMutation = (
     },
     onSuccess: async (data) => {
       const turnData = data.data.turn;
-
+      console.log("Returned turn data: ", turnData);
       // Direct cache update for turn data - no await needed, synchronous operation
       queryClient.setQueryData(["turn", turnData.id], turnData);
-
       // Invalidate game data to refetch game state
-      await queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
+      await queryClient.refetchQueries({ queryKey: ["gameData", gameId] });
     },
   });
 };

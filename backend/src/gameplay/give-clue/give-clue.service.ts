@@ -1,7 +1,9 @@
 import type { GameplayStateProvider } from "../state/gameplay-state.provider";
+import type { TurnStateProvider } from "../state/turn-state.provider";
 import type { GameplayValidationError } from "../state/gameplay-state.validation";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 import type { GameplayOperations } from "../gameplay-actions";
+import { complexProperties } from "../state/gameplay-state.helpers";
 
 import {
   validateClueWord,
@@ -20,7 +22,37 @@ export type GiveClueInput = {
 };
 
 /**
- * Successful clue result
+ * Complete turn data that matches frontend TurnData interface
+ */
+export type CompleteTurnData = {
+  id: string;
+  teamName: string;
+  status: "ACTIVE" | "COMPLETED";
+  guessesRemaining: number;
+  createdAt: Date;
+  completedAt?: Date | null;
+  clue?: {
+    word: string;
+    number: number;
+    createdAt: Date;
+  };
+  hasGuesses: boolean;
+  lastGuess?: {
+    cardWord: string;
+    playerName: string;
+    outcome: string | null;
+    createdAt: Date;
+  };
+  prevGuesses: {
+    cardWord: string;
+    playerName: string;
+    outcome: string | null;
+    createdAt: Date;
+  }[];
+};
+
+/**
+ * Successful clue result with complete turn data
  */
 export type GiveClueSuccess = {
   clue: {
@@ -28,11 +60,7 @@ export type GiveClueSuccess = {
     targetCardCount: number;
     createdAt: Date;
   };
-  turn: {
-    teamName: string;
-    guessesRemaining: number;
-    status: string;
-  };
+  turn: CompleteTurnData;
 };
 
 /**
@@ -93,12 +121,38 @@ export type GiveClueResult =
 export type GiveClueDependencies = {
   getGameState: GameplayStateProvider;
   gameplayHandler: TransactionalHandler<GameplayOperations>;
+  getTurnState: TurnStateProvider; // ← Add turn state provider
 };
 
 /**
  * Creates a service for handling clue giving with business rule validation
  */
 export const giveClueService = (dependencies: GiveClueDependencies) => {
+  /**
+   * Helper to get complete turn data for API response
+   */
+  const getCompleteTurnData = async (
+    turnPublicId: string,
+  ): Promise<CompleteTurnData> => {
+    const turnData = await dependencies.getTurnState(turnPublicId);
+    if (!turnData) {
+      throw new Error(`Failed to fetch turn data for ${turnPublicId}`);
+    }
+
+    return {
+      id: turnData.publicId,
+      teamName: turnData.teamName,
+      status: turnData.status,
+      guessesRemaining: turnData.guessesRemaining,
+      createdAt: turnData.createdAt,
+      completedAt: turnData.completedAt,
+      clue: turnData.clue,
+      hasGuesses: turnData.hasGuesses,
+      lastGuess: turnData.lastGuess,
+      prevGuesses: turnData.prevGuesses,
+    };
+  };
+
   return async (input: GiveClueInput): Promise<GiveClueResult> => {
     const result = await dependencies.getGameState(input.gameId, input.userId);
 
@@ -181,6 +235,10 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
       );
     });
 
+    // ← CRITICAL FIX: Fetch complete turn data after transaction completes
+    const currentTurn = complexProperties.getCurrentTurnOrThrow(gameData);
+    const completeTurnData = await getCompleteTurnData(currentTurn.publicId);
+
     return {
       success: true,
       data: {
@@ -189,11 +247,7 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
           targetCardCount: operationResult.clue.number,
           createdAt: operationResult.clue.createdAt,
         },
-        turn: {
-          teamName: operationResult.turn.teamName,
-          guessesRemaining: operationResult.turn.guessesRemaining,
-          status: operationResult.turn.status,
-        },
+        turn: completeTurnData, // ← Return complete enriched turn data
       },
     };
   };

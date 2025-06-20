@@ -47,6 +47,13 @@ export const TurnProvider = ({ children }: TurnProviderProps) => {
     clearActiveTurn: () => setLastActionTurnId(null),
   };
 
+  console.log("Turn query debug:", {
+    lastActionTurnId,
+    queryData: turnQuery.data,
+    queryStatus: turnQuery.status,
+    activeTurn: turnQuery.data || null,
+  });
+
   return (
     <TurnContext.Provider value={contextValue}>{children}</TurnContext.Provider>
   );

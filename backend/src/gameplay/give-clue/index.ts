@@ -1,4 +1,5 @@
 import type { GameplayStateProvider } from "../state/gameplay-state.provider";
+import type { TurnStateProvider } from "../state/turn-state.provider";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 import type { GameplayOperations } from "../gameplay-actions";
 
@@ -11,6 +12,7 @@ import { giveClueController } from "./give-clue.controller";
 export interface GiveClueDependencies {
   getGameState: GameplayStateProvider;
   gameplayHandler: TransactionalHandler<GameplayOperations>;
+  getTurnState: TurnStateProvider; // ← Add turn state provider
 }
 
 /**
@@ -23,6 +25,7 @@ export const giveClue = (dependencies: GiveClueDependencies) => {
   const giveClueServiceInstance = giveClueService({
     getGameState: dependencies.getGameState,
     gameplayHandler: dependencies.gameplayHandler,
+    getTurnState: dependencies.getTurnState, // ← Pass turn state provider
   });
 
   const controller = giveClueController({
