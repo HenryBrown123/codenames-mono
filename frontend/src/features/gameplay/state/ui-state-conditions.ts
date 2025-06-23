@@ -1,4 +1,3 @@
-// features/gameplay/state/condition-evaluator.ts
 import { GAME_TYPE } from "@codenames/shared/types";
 import { GameData } from "@frontend/shared-types";
 import { TurnData } from "../api/queries/use-turn-query";
@@ -10,49 +9,57 @@ export const conditions: Record<
   string,
   (gameData: GameData, activeTurn: TurnData | null) => boolean
 > = {
-  // Turn state conditions
+  // The SERVER is the source of truth for role transitions
   codebreakerTurnEnded: (gameData, activeTurn) => {
-    return activeTurn?.status === "COMPLETED" ||
-      (activeTurn?.hasGuesses && activeTurn?.guessesRemaining === 0)
-      ? true
-      : false;
+    // If the server says you're no longer a codebreaker, then the turn ended
+    const serverSaysNotCodebreaker =
+      gameData.playerContext?.role !== "CODEBREAKER";
+    console.log(
+      "[CONDITION] codebreakerTurnEnded - server role:",
+      gameData.playerContext?.role,
+      "result:",
+      serverSaysNotCodebreaker,
+    );
+    return serverSaysNotCodebreaker;
   },
 
-  myTeamsTurn: (gameData, activeTurn) => {
-    return activeTurn?.teamName === gameData.playerContext?.teamName;
+  // Game state conditions - these are straightforward
+  gameEnded: (gameData) => {
+    const ended = gameData.status === "COMPLETED";
+    console.log("[CONDITION] gameEnded:", ended);
+    return ended;
   },
 
-  turnInProgress: (gameData, activeTurn) => {
-    return activeTurn?.status === "ACTIVE";
+  roundCompleted: (gameData) => {
+    const completed = gameData.currentRound?.status === "COMPLETED";
+    console.log("[CONDITION] roundCompleted:", completed);
+    return completed;
   },
 
-  waitingForClue: (gameData, activeTurn) => {
-    return activeTurn?.status === "ACTIVE" && !activeTurn?.clue;
+  singleDeviceMode: (gameData) => {
+    const isSingle = gameData.gameType === GAME_TYPE.SINGLE_DEVICE;
+    console.log("[CONDITION] singleDeviceMode:", isSingle);
+    return isSingle;
   },
-
-  waitingForGuess: (gameData, activeTurn) => {
-    return activeTurn?.status === "ACTIVE" &&
-      activeTurn?.clue &&
-      !activeTurn?.hasGuesses
-      ? true
-      : false;
-  },
-
-  // Game state conditions
-  gameEnded: (gameData) => gameData.status === "COMPLETED",
-
-  roundCompleted: (gameData) => gameData.currentRound?.status === "COMPLETED",
-
-  singleDeviceMode: (gameData) => gameData.gameType === GAME_TYPE.SINGLE_DEVICE,
 
   // Negated conditions
-  "!gameEnded": (gameData) => gameData.status !== "COMPLETED",
+  "!gameEnded": (gameData) => {
+    const notEnded = gameData.status !== "COMPLETED";
+    console.log("[CONDITION] !gameEnded:", notEnded);
+    return notEnded;
+  },
 
-  "!roundCompleted": (gameData) =>
-    gameData.currentRound?.status !== "COMPLETED",
+  "!roundCompleted": (gameData) => {
+    const notCompleted = gameData.currentRound?.status !== "COMPLETED";
+    console.log("[CONDITION] !roundCompleted:", notCompleted);
+    return notCompleted;
+  },
 
-  "!singleDeviceMode": (gameData) =>
-    gameData.gameType !== GAME_TYPE.SINGLE_DEVICE,
+  "!singleDeviceMode": (gameData) => {
+    const notSingle = gameData.gameType !== GAME_TYPE.SINGLE_DEVICE;
+    console.log("[CONDITION] !singleDeviceMode:", notSingle);
+    return notSingle;
+  },
 };
 
 /**

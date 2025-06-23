@@ -15,12 +15,19 @@ import {
 
 /**
  * Maps scene keys to dashboard components
+ * Handles both uppercase and lowercase role names for consistency
  */
 export const getDashboardComponent = (
   role: string,
   scene: string,
 ): React.ComponentType<any> => {
-  const sceneKey = `${role}.${scene}`;
+  // Normalize to lowercase for consistent mapping
+  const normalizedRole = role.toLowerCase();
+  const sceneKey = `${normalizedRole}.${scene}`;
+
+  console.log(
+    `[COMPONENT_MAPPINGS] Looking up dashboard for: ${sceneKey} (original: ${role}.${scene})`,
+  );
 
   switch (sceneKey) {
     case "codebreaker.main":
@@ -35,28 +42,33 @@ export const getDashboardComponent = (
       return WaitingDashboardView;
     case "spectator.watching":
       return SpectatorDashboardView;
-    // Handle both lowercase and uppercase NONE role
     case "none.lobby":
-    case "NONE.lobby":
     case "none.dealing":
-    case "NONE.dealing":
     case "none.gameover":
-    case "NONE.gameover":
       return LobbyDashboardView;
     default:
-      console.warn(`No dashboard component found for ${sceneKey}`);
+      console.warn(
+        `No dashboard component found for ${sceneKey}, falling back to SpectatorDashboardView`,
+      );
       return SpectatorDashboardView;
   }
 };
 
 /**
  * Maps scene keys to board components
+ * Handles both uppercase and lowercase role names for consistency
  */
 export const getBoardComponent = (
   role: string,
   scene: string,
 ): React.ComponentType<any> => {
-  const sceneKey = `${role}.${scene}`;
+  // Normalize to lowercase for consistent mapping
+  const normalizedRole = role.toLowerCase();
+  const sceneKey = `${normalizedRole}.${scene}`;
+
+  console.log(
+    `[COMPONENT_MAPPINGS] Looking up board for: ${sceneKey} (original: ${role}.${scene})`,
+  );
 
   switch (sceneKey) {
     case "codebreaker.main":
@@ -68,11 +80,8 @@ export const getBoardComponent = (
     case "codemaster.waiting":
     case "spectator.watching":
     case "none.lobby":
-    case "NONE.lobby":
     case "none.dealing":
-    case "NONE.dealing":
     case "none.gameover":
-    case "NONE.gameover":
     default:
       return SpectatorBoard;
   }

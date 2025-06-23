@@ -18,6 +18,7 @@ const getOutcomeMessage = (outcome: string): string => {
 
 /**
  * Dynamic message generation based on role, scene, and game state
+ * Handles both uppercase and lowercase role names for consistency
  */
 export const getSceneMessage = (
   role: string,
@@ -25,7 +26,13 @@ export const getSceneMessage = (
   gameData: GameData,
   activeTurn: TurnData | null,
 ): string => {
-  const messageKey = `${role}.${scene}`;
+  // Normalize to lowercase for consistent mapping
+  const normalizedRole = role.toLowerCase();
+  const messageKey = `${normalizedRole}.${scene}`;
+
+  console.log(
+    `[SCENE_MESSAGES] Getting message for: ${messageKey} (original: ${role}.${scene})`,
+  );
 
   switch (messageKey) {
     case "codebreaker.main":
@@ -76,6 +83,9 @@ export const getSceneMessage = (
       return "🎉 Game Over!";
 
     default:
+      console.warn(
+        `[SCENE_MESSAGES] No message found for ${messageKey}, using default`,
+      );
       return "Ready to play";
   }
 };
