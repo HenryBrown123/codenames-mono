@@ -140,13 +140,8 @@ const uiReducer = (
   gameData: GameData,
   activeTurn: TurnData | null,
   currentRole: PlayerRole,
+  setCurrentRole: (role: PlayerRole) => void,
 ): UIState => {
-  console.log("Calling uiReducer with, state:", state, "action:", action);
-  console.log("gameData:", gameData);
-  console.log("activeTurn:", activeTurn);
-  console.log("currentRole:", currentRole);
-  console.log("state.pendingTransition:", state.pendingTransition);
-
   switch (action.type) {
     case "TRIGGER_TRANSITION": {
       const event = action.payload.event;
@@ -177,6 +172,9 @@ const uiReducer = (
         );
         const targetStateMachine = getStateMachine(serverRole);
 
+        // Clear UI role to NONE when hitting END
+        setCurrentRole(PLAYER_ROLE.NONE);
+
         if (needsHandoff) {
           return {
             ...state,
@@ -187,6 +185,8 @@ const uiReducer = (
             },
           };
         } else {
+          // Direct transition - set role to server role immediately
+          setCurrentRole(serverRole);
           return {
             ...state,
             currentScene: targetStateMachine.initial,
@@ -244,13 +244,30 @@ export const PlayerRoleSceneProvider: React.FC<
   const { gameData } = useGameData();
   const { activeTurn } = useTurn();
 
-  // Current role is always derived from fresh gameData
-  const currentRole = determineCorrectRole(gameData);
+  // UI role state - only changes on handoff completion or END transitions
+  const [currentRole, setCurrentRole] = useState<PlayerRole>(() => {
+    // On fresh load, if game is in progress, start with NONE to force handoff
+    const serverRole = determineCorrectRole(gameData);
+    if (
+      serverRole !== PLAYER_ROLE.NONE &&
+      gameData.gameType === GAME_TYPE.SINGLE_DEVICE
+    ) {
+      return PLAYER_ROLE.NONE;
+    }
+    return serverRole;
+  });
 
   // UI state managed by reducer - role transitions only happen via state machine "END"
   const [uiState, dispatch] = useReducer(
     (state: UIState, action: UIAction) =>
-      uiReducer(state, action, gameData, activeTurn, currentRole),
+      uiReducer(
+        state,
+        action,
+        gameData,
+        activeTurn,
+        currentRole,
+        setCurrentRole,
+      ),
     createInitialUIState(gameData),
   );
 
@@ -259,8 +276,14 @@ export const PlayerRoleSceneProvider: React.FC<
   }, []);
 
   const completeHandoff = useCallback(() => {
+    if (!uiState.pendingTransition) {
+      return;
+    }
+
+    // Set UI role to server role when handoff completes
+    setCurrentRole(uiState.pendingTransition.stage);
     dispatch({ type: "COMPLETE_ROLE_TRANSITION" });
-  }, []);
+  }, [uiState.pendingTransition]);
 
   const contextValue: PlayerRoleSceneContextValue = {
     currentRole,
