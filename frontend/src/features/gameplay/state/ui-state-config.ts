@@ -1,262 +1,188 @@
-import {
-  PlayerRole,
-  PLAYER_ROLE,
-  GameState,
-  GAME_STATE,
-} from "@codenames/shared/types";
-import {
-  BoardMode,
-  BOARD_MODE,
-} from "@frontend/features/gameplay/ui/game-board/game-board";
-import { Round } from "@frontend/shared-types";
+import { PLAYER_ROLE } from "@codenames/shared/types";
 
-/**
- * UI configuration with card dealing flow that returns to lobby
- */
-export const uiConfig: UIConfig = {
-  // When player has no role or game is in lobby
-  [PLAYER_ROLE.NONE]: {
-    initial: "lobby",
-    scenes: {
-      lobby: {
-        message: "lobby.waiting",
-        gameBoard: "main",
-        dashboard: "lobbyDashboard",
-        boardMode: BOARD_MODE.SPECTATOR,
-        on: {
-          GAME_STARTED: [
-            {
-              type: "scene",
-              target: "dealing",
-            },
-          ],
-          ROUND_STARTED: [
-            {
-              condition: ["singleDeviceMode"],
-              type: "role",
-              target: PLAYER_ROLE.CODEMASTER,
-            },
-            {
-              condition: ["!singleDeviceMode"],
-              type: "role",
-              target: "serverRole",
-            },
-          ],
-        },
-      },
-      dealing: {
-        message: "dealing.inProgress",
-        gameBoard: "main",
-        dashboard: "dealingDashboard",
-        boardMode: BOARD_MODE.SPECTATOR,
-        on: {
-          CARDS_DEALT: [
-            {
-              type: "scene",
-              target: "lobby",
-            },
-          ],
-        },
-      },
-      gameover: {
-        message: "gameover.main",
-        gameBoard: "main",
-        dashboard: "gameoverDashboard",
-        boardMode: BOARD_MODE.SPECTATOR,
-      },
-    },
-  },
-
-  // When player is a spectator
-  [PLAYER_ROLE.SPECTATOR]: {
-    initial: "watching",
-    scenes: {
-      watching: {
-        message: "spectator.watching",
-        gameBoard: "main",
-        dashboard: "spectatorDashboard",
-        boardMode: BOARD_MODE.SPECTATOR,
-      },
-    },
-  },
-
-  // When player is the codemaster
-  [PLAYER_ROLE.CODEMASTER]: {
-    initial: "main",
-    scenes: {
-      main: {
-        message: "codemaster.main",
-        gameBoard: "main",
-        dashboard: "codemasterDashboard",
-        boardMode: BOARD_MODE.CODEMASTER_ACTIVE,
-        on: {
-          CLUE_SUBMITTED: [
-            {
-              condition: ["singleDeviceMode"],
-              type: "role",
-              target: PLAYER_ROLE.CODEBREAKER,
-            },
-            {
-              condition: ["!singleDeviceMode"],
-              type: "scene",
-              target: "waiting",
-            },
-          ],
-        },
-      },
-      waiting: {
-        message: "codemaster.waiting",
-        gameBoard: "main",
-        dashboard: "waitingDashboard",
-        boardMode: BOARD_MODE.CODEMASTER_READONLY,
-        on: {
-          TURN_CHANGED: [
-            {
-              condition: ["singleDeviceMode"],
-              type: "role",
-              target: PLAYER_ROLE.CODEMASTER,
-            },
-            {
-              condition: ["!singleDeviceMode"],
-              type: "role",
-              target: "serverRole",
-            },
-            {
-              type: "scene",
-              target: "main",
-            },
-          ],
-        },
-      },
-    },
-  },
-
-  // When player is a codebreaker
-  [PLAYER_ROLE.CODEBREAKER]: {
-    initial: "main",
-    scenes: {
-      main: {
-        message: "codebreaker.main",
-        gameBoard: "main",
-        dashboard: "codebreakerDashboard",
-        boardMode: BOARD_MODE.CODEBREAKER,
-        on: {
-          GUESS_MADE: [
-            // Handle round/game end first
-            {
-              condition: ["roundCompleted", "gameEnded"],
-              type: "role",
-              target: PLAYER_ROLE.NONE,
-            },
-            {
-              condition: ["roundCompleted", "!gameEnded"],
-              type: "role",
-              target: PLAYER_ROLE.NONE,
-            },
-            // Show outcome scene when turn ends
-            {
-              condition: ["codebreakerTurnEnded", "!roundCompleted"],
-              type: "scene",
-              target: "outcome",
-            },
-            // Default: stay in main (continue guessing)
-            {
-              type: "scene",
-              target: "main",
-            },
-          ],
-        },
-      },
-      outcome: {
-        message: "codebreaker.outcome",
-        gameBoard: "main",
-        dashboard: "outcomeDashboard",
-        boardMode: BOARD_MODE.SPECTATOR,
-        on: {
-          OUTCOME_ACKNOWLEDGED: [
-            {
-              condition: ["singleDeviceMode"],
-              type: "role",
-              target: PLAYER_ROLE.CODEMASTER,
-            },
-            {
-              condition: ["!singleDeviceMode"],
-              type: "scene",
-              target: "waiting",
-            },
-          ],
-        },
-      },
-      waiting: {
-        message: "codebreaker.waiting",
-        gameBoard: "main",
-        dashboard: "waitingDashboard",
-        boardMode: BOARD_MODE.SPECTATOR,
-        on: {
-          TURN_CHANGED: [
-            {
-              condition: ["singleDeviceMode"],
-              type: "role",
-              target: PLAYER_ROLE.CODEBREAKER,
-            },
-            {
-              condition: ["!singleDeviceMode"],
-              type: "role",
-              target: "serverRole",
-            },
-            {
-              type: "scene",
-              target: "main",
-            },
-          ],
-        },
-      },
-    },
-  },
-};
-
-/**
- * Determines the appropriate UI stage based on backend game state
- */
-export function determineUIStage(
-  gameStatus: GameState,
-  playerRole: PlayerRole,
-  currentRound: Round | null,
-): PlayerRole {
-  if (gameStatus !== GAME_STATE.IN_PROGRESS) {
-    return PLAYER_ROLE.NONE;
-  }
-
-  if (!currentRound || currentRound.status !== "IN_PROGRESS") {
-    return PLAYER_ROLE.NONE;
-  }
-
-  return playerRole;
-}
-
-/**
- * Enhanced transition configuration interface with array condition support
- */
-export interface TransitionConfig {
+interface StateTransition {
   condition?: string | string[];
-  type: "scene" | "role";
-  target: string | PlayerRole | "serverRole";
+  type: "scene" | "END";
+  target?: string;
 }
 
-/**
- * Scene configuration interface
- */
 interface SceneConfig {
   message: string;
   gameBoard: string;
   dashboard: string;
-  boardMode: BoardMode;
-  on?: Record<string, TransitionConfig | TransitionConfig[]>;
+  on?: Record<string, StateTransition | StateTransition[]>;
 }
 
-interface StageConfig {
+interface StateMachine {
   initial: string;
   scenes: Record<string, SceneConfig>;
 }
 
-type UIConfig = Record<PlayerRole, StageConfig>;
+/**
+ * Codebreaker state machine - handles guessing flow
+ */
+export const createCodebreakerStateMachine = (
+  onEnd: () => void,
+): StateMachine => ({
+  initial: "main",
+  scenes: {
+    main: {
+      message: "codebreaker.main",
+      gameBoard: "codebreaker",
+      dashboard: "codebreaker.main",
+      on: {
+        GUESS_MADE: [
+          {
+            condition: ["roundCompleted", "gameEnded"],
+            type: "END",
+          },
+          {
+            condition: ["roundCompleted", "!gameEnded"],
+            type: "END",
+          },
+          {
+            condition: ["codebreakerTurnEnded", "!roundCompleted"],
+            type: "scene",
+            target: "outcome",
+          },
+          {
+            type: "scene",
+            target: "main",
+          },
+        ],
+      },
+    },
+
+    outcome: {
+      message: "codebreaker.outcome",
+      gameBoard: "spectator",
+      dashboard: "codebreaker.outcome",
+      on: {
+        OUTCOME_ACKNOWLEDGED: {
+          type: "END",
+        },
+      },
+    },
+
+    waiting: {
+      message: "codebreaker.waiting",
+      gameBoard: "spectator",
+      dashboard: "codebreaker.waiting",
+      on: {
+        TURN_CHANGED: {
+          type: "scene",
+          target: "main",
+        },
+      },
+    },
+  },
+});
+
+/**
+ * Codemaster state machine - handles clue giving
+ */
+export const createCodemasterStateMachine = (
+  onEnd: () => void,
+): StateMachine => ({
+  initial: "main",
+  scenes: {
+    main: {
+      message: "codemaster.main",
+      gameBoard: "codemaster",
+      dashboard: "codemaster.main",
+      on: {
+        CLUE_GIVEN: {
+          type: "END",
+        },
+      },
+    },
+
+    waiting: {
+      message: "codemaster.waiting",
+      gameBoard: "spectator",
+      dashboard: "codemaster.waiting",
+      on: {
+        TURN_CHANGED: {
+          type: "scene",
+          target: "main",
+        },
+      },
+    },
+  },
+});
+
+/**
+ * Spectator state machine - simple watching
+ */
+export const createSpectatorStateMachine = (
+  onEnd: () => void,
+): StateMachine => ({
+  initial: "watching",
+  scenes: {
+    watching: {
+      message: "spectator.watching",
+      gameBoard: "spectator",
+      dashboard: "spectator.watching",
+      on: {},
+    },
+  },
+});
+
+/**
+ * None/Lobby state machine - pre-game state
+ */
+export const createNoneStateMachine = (onEnd: () => void): StateMachine => ({
+  initial: "lobby",
+  scenes: {
+    lobby: {
+      message: "none.lobby",
+      gameBoard: "spectator",
+      dashboard: "none.lobby",
+      on: {
+        GAME_STARTED: {
+          type: "scene",
+          target: "dealing",
+        },
+      },
+    },
+
+    dealing: {
+      message: "none.dealing",
+      gameBoard: "spectator",
+      dashboard: "none.dealing",
+      on: {
+        CARDS_DEALT: {
+          type: "scene",
+          target: "lobby",
+        },
+      },
+    },
+
+    gameover: {
+      message: "none.gameover",
+      gameBoard: "spectator",
+      dashboard: "none.gameover",
+      on: {},
+    },
+  },
+});
+
+/**
+ * Factory function to get state machine for role
+ */
+export const getStateMachine = (
+  role: string,
+  onEnd: () => void,
+): StateMachine => {
+  switch (role) {
+    case PLAYER_ROLE.CODEBREAKER:
+      return createCodebreakerStateMachine(onEnd);
+    case PLAYER_ROLE.CODEMASTER:
+      return createCodemasterStateMachine(onEnd);
+    case PLAYER_ROLE.SPECTATOR:
+      return createSpectatorStateMachine(onEnd);
+    case PLAYER_ROLE.NONE:
+    default:
+      return createNoneStateMachine(onEnd);
+  }
+};

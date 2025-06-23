@@ -14,7 +14,7 @@ export { GameplayProvider } from "./gameplay-provider";
 
 // Individual hooks for components
 export { useGameData } from "./game-data-provider";
-export { useUIScene } from "./ui-scene-provider";
+export { usePlayerRoleScene } from "./ui-scene-provider";
 export { useGameActions } from "./game-actions-provider";
 
 // Types

@@ -1,3 +1,4 @@
+// features/gameplay/state/game-actions-provider.tsx
 import React, {
   createContext,
   useState,
@@ -14,7 +15,7 @@ import {
   useEndTurnMutation,
 } from "@frontend/game/api/mutations";
 import { useGameData } from "./game-data-provider";
-import { useUIScene } from "./ui-scene-provider";
+import { usePlayerRoleScene } from "./ui-scene-provider";
 import { useTurn } from "./active-turn-provider";
 
 export type ActionName =
@@ -60,8 +61,8 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   const [actionState, setActionState] = useState<ActionState>(initialState);
 
   const { gameData, gameId } = useGameData();
-  const { handleSceneTransition } = useUIScene();
-  const { setLastActionTurnId } = useTurn();
+  const { dispatch } = usePlayerRoleScene();
+  const { activeTurn, setLastActionTurnId } = useTurn();
 
   const giveClueMutation = useGiveClueMutation(gameId);
   const makeGuessMutation = useMakeGuessMutation(gameId);
@@ -82,14 +83,12 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       }
 
       const roundNumber = gameData.currentRound.roundNumber;
-
       setActionState({ name: "makeGuess", status: "loading", error: null });
 
       makeGuessMutation.mutate(
         { roundNumber, cardWord: word },
         {
           onSuccess: (res) => {
-            // Check if backend returned turn data
             if (res.success) {
               setLastActionTurnId(res.data.turn.id);
             }
@@ -99,9 +98,11 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
               status: "success",
               error: null,
             });
-            console.log("About to transition schene - GUESS_MADE");
 
-            handleSceneTransition("GUESS_MADE");
+            dispatch({
+              type: "TRIGGER_TRANSITION",
+              payload: { event: "GUESS_MADE" },
+            });
           },
           onError: (error) => {
             setActionState({ name: "makeGuess", status: "error", error });
@@ -109,12 +110,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         },
       );
     },
-    [
-      makeGuessMutation,
-      gameData.currentRound,
-      handleSceneTransition,
-      setLastActionTurnId,
-    ],
+    [makeGuessMutation, gameData, dispatch, setLastActionTurnId],
   );
 
   const giveClue = useCallback(
@@ -125,24 +121,27 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       }
 
       const roundNumber = gameData.currentRound.roundNumber;
-
       setActionState({ name: "giveClue", status: "loading", error: null });
 
       giveClueMutation.mutate(
         { roundNumber, word, targetCardCount: count },
         {
           onSuccess: (res) => {
-            if (!res.success)
-              throw new Error("Unhandled give clue mutation failure ");
+            if (!res.success) {
+              throw new Error("Unhandled give clue mutation failure");
+            }
 
-            // ensure the turn Id of the submitted clue is being tracked by the UI
             setLastActionTurnId(res.data.turn.id);
             setActionState({
               name: "giveClue",
               status: "success",
               error: null,
             });
-            handleSceneTransition("CLUE_SUBMITTED");
+
+            dispatch({
+              type: "TRIGGER_TRANSITION",
+              payload: { event: "CLUE_GIVEN" },
+            });
           },
           onError: (error) => {
             setActionState({ name: "giveClue", status: "error", error });
@@ -150,12 +149,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         },
       );
     },
-    [
-      giveClueMutation,
-      gameData.currentRound,
-      handleSceneTransition,
-      setLastActionTurnId,
-    ],
+    [giveClueMutation, gameData, dispatch, setLastActionTurnId],
   );
 
   const createRound = useCallback(() => {
@@ -163,27 +157,25 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
 
     createRoundMutation.mutate(undefined, {
       onSuccess: () => {
-        setActionState({
-          name: "createRound",
-          status: "success",
-          error: null,
+        setActionState({ name: "createRound", status: "success", error: null });
+        dispatch({
+          type: "TRIGGER_TRANSITION",
+          payload: { event: "GAME_STARTED" },
         });
-        handleSceneTransition("ROUND_CREATED");
       },
       onError: (error) => {
         setActionState({ name: "createRound", status: "error", error });
       },
     });
-  }, [createRoundMutation, handleSceneTransition]);
+  }, [createRoundMutation, dispatch]);
 
   const startRound = useCallback(() => {
     if (!gameData.currentRound) {
-      console.error("Cannot start round - no current round");
+      console.error("Cannot start round - no round exists");
       return;
     }
 
     const roundNumber = gameData.currentRound.roundNumber;
-
     setActionState({ name: "startRound", status: "loading", error: null });
 
     startRoundMutation.mutate(
@@ -195,51 +187,51 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
             status: "success",
             error: null,
           });
-          handleSceneTransition("ROUND_STARTED");
+          dispatch({
+            type: "TRIGGER_TRANSITION",
+            payload: { event: "ROUND_STARTED" },
+          });
         },
         onError: (error) => {
           setActionState({ name: "startRound", status: "error", error });
         },
       },
     );
-  }, [startRoundMutation, gameData.currentRound, handleSceneTransition]);
+  }, [startRoundMutation, gameData, dispatch]);
 
   const dealCards = useCallback(() => {
     if (!gameData.currentRound) {
-      console.error("Cannot deal cards - no current round");
+      console.error("Cannot deal cards - no round exists");
       return;
     }
 
     const roundNumber = gameData.currentRound.roundNumber;
-
     setActionState({ name: "dealCards", status: "loading", error: null });
 
     dealCardsMutation.mutate(
       { roundNumber },
       {
         onSuccess: () => {
-          setActionState({
-            name: "dealCards",
-            status: "success",
-            error: null,
+          setActionState({ name: "dealCards", status: "success", error: null });
+          dispatch({
+            type: "TRIGGER_TRANSITION",
+            payload: { event: "CARDS_DEALT" },
           });
-          handleSceneTransition("CARDS_DEALT");
         },
         onError: (error) => {
           setActionState({ name: "dealCards", status: "error", error });
         },
       },
     );
-  }, [dealCardsMutation, gameData.currentRound, handleSceneTransition]);
+  }, [dealCardsMutation, gameData, dispatch]);
 
   const endTurn = useCallback(() => {
     if (!gameData.currentRound) {
-      console.error("Cannot end turn - no active round");
+      console.error("Cannot end turn - no round exists");
       return;
     }
 
     const roundNumber = gameData.currentRound.roundNumber;
-
     setActionState({ name: "endTurn", status: "loading", error: null });
 
     endTurnMutation.mutate(
@@ -247,20 +239,23 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       {
         onSuccess: () => {
           setActionState({ name: "endTurn", status: "success", error: null });
-          handleSceneTransition("TURN_ENDED");
+          dispatch({
+            type: "TRIGGER_TRANSITION",
+            payload: { event: "TURN_ENDED" },
+          });
         },
         onError: (error) => {
           setActionState({ name: "endTurn", status: "error", error });
         },
       },
     );
-  }, [endTurnMutation, gameData.currentRound, handleSceneTransition]);
+  }, [endTurnMutation, gameData, dispatch]);
 
   const value: GameActionsContextValue = {
     actionState,
     resetActionState,
-    makeGuess,
     giveClue,
+    makeGuess,
     createRound,
     startRound,
     dealCards,
@@ -274,10 +269,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   );
 };
 
-/**
- * Hook to access game actions and action state
- */
-export const useGameActions = () => {
+export const useGameActions = (): GameActionsContextValue => {
   const context = useContext(GameActionsContext);
   if (context === undefined) {
     throw new Error("useGameActions must be used within GameActionsProvider");
