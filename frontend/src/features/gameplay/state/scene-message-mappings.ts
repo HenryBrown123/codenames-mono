@@ -2,53 +2,74 @@ import { GameData } from "@frontend/shared-types";
 import { TurnData } from "../api/queries/use-turn-query";
 
 /**
- * Helper to get outcome message
+ * Helper to get outcome message for codebreakers
  */
-const getOutcomeMessage = (outcome: string): string => {
+const getOutcomeMessage = (outcome: string, teamName: string): string => {
   switch (outcome) {
-    case "CORRECT_TEAM":
-      return "✅ Good guess!";
-    case "WRONG_TEAM":
-      return "❌ Oops! That's the other team's card";
-    case "NEUTRAL":
-      return "⚪ Neutral card - turn over";
-    case "ASSASSIN":
-      return "💀 Assassin! Game over";
+    case "CORRECT_TEAM_CARD":
+      return "Good guess!";
+    case "OTHER_TEAM_CARD":
+      const otherTeam = teamName.includes("Red") ? "blue" : "red";
+      return `Unlucky, that's a ${otherTeam} card! ${teamName}'s turn is over`;
+    case "BYSTANDER_CARD":
+      return `Unlucky, that's a bystander card! ${teamName}'s turn is over`;
+    case "ASSASSIN_CARD":
+      return "Oh no! That's the assassin! Game over";
     default:
-      return "Turn ended";
+      return `${teamName}'s turn is over`;
   }
 };
 
 /**
- * Helper to get team-specific greeting
+ * Helper to format guesses remaining text
  */
-const getTeamGreeting = (teamName: string, role: string): string => {
-  return `${teamName} ${role}`;
+const getGuessesText = (remaining: number): string => {
+  if (remaining === 1) {
+    return "You have 1 guess remaining";
+  }
+  return `You have ${remaining} guesses remaining`;
 };
 
 /**
- * Helper to get clue context for codebreakers
+ * Helper to check if turn was perfect (found all clued cards)
  */
-const getClueContext = (activeTurn: TurnData | null): string => {
-  if (!activeTurn?.clue) {
-    return "Waiting for your Codemaster to give a clue...";
+const wasPerfectTurn = (activeTurn: TurnData | null): boolean => {
+  if (!activeTurn?.clue || !activeTurn.hasGuesses || !activeTurn.lastGuess) {
+    return false;
   }
+  const correctGuesses = [
+    activeTurn.lastGuess,
+    ...activeTurn.prevGuesses,
+  ].filter((guess) => guess.outcome === "CORRECT_TEAM_CARD").length;
 
-  const { clue } = activeTurn;
-  const remaining = activeTurn.guessesRemaining || 0;
-  const guessText = remaining === 1 ? "guess" : "guesses";
-
-  // Show outcome feedback for recent guess
-  if (activeTurn.hasGuesses && activeTurn.lastGuess && remaining > 0) {
-    const outcomeMessage = getOutcomeMessage(activeTurn.lastGuess.outcome);
-    return `${outcomeMessage} • "${clue.word}" for ${clue.number} • ${remaining} ${guessText} remaining`;
-  }
-
-  return `Clue: "${clue.word}" for ${clue.number} • ${remaining} ${guessText} remaining`;
+  return correctGuesses === activeTurn.clue.number;
 };
 
 /**
- * Dynamic message generation for an input role/scene.
+ * Helper to check if target was reached (found all clued cards, bonus available)
+ */
+const wasTargetReached = (activeTurn: TurnData | null): boolean => {
+  if (
+    !activeTurn?.clue ||
+    !activeTurn.hasGuesses ||
+    !activeTurn.lastGuess ||
+    activeTurn.guessesRemaining === 0
+  ) {
+    return false;
+  }
+
+  const correctGuesses = [
+    activeTurn.lastGuess,
+    ...activeTurn.prevGuesses,
+  ].filter((guess) => guess.outcome === "CORRECT_TEAM_CARD").length;
+
+  return (
+    correctGuesses === activeTurn.clue.number && activeTurn.guessesRemaining > 0
+  );
+};
+
+/**
+ * Dynamic message generation for each role/scene combination
  */
 export const getSceneMessage = (
   role: string,
@@ -58,41 +79,79 @@ export const getSceneMessage = (
 ): string => {
   const normalizedRole = role.toLowerCase();
   const messageKey = `${normalizedRole}.${scene}`;
-  const playerTeam = gameData.playerContext?.teamName || "Team";
+  const teamName = activeTurn?.teamName || "Your team";
 
   switch (messageKey) {
     case "codebreaker.main":
-      return `${getTeamGreeting(playerTeam, "Codebreaker")} • ${getClueContext(activeTurn)}`;
+      if (!activeTurn?.clue) {
+        return "Waiting for your codemaster to give a clue...";
+      }
+
+      const remaining = activeTurn.guessesRemaining || 0;
+
+      // First guess of the turn
+      if (!activeTurn.hasGuesses) {
+        return `${teamName}, time to make a guess! ${getGuessesText(remaining)}`;
+      }
+
+      // After a correct guess - check if target reached
+      if (activeTurn.lastGuess?.outcome === "CORRECT_TEAM_CARD") {
+        if (wasTargetReached(activeTurn)) {
+          return `Excellent! You found all ${activeTurn.clue.number} cards. Bonus guess available`;
+        }
+        return `Good guess! ${getGuessesText(remaining)}`;
+      }
+
+      // This shouldn't happen in main state after wrong guess, but safety fallback
+      return `${teamName}, time to make a guess! ${getGuessesText(remaining)}`;
 
     case "codebreaker.outcome":
-      if (activeTurn?.lastGuess) {
-        const outcomeMessage = getOutcomeMessage(activeTurn.lastGuess.outcome);
-        return `${getTeamGreeting(playerTeam, "Codebreaker")} • ${outcomeMessage}`;
+      if (!activeTurn?.lastGuess) {
+        return `${teamName}'s turn is over`;
       }
-      return `${getTeamGreeting(playerTeam, "Codebreaker")} • Turn ended`;
+
+      // Check if it was a perfect turn (found exactly the clued number)
+      if (
+        activeTurn.lastGuess.outcome === "CORRECT_TEAM_CARD" &&
+        wasPerfectTurn(activeTurn)
+      ) {
+        return "Well done, perfect turn! Over to the next team";
+      }
+
+      // Regular outcome message
+      return getOutcomeMessage(activeTurn.lastGuess.outcome, teamName);
 
     case "codebreaker.waiting":
-      return `${getTeamGreeting(playerTeam, "Codebreaker")} • Waiting for other team...`;
+      return "Waiting for the other team...";
 
     case "codemaster.main":
-      return `${getTeamGreeting(playerTeam, "Codemaster")} • Give your team a clue`;
+      return `${teamName} Codemaster, give your team a clue`;
 
     case "codemaster.waiting":
       if (activeTurn?.clue) {
         const remaining = activeTurn.guessesRemaining || 0;
-        const guessText = remaining === 1 ? "guess" : "guesses";
-        return `${getTeamGreeting(playerTeam, "Codemaster")} • "${activeTurn.clue.word}" for ${activeTurn.clue.number} • ${remaining} ${guessText} remaining`;
+        if (remaining === 0) {
+          return "Your team's turn is complete";
+        }
+        return `Your team is guessing... ${remaining} guess${remaining === 1 ? "" : "es"} left`;
       }
-      return `${getTeamGreeting(playerTeam, "Codemaster")} • Waiting for your team...`;
+      return "Waiting for your team...";
 
     case "spectator.watching":
       const currentActiveTurn = gameData.currentRound?.turns?.find(
         (t) => t.status === "ACTIVE",
       );
+
       if (currentActiveTurn?.clue) {
-        return `Watching • ${currentActiveTurn.teamName}: "${currentActiveTurn.clue.word}" for ${currentActiveTurn.clue.number}`;
+        const remaining = currentActiveTurn.guessesRemaining || 0;
+        return `${currentActiveTurn.teamName} is guessing "${currentActiveTurn.clue.word}" for ${currentActiveTurn.clue.number} • ${remaining} guess${remaining === 1 ? "" : "es"} left`;
       }
-      return `Watching • ${currentActiveTurn?.teamName || "Game"} team's turn`;
+
+      if (currentActiveTurn) {
+        return `${currentActiveTurn.teamName} Codemaster is thinking...`;
+      }
+
+      return "Watching the game";
 
     case "none.lobby":
       return "Welcome! Ready to start the game?";
@@ -104,9 +163,9 @@ export const getSceneMessage = (
       // Check for winner in game data
       const winner = gameData.teams?.find((team) => team.score >= 9);
       if (winner) {
-        return `🎉 ${winner.name} wins!`;
+        return `Game over! ${winner.name} wins!`;
       }
-      return "🎉 Game Over!";
+      return "Game over!";
 
     default:
       console.warn(`No message found for ${messageKey}, using default`);

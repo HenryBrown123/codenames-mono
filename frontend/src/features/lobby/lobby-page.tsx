@@ -537,7 +537,7 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
     setIsLoading(true);
     try {
       await startGame(gameId);
-      navigate(`/game/${gameId}/play`);
+      navigate(`/game/${gameId}`);
     } catch (err) {
       console.error("Failed to start game:", err);
       setError("Failed to start game");
