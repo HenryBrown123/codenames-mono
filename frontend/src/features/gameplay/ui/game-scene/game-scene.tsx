@@ -99,7 +99,6 @@ export const GameScene: React.FC = () => {
     );
   }
 
-  // Show blurred background when handoff is active
   if (showHandoff && pendingTransition) {
     return (
       <GameSceneContainer>
