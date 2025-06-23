@@ -1,4 +1,3 @@
-// features/gameplay/state/component-mappings.ts
 import React from "react";
 import {
   LobbyDashboardView,
@@ -36,9 +35,13 @@ export const getDashboardComponent = (
       return WaitingDashboardView;
     case "spectator.watching":
       return SpectatorDashboardView;
+    // Handle both lowercase and uppercase NONE role
     case "none.lobby":
+    case "NONE.lobby":
     case "none.dealing":
+    case "NONE.dealing":
     case "none.gameover":
+    case "NONE.gameover":
       return LobbyDashboardView;
     default:
       console.warn(`No dashboard component found for ${sceneKey}`);
@@ -65,8 +68,11 @@ export const getBoardComponent = (
     case "codemaster.waiting":
     case "spectator.watching":
     case "none.lobby":
+    case "NONE.lobby":
     case "none.dealing":
+    case "NONE.dealing":
     case "none.gameover":
+    case "NONE.gameover":
     default:
       return SpectatorBoard;
   }

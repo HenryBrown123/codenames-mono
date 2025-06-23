@@ -40,12 +40,23 @@ export const PlayerRoleSceneProvider: React.FC<
   const [currentRole, setCurrentRole] = useState<PlayerRole>(PLAYER_ROLE.NONE);
   const [currentScene, setCurrentScene] = useState("lobby");
   const [showHandoff, setShowHandoff] = useState(true);
+  const [pendingTransition, setPendingTransition] = useState<{
+    stage: PlayerRole;
+    scene: string;
+  } | null>(null);
 
   const initiateRoleTransition = useCallback(() => {
     console.log("[PLAYER_ROLE_SCENE] Initiating role transition");
 
     if (gameData.gameType === GAME_TYPE.SINGLE_DEVICE) {
-      setCurrentRole(PLAYER_ROLE.NONE);
+      const serverRole = gameData.playerContext?.role || PLAYER_ROLE.SPECTATOR;
+      const stateMachine = getStateMachine(serverRole);
+
+      // Set up the pending transition
+      setPendingTransition({
+        stage: serverRole,
+        scene: stateMachine.initial,
+      });
       setShowHandoff(true);
     } else {
       const serverRole = gameData.playerContext?.role || PLAYER_ROLE.SPECTATOR;
@@ -54,16 +65,20 @@ export const PlayerRoleSceneProvider: React.FC<
   }, [gameData.gameType, gameData.playerContext?.role]);
 
   const completeRoleTransition = useCallback(() => {
-    const serverRole = gameData.playerContext?.role || PLAYER_ROLE.SPECTATOR;
-    const stateMachine = getStateMachine(serverRole);
+    if (!pendingTransition) {
+      console.warn("[PLAYER_ROLE_SCENE] No pending transition to complete");
+      return;
+    }
 
     console.log(
-      `[PLAYER_ROLE_SCENE] Completing role transition to ${serverRole} → ${stateMachine.initial}`,
+      `[PLAYER_ROLE_SCENE] Completing role transition to ${pendingTransition.stage} → ${pendingTransition.scene}`,
     );
+
     setShowHandoff(false);
-    setCurrentRole(serverRole);
-    setCurrentScene(stateMachine.initial);
-  }, [gameData.playerContext?.role]);
+    setCurrentRole(pendingTransition.stage);
+    setCurrentScene(pendingTransition.scene);
+    setPendingTransition(null);
+  }, [pendingTransition]);
 
   const handleSceneTransition = useCallback(
     (event: string) => {
@@ -148,11 +163,11 @@ export const PlayerRoleSceneProvider: React.FC<
 
   return (
     <PlayerRoleSceneContext.Provider value={contextValue}>
-      {showHandoff && (
+      {showHandoff && pendingTransition && (
         <DeviceHandoffOverlay
-          onHandoffComplete={() =>
-            dispatch({ type: "COMPLETE_ROLE_TRANSITION" })
-          }
+          gameData={gameData}
+          pendingTransition={pendingTransition}
+          onContinue={() => dispatch({ type: "COMPLETE_ROLE_TRANSITION" })}
         />
       )}
       {children}
