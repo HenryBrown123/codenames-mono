@@ -1,117 +1,209 @@
+// features/gameplay/state/player-role-scene-provider.tsx
 import React, {
-  useContext,
-  createContext,
-  ReactNode,
-  useReducer,
-  useCallback,
-  useEffect,
   useState,
+  useCallback,
+  createContext,
+  useContext,
+  ReactNode,
 } from "react";
-import { PlayerRole, PLAYER_ROLE, GAME_TYPE } from "@codenames/shared/types";
 import { useGameData } from "./game-data-provider";
 import { useTurn } from "./active-turn-provider";
-import { uiReducer, createInitialUIState } from "./ui-state-helpers";
-import { determineUIStage } from "./ui-state-config";
+import { DeviceHandoffOverlay } from "../device-handoff";
+import { PLAYER_ROLE, GAME_TYPE, PlayerRole } from "@codenames/shared/types";
+import { GameData } from "@frontend/shared-types";
+import { TurnData } from "../api/queries/use-turn-query";
+import { getStateMachine } from "./ui-state-config";
+import { evaluateConditions } from "./ui-state-conditions";
 
-interface UIState {
-  currentStage: PlayerRole;
+type SceneAction =
+  | { type: "TRIGGER_TRANSITION"; payload: { event: string } }
+  | { type: "COMPLETE_ROLE_TRANSITION" };
+
+interface PlayerRoleSceneContextValue {
+  currentRole: string;
   currentScene: string;
-  showDeviceHandoff: boolean;
-  pendingTransition: {
-    stage: PlayerRole;
-    scene: string;
-  } | null;
+  dispatch: (action: SceneAction) => void;
 }
 
-interface UISceneContextValue {
-  currentStage: PlayerRole;
-  currentScene: string;
-  showDeviceHandoff: boolean;
-  pendingTransition: UIState["pendingTransition"];
-  handleSceneTransition: (event: string) => void;
-  setUIStage: (stage: PlayerRole) => void;
-  completeHandoff: () => void;
-}
+const PlayerRoleSceneContext = createContext<
+  PlayerRoleSceneContextValue | undefined
+>(undefined);
 
-const UISceneContext = createContext<UISceneContextValue | null>(null);
-
-interface UISceneProviderProps {
+interface PlayerRoleSceneProviderProps {
   children: ReactNode;
 }
 
-export const UISceneProvider = ({ children }: UISceneProviderProps) => {
+export const PlayerRoleSceneProvider: React.FC<
+  PlayerRoleSceneProviderProps
+> = ({ children }) => {
   const { gameData } = useGameData();
   const { activeTurn } = useTurn();
-  const [wasHidden, setWasHidden] = useState(false);
+  const [currentRole, setCurrentRole] = useState<PlayerRole>(PLAYER_ROLE.NONE);
+  const [currentScene, setCurrentScene] = useState("lobby");
+  const [showHandoff, setShowHandoff] = useState(true);
 
-  const [uiState, dispatch] = useReducer(
-    (state: UIState, action: any) =>
-      uiReducer(state, action, gameData, activeTurn),
-    gameData,
-    createInitialUIState,
+  const initiateRoleTransition = useCallback(() => {
+    console.log("[PLAYER_ROLE_SCENE] Initiating role transition");
+
+    if (gameData.gameType === GAME_TYPE.SINGLE_DEVICE) {
+      setCurrentRole(PLAYER_ROLE.NONE);
+      setShowHandoff(true);
+    } else {
+      const serverRole = gameData.playerContext?.role || PLAYER_ROLE.SPECTATOR;
+      setCurrentRole(serverRole);
+    }
+  }, [gameData.gameType, gameData.playerContext?.role]);
+
+  const completeRoleTransition = useCallback(() => {
+    const serverRole = gameData.playerContext?.role || PLAYER_ROLE.SPECTATOR;
+    const stateMachine = getStateMachine(serverRole, initiateRoleTransition);
+
+    console.log(
+      `[PLAYER_ROLE_SCENE] Completing role transition to ${serverRole} → ${stateMachine.initial}`,
+    );
+    setShowHandoff(false);
+    setCurrentRole(serverRole);
+    setCurrentScene(stateMachine.initial);
+  }, [gameData.playerContext?.role]);
+
+  const handleSceneTransition = useCallback(
+    (event: string) => {
+      const stateMachine = getStateMachine(currentRole, initiateRoleTransition);
+      const currentSceneConfig = stateMachine.scenes[currentScene];
+
+      if (!currentSceneConfig?.on?.[event]) {
+        console.log(
+          `[PLAYER_ROLE_SCENE] No transitions for event: ${event} in ${currentRole}/${currentScene}`,
+        );
+        return;
+      }
+
+      console.log(
+        `[PLAYER_ROLE_SCENE] Processing event: ${event} in ${currentRole}/${currentScene}`,
+      );
+
+      const transitions = currentSceneConfig.on[event];
+      const matchingTransition = findMatchingTransition(
+        transitions,
+        gameData,
+        activeTurn,
+      );
+
+      if (!matchingTransition) {
+        console.log(
+          `[PLAYER_ROLE_SCENE] No valid transition found for: ${event}`,
+        );
+        return;
+      }
+
+      console.log(
+        `[PLAYER_ROLE_SCENE] Executing transition:`,
+        matchingTransition,
+      );
+
+      // Handle role completion
+      if (matchingTransition.type === "END") {
+        console.log(`[PLAYER_ROLE_SCENE] Role ${currentRole} signaling END`);
+        initiateRoleTransition();
+        return;
+      }
+
+      // Handle scene transition within role
+      if (matchingTransition.type === "scene" && matchingTransition.target) {
+        console.log(
+          `[PLAYER_ROLE_SCENE] Scene transition: ${currentScene} → ${matchingTransition.target}`,
+        );
+        setCurrentScene(matchingTransition.target);
+        return;
+      }
+
+      console.warn(
+        `[PLAYER_ROLE_SCENE] Unknown transition type:`,
+        matchingTransition,
+      );
+    },
+    [currentRole, currentScene, initiateRoleTransition, gameData, activeTurn],
   );
 
-  const handleSceneTransition = useCallback((event: string) => {
-    dispatch({ type: "TRIGGER_TRANSITION", payload: { event } });
-  }, []);
-
-  const setUIStage = useCallback((stage: PlayerRole) => {
-    dispatch({ type: "SET_STAGE", payload: { stage } });
-  }, []);
-
-  const completeHandoff = useCallback(() => {
-    dispatch({ type: "COMPLETE_HANDOFF" });
-  }, []);
-
-  // Track when page becomes hidden
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        setWasHidden(true); // Mark as "disconnected"
-      } else if (wasHidden && gameData.gameType === GAME_TYPE.SINGLE_DEVICE) {
-        // Page became visible again after being hidden - force handoff
-        dispatch({
-          type: "FORCE_HANDOFF",
-          payload: { targetStage: uiState.currentStage },
-        });
-        setWasHidden(false);
+  const dispatch = useCallback(
+    (action: SceneAction) => {
+      switch (action.type) {
+        case "TRIGGER_TRANSITION":
+          handleSceneTransition(action.payload.event);
+          break;
+        case "COMPLETE_ROLE_TRANSITION":
+          completeRoleTransition();
+          break;
+        default:
+          console.warn(`[PLAYER_ROLE_SCENE] Unknown action type:`, action);
       }
-    };
-    console.log(
-      new Date(),
-      "Running useEffect visibility listner, was hidden",
-      wasHidden,
-    );
+    },
+    [handleSceneTransition, completeRoleTransition],
+  );
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () =>
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [wasHidden, gameData.gameType]);
+  const contextValue: PlayerRoleSceneContextValue = {
+    currentRole,
+    currentScene,
+    dispatch,
+  };
 
   return (
-    <UISceneContext.Provider
-      value={{
-        currentStage: uiState.currentStage,
-        currentScene: uiState.currentScene,
-        showDeviceHandoff: uiState.showDeviceHandoff,
-        pendingTransition: uiState.pendingTransition,
-        handleSceneTransition,
-        setUIStage,
-        completeHandoff,
-      }}
-    >
+    <PlayerRoleSceneContext.Provider value={contextValue}>
+      {showHandoff && (
+        <DeviceHandoffOverlay
+          onHandoffComplete={() =>
+            dispatch({ type: "COMPLETE_ROLE_TRANSITION" })
+          }
+        />
+      )}
       {children}
-    </UISceneContext.Provider>
+    </PlayerRoleSceneContext.Provider>
   );
 };
 
-/**
- * Hook to access UI scene state and actions
- */
-export const useUIScene = () => {
-  const context = useContext(UISceneContext);
-  if (!context) {
-    throw new Error("useUIScene must be used within UISceneProvider");
+export const usePlayerRoleScene = (): PlayerRoleSceneContextValue => {
+  const context = useContext(PlayerRoleSceneContext);
+  if (context === undefined) {
+    throw new Error(
+      "usePlayerRoleScene must be used within PlayerRoleSceneProvider",
+    );
   }
   return context;
+};
+
+const findMatchingTransition = (
+  transitions: any,
+  gameData: GameData,
+  activeTurn: TurnData | null,
+): any => {
+  if (Array.isArray(transitions)) {
+    for (const transition of transitions) {
+      if (transition.condition && gameData) {
+        const conditionsArray = Array.isArray(transition.condition)
+          ? transition.condition
+          : [transition.condition];
+
+        const allPass = conditionsArray.every((conditionKey: string) =>
+          evaluateConditions(conditionKey, gameData, activeTurn),
+        );
+
+        if (allPass) {
+          return transition;
+        }
+      } else if (!transition.condition) {
+        return transition;
+      }
+    }
+    return null;
+  } else {
+    if (transitions.condition && gameData) {
+      const passes = evaluateConditions(
+        transitions.condition,
+        gameData,
+        activeTurn,
+      );
+      return passes ? transitions : null;
+    }
+    return transitions;
+  }
 };
