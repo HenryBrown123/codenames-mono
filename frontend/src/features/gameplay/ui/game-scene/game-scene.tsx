@@ -10,7 +10,7 @@ import {
 } from "@frontend/features/gameplay/state/component-mappings";
 import { SpectatorBoard } from "../game-board/game-board";
 import { GameInstructions } from "@frontend/features/gameplay/ui/game-instructions";
-
+import { DeviceHandoffOverlay } from "../../device-handoff";
 const GameSceneContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -59,10 +59,36 @@ const DashboardContainer = styled.div`
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 `;
 
+const BlurredBackground = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.3;
+  filter: blur(4px);
+  pointer-events: none;
+`;
+
 export const GameScene: React.FC = () => {
   const { gameData } = useGameData();
   const { activeTurn } = useTurn();
-  const { currentRole, currentScene, dispatch } = usePlayerRoleScene();
+  const {
+    currentRole,
+    currentScene,
+    showHandoff,
+    pendingTransition,
+    dispatch,
+  } = usePlayerRoleScene();
+
+  console.log("GameScene render:", {
+    currentRole,
+    currentScene,
+    showHandoff,
+    pendingTransition,
+    gameStatus: gameData?.status,
+    playerRole: gameData?.playerContext?.role,
+  });
 
   // Handle game over state
   if (gameData.currentRound?.status === "COMPLETED") {
@@ -81,7 +107,64 @@ export const GameScene: React.FC = () => {
     );
   }
 
-  // Clean API - pass role and scene individually to all mapping functions
+  // Show blurred background when handoff is active
+  if (showHandoff && pendingTransition) {
+    console.log(
+      "[GAME_SCENE] Showing handoff overlay with pending transition:",
+      pendingTransition,
+    );
+    return (
+      <GameSceneContainer>
+        <BlurredBackground>
+          <GameSceneContent
+            currentRole={currentRole}
+            currentScene={currentScene}
+            gameData={gameData}
+            activeTurn={activeTurn}
+            dispatch={dispatch}
+          />
+        </BlurredBackground>
+        <DeviceHandoffOverlay
+          gameData={gameData}
+          pendingTransition={pendingTransition}
+          onContinue={() => dispatch({ type: "COMPLETE_ROLE_TRANSITION" })}
+        />
+      </GameSceneContainer>
+    );
+  }
+
+  // Normal gameplay
+  return (
+    <GameSceneContainer>
+      <GameSceneContent
+        currentRole={currentRole}
+        currentScene={currentScene}
+        gameData={gameData}
+        activeTurn={activeTurn}
+        dispatch={dispatch}
+      />
+    </GameSceneContainer>
+  );
+};
+
+/**
+ * Extracted game scene content to avoid duplication
+ */
+interface GameSceneContentProps {
+  currentRole: string;
+  currentScene: string;
+  gameData: any;
+  activeTurn: any;
+  dispatch: any;
+}
+
+const GameSceneContent: React.FC<GameSceneContentProps> = ({
+  currentRole,
+  currentScene,
+  gameData,
+  activeTurn,
+  dispatch,
+}) => {
   const messageText = getSceneMessage(
     currentRole,
     currentScene,
@@ -92,7 +175,7 @@ export const GameScene: React.FC = () => {
   const BoardComponent = getBoardComponent(currentRole, currentScene);
 
   return (
-    <GameSceneContainer>
+    <>
       <InstructionsContainer>
         <GameInstructions messageText={messageText} />
       </InstructionsContainer>
@@ -104,6 +187,6 @@ export const GameScene: React.FC = () => {
       <DashboardContainer>
         <DashboardComponent dispatch={dispatch} />
       </DashboardContainer>
-    </GameSceneContainer>
+    </>
   );
 };

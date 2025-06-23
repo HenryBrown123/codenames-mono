@@ -16,6 +16,50 @@ interface StateMachine {
 }
 
 /**
+ * None/Lobby state machine - pre-game state with proper transitions
+ */
+export const createNoneStateMachine = (): StateMachine => ({
+  initial: "lobby",
+  scenes: {
+    lobby: {
+      on: {
+        GAME_STARTED: {
+          type: "scene",
+          target: "dealing",
+        },
+        CARDS_DEALT: {
+          type: "END", // Cards dealt means we're ready to transition to player role
+        },
+        ROUND_STARTED: {
+          type: "END", // Round started means game is active, transition to player role
+        },
+      },
+    },
+
+    dealing: {
+      on: {
+        CARDS_DEALT: {
+          type: "scene",
+          target: "lobby",
+        },
+        ROUND_STARTED: {
+          type: "END", // If round starts during dealing, transition to player role
+        },
+      },
+    },
+
+    gameover: {
+      on: {
+        GAME_STARTED: {
+          type: "scene",
+          target: "dealing",
+        },
+      },
+    },
+  },
+});
+
+/**
  * Codebreaker state machine - handles guessing flow
  */
 export const createCodebreakerStateMachine = (): StateMachine => ({
@@ -24,16 +68,17 @@ export const createCodebreakerStateMachine = (): StateMachine => ({
     main: {
       on: {
         GUESS_MADE: [
+          // Check if round/game ended first
           {
-            condition: ["roundCompleted", "gameEnded"],
+            condition: ["roundCompleted"],
             type: "END",
           },
           {
-            condition: ["roundCompleted", "!gameEnded"],
+            condition: ["gameEnded"],
             type: "END",
           },
           {
-            condition: ["codebreakerTurnEnded", "!roundCompleted"],
+            condition: ["codebreakerTurnEnded"],
             type: "scene",
             target: "outcome",
           },
@@ -48,7 +93,7 @@ export const createCodebreakerStateMachine = (): StateMachine => ({
     outcome: {
       on: {
         OUTCOME_ACKNOWLEDGED: {
-          type: "END",
+          type: "END", // Move to next role (usually codemaster of other team)
         },
       },
     },
@@ -73,7 +118,7 @@ export const createCodemasterStateMachine = (): StateMachine => ({
     main: {
       on: {
         CLUE_GIVEN: {
-          type: "END",
+          type: "END", // Clue given, transition to codebreaker role
         },
       },
     },
@@ -96,37 +141,12 @@ export const createSpectatorStateMachine = (): StateMachine => ({
   initial: "watching",
   scenes: {
     watching: {
-      on: {},
-    },
-  },
-});
-
-/**
- * None/Lobby state machine - pre-game state
- */
-export const createNoneStateMachine = (): StateMachine => ({
-  initial: "lobby",
-  scenes: {
-    lobby: {
       on: {
-        GAME_STARTED: {
+        TURN_CHANGED: {
           type: "scene",
-          target: "dealing",
+          target: "watching", // Stay watching
         },
       },
-    },
-
-    dealing: {
-      on: {
-        CARDS_DEALT: {
-          type: "scene",
-          target: "lobby",
-        },
-      },
-    },
-
-    gameover: {
-      on: {},
     },
   },
 });
@@ -135,7 +155,9 @@ export const createNoneStateMachine = (): StateMachine => ({
  * Factory function to get state machine for role
  */
 export const getStateMachine = (role: string): StateMachine => {
-  switch (role) {
+  console.log(`[STATE_MACHINE] Getting state machine for role: ${role}`);
+
+  switch (role.toUpperCase()) {
     case PLAYER_ROLE.CODEBREAKER:
       return createCodebreakerStateMachine();
     case PLAYER_ROLE.CODEMASTER:
