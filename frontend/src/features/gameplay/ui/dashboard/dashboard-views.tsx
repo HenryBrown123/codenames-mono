@@ -1,337 +1,351 @@
-import React, { useState, useEffect } from "react";
+// features/gameplay/ui/dashboard/dashboards.tsx
+import React, { useState } from "react";
 import styled from "styled-components";
-import ActionButton from "../action-button/action-button";
-import { CodeWordInput } from "./codemaster-input";
-import {
-  useGameData,
-  useUIScene,
-  useGameActions,
-} from "@frontend/features/gameplay/state";
-import { Turn } from "@frontend/shared-types";
+import { useGameActions } from "@frontend/features/gameplay/state";
+import { useTurn } from "@frontend/features/gameplay/state/active-turn-provider";
 
-const ButtonWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-`;
+// ============================================================================
+// SHARED STYLED COMPONENTS
+// ============================================================================
 
-const Container = styled.div`
+const DashboardContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 1rem;
   width: 100%;
-  height: 100%;
-  padding: 1rem;
 `;
 
-const InfoText = styled.div`
-  color: ${({ theme }) => theme.text};
-  font-size: 1.2rem;
-  text-align: center;
-  margin: 0.5rem 0;
-`;
+const ActionButton = styled.button`
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  border: 2px solid #007bff;
+  border-radius: 8px;
+  background: #007bff;
+  color: white;
+  cursor: pointer;
 
-const LoadingSpinner = styled.div`
-  width: 3rem;
-  height: 3rem;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: #4dabf7;
-  animation: spin 1s ease-in-out infinite;
-  margin: 1rem 0;
+  &:hover:not(:disabled) {
+    background: #0056b3;
+    border-color: #0056b3;
+  }
 
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
+  &:disabled {
+    background: #6c757d;
+    border-color: #6c757d;
+    cursor: not-allowed;
   }
 `;
 
-// Lobby dashboard with enhanced state handling
-export const LobbyDashboardView: React.FC = () => {
-  const { gameData } = useGameData();
-  const { handleSceneTransition } = useUIScene();
-  const { createRound, startRound, dealCards, actionState } = useGameActions();
+const EndTurnButton = styled.button`
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border: 2px solid #dc3545;
+  border-radius: 8px;
+  background: #dc3545;
+  color: white;
+  cursor: pointer;
 
-  const handleClick = () => {
-    // Case 2: Round exists with cards - start the round
-    if (
-      gameData?.currentRound?.status === "SETUP" &&
-      gameData.currentRound.cards &&
-      gameData.currentRound.cards.length > 0
-    ) {
-      startRound();
-      return;
-    }
+  &:hover:not(:disabled) {
+    background: #c82333;
+    border-color: #c82333;
+  }
 
-    if (
-      gameData?.currentRound?.status === "SETUP" &&
-      gameData.currentRound.cards.length === 0
-    ) {
-      dealCards();
-      return;
-    }
+  &:disabled {
+    background: #6c757d;
+    border-color: #6c757d;
+    cursor: not-allowed;
+  }
+`;
 
-    // Case 3: No round exists - create new round (will auto-deal cards)
-    if (!gameData?.currentRound) {
-      createRound();
-      return;
-    }
+const ClueForm = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 400px;
+`;
 
-    // Case 4: Round exists but no cards - should not happen with auto-dealing
-    console.warn("Unexpected state: round exists but no cards");
-  };
+const InputGroup = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
 
-  const getButtonText = () => {
-    if (
-      gameData?.currentRound?.status === "COMPLETED" ||
-      !gameData?.currentRound
-    ) {
-      return "Deal Cards";
-    }
+const ClueInput = styled.input`
+  flex: 1;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 2px solid #ccc;
+  border-radius: 8px;
 
-    if (
-      gameData.currentRound &&
-      gameData?.currentRound?.status !== "SETUP" &&
-      gameData?.status === "IN_PROGRESS"
-    ) {
-      return "Join Game";
-    }
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+  }
 
-    if (
-      gameData?.currentRound?.status === "SETUP" &&
-      gameData.currentRound.cards.length === 0
-    ) {
-      return "Deal Cards";
-    }
+  &:disabled {
+    background-color: #f8f9fa;
+    color: #6c757d;
+  }
+`;
 
-    if (
-      gameData?.currentRound?.status === "SETUP" &&
-      gameData.currentRound.cards &&
-      gameData.currentRound.cards.length > 0
-    ) {
-      return "Start Round";
-    }
+const CountInput = styled.input`
+  width: 80px;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  text-align: center;
 
-    return "Create Game";
-  };
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+  }
 
-  const getInfoText = () => {
-    if (
-      gameData?.currentRound &&
-      gameData.currentRound.cards &&
-      gameData.currentRound.cards.length > 0
-    ) {
-      return "Cards are ready! Review the board and start when ready.";
-    }
-    return null;
-  };
+  &:disabled {
+    background-color: #f8f9fa;
+    color: #6c757d;
+  }
+`;
 
-  const infoText = getInfoText();
+const SubmitButton = styled.button`
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  background-color: #28a745;
+  color: white;
+  cursor: pointer;
 
-  return (
-    <Container>
-      {infoText && <InfoText>{infoText}</InfoText>}
-      <ButtonWrapper>
-        <ActionButton
-          onClick={handleClick}
-          text={getButtonText()}
-          enabled={actionState.status !== "loading"}
-        />
-      </ButtonWrapper>
-    </Container>
-  );
+  &:hover:not(:disabled) {
+    background-color: #218838;
+  }
+
+  &:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+  }
+`;
+
+const OutcomeDisplay = styled.div`
+  text-align: center;
+
+  h3 {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+
+  p {
+    margin: 0.5rem 0 0 0;
+    font-size: 1rem;
+    opacity: 0.8;
+  }
+`;
+
+const ContinueButton = styled.button`
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
+
+const InfoText = styled.div`
+  font-size: 1rem;
+  color: #666;
+  text-align: center;
+`;
+
+const GuessCounter = styled.div`
+  font-size: 1rem;
+  color: #666;
+  text-align: center;
+`;
+
+// ============================================================================
+// DASHBOARD COMPONENTS
+// ============================================================================
+
+interface DashboardProps {
+  dispatch: (action: any) => void;
+}
+
+const getOutcomeMessage = (outcome: string): string => {
+  switch (outcome) {
+    case "CORRECT_TEAM":
+      return "✅ Correct!";
+    case "WRONG_TEAM":
+      return "❌ Wrong team";
+    case "NEUTRAL":
+      return "⚪ Neutral card";
+    case "ASSASSIN":
+      return "💀 Game over!";
+    default:
+      return outcome;
+  }
 };
 
-// Simplified dealing dashboard - just shows loading, no transition logic
-export const DealingDashboardView: React.FC = () => {
-  const { gameData } = useGameData();
-  const { dealCards, actionState } = useGameActions();
-  const hasDealtRef = React.useRef(false);
-
-  useEffect(() => {
-    // Auto-deal cards when this dashboard mounts (only once)
-    if (
-      !hasDealtRef.current &&
-      gameData?.currentRound &&
-      (!gameData.currentRound.cards || gameData.currentRound.cards.length === 0)
-    ) {
-      hasDealtRef.current = true;
-      dealCards();
-    }
-  }, [gameData?.currentRound, dealCards]);
-
-  const getStatusText = () => {
-    switch (actionState.status) {
-      case "loading":
-        return "Dealing cards...";
-      case "success":
-        return "Cards dealt! Returning to lobby...";
-      case "error":
-        return "Error dealing cards";
-      default:
-        return "Preparing to deal cards...";
-    }
-  };
-
-  return (
-    <Container>
-      <LoadingSpinner />
-      <InfoText>{getStatusText()}</InfoText>
-      {actionState.status === "error" && actionState.error && (
-        <InfoText style={{ color: "#ff6b6b", fontSize: "1rem" }}>
-          {actionState.error.message}
-        </InfoText>
-      )}
-    </Container>
-  );
-};
-
-// Spectator dashboard
-export const SpectatorDashboardView: React.FC = () => {
-  return (
-    <Container>
-      <InfoText>Watching the game...</InfoText>
-    </Container>
-  );
-};
-
-// Waiting dashboard
-export const WaitingDashboardView: React.FC = () => {
-  return (
-    <Container>
-      <InfoText>Waiting for the other team...</InfoText>
-    </Container>
-  );
-};
-
-// Codemaster dashboard
-export const CodemasterDashboardView: React.FC = () => {
-  const { gameData } = useGameData();
-  const { giveClue, actionState } = useGameActions();
-
-  const currentRound = gameData.currentRound;
-  const activeTurn = currentRound?.turns?.find(
-    (t: Turn) => t.status === "ACTIVE",
-  );
-  const codeWord = activeTurn?.clue?.word || "";
-  const numberOfGuesses = activeTurn?.clue?.number || 0;
-
-  const handleSubmitClue = (word: string, count: number) => {
-    giveClue(word, count);
-  };
-
-  return (
-    <Container>
-      <CodeWordInput
-        codeWord={codeWord}
-        numberOfCards={numberOfGuesses}
-        isEditable={!activeTurn?.clue}
-        isLoading={actionState.status === "loading"}
-        onSubmit={handleSubmitClue}
-      />
-    </Container>
-  );
-};
-
-// Codebreaker dashboard
-export const CodebreakerDashboardView: React.FC = () => {
-  const { gameData } = useGameData();
+export const CodebreakerDashboardView: React.FC<DashboardProps> = ({
+  dispatch,
+}) => {
   const { endTurn, actionState } = useGameActions();
-
-  const currentRound = gameData.currentRound;
-  const activeTurn = currentRound?.turns?.find(
-    (t: Turn) => t.status === "ACTIVE",
-  );
 
   const handleEndTurn = () => {
     endTurn();
   };
 
-  const hasClue = !!activeTurn?.clue;
-  const canEndTurn = hasClue && activeTurn.guessesRemaining > 0;
-
   return (
-    <ButtonWrapper>
-      {hasClue ? (
-        <ActionButton
-          onClick={handleEndTurn}
-          text="End Turn"
-          enabled={canEndTurn && actionState.status !== "loading"}
-        />
-      ) : (
-        <Container>
-          <InfoText>Waiting for clue...</InfoText>
-        </Container>
-      )}
-    </ButtonWrapper>
+    <DashboardContainer>
+      <GuessCounter>Make your guesses by clicking cards</GuessCounter>
+      <EndTurnButton
+        onClick={handleEndTurn}
+        disabled={actionState.status === "loading"}
+      >
+        {actionState.status === "loading" ? "Ending Turn..." : "End Turn"}
+      </EndTurnButton>
+    </DashboardContainer>
   );
 };
 
-// Outcome dashboard - simple continue button to move to next scene
-export const OutcomeDashboardView: React.FC = () => {
-  const { handleSceneTransition } = useUIScene();
+export const CodemasterDashboardView: React.FC<DashboardProps> = ({
+  dispatch,
+}) => {
+  const [clueWord, setClueWord] = useState("");
+  const [clueCount, setClueCount] = useState(1);
+  const { giveClue, actionState } = useGameActions();
 
-  const handleContinue = () => {
-    handleSceneTransition("OUTCOME_ACKNOWLEDGED");
+  const handleSubmitClue = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!clueWord.trim()) return;
+
+    giveClue(clueWord.trim(), clueCount);
+    setClueWord("");
+    setClueCount(1);
   };
 
+  const isLoading = actionState.status === "loading";
+
   return (
-    <ButtonWrapper>
-      <ActionButton onClick={handleContinue} text="Continue" enabled={true} />
-    </ButtonWrapper>
+    <DashboardContainer>
+      <ClueForm onSubmit={handleSubmitClue}>
+        <InputGroup>
+          <ClueInput
+            type="text"
+            value={clueWord}
+            onChange={(e) => setClueWord(e.target.value)}
+            placeholder="Enter clue word..."
+            disabled={isLoading}
+          />
+          <CountInput
+            type="number"
+            min="1"
+            max="25"
+            value={clueCount}
+            onChange={(e) => setClueCount(parseInt(e.target.value) || 1)}
+            disabled={isLoading}
+          />
+        </InputGroup>
+        <SubmitButton type="submit" disabled={!clueWord.trim() || isLoading}>
+          {isLoading ? "Submitting..." : "Give Clue"}
+        </SubmitButton>
+      </ClueForm>
+    </DashboardContainer>
   );
 };
 
-// Gameover dashboard
-export const GameoverDashboardView: React.FC = () => {
-  const { gameData } = useGameData();
-  const { actionState, createRound } = useGameActions();
-  const { handleSceneTransition } = useUIScene();
+export const OutcomeDashboardView: React.FC<DashboardProps> = ({
+  dispatch,
+}) => {
+  const { activeTurn } = useTurn();
 
-  const handleNewGame = () => {
+  const handleAcknowledge = () => {
+    dispatch({
+      type: "TRIGGER_TRANSITION",
+      payload: { event: "OUTCOME_ACKNOWLEDGED" },
+    });
+  };
+
+  if (!activeTurn?.lastGuess) {
+    return (
+      <DashboardContainer>
+        <div>No outcome to display</div>
+      </DashboardContainer>
+    );
+  }
+
+  return (
+    <DashboardContainer>
+      <OutcomeDisplay>
+        <h3>{getOutcomeMessage(activeTurn.lastGuess.outcome)}</h3>
+        <p>You guessed: "{activeTurn.lastGuess.cardWord}"</p>
+      </OutcomeDisplay>
+      <ContinueButton onClick={handleAcknowledge}>Continue</ContinueButton>
+    </DashboardContainer>
+  );
+};
+
+export const LobbyDashboardView: React.FC<DashboardProps> = ({ dispatch }) => {
+  const { createRound, startRound, dealCards, actionState } = useGameActions();
+
+  const handleCreateRound = () => {
     createRound();
   };
 
-  const handleBackToLobby = () => {
-    handleSceneTransition("BACK_TO_LOBBY");
+  const handleStartRound = () => {
+    startRound();
   };
 
-  const getWinnerText = () => {
-    if (gameData.currentRound?.status === "COMPLETED") {
-      return "Game completed!";
-    }
-    return "Game over!";
+  const handleDealCards = () => {
+    dealCards();
   };
+
+  const isLoading = actionState.status === "loading";
 
   return (
-    <Container>
-      <h2 style={{ color: "#4dabf7", marginBottom: "2rem" }}>Game Over!</h2>
+    <DashboardContainer>
+      <ActionButton onClick={handleCreateRound} disabled={isLoading}>
+        {isLoading && actionState.name === "createRound"
+          ? "Creating..."
+          : "Create Round"}
+      </ActionButton>
 
-      <InfoText style={{ fontSize: "1.5rem", marginBottom: "2rem" }}>
-        {getWinnerText()}
-      </InfoText>
+      <ActionButton onClick={handleDealCards} disabled={isLoading}>
+        {isLoading && actionState.name === "dealCards"
+          ? "Dealing..."
+          : "Deal Cards"}
+      </ActionButton>
 
-      <div style={{ display: "flex", gap: "1rem" }}>
-        <ActionButton
-          onClick={handleNewGame}
-          text={
-            actionState.status === "loading"
-              ? "Creating new game..."
-              : "New Game"
-          }
-          enabled={actionState.status !== "loading"}
-        />
+      <ActionButton onClick={handleStartRound} disabled={isLoading}>
+        {isLoading && actionState.name === "startRound"
+          ? "Starting..."
+          : "Start Round"}
+      </ActionButton>
+    </DashboardContainer>
+  );
+};
 
-        <ActionButton
-          onClick={handleBackToLobby}
-          text="Back to Lobby"
-          enabled={actionState.status !== "loading"}
-        />
-      </div>
-    </Container>
+export const WaitingDashboardView: React.FC<DashboardProps> = ({
+  dispatch,
+}) => {
+  return (
+    <DashboardContainer>
+      <InfoText>Waiting for the other team...</InfoText>
+    </DashboardContainer>
+  );
+};
+
+export const SpectatorDashboardView: React.FC<DashboardProps> = ({
+  dispatch,
+}) => {
+  return (
+    <DashboardContainer>
+      <InfoText>Watching the game...</InfoText>
+    </DashboardContainer>
   );
 };
