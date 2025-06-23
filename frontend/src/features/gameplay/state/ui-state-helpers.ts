@@ -58,13 +58,30 @@ const requiresDeviceHandoff = (
 };
 
 /**
- * Condition evaluation with comprehensive logging
+ * Condition evaluation with comprehensive logging and negation support
  */
 const evaluateCondition = (
   conditionKey: string,
   gameData: GameData,
   activeTurn: TurnData | null,
 ): boolean => {
+  // Handle negated conditions
+  if (conditionKey.startsWith("!")) {
+    const baseCondition = conditionKey.slice(1);
+    const conditionFunc = conditions[baseCondition];
+    if (!conditionFunc) {
+      console.warn(
+        `[STATE_MACHINE] Unknown condition: ${baseCondition} (from negated ${conditionKey})`,
+      );
+      return false;
+    }
+    const result = !conditionFunc(gameData, activeTurn);
+    console.log(
+      `[STATE_MACHINE] Condition "${conditionKey}": ${result} (negated ${baseCondition})`,
+    );
+    return result;
+  }
+
   const conditionFunc = conditions[conditionKey];
   if (!conditionFunc) {
     console.warn(`[STATE_MACHINE] Unknown condition: ${conditionKey}`);
@@ -126,11 +143,9 @@ const findMatchingTransition = (
           );
         }
       } else {
-        console.warn(
+        console.log(
           `[STATE_MACHINE] ✅ No conditions, selecting unconditional transition:`,
           transition,
-          gameData,
-          activeTurn,
         );
         return transition;
       }
@@ -310,25 +325,40 @@ const handleSceneTransition = (
 };
 
 /**
- * Creates initial UI state based on game data
+ * Creates initial UI state with proper single device handoff behavior
  */
 export const createInitialUIState = (gameData: GameData): UIState => {
   const playerRole = gameData.playerContext?.role || PLAYER_ROLE.NONE;
-  const stage = determineUIStage(
+  const targetStage = determineUIStage(
     gameData.status,
     playerRole,
     gameData.currentRound,
   );
-  const stageConfig = uiConfig[stage];
-  const initialScene = stageConfig?.initial || "main";
 
-  console.log(
-    `[STATE_MACHINE] Creating initial UI state: player=${playerRole}, determined=${stage}, scene=${initialScene}`,
-  );
+  // Single device: always start neutral, then transition to role (triggers handoff)
+  if (
+    gameData.gameType === GAME_TYPE.SINGLE_DEVICE &&
+    targetStage !== PLAYER_ROLE.NONE
+  ) {
+    console.log(
+      `[STATE_MACHINE] Single device init: starting at NONE with handoff to ${targetStage}`,
+    );
+    return {
+      currentStage: PLAYER_ROLE.NONE,
+      currentScene: "main",
+      showDeviceHandoff: true,
+      pendingTransition: {
+        stage: targetStage,
+        scene: uiConfig[targetStage]?.initial || "main",
+      },
+    };
+  }
 
+  // Multiplayer: direct initialization
+  console.log(`[STATE_MACHINE] Direct init to: ${targetStage}/main`);
   return {
-    currentStage: stage,
-    currentScene: initialScene,
+    currentStage: targetStage,
+    currentScene: uiConfig[targetStage]?.initial || "main",
     showDeviceHandoff: false,
     pendingTransition: null,
   };

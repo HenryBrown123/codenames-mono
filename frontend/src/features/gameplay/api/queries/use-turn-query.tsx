@@ -73,7 +73,8 @@ export const useTurnDataQuery = (
       return await fetchTurn(publicId);
     },
     enabled: !!publicId,
-    staleTime: 1000 * 60 * 5, // 5 minutes - turn data is relatively stable
+    staleTime: 0,
+    refetchOnWindowFocus: true,
     retry: 2,
   });
 };

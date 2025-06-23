@@ -104,42 +104,35 @@ export const conditions: Record<
   string,
   (gameData: GameData, activeTurn: TurnData | null) => boolean
 > = {
-  // Turn state conditions
-  codebreakerTurnEnded: (gameData, activeTurn) => {
+  codebreakerTurnEnded: (_, activeTurn) => {
     return activeTurn?.status === "COMPLETED" ||
       (activeTurn?.hasGuesses && activeTurn?.guessesRemaining === 0)
       ? true
       : false;
   },
-
   myTeamsTurn: (gameData, activeTurn) => {
     return activeTurn?.teamName === gameData.playerContext.teamName;
   },
-
-  turnInProgress: (gameData, activeTurn) => {
+  turnInProgress: (_, activeTurn) => {
     return activeTurn?.status === "ACTIVE";
   },
-
-  waitingForClue: (gameData, activeTurn) => {
+  waitingForClue: (_, activeTurn) => {
     return activeTurn?.status === "ACTIVE" && !activeTurn?.clue;
   },
-
-  waitingForGuess: (gameData, activeTurn) => {
+  waitingForGuess: (_, activeTurn) => {
     return activeTurn?.status === "ACTIVE" &&
       activeTurn?.clue &&
       !activeTurn?.hasGuesses
       ? true
       : false;
   },
+  gameEnded: (gameData, _) => gameData.status === "COMPLETED",
 
-  // Game state conditions (unchanged)
-  gameEnded: (gameData) => gameData.status === "COMPLETED",
-  roundCompleted: (gameData) => gameData.currentRound?.status === "COMPLETED",
-  singleDeviceMode: (gameData) => gameData.gameType === GAME_TYPE.SINGLE_DEVICE,
-  "!singleDeviceMode": (gameData) =>
-    gameData.gameType !== GAME_TYPE.SINGLE_DEVICE,
-  "!roundCompleted": (gameData) =>
-    gameData.currentRound?.status !== "COMPLETED",
+  roundCompleted: (gameData, _) =>
+    gameData.currentRound?.status === "COMPLETED",
+
+  singleDeviceMode: (gameData, _) =>
+    gameData.gameType === GAME_TYPE.SINGLE_DEVICE,
 };
 
 /**

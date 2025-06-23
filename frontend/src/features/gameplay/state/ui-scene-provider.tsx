@@ -4,11 +4,14 @@ import React, {
   ReactNode,
   useReducer,
   useCallback,
+  useEffect,
+  useState,
 } from "react";
-import { PlayerRole } from "@codenames/shared/types";
+import { PlayerRole, PLAYER_ROLE, GAME_TYPE } from "@codenames/shared/types";
 import { useGameData } from "./game-data-provider";
 import { useTurn } from "./active-turn-provider";
 import { uiReducer, createInitialUIState } from "./ui-state-helpers";
+import { determineUIStage } from "./ui-state-config";
 
 interface UIState {
   currentStage: PlayerRole;
@@ -39,6 +42,7 @@ interface UISceneProviderProps {
 export const UISceneProvider = ({ children }: UISceneProviderProps) => {
   const { gameData } = useGameData();
   const { activeTurn } = useTurn();
+  const [wasHidden, setWasHidden] = useState(false);
 
   const [uiState, dispatch] = useReducer(
     (state: UIState, action: any) =>
@@ -58,6 +62,31 @@ export const UISceneProvider = ({ children }: UISceneProviderProps) => {
   const completeHandoff = useCallback(() => {
     dispatch({ type: "COMPLETE_HANDOFF" });
   }, []);
+
+  // Track when page becomes hidden
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setWasHidden(true); // Mark as "disconnected"
+      } else if (wasHidden && gameData.gameType === GAME_TYPE.SINGLE_DEVICE) {
+        // Page became visible again after being hidden - force handoff
+        dispatch({
+          type: "FORCE_HANDOFF",
+          payload: { targetStage: uiState.currentStage },
+        });
+        setWasHidden(false);
+      }
+    };
+    console.log(
+      new Date(),
+      "Running useEffect visibility listner, was hidden",
+      wasHidden,
+    );
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [wasHidden, gameData.gameType]);
 
   return (
     <UISceneContext.Provider
