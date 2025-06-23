@@ -1,8 +1,10 @@
-// features/gameplay/ui/dashboard/dashboards.tsx
 import React, { useState } from "react";
 import styled from "styled-components";
-import { useGameActions } from "@frontend/features/gameplay/state";
+import ActionButton from "../action-button/action-button";
+import { CodeWordInput } from "./codemaster-input";
+import { useGameData, useGameActions } from "@frontend/features/gameplay/state";
 import { useTurn } from "@frontend/features/gameplay/state/active-turn-provider";
+import { Turn } from "@frontend/shared-types";
 
 // ============================================================================
 // SHARED STYLED COMPONENTS
@@ -16,7 +18,7 @@ const DashboardContainer = styled.div`
   width: 100%;
 `;
 
-const ActionButton = styled.button`
+const BasicActionButton = styled.button`
   padding: 1rem 2rem;
   font-size: 1rem;
   border: 2px solid #007bff;
@@ -158,23 +160,53 @@ const ContinueButton = styled.button`
 
 const InfoText = styled.div`
   font-size: 1rem;
-  color: #666;
+  color: white;
   text-align: center;
 `;
 
 const GuessCounter = styled.div`
   font-size: 1rem;
-  color: #666;
+  color: white;
   text-align: center;
+`;
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 1rem;
+`;
+
+const LoadingSpinner = styled.div`
+  width: 3rem;
+  height: 3rem;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #4dabf7;
+  animation: spin 1s ease-in-out infinite;
+  margin: 1rem 0;
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+const ButtonWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
 `;
 
 // ============================================================================
 // DASHBOARD COMPONENTS
 // ============================================================================
-
-interface DashboardProps {
-  dispatch: (action: any) => void;
-}
 
 const getOutcomeMessage = (outcome: string): string => {
   switch (outcome) {
@@ -191,9 +223,7 @@ const getOutcomeMessage = (outcome: string): string => {
   }
 };
 
-export const CodebreakerDashboardView: React.FC<DashboardProps> = ({
-  dispatch,
-}) => {
+export const CodebreakerDashboardView: React.FC = () => {
   const { endTurn, actionState } = useGameActions();
 
   const handleEndTurn = () => {
@@ -201,74 +231,51 @@ export const CodebreakerDashboardView: React.FC<DashboardProps> = ({
   };
 
   return (
-    <DashboardContainer>
-      <GuessCounter>Make your guesses by clicking cards</GuessCounter>
+    <ButtonWrapper>
       <EndTurnButton
         onClick={handleEndTurn}
         disabled={actionState.status === "loading"}
       >
         {actionState.status === "loading" ? "Ending Turn..." : "End Turn"}
       </EndTurnButton>
-    </DashboardContainer>
+    </ButtonWrapper>
   );
 };
 
-export const CodemasterDashboardView: React.FC<DashboardProps> = ({
-  dispatch,
-}) => {
-  const [clueWord, setClueWord] = useState("");
-  const [clueCount, setClueCount] = useState(1);
+export const CodemasterDashboardView: React.FC = () => {
+  const { gameData } = useGameData();
   const { giveClue, actionState } = useGameActions();
 
-  const handleSubmitClue = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!clueWord.trim()) return;
+  const currentRound = gameData.currentRound;
+  const activeTurn = currentRound?.turns?.find(
+    (t: Turn) => t.status === "ACTIVE",
+  );
+  const codeWord = activeTurn?.clue?.word || "";
+  const numberOfGuesses = activeTurn?.clue?.number || 0;
 
-    giveClue(clueWord.trim(), clueCount);
-    setClueWord("");
-    setClueCount(1);
+  const handleSubmitClue = (word: string, count: number) => {
+    giveClue(word, count);
   };
 
-  const isLoading = actionState.status === "loading";
-
   return (
-    <DashboardContainer>
-      <ClueForm onSubmit={handleSubmitClue}>
-        <InputGroup>
-          <ClueInput
-            type="text"
-            value={clueWord}
-            onChange={(e) => setClueWord(e.target.value)}
-            placeholder="Enter clue word..."
-            disabled={isLoading}
-          />
-          <CountInput
-            type="number"
-            min="1"
-            max="25"
-            value={clueCount}
-            onChange={(e) => setClueCount(parseInt(e.target.value) || 1)}
-            disabled={isLoading}
-          />
-        </InputGroup>
-        <SubmitButton type="submit" disabled={!clueWord.trim() || isLoading}>
-          {isLoading ? "Submitting..." : "Give Clue"}
-        </SubmitButton>
-      </ClueForm>
-    </DashboardContainer>
+    <Container>
+      <CodeWordInput
+        codeWord={codeWord}
+        numberOfCards={numberOfGuesses}
+        isEditable={!activeTurn?.clue}
+        isLoading={actionState.status === "loading"}
+        onSubmit={handleSubmitClue}
+      />
+    </Container>
   );
 };
 
-export const OutcomeDashboardView: React.FC<DashboardProps> = ({
-  dispatch,
-}) => {
+export const OutcomeDashboardView: React.FC = () => {
   const { activeTurn } = useTurn();
 
   const handleAcknowledge = () => {
-    dispatch({
-      type: "TRIGGER_TRANSITION",
-      payload: { event: "OUTCOME_ACKNOWLEDGED" },
-    });
+    // This would be handled by the scene provider
+    console.log("Outcome acknowledged");
   };
 
   if (!activeTurn?.lastGuess) {
@@ -290,7 +297,8 @@ export const OutcomeDashboardView: React.FC<DashboardProps> = ({
   );
 };
 
-export const LobbyDashboardView: React.FC<DashboardProps> = ({ dispatch }) => {
+export const LobbyDashboardView: React.FC = () => {
+  const { gameData } = useGameData();
   const { createRound, startRound, dealCards, actionState } = useGameActions();
 
   const handleCreateRound = () => {
@@ -307,45 +315,106 @@ export const LobbyDashboardView: React.FC<DashboardProps> = ({ dispatch }) => {
 
   const isLoading = actionState.status === "loading";
 
+  // Determine which buttons to show based on game state
+  const showCreateRound = !gameData?.currentRound;
+  const showDealCards =
+    gameData?.currentRound?.status === "SETUP" &&
+    (!gameData.currentRound.cards || gameData.currentRound.cards.length === 0);
+  const showStartRound =
+    gameData?.currentRound?.status === "SETUP" &&
+    gameData.currentRound.cards &&
+    gameData.currentRound.cards.length > 0;
+
   return (
     <DashboardContainer>
-      <ActionButton onClick={handleCreateRound} disabled={isLoading}>
-        {isLoading && actionState.name === "createRound"
-          ? "Creating..."
-          : "Create Round"}
-      </ActionButton>
+      {showCreateRound && (
+        <ActionButton
+          onClick={handleCreateRound}
+          enabled={!isLoading}
+          text={
+            isLoading && actionState.name === "createRound"
+              ? "Creating..."
+              : "Create Round"
+          }
+        />
+      )}
 
-      <ActionButton onClick={handleDealCards} disabled={isLoading}>
-        {isLoading && actionState.name === "dealCards"
-          ? "Dealing..."
-          : "Deal Cards"}
-      </ActionButton>
+      {showDealCards && (
+        <ActionButton
+          onClick={handleDealCards}
+          enabled={!isLoading}
+          text={
+            isLoading && actionState.name === "dealCards"
+              ? "Dealing..."
+              : "Deal Cards"
+          }
+        />
+      )}
 
-      <ActionButton onClick={handleStartRound} disabled={isLoading}>
-        {isLoading && actionState.name === "startRound"
-          ? "Starting..."
-          : "Start Round"}
-      </ActionButton>
+      {showStartRound && (
+        <ActionButton
+          onClick={handleStartRound}
+          enabled={!isLoading}
+          text={
+            isLoading && actionState.name === "startRound"
+              ? "Starting..."
+              : "Start Round"
+          }
+        />
+      )}
     </DashboardContainer>
   );
 };
 
-export const WaitingDashboardView: React.FC<DashboardProps> = ({
-  dispatch,
-}) => {
+export const DealingDashboardView: React.FC = () => {
+  const { actionState } = useGameActions();
+
+  const getStatusText = () => {
+    switch (actionState.status) {
+      case "loading":
+        return "Dealing cards...";
+      case "success":
+        return "Cards dealt! Returning to lobby...";
+      case "error":
+        return "Error dealing cards";
+      default:
+        return "Preparing to deal cards...";
+    }
+  };
+
   return (
-    <DashboardContainer>
+    <Container>
+      <LoadingSpinner />
+      <InfoText>{getStatusText()}</InfoText>
+      {actionState.status === "error" && actionState.error && (
+        <InfoText style={{ color: "#ff6b6b", fontSize: "1rem" }}>
+          {actionState.error.message}
+        </InfoText>
+      )}
+    </Container>
+  );
+};
+
+export const WaitingDashboardView: React.FC = () => {
+  return (
+    <Container>
       <InfoText>Waiting for the other team...</InfoText>
-    </DashboardContainer>
+    </Container>
   );
 };
 
-export const SpectatorDashboardView: React.FC<DashboardProps> = ({
-  dispatch,
-}) => {
+export const SpectatorDashboardView: React.FC = () => {
   return (
-    <DashboardContainer>
+    <Container>
       <InfoText>Watching the game...</InfoText>
-    </DashboardContainer>
+    </Container>
+  );
+};
+
+export const GameoverDashboardView: React.FC = () => {
+  return (
+    <Container>
+      <InfoText>🎉 Game Over!</InfoText>
+    </Container>
   );
 };
