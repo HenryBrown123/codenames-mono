@@ -2,7 +2,11 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import ActionButton from "../action-button/action-button";
 import { CodeWordInput } from "./codemaster-input";
-import { useGameData, useGameActions } from "@frontend/features/gameplay/state";
+import {
+  useGameData,
+  useGameActions,
+  usePlayerRoleScene,
+} from "@frontend/features/gameplay/state";
 import { useTurn } from "@frontend/features/gameplay/state/active-turn-provider";
 import { Turn } from "@frontend/shared-types";
 
@@ -272,10 +276,11 @@ export const CodemasterDashboardView: React.FC = () => {
 
 export const OutcomeDashboardView: React.FC = () => {
   const { activeTurn } = useTurn();
+  const { handleSceneTransition } = usePlayerRoleScene();
 
   const handleAcknowledge = () => {
-    // This would be handled by the scene provider
     console.log("Outcome acknowledged");
+    handleSceneTransition("OUTCOME_ACKNOWLEDGED"); // Actually trigger the transition!
   };
 
   if (!activeTurn?.lastGuess) {
