@@ -55,6 +55,7 @@ export interface ApiCard {
 }
 
 export interface ApiTurn {
+  id: string;
   teamName: string;
   status: string;
   guessesRemaining: number;
@@ -120,6 +121,7 @@ export interface Card {
 }
 
 export interface Turn {
+  id: string;
   teamName: string;
   status: string;
   guessesRemaining: number;
@@ -222,6 +224,7 @@ function transformApiCard(apiCard: ApiCard): Card {
 
 function transformApiTurn(apiTurn: ApiTurn): Turn {
   return {
+    id: apiTurn.id,
     teamName: apiTurn.teamName,
     status: apiTurn.status,
     guessesRemaining: apiTurn.guessesRemaining,
