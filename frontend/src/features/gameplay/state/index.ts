@@ -23,6 +23,3 @@ export type {
   ActionName,
   GameActionsContextValue,
 } from "./game-actions-provider";
-
-// UI State helpers (keep existing exports)
-export { createInitialUIState, uiReducer } from "./ui-state-helpers";

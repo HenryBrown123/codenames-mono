@@ -1,4 +1,3 @@
-// features/gameplay/state/player-role-scene-provider.tsx
 import React, {
   useState,
   useCallback,
@@ -56,7 +55,7 @@ export const PlayerRoleSceneProvider: React.FC<
 
   const completeRoleTransition = useCallback(() => {
     const serverRole = gameData.playerContext?.role || PLAYER_ROLE.SPECTATOR;
-    const stateMachine = getStateMachine(serverRole, initiateRoleTransition);
+    const stateMachine = getStateMachine(serverRole);
 
     console.log(
       `[PLAYER_ROLE_SCENE] Completing role transition to ${serverRole} → ${stateMachine.initial}`,
@@ -68,7 +67,7 @@ export const PlayerRoleSceneProvider: React.FC<
 
   const handleSceneTransition = useCallback(
     (event: string) => {
-      const stateMachine = getStateMachine(currentRole, initiateRoleTransition);
+      const stateMachine = getStateMachine(currentRole);
       const currentSceneConfig = stateMachine.scenes[currentScene];
 
       if (!currentSceneConfig?.on?.[event]) {

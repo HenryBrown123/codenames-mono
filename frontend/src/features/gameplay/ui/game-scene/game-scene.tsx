@@ -8,7 +8,7 @@ import {
   getDashboardComponent,
   getBoardComponent,
 } from "@frontend/features/gameplay/state/component-mappings";
-import { SpectatorBoard } from "@frontend/features/gameplay/ui/game-board/game-board";
+import { SpectatorBoard } from "../game-board/game-board";
 import { GameInstructions } from "@frontend/features/gameplay/ui/game-instructions";
 
 const GameSceneContainer = styled.div`
