@@ -141,6 +141,12 @@ const uiReducer = (
   activeTurn: TurnData | null,
   currentRole: PlayerRole,
 ): UIState => {
+  console.log("Calling uiReducer with, state:", state, "action:", action);
+  console.log("gameData:", gameData);
+  console.log("activeTurn:", activeTurn);
+  console.log("currentRole:", currentRole);
+  console.log("state.pendingTransition:", state.pendingTransition);
+
   switch (action.type) {
     case "TRIGGER_TRANSITION": {
       const event = action.payload.event;

@@ -98,6 +98,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
               error: null,
             });
 
+            console.log("[MUTATION] About to fire GUESS_MADE transition");
             handleSceneTransition("GUESS_MADE");
           },
           onError: (error) => {
