@@ -1,33 +1,17 @@
 import React from "react";
-import { useParams } from "react-router-dom";
 import { GameplayProvider } from "@frontend/features/gameplay/state";
-import { GameplayPageContent } from "./gameplay-page-content";
+import { GameScene } from "@frontend/features/gameplay/ui/game-scene";
 
-/**
- * Main gameplay page component
- * Handles route params and provides the game context
- */
-export const GameplayPage: React.FC = () => {
-  const { gameId } = useParams<{ gameId: string }>();
+interface GameplayPageContentProps {
+  gameId: string;
+}
 
-  if (!gameId) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <h2>Invalid game ID</h2>
-      </div>
-    );
-  }
-
+export const GameplayPageContent: React.FC<GameplayPageContentProps> = ({
+  gameId,
+}) => {
   return (
     <GameplayProvider gameId={gameId}>
-      <GameplayPageContent />
+      <GameScene />
     </GameplayProvider>
   );
 };

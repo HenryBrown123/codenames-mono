@@ -1,17 +1,15 @@
 import React from "react";
 import styled from "styled-components";
-
-import { useGameData, useUIScene } from "@frontend/features/gameplay/state";
+import { useGameData } from "@frontend/features/gameplay/state";
+import { usePlayerRoleScene } from "@frontend/features/gameplay/state";
 import { useTurn } from "@frontend/features/gameplay/state/active-turn-provider";
-import { uiConfig } from "@frontend/features/gameplay/state/ui-state-config";
+import { getSceneMessage } from "@frontend/features/gameplay/state/scene-message-mappings";
 import {
-  messages,
-  gameBoards,
-  dashboards,
-  boardModeInteractivity,
-} from "@frontend/features/gameplay/state/ui-state-mappings";
+  getDashboardComponent,
+  getBoardComponent,
+} from "@frontend/features/gameplay/state/component-mappings";
+import { SpectatorBoard } from "@frontend/features/gameplay/ui/game-board/game-board";
 import { GameInstructions } from "@frontend/features/gameplay/ui/game-instructions";
-import { PLAYER_ROLE } from "@codenames/shared/types";
 
 const GameSceneContainer = styled.div`
   display: flex;
@@ -63,67 +61,48 @@ const DashboardContainer = styled.div`
 
 export const GameScene: React.FC = () => {
   const { gameData } = useGameData();
-  const { currentStage, currentScene } = useUIScene();
   const { activeTurn } = useTurn();
+  const { currentRole, currentScene, dispatch } = usePlayerRoleScene();
 
-  console.log("Rendering scene with: ", {
-    currentStage,
+  // Handle game over state
+  if (gameData.currentRound?.status === "COMPLETED") {
+    return (
+      <GameSceneContainer>
+        <InstructionsContainer>
+          <GameInstructions messageText="🎉 Game Over!" />
+        </InstructionsContainer>
+        <GameBoardContainer>
+          <SpectatorBoard />
+        </GameBoardContainer>
+        <DashboardContainer>
+          <div>Game Completed!</div>
+        </DashboardContainer>
+      </GameSceneContainer>
+    );
+  }
+
+  // Clean API - pass role and scene individually to all mapping functions
+  const messageText = getSceneMessage(
+    currentRole,
     currentScene,
     gameData,
     activeTurn,
-  });
-
-  const sceneConfig =
-    gameData.currentRound?.status === "COMPLETED"
-      ? uiConfig[PLAYER_ROLE.NONE]?.scenes["gameover"]
-      : uiConfig[currentStage]?.scenes[currentScene];
-
-  if (!sceneConfig || !gameData.playerContext) {
-    console.error("No scene config found", {
-      currentStage,
-      currentScene,
-      sceneConfig,
-      playerContext: gameData?.playerContext,
-    });
-    return <div>Loading game scene...</div>;
-  }
-
-  // Orchestrate message derivation here
-  const messageText = sceneConfig.message
-    ? messages[sceneConfig.message](gameData, activeTurn)
-    : null;
-
-  const BoardComponent = sceneConfig.gameBoard
-    ? gameBoards[sceneConfig.gameBoard]
-    : null;
-
-  const DashboardComponent = sceneConfig.dashboard
-    ? dashboards[sceneConfig.dashboard]
-    : null;
-
-  const boardMode = sceneConfig.boardMode;
-  const interactive = boardModeInteractivity[boardMode];
+  );
+  const DashboardComponent = getDashboardComponent(currentRole, currentScene);
+  const BoardComponent = getBoardComponent(currentRole, currentScene);
 
   return (
     <GameSceneContainer>
-      {messageText && (
-        <InstructionsContainer>
-          <GameInstructions messageText={messageText} />
-        </InstructionsContainer>
-      )}
+      <InstructionsContainer>
+        <GameInstructions messageText={messageText} />
+      </InstructionsContainer>
+
       <GameBoardContainer>
-        {BoardComponent && (
-          <BoardComponent boardMode={boardMode} interactive={interactive} />
-        )}
+        <BoardComponent />
       </GameBoardContainer>
+
       <DashboardContainer>
-        {DashboardComponent ? (
-          <DashboardComponent />
-        ) : (
-          <div style={{ color: "red", padding: "1rem" }}>
-            Dashboard not found: {sceneConfig.dashboard}
-          </div>
-        )}
+        <DashboardComponent dispatch={dispatch} />
       </DashboardContainer>
     </GameSceneContainer>
   );

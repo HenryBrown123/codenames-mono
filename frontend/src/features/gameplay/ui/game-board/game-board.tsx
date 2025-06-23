@@ -1,20 +1,8 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, memo, useMemo } from "react";
 import styled from "styled-components";
+import { useGameData } from "@frontend/features/gameplay/state";
+import { useGameActions } from "@frontend/features/gameplay/state";
 import { GameCard } from "./game-card";
-import { useGameData, useGameActions } from "@frontend/features/gameplay/state";
-import { GameData, Card } from "@frontend/shared-types";
-
-/**
- * Board display modes that control card visibility and interactivity
- */
-export const BOARD_MODE = {
-  CODEMASTER_ACTIVE: "codemaster-active",
-  CODEMASTER_READONLY: "codemaster-readonly",
-  CODEBREAKER: "codebreaker",
-  SPECTATOR: "spectator",
-} as const;
-
-export type BoardMode = (typeof BOARD_MODE)[keyof typeof BOARD_MODE];
 
 const CardsContainer = styled.div`
   display: grid;
@@ -27,38 +15,23 @@ const CardsContainer = styled.div`
   justify-items: stretch;
 `;
 
-interface GameBoardViewProps {
-  boardMode: BoardMode;
-  interactive?: boolean;
-}
+// ============================================================================
+// CODEBREAKER BOARD
+// ============================================================================
 
-/**
- * GameBoardView component that accepts props from the UI state mappings
- */
-export const GameBoardView: React.FC<GameBoardViewProps> = ({
-  boardMode,
-  interactive,
-}) => {
-  // Use gameData from props if provided, otherwise fall back to hook
+export const CodebreakerBoard: React.FC = memo(() => {
   const { gameData } = useGameData();
-
   const { makeGuess, actionState } = useGameActions();
-
-  // Track multiple animating cards using Set<string> (from working version)
   const [animatingCards, setAnimatingCards] = useState<Set<string>>(new Set());
 
   const cards = gameData.currentRound?.cards || [];
+  const isLoading = actionState.status === "loading";
 
   const handleCardClick = useCallback(
     (cardWord: string) => {
-      console.log(`Card clicked: ${cardWord}`);
-
-      // Start animation immediately on click (from working version)
       setAnimatingCards((prev) => new Set(prev).add(cardWord));
-
       makeGuess(cardWord);
 
-      // Remove from animating set after action completes
       setTimeout(() => {
         setAnimatingCards((prev) => {
           const next = new Set(prev);
@@ -70,33 +43,87 @@ export const GameBoardView: React.FC<GameBoardViewProps> = ({
     [makeGuess],
   );
 
-  const showTeamColors = useMemo(() => {
-    return boardMode === BOARD_MODE.CODEMASTER_ACTIVE;
-  }, [boardMode]);
-
-  const isLoading = actionState.status === "loading";
-
-  const clickable = useMemo(() => {
-    // Use the interactive prop if provided, otherwise use board mode logic
-    if (interactive !== undefined) {
-      return interactive && !isLoading;
-    }
-    return boardMode === BOARD_MODE.CODEBREAKER && !isLoading;
-  }, [boardMode, isLoading, interactive]);
-
   return (
-    <CardsContainer aria-label="game board container with cards">
-      {cards.map((card: Card, index: number) => (
+    <CardsContainer aria-label="codebreaker game board">
+      {cards.map((card, index) => (
         <GameCard
           key={card.word}
           card={card}
           cardIndex={index}
-          showTeamColors={showTeamColors}
-          clickable={clickable && !card.selected}
+          showTeamColors={false}
+          clickable={!isLoading && !card.selected}
           isAnimating={animatingCards.has(card.word)}
           onCardClick={handleCardClick}
         />
       ))}
     </CardsContainer>
   );
-};
+});
+
+CodebreakerBoard.displayName = "CodebreakerBoard";
+
+// ============================================================================
+// CODEMASTER BOARD
+// ============================================================================
+
+export const CodemasterBoard: React.FC = memo(() => {
+  const { gameData } = useGameData();
+  const cards = gameData.currentRound?.cards || [];
+
+  return (
+    <CardsContainer aria-label="codemaster game board">
+      {cards.map((card, index) => (
+        <GameCard
+          key={card.word}
+          card={card}
+          cardIndex={index}
+          showTeamColors={true}
+          clickable={false}
+          isAnimating={false}
+          onCardClick={() => {}}
+        />
+      ))}
+    </CardsContainer>
+  );
+});
+
+CodemasterBoard.displayName = "CodemasterBoard";
+
+// ============================================================================
+// SPECTATOR BOARD
+// ============================================================================
+
+export const SpectatorBoard: React.FC = memo(() => {
+  const { gameData } = useGameData();
+  const cards = gameData.currentRound?.cards || [];
+
+  const displayCards = useMemo(() => {
+    if (cards.length === 0) {
+      return Array.from({ length: 25 }, (_, i) => ({
+        word: "???",
+        teamName: "NEUTRAL",
+        selected: false,
+        _id: i,
+      }));
+    }
+    return cards;
+  }, [cards]);
+
+  return (
+    <CardsContainer aria-label="spectator game board">
+      {displayCards.map((card, index) => (
+        <GameCard
+          key={card.word === "???" ? `placeholder-${index}` : card.word}
+          card={card}
+          cardIndex={index}
+          showTeamColors={false}
+          clickable={false}
+          isAnimating={false}
+          onCardClick={() => {}}
+        />
+      ))}
+    </CardsContainer>
+  );
+});
+
+SpectatorBoard.displayName = "SpectatorBoard";
