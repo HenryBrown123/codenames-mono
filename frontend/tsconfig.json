@@ -11,8 +11,10 @@
     "paths": {
       "@frontend/*": ["src/*"],
       "@frontend/lib/*": ["src/lib/*"],
-      "@frontend/game/*": ["src/features/gameplay/*"],
-      "@frontend/game-access/*": ["src/features/game-access/*"],
+      "@frontend/game/*": ["src/gameplay/*"],
+      "@frontend/game-access/*": ["src/game-access/*"],
+      "@frontend/gameplay/*": ["src/gameplay/*"],
+      "@frontend/lobby/*": ["src/lobby/*"],
       "@frontend/pages/*": ["src/pages/*"],
       "@frontend/style/*": ["src/style/*"]
     },

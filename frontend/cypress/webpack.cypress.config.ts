@@ -10,7 +10,7 @@ const webpackConfig: Configuration = {
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "../src"),
-      "@game": path.resolve(__dirname, "../src/features/gameplay/*"),
+      "@game": path.resolve(__dirname, "../src/gameplay/*"),
       "@pages": path.resolve(__dirname, "../src/pages/*"),
       "@style": path.resolve(__dirname, "../src/style/*"),
       "@test": path.resolve(__dirname, "../test/*"),

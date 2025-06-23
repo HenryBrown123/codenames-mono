@@ -125,14 +125,9 @@ const Overlay = styled.div<OverlayProps>`
 
 // Create a safe hook that doesn't throw when outside the provider
 const useSafeGameContext = () => {
-  try {
-    // Dynamically import to avoid circular dependencies
-    const { useGameContext } = require("@frontend/game/state");
-    return useGameContext();
-  } catch (error) {
-    // Return null if not within a GameContextProvider
-    return null;
-  }
+  // For now, return null as the game context hook doesn't exist
+  // This is a dev tool that's not actively being used
+  return null;
 };
 
 export const Menu: React.FC = () => {
@@ -140,8 +135,8 @@ export const Menu: React.FC = () => {
   const menuRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
-  // Safely access game context - will be null if not in a game
-  const gameContext = useSafeGameContext();
+  // Game context is not currently implemented
+  const gameContext = null;
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);

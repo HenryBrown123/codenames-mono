@@ -1,0 +1,1 @@
+export { GameDataProvider } from './game-data.provider';
