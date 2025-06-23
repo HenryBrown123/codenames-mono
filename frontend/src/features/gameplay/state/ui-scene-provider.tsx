@@ -224,15 +224,12 @@ const uiReducer = (
  * Creates initial UI state with handoff detection
  */
 const createInitialUIState = (gameData: GameData): UIState => {
-  // Always start with NONE for single device games to force handoff detection
   const initialRole =
     gameData.gameType === GAME_TYPE.SINGLE_DEVICE
       ? PLAYER_ROLE.NONE
       : determineCorrectRole(gameData);
 
   const stateMachine = getStateMachine(initialRole);
-
-  // Check if handoff is needed on initialization
   const serverRole = determineCorrectRole(gameData);
   const needsHandoff = requiresDeviceHandoff(initialRole, serverRole, gameData);
 
@@ -261,16 +258,14 @@ export const PlayerRoleSceneProvider: React.FC<
   PlayerRoleSceneProviderProps
 > = ({ children }) => {
   const { gameData } = useGameData();
-  const { activeTurn } = useTurn();
+  const { activeTurn, clearActiveTurn } = useTurn();
 
-  // Create a reducer that captures the dependencies
   const reducerWithDependencies = useCallback(
     (state: UIState, action: UIAction) =>
       uiReducer(state, action, gameData, activeTurn),
     [gameData, activeTurn],
   );
 
-  // Pure reducer managing all UI state
   const [uiState, dispatch] = useReducer(
     reducerWithDependencies,
     gameData,
@@ -282,6 +277,7 @@ export const PlayerRoleSceneProvider: React.FC<
   }, []);
 
   const completeHandoff = useCallback(() => {
+    clearActiveTurn();
     dispatch({ type: "COMPLETE_ROLE_TRANSITION" });
   }, []);
 
