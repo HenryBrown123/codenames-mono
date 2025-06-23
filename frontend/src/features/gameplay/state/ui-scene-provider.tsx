@@ -228,7 +228,10 @@ const uiReducer = (
  * Creates initial UI state
  */
 const createInitialUIState = (gameData: GameData): UIState => {
-  const role = determineCorrectRole(gameData);
+  const role =
+    gameData.gameType === "SINGLE_DEVICE"
+      ? PLAYER_ROLE.NONE
+      : determineCorrectRole(gameData);
   const stateMachine = getStateMachine(role);
 
   return {
