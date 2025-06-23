@@ -163,7 +163,6 @@ export function CodeWordInput({
     <Container>
       <InputContainer>
         <InlineGroup>
-          <InlineText>My clue is</InlineText>
           <UnderlinedTextInput
             ref={textInputRef}
             type="text"

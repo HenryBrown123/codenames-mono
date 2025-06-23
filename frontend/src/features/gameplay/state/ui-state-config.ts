@@ -8,6 +8,7 @@ import {
   BoardMode,
   BOARD_MODE,
 } from "@frontend/features/gameplay/ui/game-board/game-board";
+import { Round } from "@frontend/shared-types";
 
 /**
  * UI configuration with card dealing flow that returns to lobby
@@ -220,13 +221,12 @@ export const uiConfig: UIConfig = {
 export function determineUIStage(
   gameStatus: GameState,
   playerRole: PlayerRole,
-  currentRound: any,
+  currentRound: Round | null,
 ): PlayerRole {
   if (gameStatus !== GAME_STATE.IN_PROGRESS) {
     return PLAYER_ROLE.NONE;
   }
 
-  // If round is not in progress, stay in lobby regardless of player role
   if (!currentRound || currentRound.status !== "IN_PROGRESS") {
     return PLAYER_ROLE.NONE;
   }

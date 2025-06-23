@@ -41,5 +41,7 @@ export const useGameDataQuery = (
       return fetchGame(gameId);
     },
     enabled: !!gameId,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 };
