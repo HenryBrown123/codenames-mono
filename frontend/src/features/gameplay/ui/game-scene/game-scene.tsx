@@ -11,6 +11,7 @@ import {
 import { SpectatorBoard } from "../game-board/game-board";
 import { GameInstructions } from "@frontend/features/gameplay/ui/game-instructions";
 import { DeviceHandoffOverlay } from "../../device-handoff";
+
 const GameSceneContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -78,17 +79,8 @@ export const GameScene: React.FC = () => {
     currentScene,
     showHandoff,
     pendingTransition,
-    dispatch,
+    completeHandoff,
   } = usePlayerRoleScene();
-
-  console.log("GameScene render:", {
-    currentRole,
-    currentScene,
-    showHandoff,
-    pendingTransition,
-    gameStatus: gameData?.status,
-    playerRole: gameData?.playerContext?.role,
-  });
 
   // Handle game over state
   if (gameData.currentRound?.status === "COMPLETED") {
@@ -109,10 +101,6 @@ export const GameScene: React.FC = () => {
 
   // Show blurred background when handoff is active
   if (showHandoff && pendingTransition) {
-    console.log(
-      "[GAME_SCENE] Showing handoff overlay with pending transition:",
-      pendingTransition,
-    );
     return (
       <GameSceneContainer>
         <BlurredBackground>
@@ -121,13 +109,12 @@ export const GameScene: React.FC = () => {
             currentScene={currentScene}
             gameData={gameData}
             activeTurn={activeTurn}
-            dispatch={dispatch}
           />
         </BlurredBackground>
         <DeviceHandoffOverlay
           gameData={gameData}
           pendingTransition={pendingTransition}
-          onContinue={() => dispatch({ type: "COMPLETE_ROLE_TRANSITION" })}
+          onContinue={completeHandoff}
         />
       </GameSceneContainer>
     );
@@ -141,7 +128,6 @@ export const GameScene: React.FC = () => {
         currentScene={currentScene}
         gameData={gameData}
         activeTurn={activeTurn}
-        dispatch={dispatch}
       />
     </GameSceneContainer>
   );
@@ -155,7 +141,6 @@ interface GameSceneContentProps {
   currentScene: string;
   gameData: any;
   activeTurn: any;
-  dispatch: any;
 }
 
 const GameSceneContent: React.FC<GameSceneContentProps> = ({
@@ -163,7 +148,6 @@ const GameSceneContent: React.FC<GameSceneContentProps> = ({
   currentScene,
   gameData,
   activeTurn,
-  dispatch,
 }) => {
   const messageText = getSceneMessage(
     currentRole,
@@ -185,7 +169,7 @@ const GameSceneContent: React.FC<GameSceneContentProps> = ({
       </GameBoardContainer>
 
       <DashboardContainer>
-        <DashboardComponent dispatch={dispatch} />
+        <DashboardComponent />
       </DashboardContainer>
     </>
   );

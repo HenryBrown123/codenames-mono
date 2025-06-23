@@ -25,9 +25,9 @@ export const getDashboardComponent = (
   const normalizedRole = role.toLowerCase();
   const sceneKey = `${normalizedRole}.${scene}`;
 
-  console.log(
-    `[COMPONENT_MAPPINGS] Looking up dashboard for: ${sceneKey} (original: ${role}.${scene})`,
-  );
+  //console.log(
+  //  `[COMPONENT_MAPPINGS] Looking up dashboard for: ${sceneKey} (original: ${role}.${scene})`,
+  //);
 
   switch (sceneKey) {
     case "codebreaker.main":
@@ -66,9 +66,9 @@ export const getBoardComponent = (
   const normalizedRole = role.toLowerCase();
   const sceneKey = `${normalizedRole}.${scene}`;
 
-  console.log(
-    `[COMPONENT_MAPPINGS] Looking up board for: ${sceneKey} (original: ${role}.${scene})`,
-  );
+  //   console.log(
+  //     `[COMPONENT_MAPPINGS] Looking up board for: ${sceneKey} (original: ${role}.${scene})`,
+  //   );
 
   switch (sceneKey) {
     case "codebreaker.main":

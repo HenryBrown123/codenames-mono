@@ -30,9 +30,9 @@ export const getSceneMessage = (
   const normalizedRole = role.toLowerCase();
   const messageKey = `${normalizedRole}.${scene}`;
 
-  console.log(
-    `[SCENE_MESSAGES] Getting message for: ${messageKey} (original: ${role}.${scene})`,
-  );
+  //   console.log(
+  //     `[SCENE_MESSAGES] Getting message for: ${messageKey} (original: ${role}.${scene})`,
+  //   );
 
   switch (messageKey) {
     case "codebreaker.main":
