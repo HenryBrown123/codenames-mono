@@ -1,5 +1,12 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from "react";
 import { TurnData, useTurnDataQuery } from "../api/queries/use-turn-query";
+import { useGameData } from "./game-data-provider";
 
 /**
  * Turn context type definition
@@ -26,20 +33,24 @@ interface TurnProviderProps {
 
 /**
  * Turn provider component
- * Manages shared turn state across all gameplay components
- * Follows the "mutations belong to turns" philosophy from the architecture
+ * Automatically populates with current active turn from game data
  */
 export const TurnProvider = ({ children }: TurnProviderProps) => {
-  // Track the public ID of the last action turn for outcome feedback
+  const { gameData } = useGameData();
+
+  // Track the turn ID to query - either manually set or auto from game data
   const [lastActionTurnId, setLastActionTurnId] = useState<string | null>(null);
 
+  // Auto-populate with current active turn ID if none is set
+  const activeTurnId =
+    lastActionTurnId ||
+    gameData.currentRound?.turns?.find((t) => t.status === "ACTIVE")?.id ||
+    null;
+
   // Use the query hook to fetch turn data
-  const turnQuery = useTurnDataQuery(lastActionTurnId);
+  const turnQuery = useTurnDataQuery(activeTurnId);
 
   const contextValue: TurnContextType = {
-    /**
-     * Current active turn data (null if no turn tracked)
-     */
     activeTurn: turnQuery.data || null,
     isLoading: turnQuery.isLoading,
     error: turnQuery.error,
@@ -47,11 +58,10 @@ export const TurnProvider = ({ children }: TurnProviderProps) => {
     clearActiveTurn: () => setLastActionTurnId(null),
   };
 
-  console.log("Turn query debug:", {
+  console.log("Turn provider debug:", {
     lastActionTurnId,
+    activeTurnId,
     queryData: turnQuery.data,
-    queryStatus: turnQuery.status,
-    activeTurn: turnQuery.data || null,
   });
 
   return (
@@ -62,7 +72,6 @@ export const TurnProvider = ({ children }: TurnProviderProps) => {
 /**
  * Hook to access turn context
  * Must be used within a TurnProvider
- * @returns Turn context value
  */
 export const useTurn = (): TurnContextType => {
   const context = useContext(TurnContext);
