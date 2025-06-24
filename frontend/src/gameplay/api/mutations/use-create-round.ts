@@ -6,9 +6,18 @@ import {
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
 
+interface CreateRoundApiResponse {
+  success: boolean;
+  data: {
+    round: {
+      roundNumber: number;
+      status: string;
+    };
+  };
+}
+
 /**
- * Mutation for creating a new round
- * POST /games/{gameId}/rounds
+ * Creates a new round for the game.
  */
 export const useCreateRoundMutation = (
   gameId: string,
@@ -17,10 +26,10 @@ export const useCreateRoundMutation = (
 
   return useMutation({
     mutationFn: async () => {
-      const response: AxiosResponse = await api.post(`/games/${gameId}/rounds`);
+      const response: AxiosResponse<CreateRoundApiResponse> = await api.post(`/games/${gameId}/rounds`);
 
       if (!response.data.success) {
-        throw new Error(response.data.error || "Failed to create round");
+        throw new Error("Failed to create round");
       }
     },
     onSuccess: async () => {

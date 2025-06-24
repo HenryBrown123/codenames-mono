@@ -77,7 +77,6 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   const makeGuess = useCallback(
     (word: string) => {
       if (!gameData.currentRound) {
-        console.error("Cannot make guess - no active round");
         return;
       }
 
@@ -85,12 +84,10 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       setActionState({ name: "makeGuess", status: "loading", error: null });
 
       makeGuessMutation.mutate(
-        { roundNumber, cardWord: word },
+        { cardWord: word, roundNumber },
         {
           onSuccess: (res) => {
-            if (res.success) {
-              setLastActionTurnId(res.data.turn.id);
-            }
+            setLastActionTurnId(res.turn.id);
 
             setActionState({
               name: "makeGuess",
@@ -98,7 +95,6 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
               error: null,
             });
 
-            console.log("[MUTATION] About to fire GUESS_MADE transition");
             handleSceneTransition("GUESS_MADE");
           },
           onError: (error) => {
@@ -118,7 +114,6 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   const giveClue = useCallback(
     (word: string, count: number) => {
       if (!gameData.currentRound) {
-        console.error("Cannot give clue - no active round");
         return;
       }
 
@@ -126,14 +121,10 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       setActionState({ name: "giveClue", status: "loading", error: null });
 
       giveClueMutation.mutate(
-        { roundNumber, word, targetCardCount: count },
+        { word, targetCardCount: count, roundNumber },
         {
           onSuccess: (res) => {
-            if (!res.success) {
-              throw new Error("Unhandled give clue mutation failure");
-            }
-
-            setLastActionTurnId(res.data.turn.id);
+            setLastActionTurnId(res.turn.id);
             setActionState({
               name: "giveClue",
               status: "success",
@@ -172,7 +163,6 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
 
   const startRound = useCallback(() => {
     if (!gameData.currentRound) {
-      console.error("Cannot start round - no round exists");
       return;
     }
 
@@ -199,7 +189,6 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
 
   const dealCards = useCallback(() => {
     if (!gameData.currentRound) {
-      console.error("Cannot deal cards - no round exists");
       return;
     }
 
@@ -222,7 +211,6 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
 
   const endTurn = useCallback(() => {
     if (!gameData.currentRound) {
-      console.error("Cannot end turn - no round exists");
       return;
     }
 

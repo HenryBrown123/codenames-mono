@@ -6,27 +6,38 @@ import {
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
 
-interface DealCardsVariables {
+interface DealCardsApiResponse {
+  success: boolean;
+  data: {
+    cards: Array<{
+      word: string;
+      teamName: string | null;
+      cardType: string;
+      selected: boolean;
+    }>;
+  };
+}
+
+interface DealCardsInput {
   roundNumber: number;
 }
 
 /**
- * Mutation for dealing cards to a round
- * POST /games/{gameId}/rounds/{id}/deal
+ * Deals cards for a round.
  */
 export const useDealCardsMutation = (
   gameId: string,
-): UseMutationResult<void, Error, DealCardsVariables> => {
+): UseMutationResult<void, Error, DealCardsInput> => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ roundNumber }) => {
-      const response: AxiosResponse = await api.post(
+      const response: AxiosResponse<DealCardsApiResponse> = await api.post(
         `/games/${gameId}/rounds/${roundNumber}/deal`,
       );
 
       if (!response.data.success) {
-        throw new Error(response.data.error || "Failed to deal cards");
+        throw new Error("Failed to deal cards");
       }
     },
     onSuccess: async () => {

@@ -1,9 +1,6 @@
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
 
-// ==========================================
-// TYPES
-// ==========================================
 
 export interface PlayerAddData {
   playerName: string;
@@ -35,9 +32,6 @@ export interface LobbyData {
   canModifyGame: boolean;
 }
 
-// ==========================================
-// API RESPONSE INTERFACES
-// ==========================================
 
 interface AddPlayersResponse {
   success: boolean;
@@ -55,12 +49,19 @@ interface RemovePlayerResponse {
   removedPlayerId: string;
 }
 
-interface StartGameResponse {
+interface StartGameApiResponse {
   success: boolean;
-  gameId?: string;
-  publicId?: string;
-  status?: string;
-  error?: string;
+  data: {
+    game: {
+      publicId: string;
+      status: string;
+    };
+  };
+}
+
+export interface GameStartedResult {
+  publicId: string;
+  status: string;
 }
 
 interface GetLobbyStateResponse {
@@ -68,34 +69,19 @@ interface GetLobbyStateResponse {
   data: { game: LobbyData };
 }
 
-// ==========================================
-// API FUNCTIONS
-// ==========================================
 
-/**
- * Get current lobby state
- * Note: There's no specific /lobby endpoint, so we'll need to create one
- * or get this data from the game endpoint
- */
 export const getLobbyState = async (gameId: string): Promise<LobbyData> => {
-  // For now, we'll try to get game state and transform it to lobby format
-  // You may need to create a /lobby endpoint on your backend
   const response: AxiosResponse<GetLobbyStateResponse> = await api.get(
     `/games/${gameId}`,
   );
 
   if (!response.data.success) {
-    console.error("Failed to get lobby state", response.data);
     throw new Error("Failed to get lobby state");
   }
 
-  console.log("Lobby state retrieved!");
   return response.data.data.game;
 };
 
-/**
- * Add players to the lobby
- */
 export const addPlayers = async (
   gameId: string,
   playersToAdd: PlayerAddData[],
@@ -106,17 +92,12 @@ export const addPlayers = async (
   );
 
   if (!response.data.success) {
-    console.error("Failed to add players", response.data);
     throw new Error("Failed to add players");
   }
 
-  console.log("Players added successfully!");
   return response.data;
 };
 
-/**
- * Modify a single player
- */
 export const modifyPlayer = async (
   gameId: string,
   playerId: string,
@@ -128,17 +109,12 @@ export const modifyPlayer = async (
   );
 
   if (!response.data.success) {
-    console.error("Failed to modify player", response.data);
     throw new Error("Failed to modify player");
   }
 
-  console.log("Player modified successfully!");
   return response.data;
 };
 
-/**
- * Modify multiple players (batch update)
- */
 export const modifyPlayers = async (
   gameId: string,
   updates: Array<{ playerId: string } & PlayerUpdateData>,
@@ -149,17 +125,12 @@ export const modifyPlayers = async (
   );
 
   if (!response.data.success) {
-    console.error("Failed to modify players", response.data);
     throw new Error("Failed to modify players");
   }
 
-  console.log("Players modified successfully!");
   return response.data;
 };
 
-/**
- * Remove a player from the lobby
- */
 export const removePlayer = async (
   gameId: string,
   playerId: string,
@@ -169,38 +140,28 @@ export const removePlayer = async (
   );
 
   if (!response.data.success) {
-    console.error("Failed to remove player", response.data);
     throw new Error("Failed to remove player");
   }
 
-  console.log("Player removed successfully!");
   return response.data;
 };
 
 /**
- * Start the game
+ * Starts the game from lobby state.
  */
-export const startGame = async (gameId: string): Promise<StartGameResponse> => {
-  const response: AxiosResponse<StartGameResponse> = await api.post(
+export const startGame = async (gameId: string): Promise<GameStartedResult> => {
+  const response: AxiosResponse<StartGameApiResponse> = await api.post(
     `/games/${gameId}/start`,
   );
 
   if (!response.data.success) {
-    console.error("Failed to start game", response.data);
-    throw new Error(response.data.error || "Failed to start game");
+    throw new Error("Failed to start game");
   }
 
-  console.log("Game started successfully!");
-  return response.data;
+  return response.data.data.game;
 };
 
-// ==========================================
-// CONVENIENCE FUNCTIONS
-// ==========================================
 
-/**
- * Add a single player (convenience wrapper)
- */
 export const addPlayer = async (
   gameId: string,
   playerName: string,
@@ -209,9 +170,6 @@ export const addPlayer = async (
   return addPlayers(gameId, [{ playerName, teamName }]);
 };
 
-/**
- * Move a player to a different team
- */
 export const movePlayerToTeam = async (
   gameId: string,
   playerId: string,
@@ -220,9 +178,6 @@ export const movePlayerToTeam = async (
   return modifyPlayer(gameId, playerId, { playerId, teamName: newTeamName });
 };
 
-/**
- * Rename a player
- */
 export const renamePlayer = async (
   gameId: string,
   playerId: string,
