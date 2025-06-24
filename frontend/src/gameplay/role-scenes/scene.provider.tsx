@@ -8,8 +8,7 @@ import React, {
 import { useGameData } from "../game-data";
 import { useTurn } from "../turn-management";
 import { PLAYER_ROLE, GAME_TYPE, PlayerRole } from "@codenames/shared/types";
-import { GameData } from "@frontend/shared-types";
-import { TurnData } from "../api/queries/use-turn-query";
+import { GameData, TurnData } from "@frontend/shared-types";
 import { getStateMachine } from "./scene-config";
 import { evaluateConditions } from "./scene-conditions";
 

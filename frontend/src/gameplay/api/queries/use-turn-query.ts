@@ -1,78 +1,46 @@
-import { useState } from "react";
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
-
-/**
- * Turn data types for the turn state system
- */
-
-export interface TurnGuess {
-  cardWord: string;
-  playerName: string;
-  outcome: string;
-  createdAt: Date;
-}
-
-export interface TurnClue {
-  word: string;
-  number: number;
-  createdAt: Date;
-}
-
-export interface TurnData {
-  id: string;
-  teamName: string;
-  status: "ACTIVE" | "COMPLETED";
-  guessesRemaining: number;
-  createdAt: Date;
-  completedAt?: Date | null;
-  clue?: TurnClue;
-  hasGuesses: boolean;
-  lastGuess?: TurnGuess;
-  prevGuesses: TurnGuess[];
-}
-
-export interface GetTurnResponse {
-  success: true;
-  data: {
-    turn: TurnData;
-  };
-}
+import {
+  TurnData,
+  GetTurnResponse,
+  transformApiTurnResponse
+} from "@frontend/shared-types";
 
 /**
  * Fetches turn data from the backend API
  * GET /turns/{publicId}
  */
-const fetchTurn = async (publicId: string): Promise<TurnData> => {
+const fetchTurn = async (turnId: string): Promise<TurnData> => {
   const response: AxiosResponse<GetTurnResponse> = await api.get(
-    `/turns/${publicId}`,
+    `/turns/${turnId}`,
   );
 
   if (!response.data.success) {
     throw new Error("Failed to fetch turn data");
   }
 
-  return response.data.data.turn;
+  const apiTurn = response.data.data.turn;
+  return transformApiTurnResponse(apiTurn);
 };
 
 /**
  * Query hook for fetching turn data
- * @param publicId - The turn public ID to fetch, can be null
+ * @param turnId - The turn ID to fetch, can be null
  * @returns React Query result with TurnData
  */
 export const useTurnDataQuery = (
-  publicId: string | null,
+  turnId: string | null,
 ): UseQueryResult<TurnData, Error> => {
   return useQuery<TurnData>({
-    queryKey: ["turn", publicId],
+    queryKey: ["turn", turnId],
     queryFn: async () => {
-      if (!publicId) {
-        throw new Error("Turn public ID is required");
+      if (!turnId) {
+        throw new Error("Turn ID is required");
       }
-      return await fetchTurn(publicId);
+      return await fetchTurn(turnId);
     },
-    enabled: !!publicId,
+    enabled: !!turnId,
     staleTime: 0,
     refetchOnWindowFocus: true,
     retry: 2,

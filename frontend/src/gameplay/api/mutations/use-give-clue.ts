@@ -5,8 +5,7 @@ import {
 } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
-import { GiveClueRequest } from "@frontend/shared-types";
-import { TurnData } from "../queries/use-turn-query";
+import { GiveClueRequest, TurnData } from "@frontend/shared-types";
 
 interface GiveClueVariables extends GiveClueRequest {
   roundNumber: number;

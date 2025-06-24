@@ -1,6 +1,5 @@
 import { GAME_TYPE } from "@codenames/shared/types";
-import { GameData } from "@frontend/shared-types";
-import { TurnData } from "../api/queries/use-turn-query";
+import { GameData, TurnData } from "@frontend/shared-types";
 import { act } from "react";
 
 /**

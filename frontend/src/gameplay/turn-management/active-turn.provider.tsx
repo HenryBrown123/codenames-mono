@@ -1,11 +1,6 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  ReactNode,
-  useEffect,
-} from "react";
-import { TurnData, useTurnDataQuery } from "../api/queries/use-turn-query";
+import { createContext, useContext, useState, ReactNode } from "react";
+import { useTurnDataQuery } from "../api/queries/use-turn-query";
+import { TurnData } from "@frontend/shared-types";
 import { useGameData } from "../game-data";
 
 /**

@@ -5,8 +5,7 @@ import {
 } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
-import { TurnData } from "../queries/use-turn-query";
-import { MakeGuessRequest } from "@frontend/shared-types";
+import { TurnData, MakeGuessRequest } from "@frontend/shared-types";
 
 interface MakeGuessVariables extends MakeGuessRequest {
   roundNumber: number;

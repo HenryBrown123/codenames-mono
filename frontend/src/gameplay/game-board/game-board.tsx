@@ -103,6 +103,7 @@ export const SpectatorBoard: React.FC = memo(() => {
         word: "???",
         teamName: "NEUTRAL",
         selected: false,
+        cardType: "BYSTANDER",
         _id: i,
       }));
     }

@@ -58,11 +58,11 @@ export const CodebreakerDashboardView: React.FC = () => {
     endTurn();
   };
 
-  const hasClueWithWord = activeTurn?.clue?.word;
+  const hasClueWithWord =
+    activeTurn?.clue !== null && activeTurn?.clue !== undefined;
   const canEndTurn = hasClueWithWord && (activeTurn?.guessesRemaining || 0) > 0;
 
-  // hasClueWithWord not used directly
-  if (!activeTurn?.clue?.word) {
+  if (!activeTurn || activeTurn.clue === null) {
     return <Container />;
   }
 
@@ -88,20 +88,14 @@ export const CodebreakerDashboardView: React.FC = () => {
 };
 
 export const CodemasterDashboardView: React.FC = () => {
-  const { gameData } = useGameData();
   const { giveClue, actionState } = useGameActions();
-
-  const currentRound = gameData.currentRound;
-  const activeTurn = currentRound?.turns?.find(
-    (t: Turn) => t.status === "ACTIVE",
-  );
+  const { activeTurn } = useTurn();
 
   const handleSubmitClue = (word: string, count: number) => {
     giveClue(word, count);
   };
 
-  // If clue already given, show empty dashboard (message handles the text)
-  if (activeTurn?.clue) {
+  if (!activeTurn || activeTurn.clue !== null) {
     return <Container />;
   }
 
