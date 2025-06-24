@@ -12,7 +12,7 @@
     "build:all": "npx tsc --build",
     "clean:all": "rimraf **/dist",
     "test:all": "npm run test --workspaces",
-    "dev:all": "npm run dev --workspace client && npm run start --workspace express-server"
+    "dev:all": "npm run dev --workspace frontend & npm run dev --workspace backend"
   },
   "devDependencies": {
     "eslint": "^8.49.0",
