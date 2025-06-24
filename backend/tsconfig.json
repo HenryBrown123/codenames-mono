@@ -12,12 +12,7 @@
       "@backend/common/*": ["src/common/*"]
     }
   },
-  "include": [
-    "test/**/*",
-    "src/**/*",
-    "src/common/http-middleware/.ts",
-    "src/**/*.json"
-  ],
+  "include": ["test/**/*", "src/**/*", "src/**/*.json"],
   "exclude": ["node_modules", "dist", "src/zzz-legacy/**"],
   "references": [{ "path": "../shared" }]
 }

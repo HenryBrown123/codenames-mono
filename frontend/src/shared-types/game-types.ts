@@ -50,8 +50,8 @@ export interface ApiRound {
 export interface ApiCard {
   word: string;
   selected: boolean;
-  teamName?: string | null;
-  cardType?: string;
+  teamName: string | null;
+  cardType: string;
 }
 
 export interface ApiTurn {
@@ -114,10 +114,8 @@ export interface Round {
 export interface Card {
   word: string;
   selected: boolean;
-  teamName?: string | null;
-  cardType?: string;
-  // UI helpers
-  team?: string; // For backward compatibility with existing components
+  teamName: string | null;
+  cardType: string;
 }
 
 export interface Turn {
@@ -161,6 +159,99 @@ export interface GiveClueRequest {
 
 export interface MakeGuessRequest {
   cardWord: string;
+}
+
+// ==========================================
+// TURN DATA TYPES (for detailed turn queries)
+// ==========================================
+
+export interface TurnGuess {
+  cardWord: string;
+  playerName: string;
+  outcome: string;
+  createdAt: Date;
+}
+
+export interface TurnClue {
+  word: string;
+  number: number;
+  createdAt: Date;
+}
+
+export interface TurnData {
+  id: string;
+  teamName: string;
+  status: "ACTIVE" | "COMPLETED";
+  guessesRemaining: number;
+  createdAt: Date;
+  completedAt: Date | null;
+  clue: TurnClue | null;
+  hasGuesses: boolean;
+  lastGuess: TurnGuess | null;
+  prevGuesses: TurnGuess[];
+}
+
+export interface ApiTurnResponse {
+  id: string;
+  teamName: string;
+  status: "ACTIVE" | "COMPLETED";
+  guessesRemaining: number;
+  createdAt: string;
+  completedAt: string | null;
+  clue: {
+    word: string;
+    number: number;
+    createdAt: string;
+  } | null;
+  hasGuesses: boolean;
+  lastGuess: {
+    cardWord: string;
+    playerName: string;
+    outcome: string;
+    createdAt: string;
+  } | null;
+  prevGuesses: {
+    cardWord: string;
+    playerName: string;
+    outcome: string;
+    createdAt: string;
+  }[];
+}
+
+export interface GetTurnResponse {
+  success: true;
+  data: {
+    turn: ApiTurnResponse;
+  };
+}
+
+export function transformApiTurnResponse(apiTurn: ApiTurnResponse): TurnData {
+  return {
+    id: apiTurn.id,
+    teamName: apiTurn.teamName,
+    status: apiTurn.status,
+    guessesRemaining: apiTurn.guessesRemaining,
+    createdAt: new Date(apiTurn.createdAt),
+    completedAt: apiTurn.completedAt ? new Date(apiTurn.completedAt) : null,
+    clue: apiTurn.clue ? {
+      word: apiTurn.clue.word,
+      number: apiTurn.clue.number,
+      createdAt: new Date(apiTurn.clue.createdAt)
+    } : null,
+    hasGuesses: apiTurn.hasGuesses,
+    lastGuess: apiTurn.lastGuess ? {
+      cardWord: apiTurn.lastGuess.cardWord,
+      playerName: apiTurn.lastGuess.playerName,
+      outcome: apiTurn.lastGuess.outcome,
+      createdAt: new Date(apiTurn.lastGuess.createdAt)
+    } : null,
+    prevGuesses: apiTurn.prevGuesses.map(guess => ({
+      cardWord: guess.cardWord,
+      playerName: guess.playerName,
+      outcome: guess.outcome,
+      createdAt: new Date(guess.createdAt)
+    })),
+  };
 }
 
 // ==========================================
@@ -217,8 +308,6 @@ function transformApiCard(apiCard: ApiCard): Card {
     selected: apiCard.selected,
     teamName: apiCard.teamName,
     cardType: apiCard.cardType,
-    // For backward compatibility - map teamName to team
-    team: apiCard.teamName?.toLowerCase(),
   };
 }
 

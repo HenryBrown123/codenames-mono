@@ -1,5 +1,4 @@
-import { GameData } from "@frontend/shared-types";
-import { TurnData } from "../api/queries/use-turn-query";
+import { GameData, TurnData } from "@frontend/shared-types";
 
 /**
  * Helper to get outcome message for codebreakers
