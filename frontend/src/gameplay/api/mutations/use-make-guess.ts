@@ -5,42 +5,70 @@ import {
 } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
-import { TurnData, MakeGuessRequest } from "@frontend/shared-types";
+import { TurnData } from "../queries/use-turn-query";
 
-interface MakeGuessVariables extends MakeGuessRequest {
-  roundNumber: number;
-}
-
-/**
- * Response type that includes turn data
- * This should match your backend API response
- */
-interface MakeGuessResponse {
-  success: true;
+interface MakeGuessApiResponse {
+  success: boolean;
   data: {
     guess: {
       cardWord: string;
       outcome: string;
-      createdAt: Date;
+      createdAt: string;
     };
-    turn: TurnData; // Full turn object with updated state
+    turn: {
+      id: string;
+      teamName: string;
+      status: string;
+      guessesRemaining: number;
+      createdAt: string;
+      completedAt: string | null;
+      clue: {
+        word: string;
+        number: number;
+        createdAt: string;
+      } | null;
+      hasGuesses: boolean;
+      lastGuess: {
+        cardWord: string;
+        playerName: string;
+        outcome: string;
+        createdAt: string;
+      } | null;
+      prevGuesses: Array<{
+        cardWord: string;
+        playerName: string;
+        outcome: string;
+        createdAt: string;
+      }>;
+    };
   };
 }
 
+interface MakeGuessInput {
+  cardWord: string;
+  roundNumber: number;
+}
+
+export interface GuessResult {
+  guess: {
+    cardWord: string;
+    outcome: string;
+    createdAt: Date;
+  };
+  turn: TurnData; // Uses rich TurnData from use-turn-query
+}
+
 /**
- * Mutation for making a guess
- * POST /games/{gameId}/rounds/{roundNumber}/guesses
- *
- * Updated to return turn data for cache integration
+ * Submits a guess for a card.
  */
 export const useMakeGuessMutation = (
   gameId: string,
-): UseMutationResult<MakeGuessResponse, Error, MakeGuessVariables> => {
+): UseMutationResult<GuessResult, Error, MakeGuessInput> => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ roundNumber, cardWord }) => {
-      const response: AxiosResponse<MakeGuessResponse> = await api.post(
+    mutationFn: async ({ cardWord, roundNumber }) => {
+      const response: AxiosResponse<MakeGuessApiResponse> = await api.post(
         `/games/${gameId}/rounds/${roundNumber}/guesses`,
         { cardWord },
       );
@@ -49,14 +77,45 @@ export const useMakeGuessMutation = (
         throw new Error("Failed to make guess");
       }
 
-      return response.data;
+      const { guess, turn } = response.data.data;
+      
+      return {
+        guess: {
+          cardWord: guess.cardWord,
+          outcome: guess.outcome,
+          createdAt: new Date(guess.createdAt),
+        },
+        turn: {
+          id: turn.id,
+          teamName: turn.teamName,
+          status: turn.status as "ACTIVE" | "COMPLETED",
+          guessesRemaining: turn.guessesRemaining,
+          createdAt: new Date(turn.createdAt),
+          completedAt: turn.completedAt ? new Date(turn.completedAt) : null,
+          clue: turn.clue ? {
+            word: turn.clue.word,
+            number: turn.clue.number,
+            createdAt: new Date(turn.clue.createdAt)
+          } : null,
+          hasGuesses: turn.hasGuesses,
+          lastGuess: turn.lastGuess ? {
+            cardWord: turn.lastGuess.cardWord,
+            playerName: turn.lastGuess.playerName,
+            outcome: turn.lastGuess.outcome,
+            createdAt: new Date(turn.lastGuess.createdAt)
+          } : null,
+          prevGuesses: turn.prevGuesses.map(g => ({
+            cardWord: g.cardWord,
+            playerName: g.playerName,
+            outcome: g.outcome,
+            createdAt: new Date(g.createdAt)
+          })),
+        },
+      };
     },
     onSuccess: async (data) => {
-      const turnData = data.data.turn;
-      console.log("Returned turn data: ", turnData);
-      // Direct cache update for turn data - no await needed, synchronous operation
+      const turnData = data.turn;
       queryClient.setQueryData(["turn", turnData.id], turnData);
-      // Invalidate game data to refetch game state
       await queryClient.refetchQueries({ queryKey: ["gameData", gameId] });
     },
   });

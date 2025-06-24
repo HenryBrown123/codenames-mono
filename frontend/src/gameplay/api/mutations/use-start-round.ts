@@ -6,27 +6,36 @@ import {
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
 
-interface StartRoundVariables {
+interface StartRoundApiResponse {
+  success: boolean;
+  data: {
+    round: {
+      roundNumber: number;
+      status: string;
+    };
+  };
+}
+
+interface StartRoundInput {
   roundNumber: number;
 }
 
 /**
- * Mutation for starting a round
- * POST /games/{gameId}/rounds/{roundNumber}/start
+ * Starts an existing round.
  */
 export const useStartRoundMutation = (
   gameId: string,
-): UseMutationResult<void, Error, StartRoundVariables> => {
+): UseMutationResult<void, Error, StartRoundInput> => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ roundNumber }) => {
-      const response: AxiosResponse = await api.post(
+      const response: AxiosResponse<StartRoundApiResponse> = await api.post(
         `/games/${gameId}/rounds/${roundNumber}/start`,
       );
 
       if (!response.data.success) {
-        throw new Error(response.data.error || "Failed to start round");
+        throw new Error("Failed to start round");
       }
     },
     onSuccess: async () => {

@@ -6,27 +6,38 @@ import {
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
 
-interface EndTurnVariables {
+interface EndTurnApiResponse {
+  success: boolean;
+  data: {
+    turn: {
+      id: string;
+      teamName: string;
+      status: string;
+      completedAt: string;
+    };
+  };
+}
+
+interface EndTurnInput {
   roundNumber: number;
 }
 
 /**
- * Mutation for ending a turn
- * POST /games/{gameId}/rounds/{roundNumber}/end-turn
+ * Ends the current turn.
  */
 export const useEndTurnMutation = (
   gameId: string,
-): UseMutationResult<void, Error, EndTurnVariables> => {
+): UseMutationResult<void, Error, EndTurnInput> => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ roundNumber }) => {
-      const response: AxiosResponse = await api.post(
+      const response: AxiosResponse<EndTurnApiResponse> = await api.post(
         `/games/${gameId}/rounds/${roundNumber}/end-turn`,
       );
 
       if (!response.data.success) {
-        throw new Error(response.data.error || "Failed to end turn");
+        throw new Error("Failed to end turn");
       }
     },
     onSuccess: async () => {

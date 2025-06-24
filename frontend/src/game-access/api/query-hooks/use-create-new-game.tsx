@@ -1,10 +1,18 @@
-import { useMutation } from "@tanstack/react-query";
-import { createNewGame, CreateGamePayload } from "../endpoints/create-new-game";
+import { useMutation, UseMutationResult } from "@tanstack/react-query";
+import { createNewGame, CreateGamePayload, GameCreatedResult } from "../endpoints/create-new-game";
+import { GameType, GameFormat } from "@frontend/shared-types/domain-types";
 
-// Hook for creating a new game
-export const useCreateNewGame = () => {
+interface CreateGameInput {
+  gameType: GameType;
+  gameFormat: GameFormat;
+}
+
+/**
+ * Creates a new game with the specified type and format.
+ */
+export const useCreateNewGame = (): UseMutationResult<GameCreatedResult, Error, CreateGameInput> => {
   return useMutation({
     mutationKey: ["createNewGame"],
-    mutationFn: (payload: CreateGamePayload) => createNewGame(payload),
+    mutationFn: (payload: CreateGameInput) => createNewGame(payload),
   });
 };

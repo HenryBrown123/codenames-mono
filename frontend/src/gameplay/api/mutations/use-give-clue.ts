@@ -5,42 +5,110 @@ import {
 } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
-import { GiveClueRequest, TurnData } from "@frontend/shared-types";
+import { TurnData } from "../queries/use-turn-query";
 
-interface GiveClueVariables extends GiveClueRequest {
-  roundNumber: number;
-}
-
-/**
- * Response type that includes turn data
- * This should match your backend API response
- */
-interface GiveClueResponse {
-  success: true;
+interface GiveClueApiResponse {
+  success: boolean;
   data: {
     clue: {
       word: string;
       number: number;
-      createdAt: Date;
+      createdAt: string;
     };
-    turn: TurnData; // Full turn object with updated state
+    turn: {
+      id: string;
+      teamName: string;
+      status: string;
+      guessesRemaining: number;
+      createdAt: string;
+      completedAt: string | null;
+      clue: {
+        word: string;
+        number: number;
+        createdAt: string;
+      } | null;
+      hasGuesses: boolean;
+      lastGuess: {
+        cardWord: string;
+        playerName: string;
+        outcome: string;
+        createdAt: string;
+      } | null;
+      prevGuesses: Array<{
+        cardWord: string;
+        playerName: string;
+        outcome: string;
+        createdAt: string;
+      }>;
+    };
+  };
+}
+
+interface GiveClueInput {
+  word: string;
+  targetCardCount: number;
+  roundNumber: number;
+}
+
+export interface ClueGivenResult {
+  clue: {
+    word: string;
+    number: number;
+    createdAt: Date;
+  };
+  turn: TurnData; // Uses rich TurnData from use-turn-query
+}
+
+
+function transformApiResponseToClueGivenResult(apiResponse: GiveClueApiResponse): ClueGivenResult {
+  const { clue, turn } = apiResponse.data;
+  
+  return {
+    clue: {
+      word: clue.word,
+      number: clue.number,
+      createdAt: new Date(clue.createdAt),
+    },
+    turn: {
+      id: turn.id,
+      teamName: turn.teamName,
+      status: turn.status as "ACTIVE" | "COMPLETED",
+      guessesRemaining: turn.guessesRemaining,
+      createdAt: new Date(turn.createdAt),
+      completedAt: turn.completedAt ? new Date(turn.completedAt) : null,
+      clue: turn.clue ? {
+        word: turn.clue.word,
+        number: turn.clue.number,
+        createdAt: new Date(turn.clue.createdAt)
+      } : null,
+      hasGuesses: turn.hasGuesses,
+      lastGuess: turn.lastGuess ? {
+        cardWord: turn.lastGuess.cardWord,
+        playerName: turn.lastGuess.playerName,
+        outcome: turn.lastGuess.outcome,
+        createdAt: new Date(turn.lastGuess.createdAt)
+      } : null,
+      prevGuesses: turn.prevGuesses.map(guess => ({
+        cardWord: guess.cardWord,
+        playerName: guess.playerName,
+        outcome: guess.outcome,
+        createdAt: new Date(guess.createdAt)
+      })),
+    },
   };
 }
 
 /**
- * Mutation for giving a clue
- * POST /games/{gameId}/rounds/{roundNumber}/clues
- *
- * Updated to return turn data for cache integration
+ * Submits a clue for the current turn.
  */
 export const useGiveClueMutation = (
   gameId: string,
-): UseMutationResult<GiveClueResponse, Error, GiveClueVariables> => {
+): UseMutationResult<ClueGivenResult, Error, GiveClueInput> => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ roundNumber, word, targetCardCount }) => {
-      const response: AxiosResponse<GiveClueResponse> = await api.post(
+    mutationFn: async ({ word, targetCardCount, roundNumber }) => {
+      const response: AxiosResponse<GiveClueApiResponse> = await api.post(
         `/games/${gameId}/rounds/${roundNumber}/clues`,
         { word, targetCardCount },
       );
@@ -49,15 +117,11 @@ export const useGiveClueMutation = (
         throw new Error("Failed to give clue");
       }
 
-      return response.data;
+      return transformApiResponseToClueGivenResult(response.data);
     },
     onSuccess: async (data) => {
-      const turnData = data.data.turn;
-
-      // Direct cache update for turn data - no await needed, synchronous operation
+      const turnData = data.turn;
       queryClient.setQueryData(["turn", turnData.id], turnData);
-
-      // Invalidate game data to refetch game state
       await queryClient.refetchQueries({ queryKey: ["gameData", gameId] });
     },
   });
