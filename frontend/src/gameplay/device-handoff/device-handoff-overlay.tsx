@@ -62,11 +62,11 @@ const HandoffCard = styled.div`
   animation: ${fadeIn} 0.6s ease-out;
 `;
 
-const HandoffIcon = styled.div<{ $roleColor: string }>`
+const HandoffIcon = styled.div<{ $color: string }>`
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: ${(props) => props.$roleColor};
+  background: ${(props) => props.$color};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -99,11 +99,17 @@ const PlayerInfo = styled.div`
   border: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
-const PlayerName = styled.h2`
+const PlayerName = styled.h2<{ $teamColor?: string }>`
   color: white;
   font-size: 1.8rem;
   font-weight: bold;
   margin: 0 0 0.5rem;
+  ${props => props.$teamColor && `
+    background: linear-gradient(135deg, ${props.$teamColor}dd, ${props.$teamColor}99);
+    padding: 0.5rem 1.5rem;
+    border-radius: 12px;
+    display: inline-block;
+  `}
 `;
 
 const RoleInfo = styled.div`
@@ -129,10 +135,11 @@ const TeamInfo = styled.div<{ $teamColor: string }>`
 `;
 
 const ActionText = styled.p`
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 1rem;
-  margin: 1rem 0 0;
-  font-style: italic;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1.1rem;
+  margin: 1.5rem 0 0;
+  line-height: 1.6;
+  white-space: pre-wrap;
 `;
 
 const ContinueButton = styled.button`
@@ -229,43 +236,40 @@ export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
     return role.charAt(0) + role.slice(1).toLowerCase();
   };
 
-  const getActionNeeded = (role: PlayerRole, gameData: GameData): string => {
-    const activeTurn = gameData.currentRound?.turns?.find(
-      (t) => t.status === "ACTIVE",
-    );
-
+  const getActionText = (role: PlayerRole): string => {
     switch (role) {
       case PLAYER_ROLE.CODEMASTER:
-        return "give a clue to your team";
+        return "Hide the screen! You're about to see which cards belong to each team. Don't let the codebreakers peek!";
       case PLAYER_ROLE.CODEBREAKER:
-        return activeTurn?.clue
-          ? `make guesses based on the clue "${activeTurn.clue.word}"`
-          : "wait for your codemaster's clue";
+        return "Time to guess! Work together to decode your codemaster's clue and find your team's cards.";
       case PLAYER_ROLE.SPECTATOR:
-        return "watch the game";
+        return "Watch the game unfold!";
       default:
-        return "continue playing";
+        return "Continue playing";
     }
   };
 
-  const getPlayerName = (role: PlayerRole, teamName: string): string => {
+  const getPlayerName = (role: PlayerRole, teamName: string, playerName?: string): string => {
+    if (role === PLAYER_ROLE.CODEMASTER && playerName) {
+      return playerName;
+    } else if (role === PLAYER_ROLE.CODEBREAKER) {
+      return `${teamName} Codebreakers`;
+    }
     return `${teamName} ${formatRoleName(role)}`;
   };
 
   const targetRole = pendingTransition.stage;
   const targetTeam = gameData.playerContext.teamName;
-  const targetPlayer = getPlayerName(targetRole, targetTeam);
-  const actionNeeded = getActionNeeded(targetRole, gameData);
+  const playerName = gameData.playerContext.playerName;
+  const targetPlayer = getPlayerName(targetRole, targetTeam, playerName);
+  const actionText = getActionText(targetRole);
+  const teamColor = getTeamColor(targetTeam);
 
   return (
     <OverlayContainer>
       <BackgroundBlur />
       <HandoffCard>
-        {gameData.currentRound && (
-          <RoundInfo>Round {gameData.currentRound.roundNumber}</RoundInfo>
-        )}
-
-        <HandoffIcon $roleColor={getRoleColor(targetRole)}>
+        <HandoffIcon $color={teamColor}>
           {getRoleIcon(targetRole)}
         </HandoffIcon>
 
@@ -273,23 +277,23 @@ export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
         <Subtitle>It's time for the next player to take their turn</Subtitle>
 
         <PlayerInfo>
-          <PlayerName>{targetPlayer}</PlayerName>
+          <PlayerName $teamColor={targetRole === PLAYER_ROLE.CODEBREAKER ? teamColor : undefined}>
+            {targetPlayer}
+          </PlayerName>
 
-          <RoleInfo>
-            {getRoleIcon(targetRole)}
-            <span>{formatRoleName(targetRole)}</span>
-          </RoleInfo>
+          {targetRole === PLAYER_ROLE.CODEMASTER && (
+            <RoleInfo>
+              <TeamInfo $teamColor={teamColor}>
+                {targetTeam} Codemaster
+              </TeamInfo>
+            </RoleInfo>
+          )}
 
-          <TeamInfo $teamColor={getTeamColor(targetTeam)}>
-            {targetTeam}
-          </TeamInfo>
-
-          <ActionText>Ready to {actionNeeded}</ActionText>
+          <ActionText>{actionText}</ActionText>
         </PlayerInfo>
 
         <ContinueButton onClick={onContinue}>
-          <FaHandPaper />
-          Continue as {targetPlayer}
+          I'm Ready
         </ContinueButton>
       </HandoffCard>
     </OverlayContainer>
