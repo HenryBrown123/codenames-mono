@@ -1,14 +1,12 @@
 import React from "react";
 import styled from "styled-components";
 import { CodeWordInput } from "./codemaster-input";
-import {
-  useGameData,
-  useGameActions,
-  usePlayerRoleScene,
-} from "@frontend/gameplay/state";
-import { useTurn } from "@frontend/gameplay/turn-management/active-turn.provider";
+import { useGameData } from "@frontend/gameplay/game-data";
+import { useGameActions } from "@frontend/gameplay/game-actions";
+import { usePlayerRoleScene } from "@frontend/gameplay/role-scenes";
+import { useTurn } from "@frontend/gameplay/turn-management";
 import { Turn } from "@frontend/shared-types";
-import { ActionButton } from "@frontend/gameplay/ui/action-button";
+import { ActionButton } from "@frontend/gameplay/shared/action-button";
 
 // ============================================================================
 // STYLED COMPONENTS (Master Branch Style)
@@ -60,21 +58,32 @@ export const CodebreakerDashboardView: React.FC = () => {
     endTurn();
   };
 
-  const hasClue = !!activeTurn?.clue;
-  const canEndTurn = hasClue && (activeTurn?.guessesRemaining || 0) > 0;
+  const hasClueWithWord = activeTurn?.clue?.word;
+  const canEndTurn = hasClueWithWord && (activeTurn?.guessesRemaining || 0) > 0;
 
-  if (!hasClue) {
+  // hasClueWithWord not used directly
+  if (!activeTurn?.clue?.word) {
     return <Container />;
   }
 
   return (
-    <ButtonWrapper>
-      <ActionButton
-        onClick={handleEndTurn}
-        text={actionState.status === "loading" ? "Ending Turn..." : "End Turn"}
-        enabled={canEndTurn && actionState.status !== "loading"}
+    <Container>
+      <CodeWordInput
+        codeWord={activeTurn.clue.word}
+        numberOfCards={activeTurn.clue.number}
+        isEditable={false}
+        isLoading={false}
       />
-    </ButtonWrapper>
+      <ButtonWrapper>
+        <ActionButton
+          onClick={handleEndTurn}
+          text={
+            actionState.status === "loading" ? "Ending Turn..." : "End Turn"
+          }
+          enabled={(canEndTurn && actionState.status !== "loading") || false}
+        />
+      </ButtonWrapper>
+    </Container>
   );
 };
 
@@ -100,7 +109,7 @@ export const CodemasterDashboardView: React.FC = () => {
     <Container>
       <CodeWordInput
         codeWord=""
-        numberOfCards={1}
+        numberOfCards={null}
         isEditable={true}
         isLoading={actionState.status === "loading"}
         onSubmit={handleSubmitClue}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
-import ActionButton from "../action-button/action-button";
-import { useGameData } from "@frontend/gameplay/state";
+import { ActionButton } from "@frontend/gameplay/shared/action-button";
+import { useGameData } from "@frontend/gameplay/game-data";
 import { Card } from "@frontend/shared-types";
 
 const Container = styled.div`
@@ -92,7 +92,7 @@ const StyledActionButton = styled(ActionButton)`
 
 type CodeWordInputProps = {
   codeWord?: string;
-  numberOfCards?: number;
+  numberOfCards: number | null;
   isEditable?: boolean;
   isLoading?: boolean;
   onSubmit?: (codeWord: string, numberOfCards: number) => void;
@@ -100,7 +100,7 @@ type CodeWordInputProps = {
 
 export function CodeWordInput({
   codeWord = "",
-  numberOfCards = 1,
+  numberOfCards,
   isEditable = true,
   isLoading = false,
   onSubmit,
@@ -131,7 +131,11 @@ export function CodeWordInput({
       return;
     }
 
-    if (inputNumberOfCards < 1 || inputNumberOfCards > 9) {
+    if (
+      !inputNumberOfCards ||
+      inputNumberOfCards < 1 ||
+      inputNumberOfCards > 9
+    ) {
       setErrorMessage("Number of cards must be between 1 and 9");
       return;
     }
@@ -151,7 +155,7 @@ export function CodeWordInput({
     onSubmit(inputCodeWord, inputNumberOfCards);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && isEditable && !isLoading) {
       handleSubmit();
     }
@@ -166,9 +170,9 @@ export function CodeWordInput({
           <UnderlinedTextInput
             ref={textInputRef}
             type="text"
-            value={inputCodeWord}
+            value={inputCodeWord ?? undefined}
             onChange={(e) => setInputCodeWord(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             disabled={!isEditable || isLoading}
             isError={hasError}
             placeholder="word"
@@ -180,9 +184,9 @@ export function CodeWordInput({
             type="number"
             min="1"
             max="9"
-            value={inputNumberOfCards}
+            value={inputNumberOfCards ?? ""}
             onChange={(e) => setInputNumberOfCards(Number(e.target.value))}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             disabled={!isEditable || isLoading}
             isError={hasError}
           />

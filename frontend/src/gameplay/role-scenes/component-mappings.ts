@@ -6,12 +6,12 @@ import {
   CodebreakerDashboardView,
   WaitingDashboardView,
   OutcomeDashboardView,
-} from "@frontend/gameplay/dashboard/dashboard-views";
+} from "@frontend/gameplay/dashboard";
 import {
   CodebreakerBoard,
   CodemasterBoard,
   SpectatorBoard,
-} from "@frontend/gameplay/game-board/game-board/game-board";
+} from "@frontend/gameplay/game-board";
 
 /**
  * Maps scene keys to dashboard components

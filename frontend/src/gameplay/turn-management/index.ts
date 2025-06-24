@@ -1,1 +1,1 @@
-export { ActiveTurnProvider } from './active-turn.provider';
+export { TurnProvider, useTurn } from './active-turn.provider';

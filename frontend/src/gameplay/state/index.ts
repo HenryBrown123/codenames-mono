@@ -11,15 +11,3 @@
 
 // Main composition provider
 export { GameplayProvider } from "./gameplay.provider";
-
-// Context hooks
-export { useGameData } from "../game-data/game-data.provider";
-export { useGameActions } from "../game-actions/game-actions.provider";
-export { usePlayerRoleScene } from "../role-scenes/scene.provider";
-
-// Types
-export type {
-  ActionState,
-  ActionName,
-  GameActionsContextValue,
-} from "../game-actions/game-actions.provider";
