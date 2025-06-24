@@ -1,7 +1,7 @@
 import React, { useState, useCallback, memo, useMemo } from "react";
 import styled from "styled-components";
-import { useGameData } from "@frontend/gameplay/state";
-import { useGameActions } from "@frontend/gameplay/state";
+import { useGameData } from "@frontend/gameplay/game-data";
+import { useGameActions } from "@frontend/gameplay/game-actions";
 import { GameCard } from "./game-card";
 
 const CardsContainer = styled.div`

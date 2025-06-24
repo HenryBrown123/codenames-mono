@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { useCreateGuestSession } from "@frontend/game-access/api";
+import { useCreateGuestSession } from "@frontend/game-access/api/query-hooks/use-guest-session";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { LoadingSpinner } from "@frontend/gameplay/ui";
-import { ActionButton } from "@frontend/gameplay/ui/action-button";
+import { LoadingSpinner, ActionButton } from "@frontend/gameplay/shared";
 
 export const GuestAuthPageContent: React.FC = () => {
   const [error, setError] = useState<string | null>(null);

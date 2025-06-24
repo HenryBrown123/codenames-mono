@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { useCreateNewGame } from "@frontend/game-access/api";
+import { useCreateNewGame } from "@frontend/game-access/api/query-hooks/use-create-new-game";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { LoadingSpinner } from "@frontend/gameplay/ui";
-import { ActionButton } from "@frontend/gameplay/ui/action-button";
+import { LoadingSpinner, ActionButton } from "@frontend/gameplay/shared";
 import {
   GAME_TYPE,
   GAME_FORMAT,

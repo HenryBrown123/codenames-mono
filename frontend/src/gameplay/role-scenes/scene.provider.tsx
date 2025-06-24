@@ -5,13 +5,13 @@ import React, {
   ReactNode,
   useReducer,
 } from "react";
-import { useGameData } from "./game-data-provider";
-import { useTurn } from "./active-turn-provider";
+import { useGameData } from "../game-data";
+import { useTurn } from "../turn-management";
 import { PLAYER_ROLE, GAME_TYPE, PlayerRole } from "@codenames/shared/types";
 import { GameData } from "@frontend/shared-types";
 import { TurnData } from "../api/queries/use-turn-query";
-import { getStateMachine } from "./ui-state-config";
-import { evaluateConditions } from "./ui-state-conditions";
+import { getStateMachine } from "./scene-config";
+import { evaluateConditions } from "./scene-conditions";
 
 interface UIState {
   currentRole: PlayerRole;

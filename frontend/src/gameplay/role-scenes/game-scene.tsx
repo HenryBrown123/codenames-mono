@@ -1,16 +1,16 @@
 import React from "react";
 import styled from "styled-components";
-import { useGameData } from "@frontend/gameplay/state";
-import { usePlayerRoleScene } from "@frontend/gameplay/state";
-import { useTurn } from "@frontend/gameplay/turn-management/active-turn.provider";
-import { getSceneMessage } from "./scene-message-mappings";
+import { useGameData } from "@frontend/gameplay/game-data";
+import { usePlayerRoleScene } from "@frontend/gameplay/role-scenes";
+import { useTurn } from "@frontend/gameplay/turn-management";
+import { getSceneMessage } from "./scene-messages";
 import {
   getDashboardComponent,
   getBoardComponent,
 } from "./component-mappings";
-import { SpectatorBoard } from "../game-board/game-board/game-board";
-import { GameInstructions } from "../ui/game-instructions";
-import { DeviceHandoffOverlay } from "../device-handoff/device-handoff";
+import { SpectatorBoard } from "../game-board";
+import { GameInstructions } from "../game-instructions";
+import { DeviceHandoffOverlay } from "../device-handoff";
 
 const GameSceneContainer = styled.div`
   display: flex;

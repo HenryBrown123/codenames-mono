@@ -1,2 +1,5 @@
-export { GameBoard } from './game-board';
-export { GameCard } from './game-card';
+export {
+  CodebreakerBoard,
+  CodemasterBoard,
+  SpectatorBoard,
+} from "./game-board";

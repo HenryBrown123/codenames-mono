@@ -1,1 +1,1 @@
-export { GameDataProvider } from './game-data.provider';
+export { GameDataProvider, useGameData } from './game-data.provider';

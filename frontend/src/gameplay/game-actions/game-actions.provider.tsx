@@ -13,9 +13,9 @@ import {
   useDealCardsMutation,
   useEndTurnMutation,
 } from "@frontend/gameplay/api/mutations";
-import { useGameData } from "../game-data/game-data.provider";
-import { usePlayerRoleScene } from "../role-scenes/scene.provider";
-import { useTurn } from "../turn-management/active-turn.provider";
+import { useGameData } from "../game-data";
+import { usePlayerRoleScene } from "../role-scenes";
+import { useTurn } from "../turn-management";
 
 export type ActionName =
   | "giveClue"

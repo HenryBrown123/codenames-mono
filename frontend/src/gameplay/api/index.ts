@@ -1,2 +1,1 @@
-export * from "./queries";
-export * from "./mutations";
+// Only export items from this api folder

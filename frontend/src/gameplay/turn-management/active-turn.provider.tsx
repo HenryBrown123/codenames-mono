@@ -6,7 +6,7 @@ import {
   useEffect,
 } from "react";
 import { TurnData, useTurnDataQuery } from "../api/queries/use-turn-query";
-import { useGameData } from "./game-data-provider";
+import { useGameData } from "../game-data";
 
 /**
  * Turn context type definition
@@ -38,10 +38,11 @@ interface TurnProviderProps {
 export const TurnProvider = ({ children }: TurnProviderProps) => {
   const { gameData } = useGameData();
 
-  // Track the turn ID to query - either manually set or auto from game data
+  // Track the turn ID of recently executed actions to allow outcomes to be presented even
+  // after the active turn has changed.
   const [lastActionTurnId, setLastActionTurnId] = useState<string | null>(null);
 
-  // Auto-populate with current active turn ID if none is set
+  // Auto-populate with current active turn ID if none is being tracked by last action
   const activeTurnId =
     lastActionTurnId ||
     gameData.currentRound?.turns?.find((t) => t.status === "ACTIVE")?.id ||

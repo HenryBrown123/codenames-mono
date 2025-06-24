@@ -1,4 +1,4 @@
-export { SceneProvider } from './scene.provider';
+export { PlayerRoleSceneProvider, usePlayerRoleScene } from './scene.provider';
 export { GameScene } from './game-scene';
 export * from './scene-config';
 export * from './scene-conditions';

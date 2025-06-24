@@ -1,18 +1,8 @@
 import { ReactNode } from "react";
-import { GameDataProvider } from "./game-data-provider";
-import { TurnProvider } from "./active-turn-provider";
-import { PlayerRoleSceneProvider } from "./ui-scene-provider";
-import { GameActionsProvider } from "./game-actions-provider";
-
-export { useGameData } from "./game-data-provider";
-
-export { useGameActions } from "./game-actions-provider";
-
-export type {
-  ActionState,
-  ActionName,
-  GameActionsContextValue,
-} from "./game-actions-provider";
+import { GameDataProvider } from "../game-data";
+import { TurnProvider } from "../turn-management";
+import { PlayerRoleSceneProvider } from "../role-scenes";
+import { GameActionsProvider } from "../game-actions";
 
 interface GameplayProviderProps {
   gameId: string;
