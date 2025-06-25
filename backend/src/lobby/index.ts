@@ -19,9 +19,16 @@ import { removePlayersController } from "./remove-players/remove-players.control
 import { startGameService } from "./start-game/start-game.service";
 import { startGameController } from "./start-game/start-game.controller";
 
+import newRound from "./new-round";
+import dealCards from "./deal-cards";
+import startRound from "./start-round";
+import quickStart from "./quick-start";
+
 import { lobbyState } from "./state";
 import { lobbyOperations } from "./lobby-actions";
 import { lobbyErrorHandler } from "./errors/lobby-errors.middleware";
+import { gameplayState } from "../gameplay/state";
+import { gameplayActions } from "../gameplay/gameplay-actions";
 
 /** Initializes the lobby feature module with all routes and dependencies */
 export const initialize = (
@@ -29,11 +36,13 @@ export const initialize = (
   db: Kysely<DB>,
   auth: AuthMiddleware,
 ) => {
-  // State provider
+  // State providers
   const { provider: getLobbyState } = lobbyState(db);
+  const { provider: getGameState } = gameplayState(db);
 
-  // Transaction handler with lobby operations
+  // Transaction handlers
   const lobbyHandler = createTransactionalHandler(db, lobbyOperations);
+  const { handler: gameplayHandler } = gameplayActions(db);
 
   // Create service functions
   const lobbyAddPlayersService = addPlayersService({
@@ -75,6 +84,31 @@ export const initialize = (
     startGame: lobbyStartGameService,
   });
 
+  // Round management controllers (moved from gameplay)
+  // These services still use gameplay operations but need lobby operations too
+  // TODO: Refactor to use proper lobby operations only
+  const { controller: newRoundController } = newRound({
+    getGameState,
+    gameplayHandler, // Still uses gameplay handler for complex operations
+  });
+
+  const { controller: dealCardsController } = dealCards({
+    getGameState,
+    gameplayHandler,
+  });
+
+  const { controller: startRoundController } = startRound({
+    getGameState,
+    gameplayHandler,
+  });
+
+  // Quick start controller
+  const { controller: quickStartController } = quickStart({
+    lobbyHandler,
+    getLobbyState,
+    db,
+  });
+
   // Create router and register routes
   const router = Router();
 
@@ -99,6 +133,18 @@ export const initialize = (
   );
 
   router.post("/games/:gameId/start", auth, lobbyStartGameController);
+
+  // Round management routes (moved from gameplay)
+  router.post("/games/:gameId/rounds", auth, newRoundController);
+  router.post("/games/:gameId/rounds/:id/deal", auth, dealCardsController);
+  router.post(
+    "/games/:gameId/rounds/:roundNumber/start",
+    auth,
+    startRoundController,
+  );
+
+  // Quick start route
+  router.post("/games/:gameId/quick-start", auth, quickStartController);
 
   // Apply routes and error handlers
   app.use("/api", router);

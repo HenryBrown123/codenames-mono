@@ -3,12 +3,12 @@ import {
   GameAggregate,
   gameplayBaseSchema,
   roundSchema,
-} from "../state/gameplay-state.types";
+} from "../../gameplay/state/gameplay-state.types";
 import {
   validateWithZodSchema,
   ValidatedGameState,
   GameplayValidationResult,
-} from "../state/gameplay-state.validation";
+} from "../../gameplay/state/gameplay-state.validation";
 import { z } from "zod";
 
 /**

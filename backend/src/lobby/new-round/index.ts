@@ -1,6 +1,6 @@
-import type { GameplayStateProvider } from "../state/gameplay-state.provider";
+import type { GameplayStateProvider } from "../../gameplay/state/gameplay-state.provider";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
-import type { GameplayOperations } from "../gameplay-actions";
+import type { GameplayOperations } from "../../gameplay/gameplay-actions";
 
 import { roundCreationService } from "./new-round.service";
 import { newRoundController } from "./new-round.controller";

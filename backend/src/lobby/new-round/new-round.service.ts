@@ -1,11 +1,11 @@
-import type { GameplayStateProvider } from "../state/gameplay-state.provider";
-import type { GameplayValidationError } from "../state/gameplay-state.validation";
+import type { GameplayStateProvider } from "../../gameplay/state/gameplay-state.provider";
+import type { GameplayValidationError } from "../../gameplay/state/gameplay-state.validation";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
-import type { GameplayOperations } from "../gameplay-actions";
+import type { GameplayOperations } from "../../gameplay/gameplay-actions";
 
 import { validate as checkRoundCreationRules } from "./new-round.rules";
 import { validate as checkRoleAssignmentRules } from "../assign-roles/assign-roles.rules";
-import { UnexpectedGameplayError } from "../errors/gameplay.errors";
+import { UnexpectedGameplayError } from "../../gameplay/errors/gameplay.errors";
 
 /**
  * Input parameters for round creation

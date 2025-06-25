@@ -1,19 +1,19 @@
 import { GAME_STATE, ROUND_STATE } from "@codenames/shared/types";
 
-import { GameAggregate } from "../state/gameplay-state.types";
+import { GameAggregate } from "../../gameplay/state/gameplay-state.types";
 
 import {
   gameplayBaseSchema,
   currentRoundSchema,
-} from "../state/gameplay-state.types";
+} from "../../gameplay/state/gameplay-state.types";
 
-import { complexProperties } from "../state/gameplay-state.helpers";
+import { complexProperties } from "../../gameplay/state/gameplay-state.helpers";
 
 import {
   validateWithZodSchema,
   ValidatedGameState,
   GameplayValidationResult,
-} from "../state/gameplay-state.validation";
+} from "../../gameplay/state/gameplay-state.validation";
 
 import { z } from "zod";
 

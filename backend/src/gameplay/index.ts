@@ -8,9 +8,6 @@ import { gameplayState } from "./state";
 import { gameplayActions } from "./gameplay-actions";
 import { turnState } from "./state";
 
-import newRound from "./new-round";
-import dealCards from "./deal-cards";
-import startRound from "./start-round";
 import getGame from "./get-game";
 import giveClue from "./give-clue";
 import makeGuess from "./guess";
@@ -34,20 +31,6 @@ export const initialize = (
   const { handler: gameplayHandler } = gameplayActions(db);
 
   // Feature modules - each gets both read and write capabilities
-  const { controller: newRoundController } = newRound({
-    getGameState,
-    gameplayHandler,
-  });
-
-  const { controller: dealCardsController } = dealCards({
-    getGameState,
-    gameplayHandler,
-  });
-
-  const { controller: startRoundController } = startRound({
-    getGameState,
-    gameplayHandler,
-  });
 
   const { controller: getGameController } = getGame({
     getGameState,
@@ -72,13 +55,6 @@ export const initialize = (
   // Routes setup
   const router = Router();
 
-  router.post("/games/:gameId/rounds", auth, newRoundController);
-  router.post("/games/:gameId/rounds/:id/deal", auth, dealCardsController);
-  router.post(
-    "/games/:gameId/rounds/:roundNumber/start",
-    auth,
-    startRoundController,
-  );
   router.get("/games/:gameId", auth, getGameController);
   router.post(
     "/games/:gameId/rounds/:roundNumber/clues",

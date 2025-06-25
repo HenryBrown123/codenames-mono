@@ -327,5 +327,217 @@ export function createLobbyPaths() {
         },
       },
     },
+    "/games/{gameId}/quick-start": {
+      post: {
+        summary: "Quick start a game",
+        description:
+          "Starts a game and performs all initial setup in a single operation: creates round, deals cards, assigns roles, and starts the round",
+        tags: ["Lobby"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "gameId",
+            in: "path",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description: "Public ID of the game",
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Game quick started successfully",
+            content: {
+              "application/json": {
+                example: {
+                  success: true,
+                  data: {
+                    game: {
+                      publicId: "abc123",
+                      status: "IN_PROGRESS",
+                    },
+                    round: {
+                      roundId: 1,
+                      roundNumber: 1,
+                    },
+                    turn: {
+                      turnId: 1,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "409": {
+            description:
+              "Game cannot be started due to business rule violations",
+            content: {
+              "application/json": {
+                example: {
+                  success: false,
+                  error: "Cannot start game with less than 4 players",
+                },
+              },
+            },
+          },
+          "401": {
+            description: "Unauthorized",
+          },
+          "500": {
+            description: "Server error",
+          },
+        },
+      },
+    },
+    "/games/{gameId}/rounds": {
+      post: {
+        summary: "Create a new round",
+        description: "Creates a new round for the game",
+        tags: ["Lobby"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "gameId",
+            in: "path",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description: "Public ID of the game",
+          },
+        ],
+        responses: {
+          "201": {
+            description: "Round created successfully",
+            content: {
+              "application/json": {
+                example: {
+                  success: true,
+                  data: {
+                    round: {
+                      id: 1,
+                      roundNumber: 1,
+                      status: "NOT_STARTED",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "401": {
+            description: "Unauthorized",
+          },
+          "500": {
+            description: "Server error",
+          },
+        },
+      },
+    },
+    "/games/{gameId}/rounds/{id}/deal": {
+      post: {
+        summary: "Deal cards to a round",
+        description: "Deals cards to the specified round",
+        tags: ["Lobby"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "gameId",
+            in: "path",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description: "Public ID of the game",
+          },
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description: "Round ID",
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Cards dealt successfully",
+            content: {
+              "application/json": {
+                example: {
+                  success: true,
+                  data: {
+                    cardsDealt: 25,
+                  },
+                },
+              },
+            },
+          },
+          "401": {
+            description: "Unauthorized",
+          },
+          "500": {
+            description: "Server error",
+          },
+        },
+      },
+    },
+    "/games/{gameId}/rounds/{roundNumber}/start": {
+      post: {
+        summary: "Start a round",
+        description: "Starts the specified round and creates the first turn",
+        tags: ["Lobby"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "gameId",
+            in: "path",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description: "Public ID of the game",
+          },
+          {
+            name: "roundNumber",
+            in: "path",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description: "Round number",
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Round started successfully",
+            content: {
+              "application/json": {
+                example: {
+                  success: true,
+                  data: {
+                    round: {
+                      roundNumber: 1,
+                      status: "IN_PROGRESS",
+                    },
+                    turn: {
+                      id: 1,
+                      teamId: 1,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "401": {
+            description: "Unauthorized",
+          },
+          "500": {
+            description: "Server error",
+          },
+        },
+      },
+    },
   };
 }
