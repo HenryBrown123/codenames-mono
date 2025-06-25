@@ -5,6 +5,8 @@ import type { LobbyOperations } from "../lobby-actions";
 
 import { validate as checkRoundCreationRules } from "./new-round.rules";
 import { validate as checkRoleAssignmentRules } from "../assign-roles/assign-roles.rules";
+import { validate as checkCardDealingRules } from "../deal-cards/deal-cards.rules";
+import { UnexpectedLobbyError } from "../errors/lobby.errors";
 
 /**
  * Input parameters for round creation
@@ -22,6 +24,16 @@ export type RoundCreationSuccess = {
   roundNumber: number;
   _gameId: number;
   createdAt: Date;
+  status: string;
+  cards: Array<{
+    _id: number;
+    _roundId: number;
+    word: string;
+    cardType: string;
+    _teamId: number | null;
+    teamName?: string | null;
+    selected: boolean;
+  }>;
 };
 
 /**
@@ -119,20 +131,50 @@ export const roundCreationService = (
     const operationResult = await dependencies.lobbyHandler(async (ops) => {
       const newRound = await ops.createRound(validationResult.data);
 
-      // Get fresh lobby state after round creation to validate role assignment
-      const stateAfterRoundCreation = await ops.getLobbyState(
+      // Get fresh lobby state after round creation to validate card dealing
+      let currentState = await ops.getLobbyState(
         input.gameId,
         input.userId,
       );
       
-      if (stateAfterRoundCreation) {
-        const validatedForRoles = checkRoleAssignmentRules(
-          stateAfterRoundCreation,
-        );
+      if (!currentState) {
+        throw new UnexpectedLobbyError("Failed to get lobby state after round creation");
+      }
 
-        if (validatedForRoles.valid) {
-          await ops.assignPlayerRoles(validatedForRoles.data);
-        }
+      // Deal cards
+      const dealValidation = checkCardDealingRules(currentState);
+      if (!dealValidation.valid) {
+        throw new UnexpectedLobbyError(`Cannot deal cards: ${dealValidation.errors[0].message}`);
+      }
+      
+      await ops.dealCards(dealValidation.data);
+
+      // Get fresh state again after dealing cards
+      currentState = await ops.getLobbyState(
+        input.gameId,
+        input.userId,
+      );
+      
+      if (!currentState) {
+        throw new UnexpectedLobbyError("Failed to get lobby state after dealing cards");
+      }
+
+      // Assign roles
+      const validatedForRoles = checkRoleAssignmentRules(currentState);
+      if (!validatedForRoles.valid) {
+        throw new UnexpectedLobbyError(`Cannot assign roles: ${validatedForRoles.errors[0].message}`);
+      }
+      
+      await ops.assignPlayerRoles(validatedForRoles.data);
+
+      // Get final state to return full round data
+      const finalState = await ops.getLobbyState(
+        input.gameId,
+        input.userId,
+      );
+      
+      if (!finalState || !finalState.currentRound) {
+        throw new UnexpectedLobbyError("Failed to get final lobby state");
       }
 
       return {
@@ -140,6 +182,8 @@ export const roundCreationService = (
         roundNumber: newRound.roundNumber,
         _gameId: newRound._gameId,
         createdAt: newRound.createdAt,
+        status: finalState.currentRound.status,
+        cards: finalState.currentRound.cards || [],
       };
     });
 

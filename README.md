@@ -390,7 +390,6 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   ├── errors
 │       │   ├── modify-players
 │       │   ├── new-round
-│       │   ├── quick-start
 │       │   ├── remove-players
 │       │   ├── start-game
 │       │   ├── start-round
@@ -438,7 +437,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-77 directories
+76 directories
 ```
 
 ## Getting Started

@@ -22,7 +22,6 @@ import { startGameController } from "./start-game/start-game.controller";
 import newRound from "./new-round";
 import dealCards from "./deal-cards";
 import startRound from "./start-round";
-import quickStart from "./quick-start";
 
 import { lobbyState } from "./state";
 import { lobbyOperations } from "./lobby-actions";
@@ -94,11 +93,6 @@ export const initialize = (
     lobbyHandler,
   });
 
-  const { controller: quickStartController } = quickStart({
-    lobbyHandler,
-    getLobbyState,
-  });
-
   // Create router and register routes
   const router = Router();
 
@@ -131,8 +125,6 @@ export const initialize = (
     auth,
     startRoundController,
   );
-
-  router.post("/games/:gameId/quick-start", auth, quickStartController);
 
   app.use("/api", router);
   app.use("/api", lobbyErrorHandler);
