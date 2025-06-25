@@ -1,6 +1,6 @@
-import type { GameplayStateProvider } from "../../gameplay/state/gameplay-state.provider";
+import type { LobbyStateProvider } from "../state/lobby-state.provider";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
-import type { GameplayOperations } from "../../gameplay/gameplay-actions";
+import type { LobbyOperations } from "../lobby-actions";
 
 import { dealCardsService } from "./deal-cards.service";
 import { dealCardsController } from "./deal-cards.controller";
@@ -9,8 +9,8 @@ import { dealCardsController } from "./deal-cards.controller";
  * Dependencies required by the deal cards feature
  */
 export interface DealCardsDependencies {
-  getGameState: GameplayStateProvider;
-  gameplayHandler: TransactionalHandler<GameplayOperations>;
+  getLobbyState: LobbyStateProvider;
+  lobbyHandler: TransactionalHandler<LobbyOperations>;
 }
 
 /**
@@ -21,8 +21,8 @@ export interface DealCardsDependencies {
  */
 export const dealCards = (dependencies: DealCardsDependencies) => {
   const dealCardsServiceInstance = dealCardsService({
-    getGameState: dependencies.getGameState,
-    gameplayHandler: dependencies.gameplayHandler,
+    getLobbyState: dependencies.getLobbyState,
+    lobbyHandler: dependencies.lobbyHandler,
   });
 
   const controller = dealCardsController({

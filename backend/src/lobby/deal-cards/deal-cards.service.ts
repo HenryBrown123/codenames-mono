@@ -1,7 +1,7 @@
-import type { GameplayStateProvider } from "../../gameplay/state/gameplay-state.provider";
+import type { LobbyStateProvider } from "../state/lobby-state.provider";
 import type { GameplayValidationError } from "../../gameplay/state/gameplay-state.validation";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
-import type { GameplayOperations } from "../../gameplay/gameplay-actions";
+import type { LobbyOperations } from "../lobby-actions";
 import type { CardResult } from "@backend/common/data-access/repositories/cards.repository";
 
 import { validate as checkCardDealingRules } from "./deal-cards.rules";
@@ -63,8 +63,8 @@ export type DealCardsResult =
  * Dependencies required by the deal cards service
  */
 export type DealCardsDependencies = {
-  getGameState: GameplayStateProvider;
-  gameplayHandler: TransactionalHandler<GameplayOperations>;
+  getLobbyState: LobbyStateProvider;
+  lobbyHandler: TransactionalHandler<LobbyOperations>;
 };
 
 /**
@@ -75,9 +75,9 @@ export type DealCardsDependencies = {
  */
 export const dealCardsService = (dependencies: DealCardsDependencies) => {
   return async (input: DealCardsInput): Promise<DealCardsResult> => {
-    const result = await dependencies.getGameState(input.gameId, input.userId);
+    const lobbyState = await dependencies.getLobbyState(input.gameId, input.userId);
 
-    if (result.status === "game-not-found") {
+    if (!lobbyState) {
       return {
         success: false,
         error: {
@@ -87,7 +87,8 @@ export const dealCardsService = (dependencies: DealCardsDependencies) => {
       };
     }
 
-    if (result.status === "user-not-player") {
+    // Check if user can modify game (basic permission check)
+    if (!lobbyState.userContext.canModifyGame) {
       return {
         success: false,
         error: {
@@ -98,9 +99,9 @@ export const dealCardsService = (dependencies: DealCardsDependencies) => {
       };
     }
 
-    const gameData = result.data;
+    const gameData = lobbyState;
 
-    const validationResult = checkCardDealingRules(gameData);
+    const validationResult = checkCardDealingRules(gameData as any);
 
     if (!validationResult.valid) {
       return {
@@ -113,7 +114,7 @@ export const dealCardsService = (dependencies: DealCardsDependencies) => {
       };
     }
 
-    const dealtCards = await dependencies.gameplayHandler(async (ops) => {
+    const dealtCards = await dependencies.lobbyHandler(async (ops) => {
       return await ops.dealCards(validationResult.data);
     });
 

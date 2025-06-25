@@ -79,7 +79,7 @@ export const modifyPlayersService = (dependencies: ServiceDependencies) => {
           publicName?: string;
           teamId?: number;
         } = {
-          gameId: lobby._gameId,
+          gameId: lobby._id,
           publicPlayerId: player.playerId,
         };
 

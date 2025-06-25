@@ -1,6 +1,6 @@
-import type { GameplayStateProvider } from "../../gameplay/state/gameplay-state.provider";
+import type { LobbyStateProvider } from "../state/lobby-state.provider";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
-import type { GameplayOperations } from "../../gameplay/gameplay-actions";
+import type { LobbyOperations } from "../lobby-actions";
 
 import { startRoundService } from "./start-round.service";
 import { startRoundController } from "./start-round.controller";
@@ -9,8 +9,8 @@ import { startRoundController } from "./start-round.controller";
  * Dependencies required by the start round feature
  */
 export interface StartRoundDependencies {
-  getGameState: GameplayStateProvider;
-  gameplayHandler: TransactionalHandler<GameplayOperations>;
+  getLobbyState: LobbyStateProvider;
+  lobbyHandler: TransactionalHandler<LobbyOperations>;
 }
 
 /**
@@ -21,8 +21,8 @@ export interface StartRoundDependencies {
  */
 export const startRound = (dependencies: StartRoundDependencies) => {
   const startRoundServiceInstance = startRoundService({
-    getGameState: dependencies.getGameState,
-    gameplayHandler: dependencies.gameplayHandler,
+    getLobbyState: dependencies.getLobbyState,
+    lobbyHandler: dependencies.lobbyHandler,
   });
 
   const controller = startRoundController({

@@ -71,7 +71,7 @@ export const addPlayersService = (dependencies: ServiceDependencies) => {
     return await dependencies.lobbyHandler(async (lobbyOps) => {
       const repositoryRequest = playersToAdd.map((player) => ({
         userId,
-        gameId: lobby._gameId,
+        gameId: lobby._id,
         teamId: teamNameToIdMap.get(player.teamName)!,
         publicName: player.playerName,
         statusId: 1,
@@ -93,7 +93,7 @@ export const addPlayersService = (dependencies: ServiceDependencies) => {
           teamName: player.teamName,
           statusId: player.statusId,
         })),
-        gamePublicId: lobby.publicId,
+        gamePublicId: lobby.public_id,
       };
     });
   };

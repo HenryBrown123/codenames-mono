@@ -66,7 +66,7 @@ export const startGameService = (dependencies: ServiceDependencies) => {
 
     return await dependencies.lobbyHandler(async (lobbyOps) => {
       const updatedGame = await lobbyOps.updateGameStatus(
-        lobby._gameId,
+        lobby._id,
         GAME_STATE.IN_PROGRESS,
       );
 

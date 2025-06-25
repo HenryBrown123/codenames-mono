@@ -1,6 +1,6 @@
-import type { GameplayStateProvider } from "../../gameplay/state/gameplay-state.provider";
+import type { LobbyStateProvider } from "../state/lobby-state.provider";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
-import type { GameplayOperations } from "../../gameplay/gameplay-actions";
+import type { LobbyOperations } from "../lobby-actions";
 
 import { roundCreationService } from "./new-round.service";
 import { newRoundController } from "./new-round.controller";
@@ -9,8 +9,8 @@ import { newRoundController } from "./new-round.controller";
  * Dependencies required by the new round feature
  */
 export interface NewRoundDependencies {
-  getGameState: GameplayStateProvider;
-  gameplayHandler: TransactionalHandler<GameplayOperations>;
+  getLobbyState: LobbyStateProvider;
+  lobbyHandler: TransactionalHandler<LobbyOperations>;
 }
 
 /**
@@ -21,8 +21,8 @@ export interface NewRoundDependencies {
  */
 export const newRound = (dependencies: NewRoundDependencies) => {
   const createRound = roundCreationService({
-    getGameState: dependencies.getGameState,
-    gameplayHandler: dependencies.gameplayHandler,
+    getLobbyState: dependencies.getLobbyState,
+    lobbyHandler: dependencies.lobbyHandler,
   });
 
   const controller = newRoundController({ createRound });
