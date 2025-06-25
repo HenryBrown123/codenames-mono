@@ -9,16 +9,18 @@ import {
 import * as roundsRepository from "@backend/common/data-access/repositories/rounds.repository";
 import * as cardsRepository from "@backend/common/data-access/repositories/cards.repository";
 import * as playerRepository from "@backend/common/data-access/repositories/players.repository";
+import * as playerRolesRepository from "@backend/common/data-access/repositories/player-roles.repository";
 import * as turnRepository from "@backend/common/data-access/repositories/turns.repository";
 import * as gameRepository from "@backend/common/data-access/repositories/games.repository";
-
-import * as newRoundActions from "./new-round/new-round.actions";
-import * as dealCardsActions from "./deal-cards/deal-cards.actions";
-import * as startRoundActions from "./start-round/start-round.actions";
-import * as assignRolesActions from "./assign-roles/assign-roles.actions";
 import * as giveClueActions from "./give-clue/give-clue.actions";
 import * as makeGuessActions from "./guess/make-guess.actions";
 import * as makeGuessRules from "./guess/make-guess.rules";
+
+// Import lobby actions for moved services that still depend on them
+import * as newRoundActions from "../lobby/new-round/new-round.actions";
+import * as dealCardsActions from "../lobby/deal-cards/deal-cards.actions";
+import * as startRoundActions from "../lobby/start-round/start-round.actions";
+import * as assignRolesActions from "../lobby/assign-roles/assign-roles.actions";
 
 import { gameplayState } from "./state";
 import { UnexpectedGameplayError } from "./errors/gameplay.errors";
@@ -40,24 +42,6 @@ const getGameStateOrThrow =
  * Creates gameplay operations for use within a transaction context
  */
 export const gameplayOperations = (trx: TransactionContext) => ({
-  /** round management */
-  createRound: newRoundActions.createNextRound(
-    roundsRepository.createNewRound(trx),
-  ),
-  assignPlayerRoles: assignRolesActions.assignRolesRandomly(
-    playerRepository.assignPlayerRoles(trx),
-    (gameId: number) =>
-      playerRepository.getRoleHistory(trx)(gameId, "CODEMASTER"),
-  ),
-  dealCards: dealCardsActions.dealCardsToRound(
-    cardsRepository.getRandomWords(trx),
-    cardsRepository.replaceCards(trx),
-  ),
-  startRound: startRoundActions.startCurrentRound(
-    roundsRepository.updateRoundStatus(trx),
-    turnRepository.createTurn(trx),
-  ),
-
   /** codemaster moves */
   giveClue: giveClueActions.giveClueToTurn(
     turnRepository.createClue(trx),
@@ -96,6 +80,24 @@ export const gameplayOperations = (trx: TransactionContext) => ({
       winningTeamId,
     );
   },
+
+  /** lobby operations (temporarily kept for moved services) */
+  createRound: newRoundActions.createNextRound(
+    roundsRepository.createNewRound(trx),
+  ),
+  assignPlayerRoles: assignRolesActions.assignRolesRandomly(
+    playerRolesRepository.assignPlayerRoles(trx),
+    (gameId: number) =>
+      playerRepository.getRoleHistory(trx)(gameId, "CODEMASTER"),
+  ),
+  dealCards: dealCardsActions.dealCardsToRound(
+    cardsRepository.getRandomWords(trx),
+    cardsRepository.replaceCards(trx),
+  ),
+  startRound: startRoundActions.startCurrentRound(
+    roundsRepository.updateRoundStatus(trx),
+    turnRepository.createTurn(trx),
+  ),
 
   /** queries */
   getCurrentGameState: getGameStateOrThrow(trx),

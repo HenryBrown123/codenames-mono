@@ -377,22 +377,23 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   ├── http-middleware
 │       │   └── logging
 │       ├── gameplay
-│       │   ├── assign-roles
-│       │   ├── deal-cards
 │       │   ├── errors
 │       │   ├── get-game
 │       │   ├── get-turn
 │       │   ├── give-clue
 │       │   ├── guess
-│       │   ├── new-round
-│       │   ├── start-round
 │       │   └── state
 │       ├── lobby
 │       │   ├── add-players
+│       │   ├── assign-roles
+│       │   ├── deal-cards
 │       │   ├── errors
 │       │   ├── modify-players
+│       │   ├── new-round
+│       │   ├── quick-start
 │       │   ├── remove-players
 │       │   ├── start-game
+│       │   ├── start-round
 │       │   └── state
 │       └── setup
 │           ├── create-new-game
@@ -437,7 +438,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-76 directories
+77 directories
 ```
 
 ## Getting Started

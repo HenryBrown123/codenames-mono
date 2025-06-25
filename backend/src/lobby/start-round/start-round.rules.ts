@@ -4,15 +4,15 @@ import {
   GameAggregate,
   roundSchema,
   gameplayBaseSchema,
-} from "../state/gameplay-state.types";
+} from "../../gameplay/state/gameplay-state.types";
 
-import { complexProperties } from "../state/gameplay-state.helpers";
+import { complexProperties } from "../../gameplay/state/gameplay-state.helpers";
 
 import {
   validateWithZodSchema,
   ValidatedGameState,
   GameplayValidationResult,
-} from "../state/gameplay-state.validation";
+} from "../../gameplay/state/gameplay-state.validation";
 
 import { z } from "zod";
 
