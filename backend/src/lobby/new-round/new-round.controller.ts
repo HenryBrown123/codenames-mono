@@ -25,6 +25,15 @@ export const newRoundResponseSchema = z.object({
       roundNumber: z.number(),
       status: z.string(),
       createdAt: z.date(),
+      cards: z.array(z.object({
+        _id: z.number(),
+        _roundId: z.number(),
+        word: z.string(),
+        cardType: z.string(),
+        _teamId: z.number().nullable(),
+        teamName: z.string().nullable().optional(),
+        selected: z.boolean(),
+      })).length(25),
     }),
   }),
 });
@@ -147,8 +156,9 @@ export const newRoundController = ({ createRound }: Dependencies) => {
         data: {
           round: {
             roundNumber: result.data.roundNumber,
-            status: "SETUP",
+            status: result.data.status,
             createdAt: result.data.createdAt,
+            cards: result.data.cards,
           },
         },
       });

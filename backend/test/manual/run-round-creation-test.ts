@@ -1,7 +1,7 @@
-import { testQuickStartEndpoint } from "./test-quick-start";
+import { testRoundCreationFlow } from "./test-round-creation-flow";
 
 // Run the test
-testQuickStartEndpoint(true)
+testRoundCreationFlow(true)
   .then(() => {
     console.log("\nTest completed successfully!");
     process.exit(0);

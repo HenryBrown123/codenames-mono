@@ -1,6 +1,6 @@
 /**
- * Quick Start Endpoint Test
- * Tests the new quick-start endpoint that combines multiple operations
+ * Round Creation Flow Test
+ * Tests the new round creation flow that automatically deals cards and assigns roles
  */
 
 import {
@@ -12,13 +12,13 @@ import {
   colors,
 } from "./test-common";
 
-export async function testQuickStartEndpoint(verbose = true): Promise<void> {
+export async function testRoundCreationFlow(verbose = true): Promise<void> {
   const api = new ApiClient(verbose);
   let gameId: string = "";
 
   try {
     console.log(
-      `${colors.bright}🚀 Testing Quick Start Endpoint${colors.reset}\n`,
+      `${colors.bright}🚀 Testing Round Creation Flow${colors.reset}\n`,
     );
 
     // === SETUP PHASE ===
@@ -44,26 +44,52 @@ export async function testQuickStartEndpoint(verbose = true): Promise<void> {
       { playerName: "Diana", teamName: "Team Blue" },
     ]);
 
-    // === TEST QUICK START ===
-    logStep("Test Quick Start Endpoint", verbose);
+    // === TEST NEW ROUND CREATION FLOW ===
+    logStep("Start Game", verbose);
     console.log(
-      `    ${colors.cyan}POST /games/${gameId}/quick-start${colors.reset}`,
+      `    ${colors.cyan}POST /games/${gameId}/start${colors.reset}`,
+    );
+    
+    const startResponse = await api.post(`/games/${gameId}/start`);
+    if (!startResponse.data.success) {
+      throw new Error(`Failed to start game: ${startResponse.data.error}`);
+    }
+    console.log(
+      `    ${colors.green}✅ Game Started!${colors.reset}`,
     );
 
-    const quickStartResponse = await api.post(`/games/${gameId}/quick-start`);
+    logStep("Create Round (with automatic card dealing and role assignment)", verbose);
+    console.log(
+      `    ${colors.cyan}POST /games/${gameId}/rounds${colors.reset}`,
+    );
 
-    if (quickStartResponse.data.success) {
+    const roundResponse = await api.post(`/games/${gameId}/rounds`);
+    
+    if (roundResponse.data.success) {
       console.log(
-        `    ${colors.green}✅ Quick Start Successful!${colors.reset}`,
+        `    ${colors.green}✅ Round Created Successfully!${colors.reset}`,
       );
       console.log(
-        `    ${colors.dim}Game Status: ${quickStartResponse.data.data.game.status}${colors.reset}`,
+        `    ${colors.dim}Round Number: ${roundResponse.data.data.round.roundNumber}${colors.reset}`,
       );
       console.log(
-        `    ${colors.dim}Round ID: ${quickStartResponse.data.data.round?.roundId || 'N/A'}${colors.reset}`,
+        `    ${colors.dim}Round Status: ${roundResponse.data.data.round.status}${colors.reset}`,
       );
       console.log(
-        `    ${colors.dim}Turn ID: ${quickStartResponse.data.data.turn?.turnId || 'N/A'}${colors.reset}`,
+        `    ${colors.dim}Cards Dealt: ${roundResponse.data.data.round.cards.length}${colors.reset}`,
+      );
+
+      logStep("Start Round", verbose);
+      console.log(
+        `    ${colors.cyan}POST /games/${gameId}/rounds/${roundResponse.data.data.round.roundNumber}/start${colors.reset}`,
+      );
+      
+      const startRoundResponse = await api.post(`/games/${gameId}/rounds/${roundResponse.data.data.round.roundNumber}/start`);
+      if (!startRoundResponse.data.success) {
+        throw new Error(`Failed to start round: ${startRoundResponse.data.error}`);
+      }
+      console.log(
+        `    ${colors.green}✅ Round Started!${colors.reset}`,
       );
 
       // Verify game state after quick start
@@ -109,12 +135,12 @@ export async function testQuickStartEndpoint(verbose = true): Promise<void> {
       // === TEST ERROR CASES ===
       console.log(`\n${colors.bright}Testing Error Cases:${colors.reset}`);
 
-      // Test 1: Try quick start on already started game
-      logStep("Test Quick Start on Already Started Game", verbose);
+      // Test 1: Try to start an already started game
+      logStep("Test Starting Already Started Game", verbose);
       try {
-        await api.post(`/games/${gameId}/quick-start`);
+        await api.post(`/games/${gameId}/start`);
         console.log(
-          `    ${colors.red}✗ Failed - Should have rejected duplicate quick start${colors.reset}`,
+          `    ${colors.red}✗ Failed - Should have rejected duplicate start${colors.reset}`,
         );
       } catch (error: any) {
         if (error.serverError?.error?.includes("Cannot start game")) {
@@ -128,8 +154,8 @@ export async function testQuickStartEndpoint(verbose = true): Promise<void> {
         }
       }
 
-      // Test 2: Try quick start with insufficient players
-      logStep("Test Quick Start with Insufficient Players", verbose);
+      // Test 2: Try to start game with insufficient players
+      logStep("Test Starting Game with Insufficient Players", verbose);
       const newGameResponse = await api.post("/games", {
         gameType: "SINGLE_DEVICE",
         gameFormat: "QUICK",
@@ -143,7 +169,7 @@ export async function testQuickStartEndpoint(verbose = true): Promise<void> {
       ]);
 
       try {
-        await api.post(`/games/${newGameId}/quick-start`);
+        await api.post(`/games/${newGameId}/start`);
         console.log(
           `    ${colors.red}✗ Failed - Should have rejected insufficient players${colors.reset}`,
         );
@@ -162,18 +188,18 @@ export async function testQuickStartEndpoint(verbose = true): Promise<void> {
       }
 
       console.log(
-        `\n${colors.green}${colors.bright}✅ Quick Start Endpoint Test Complete!${colors.reset}`,
+        `\n${colors.green}${colors.bright}✅ Round Creation Flow Test Complete!${colors.reset}`,
       );
     } else {
       console.log(
-        `    ${colors.red}✗ Quick Start Failed: ${quickStartResponse.data.error}${colors.reset}`,
+        `    ${colors.red}✗ Round Creation Failed: ${roundResponse.data.error}${colors.reset}`,
       );
     }
   } catch (error) {
-    logError("Quick Start Test", error);
+    logError("Round Creation Flow Test", error);
     throw error;
   }
 }
 
 // Export for use in other test files
-export default testQuickStartEndpoint;
+export default testRoundCreationFlow;
