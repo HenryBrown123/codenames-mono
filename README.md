@@ -347,85 +347,75 @@ Frontend and backend extend these base types with their specific requirements.
 ```
 .
 ├── backend
-│   ├── src
-│   │   ├── auth
-│   │   │   ├── create-guest-session
-│   │   │   └── errors
-│   │   ├── common
-│   │   │   ├── config
-│   │   │   ├── data
-│   │   │   │   ├── decks
-│   │   │   │   └── enums
-│   │   │   ├── data-access
-│   │   │   │   └── repositories
-│   │   │   ├── db
-│   │   │   ├── http-middleware
-│   │   │   └── logging
-│   │   ├── gameplay
-│   │   │   ├── assign-roles
-│   │   │   ├── deal-cards
-│   │   │   ├── errors
-│   │   │   ├── get-game
-│   │   │   ├── get-turn
-│   │   │   ├── give-clue
-│   │   │   ├── guess
-│   │   │   ├── new-round
-│   │   │   ├── start-round
-│   │   │   └── state
-│   │   ├── lobby
-│   │   │   ├── add-players
-│   │   │   ├── errors
-│   │   │   ├── modify-players
-│   │   │   ├── remove-players
-│   │   │   ├── start-game
-│   │   │   └── state
-│   │   └── setup
-│   │       ├── create-new-game
-│   │       └── errors
-│   └── test
-│       └── manual
+│   └── src
+│       ├── auth
+│       │   ├── create-guest-session
+│       │   └── errors
+│       ├── common
+│       │   ├── config
+│       │   ├── data
+│       │   │   ├── decks
+│       │   │   └── enums
+│       │   ├── data-access
+│       │   │   └── repositories
+│       │   ├── db
+│       │   ├── http-middleware
+│       │   └── logging
+│       ├── gameplay
+│       │   ├── assign-roles
+│       │   ├── deal-cards
+│       │   ├── errors
+│       │   ├── get-game
+│       │   ├── get-turn
+│       │   ├── give-clue
+│       │   ├── guess
+│       │   ├── new-round
+│       │   ├── start-round
+│       │   └── state
+│       ├── lobby
+│       │   ├── add-players
+│       │   ├── errors
+│       │   ├── modify-players
+│       │   ├── remove-players
+│       │   ├── start-game
+│       │   └── state
+│       └── setup
+│           ├── create-new-game
+│           └── errors
 ├── frontend
-│   ├── cypress
-│   │   ├── component
-│   │   └── support
 │   ├── public
-│   ├── src
-│   │   ├── app
-│   │   │   └── routes
-│   │   │       └── page-layout
-│   │   ├── game-access
-│   │   │   ├── api
-│   │   │   │   ├── endpoints
-│   │   │   │   └── query-hooks
-│   │   │   └── pages
-│   │   ├── gameplay
-│   │   │   ├── api
-│   │   │   │   ├── mutations
-│   │   │   │   └── queries
-│   │   │   ├── dashboard
-│   │   │   ├── device-handoff
-│   │   │   ├── game-actions
-│   │   │   ├── game-board
-│   │   │   ├── game-data
-│   │   │   ├── game-instructions
-│   │   │   ├── pages
-│   │   │   ├── role-scenes
-│   │   │   ├── shared
-│   │   │   │   ├── action-button
-│   │   │   │   ├── error-message
-│   │   │   │   └── loading-spinner
-│   │   │   ├── state
-│   │   │   └── turn-management
-│   │   ├── lib
-│   │   ├── lobby
-│   │   │   └── api
-│   │   ├── shared-types
-│   │   └── style
-│   └── test
-│       └── features
-│           └── gameplay
-│               └── components
-│                   └── game-board
+│   └── src
+│       ├── app
+│       │   └── routes
+│       │       └── page-layout
+│       ├── game-access
+│       │   ├── api
+│       │   │   ├── endpoints
+│       │   │   └── query-hooks
+│       │   └── pages
+│       ├── gameplay
+│       │   ├── api
+│       │   │   ├── mutations
+│       │   │   └── queries
+│       │   ├── dashboard
+│       │   ├── device-handoff
+│       │   ├── game-actions
+│       │   ├── game-board
+│       │   ├── game-data
+│       │   ├── game-instructions
+│       │   ├── pages
+│       │   ├── role-scenes
+│       │   ├── shared
+│       │   │   ├── action-button
+│       │   │   ├── error-message
+│       │   │   └── loading-spinner
+│       │   ├── state
+│       │   └── turn-management
+│       ├── lib
+│       ├── lobby
+│       │   └── api
+│       ├── shared-types
+│       └── style
 ├── scripts
 └── shared
     └── src
@@ -433,7 +423,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-87 directories
+77 directories
 ```
 
 ## Getting Started

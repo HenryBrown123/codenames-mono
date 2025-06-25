@@ -3,8 +3,10 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
 
+const excludePattern = 'test|cypress|node_modules'
+
 // Generate directory structure
-const structure = execSync('tree -d --gitignore', { encoding: 'utf8' });
+const structure = execSync(`tree -d --gitignore -I "${excludePattern}"`, { encoding: 'utf8' });
 
 // Read current README
 const readme = fs.readFileSync('README.md', 'utf8');
