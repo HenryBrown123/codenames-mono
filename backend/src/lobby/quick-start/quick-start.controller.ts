@@ -53,7 +53,6 @@ export const quickStartController =
         const validatedResponse = quickStartResponseSchema.parse(response);
         res.status(200).json(validatedResponse);
       } else {
-        // All errors from service are treated as 409 Conflict
         res.status(409).json({
           success: false,
           error: result.error,

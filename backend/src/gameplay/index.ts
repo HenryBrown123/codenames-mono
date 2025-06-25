@@ -10,7 +10,7 @@ import { turnState } from "./state";
 
 import getGame from "./get-game";
 import giveClue from "./give-clue";
-import makeGuess from "./guess";
+import makeGuess from "./make-guess";
 import getTurn from "./get-turn";
 
 import { gameplayErrorHandler } from "./errors/gameplay-errors.middleware";

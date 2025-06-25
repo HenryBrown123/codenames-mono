@@ -381,7 +381,7 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   ├── get-game
 │       │   ├── get-turn
 │       │   ├── give-clue
-│       │   ├── guess
+│       │   ├── make-guess
 │       │   └── state
 │       ├── lobby
 │       │   ├── add-players
