@@ -46,12 +46,27 @@ The API implements RESTful patterns where appropriate, with action-based endpoin
 
 Example endpoints:
 ```
-GET    /api/games/:gameId
+# Authentication
+POST   /api/auth/guests
+
+# Game Setup
 POST   /api/games
+GET    /api/games/:gameId
+
+# Lobby Management
 POST   /api/games/:gameId/players
+PATCH  /api/games/:gameId/players
+PATCH  /api/games/:gameId/players/:playerId
+DELETE /api/games/:gameId/players/:playerId
 POST   /api/games/:gameId/start
+
+# Gameplay
+POST   /api/games/:gameId/rounds
+POST   /api/games/:gameId/rounds/:id/deal
+POST   /api/games/:gameId/rounds/:roundNumber/start
 POST   /api/games/:gameId/rounds/:roundNumber/clues
 POST   /api/games/:gameId/rounds/:roundNumber/guesses
+GET    /api/turns/:turnId
 ```
 
 ### Database Layer
@@ -178,19 +193,19 @@ The frontend implements a functional React architecture with minimal external de
 
 ### State Management
 
-React Query manages all server state synchronization and mutations. The architecture uses multiple focused providers:
+@tanstack/react-query manages all server state synchronization and mutations. The architecture uses multiple focused providers:
 
 ```typescript
 <GameDataProvider gameId={gameId}>
-  <TurnProvider>
+  <ActiveTurnProvider>
     <PlayerRoleSceneProvider>
       <GameActionsProvider>{children}</GameActionsProvider>
     </PlayerRoleSceneProvider>
-  </TurnProvider>
+  </ActiveTurnProvider>
 </GameDataProvider>
 ```
 
-React Query handles:
+@tanstack/react-query handles:
 - Automatic background refetching
 - Request deduplication
 - Optimistic updates for game actions
@@ -282,7 +297,7 @@ The GameScene component composes different boards, dashboards, and message panel
 
 Device handoff is managed seamlessly for single-device games, showing transition overlays when switching between players.
 
-The architecture avoids `useEffect` for data synchronization, relying on React Query for all server state management. Effects are limited to complex form validation and debug logging.
+The architecture avoids `useEffect` for data synchronization, relying on @tanstack/react-query for all server state management. Effects are limited to complex form validation and debug logging.
 
 ## Shared Package
 
@@ -333,7 +348,7 @@ Frontend and backend extend these base types with their specific requirements.
 ### Frontend
 - **React**: UI library (functional components)
 - **TypeScript**: Static typing with strict mode
-- **React Query**: Server state management
+- **@tanstack/react-query**: Server state management
 - **Styled Components**: Component-scoped styling
 - **React Router**: Client-side routing
 
@@ -435,9 +450,9 @@ Frontend and backend extend these base types with their specific requirements.
 ### Installation
 
 ```bash
-# Clone repository
-git clone https://github.com/username/codenames.git
-cd codenames
+# Clone repository  
+git clone <your-repo-url>
+cd codenames-mono
 
 # Install dependencies
 npm install
@@ -445,8 +460,8 @@ npm install
 # Start PostgreSQL (using Docker)
 docker-compose up -d
 
-# Run database migrations
-npm run migrate -w backend
+# Setup database (optional - tables created automatically)
+npm run db:setup -w backend
 
 # Start development servers
 npm run dev:all
@@ -455,8 +470,8 @@ npm run dev:all
 ### Development
 
 The development environment runs:
-- Backend API on http://localhost:3001
-- Frontend dev server on http://localhost:3000
+- Backend API on http://localhost:3000
+- Frontend dev server on http://localhost:8000
 - PostgreSQL on localhost:5432
 
 The frontend development server proxies API requests to the backend.

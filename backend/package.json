@@ -8,7 +8,8 @@
     "dev": "tsx --watch src/index.ts",
     "build": "tsc --build",
     "start": "node dist/index.js",
-    "dev:dbTypes": "npx kysely-codegen --out-file ./src/common/db/db.types.ts"
+    "dev:dbTypes": "npx kysely-codegen --out-file ./src/common/db/db.types.ts",
+    "db:setup": "psql -h localhost -U codenames -d codenames -f src/common/db/init.sql"
   },
   "jest": {
     "preset": "ts-jest/presets/default-esm",
