@@ -1,78 +1,59 @@
-import { GAME_STATE, ROUND_STATE } from "@codenames/shared/types";
-import { LobbyAggregate } from "../state/lobby-state.types";
+import { z } from "zod";
+import { ROUND_STATE } from "@codenames/shared/types";
+import { LobbyAggregate, lobbyBaseSchema } from "../state/lobby-state.types";
 import { 
-  LobbyValidationResult, 
+  LobbyValidationResult,
   ValidatedLobbyState,
-  createBrandedResult 
+  validateWithZodSchema
 } from "../state/lobby-state.validation";
 
 /**
- * Rules for validating card dealing in the lobby context
+ * Schema for validating card dealing
  */
-const cardDealingRules = {
-  hasCurrentRound(lobby: LobbyAggregate): boolean {
-    return lobby.currentRound !== null && lobby.currentRound !== undefined;
-  },
-
-  isRoundInSetupState(lobby: LobbyAggregate): boolean {
-    return lobby.currentRound?.status === ROUND_STATE.SETUP;
-  },
-
-  hasNoCardsDealt(lobby: LobbyAggregate): boolean {
-    return !lobby.currentRound?.cards || lobby.currentRound.cards.length === 0;
-  },
-
-  hasMinimumTwoTeams(lobby: LobbyAggregate): boolean {
-    return lobby.teams.length >= 2;
-  },
-};
+const dealCardsValidationSchema = lobbyBaseSchema
+  .refine(
+    (data) => data.currentRound !== null && data.currentRound !== undefined,
+    {
+      message: "No current round to deal cards to",
+      path: ["currentRound"],
+    }
+  )
+  .refine(
+    (data) => data.currentRound?.status === ROUND_STATE.SETUP,
+    {
+      message: "Round must be in SETUP state to deal cards",
+      path: ["currentRound", "status"],
+    }
+  )
+  .refine(
+    (data) => !data.currentRound?.cards || data.currentRound.cards.length === 0,
+    {
+      message: "Cards have already been dealt for this round",
+      path: ["currentRound", "cards"],
+    }
+  )
+  .refine(
+    (data) => data.teams.length >= 2,
+    {
+      message: "Game must have at least 2 teams to deal cards",
+      path: ["teams"],
+    }
+  )
+  .transform((data) => ({
+    ...data,
+    currentRound: data.currentRound!,
+  }));
 
 /**
- * Type for a validated lobby state during card dealing
+ * Type for validated deal cards state
  */
-export type DealCardsValidLobbyState = ValidatedLobbyState<"dealCards"> & {
-  currentRound: NonNullable<LobbyAggregate['currentRound']>;
-};
+export type DealCardsValidLobbyState = ValidatedLobbyState<typeof dealCardsValidationSchema>;
 
 /**
  * Validates if cards can be dealt
  */
 export function validate(
-  lobby: LobbyAggregate
+  data: LobbyAggregate
 ): LobbyValidationResult<DealCardsValidLobbyState> {
-  const errors: Array<{ path?: string[]; message: string }> = [];
-
-  if (!cardDealingRules.hasCurrentRound(lobby)) {
-    errors.push({
-      path: ["currentRound"],
-      message: "No current round to deal cards to",
-    });
-  }
-
-  if (!cardDealingRules.isRoundInSetupState(lobby)) {
-    errors.push({
-      path: ["currentRound", "status"],
-      message: `Round must be in SETUP state, current: ${lobby.currentRound?.status}`,
-    });
-  }
-
-  if (!cardDealingRules.hasNoCardsDealt(lobby)) {
-    errors.push({
-      path: ["currentRound", "cards"],
-      message: "Cards have already been dealt for this round",
-    });
-  }
-
-  if (!cardDealingRules.hasMinimumTwoTeams(lobby)) {
-    errors.push({
-      path: ["teams"],
-      message: "Game must have at least 2 teams to deal cards",
-    });
-  }
-
-  if (errors.length > 0) {
-    return { valid: false, errors };
-  }
-
-  return { valid: true, data: createBrandedResult(lobby, "dealCards") as DealCardsValidLobbyState };
+  return validateWithZodSchema(dealCardsValidationSchema, data);
 }

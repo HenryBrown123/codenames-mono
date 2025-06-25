@@ -44,7 +44,7 @@ export const playerContextSchema = z.object({
   ]),
 });
 
-// Simplified card schema for lobby - only needed for "cards dealt" check
+// Simplified card schema for lobby 
 export const cardSchema = z.object({
   _id: z.number().int().positive(),
   _roundId: z.number().int().positive(),
@@ -55,7 +55,7 @@ export const cardSchema = z.object({
   selected: z.boolean(),
 });
 
-// Simplified round schema for lobby - no turn/guess/clue details needed
+// Simplified round schema for lobby
 export const roundSchema = z.object({
   _id: z.number().int().positive(),
   number: z.number().int().positive(),
@@ -64,8 +64,8 @@ export const roundSchema = z.object({
     ROUND_STATE.IN_PROGRESS,
     ROUND_STATE.COMPLETED,
   ]),
-  cards: z.array(cardSchema).optional().default([]), // Only needed for "cards dealt" check
-  players: z.array(playerSchema).optional().default([]), // For role assignment check
+  cards: z.array(cardSchema).optional().default([]), 
+  players: z.array(playerSchema).optional().default([]), 
   createdAt: z.date(),
 });
 
@@ -101,10 +101,10 @@ export const lobbyBaseSchema = z.object({
   ]),
   gameType: z.enum([GAME_TYPE.SINGLE_DEVICE, GAME_TYPE.MULTI_DEVICE]),
   teams: z.array(teamSchema),
-  currentRound: roundSchema.optional().nullable(), // Simplified!
+  currentRound: roundSchema.optional().nullable(),
   historicalRounds: z.array(historicalRoundSchema).optional().default([]),
   userContext: userContextSchema,
-  playerContext: playerContextSchema,
+  playerContext: playerContextSchema.nullable(),
   createdAt: z.date(),
   updatedAt: z.date().optional().nullable(),
 });

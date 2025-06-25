@@ -24,6 +24,7 @@ import {
 
 import { LobbyAggregate } from "./lobby-state.types";
 
+
 export type LobbyStateProvider = (
   gameId: PublicId,
   userId: number,
@@ -70,15 +71,7 @@ export const lobbyStateProvider = (
       publicName: userPlayer.publicName,
       teamName: userPlayer.teamName,
       role: userPlayer.role,
-    } : {
-      _userId: userId,
-      _id: 0,
-      _teamId: 0,
-      username: null,
-      publicName: "Guest",
-      teamName: "No Team",
-      role: "NONE" as any,
-    };
+    } : null;
 
     // Find current round (latest incomplete round) and historical rounds
     const sortedRounds = rounds.sort((a, b) => b.roundNumber - a.roundNumber);

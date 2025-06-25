@@ -1,88 +1,69 @@
+import { z } from "zod";
 import { GAME_STATE, ROUND_STATE } from "@codenames/shared/types";
-import { LobbyAggregate } from "../state/lobby-state.types";
+import { LobbyAggregate, lobbyBaseSchema } from "../state/lobby-state.types";
 import { 
-  LobbyValidationResult, 
+  LobbyValidationResult,
   ValidatedLobbyState,
-  createBrandedResult 
+  validateWithZodSchema
 } from "../state/lobby-state.validation";
 
 /**
- * Rules for validating round start in the lobby context
+ * Schema for validating round start
  */
-const roundStartRules = {
-  isRoundInSetupState(lobby: LobbyAggregate): boolean {
-    return lobby.currentRound?.status === ROUND_STATE.SETUP;
-  },
-
-  hasCardsDealt(lobby: LobbyAggregate): boolean {
-    return (
-      lobby.currentRound?.cards !== undefined &&
-      lobby.currentRound.cards.length > 0
-    );
-  },
-
-  hasMinimumPlayersPerTeam(lobby: LobbyAggregate): boolean {
-    return lobby.teams.every((team) => team.players.length >= 2);
-  },
-
-  isGameInProgress(lobby: LobbyAggregate): boolean {
-    return lobby.status === GAME_STATE.IN_PROGRESS;
-  },
-};
+const startRoundValidationSchema = lobbyBaseSchema
+  .refine(
+    (data) => data.currentRound !== null && data.currentRound !== undefined,
+    {
+      message: "No current round to start",
+      path: ["currentRound"],
+    }
+  )
+  .refine(
+    (data) => data.status === GAME_STATE.IN_PROGRESS,
+    {
+      message: "Game must be in IN_PROGRESS state to start a round",
+      path: ["status"],
+    }
+  )
+  .refine(
+    (data) => data.currentRound?.status === ROUND_STATE.SETUP,
+    {
+      message: "Round must be in SETUP state to start",
+      path: ["currentRound", "status"],
+    }
+  )
+  .refine(
+    (data) => data.currentRound?.cards !== undefined && data.currentRound.cards.length > 0,
+    {
+      message: "Cards must be dealt before starting the round",
+      path: ["currentRound", "cards"],
+    }
+  )
+  .refine(
+    (data) => data.teams.every((team) => team.players.length >= 2),
+    {
+      message: "Each team must have at least 2 players",
+      path: ["teams"],
+    }
+  )
+  .transform((data) => ({
+    ...data,
+    currentRound: {
+      ...data.currentRound!,
+      cards: data.currentRound!.cards!,
+    },
+  }));
 
 /**
- * Type for a validated lobby state during round start
+ * Type for validated start round state
  */
-export type StartRoundValidLobbyState = ValidatedLobbyState<"startRound"> & {
-  currentRound: NonNullable<LobbyAggregate['currentRound']>;
-};
+export type StartRoundValidLobbyState = ValidatedLobbyState<typeof startRoundValidationSchema>;
 
 /**
  * Validates if a round can be started
  */
 export function validate(
-  lobby: LobbyAggregate
+  data: LobbyAggregate
 ): LobbyValidationResult<StartRoundValidLobbyState> {
-  const errors: Array<{ path?: string[]; message: string }> = [];
-
-  if (!lobby.currentRound) {
-    errors.push({
-      path: ["currentRound"],
-      message: "No current round to start",
-    });
-  }
-
-  if (!roundStartRules.isGameInProgress(lobby)) {
-    errors.push({
-      path: ["status"],
-      message: "Game must be in IN_PROGRESS state to start a round",
-    });
-  }
-
-  if (!roundStartRules.isRoundInSetupState(lobby)) {
-    errors.push({
-      path: ["currentRound", "status"],
-      message: `Round must be in SETUP state, current: ${lobby.currentRound?.status}`,
-    });
-  }
-
-  if (!roundStartRules.hasCardsDealt(lobby)) {
-    errors.push({
-      path: ["currentRound", "cards"],
-      message: "Cards must be dealt before starting the round",
-    });
-  }
-
-  if (!roundStartRules.hasMinimumPlayersPerTeam(lobby)) {
-    errors.push({
-      path: ["teams"],
-      message: "Each team must have at least 2 players",
-    });
-  }
-
-  if (errors.length > 0) {
-    return { valid: false, errors };
-  }
-
-  return { valid: true, data: createBrandedResult(lobby, "startRound") as StartRoundValidLobbyState };
+  return validateWithZodSchema(startRoundValidationSchema, data);
 }
