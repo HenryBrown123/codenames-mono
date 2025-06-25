@@ -8,7 +8,6 @@ import {
 import type { TeamId } from "@backend/common/data-access/repositories/teams.repository";
 
 import type { DealCardsValidLobbyState } from "./deal-cards.rules";
-import { complexProperties } from "../../gameplay/state/gameplay-state.helpers";
 
 /**
  * Factory function that creates a card dealing action with repository dependencies

@@ -3,10 +3,13 @@ import type { LobbyStateProvider } from "../state/lobby-state.provider";
 import { lobbyHelpers } from "../state/lobby-state.helpers";
 import { GAME_STATE } from "@codenames/shared/types";
 import { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
-import { gameplayState } from "../../gameplay/state";
-import type { GameplayStateProvider } from "../../gameplay/state/gameplay-state.provider";
 import type { DB } from "@backend/common/db/db.types";
 import { Kysely } from "kysely";
+
+// Import the services we need
+import { roundCreationService } from "../new-round/new-round.service";
+import { dealCardsService } from "../deal-cards/deal-cards.service";
+import { startRoundService } from "../start-round/start-round.service";
 
 export type QuickStartSuccess = {
   success: true;
@@ -31,6 +34,22 @@ export type ServiceDependencies = {
 };
 
 export const quickStartService = (dependencies: ServiceDependencies) => {
+  // Create the services we'll use
+  const createRound = roundCreationService({
+    getLobbyState: dependencies.getLobbyState,
+    lobbyHandler: dependencies.lobbyHandler,
+  });
+
+  const dealCards = dealCardsService({
+    getLobbyState: dependencies.getLobbyState,
+    lobbyHandler: dependencies.lobbyHandler,
+  });
+
+  const startRound = startRoundService({
+    getLobbyState: dependencies.getLobbyState,
+    lobbyHandler: dependencies.lobbyHandler,
+  });
+
   const quickStart = async (
     publicGameId: string,
     userId: number
@@ -76,13 +95,15 @@ export const quickStartService = (dependencies: ServiceDependencies) => {
       };
     }
 
-    // Execute all operations in a single transaction
-    return await dependencies.lobbyHandler(async (lobbyOps) => {
-      // 1. Update game status to IN_PROGRESS
-      const updatedGame = await lobbyOps.updateGameStatus(
-        lobby._id,
-        GAME_STATE.IN_PROGRESS,
-      );
+    try {
+      // Execute all operations in sequence
+      // Step 1: Update game status to IN_PROGRESS
+      const updatedGame = await dependencies.lobbyHandler(async (lobbyOps) => {
+        return await lobbyOps.updateGameStatus(
+          lobby._id,
+          GAME_STATE.IN_PROGRESS,
+        );
+      });
 
       if (updatedGame.status !== GAME_STATE.IN_PROGRESS) {
         throw new Error(
@@ -90,24 +111,52 @@ export const quickStartService = (dependencies: ServiceDependencies) => {
         );
       }
 
-      // TODO: Implement full workflow with proper validation
-      // For now, just update game status as a basic quick-start
-      // Full implementation would:
-      // - Create round using validated game state
-      // - Deal cards using validated game state  
-      // - Assign roles using validated game state
-      // - Start round using validated game state
+      // Step 2: Create a new round (includes role assignment)
+      const roundResult = await createRound({
+        gameId: publicGameId,
+        userId: userId,
+      });
 
-      // Return success with basic info
+      if (!roundResult.success) {
+        throw new Error(`Failed to create round: ${roundResult.error.status}`);
+      }
+
+      // Step 3: Deal cards
+      const dealResult = await dealCards({
+        gameId: publicGameId,
+        userId: userId,
+      });
+
+      if (!dealResult.success) {
+        throw new Error(`Failed to deal cards: ${dealResult.error.status}`);
+      }
+
+      // Step 4: Start the round
+      const startResult = await startRound({
+        gameId: publicGameId,
+        roundNumber: 1, // First round for quick start
+        userId: userId,
+      });
+
+      if (!startResult.success) {
+        throw new Error(`Failed to start round: ${startResult.error.status}`);
+      }
+
+      // Return success with actual IDs
       return {
         success: true,
         gameId: updatedGame._id,
         publicId: updatedGame.public_id,
-        roundId: 0, // Placeholder - would be actual round ID
-        turnId: 0, // Placeholder - would be actual turn ID
+        roundId: roundResult.data._id,
+        turnId: 0, // TODO: Get turn ID from somewhere
         status: updatedGame.status,
       };
-    });
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Failed to quick start game",
+      };
+    }
   };
 
   return quickStart;

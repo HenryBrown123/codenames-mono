@@ -1,7 +1,6 @@
 import { RoundStatusUpdater } from "@backend/common/data-access/repositories/rounds.repository";
 import { TurnCreator } from "@backend/common/data-access/repositories/turns.repository";
 import { StartRoundValidLobbyState } from "./start-round.rules";
-import { complexProperties } from "../../gameplay/state/gameplay-state.helpers";
 import { ROUND_STATE } from "@codenames/shared/types";
 
 /**

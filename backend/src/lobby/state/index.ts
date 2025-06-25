@@ -23,6 +23,7 @@ export const createLobbyStateProvider = (dbContext: Kysely<DB>) => {
     teamsRepository.getTeamsByGameId(dbContext),
     playerRepository.findPlayersByGameId(dbContext),
     roundsRepository.getRoundsByGameId(dbContext),
+    cardsRepository.getCardsByRoundId(dbContext),
   );
 };
 

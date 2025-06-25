@@ -1,6 +1,5 @@
 import { RoundCreator } from "@backend/common/data-access/repositories/rounds.repository";
 import { NewRoundValidLobbyState } from "./new-round.rules";
-import { complexProperties } from "../../gameplay/state/gameplay-state.helpers";
 
 /**
  * Factory function that creates a round creation action with repository dependencies
