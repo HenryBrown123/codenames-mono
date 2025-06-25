@@ -12,6 +12,21 @@ import * as startRoundActions from "./start-round/start-round.actions";
 import * as assignRolesActions from "./assign-roles/assign-roles.actions";
 
 import { lobbyState } from "./state";
+import { UnexpectedLobbyError } from "./errors/lobby.errors";
+
+/**
+ * Wrapper around gameplay state provider to throw if not found
+ */
+const getGameStateOrThrow =
+  (trx: TransactionContext) => async (gameId: string, userId: number) => {
+    const lobby = await lobbyState(trx).provider(gameId, userId);
+
+    if (!lobby)
+      throw new UnexpectedLobbyError("Lobby data not found");
+
+    return lobby;
+  };
+
 
 /**
  * Creates lobby operations for use within a transaction context
@@ -20,13 +35,12 @@ import { lobbyState } from "./state";
  * @returns Object containing all lobby operations
  */
 export const lobbyOperations = (trx: TransactionContext) => ({
-  getLobbyState: lobbyState(trx).provider,
+  getLobbyState: getGameStateOrThrow(trx),
   addPlayers: playersRepository.addPlayers(trx),
   removePlayer: playersRepository.removePlayer(trx),
   modifyPlayers: playersRepository.modifyPlayers(trx),
   updateGameStatus: gamesRepository.updateGameStatus(trx),
   
-  // Round management operations (moved from gameplay)
   createRound: newRoundActions.createNextRound(
     roundsRepository.createNewRound(trx),
   ),

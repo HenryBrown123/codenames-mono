@@ -61,7 +61,6 @@ export const initialize = (
     getLobbyState,
   });
 
-  // Create controllers
   const lobbyAddPlayersController = addPlayersController({
     addPlayers: lobbyAddPlayersService,
   });
@@ -80,8 +79,6 @@ export const initialize = (
     startGame: lobbyStartGameService,
   });
 
-  // Round management controllers (moved from gameplay)
-  // Now properly using lobby dependencies
   const { controller: newRoundController } = newRound({
     getLobbyState,
     lobbyHandler,
@@ -97,11 +94,9 @@ export const initialize = (
     lobbyHandler,
   });
 
-  // Quick start controller
   const { controller: quickStartController } = quickStart({
     lobbyHandler,
     getLobbyState,
-    db,
   });
 
   // Create router and register routes
@@ -129,7 +124,6 @@ export const initialize = (
 
   router.post("/games/:gameId/start", auth, lobbyStartGameController);
 
-  // Round management routes (moved from gameplay)
   router.post("/games/:gameId/rounds", auth, newRoundController);
   router.post("/games/:gameId/rounds/:id/deal", auth, dealCardsController);
   router.post(
@@ -138,10 +132,8 @@ export const initialize = (
     startRoundController,
   );
 
-  // Quick start route
   router.post("/games/:gameId/quick-start", auth, quickStartController);
 
-  // Apply routes and error handlers
   app.use("/api", router);
   app.use("/api", lobbyErrorHandler);
 };

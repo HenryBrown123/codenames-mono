@@ -1,78 +1,93 @@
-import { z } from "zod";
+import { z, ZodSchema } from "zod";
 import { LobbyAggregate } from "./lobby-state.types";
 
 /**
- * Validation error for lobby operations
+ * Branded type for validated lobby state
  */
-export type LobbyValidationError = {
-  path?: string[];
-  message: string;
+export type ValidatedLobbyState<T extends ZodSchema> = z.infer<T> & {
+  readonly __brand: unique symbol;
 };
 
 /**
- * Generic result type for lobby validation operations
+ * Validation result with discriminated union
  */
-export type LobbyValidationResult<T> = 
+export type LobbyValidationResult<T> =
   | { valid: true; data: T }
   | { valid: false; errors: LobbyValidationError[] };
 
 /**
- * Base type for validated lobby states with branding
+ * Structured validation error
  */
-export type ValidatedLobbyState<TBrand extends string> = LobbyAggregate & {
-  _brand: TBrand;
+export type LobbyValidationError = {
+  path: string;
+  message: string;
+  code?: string;
 };
 
 /**
- * Helper function to validate data with Zod schema and transform to lobby validation result
+ * Validates data against a Zod schema, returning branded type
  */
-export function validateWithZodSchema<T>(
-  schema: z.ZodSchema<T>,
+export const validateWithZodSchema = <T extends z.ZodType>(
+  schema: T,
   data: unknown,
-  context?: string
-): LobbyValidationResult<T> {
+): LobbyValidationResult<ValidatedLobbyState<T>> => {
   const result = schema.safeParse(data);
-  
-  if (result.success) {
-    return { valid: true, data: result.data };
+
+  if (!result.success) {
+    return { valid: false, errors: convertZodErrors(result.error) };
   }
-  
-  const errors: LobbyValidationError[] = result.error.errors.map((error) => ({
-    path: error.path.map(String),
-    message: context ? `${context}: ${error.message}` : error.message,
+
+  return { valid: true, data: result.data as ValidatedLobbyState<T> };
+};
+
+/**
+ * Converts Zod errors to our error format
+ */
+const convertZodErrors = (error: z.ZodError): LobbyValidationError[] =>
+  error.errors.map((err) => ({
+    path: err.path.join("."),
+    message: err.message,
+    code: err.code,
   }));
-  
-  return { valid: false, errors };
-}
 
 /**
- * Helper function to combine multiple validation results
+ * Extracts the validated type from a validator function
  */
-export function combineValidationResults<T>(
-  results: LobbyValidationResult<any>[],
-  data: T
-): LobbyValidationResult<T> {
-  const allErrors: LobbyValidationError[] = [];
-  
-  for (const result of results) {
-    if (!result.valid) {
-      allErrors.push(...result.errors);
-    }
-  }
-  
-  if (allErrors.length > 0) {
-    return { valid: false, errors: allErrors };
-  }
-  
-  return { valid: true, data };
-}
+type ExtractValidatedType<T> = T extends (
+  data: LobbyAggregate,
+) => LobbyValidationResult<infer U>
+  ? U
+  : never;
 
 /**
- * Helper function to create branded validation result
+ * Creates intersection of all validator return types
  */
-export function createBrandedResult<TBrand extends string>(
-  lobby: LobbyAggregate,
-  brand: TBrand
-): ValidatedLobbyState<TBrand> {
-  return lobby as ValidatedLobbyState<TBrand>;
-}
+type IntersectValidators<T extends readonly any[]> = T extends readonly [
+  infer First,
+  ...infer Rest,
+]
+  ? ExtractValidatedType<First> & IntersectValidators<Rest>
+  : unknown;
+
+/**
+ * Chains validation functions, accumulating all validation brands
+ */
+export const validateAll = <
+  T extends readonly [
+    (data: LobbyAggregate) => LobbyValidationResult<any>,
+    ...any[],
+  ],
+>(
+  data: LobbyAggregate,
+  validators: T,
+): LobbyValidationResult<IntersectValidators<T>> => {
+  let currentData = data;
+
+  for (const validator of validators) {
+    const result = validator(currentData);
+    if (!result.valid) return result;
+    currentData = result.data;
+  }
+
+  return { valid: true, data: currentData as IntersectValidators<T> };
+};

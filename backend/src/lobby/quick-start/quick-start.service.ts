@@ -1,6 +1,5 @@
 import type { LobbyOperations } from "../lobby-actions";
 import type { LobbyStateProvider } from "../state/lobby-state.provider";
-import { lobbyHelpers } from "../state/lobby-state.helpers";
 import { GAME_STATE } from "@codenames/shared/types";
 import { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 import type { DB } from "@backend/common/db/db.types";
@@ -10,6 +9,9 @@ import { Kysely } from "kysely";
 import { roundCreationService } from "../new-round/new-round.service";
 import { dealCardsService } from "../deal-cards/deal-cards.service";
 import { startRoundService } from "../start-round/start-round.service";
+
+// Import validation
+import { validate as validateQuickStart } from "./quick-start.rules";
 
 export type QuickStartSuccess = {
   success: true;
@@ -30,7 +32,6 @@ export type QuickStartResult = QuickStartSuccess | QuickStartError;
 export type ServiceDependencies = {
   lobbyHandler: TransactionalHandler<LobbyOperations>;
   getLobbyState: LobbyStateProvider;
-  db: Kysely<DB>;
 };
 
 export const quickStartService = (dependencies: ServiceDependencies) => {
@@ -63,35 +64,14 @@ export const quickStartService = (dependencies: ServiceDependencies) => {
       };
     }
 
-    // Validate lobby can start
-    const totalPlayers = lobbyHelpers.getTotalPlayerCount(lobby);
-    const teamCounts = lobbyHelpers.getTeamPlayerCounts(lobby);
-
-    if (lobby.status !== "LOBBY") {
+    // Validate lobby can be quick started using Zod schema
+    const validationResult = validateQuickStart(lobby);
+    if (!validationResult.valid) {
+      // Return the first validation error message
+      const firstError = validationResult.errors[0];
       return {
         success: false,
-        error: `Cannot start game in '${lobby.status}' state`,
-      };
-    }
-
-    if (totalPlayers < 4) {
-      return {
-        success: false,
-        error: "Cannot start game with less than 4 players",
-      };
-    }
-
-    if (teamCounts.length < 2) {
-      return {
-        success: false,
-        error: "Cannot start game with less than 2 teams",
-      };
-    }
-
-    if (teamCounts.some((count) => count < 2)) {
-      return {
-        success: false,
-        error: "Each team must have at least 2 players",
+        error: firstError.message,
       };
     }
 

@@ -1,69 +1,52 @@
+import { z } from "zod";
 import { GAME_STATE, ROUND_STATE, MAX_ROUNDS_BY_FORMAT } from "@codenames/shared/types";
-import { LobbyAggregate } from "../state/lobby-state.types";
+import { LobbyAggregate, lobbyBaseSchema } from "../state/lobby-state.types";
 import { 
-  LobbyValidationResult, 
+  LobbyValidationResult,
   ValidatedLobbyState,
-  createBrandedResult 
+  validateWithZodSchema
 } from "../state/lobby-state.validation";
 
 /**
- * Rules for validating round creation in the lobby context
+ * Schema for validating new round creation
  */
-const roundCreationRules = {
-  isPreviousRoundCompleted(lobby: LobbyAggregate): boolean {
-    if (!lobby.currentRound) return true;
-    return lobby.currentRound.status === ROUND_STATE.COMPLETED;
-  },
-
-  isWithinMaxRounds(lobby: LobbyAggregate): boolean {
-    const completedRounds = lobby.historicalRounds?.length || 0;
-    const maxRounds = MAX_ROUNDS_BY_FORMAT[lobby.game_format];
-    return completedRounds < maxRounds;
-  },
-
-  isGameInProgress(lobby: LobbyAggregate): boolean {
-    return lobby.status === GAME_STATE.IN_PROGRESS;
-  },
-};
+const newRoundValidationSchema = lobbyBaseSchema
+  .refine(
+    (data) => data.status === GAME_STATE.IN_PROGRESS,
+    {
+      message: "Game must be in IN_PROGRESS state to create a new round",
+      path: ["status"],
+    }
+  )
+  .refine(
+    (data) => !data.currentRound || data.currentRound.status === ROUND_STATE.COMPLETED,
+    {
+      message: "Current round must be completed before creating a new round",
+      path: ["currentRound", "status"],
+    }
+  )
+  .refine(
+    (data) => {
+      const completedRounds = data.historicalRounds?.length || 0;
+      const maxRounds = MAX_ROUNDS_BY_FORMAT[data.game_format];
+      return completedRounds < maxRounds;
+    },
+    (data) => ({
+      message: `Maximum of ${MAX_ROUNDS_BY_FORMAT[data.game_format]} rounds allowed for ${data.game_format} format`,
+      path: ["historicalRounds"],
+    })
+  );
 
 /**
- * Type for a validated lobby state during round creation
+ * Type for validated new round state
  */
-export type NewRoundValidLobbyState = ValidatedLobbyState<"newRound">;
+export type NewRoundValidLobbyState = ValidatedLobbyState<typeof newRoundValidationSchema>;
 
 /**
  * Validates if a new round can be created
  */
 export function validate(
-  lobby: LobbyAggregate
+  data: LobbyAggregate
 ): LobbyValidationResult<NewRoundValidLobbyState> {
-  const errors: Array<{ path?: string[]; message: string }> = [];
-
-  if (!roundCreationRules.isGameInProgress(lobby)) {
-    errors.push({
-      path: ["status"],
-      message: `Game must be in IN_PROGRESS state, current: ${lobby.status}`,
-    });
-  }
-
-  if (!roundCreationRules.isPreviousRoundCompleted(lobby)) {
-    errors.push({
-      path: ["currentRound", "status"],
-      message: "Current round must be completed before creating a new round",
-    });
-  }
-
-  if (!roundCreationRules.isWithinMaxRounds(lobby)) {
-    const maxRounds = MAX_ROUNDS_BY_FORMAT[lobby.game_format];
-    errors.push({
-      path: ["historicalRounds"],
-      message: `Maximum of ${maxRounds} rounds allowed for ${lobby.game_format} format`,
-    });
-  }
-
-  if (errors.length > 0) {
-    return { valid: false, errors };
-  }
-
-  return { valid: true, data: createBrandedResult(lobby, "newRound") };
+  return validateWithZodSchema(newRoundValidationSchema, data);
 }
