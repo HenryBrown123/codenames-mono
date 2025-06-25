@@ -416,14 +416,13 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   └── api
 │       ├── shared-types
 │       └── style
-├── scripts
 └── shared
     └── src
         ├── api
         │   └── modules
         └── types
 
-77 directories
+76 directories
 ```
 
 ## Getting Started

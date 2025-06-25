@@ -3,7 +3,8 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
 
-const excludePattern = 'test|cypress|node_modules'
+// exlude folders... gitignore'd folders excluded automatically.
+const excludePattern = 'test|cypress|node_modules|scripts'
 
 // Generate directory structure
 const structure = execSync(`tree -d --gitignore -I "${excludePattern}"`, { encoding: 'utf8' });
