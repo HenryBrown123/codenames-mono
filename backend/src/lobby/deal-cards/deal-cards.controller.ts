@@ -36,7 +36,7 @@ export type DealCardsErrorResponse = {
   error: string;
   details?: {
     code: string;
-    validationErrors?: { path: string; message: string }[];
+    validationErrors?: { path?: string[]; message: string }[];
   };
 };
 

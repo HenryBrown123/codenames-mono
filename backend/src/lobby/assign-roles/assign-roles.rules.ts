@@ -1,86 +1,77 @@
 import { GAME_STATE, ROUND_STATE, PLAYER_ROLE } from "@codenames/shared/types";
-import {
-  GameAggregate,
-  gameplayBaseSchema,
-  roundSchema,
-} from "../../gameplay/state/gameplay-state.types";
-import {
-  validateWithZodSchema,
-  ValidatedGameState,
-  GameplayValidationResult,
-} from "../../gameplay/state/gameplay-state.validation";
-import { z } from "zod";
+import { LobbyAggregate } from "../state/lobby-state.types";
+import { 
+  LobbyValidationResult, 
+  ValidatedLobbyState,
+  createBrandedResult 
+} from "../state/lobby-state.validation";
 
 /**
- * Rules for validating role assignment in a game
+ * Rules for validating role assignment in the lobby context
  */
 const roleAssignmentRules = {
-  /**
-   * Checks if the round is in SETUP state and ready for role assignment
-   */
-  isRoundInSetupState(game: GameAggregate): boolean {
-    return game.currentRound?.status === ROUND_STATE.SETUP;
+  isRoundInSetupState(lobby: LobbyAggregate): boolean {
+    return lobby.currentRound?.status === ROUND_STATE.SETUP;
   },
 
-  /**
-   * Checks if roles have not already been assigned
-   */
-  hasNoExistingRoles(game: GameAggregate): boolean {
-    if (!game.currentRound?.players) return true;
-    return game.currentRound.players.every(
-      (player) => !player.role || player.role === PLAYER_ROLE.NONE,
+  hasNoExistingRoles(lobby: LobbyAggregate): boolean {
+    if (!lobby.currentRound?.players) return true;
+    return lobby.currentRound.players.every(
+      (player) => !player.role || player.role === PLAYER_ROLE.NONE
     );
   },
 
-  /**
-   * Checks if each team has at least 2 players for role assignment
-   */
-  hasMinimumPlayersPerTeam(game: GameAggregate): boolean {
-    return game.teams.every((team) => team.players.length >= 2);
+  hasMinimumPlayersPerTeam(lobby: LobbyAggregate): boolean {
+    return lobby.teams.every((team) => team.players.length >= 2);
   },
 };
 
 /**
- * Base schema for role assignment validation - use the full round schema
+ * Type for a validated lobby state during role assignment
  */
-export const roleAssignmentSchema = gameplayBaseSchema.extend({
-  status: z.literal(GAME_STATE.IN_PROGRESS),
-  currentRound: roundSchema
-    .extend({
-      status: z.literal(ROUND_STATE.SETUP),
-    })
-    .required(),
-});
+export type AssignRolesValidLobbyState = ValidatedLobbyState<"assignRoles"> & {
+  currentRound: NonNullable<LobbyAggregate['currentRound']>;
+};
 
 /**
- * Enhanced schema that includes rules for role assignment validation
- */
-export const roleAssignmentAllowedSchema = roleAssignmentSchema
-  .refine(roleAssignmentRules.isRoundInSetupState, {
-    message: "Round must be in SETUP state to assign roles",
-    path: ["currentRound", "status"],
-  })
-  .refine(roleAssignmentRules.hasNoExistingRoles, {
-    message: "Roles have already been assigned for this round",
-    path: ["currentRound", "players"],
-  })
-  .refine(roleAssignmentRules.hasMinimumPlayersPerTeam, {
-    message: "Each team must have at least 2 players to assign roles",
-    path: ["teams"],
-  });
-
-/**
- * Type definition for a valid game state during role assignment
- */
-export type AssignRolesValidGameState = ValidatedGameState<
-  typeof roleAssignmentAllowedSchema
->;
-
-/**
- * Validates the game state for role assignment
+ * Validates if roles can be assigned
  */
 export function validate(
-  data: GameAggregate,
-): GameplayValidationResult<AssignRolesValidGameState> {
-  return validateWithZodSchema(roleAssignmentAllowedSchema, data);
+  lobby: LobbyAggregate
+): LobbyValidationResult<AssignRolesValidLobbyState> {
+  const errors: Array<{ path?: string[]; message: string }> = [];
+
+  if (!lobby.currentRound) {
+    errors.push({
+      path: ["currentRound"],
+      message: "No current round to assign roles to",
+    });
+  }
+
+  if (!roleAssignmentRules.isRoundInSetupState(lobby)) {
+    errors.push({
+      path: ["currentRound", "status"],
+      message: "Round must be in SETUP state to assign roles",
+    });
+  }
+
+  if (!roleAssignmentRules.hasNoExistingRoles(lobby)) {
+    errors.push({
+      path: ["currentRound", "players"],
+      message: "Roles have already been assigned for this round",
+    });
+  }
+
+  if (!roleAssignmentRules.hasMinimumPlayersPerTeam(lobby)) {
+    errors.push({
+      path: ["teams"],
+      message: "Each team must have at least 2 players to assign roles",
+    });
+  }
+
+  if (errors.length > 0) {
+    return { valid: false, errors };
+  }
+
+  return { valid: true, data: createBrandedResult(lobby, "assignRoles") as AssignRolesValidLobbyState };
 }

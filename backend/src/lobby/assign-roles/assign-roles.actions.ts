@@ -1,5 +1,5 @@
 import { RoleAssignmentCreator } from "@backend/common/data-access/repositories/players.repository";
-import type { AssignRolesValidGameState } from "./assign-roles.rules";
+import type { AssignRolesValidLobbyState } from "./assign-roles.rules";
 
 /**
  * Type for role assignment input
@@ -22,7 +22,7 @@ export const assignRolesRandomly = (
    * Randomly assigns roles for a pre-validated game state
    * Players who haven't been codemaster get priority, then random selection
    */
-  return async (gameState: AssignRolesValidGameState) => {
+  return async (gameState: AssignRolesValidLobbyState) => {
     const assignments: RoleAssignmentInput[] = [];
 
     const previousCodemasters = await getPreviousCodemasters(gameState._id);

@@ -1,116 +1,78 @@
 import { GAME_STATE, ROUND_STATE } from "@codenames/shared/types";
-
-import { GameAggregate } from "../../gameplay/state/gameplay-state.types";
-
-import {
-  gameplayBaseSchema,
-  currentRoundSchema,
-} from "../../gameplay/state/gameplay-state.types";
-
-import { complexProperties } from "../../gameplay/state/gameplay-state.helpers";
-
-import {
-  validateWithZodSchema,
-  ValidatedGameState,
-  GameplayValidationResult,
-} from "../../gameplay/state/gameplay-state.validation";
-
-import { z } from "zod";
+import { LobbyAggregate } from "../state/lobby-state.types";
+import { 
+  LobbyValidationResult, 
+  ValidatedLobbyState,
+  createBrandedResult 
+} from "../state/lobby-state.validation";
 
 /**
- * Rules for validating card dealing in a game
+ * Rules for validating card dealing in the lobby context
  */
 const cardDealingRules = {
-  /**
-   * Checks if the game has at least one round
-   * @param game - The current game state
-   * @returns true if the game has at least one round
-   */
-  hasRounds(game: GameAggregate): boolean {
-    return complexProperties.getRoundCount(game) >= 1;
+  hasCurrentRound(lobby: LobbyAggregate): boolean {
+    return lobby.currentRound !== null && lobby.currentRound !== undefined;
   },
 
-  /**
-   * Checks if the latest round is in SETUP state
-   * @param game - The current game state
-   * @returns true if the latest round exists and is in SETUP state
-   */
-  isLatestRoundInSetupState(game: GameAggregate): boolean {
-    const latestRound = game.currentRound;
-    // If there are rounds, there must be a latest round
-    return (
-      latestRound !== undefined &&
-      latestRound !== null &&
-      latestRound.status === ROUND_STATE.SETUP
-    );
+  isRoundInSetupState(lobby: LobbyAggregate): boolean {
+    return lobby.currentRound?.status === ROUND_STATE.SETUP;
   },
 
-  /**
-   * Checks if the game has at least 2 teams for proper gameplay
-   * @param game - The current game state
-   * @returns true if the game has at least 2 teams
-   */
-  hasMinimumTwoTeams(game: GameAggregate): boolean {
-    return complexProperties.getTeamCount(game) >= 2;
+  hasNoCardsDealt(lobby: LobbyAggregate): boolean {
+    return !lobby.currentRound?.cards || lobby.currentRound.cards.length === 0;
   },
 
-  /**
-   * Checks if cards have not already been dealt for the round
-   * @param game - The current game state
-   * @returns true if the latest round has no cards yet
-   */
-  hasNoCardsDealt(game: GameAggregate): boolean {
-    // This would require a proper implementation in gameState to track cards
-    // For now, we'll use a placeholder that assumes no cards have been dealt yet
-    return true;
+  hasMinimumTwoTeams(lobby: LobbyAggregate): boolean {
+    return lobby.teams.length >= 2;
   },
 };
 
 /**
- * Base schema for card dealing validation
+ * Type for a validated lobby state during card dealing
  */
-const cardDealingSchema = gameplayBaseSchema.extend({
-  status: z.literal(GAME_STATE.IN_PROGRESS),
-  currentRound: currentRoundSchema.extend({
-    status: z.literal(ROUND_STATE.SETUP),
-  }),
-});
+export type DealCardsValidLobbyState = ValidatedLobbyState<"dealCards"> & {
+  currentRound: NonNullable<LobbyAggregate['currentRound']>;
+};
 
 /**
- * Enhanced schema that includes rules for card dealing validation
- */
-const cardDealingAllowedSchema = cardDealingSchema
-  .refine(cardDealingRules.hasRounds, {
-    message: "Game must have at least one round to deal cards",
-    path: ["rounds"],
-  })
-  .refine(cardDealingRules.isLatestRoundInSetupState, {
-    message: "Latest round must be in SETUP state to deal cards",
-    path: ["rounds"],
-  })
-  .refine(cardDealingRules.hasMinimumTwoTeams, {
-    message: "Game must have at least 2 teams to deal cards",
-    path: ["teams"],
-  })
-  .refine(cardDealingRules.hasNoCardsDealt, {
-    message: "Cards have already been dealt for this round",
-    path: ["rounds"],
-  });
-
-/**
- * Type definition for a valid game state during card dealing
- */
-export type DealCardsValidGameState = ValidatedGameState<
-  typeof cardDealingAllowedSchema
->;
-
-/**
- * Validates the game state for card dealing
- * @param data - Unknown data to validate
- * @returns Validation result containing either valid game state or validation errors
+ * Validates if cards can be dealt
  */
 export function validate(
-  data: GameAggregate,
-): GameplayValidationResult<DealCardsValidGameState> {
-  return validateWithZodSchema(cardDealingAllowedSchema, data);
+  lobby: LobbyAggregate
+): LobbyValidationResult<DealCardsValidLobbyState> {
+  const errors: Array<{ path?: string[]; message: string }> = [];
+
+  if (!cardDealingRules.hasCurrentRound(lobby)) {
+    errors.push({
+      path: ["currentRound"],
+      message: "No current round to deal cards to",
+    });
+  }
+
+  if (!cardDealingRules.isRoundInSetupState(lobby)) {
+    errors.push({
+      path: ["currentRound", "status"],
+      message: `Round must be in SETUP state, current: ${lobby.currentRound?.status}`,
+    });
+  }
+
+  if (!cardDealingRules.hasNoCardsDealt(lobby)) {
+    errors.push({
+      path: ["currentRound", "cards"],
+      message: "Cards have already been dealt for this round",
+    });
+  }
+
+  if (!cardDealingRules.hasMinimumTwoTeams(lobby)) {
+    errors.push({
+      path: ["teams"],
+      message: "Game must have at least 2 teams to deal cards",
+    });
+  }
+
+  if (errors.length > 0) {
+    return { valid: false, errors };
+  }
+
+  return { valid: true, data: createBrandedResult(lobby, "dealCards") as DealCardsValidLobbyState };
 }
