@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import { RefreshCw } from "lucide-react";
 import { CodeWordInput } from "./codemaster-input";
 import { useGameData } from "@frontend/gameplay/game-data";
 import { useGameActions } from "@frontend/gameplay/game-actions";
@@ -43,6 +44,34 @@ const LoadingSpinner = styled.div`
     to {
       transform: rotate(360deg);
     }
+  }
+`;
+
+const RefreshButton = styled.button`
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+  
+  &:hover {
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.3;
+  }
+  
+  svg {
+    width: 1rem;
+    height: 1rem;
   }
 `;
 
@@ -130,6 +159,11 @@ export const LobbyDashboardView: React.FC = () => {
   const { gameData } = useGameData();
   const { createRound, startRound, dealCards, actionState } = useGameActions();
 
+  const canRedeal = 
+    gameData?.currentRound?.status === "SETUP" && 
+    gameData.currentRound.cards && 
+    gameData.currentRound.cards.length > 0;
+
   const handleClick = () => {
     if (
       gameData?.currentRound?.status === "SETUP" &&
@@ -152,6 +186,10 @@ export const LobbyDashboardView: React.FC = () => {
       createRound();
       return;
     }
+  };
+
+  const handleRedeal = () => {
+    dealCards(true);
   };
 
   const getButtonText = () => {
@@ -178,13 +216,24 @@ export const LobbyDashboardView: React.FC = () => {
   };
 
   return (
-    <ButtonWrapper>
-      <ActionButton
-        onClick={handleClick}
-        text={actionState.status === "loading" ? "Loading..." : getButtonText()}
-        enabled={actionState.status !== "loading"}
-      />
-    </ButtonWrapper>
+    <Container style={{ position: 'relative' }}>
+      {canRedeal && (
+        <RefreshButton
+          onClick={handleRedeal}
+          disabled={actionState.status === "loading"}
+          title="Re-deal cards"
+        >
+          <RefreshCw />
+        </RefreshButton>
+      )}
+      <ButtonWrapper>
+        <ActionButton
+          onClick={handleClick}
+          text={actionState.status === "loading" ? "Loading..." : getButtonText()}
+          enabled={actionState.status !== "loading"}
+        />
+      </ButtonWrapper>
+    </Container>
   );
 };
 

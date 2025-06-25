@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(lsof:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(npx tsc:*)",
+      "mcp__ide__getDiagnostics"
     ]
   },
   "enableAllProjectMcpServers": false

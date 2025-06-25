@@ -18,6 +18,7 @@ export const dealCardsRequestSchema = z.object({
     .object({
       deck: z.string().min(1).default("BASE"),
       languageCode: z.string().min(2).max(5).default("en"),
+      redeal: z.boolean().optional().default(false),
     })
     .optional()
     .default({}),
@@ -86,6 +87,7 @@ export const dealCardsController = ({ dealCards }: Dependencies) => {
       const result = await dealCards({
         gameId: validatedRequest.params.gameId,
         userId: validatedRequest.auth.userId,
+        redeal: validatedRequest.body.redeal,
       });
 
       if (result.success) {
