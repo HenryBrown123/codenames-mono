@@ -1,13 +1,7 @@
 import { z } from "zod";
 import { GAME_STATE, GAME_TYPE, GAME_FORMAT, ROUND_STATE, PLAYER_ROLE } from "@codenames/shared/types";
 
-// Import gameplay schemas for compatibility
-import {
-  roundSchema as gameplayRoundSchema,
-  gameplayBaseSchema,
-  playerContextSchema as gameplayPlayerContextSchema,
-} from "../../gameplay/state/gameplay-state.types";
-
+// Player schema for lobby context
 export const playerSchema = z.object({
   _id: z.number().int().positive(),
   publicId: z.string(),
@@ -20,6 +14,7 @@ export const playerSchema = z.object({
   role: z.string().default(PLAYER_ROLE.NONE),
 });
 
+// Team schema for lobby context
 export const teamSchema = z.object({
   _id: z.number().int().positive(),
   _gameId: z.number().int().positive(),
@@ -27,12 +22,13 @@ export const teamSchema = z.object({
   players: z.array(playerSchema).default([]),
 });
 
+// User context for permissions
 export const userContextSchema = z.object({
   _userId: z.number().int().positive(),
   canModifyGame: z.boolean().default(true),
 });
 
-// Player context for validation compatibility with gameplay state
+// Player context for validation compatibility
 export const playerContextSchema = z.object({
   _userId: z.number().int().positive(),
   _id: z.number().int().positive(),
@@ -48,7 +44,7 @@ export const playerContextSchema = z.object({
   ]),
 });
 
-// Round-related schemas for lobby context
+// Simplified card schema for lobby - only needed for "cards dealt" check
 export const cardSchema = z.object({
   _id: z.number().int().positive(),
   _roundId: z.number().int().positive(),
@@ -59,36 +55,7 @@ export const cardSchema = z.object({
   selected: z.boolean(),
 });
 
-// Clue and guess schemas for turn context
-export const clueSchema = z.object({
-  _id: z.number().int().positive(),
-  word: z.string(),
-  targetCardCount: z.number().int(),
-  createdAt: z.date(),
-});
-
-export const guessSchema = z.object({
-  _id: z.number().int().positive(),
-  _cardId: z.number().int().positive(),
-  word: z.string(),
-  createdAt: z.date(),
-});
-
-// Turn schema for round context (matching gameplay structure)
-export const turnSchema = z.object({
-  _id: z.number().int().positive(),
-  publicId: z.string(),
-  _teamId: z.number().int().positive(),
-  teamName: z.string(),
-  status: z.string(),
-  _roundId: z.number().int().positive(),
-  guessesRemaining: z.number().int(),
-  createdAt: z.date(),
-  completedAt: z.date().nullable(),
-  clue: clueSchema.optional(),
-  guesses: z.array(guessSchema).default([]),
-});
-
+// Simplified round schema for lobby - no turn/guess/clue details needed
 export const roundSchema = z.object({
   _id: z.number().int().positive(),
   number: z.number().int().positive(),
@@ -97,12 +64,12 @@ export const roundSchema = z.object({
     ROUND_STATE.IN_PROGRESS,
     ROUND_STATE.COMPLETED,
   ]),
-  cards: z.array(cardSchema).optional().default([]),
-  turns: z.array(turnSchema).optional().default([]),
-  players: z.array(playerSchema).optional().default([]),
+  cards: z.array(cardSchema).optional().default([]), // Only needed for "cards dealt" check
+  players: z.array(playerSchema).optional().default([]), // For role assignment check
   createdAt: z.date(),
 });
 
+// Historical round schema - minimal info for round count validation
 export const historicalRoundSchema = z.object({
   _id: z.number().int().positive(),
   number: z.number().int().positive(),
@@ -116,6 +83,7 @@ export const historicalRoundSchema = z.object({
   createdAt: z.date(),
 });
 
+// Main lobby aggregate schema
 export const lobbyBaseSchema = z.object({
   _id: z.number().int().positive(),
   public_id: z.string(),
@@ -133,7 +101,7 @@ export const lobbyBaseSchema = z.object({
   ]),
   gameType: z.enum([GAME_TYPE.SINGLE_DEVICE, GAME_TYPE.MULTI_DEVICE]),
   teams: z.array(teamSchema),
-  currentRound: roundSchema.optional().nullable(),
+  currentRound: roundSchema.optional().nullable(), // Simplified!
   historicalRounds: z.array(historicalRoundSchema).optional().default([]),
   userContext: userContextSchema,
   playerContext: playerContextSchema,
@@ -141,7 +109,12 @@ export const lobbyBaseSchema = z.object({
   updatedAt: z.date().optional().nullable(),
 });
 
+// Type exports
 export type Player = z.infer<typeof playerSchema>;
 export type Team = z.infer<typeof teamSchema>;
 export type UserContext = z.infer<typeof userContextSchema>;
+export type PlayerContext = z.infer<typeof playerContextSchema>;
+export type Card = z.infer<typeof cardSchema>;
+export type Round = z.infer<typeof roundSchema>;
+export type HistoricalRound = z.infer<typeof historicalRoundSchema>;
 export type LobbyAggregate = z.infer<typeof lobbyBaseSchema>;

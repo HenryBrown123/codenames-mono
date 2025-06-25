@@ -18,6 +18,10 @@ import {
   RoundFinderAll,
 } from "@backend/common/data-access/repositories/rounds.repository";
 
+import {
+  CardsFinder,
+} from "@backend/common/data-access/repositories/cards.repository";
+
 import { LobbyAggregate } from "./lobby-state.types";
 
 export type LobbyStateProvider = (
@@ -30,6 +34,7 @@ export const lobbyStateProvider = (
   getTeams: TeamsFinder<InternalId>,
   getPlayersByGameId: PlayerFinderAll<InternalId>,
   getRoundsByGameId: RoundFinderAll<InternalId>,
+  getCardsByRoundId: CardsFinder<InternalId>,
 ): LobbyStateProvider => {
   const getLobbyState = async (
     gameId: PublicId,
@@ -91,9 +96,18 @@ export const lobbyStateProvider = (
         _id: currentRound._id,
         number: currentRound.roundNumber,
         status: currentRound.status,
-        cards: [], // Cards populated when needed
-        turns: [], // Turns populated when needed  
-        players: [], // Round players populated when needed
+        cards: await getCardsByRoundId(currentRound._id).then(cards => 
+          cards.map(card => ({
+            _id: card._id,
+            _roundId: card._roundId,
+            _teamId: card._teamId,
+            teamName: card.teamName,
+            word: card.word,
+            cardType: card.cardType,
+            selected: card.selected,
+          }))
+        ),
+        players: [], // Will be populated when needed for role assignment
         createdAt: currentRound.createdAt,
       } : null,
       historicalRounds: historicalRounds.map(r => ({

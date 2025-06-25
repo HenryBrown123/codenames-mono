@@ -27,8 +27,6 @@ import quickStart from "./quick-start";
 import { lobbyState } from "./state";
 import { lobbyOperations } from "./lobby-actions";
 import { lobbyErrorHandler } from "./errors/lobby-errors.middleware";
-import { gameplayState } from "../gameplay/state";
-import { gameplayActions } from "../gameplay/gameplay-actions";
 
 /** Initializes the lobby feature module with all routes and dependencies */
 export const initialize = (
@@ -38,11 +36,9 @@ export const initialize = (
 ) => {
   // State providers
   const { provider: getLobbyState } = lobbyState(db);
-  const { provider: getGameState } = gameplayState(db);
 
   // Transaction handlers
   const lobbyHandler = createTransactionalHandler(db, lobbyOperations);
-  const { handler: gameplayHandler } = gameplayActions(db);
 
   // Create service functions
   const lobbyAddPlayersService = addPlayersService({
