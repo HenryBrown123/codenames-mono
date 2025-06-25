@@ -80,7 +80,7 @@ export const quickStartService = (dependencies: ServiceDependencies) => {
     return await dependencies.lobbyHandler(async (lobbyOps) => {
       // 1. Update game status to IN_PROGRESS
       const updatedGame = await lobbyOps.updateGameStatus(
-        lobby._gameId,
+        lobby._id,
         GAME_STATE.IN_PROGRESS,
       );
 

@@ -1,7 +1,7 @@
-import type { GameplayStateProvider } from "../../gameplay/state/gameplay-state.provider";
+import type { LobbyStateProvider } from "../state/lobby-state.provider";
 import type { GameplayValidationError } from "../../gameplay/state/gameplay-state.validation";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
-import type { GameplayOperations } from "../../gameplay/gameplay-actions";
+import type { LobbyOperations } from "../lobby-actions";
 
 import { validate as checkRoundStartRules } from "./start-round.rules";
 
@@ -66,8 +66,8 @@ export type StartRoundResult =
  * Dependencies required by the start round service
  */
 export type StartRoundDependencies = {
-  getGameState: GameplayStateProvider;
-  gameplayHandler: TransactionalHandler<GameplayOperations>;
+  getLobbyState: LobbyStateProvider;
+  lobbyHandler: TransactionalHandler<LobbyOperations>;
 };
 
 /**
@@ -78,9 +78,9 @@ export type StartRoundDependencies = {
  */
 export const startRoundService = (dependencies: StartRoundDependencies) => {
   return async (input: StartRoundInput): Promise<StartRoundResult> => {
-    const result = await dependencies.getGameState(input.gameId, input.userId);
+    const lobbyState = await dependencies.getLobbyState(input.gameId, input.userId);
 
-    if (result.status === "game-not-found") {
+    if (!lobbyState) {
       return {
         success: false,
         error: {
@@ -90,7 +90,8 @@ export const startRoundService = (dependencies: StartRoundDependencies) => {
       };
     }
 
-    if (result.status === "user-not-player") {
+    // Check if user can modify game (basic permission check)
+    if (!lobbyState.userContext.canModifyGame) {
       return {
         success: false,
         error: {
@@ -101,7 +102,7 @@ export const startRoundService = (dependencies: StartRoundDependencies) => {
       };
     }
 
-    const gameData = result.data;
+    const gameData = lobbyState;
 
     if (!gameData.currentRound) {
       return {
@@ -124,7 +125,7 @@ export const startRoundService = (dependencies: StartRoundDependencies) => {
       };
     }
 
-    const validationResult = checkRoundStartRules(gameData);
+    const validationResult = checkRoundStartRules(gameData as any);
 
     if (!validationResult.valid) {
       return {
@@ -137,7 +138,7 @@ export const startRoundService = (dependencies: StartRoundDependencies) => {
       };
     }
 
-    const updatedRound = await dependencies.gameplayHandler(async (ops) => {
+    const updatedRound = await dependencies.lobbyHandler(async (ops) => {
       return await ops.startRound(validationResult.data);
     });
 

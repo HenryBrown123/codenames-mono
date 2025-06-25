@@ -85,21 +85,20 @@ export const initialize = (
   });
 
   // Round management controllers (moved from gameplay)
-  // These services still use gameplay operations but need lobby operations too
-  // TODO: Refactor to use proper lobby operations only
+  // Now properly using lobby dependencies
   const { controller: newRoundController } = newRound({
-    getGameState,
-    gameplayHandler, // Still uses gameplay handler for complex operations
+    getLobbyState,
+    lobbyHandler,
   });
 
   const { controller: dealCardsController } = dealCards({
-    getGameState,
-    gameplayHandler,
+    getLobbyState,
+    lobbyHandler,
   });
 
   const { controller: startRoundController } = startRound({
-    getGameState,
-    gameplayHandler,
+    getLobbyState,
+    lobbyHandler,
   });
 
   // Quick start controller

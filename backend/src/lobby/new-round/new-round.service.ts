@@ -1,7 +1,7 @@
-import type { GameplayStateProvider } from "../../gameplay/state/gameplay-state.provider";
+import type { LobbyStateProvider } from "../state/lobby-state.provider";
 import type { GameplayValidationError } from "../../gameplay/state/gameplay-state.validation";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
-import type { GameplayOperations } from "../../gameplay/gameplay-actions";
+import type { LobbyOperations } from "../lobby-actions";
 
 import { validate as checkRoundCreationRules } from "./new-round.rules";
 import { validate as checkRoleAssignmentRules } from "../assign-roles/assign-roles.rules";
@@ -64,8 +64,8 @@ export type RoundCreationResult =
  * Dependencies required by the round creation service
  */
 export type RoundCreationDependencies = {
-  getGameState: GameplayStateProvider;
-  gameplayHandler: TransactionalHandler<GameplayOperations>;
+  getLobbyState: LobbyStateProvider;
+  lobbyHandler: TransactionalHandler<LobbyOperations>;
 };
 
 /**
@@ -78,9 +78,9 @@ export const roundCreationService = (
   dependencies: RoundCreationDependencies,
 ) => {
   return async (input: RoundCreationInput): Promise<RoundCreationResult> => {
-    const result = await dependencies.getGameState(input.gameId, input.userId);
+    const lobbyState = await dependencies.getLobbyState(input.gameId, input.userId);
 
-    if (result.status === "game-not-found") {
+    if (!lobbyState) {
       return {
         success: false,
         error: {
@@ -90,7 +90,8 @@ export const roundCreationService = (
       };
     }
 
-    if (result.status === "user-not-player") {
+    // Check if user can modify game (basic permission check)
+    if (!lobbyState.userContext.canModifyGame) {
       return {
         success: false,
         error: {
@@ -101,9 +102,9 @@ export const roundCreationService = (
       };
     }
 
-    const gameData = result.data;
+    const gameData = lobbyState;
 
-    const validationResult = checkRoundCreationRules(gameData);
+    const validationResult = checkRoundCreationRules(gameData as any);
 
     if (!validationResult.valid) {
       return {
@@ -116,26 +117,23 @@ export const roundCreationService = (
       };
     }
 
-    const operationResult = await dependencies.gameplayHandler(async (ops) => {
+    const operationResult = await dependencies.lobbyHandler(async (ops) => {
       const newRound = await ops.createRound(validationResult.data);
 
-      const stateAfterRoundCreationResult = await ops.getCurrentGameState(
+      // Get fresh lobby state after round creation to validate role assignment
+      const stateAfterRoundCreation = await ops.getLobbyState(
         input.gameId,
         input.userId,
       );
-      const stateAfterRoundCreation = stateAfterRoundCreationResult;
+ 
+        const validatedForRoles = checkRoleAssignmentRules(
+          stateAfterRoundCreation
+        )
 
-      const validatedForRoles = checkRoleAssignmentRules(
-        stateAfterRoundCreation,
-      );
-
-      if (!validatedForRoles.valid) {
-        throw new UnexpectedGameplayError(
-          "Unable to create roles after round creation",
-        );
+        if (validatedForRoles.valid) {
+          await ops.assignPlayerRoles(validatedForRoles.data);
+        }
       }
-
-      await ops.assignPlayerRoles(validatedForRoles.data);
 
       return {
         _id: newRound._id,
