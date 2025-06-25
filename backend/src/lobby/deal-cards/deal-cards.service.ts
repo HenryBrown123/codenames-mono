@@ -12,6 +12,7 @@ import { validate as checkCardDealingRules } from "./deal-cards.rules";
 export type DealCardsInput = {
   gameId: string;
   userId: number;
+  redeal?: boolean;
 };
 
 /**
@@ -101,7 +102,8 @@ export const dealCardsService = (dependencies: DealCardsDependencies) => {
 
     const gameData = lobbyState;
 
-    const validationResult = checkCardDealingRules(gameData);
+    // Pass redeal flag in context for validation
+    const validationResult = checkCardDealingRules(gameData, { redeal: input.redeal });
 
     if (!validationResult.valid) {
       return {

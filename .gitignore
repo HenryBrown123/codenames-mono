@@ -83,3 +83,4 @@ Thumbs.db
 rebase-script.sh
 package-lock.json
 frontend/package-lock.json
+.claude/settings.local.json

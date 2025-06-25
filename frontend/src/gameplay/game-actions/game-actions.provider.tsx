@@ -38,7 +38,7 @@ export interface GameActionsContextValue {
   makeGuess: (word: string) => void;
   createRound: () => void;
   startRound: () => void;
-  dealCards: () => void;
+  dealCards: (redeal?: boolean) => void;
   endTurn: () => void;
 }
 
@@ -187,7 +187,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
     );
   }, [startRoundMutation, gameData.currentRound, handleSceneTransition]);
 
-  const dealCards = useCallback(() => {
+  const dealCards = useCallback((redeal: boolean = false) => {
     if (!gameData.currentRound) {
       return;
     }
@@ -196,11 +196,13 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
     setActionState({ name: "dealCards", status: "loading", error: null });
 
     dealCardsMutation.mutate(
-      { roundNumber },
+      { roundNumber, redeal },
       {
         onSuccess: () => {
           setActionState({ name: "dealCards", status: "success", error: null });
-          handleSceneTransition("CARDS_DEALT");
+          if (!redeal) {
+            handleSceneTransition("CARDS_DEALT");
+          }
         },
         onError: (error) => {
           setActionState({ name: "dealCards", status: "error", error });

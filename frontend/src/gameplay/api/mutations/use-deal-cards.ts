@@ -20,6 +20,7 @@ interface DealCardsApiResponse {
 
 interface DealCardsInput {
   roundNumber: number;
+  redeal?: boolean;
 }
 
 /**
@@ -31,9 +32,10 @@ export const useDealCardsMutation = (
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ roundNumber }) => {
+    mutationFn: async ({ roundNumber, redeal = false }) => {
       const response: AxiosResponse<DealCardsApiResponse> = await api.post(
         `/games/${gameId}/rounds/${roundNumber}/deal`,
+        { redeal }
       );
 
       if (!response.data.success) {
