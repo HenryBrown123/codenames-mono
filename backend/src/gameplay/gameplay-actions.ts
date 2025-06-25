@@ -11,8 +11,8 @@ import * as turnRepository from "@backend/common/data-access/repositories/turns.
 import * as roundsRepository from "@backend/common/data-access/repositories/rounds.repository";
 import * as gameRepository from "@backend/common/data-access/repositories/games.repository";
 import * as giveClueActions from "./give-clue/give-clue.actions";
-import * as makeGuessActions from "./guess/make-guess.actions";
-import * as makeGuessRules from "./guess/make-guess.rules";
+import * as makeGuessActions from "./make-guess/make-guess.actions";
+import * as makeGuessRules from "./make-guess/make-guess.rules";
 
 
 import { gameplayState } from "./state";
