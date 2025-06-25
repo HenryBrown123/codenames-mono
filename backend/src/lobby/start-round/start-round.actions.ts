@@ -1,6 +1,6 @@
 import { RoundStatusUpdater } from "@backend/common/data-access/repositories/rounds.repository";
 import { TurnCreator } from "@backend/common/data-access/repositories/turns.repository";
-import { StartRoundValidGameState } from "./start-round.rules";
+import { StartRoundValidLobbyState } from "./start-round.rules";
 import { complexProperties } from "../../gameplay/state/gameplay-state.helpers";
 import { ROUND_STATE } from "@codenames/shared/types";
 
@@ -23,9 +23,9 @@ export const startCurrentRound = (
    * @returns Updated round data
    */
   const startRoundFromValidState = async (
-    gameState: StartRoundValidGameState,
+    gameState: StartRoundValidLobbyState,
   ) => {
-    const currentRound = complexProperties.getLatestRoundOrThrow(gameState);
+    const currentRound = gameState.currentRound!;
 
     // Update round status to IN_PROGRESS
     const updatedRound = await updateRoundStatus({

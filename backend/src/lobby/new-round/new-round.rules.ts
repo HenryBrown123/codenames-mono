@@ -1,84 +1,69 @@
-import {
-  GAME_STATE,
-  ROUND_STATE,
-  MAX_ROUNDS_BY_FORMAT,
-} from "@codenames/shared/types";
-
-import { GameAggregate } from "../../gameplay/state/gameplay-state.types";
-import { gameplayBaseSchema } from "../../gameplay/state/gameplay-state.types";
-import { complexProperties } from "../../gameplay/state/gameplay-state.helpers";
-
-import { roleAssignmentAllowedSchema } from "../assign-roles/assign-roles.rules";
-
-import {
-  validateWithZodSchema,
-  ValidatedGameState,
-  GameplayValidationResult,
-} from "../../gameplay/state/gameplay-state.validation";
-
-import { z } from "zod";
+import { GAME_STATE, ROUND_STATE, MAX_ROUNDS_BY_FORMAT } from "@codenames/shared/types";
+import { LobbyAggregate } from "../state/lobby-state.types";
+import { 
+  LobbyValidationResult, 
+  ValidatedLobbyState,
+  createBrandedResult 
+} from "../state/lobby-state.validation";
 
 /**
- * Rules for validating round creation in the game
+ * Rules for validating round creation in the lobby context
  */
 const roundCreationRules = {
-  /**
-   * Checks if the previous round is completed
-   * @param game - The current game state
-   * @returns true if there is no previous round or if the previous round is completed
-   */
-  isPreviousRoundCompleted(game: GameAggregate): boolean {
-    const latestRound = game.currentRound;
-    if (!latestRound) return true;
-    return latestRound.status === ROUND_STATE.COMPLETED;
+  isPreviousRoundCompleted(lobby: LobbyAggregate): boolean {
+    if (!lobby.currentRound) return true;
+    return lobby.currentRound.status === ROUND_STATE.COMPLETED;
   },
 
-  /**
-   * Checks if the game has not exceeded the maximum number of rounds
-   * @param game - The current game state
-   * @returns true if the current round count is less than the maximum allowed rounds
-   */
-  isWithinMaxRounds(game: GameAggregate): boolean {
-    const currentRoundCount = complexProperties.getRoundCount(game);
-    const maxRounds = MAX_ROUNDS_BY_FORMAT[game.game_format];
-    return currentRoundCount < maxRounds;
+  isWithinMaxRounds(lobby: LobbyAggregate): boolean {
+    const completedRounds = lobby.historicalRounds?.length || 0;
+    const maxRounds = MAX_ROUNDS_BY_FORMAT[lobby.game_format];
+    return completedRounds < maxRounds;
+  },
+
+  isGameInProgress(lobby: LobbyAggregate): boolean {
+    return lobby.status === GAME_STATE.IN_PROGRESS;
   },
 };
 
 /**
- * Base schema for round creation validation
+ * Type for a validated lobby state during round creation
  */
-const roundCreationSchema = gameplayBaseSchema.extend({
-  status: z.literal(GAME_STATE.IN_PROGRESS),
-});
+export type NewRoundValidLobbyState = ValidatedLobbyState<"newRound">;
 
 /**
- * Enhanced schema that includes rules for round creation validation
- */
-const roundCreationAllowedSchema = roundCreationSchema
-  .refine(roundCreationRules.isPreviousRoundCompleted, {
-    message: "Previous round must be completed before creating a new round",
-    path: ["rounds"],
-  })
-  .refine(roundCreationRules.isWithinMaxRounds, (game) => ({
-    message: `Maximum of ${MAX_ROUNDS_BY_FORMAT[game.game_format]} rounds allowed for ${game.game_format} format`,
-    path: ["rounds"],
-  }));
-
-/**
- * Type definition for a valid game state during round creation
- */
-export type NewRoundValidGameState = ValidatedGameState<
-  typeof roundCreationAllowedSchema
->;
-
-/**
- * Validates the game state for round creation
- * @param data - Unknown data to validate
- * @returns Validation result containing either valid game state or validation errors
+ * Validates if a new round can be created
  */
 export function validate(
-  data: GameAggregate,
-): GameplayValidationResult<NewRoundValidGameState> {
-  return validateWithZodSchema(roundCreationAllowedSchema, data);
+  lobby: LobbyAggregate
+): LobbyValidationResult<NewRoundValidLobbyState> {
+  const errors: Array<{ path?: string[]; message: string }> = [];
+
+  if (!roundCreationRules.isGameInProgress(lobby)) {
+    errors.push({
+      path: ["status"],
+      message: `Game must be in IN_PROGRESS state, current: ${lobby.status}`,
+    });
+  }
+
+  if (!roundCreationRules.isPreviousRoundCompleted(lobby)) {
+    errors.push({
+      path: ["currentRound", "status"],
+      message: "Current round must be completed before creating a new round",
+    });
+  }
+
+  if (!roundCreationRules.isWithinMaxRounds(lobby)) {
+    const maxRounds = MAX_ROUNDS_BY_FORMAT[lobby.game_format];
+    errors.push({
+      path: ["historicalRounds"],
+      message: `Maximum of ${maxRounds} rounds allowed for ${lobby.game_format} format`,
+    });
+  }
+
+  if (errors.length > 0) {
+    return { valid: false, errors };
+  }
+
+  return { valid: true, data: createBrandedResult(lobby, "newRound") };
 }

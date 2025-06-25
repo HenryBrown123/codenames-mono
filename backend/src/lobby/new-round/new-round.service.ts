@@ -1,5 +1,5 @@
 import type { LobbyStateProvider } from "../state/lobby-state.provider";
-import type { GameplayValidationError } from "../../gameplay/state/gameplay-state.validation";
+import type { LobbyValidationError } from "../state/lobby-state.validation";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 import type { LobbyOperations } from "../lobby-actions";
 
@@ -41,7 +41,7 @@ export type RoundCreationFailure =
   | {
       status: typeof ROUND_CREATION_ERROR.INVALID_GAME_STATE;
       currentState: string;
-      validationErrors: GameplayValidationError[];
+      validationErrors: LobbyValidationError[];
     }
   | {
       status: typeof ROUND_CREATION_ERROR.GAME_NOT_FOUND;
@@ -104,7 +104,7 @@ export const roundCreationService = (
 
     const gameData = lobbyState;
 
-    const validationResult = checkRoundCreationRules(gameData as any);
+    const validationResult = checkRoundCreationRules(gameData);
 
     if (!validationResult.valid) {
       return {
@@ -125,10 +125,11 @@ export const roundCreationService = (
         input.gameId,
         input.userId,
       );
- 
+      
+      if (stateAfterRoundCreation) {
         const validatedForRoles = checkRoleAssignmentRules(
-          stateAfterRoundCreation
-        )
+          stateAfterRoundCreation,
+        );
 
         if (validatedForRoles.valid) {
           await ops.assignPlayerRoles(validatedForRoles.data);

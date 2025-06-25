@@ -1,102 +1,88 @@
 import { GAME_STATE, ROUND_STATE } from "@codenames/shared/types";
-
-import {
-  GameAggregate,
-  roundSchema,
-  gameplayBaseSchema,
-} from "../../gameplay/state/gameplay-state.types";
-
-import { complexProperties } from "../../gameplay/state/gameplay-state.helpers";
-
-import {
-  validateWithZodSchema,
-  ValidatedGameState,
-  GameplayValidationResult,
-} from "../../gameplay/state/gameplay-state.validation";
-
-import { z } from "zod";
+import { LobbyAggregate } from "../state/lobby-state.types";
+import { 
+  LobbyValidationResult, 
+  ValidatedLobbyState,
+  createBrandedResult 
+} from "../state/lobby-state.validation";
 
 /**
- * Rules for validating round starting in a game
+ * Rules for validating round start in the lobby context
  */
 const roundStartRules = {
-  /**
-   * Checks if the latest round is in SETUP state
-   * @param game - The current game state
-   * @returns true if the latest round exists and is in SETUP state
-   */
-  isLatestRoundInSetupState(game: GameAggregate): boolean {
-    const latestRound = complexProperties.getLatestRound(game);
-    return latestRound !== null && latestRound.status === ROUND_STATE.SETUP;
+  isRoundInSetupState(lobby: LobbyAggregate): boolean {
+    return lobby.currentRound?.status === ROUND_STATE.SETUP;
   },
 
-  /**
-   * Checks if cards have been dealt for the round
-   * @param game - The current game state
-   * @returns true if the latest round has cards
-   */
-  hasCardsDealt(game: GameAggregate): boolean {
-    const latestRound = complexProperties.getLatestRound(game);
+  hasCardsDealt(lobby: LobbyAggregate): boolean {
     return (
-      latestRound !== null &&
-      latestRound.cards !== undefined &&
-      latestRound.cards.length > 0
+      lobby.currentRound?.cards !== undefined &&
+      lobby.currentRound.cards.length > 0
     );
   },
 
-  /**
-   * Checks if game is in progress state
-   * @param game - The current game state
-   * @returns true if the game is in IN_PROGRESS state
-   */
-  isGameInProgressState(game: GameAggregate): boolean {
-    return game.status === GAME_STATE.IN_PROGRESS;
+  hasMinimumPlayersPerTeam(lobby: LobbyAggregate): boolean {
+    return lobby.teams.every((team) => team.players.length >= 2);
+  },
+
+  isGameInProgress(lobby: LobbyAggregate): boolean {
+    return lobby.status === GAME_STATE.IN_PROGRESS;
   },
 };
 
 /**
- * Base schema for round start validation
+ * Type for a validated lobby state during round start
  */
-const roundStartSchema = gameplayBaseSchema.extend({
-  status: z.literal(GAME_STATE.IN_PROGRESS),
-  currentRound: roundSchema
-    .extend({
-      status: z.literal(ROUND_STATE.SETUP),
-    })
-    .required(),
-});
+export type StartRoundValidLobbyState = ValidatedLobbyState<"startRound"> & {
+  currentRound: NonNullable<LobbyAggregate['currentRound']>;
+};
 
 /**
- * Enhanced schema that includes rules for round starting validation
- */
-const roundStartAllowedSchema = roundStartSchema
-  .refine(roundStartRules.isLatestRoundInSetupState, {
-    message: "Latest round must be in SETUP state to start the round",
-    path: ["currentRound", "status"],
-  })
-  .refine(roundStartRules.hasCardsDealt, {
-    message: "Cards must be dealt before starting the round",
-    path: ["currentRound", "cards"],
-  })
-  .refine(roundStartRules.isGameInProgressState, {
-    message: "Game must be in IN_PROGRESS state to start a round",
-    path: ["status"],
-  });
-
-/**
- * Type definition for a valid game state during round start
- */
-export type StartRoundValidGameState = ValidatedGameState<
-  typeof roundStartAllowedSchema
->;
-
-/**
- * Validates the game state for round starting
- * @param data - Unknown data to validate
- * @returns Validation result containing either valid game state or validation errors
+ * Validates if a round can be started
  */
 export function validate(
-  data: unknown,
-): GameplayValidationResult<StartRoundValidGameState> {
-  return validateWithZodSchema(roundStartAllowedSchema, data);
+  lobby: LobbyAggregate
+): LobbyValidationResult<StartRoundValidLobbyState> {
+  const errors: Array<{ path?: string[]; message: string }> = [];
+
+  if (!lobby.currentRound) {
+    errors.push({
+      path: ["currentRound"],
+      message: "No current round to start",
+    });
+  }
+
+  if (!roundStartRules.isGameInProgress(lobby)) {
+    errors.push({
+      path: ["status"],
+      message: "Game must be in IN_PROGRESS state to start a round",
+    });
+  }
+
+  if (!roundStartRules.isRoundInSetupState(lobby)) {
+    errors.push({
+      path: ["currentRound", "status"],
+      message: `Round must be in SETUP state, current: ${lobby.currentRound?.status}`,
+    });
+  }
+
+  if (!roundStartRules.hasCardsDealt(lobby)) {
+    errors.push({
+      path: ["currentRound", "cards"],
+      message: "Cards must be dealt before starting the round",
+    });
+  }
+
+  if (!roundStartRules.hasMinimumPlayersPerTeam(lobby)) {
+    errors.push({
+      path: ["teams"],
+      message: "Each team must have at least 2 players",
+    });
+  }
+
+  if (errors.length > 0) {
+    return { valid: false, errors };
+  }
+
+  return { valid: true, data: createBrandedResult(lobby, "startRound") as StartRoundValidLobbyState };
 }

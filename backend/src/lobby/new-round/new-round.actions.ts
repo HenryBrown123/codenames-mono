@@ -1,5 +1,5 @@
 import { RoundCreator } from "@backend/common/data-access/repositories/rounds.repository";
-import { NewRoundValidGameState } from "./new-round.rules";
+import { NewRoundValidLobbyState } from "./new-round.rules";
 import { complexProperties } from "../../gameplay/state/gameplay-state.helpers";
 
 /**
@@ -15,8 +15,8 @@ export const createNextRound = (createRoundRepo: RoundCreator) => {
    * @param gameState - Validated game state that meets all business rules
    * @returns Newly created round data
    */
-  const createNewRound = async (gameState: NewRoundValidGameState) => {
-    const nextRoundNumber = complexProperties.getRoundCount(gameState) + 1;
+  const createNewRound = async (gameState: NewRoundValidLobbyState) => {
+    const nextRoundNumber = (gameState.historicalRounds?.length || 0) + 1;
     return await createRoundRepo({
       gameId: gameState._id,
       roundNumber: nextRoundNumber,

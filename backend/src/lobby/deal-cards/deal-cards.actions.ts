@@ -7,7 +7,7 @@ import {
 } from "@backend/common/data-access/repositories/cards.repository";
 import type { TeamId } from "@backend/common/data-access/repositories/teams.repository";
 
-import type { DealCardsValidGameState } from "./deal-cards.rules";
+import type { DealCardsValidLobbyState } from "./deal-cards.rules";
 import { complexProperties } from "../../gameplay/state/gameplay-state.helpers";
 
 /**
@@ -27,7 +27,7 @@ export const dealCardsToRound = (
    * @param gameState - Validated game state that meets all business rules
    * @returns Laid out cards data with grid information
    */
-  return async (gameState: DealCardsValidGameState) => {
+  return async (gameState: DealCardsValidLobbyState) => {
     const [team1, team2] = gameState.teams;
 
     const startsFirst = Math.random() > 0.5;

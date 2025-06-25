@@ -1,5 +1,5 @@
 import type { LobbyStateProvider } from "../state/lobby-state.provider";
-import type { GameplayValidationError } from "../../gameplay/state/gameplay-state.validation";
+import type { LobbyValidationError } from "../state/lobby-state.validation";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 import type { LobbyOperations } from "../lobby-actions";
 
@@ -39,7 +39,7 @@ export type StartRoundFailure =
   | {
       status: typeof START_ROUND_ERROR.INVALID_GAME_STATE;
       currentState: string;
-      validationErrors: GameplayValidationError[];
+      validationErrors: LobbyValidationError[];
     }
   | {
       status: typeof START_ROUND_ERROR.GAME_NOT_FOUND;
@@ -125,7 +125,7 @@ export const startRoundService = (dependencies: StartRoundDependencies) => {
       };
     }
 
-    const validationResult = checkRoundStartRules(gameData as any);
+    const validationResult = checkRoundStartRules(gameData);
 
     if (!validationResult.valid) {
       return {

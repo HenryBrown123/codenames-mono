@@ -1,5 +1,5 @@
 import type { LobbyStateProvider } from "../state/lobby-state.provider";
-import type { GameplayValidationError } from "../../gameplay/state/gameplay-state.validation";
+import type { LobbyValidationError } from "../state/lobby-state.validation";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 import type { LobbyOperations } from "../lobby-actions";
 import type { CardResult } from "@backend/common/data-access/repositories/cards.repository";
@@ -40,7 +40,7 @@ export type DealCardsFailure =
   | {
       status: typeof DEAL_CARDS_ERROR.INVALID_GAME_STATE;
       currentState: string;
-      validationErrors: GameplayValidationError[];
+      validationErrors: LobbyValidationError[];
     }
   | {
       status: typeof DEAL_CARDS_ERROR.GAME_NOT_FOUND;
@@ -101,7 +101,7 @@ export const dealCardsService = (dependencies: DealCardsDependencies) => {
 
     const gameData = lobbyState;
 
-    const validationResult = checkCardDealingRules(gameData as any);
+    const validationResult = checkCardDealingRules(gameData);
 
     if (!validationResult.valid) {
       return {

@@ -41,7 +41,7 @@ export const newRoundErrorSchema = z.object({
       validationErrors: z
         .array(
           z.object({
-            path: z.string(),
+            path: z.array(z.string()).optional(),
             message: z.string(),
           }),
         )
@@ -125,7 +125,10 @@ export const newRoundController = ({ createRound }: Dependencies) => {
           result.error.validationErrors
         ) {
           errorResponse.details!.validationErrors =
-            result.error.validationErrors;
+            result.error.validationErrors.map(err => ({
+              path: err.path,
+              message: err.message
+            }));
         }
 
         if (result.error.status === "game-not-found") {
