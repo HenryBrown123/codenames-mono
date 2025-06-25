@@ -155,8 +155,9 @@ export const LobbyDashboardView: React.FC = () => {
   };
 
   const getButtonText = () => {
+    // actually creates round + assignes roles and deals cards but the "visible" action is dealing cards.
     if (!gameData?.currentRound) {
-      return "Create New Game";
+      return "Deal Cards";
     }
 
     if (
