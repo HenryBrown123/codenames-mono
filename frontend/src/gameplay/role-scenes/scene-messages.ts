@@ -156,7 +156,7 @@ export const getSceneMessage = (
       return "Welcome! Ready to start the game?";
 
     case "none.dealing":
-      return "Dealing cards... Get ready!";
+      return "Cards dealt... Get ready!";
 
     case "none.gameover":
       // Check for winner in game data

@@ -100,7 +100,7 @@ export const SpectatorBoard: React.FC = memo(() => {
   const displayCards = useMemo(() => {
     if (cards.length === 0) {
       return Array.from({ length: 25 }, (_, i) => ({
-        word: "???",
+        word: "",
         teamName: "NEUTRAL",
         selected: false,
         cardType: "BYSTANDER",
@@ -114,7 +114,7 @@ export const SpectatorBoard: React.FC = memo(() => {
     <CardsContainer aria-label="spectator game board">
       {displayCards.map((card, index) => (
         <GameCard
-          key={card.word === "???" ? `placeholder-${index}` : card.word}
+          key={card.word === "" ? `placeholder-${index}` : card.word}
           card={card}
           cardIndex={index}
           showTeamColors={false}
