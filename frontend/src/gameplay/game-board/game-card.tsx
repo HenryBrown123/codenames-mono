@@ -1,4 +1,5 @@
-import { memo, useCallback } from "react";
+// frontend/src/gameplay/game-board/game-card.tsx
+import { memo, useCallback, useEffect } from "react";
 import styled, { css, keyframes } from "styled-components";
 import { FaStar, FaLeaf, FaSkull, FaPeace } from "react-icons/fa";
 import { Card } from "@frontend/shared-types";
@@ -38,19 +39,17 @@ const strikeThrough = keyframes`
   }
 `;
 
-const coverSlideIn = keyframes`
-  from {
-    transform: translateY(-100vh);
-    opacity: 0;
+const flipAnimation = keyframes`
+  0% {
+    transform: rotateY(0deg);
   }
-  to {
-    transform: translateY(0);
-    opacity: 1;
+  100% {
+    transform: rotateY(180deg);
   }
 `;
 
 // Styled Components
-const CardContainer = styled.div<{ $index: number }>`
+const CardContainer = styled.div`
   height: 100%;
   width: 100%;
   box-sizing: border-box;
@@ -61,7 +60,7 @@ const CardContainer = styled.div<{ $index: number }>`
   
   /* State-based animations */
   &[data-state="dealing"] {
-    animation: ${dealAnimation} 0.8s calc(${props => props.$index} * 50ms) cubic-bezier(0.4, 0, 0.2, 1) both;
+    animation: ${dealAnimation} 0.8s calc(var(--index) * 50ms) cubic-bezier(0.4, 0, 0.2, 1) both;
   }
 `;
 
@@ -69,6 +68,17 @@ const CardInner = styled.div`
   position: relative;
   width: 100%;
   height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s;
+  
+  /* Only flip when THIS card is covering */
+  [data-state="covering"] & {
+    animation: ${flipAnimation} 0.6s ease-in-out forwards;
+  }
+  
+  [data-state="covered"] & {
+    transform: rotateY(180deg);
+  }
 `;
 
 const sharedCardStyles = css`
@@ -87,6 +97,25 @@ const sharedCardStyles = css`
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
   backface-visibility: hidden;
+  
+  /* Restored card textures */
+  background-image: linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.1) 25%,
+      transparent 25%
+    ),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%),
+    radial-gradient(
+      circle at 10% 20%,
+      rgba(255, 255, 255, 0.05),
+      transparent 20%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgba(255, 255, 255, 0.05),
+      transparent 20%
+    );
+  background-size: 10px 10px, 10px 10px;
   background-blend-mode: overlay;
 `;
 
@@ -107,16 +136,8 @@ const CardFront = styled.button<{ $backgroundColour: string; $clickable: boolean
 
 const CoverCard = styled.div<{ $backgroundColour: string }>`
   ${sharedCardStyles}
-  position: absolute;
-  top: 0;
-  left: 0;
   background-color: ${props => props.$backgroundColour};
-  z-index: 10;
-  
-  /* Animation based on parent state */
-  [data-state="covering"] & {
-    animation: ${coverSlideIn} 0.5s ease-out forwards;
-  }
+  transform: rotateY(180deg);
 `;
 
 const CardContent = styled.div`
@@ -190,31 +211,80 @@ export const GameCard = memo<GameCardProps>(
     const animation = useCardAnimation(card.word);
     const cardColor = getCardColor(card.teamName, card.cardType);
     
+    // Debug log on every render
+    useEffect(() => {
+      console.log(`[CARD ${cardIndex}] "${card.word}" render:`, {
+        state: animation.state,
+        selected: card.selected,
+        clickable,
+        showTeamColors,
+        cardColor,
+        teamName: card.teamName,
+        cardType: card.cardType,
+        'animation.is': animation.is,
+      });
+    });
+    
+    // Log state changes
+    useEffect(() => {
+      console.log(`[CARD ${cardIndex}] "${card.word}" state changed to: ${animation.state}`);
+    }, [animation.state, card.word, cardIndex]);
+    
+    // Log selection changes
+    useEffect(() => {
+      console.log(`[CARD ${cardIndex}] "${card.word}" selected changed to: ${card.selected}`);
+    }, [card.selected, card.word, cardIndex]);
+    
     // Auto-trigger deal animation on mount
     if (animation.is.hidden) {
+      console.log(`[CARD ${cardIndex}] "${card.word}" triggering deal animation`);
       animation.actions.deal();
     }
     
     // When server confirms selection, transition to covering
     if (card.selected && animation.is.selecting) {
+      console.log(`[CARD ${cardIndex}] "${card.word}" server confirmed selection, transitioning to covering`);
       animation.actions.cover();
     }
     
     const handleClick = useCallback(() => {
+      console.log(`[CARD ${cardIndex}] "${card.word}" clicked!`, {
+        currentState: animation.state,
+        willSelect: animation.is.idle,
+      });
       animation.actions.select();
       onCardClick(card.word);
-    }, [animation, onCardClick, card.word]);
+    }, [animation, onCardClick, card.word, cardIndex]);
     
-    // Show cover when in covering or covered state
-    const shouldShowCover = animation.is.covering || animation.is.covered;
+    // For 3D flip, we need both sides at all times
+    const showFlipped = animation.is.covering || animation.is.covered;
+    
+    console.log(`[CARD ${cardIndex}] "${card.word}" render decision:`, {
+      showFlipped,
+      'animation.is.covering': animation.is.covering,
+      'animation.is.covered': animation.is.covered,
+      className: showFlipped ? 'flipped' : '',
+    });
+    
+    // Handle animation end
+    const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
+      console.log(`[CARD ${cardIndex}] "${card.word}" animation ended:`, {
+        animationName: e.animationName,
+        target: e.target,
+        currentTarget: e.currentTarget,
+        isTargetCurrentTarget: e.target === e.currentTarget,
+        currentState: animation.state,
+      });
+      animation.handleAnimationEnd(e);
+    }, [animation, card.word, cardIndex]);
     
     return (
       <CardContainer 
         data-state={animation.state}
-        $index={cardIndex}
-        onAnimationEnd={animation.handleAnimationEnd}
+        style={{ '--index': cardIndex } as React.CSSProperties}
+        onAnimationEnd={handleAnimationEnd}
       >
-        <CardInner>
+        <CardInner className={showFlipped ? 'flipped' : ''}>
           <CardFront
             onClick={clickable && !card.selected ? handleClick : undefined}
             $backgroundColour={showTeamColors ? cardColor : FRONT_CARD_COLOUR}
@@ -223,25 +293,34 @@ export const GameCard = memo<GameCardProps>(
           >
             <CardContent>{card.word}</CardContent>
           </CardFront>
-        </CardInner>
-        
-        {shouldShowCover && (
+          
           <CoverCard $backgroundColour={cardColor}>
             <CornerIcon>{getIcon(cardColor)}</CornerIcon>
           </CoverCard>
-        )}
+        </CardInner>
       </CardContainer>
     );
   },
   (prevProps, nextProps) => {
-    return (
-      prevProps.card.word === nextProps.card.word &&
+    const isEqual = prevProps.card.word === nextProps.card.word &&
       prevProps.card.selected === nextProps.card.selected &&
       prevProps.card.teamName === nextProps.card.teamName &&
       prevProps.showTeamColors === nextProps.showTeamColors &&
       prevProps.clickable === nextProps.clickable &&
-      prevProps.cardIndex === nextProps.cardIndex
-    );
+      prevProps.cardIndex === nextProps.cardIndex;
+    
+    if (!isEqual) {
+      console.log(`[CARD ${prevProps.cardIndex}] "${prevProps.card.word}" re-rendering due to prop change:`, {
+        word: prevProps.card.word !== nextProps.card.word,
+        selected: prevProps.card.selected !== nextProps.card.selected,
+        teamName: prevProps.card.teamName !== nextProps.card.teamName,
+        showTeamColors: prevProps.showTeamColors !== nextProps.showTeamColors,
+        clickable: prevProps.clickable !== nextProps.clickable,
+        cardIndex: prevProps.cardIndex !== nextProps.cardIndex,
+      });
+    }
+    
+    return isEqual;
   },
 );
 

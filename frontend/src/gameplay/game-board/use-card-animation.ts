@@ -1,44 +1,73 @@
-import { useCallback } from "react";
+// frontend/src/gameplay/game-board/use-card-animation.ts
+import { useCallback, useEffect } from "react";
 import { useAnimationState } from "../animation/use-animation-state";
-import { cardStateMachine } from "./card-animation-states";
+import { cardStateMachine, CardState, CardTrigger } from "./card-animation-states";
 
-/**
- * Card-specific animation hook that provides a clean API for managing card animations.
- * Handles animation completion events and provides semantic actions.
- * 
- * @param cardId - Unique identifier for the card (typically the word)
- * @returns Object with current state, state checks, actions, and animation handler
- */
 export const useCardAnimation = (cardId: string) => {
   const { getState, send } = useAnimationState(cardStateMachine);
   
   const animationState = getState(cardId);
   
-  // Handle CSS animation completion events
+  // Debug logging
+  useEffect(() => {
+    console.log(`[CARD ANIMATION] ${cardId}: state = ${animationState}`);
+  }, [animationState, cardId]);
+  
   const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
-    if (e.target !== e.currentTarget) return;
+    // Must check if this is our element, not a child
+    if (e.target !== e.currentTarget) {
+      console.log(`[CARD ANIMATION] ${cardId}: Ignoring child animation event`);
+      return;
+    }
+    
+    console.log(`[CARD ANIMATION] ${cardId}: Animation ended in state ${animationState}, animation name: ${e.animationName}`);
     
     switch (animationState) {
       case 'dealing':
+        console.log(`[CARD ANIMATION] ${cardId}: Finishing deal`);
         send(cardId, 'finishDeal');
         break;
       case 'covering':
+        console.log(`[CARD ANIMATION] ${cardId}: Finishing cover`);
         send(cardId, 'finishCover');
         break;
     }
   }, [animationState, cardId, send]);
   
-  // Semantic actions that check current state before transitioning
   const actions = {
-    deal: () => animationState === 'hidden' && send(cardId, 'deal'),
-    finishDeal: () => animationState === 'dealing' && send(cardId, 'finishDeal'),
-    select: () => animationState === 'idle' && send(cardId, 'select'),
-    cover: () => animationState === 'selecting' && send(cardId, 'cover'),
-    finishCover: () => animationState === 'covering' && send(cardId, 'finishCover'),
-    reset: () => send(cardId, 'reset'),
+    deal: () => {
+      if (animationState === 'hidden') {
+        console.log(`[CARD ANIMATION] ${cardId}: Starting deal`);
+        send(cardId, 'deal');
+        return true;
+      }
+      console.log(`[CARD ANIMATION] ${cardId}: Cannot deal from state ${animationState}`);
+      return false;
+    },
+    select: () => {
+      if (animationState === 'idle') {
+        console.log(`[CARD ANIMATION] ${cardId}: Starting select`);
+        send(cardId, 'select');
+        return true;
+      }
+      console.log(`[CARD ANIMATION] ${cardId}: Cannot select from state ${animationState}`);
+      return false;
+    },
+    cover: () => {
+      if (animationState === 'selecting') {
+        console.log(`[CARD ANIMATION] ${cardId}: Starting cover`);
+        send(cardId, 'cover');
+        return true;
+      }
+      console.log(`[CARD ANIMATION] ${cardId}: Cannot cover from state ${animationState}`);
+      return false;
+    },
+    reset: () => {
+      console.log(`[CARD ANIMATION] ${cardId}: Resetting`);
+      send(cardId, 'reset');
+    },
   };
   
-  // Convenient state checks
   const is = {
     hidden: animationState === 'hidden',
     dealing: animationState === 'dealing',
