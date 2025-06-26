@@ -4,6 +4,7 @@ import React, {
   useContext,
   ReactNode,
   useReducer,
+  useState,
 } from "react";
 import { useGameData } from "../game-data";
 import { useTurn } from "../turn-management";
@@ -36,6 +37,7 @@ interface PlayerRoleSceneContextValue {
   } | null;
   handleSceneTransition: (event: string) => void;
   completeHandoff: () => void;
+  isInitialScene: boolean;
 }
 
 const PlayerRoleSceneContext = createContext<
@@ -271,6 +273,12 @@ export const PlayerRoleSceneProvider: React.FC<
     createInitialUIState,
   );
 
+  // Determine if current scene is the initial scene for the role
+  const isInitialScene = React.useMemo(() => {
+    const stateMachine = getStateMachine(uiState.currentRole);
+    return uiState.currentScene === stateMachine.initial;
+  }, [uiState.currentRole, uiState.currentScene]);
+
   const handleSceneTransition = useCallback((event: string) => {
     dispatch({ type: "TRIGGER_TRANSITION", payload: { event } });
   }, []);
@@ -287,6 +295,7 @@ export const PlayerRoleSceneProvider: React.FC<
     pendingTransition: uiState.pendingTransition,
     handleSceneTransition,
     completeHandoff,
+    isInitialScene,
   };
 
   return (
