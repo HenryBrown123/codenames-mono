@@ -24,6 +24,9 @@ export const useAnimationState = <TState extends string, TTrigger extends string
   const send = useCallback((id: string, trigger: TTrigger): TState => {
     const currentState = getState(id);
     const nextState = machine.transitions[currentState]?.[trigger];
+
+    console.log(`[ANIMATION STATE] ${id}: ${currentState} + ${trigger} = ${nextState || 'NO TRANSITION'}`);
+    
     
     if (nextState) {
       states.current.set(id, nextState);

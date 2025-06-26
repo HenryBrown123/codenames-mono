@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { useGameData } from "@frontend/gameplay/game-data";
 import { useGameActions } from "@frontend/gameplay/game-actions";
 import { GameCard } from "./game-card";
+import { useBoardAnimations } from "./use-board-animations";
 
 const CardsContainer = styled.div`
   display: grid;
@@ -18,28 +19,41 @@ const CardsContainer = styled.div`
 export const CodebreakerBoard: React.FC = memo(() => {
   const { gameData } = useGameData();
   const { makeGuess, actionState } = useGameActions();
+  const boardAnimations = useBoardAnimations();
+  
   const cards = gameData.currentRound?.cards || [];
   const isLoading = actionState.status === "loading";
 
   const handleCardClick = useCallback(
     (cardWord: string) => {
-      makeGuess(cardWord);
+      if (!isLoading) makeGuess(cardWord);
     },
-    [makeGuess],
+    [makeGuess, isLoading],
   );
 
   return (
     <CardsContainer aria-label="codebreaker game board">
-      {cards.map((card, index) => (
-        <GameCard
-          key={card.word}
-          card={card}
-          cardIndex={index}
-          showTeamColors={false}
-          clickable={!isLoading && !card.selected}
-          onCardClick={handleCardClick}
-        />
-      ))}
+      {cards.map((card, index) => {
+        const cardId = `${index}-${card.word || 'empty'}`;
+        const animation = boardAnimations.getCardAnimation(cardId);
+        
+        // Handle server selection
+        boardAnimations.handleServerSelection(cardId, card.selected);
+        
+        return (
+          <GameCard
+            key={cardId}
+            card={card}
+            cardIndex={index}
+            cardId={cardId}
+            animation={animation}
+            onAnimationEnd={(e) => boardAnimations.handleAnimationEnd(cardId, e)}
+            showTeamColors={false}
+            clickable={!isLoading && !card.selected}
+            onCardClick={handleCardClick}
+          />
+        );
+      })}
     </CardsContainer>
   );
 });
@@ -48,20 +62,32 @@ CodebreakerBoard.displayName = "CodebreakerBoard";
 
 export const CodemasterBoard: React.FC = memo(() => {
   const { gameData } = useGameData();
+  const boardAnimations = useBoardAnimations();
   const cards = gameData.currentRound?.cards || [];
 
   return (
     <CardsContainer aria-label="codemaster game board">
-      {cards.map((card, index) => (
-        <GameCard
-          key={card.word}
-          card={card}
-          cardIndex={index}
-          showTeamColors={true}
-          clickable={false}
-          onCardClick={() => {}}
-        />
-      ))}
+      {cards.map((card, index) => {
+        const cardId = `${index}-${card.word || 'empty'}`;
+        const animation = boardAnimations.getCardAnimation(cardId);
+        
+        // Handle server selection
+        boardAnimations.handleServerSelection(cardId, card.selected);
+        
+        return (
+          <GameCard
+            key={cardId}
+            card={card}
+            cardIndex={index}
+            cardId={cardId}
+            animation={animation}
+            onAnimationEnd={(e) => boardAnimations.handleAnimationEnd(cardId, e)}
+            showTeamColors={true}
+            clickable={false}
+            onCardClick={() => {}}
+          />
+        );
+      })}
     </CardsContainer>
   );
 });
@@ -70,6 +96,7 @@ CodemasterBoard.displayName = "CodemasterBoard";
 
 export const SpectatorBoard: React.FC = memo(() => {
   const { gameData } = useGameData();
+  const boardAnimations = useBoardAnimations();
   const cards = gameData.currentRound?.cards || [];
 
   const displayCards = useMemo(() => {
@@ -87,16 +114,27 @@ export const SpectatorBoard: React.FC = memo(() => {
 
   return (
     <CardsContainer aria-label="spectator game board">
-      {displayCards.map((card, index) => (
-        <GameCard
-          key={card.word === "" ? `placeholder-${index}` : card.word}
-          card={card}
-          cardIndex={index}
-          showTeamColors={false}
-          clickable={false}
-          onCardClick={() => {}}
-        />
-      ))}
+      {displayCards.map((card, index) => {
+        const cardId = card.word === "" ? `placeholder-${index}` : `${index}-${card.word}`;
+        const animation = boardAnimations.getCardAnimation(cardId);
+        
+        // Handle server selection
+        boardAnimations.handleServerSelection(cardId, card.selected);
+        
+        return (
+          <GameCard
+            key={cardId}
+            card={card}
+            cardIndex={index}
+            cardId={cardId}
+            animation={animation}
+            onAnimationEnd={(e) => boardAnimations.handleAnimationEnd(cardId, e)}
+            showTeamColors={false}
+            clickable={false}
+            onCardClick={() => {}}
+          />
+        );
+      })}
     </CardsContainer>
   );
 });
