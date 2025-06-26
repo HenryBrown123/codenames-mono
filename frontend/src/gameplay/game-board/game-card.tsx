@@ -1,13 +1,13 @@
-import React, { memo, useCallback } from "react";
+import { memo, useCallback } from "react";
 import styled, { css, keyframes } from "styled-components";
 import { FaStar, FaLeaf, FaSkull, FaPeace } from "react-icons/fa";
 import { Card } from "@frontend/shared-types";
+import { useCardAnimation } from "./use-card-animation";
 
 const FRONT_CARD_COLOUR = "#494646";
 
 const getIcon = (cardColor?: string) => {
   if (!cardColor) return null;
-
   if (cardColor.includes("#B22222")) return <FaStar />;
   if (cardColor.includes("#228B22")) return <FaLeaf />;
   if (cardColor.includes("#4169E1")) return <FaPeace />;
@@ -15,36 +15,66 @@ const getIcon = (cardColor?: string) => {
   return null;
 };
 
-const slideInAnimation = keyframes`
+// Animations
+const dealAnimation = keyframes`
   0% {
-    transform: translate(-2000px, -2000px);
+    transform: translateY(-100vh) rotate(720deg) scale(0);
     opacity: 0;
   }
+  60% {
+    transform: translateY(0) rotate(360deg) scale(1.1);
+    opacity: 1;
+  }
   100% {
-    transform: translate(0, 0);
+    transform: translateY(0) rotate(0) scale(1);
     opacity: 1;
   }
 `;
 
-// Add flip animation
-const flipIn = keyframes`
-  0% {
-    transform: rotateY(180deg);
+const strikeThrough = keyframes`
+  to {
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+`;
+
+const coverSlideIn = keyframes`
+  from {
+    transform: translateY(-100vh);
     opacity: 0;
   }
-  50% {
-    transform: rotateY(90deg);
-    opacity: 0.5;
-  }
-  100% {
-    transform: rotateY(0deg);
+  to {
+    transform: translateY(0);
     opacity: 1;
   }
 `;
 
-const sharedCardStyles = `
+// Styled Components
+const CardContainer = styled.div<{ $index: number }>`
   height: 100%;
   width: 100%;
+  box-sizing: border-box;
+  padding: 0;
+  position: relative;
+  perspective: 1000px;
+  margin: auto;
+  
+  /* State-based animations */
+  &[data-state="dealing"] {
+    animation: ${dealAnimation} 0.8s calc(${props => props.$index} * 50ms) cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+`;
+
+const CardInner = styled.div`
+  position: relative;
+  width: 100%;
+  height: 100%;
+`;
+
+const sharedCardStyles = css`
+  position: absolute;
+  width: 100%;
+  height: 100%;
   border-radius: 12px;
   color: white;
   font-family: sans-serif;
@@ -54,69 +84,42 @@ const sharedCardStyles = `
   align-items: center;
   text-align: center;
   padding: 0;
-  position: relative;
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
-  background-image: linear-gradient(
-      45deg,
-      rgba(255, 255, 255, 0.1) 25%,
-      transparent 25%
-    ),
-    linear-gradient(-45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%),
-    radial-gradient(
-      circle at 10% 20%,
-      rgba(255, 255, 255, 0.05),
-      transparent 20%
-    ),
-    radial-gradient(
-      circle at 80% 80%,
-      rgba(255, 255, 255, 0.05),
-      transparent 20%
-    );
-  background-size: 10px 10px, 10px 10px;
+  backface-visibility: hidden;
   background-blend-mode: overlay;
 `;
 
-interface CardProps {
-  backgroundColour?: string;
-  children: React.ReactNode;
-  clickable?: boolean;
-  $isDealing?: boolean;
-  animationDelay?: number;
-}
-
-const CardContainer = styled.div`
-  height: 100%;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0;
-  position: relative;
-  perspective: 1000px;
-  margin: auto;
-`;
-
-const CardButton = styled.button<CardProps>`
+const CardFront = styled.button<{ $backgroundColour: string; $clickable: boolean }>`
   ${sharedCardStyles}
-  background-color: ${(props) => props.backgroundColour || FRONT_CARD_COLOUR};
+  background-color: ${props => props.$backgroundColour};
+  cursor: ${props => props.$clickable ? 'pointer' : 'default'};
   transition: transform 0.2s;
-  cursor: ${(props) => (props.clickable ? "pointer" : "default")};
   
-  ${props => props.$isDealing && css`
-    animation: ${flipIn} 0.6s ease-out;
-    animation-delay: ${props.animationDelay || 0}s;
-    animation-fill-mode: both;
-  `}
-
-  &:hover {
-    transform: ${(props) => (props.clickable ? "translateY(-4px)" : "none")};
+  [data-state="idle"] &:hover {
+    transform: ${props => props.$clickable ? 'translateY(-4px)' : 'none'};
   }
-
+  
   &:active {
-    transform: ${(props) => (props.clickable ? "translateY(1px)" : "none")};
+    transform: ${props => props.$clickable ? 'translateY(1px)' : 'none'};
   }
 `;
 
-const CardContent = styled.div<{ selected?: boolean }>`
+const CoverCard = styled.div<{ $backgroundColour: string }>`
+  ${sharedCardStyles}
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: ${props => props.$backgroundColour};
+  z-index: 10;
+  
+  /* Animation based on parent state */
+  [data-state="covering"] & {
+    animation: ${coverSlideIn} 0.5s ease-out forwards;
+  }
+`;
+
+const CardContent = styled.div`
   position: relative;
   display: flex;
   justify-content: center;
@@ -128,26 +131,11 @@ const CardContent = styled.div<{ selected?: boolean }>`
   overflow-wrap: break-word;
   margin: 0;
   padding: 0;
-  text-decoration: ${(props) => (props.selected ? "line-through" : "none")};
-`;
-
-const CoverCard = styled.div<{
-  backgroundColour?: string;
-  animationDelay?: number;
-  animate?: boolean;
-}>`
-  ${sharedCardStyles}
-  position: absolute;
-  top: 0;
-  left: 0;
-  background-color: ${(props) => props.backgroundColour || FRONT_CARD_COLOUR};
-  opacity: ${(props) => (props.animate ? 0 : 1)};
-  ${(props) =>
-    props.animate &&
-    css`
-      animation: ${slideInAnimation} 0.8s ease-out ${props.animationDelay || 0}s
-        forwards;
-    `};
+  
+  /* Strike-through animation during selection */
+  [data-state="selecting"] & {
+    animation: ${strikeThrough} 0.3s ease-out forwards;
+  }
 `;
 
 const CornerIcon = styled.div`
@@ -158,13 +146,12 @@ const CornerIcon = styled.div`
   font-size: clamp(0.5rem, 1vw, 2rem);
 `;
 
-// Helper functions (your original ones)
+// Helper function
 export const getCardColor = (
   teamName?: string | null,
   cardType?: string,
 ): string => {
   const type = cardType || teamName;
-
   switch (type?.toLowerCase()) {
     case "assassin":
       return "#1d2023";
@@ -185,13 +172,12 @@ export interface GameCardProps {
   cardIndex: number;
   showTeamColors: boolean;
   clickable: boolean;
-  isAnimating: boolean;
   onCardClick: (cardWord: string) => void;
-  isDealing?: boolean; // Add this prop
 }
 
 /**
- * Simplified GameCard - just handles display and calls parent callback
+ * GameCard component with state-machine-driven animations.
+ * Animations are triggered by state changes and completed via CSS animation events.
  */
 export const GameCard = memo<GameCardProps>(
   ({
@@ -199,38 +185,48 @@ export const GameCard = memo<GameCardProps>(
     cardIndex,
     showTeamColors,
     clickable,
-    isAnimating,
     onCardClick,
-    isDealing = false,
   }) => {
+    const animation = useCardAnimation(card.word);
     const cardColor = getCardColor(card.teamName, card.cardType);
-    const isPlaceholder = card.word === "";
-
+    
+    // Auto-trigger deal animation on mount
+    if (animation.is.hidden) {
+      animation.actions.deal();
+    }
+    
+    // When server confirms selection, transition to covering
+    if (card.selected && animation.is.selecting) {
+      animation.actions.cover();
+    }
+    
     const handleClick = useCallback(() => {
-      if (clickable && !card.selected) {
-        onCardClick(card.word);
-      }
-    }, [clickable, card.selected, card.word, onCardClick]);
-
+      animation.actions.select();
+      onCardClick(card.word);
+    }, [animation, onCardClick, card.word]);
+    
+    // Show cover when in covering or covered state
+    const shouldShowCover = animation.is.covering || animation.is.covered;
+    
     return (
-      <CardContainer>
-        <CardButton
-          onClick={clickable && !card.selected ? handleClick : undefined}
-          clickable={clickable && !card.selected}
-          backgroundColour={showTeamColors ? cardColor : FRONT_CARD_COLOUR}
-          aria-label={`Card with text ${card.word}`}
-          $isDealing={isDealing && !isPlaceholder}
-          animationDelay={cardIndex * 0.05} // Stagger the flips
-        >
-          <CardContent selected={card.selected}>{card.word}</CardContent>
-        </CardButton>
-        {card.selected && (
-          <CoverCard
-            animationDelay={cardIndex * 0.1}
-            backgroundColour={cardColor}
-            animate={isAnimating}
-            aria-label="Selected card"
+      <CardContainer 
+        data-state={animation.state}
+        $index={cardIndex}
+        onAnimationEnd={animation.handleAnimationEnd}
+      >
+        <CardInner>
+          <CardFront
+            onClick={clickable && !card.selected ? handleClick : undefined}
+            $backgroundColour={showTeamColors ? cardColor : FRONT_CARD_COLOUR}
+            $clickable={clickable && !card.selected}
+            aria-label={`Card with text ${card.word}`}
           >
+            <CardContent>{card.word}</CardContent>
+          </CardFront>
+        </CardInner>
+        
+        {shouldShowCover && (
+          <CoverCard $backgroundColour={cardColor}>
             <CornerIcon>{getIcon(cardColor)}</CornerIcon>
           </CoverCard>
         )}
@@ -238,15 +234,15 @@ export const GameCard = memo<GameCardProps>(
     );
   },
   (prevProps, nextProps) => {
-    const same =
+    return (
       prevProps.card.word === nextProps.card.word &&
       prevProps.card.selected === nextProps.card.selected &&
       prevProps.card.teamName === nextProps.card.teamName &&
       prevProps.showTeamColors === nextProps.showTeamColors &&
       prevProps.clickable === nextProps.clickable &&
-      prevProps.isAnimating === nextProps.isAnimating &&
-      prevProps.isDealing === nextProps.isDealing;
-
-    return same;
+      prevProps.cardIndex === nextProps.cardIndex
+    );
   },
 );
+
+GameCard.displayName = "GameCard";

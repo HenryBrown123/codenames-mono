@@ -409,6 +409,7 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   │   └── query-hooks
 │       │   └── pages
 │       ├── gameplay
+│       │   ├── animation
 │       │   ├── api
 │       │   │   ├── mutations
 │       │   │   └── queries
@@ -437,7 +438,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-76 directories
+77 directories
 ```
 
 ## Getting Started

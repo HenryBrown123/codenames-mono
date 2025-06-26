@@ -4,7 +4,8 @@
       "Bash(lsof:*)",
       "Bash(rm:*)",
       "Bash(npx tsc:*)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(mkdir:*)"
     ]
   },
   "enableAllProjectMcpServers": false
