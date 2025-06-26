@@ -26,6 +26,22 @@ const slideInAnimation = keyframes`
   }
 `;
 
+// Add flip animation
+const flipIn = keyframes`
+  0% {
+    transform: rotateY(180deg);
+    opacity: 0;
+  }
+  50% {
+    transform: rotateY(90deg);
+    opacity: 0.5;
+  }
+  100% {
+    transform: rotateY(0deg);
+    opacity: 1;
+  }
+`;
+
 const sharedCardStyles = `
   height: 100%;
   width: 100%;
@@ -65,6 +81,8 @@ interface CardProps {
   backgroundColour?: string;
   children: React.ReactNode;
   clickable?: boolean;
+  $isDealing?: boolean;
+  animationDelay?: number;
 }
 
 const CardContainer = styled.div`
@@ -82,6 +100,12 @@ const CardButton = styled.button<CardProps>`
   background-color: ${(props) => props.backgroundColour || FRONT_CARD_COLOUR};
   transition: transform 0.2s;
   cursor: ${(props) => (props.clickable ? "pointer" : "default")};
+  
+  ${props => props.$isDealing && css`
+    animation: ${flipIn} 0.6s ease-out;
+    animation-delay: ${props.animationDelay || 0}s;
+    animation-fill-mode: both;
+  `}
 
   &:hover {
     transform: ${(props) => (props.clickable ? "translateY(-4px)" : "none")};
@@ -163,6 +187,7 @@ export interface GameCardProps {
   clickable: boolean;
   isAnimating: boolean;
   onCardClick: (cardWord: string) => void;
+  isDealing?: boolean; // Add this prop
 }
 
 /**
@@ -176,8 +201,10 @@ export const GameCard = memo<GameCardProps>(
     clickable,
     isAnimating,
     onCardClick,
+    isDealing = false,
   }) => {
     const cardColor = getCardColor(card.teamName, card.cardType);
+    const isPlaceholder = card.word === "";
 
     const handleClick = useCallback(() => {
       if (clickable && !card.selected) {
@@ -192,6 +219,8 @@ export const GameCard = memo<GameCardProps>(
           clickable={clickable && !card.selected}
           backgroundColour={showTeamColors ? cardColor : FRONT_CARD_COLOUR}
           aria-label={`Card with text ${card.word}`}
+          $isDealing={isDealing && !isPlaceholder}
+          animationDelay={cardIndex * 0.05} // Stagger the flips
         >
           <CardContent selected={card.selected}>{card.word}</CardContent>
         </CardButton>
@@ -215,7 +244,8 @@ export const GameCard = memo<GameCardProps>(
       prevProps.card.teamName === nextProps.card.teamName &&
       prevProps.showTeamColors === nextProps.showTeamColors &&
       prevProps.clickable === nextProps.clickable &&
-      prevProps.isAnimating === nextProps.isAnimating;
+      prevProps.isAnimating === nextProps.isAnimating &&
+      prevProps.isDealing === nextProps.isDealing;
 
     return same;
   },

@@ -193,7 +193,6 @@ export const LobbyDashboardView: React.FC = () => {
   };
 
   const getButtonText = () => {
-    // actually creates round + assignes roles and deals cards but the "visible" action is dealing cards.
     if (!gameData?.currentRound) {
       return "Deal Cards";
     }
@@ -229,7 +228,7 @@ export const LobbyDashboardView: React.FC = () => {
       <ButtonWrapper>
         <ActionButton
           onClick={handleClick}
-          text={actionState.status === "loading" ? "Loading..." : getButtonText()}
+          text={getButtonText()}
           enabled={actionState.status !== "loading"}
         />
       </ButtonWrapper>
@@ -264,11 +263,7 @@ export const GameoverDashboardView: React.FC = () => {
     <ButtonWrapper>
       <ActionButton
         onClick={handleNewGame}
-        text={
-          actionState.status === "loading" && actionState.name === "createRound"
-            ? "Creating..."
-            : "New Game"
-        }
+        text="New Game"
         enabled={actionState.status !== "loading"}
       />
     </ButtonWrapper>
