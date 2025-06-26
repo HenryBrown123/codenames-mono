@@ -1,9 +1,8 @@
-// frontend/src/gameplay/game-board/game-card.tsx
-import { memo, useCallback, useEffect } from "react";
+import { memo, useCallback } from "react";
 import styled, { css, keyframes } from "styled-components";
 import { FaStar, FaLeaf, FaSkull, FaPeace } from "react-icons/fa";
 import { Card } from "@frontend/shared-types";
-import { useCardAnimation } from "./use-card-animation";
+import { CardAnimationControl } from "./use-board-animations";
 
 const FRONT_CARD_COLOUR = "#494646";
 
@@ -191,6 +190,9 @@ export const getCardColor = (
 export interface GameCardProps {
   card: Card;
   cardIndex: number;
+  cardId: string;
+  animation: CardAnimationControl;
+  onAnimationEnd: (e: React.AnimationEvent) => void;
   showTeamColors: boolean;
   clickable: boolean;
   onCardClick: (cardWord: string) => void;
@@ -198,97 +200,40 @@ export interface GameCardProps {
 
 /**
  * GameCard component with state-machine-driven animations.
- * Animations are triggered by state changes and completed via CSS animation events.
+ * Uses ref-based state management for clean, synchronous updates.
  */
 export const GameCard = memo<GameCardProps>(
   ({
     card,
     cardIndex,
+    cardId,
+    animation,
+    onAnimationEnd,
     showTeamColors,
     clickable,
     onCardClick,
   }) => {
-    const animation = useCardAnimation(card.word);
     const cardColor = getCardColor(card.teamName, card.cardType);
     
-    // Debug log on every render
-    useEffect(() => {
-      console.log(`[CARD ${cardIndex}] "${card.word}" render:`, {
-        state: animation.state,
-        selected: card.selected,
-        clickable,
-        showTeamColors,
-        cardColor,
-        teamName: card.teamName,
-        cardType: card.cardType,
-        'animation.is': animation.is,
-      });
-    });
-    
-    // Log state changes
-    useEffect(() => {
-      console.log(`[CARD ${cardIndex}] "${card.word}" state changed to: ${animation.state}`);
-    }, [animation.state, card.word, cardIndex]);
-    
-    // Log selection changes
-    useEffect(() => {
-      console.log(`[CARD ${cardIndex}] "${card.word}" selected changed to: ${card.selected}`);
-    }, [card.selected, card.word, cardIndex]);
-    
-    // Auto-trigger deal animation on mount
-    if (animation.is.hidden) {
-      console.log(`[CARD ${cardIndex}] "${card.word}" triggering deal animation`);
-      animation.actions.deal();
-    }
-    
-    // When server confirms selection, transition to covering
-    if (card.selected && animation.is.selecting) {
-      console.log(`[CARD ${cardIndex}] "${card.word}" server confirmed selection, transitioning to covering`);
-      animation.actions.cover();
-    }
-    
     const handleClick = useCallback(() => {
-      console.log(`[CARD ${cardIndex}] "${card.word}" clicked!`, {
-        currentState: animation.state,
-        willSelect: animation.is.idle,
-      });
+      if (!clickable || card.selected || !animation.is.idle) return;
+      
+      console.log(`[CARD ${cardIndex}] "${card.word}" clicked`);
       animation.actions.select();
       onCardClick(card.word);
-    }, [animation, onCardClick, card.word, cardIndex]);
-    
-    // For 3D flip, we need both sides at all times
-    const showFlipped = animation.is.covering || animation.is.covered;
-    
-    console.log(`[CARD ${cardIndex}] "${card.word}" render decision:`, {
-      showFlipped,
-      'animation.is.covering': animation.is.covering,
-      'animation.is.covered': animation.is.covered,
-      className: showFlipped ? 'flipped' : '',
-    });
-    
-    // Handle animation end
-    const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
-      console.log(`[CARD ${cardIndex}] "${card.word}" animation ended:`, {
-        animationName: e.animationName,
-        target: e.target,
-        currentTarget: e.currentTarget,
-        isTargetCurrentTarget: e.target === e.currentTarget,
-        currentState: animation.state,
-      });
-      animation.handleAnimationEnd(e);
-    }, [animation, card.word, cardIndex]);
+    }, [animation, onCardClick, card.word, cardIndex, clickable, card.selected]);
     
     return (
       <CardContainer 
         data-state={animation.state}
         style={{ '--index': cardIndex } as React.CSSProperties}
-        onAnimationEnd={handleAnimationEnd}
+        onAnimationEnd={onAnimationEnd}
       >
-        <CardInner className={showFlipped ? 'flipped' : ''}>
+        <CardInner>
           <CardFront
-            onClick={clickable && !card.selected ? handleClick : undefined}
+            onClick={handleClick}
             $backgroundColour={showTeamColors ? cardColor : FRONT_CARD_COLOUR}
-            $clickable={clickable && !card.selected}
+            $clickable={clickable && !card.selected && animation.is.idle}
             aria-label={`Card with text ${card.word}`}
           >
             <CardContent>{card.word}</CardContent>
@@ -301,27 +246,17 @@ export const GameCard = memo<GameCardProps>(
       </CardContainer>
     );
   },
+  // Better memo comparison
   (prevProps, nextProps) => {
-    const isEqual = prevProps.card.word === nextProps.card.word &&
+    return prevProps.card.word === nextProps.card.word &&
       prevProps.card.selected === nextProps.card.selected &&
       prevProps.card.teamName === nextProps.card.teamName &&
       prevProps.showTeamColors === nextProps.showTeamColors &&
       prevProps.clickable === nextProps.clickable &&
-      prevProps.cardIndex === nextProps.cardIndex;
-    
-    if (!isEqual) {
-      console.log(`[CARD ${prevProps.cardIndex}] "${prevProps.card.word}" re-rendering due to prop change:`, {
-        word: prevProps.card.word !== nextProps.card.word,
-        selected: prevProps.card.selected !== nextProps.card.selected,
-        teamName: prevProps.card.teamName !== nextProps.card.teamName,
-        showTeamColors: prevProps.showTeamColors !== nextProps.showTeamColors,
-        clickable: prevProps.clickable !== nextProps.clickable,
-        cardIndex: prevProps.cardIndex !== nextProps.cardIndex,
-      });
-    }
-    
-    return isEqual;
-  },
+      prevProps.cardIndex === nextProps.cardIndex &&
+      prevProps.cardId === nextProps.cardId &&
+      prevProps.animation.state === nextProps.animation.state;
+  }
 );
 
 GameCard.displayName = "GameCard";
