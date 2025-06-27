@@ -26,6 +26,7 @@ export const useBoardAnimations = () => {
   const animationState = useAnimationState(cardStateMachine);
   const processedCards = useRef(new Set<string>());
   const coveringCards = useRef(new Set<string>());
+  const serverSelectedCards = useRef(new Set<string>()); // Track processed server selections
   
   const getCardAnimation = useCallback((cardId: string): CardAnimationControl => {
     const state = animationState.getState(cardId);
@@ -73,6 +74,7 @@ export const useBoardAnimations = () => {
           console.log(`[BOARD ANIMATIONS] Resetting card: ${cardId}`);
           processedCards.current.delete(cardId);
           coveringCards.current.delete(cardId);
+          serverSelectedCards.current.delete(cardId);
           animationState.reset(cardId);
         },
       },
@@ -108,12 +110,23 @@ export const useBoardAnimations = () => {
   const handleServerSelection = useCallback((cardId: string, isSelected: boolean) => {
     const state = animationState.getState(cardId);
     
+    // Skip if we've already processed this server selection
+    if (isSelected && serverSelectedCards.current.has(cardId)) {
+      return;
+    }
+    
     if (isSelected && state === 'selecting' && !coveringCards.current.has(cardId)) {
       requestAnimationFrame(() => {
         console.log(`[BOARD ANIMATIONS] Server confirmed selection for: ${cardId}`);
         coveringCards.current.add(cardId);
+        serverSelectedCards.current.add(cardId); // Mark as processed
         animationState.send(cardId, 'cover');
       });
+    }
+    
+    // If a card is not selected but was previously, remove from tracking
+    if (!isSelected && serverSelectedCards.current.has(cardId)) {
+      serverSelectedCards.current.delete(cardId);
     }
   }, [animationState]);
   
@@ -122,6 +135,7 @@ export const useBoardAnimations = () => {
     console.log('[BOARD ANIMATIONS] Resetting all cards for re-deal');
     processedCards.current.clear();
     coveringCards.current.clear();
+    serverSelectedCards.current.clear(); // Clear server selection tracking
     animationState.reset();
   }, [animationState]);
   
