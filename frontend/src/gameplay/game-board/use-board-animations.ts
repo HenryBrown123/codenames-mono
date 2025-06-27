@@ -34,11 +34,22 @@ export const useBoardAnimations = () => {
     // Auto-deal NEW cards after they've been painted
     if (!processedCards.current.has(cardId) && state === 'hidden') {
       processedCards.current.add(cardId);
-      // Single RAF ensures card is rendered in hidden state before dealing
-      requestAnimationFrame(() => {
-        console.log(`[BOARD ANIMATIONS] Auto-dealing card: ${cardId}`);
+      
+      // Check if this is a placeholder card (empty word)
+      const isPlaceholder = cardId.startsWith('placeholder-');
+      
+      if (isPlaceholder) {
+        // Skip animation for placeholders - go straight to idle
+        console.log(`[BOARD ANIMATIONS] Skipping animation for placeholder: ${cardId}`);
         animationState.send(cardId, 'deal');
-      });
+        animationState.send(cardId, 'finishDeal');
+      } else {
+        // Normal animation for real cards
+        requestAnimationFrame(() => {
+          console.log(`[BOARD ANIMATIONS] Auto-dealing card: ${cardId}`);
+          animationState.send(cardId, 'deal');
+        });
+      }
     }
     
     return {

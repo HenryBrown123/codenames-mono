@@ -32,8 +32,14 @@ const dealAnimation = keyframes`
 `;
 
 const strikeThrough = keyframes`
-  to {
+  0% {
+    text-decoration: none;
+    opacity: 1;
+  }
+  100% {
     text-decoration: line-through;
+    text-decoration-thickness: 3px;
+    text-decoration-color: rgba(255, 0, 0, 0.8);
     opacity: 0.7;
   }
 `;
@@ -85,9 +91,9 @@ const CardInner = styled.div`
   transform-style: preserve-3d;
   transition: transform 0.6s;
   
-  /* Only flip when THIS card is covering */
+  /* Stagger the flip animation slightly */
   [data-state="covering"] & {
-    animation: ${flipAnimation} 0.6s ease-in-out forwards;
+    animation: ${flipAnimation} 0.6s calc(var(--index) * 20ms) ease-in-out forwards;
   }
   
   [data-state="covered"] & {
@@ -112,7 +118,11 @@ const sharedCardStyles = css`
   box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
   backface-visibility: hidden;
   
-  /* Restored card textures */
+  /* Force hardware acceleration */
+  transform: translateZ(0);
+  will-change: transform;
+  
+  /* Card texture */
   background-image: linear-gradient(
       45deg,
       rgba(255, 255, 255, 0.1) 25%,
@@ -154,7 +164,7 @@ const CoverCard = styled.div<{ $backgroundColour: string }>`
   transform: rotateY(180deg);
 `;
 
-const CardContent = styled.div`
+const CardContent = styled.div<{ $isSelecting: boolean }>`
   position: relative;
   display: flex;
   justify-content: center;
@@ -167,10 +177,10 @@ const CardContent = styled.div`
   margin: 0;
   padding: 0;
   
-  /* Strike-through animation during selection */
-  [data-state="selecting"] & {
-    animation: ${strikeThrough} 0.3s ease-out forwards;
-  }
+  /* Strike-through animation - controlled by prop not parent state */
+  ${props => props.$isSelecting && css`
+    animation: ${strikeThrough} 0.4s ease-out forwards;
+  `}
 `;
 
 const CornerIcon = styled.div`
@@ -202,6 +212,50 @@ export const getCardColor = (
   }
 };
 
+// Memoized front face component
+const CardFrontFace = memo<{
+  word: string;
+  backgroundColor: string;
+  clickable: boolean;
+  isSelecting: boolean;
+  onClick: () => void;
+}>(({ word, backgroundColor, clickable, isSelecting, onClick }) => {
+  return (
+    <CardFront
+      onClick={onClick}
+      $backgroundColour={backgroundColor}
+      $clickable={clickable}
+      aria-label={`Card with text ${word}`}
+    >
+      <CardContent $isSelecting={isSelecting}>{word}</CardContent>
+    </CardFront>
+  );
+}, (prev, next) => {
+  // Only re-render if these specific props change
+  return (
+    prev.word === next.word &&
+    prev.backgroundColor === next.backgroundColor &&
+    prev.clickable === next.clickable &&
+    prev.isSelecting === next.isSelecting
+  );
+});
+
+CardFrontFace.displayName = "CardFrontFace";
+
+// Memoized back face component
+const CardBackFace = memo<{
+  backgroundColor: string;
+}>(({ backgroundColor }) => {
+  const icon = getIcon(backgroundColor);
+  return (
+    <CoverCard $backgroundColour={backgroundColor}>
+      {icon && <CornerIcon>{icon}</CornerIcon>}
+    </CoverCard>
+  );
+}, (prev, next) => prev.backgroundColor === next.backgroundColor);
+
+CardBackFace.displayName = "CardBackFace";
+
 export interface GameCardProps {
   card: Card;
   cardIndex: number;
@@ -214,8 +268,7 @@ export interface GameCardProps {
 }
 
 /**
- * GameCard component with state-machine-driven animations.
- * Uses ref-based state management for clean, synchronous updates.
+ * GameCard component with decoupled faces for smooth animations
  */
 export const GameCard = memo<GameCardProps>(
   ({
@@ -257,27 +310,18 @@ export const GameCard = memo<GameCardProps>(
       <CardContainer 
         data-state={animation.state}
         style={{ '--index': cardIndex } as React.CSSProperties}
-        onAnimationEnd={(e) => {
-          console.log(`[CARD ${cardIndex}] onAnimationEnd fired:`, e.animationName);
-          onAnimationEnd(e);
-        }}
-        onAnimationStart={(e) => {
-          console.log(`[CARD ${cardIndex}] onAnimationStart fired:`, e.animationName);
-        }}
+        onAnimationEnd={onAnimationEnd}
       >
-        <CardInner>
-          <CardFront
+        <CardInner style={{ '--index': cardIndex } as React.CSSProperties}>
+          <CardFrontFace
+            word={card.word}
+            backgroundColor={showTeamColors ? cardColor : FRONT_CARD_COLOUR}
+            clickable={clickable && !card.selected && animation.is.idle}
+            isSelecting={animation.is.selecting}
             onClick={handleClick}
-            $backgroundColour={showTeamColors ? cardColor : FRONT_CARD_COLOUR}
-            $clickable={clickable && !card.selected && animation.is.idle}
-            aria-label={`Card with text ${card.word}`}
-          >
-            <CardContent>{card.word}</CardContent>
-          </CardFront>
+          />
           
-          <CoverCard $backgroundColour={cardColor}>
-            <CornerIcon>{getIcon(cardColor)}</CornerIcon>
-          </CoverCard>
+          <CardBackFace backgroundColor={cardColor} />
         </CardInner>
       </CardContainer>
     );
