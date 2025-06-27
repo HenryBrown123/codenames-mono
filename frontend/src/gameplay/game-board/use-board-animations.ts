@@ -24,25 +24,19 @@ export interface CardAnimationControl {
 
 export const useBoardAnimations = () => {
   const animationState = useAnimationState(cardStateMachine);
-  const initializedCards = useRef(new Set<string>());
+  const processedCards = useRef(new Set<string>());
   const coveringCards = useRef(new Set<string>());
-  const pendingDeals = useRef(new Set<string>());
   
   const getCardAnimation = useCallback((cardId: string): CardAnimationControl => {
     const state = animationState.getState(cardId);
     
-    // Queue deal for next frame if card is new
-    if (!initializedCards.current.has(cardId) && state === 'hidden' && !pendingDeals.current.has(cardId)) {
-      initializedCards.current.add(cardId);
-      pendingDeals.current.add(cardId);
-      
-      // Double RAF to ensure component renders with hidden state first
+    // Auto-deal NEW cards after they've been painted
+    if (!processedCards.current.has(cardId) && state === 'hidden') {
+      processedCards.current.add(cardId);
+      // Single RAF ensures card is rendered in hidden state before dealing
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          console.log(`[BOARD ANIMATIONS] Auto-dealing card: ${cardId}`);
-          animationState.send(cardId, 'deal');
-          pendingDeals.current.delete(cardId);
-        });
+        console.log(`[BOARD ANIMATIONS] Auto-dealing card: ${cardId}`);
+        animationState.send(cardId, 'deal');
       });
     }
     
@@ -77,10 +71,9 @@ export const useBoardAnimations = () => {
         },
         reset: () => {
           console.log(`[BOARD ANIMATIONS] Resetting card: ${cardId}`);
-          initializedCards.current.delete(cardId);
+          processedCards.current.delete(cardId);
           coveringCards.current.delete(cardId);
-          pendingDeals.current.delete(cardId);
-          animationState.send(cardId, 'reset');
+          animationState.reset(cardId);
         },
       },
     };
@@ -127,7 +120,7 @@ export const useBoardAnimations = () => {
   // Add method to reset all cards (for deal button)
   const resetAllCards = useCallback(() => {
     console.log('[BOARD ANIMATIONS] Resetting all cards for re-deal');
-    initializedCards.current.clear();
+    processedCards.current.clear();
     coveringCards.current.clear();
     animationState.reset();
   }, [animationState]);
@@ -143,7 +136,7 @@ export const useBoardAnimations = () => {
       covered: 0,
     };
     
-    Array.from(initializedCards.current).forEach(cardId => {
+    Array.from(processedCards.current).forEach(cardId => {
       const state = animationState.getState(cardId);
       summary[state]++;
     });
