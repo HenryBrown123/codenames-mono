@@ -1,9 +1,14 @@
-import React, { useCallback, memo, useMemo } from "react";
+import React, { useCallback, memo, useMemo, useRef } from "react";
 import styled from "styled-components";
 import { useGameData } from "@frontend/gameplay/game-data";
 import { useGameActions } from "@frontend/gameplay/game-actions";
 import { GameCard } from "./game-card";
 import { useBoardAnimations } from "./use-board-animations";
+
+// Add prop type
+interface BoardProps {
+  boardAnimations: ReturnType<typeof useBoardAnimations>;
+}
 
 const CardsContainer = styled.div`
   display: grid;
@@ -16,10 +21,9 @@ const CardsContainer = styled.div`
   justify-items: stretch;
 `;
 
-export const CodebreakerBoard: React.FC = memo(() => {
+export const CodebreakerBoard: React.FC<BoardProps> = memo(({ boardAnimations }) => {
   const { gameData } = useGameData();
   const { makeGuess, actionState } = useGameActions();
-  const boardAnimations = useBoardAnimations();
   
   const cards = gameData.currentRound?.cards || [];
   const isLoading = actionState.status === "loading";
@@ -37,7 +41,6 @@ export const CodebreakerBoard: React.FC = memo(() => {
         const cardId = `${index}-${card.word || 'empty'}`;
         const animation = boardAnimations.getCardAnimation(cardId);
         
-        // Handle server selection
         boardAnimations.handleServerSelection(cardId, card.selected);
         
         return (
@@ -60,9 +63,8 @@ export const CodebreakerBoard: React.FC = memo(() => {
 
 CodebreakerBoard.displayName = "CodebreakerBoard";
 
-export const CodemasterBoard: React.FC = memo(() => {
+export const CodemasterBoard: React.FC<BoardProps> = memo(({ boardAnimations }) => {
   const { gameData } = useGameData();
-  const boardAnimations = useBoardAnimations();
   const cards = gameData.currentRound?.cards || [];
 
   return (
@@ -71,7 +73,6 @@ export const CodemasterBoard: React.FC = memo(() => {
         const cardId = `${index}-${card.word || 'empty'}`;
         const animation = boardAnimations.getCardAnimation(cardId);
         
-        // Handle server selection
         boardAnimations.handleServerSelection(cardId, card.selected);
         
         return (
@@ -94,10 +95,19 @@ export const CodemasterBoard: React.FC = memo(() => {
 
 CodemasterBoard.displayName = "CodemasterBoard";
 
-export const SpectatorBoard: React.FC = memo(() => {
+export const SpectatorBoard: React.FC<BoardProps> = memo(({ boardAnimations }) => {
   const { gameData } = useGameData();
-  const boardAnimations = useBoardAnimations();
   const cards = gameData.currentRound?.cards || [];
+  
+  // Reset animations when cards change
+  const prevCardsRef = useRef<string>("");
+  const cardsKey = cards.map(c => c.word).join(",");
+  
+  if (prevCardsRef.current && prevCardsRef.current !== cardsKey) {
+    console.log("[BOARD] Cards changed, resetting all animations");
+    boardAnimations.resetAllCards();
+  }
+  prevCardsRef.current = cardsKey;
 
   const displayCards = useMemo(() => {
     if (cards.length === 0) {
@@ -118,7 +128,6 @@ export const SpectatorBoard: React.FC = memo(() => {
         const cardId = card.word === "" ? `placeholder-${index}` : `${index}-${card.word}`;
         const animation = boardAnimations.getCardAnimation(cardId);
         
-        // Handle server selection
         boardAnimations.handleServerSelection(cardId, card.selected);
         
         return (

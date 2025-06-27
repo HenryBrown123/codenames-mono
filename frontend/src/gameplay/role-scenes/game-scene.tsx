@@ -11,6 +11,7 @@ import {
 import { SpectatorBoard } from "../game-board";
 import { GameInstructions } from "../game-instructions";
 import { DeviceHandoffOverlay } from "../device-handoff";
+import { useBoardAnimations } from "../game-board/use-board-animations";
 
 const GameSceneContainer = styled.div`
   display: flex;
@@ -81,6 +82,9 @@ export const GameScene: React.FC = () => {
     pendingTransition,
     completeHandoff,
   } = usePlayerRoleScene();
+  
+  // Single animation instance at the top level
+  const boardAnimations = useBoardAnimations();
 
   // Handle game over state
   if (gameData.currentRound?.status === "COMPLETED") {
@@ -90,7 +94,7 @@ export const GameScene: React.FC = () => {
           <GameInstructions messageText="🎉 Game Over!" />
         </InstructionsContainer>
         <GameBoardContainer>
-          <SpectatorBoard />
+          <SpectatorBoard boardAnimations={boardAnimations} />
         </GameBoardContainer>
         <DashboardContainer>
           <div>Game Completed!</div>
@@ -108,6 +112,7 @@ export const GameScene: React.FC = () => {
             currentScene={currentScene}
             gameData={gameData}
             activeTurn={activeTurn}
+            boardAnimations={boardAnimations}
           />
         </BlurredBackground>
         <DeviceHandoffOverlay
@@ -127,19 +132,21 @@ export const GameScene: React.FC = () => {
         currentScene={currentScene}
         gameData={gameData}
         activeTurn={activeTurn}
+        boardAnimations={boardAnimations}
       />
     </GameSceneContainer>
   );
 };
 
 /**
- * Extracted game scene content to avoid duplication
+ * Extracted game scene content with boardAnimations prop
  */
 interface GameSceneContentProps {
   currentRole: string;
   currentScene: string;
   gameData: any;
   activeTurn: any;
+  boardAnimations: ReturnType<typeof useBoardAnimations>;
 }
 
 const GameSceneContent: React.FC<GameSceneContentProps> = ({
@@ -147,6 +154,7 @@ const GameSceneContent: React.FC<GameSceneContentProps> = ({
   currentScene,
   gameData,
   activeTurn,
+  boardAnimations,
 }) => {
   const messageText = getSceneMessage(
     currentRole,
@@ -164,7 +172,7 @@ const GameSceneContent: React.FC<GameSceneContentProps> = ({
       </InstructionsContainer>
 
       <GameBoardContainer>
-        <BoardComponent />
+        <BoardComponent boardAnimations={boardAnimations} />
       </GameBoardContainer>
 
       <DashboardContainer>

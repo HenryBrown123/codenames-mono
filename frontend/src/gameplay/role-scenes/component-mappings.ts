@@ -56,12 +56,12 @@ export const getDashboardComponent = (
 
 /**
  * Maps scene keys to board components
- * Handles both uppercase and lowercase role names for consistency
+ * Now returns components that expect boardAnimations prop
  */
 export const getBoardComponent = (
   role: string,
   scene: string,
-): React.ComponentType<any> => {
+): React.ComponentType<{ boardAnimations: any }> => {
   // Normalize to lowercase for consistent mapping
   const normalizedRole = role.toLowerCase();
   const sceneKey = `${normalizedRole}.${scene}`;
