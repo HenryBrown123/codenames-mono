@@ -38,8 +38,10 @@ export const useAnimationState = <TState extends string, TTrigger extends string
   
   const reset = useCallback((id?: string) => {
     if (id) {
+      console.log(`[ANIMATION STATE] Resetting state for: ${id}`);
       states.current.delete(id);
     } else {
+      console.log(`[ANIMATION STATE] Resetting all states`);
       states.current.clear();
     }
   }, []);
