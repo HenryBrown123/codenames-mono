@@ -1,3 +1,6 @@
+// ===== FIX: Ensure cards render hidden before dealing =====
+
+// ===== use-board-animations.ts =====
 import { useCallback, useRef } from "react";
 import { useAnimationState } from "../animation/use-animation-state";
 import { cardStateMachine, CardState } from "./card-animation-states";
@@ -23,17 +26,23 @@ export const useBoardAnimations = () => {
   const animationState = useAnimationState(cardStateMachine);
   const initializedCards = useRef(new Set<string>());
   const coveringCards = useRef(new Set<string>());
+  const pendingDeals = useRef(new Set<string>());
   
   const getCardAnimation = useCallback((cardId: string): CardAnimationControl => {
     const state = animationState.getState(cardId);
     
-    // Auto-trigger deal for new cards using RAF
-    if (!initializedCards.current.has(cardId) && state === 'hidden') {
+    // Queue deal for next frame if card is new
+    if (!initializedCards.current.has(cardId) && state === 'hidden' && !pendingDeals.current.has(cardId)) {
       initializedCards.current.add(cardId);
+      pendingDeals.current.add(cardId);
       
+      // Double RAF to ensure component renders with hidden state first
       requestAnimationFrame(() => {
-        console.log(`[BOARD ANIMATIONS] Auto-dealing card: ${cardId}`);
-        animationState.send(cardId, 'deal');
+        requestAnimationFrame(() => {
+          console.log(`[BOARD ANIMATIONS] Auto-dealing card: ${cardId}`);
+          animationState.send(cardId, 'deal');
+          pendingDeals.current.delete(cardId);
+        });
       });
     }
     
@@ -54,6 +63,7 @@ export const useBoardAnimations = () => {
             animationState.send(cardId, 'select');
             return true;
           }
+          console.warn(`[BOARD ANIMATIONS] Cannot select ${cardId} - state is ${state}, not idle`);
           return false;
         },
         cover: () => {
@@ -69,6 +79,7 @@ export const useBoardAnimations = () => {
           console.log(`[BOARD ANIMATIONS] Resetting card: ${cardId}`);
           initializedCards.current.delete(cardId);
           coveringCards.current.delete(cardId);
+          pendingDeals.current.delete(cardId);
           animationState.send(cardId, 'reset');
         },
       },
@@ -76,22 +87,29 @@ export const useBoardAnimations = () => {
   }, [animationState]);
   
   const handleAnimationEnd = useCallback((cardId: string, e: React.AnimationEvent) => {
+    // Detailed logging
+    console.log(`[BOARD ANIMATIONS] onAnimationEnd fired for ${cardId}:`, {
+      animationName: e.animationName,
+      target: e.target === e.currentTarget ? 'correct' : 'child element'
+    });
+    
     if (e.target !== e.currentTarget) return;
     
     const state = animationState.getState(cardId);
-    console.log(`[BOARD ANIMATIONS] Animation ended for ${cardId} in state: ${state}`);
+    console.log(`[BOARD ANIMATIONS] Processing animation end for ${cardId} in state: ${state}`);
     
-    requestAnimationFrame(() => {
-      switch (state) {
-        case 'dealing':
-          animationState.send(cardId, 'finishDeal');
-          break;
-        case 'covering':
-          animationState.send(cardId, 'finishCover');
-          coveringCards.current.delete(cardId);
-          break;
-      }
-    });
+    // No RAF here - state updates should be synchronous
+    switch (state) {
+      case 'dealing':
+        console.log(`[BOARD ANIMATIONS] Transitioning ${cardId} from dealing to idle`);
+        animationState.send(cardId, 'finishDeal');
+        break;
+      case 'covering':
+        console.log(`[BOARD ANIMATIONS] Transitioning ${cardId} from covering to covered`);
+        animationState.send(cardId, 'finishCover');
+        coveringCards.current.delete(cardId);
+        break;
+    }
   }, [animationState]);
   
   const handleServerSelection = useCallback((cardId: string, isSelected: boolean) => {
@@ -106,9 +124,38 @@ export const useBoardAnimations = () => {
     }
   }, [animationState]);
   
+  // Add method to reset all cards (for deal button)
+  const resetAllCards = useCallback(() => {
+    console.log('[BOARD ANIMATIONS] Resetting all cards for re-deal');
+    initializedCards.current.clear();
+    coveringCards.current.clear();
+    animationState.reset();
+  }, [animationState]);
+  
+  // Add method to get current state summary
+  const getStateSummary = useCallback(() => {
+    const summary: Record<CardState, number> = {
+      hidden: 0,
+      dealing: 0,
+      idle: 0,
+      selecting: 0,
+      covering: 0,
+      covered: 0,
+    };
+    
+    Array.from(initializedCards.current).forEach(cardId => {
+      const state = animationState.getState(cardId);
+      summary[state]++;
+    });
+    
+    return summary;
+  }, [animationState]);
+  
   return {
     getCardAnimation,
     handleAnimationEnd,
     handleServerSelection,
+    resetAllCards,
+    getStateSummary,
   };
 };

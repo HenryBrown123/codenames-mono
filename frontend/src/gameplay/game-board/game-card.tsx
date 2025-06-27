@@ -1,4 +1,4 @@
-import { memo, useCallback } from "react";
+import React, { memo, useCallback } from "react";
 import styled, { css, keyframes } from "styled-components";
 import { FaStar, FaLeaf, FaSkull, FaPeace } from "react-icons/fa";
 import { Card } from "@frontend/shared-types";
@@ -57,9 +57,24 @@ const CardContainer = styled.div`
   perspective: 1000px;
   margin: auto;
   
-  /* State-based animations */
+  /* Initial hidden state */
+  &[data-state="hidden"] {
+    opacity: 0;
+    transform: translateY(-100vh) scale(0);
+  }
+  
+  /* Dealing animation */
   &[data-state="dealing"] {
-    animation: ${dealAnimation} 0.8s calc(var(--index) * 50ms) cubic-bezier(0.4, 0, 0.2, 1) both;
+    animation: ${dealAnimation} 0.8s calc(var(--index) * 50ms) cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  
+  /* Other states */
+  &[data-state="idle"],
+  &[data-state="selecting"],
+  &[data-state="covering"],
+  &[data-state="covered"] {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 `;
 
@@ -216,18 +231,39 @@ export const GameCard = memo<GameCardProps>(
     const cardColor = getCardColor(card.teamName, card.cardType);
     
     const handleClick = useCallback(() => {
-      if (!clickable || card.selected || !animation.is.idle) return;
+      console.log(`[CARD ${cardIndex}] Click attempt:`, {
+        clickable,
+        selected: card.selected,
+        state: animation.state,
+        isIdle: animation.is.idle
+      });
       
-      console.log(`[CARD ${cardIndex}] "${card.word}" clicked`);
+      if (!clickable || card.selected || !animation.is.idle) {
+        console.log(`[CARD ${cardIndex}] Click blocked`);
+        return;
+      }
+      
+      console.log(`[CARD ${cardIndex}] "${card.word}" clicked - triggering select`);
       animation.actions.select();
       onCardClick(card.word);
-    }, [animation, onCardClick, card.word, cardIndex, clickable, card.selected]);
+    }, [animation, onCardClick, card, cardIndex, clickable]);
+    
+    // Debug: Log state changes
+    React.useEffect(() => {
+      console.log(`[CARD ${cardIndex}] State changed to: ${animation.state}`);
+    }, [animation.state, cardIndex]);
     
     return (
       <CardContainer 
         data-state={animation.state}
         style={{ '--index': cardIndex } as React.CSSProperties}
-        onAnimationEnd={onAnimationEnd}
+        onAnimationEnd={(e) => {
+          console.log(`[CARD ${cardIndex}] onAnimationEnd fired:`, e.animationName);
+          onAnimationEnd(e);
+        }}
+        onAnimationStart={(e) => {
+          console.log(`[CARD ${cardIndex}] onAnimationStart fired:`, e.animationName);
+        }}
       >
         <CardInner>
           <CardFront
