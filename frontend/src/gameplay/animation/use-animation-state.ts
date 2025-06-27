@@ -1,4 +1,4 @@
-import { useRef, useCallback } from "react";
+import { useState, useCallback } from "react";
 
 export interface StateMachine<TState extends string, TTrigger extends string> {
   initial: TState;
@@ -6,43 +6,47 @@ export interface StateMachine<TState extends string, TTrigger extends string> {
 }
 
 /**
- * Generic hook for managing animation states via state machine pattern.
- * Uses refs to avoid re-renders and provides a simple API for state transitions.
- * 
- * @param machine - State machine definition with states and valid transitions
- * @returns Object with methods to get current state, send triggers, and reset
+ * Hook for managing animation states via state machine pattern.
+ * Uses React state to ensure UI updates when animations change.
  */
 export const useAnimationState = <TState extends string, TTrigger extends string>(
   machine: StateMachine<TState, TTrigger>
 ) => {
-  const states = useRef<Map<string, TState>>(new Map());
+  const [states, setStates] = useState<Map<string, TState>>(new Map());
   
   const getState = useCallback((id: string): TState => {
-    return states.current.get(id) || machine.initial;
-  }, [machine.initial]);
+    return states.get(id) || machine.initial;
+  }, [states, machine.initial]);
   
   const send = useCallback((id: string, trigger: TTrigger): TState => {
-    const currentState = getState(id);
+    const currentState = states.get(id) || machine.initial;
     const nextState = machine.transitions[currentState]?.[trigger];
 
     console.log(`[ANIMATION STATE] ${id}: ${currentState} + ${trigger} = ${nextState || 'NO TRANSITION'}`);
     
-    
     if (nextState) {
-      states.current.set(id, nextState);
+      setStates(prev => {
+        const newMap = new Map(prev);
+        newMap.set(id, nextState);
+        return newMap;
+      });
       return nextState;
     }
     
     return currentState;
-  }, [getState, machine.transitions]);
+  }, [states, machine]);
   
   const reset = useCallback((id?: string) => {
     if (id) {
       console.log(`[ANIMATION STATE] Resetting state for: ${id}`);
-      states.current.delete(id);
+      setStates(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(id);
+        return newMap;
+      });
     } else {
       console.log(`[ANIMATION STATE] Resetting all states`);
-      states.current.clear();
+      setStates(new Map());
     }
   }, []);
   
