@@ -1,13 +1,15 @@
-import React, { useCallback, memo, useMemo, useRef } from "react";
+import React, { useCallback, memo, useMemo } from "react";
 import styled from "styled-components";
 import { useGameData } from "@frontend/gameplay/game-data";
 import { useGameActions } from "@frontend/gameplay/game-actions";
+import { usePlayerRoleScene } from "@frontend/gameplay/role-scenes";
 import { GameCard } from "./game-card";
-import { useBoardAnimations } from "./use-board-animations";
+import { useCardVisibility } from "./use-card-visibility";
 
-// Add prop type
+// New prop interface for visibility control
 interface BoardProps {
-  boardAnimations: ReturnType<typeof useBoardAnimations>;
+  showOnMount?: boolean;
+  onResetVisibility?: () => void;
 }
 
 const CardsContainer = styled.div`
@@ -21,12 +23,18 @@ const CardsContainer = styled.div`
   justify-items: stretch;
 `;
 
-export const CodebreakerBoard: React.FC<BoardProps> = memo(({ boardAnimations }) => {
+export const CodebreakerBoard: React.FC<BoardProps> = memo(({ showOnMount = false }) => {
   const { gameData } = useGameData();
   const { makeGuess, actionState } = useGameActions();
   
   const cards = gameData.currentRound?.cards || [];
   const isLoading = actionState.status === "loading";
+
+  // Use visibility tracking
+  const visibility = useCardVisibility({ 
+    cards, 
+    showOnMount
+  });
 
   const handleCardClick = useCallback(
     (cardWord: string) => {
@@ -38,22 +46,19 @@ export const CodebreakerBoard: React.FC<BoardProps> = memo(({ boardAnimations })
   return (
     <CardsContainer aria-label="codebreaker game board">
       {cards.map((card, index) => {
-        const cardId = `${index}-${card.word || 'empty'}`;
-        const animation = boardAnimations.getCardAnimation(cardId);
-        
-        boardAnimations.handleServerSelection(cardId, card.selected);
+        const cardId = `${index}-${card.word}`;
+        const animation = visibility.getRequiredAnimation(cardId, card);
         
         return (
           <GameCard
             key={cardId}
             card={card}
             cardIndex={index}
-            cardId={cardId}
             animation={animation}
-            onAnimationEnd={(e) => boardAnimations.handleAnimationEnd(cardId, e)}
-            showTeamColors={false}
-            clickable={!isLoading && !card.selected}
+            onAnimationComplete={() => visibility.handleAnimationComplete(cardId, animation)}
             onCardClick={handleCardClick}
+            clickable={!isLoading && !card.selected}
+            showTeamColors={false}
           />
         );
       })}
@@ -63,29 +68,32 @@ export const CodebreakerBoard: React.FC<BoardProps> = memo(({ boardAnimations })
 
 CodebreakerBoard.displayName = "CodebreakerBoard";
 
-export const CodemasterBoard: React.FC<BoardProps> = memo(({ boardAnimations }) => {
+export const CodemasterBoard: React.FC<BoardProps> = memo(({ showOnMount = false }) => {
   const { gameData } = useGameData();
   const cards = gameData.currentRound?.cards || [];
+
+  // Use visibility tracking
+  const visibility = useCardVisibility({ 
+    cards, 
+    showOnMount
+  });
 
   return (
     <CardsContainer aria-label="codemaster game board">
       {cards.map((card, index) => {
-        const cardId = `${index}-${card.word || 'empty'}`;
-        const animation = boardAnimations.getCardAnimation(cardId);
-        
-        boardAnimations.handleServerSelection(cardId, card.selected);
+        const cardId = `${index}-${card.word}`;
+        const animation = visibility.getRequiredAnimation(cardId, card);
         
         return (
           <GameCard
             key={cardId}
             card={card}
             cardIndex={index}
-            cardId={cardId}
             animation={animation}
-            onAnimationEnd={(e) => boardAnimations.handleAnimationEnd(cardId, e)}
-            showTeamColors={true}
-            clickable={false}
+            onAnimationComplete={() => visibility.handleAnimationComplete(cardId, animation)}
             onCardClick={() => {}}
+            clickable={false}
+            showTeamColors={true}
           />
         );
       })}
@@ -95,19 +103,13 @@ export const CodemasterBoard: React.FC<BoardProps> = memo(({ boardAnimations }) 
 
 CodemasterBoard.displayName = "CodemasterBoard";
 
-export const SpectatorBoard: React.FC<BoardProps> = memo(({ boardAnimations }) => {
+export const SpectatorBoard: React.FC<BoardProps> = memo(({ showOnMount = false }) => {
   const { gameData } = useGameData();
+  const { isInitialScene } = usePlayerRoleScene();
   const cards = gameData.currentRound?.cards || [];
   
-  // Reset animations when cards change
-  const prevCardsRef = useRef<string>("");
-  const cardsKey = cards.map(c => c.word).join(",");
-  
-  if (prevCardsRef.current && prevCardsRef.current !== cardsKey) {
-    console.log("[BOARD] Cards changed, resetting all animations");
-    boardAnimations.resetAllCards();
-  }
-  prevCardsRef.current = cardsKey;
+  // Animate on mount only if we're in the initial scene (lobby) and have cards
+  const shouldAnimate = showOnMount || (isInitialScene && cards.length > 0);
 
   const displayCards = useMemo(() => {
     if (cards.length === 0) {
@@ -122,25 +124,34 @@ export const SpectatorBoard: React.FC<BoardProps> = memo(({ boardAnimations }) =
     return cards;
   }, [cards]);
 
+  // Use visibility tracking
+  const visibility = useCardVisibility({ 
+    cards: displayCards, 
+    showOnMount: shouldAnimate
+  });
+
   return (
     <CardsContainer aria-label="spectator game board">
       {displayCards.map((card, index) => {
-        const cardId = card.word === "" ? `placeholder-${index}` : `${index}-${card.word}`;
-        const animation = boardAnimations.getCardAnimation(cardId);
+        const cardId = card.word === "" 
+          ? `placeholder-${index}` 
+          : `${index}-${card.word}`;
         
-        boardAnimations.handleServerSelection(cardId, card.selected);
+        // Skip animations for placeholder cards
+        const animation = card.word === "" 
+          ? null 
+          : visibility.getRequiredAnimation(cardId, card);
         
         return (
           <GameCard
             key={cardId}
             card={card}
             cardIndex={index}
-            cardId={cardId}
             animation={animation}
-            onAnimationEnd={(e) => boardAnimations.handleAnimationEnd(cardId, e)}
-            showTeamColors={false}
-            clickable={false}
+            onAnimationComplete={() => visibility.handleAnimationComplete(cardId, animation)}
             onCardClick={() => {}}
+            clickable={false}
+            showTeamColors={false}
           />
         );
       })}
