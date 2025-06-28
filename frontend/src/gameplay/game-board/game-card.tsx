@@ -2,7 +2,6 @@ import React, { memo, useCallback } from "react";
 import styled, { css, keyframes } from "styled-components";
 import { FaStar, FaLeaf, FaSkull, FaPeace } from "react-icons/fa";
 import { Card } from "@frontend/shared-types";
-import { CardAnimationControl } from "./use-board-animations";
 
 const FRONT_CARD_COLOUR = "#494646";
 
@@ -31,20 +30,7 @@ const dealAnimation = keyframes`
   }
 `;
 
-const strikeThrough = keyframes`
-  0% {
-    text-decoration: none;
-    opacity: 1;
-  }
-  100% {
-    text-decoration: line-through;
-    text-decoration-thickness: 3px;
-    text-decoration-color: rgba(255, 0, 0, 0.8);
-    opacity: 0.7;
-  }
-`;
-
-const flipAnimation = keyframes`
+const coverAnimation = keyframes`
   0% {
     transform: rotateY(0deg);
   }
@@ -63,24 +49,12 @@ const CardContainer = styled.div`
   perspective: 1000px;
   margin: auto;
   
-  /* Initial hidden state */
-  &[data-state="hidden"] {
-    opacity: 0;
-    transform: translateY(-100vh) scale(0);
-  }
-  
-  /* Dealing animation */
-  &[data-state="dealing"] {
+  &[data-animation="dealing"] {
     animation: ${dealAnimation} 0.8s calc(var(--index) * 50ms) cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
   
-  /* Other states */
-  &[data-state="idle"],
-  &[data-state="selecting"],
-  &[data-state="covering"],
-  &[data-state="covered"] {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+  &[data-animation="covering"] .card-inner {
+    animation: ${coverAnimation} 0.6s ease-in-out forwards;
   }
 `;
 
@@ -90,15 +64,6 @@ const CardInner = styled.div`
   height: 100%;
   transform-style: preserve-3d;
   transition: transform 0.6s;
-  
-  /* Stagger the flip animation slightly */
-  [data-state="covering"] & {
-    animation: ${flipAnimation} 0.6s calc(var(--index) * 20ms) ease-in-out forwards;
-  }
-  
-  [data-state="covered"] & {
-    transform: rotateY(180deg);
-  }
 `;
 
 const sharedCardStyles = css`
@@ -143,18 +108,19 @@ const sharedCardStyles = css`
   background-blend-mode: overlay;
 `;
 
-const CardFront = styled.button<{ $backgroundColour: string; $clickable: boolean }>`
+const CardFront = styled.button<{ $backgroundColour: string; $clickable: boolean; $covered: boolean }>`
   ${sharedCardStyles}
   background-color: ${props => props.$backgroundColour};
   cursor: ${props => props.$clickable ? 'pointer' : 'default'};
   transition: transform 0.2s;
+  transform: ${props => props.$covered ? 'rotateY(180deg)' : 'rotateY(0deg)'};
   
-  [data-state="idle"] &:hover {
-    transform: ${props => props.$clickable ? 'translateY(-4px)' : 'none'};
+  &:hover {
+    transform: ${props => props.$clickable && !props.$covered ? 'translateY(-4px)' : props.$covered ? 'rotateY(180deg)' : 'none'};
   }
   
   &:active {
-    transform: ${props => props.$clickable ? 'translateY(1px)' : 'none'};
+    transform: ${props => props.$clickable && !props.$covered ? 'translateY(1px)' : props.$covered ? 'rotateY(180deg)' : 'none'};
   }
 `;
 
@@ -164,7 +130,7 @@ const CoverCard = styled.div<{ $backgroundColour: string }>`
   transform: rotateY(180deg);
 `;
 
-const CardContent = styled.div<{ $isSelecting: boolean }>`
+const CardContent = styled.div`
   position: relative;
   display: flex;
   justify-content: center;
@@ -176,11 +142,6 @@ const CardContent = styled.div<{ $isSelecting: boolean }>`
   overflow-wrap: break-word;
   margin: 0;
   padding: 0;
-  
-  /* Strike-through animation - controlled by prop not parent state */
-  ${props => props.$isSelecting && css`
-    animation: ${strikeThrough} 0.4s ease-out forwards;
-  `}
 `;
 
 const CornerIcon = styled.div`
@@ -217,17 +178,18 @@ const CardFrontFace = memo<{
   word: string;
   backgroundColor: string;
   clickable: boolean;
-  isSelecting: boolean;
+  covered: boolean;
   onClick: () => void;
-}>(({ word, backgroundColor, clickable, isSelecting, onClick }) => {
+}>(({ word, backgroundColor, clickable, covered, onClick }) => {
   return (
     <CardFront
       onClick={onClick}
       $backgroundColour={backgroundColor}
       $clickable={clickable}
+      $covered={covered}
       aria-label={`Card with text ${word}`}
     >
-      <CardContent $isSelecting={isSelecting}>{word}</CardContent>
+      <CardContent>{word}</CardContent>
     </CardFront>
   );
 }, (prev, next) => {
@@ -236,7 +198,7 @@ const CardFrontFace = memo<{
     prev.word === next.word &&
     prev.backgroundColor === next.backgroundColor &&
     prev.clickable === next.clickable &&
-    prev.isSelecting === next.isSelecting
+    prev.covered === next.covered
   );
 });
 
@@ -259,12 +221,11 @@ CardBackFace.displayName = "CardBackFace";
 export interface GameCardProps {
   card: Card;
   cardIndex: number;
-  cardId: string;
-  animation: CardAnimationControl;
-  onAnimationEnd: (e: React.AnimationEvent) => void;
-  showTeamColors: boolean;
-  clickable: boolean;
+  animation: 'dealing' | 'covering' | null;
+  onAnimationComplete: () => void;
   onCardClick: (cardWord: string) => void;
+  clickable: boolean;
+  showTeamColors: boolean;
 }
 
 /**
@@ -274,50 +235,38 @@ export const GameCard = memo<GameCardProps>(
   ({
     card,
     cardIndex,
-    cardId,
     animation,
-    onAnimationEnd,
+    onAnimationComplete,
     showTeamColors,
     clickable,
     onCardClick,
   }) => {
     const cardColor = getCardColor(card.teamName, card.cardType);
     
-    const handleClick = useCallback(() => {
-      console.log(`[CARD ${cardIndex}] Click attempt:`, {
-        clickable,
-        selected: card.selected,
-        state: animation.state,
-        isIdle: animation.is.idle
-      });
-      
-      if (!clickable || card.selected || !animation.is.idle) {
-        console.log(`[CARD ${cardIndex}] Click blocked`);
-        return;
+    const handleAnimationEnd = (e: React.AnimationEvent) => {
+      if (e.target === e.currentTarget) {
+        onAnimationComplete();
       }
-      
-      console.log(`[CARD ${cardIndex}] "${card.word}" clicked - triggering select`);
-      animation.actions.select();
-      onCardClick(card.word);
-    }, [animation, onCardClick, card, cardIndex, clickable]);
+    };
     
-    // Debug: Log state changes
-    React.useEffect(() => {
-      console.log(`[CARD ${cardIndex}] State changed to: ${animation.state}`);
-    }, [animation.state, cardIndex]);
+    const handleClick = useCallback(() => {
+      if (clickable && !card.selected) {
+        onCardClick(card.word);
+      }
+    }, [onCardClick, card, clickable]);
     
     return (
       <CardContainer 
-        data-state={animation.state}
+        data-animation={animation}
         style={{ '--index': cardIndex } as React.CSSProperties}
-        onAnimationEnd={onAnimationEnd}
+        onAnimationEnd={handleAnimationEnd}
       >
-        <CardInner style={{ '--index': cardIndex } as React.CSSProperties}>
+        <CardInner className="card-inner">
           <CardFrontFace
             word={card.word}
             backgroundColor={showTeamColors ? cardColor : FRONT_CARD_COLOUR}
-            clickable={clickable && !card.selected && animation.is.idle}
-            isSelecting={animation.is.selecting}
+            clickable={clickable && !card.selected}
+            covered={card.selected}
             onClick={handleClick}
           />
           
@@ -334,8 +283,7 @@ export const GameCard = memo<GameCardProps>(
       prevProps.showTeamColors === nextProps.showTeamColors &&
       prevProps.clickable === nextProps.clickable &&
       prevProps.cardIndex === nextProps.cardIndex &&
-      prevProps.cardId === nextProps.cardId &&
-      prevProps.animation.state === nextProps.animation.state;
+      prevProps.animation === nextProps.animation;
   }
 );
 

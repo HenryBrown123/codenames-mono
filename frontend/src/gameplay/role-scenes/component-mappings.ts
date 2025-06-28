@@ -56,12 +56,12 @@ export const getDashboardComponent = (
 
 /**
  * Maps scene keys to board components
- * Now returns components that expect boardAnimations prop
+ * Now returns components that expect visibility control props
  */
 export const getBoardComponent = (
   role: string,
   scene: string,
-): React.ComponentType<{ boardAnimations: any }> => {
+): React.ComponentType<{ showOnMount?: boolean; onResetVisibility?: () => void }> => {
   // Normalize to lowercase for consistent mapping
   const normalizedRole = role.toLowerCase();
   const sceneKey = `${normalizedRole}.${scene}`;

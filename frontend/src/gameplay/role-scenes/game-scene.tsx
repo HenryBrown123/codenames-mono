@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { useGameData } from "@frontend/gameplay/game-data";
 import { usePlayerRoleScene } from "@frontend/gameplay/role-scenes";
@@ -11,7 +11,6 @@ import {
 import { SpectatorBoard } from "../game-board";
 import { GameInstructions } from "../game-instructions";
 import { DeviceHandoffOverlay } from "../device-handoff";
-import { useBoardAnimations } from "../game-board/use-board-animations";
 
 const GameSceneContainer = styled.div`
   display: flex;
@@ -83,8 +82,8 @@ export const GameScene: React.FC = () => {
     completeHandoff,
   } = usePlayerRoleScene();
   
-  // Single animation instance at the top level
-  const boardAnimations = useBoardAnimations();
+  // State for controlling animations
+  const [shouldAnimateDeal, setShouldAnimateDeal] = useState(false);
 
   // Handle game over state
   if (gameData.currentRound?.status === "COMPLETED") {
@@ -94,7 +93,7 @@ export const GameScene: React.FC = () => {
           <GameInstructions messageText="🎉 Game Over!" />
         </InstructionsContainer>
         <GameBoardContainer>
-          <SpectatorBoard boardAnimations={boardAnimations} />
+          <SpectatorBoard showOnMount={false} />
         </GameBoardContainer>
         <DashboardContainer>
           <div>Game Completed!</div>
@@ -112,7 +111,8 @@ export const GameScene: React.FC = () => {
             currentScene={currentScene}
             gameData={gameData}
             activeTurn={activeTurn}
-            boardAnimations={boardAnimations}
+            showOnMount={shouldAnimateDeal}
+            onResetVisibility={() => setShouldAnimateDeal(true)}
           />
         </BlurredBackground>
         <DeviceHandoffOverlay
@@ -132,21 +132,23 @@ export const GameScene: React.FC = () => {
         currentScene={currentScene}
         gameData={gameData}
         activeTurn={activeTurn}
-        boardAnimations={boardAnimations}
+        showOnMount={shouldAnimateDeal}
+        onResetVisibility={() => setShouldAnimateDeal(true)}
       />
     </GameSceneContainer>
   );
 };
 
 /**
- * Extracted game scene content with boardAnimations prop
+ * Extracted game scene content with visibility control props
  */
 interface GameSceneContentProps {
   currentRole: string;
   currentScene: string;
   gameData: any;
   activeTurn: any;
-  boardAnimations: ReturnType<typeof useBoardAnimations>;
+  showOnMount: boolean;
+  onResetVisibility: () => void;
 }
 
 const GameSceneContent: React.FC<GameSceneContentProps> = ({
@@ -154,7 +156,8 @@ const GameSceneContent: React.FC<GameSceneContentProps> = ({
   currentScene,
   gameData,
   activeTurn,
-  boardAnimations,
+  showOnMount,
+  onResetVisibility,
 }) => {
   const messageText = getSceneMessage(
     currentRole,
@@ -172,7 +175,7 @@ const GameSceneContent: React.FC<GameSceneContentProps> = ({
       </InstructionsContainer>
 
       <GameBoardContainer>
-        <BoardComponent boardAnimations={boardAnimations} />
+        <BoardComponent showOnMount={showOnMount} onResetVisibility={onResetVisibility} />
       </GameBoardContainer>
 
       <DashboardContainer>
