@@ -299,6 +299,124 @@ Device handoff is managed seamlessly for single-device games, showing transition
 
 The architecture avoids `useEffect` for data synchronization, relying on @tanstack/react-query for all server state management. Effects are limited to complex form validation and debug logging.
 
+# Animation Architecture
+
+## Overview
+
+The Codenames game uses a **visibility-based animation system** that tracks the visual presentation state of cards separately from the game data state. This approach ensures animations play at the right time, in the right place, without complex orchestration logic.
+
+## Core Concept
+
+Instead of imperatively triggering animations, the system **derives** animation needs by comparing:
+- **Server State**: What the game data says (e.g., "this card is selected")
+- **Visual State**: What has been shown to the user (e.g., "this card has been covered")
+
+When these states don't match, an animation plays to transition the visual state.
+
+## Key Components
+
+### `useCardVisibility` Hook
+
+The heart of the animation system. This hook tracks two sets of visual state:
+
+```typescript
+const visibility = useCardVisibility({ 
+  cards,           // Current cards from server
+  showOnMount      // Whether to animate cards in on first render
+});
+```
+
+**Tracked States:**
+- `dealtCards`: Set of card IDs that have been dealt (shown) to the player
+- `coveredCards`: Set of card IDs that have been covered (flipped to show team color)
+
+**Key Methods:**
+- `getRequiredAnimation(cardId, card)`: Returns `'dealing'`, `'covering'`, or `null`
+- `handleAnimationComplete(cardId, animation)`: Updates visual state after animation finishes
+
+### Animation Flow
+
+1. **Board renders** with current game data
+2. **For each card**, the board asks: "What animation is needed?"
+   - Not dealt yet? → `'dealing'` animation
+   - Selected but not covered? → `'covering'` animation
+   - Otherwise → No animation
+3. **Card plays animation** via CSS `data-animation` attribute
+4. **On completion**, card notifies board → visual state updated
+5. **Next render**, no animation needed (states match)
+
+## Scene-Based Animation Control
+
+Different scenes have different animation requirements:
+
+### Lobby Scene
+- `showOnMount: true` when cards are dealt
+- All cards animate in with dealing animation
+
+### Codebreaker Main Scene
+- `showOnMount: false` - cards already visible
+- No cover animations here - just immediate selection
+
+### Codebreaker Outcome Scene
+- Fresh board instance with new visibility tracking
+- Selected card animates to covered state
+- Previously selected cards remain covered without animation
+
+### Spectator/Waiting Scenes
+- `showOnMount: false` - passive viewing
+- Shows current state without animations
+
+## Implementation Example
+
+```typescript
+// In a board component
+const visibility = useCardVisibility({ cards, showOnMount: false });
+
+return cards.map((card, index) => {
+  const cardId = `${index}-${card.word}`;
+  const animation = visibility.getRequiredAnimation(cardId, card);
+  
+  return (
+    <GameCard
+      key={cardId}
+      card={card}
+      animation={animation}
+      onAnimationComplete={() => visibility.handleAnimationComplete(cardId, animation)}
+      // ... other props
+    />
+  );
+});
+```
+
+## Benefits
+
+1. **Declarative**: Animations are derived from state, not triggered imperatively
+2. **Scene Independent**: Each board instance manages its own visibility
+3. **Predictable**: Clear relationship between data and visual state
+4. **React-Friendly**: Works with React's re-render cycle, not against it
+5. **Simple**: No complex state machines or timing logic
+
+## Animation Types
+
+### Dealing Animation
+- **When**: Card exists in data but hasn't been shown yet
+- **Visual**: Cards fall from top with rotation, cascade timing based on position
+- **Duration**: 0.8s with 50ms stagger between cards
+
+### Covering Animation
+- **When**: Card is selected in data but hasn't been visually covered
+- **Visual**: Card flips to reveal team color on back
+- **Duration**: 0.6s ease-in-out
+
+## Re-deal Functionality
+
+The re-deal button in the lobby works by:
+1. Calling `dealCards(true)` which fetches new cards
+2. Board re-renders with fresh `useCardVisibility` instance
+3. New instance = empty visual state = all cards animate in
+
+No special reset logic needed - it just works!
+
 ## Shared Package
 
 The shared package contains:
