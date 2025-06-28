@@ -72,10 +72,10 @@ export const getBoardComponent = (
 
   switch (sceneKey) {
     case "codebreaker.main":
+    case "codebreaker.outcome":
       return CodebreakerBoard;
     case "codemaster.main":
       return CodemasterBoard;
-    case "codebreaker.outcome":
     case "codebreaker.waiting":
     case "codemaster.waiting":
     case "spectator.watching":

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import styled from "styled-components";
 import { useGameData } from "@frontend/gameplay/game-data";
 import { usePlayerRoleScene } from "@frontend/gameplay/role-scenes";
@@ -81,9 +81,6 @@ export const GameScene: React.FC = () => {
     pendingTransition,
     completeHandoff,
   } = usePlayerRoleScene();
-  
-  // State for controlling animations
-  const [shouldAnimateDeal, setShouldAnimateDeal] = useState(false);
 
   // Handle game over state
   if (gameData.currentRound?.status === "COMPLETED") {
@@ -111,8 +108,8 @@ export const GameScene: React.FC = () => {
             currentScene={currentScene}
             gameData={gameData}
             activeTurn={activeTurn}
-            showOnMount={shouldAnimateDeal}
-            onResetVisibility={() => setShouldAnimateDeal(true)}
+            showOnMount={false}
+            onResetVisibility={() => {}}
           />
         </BlurredBackground>
         <DeviceHandoffOverlay
@@ -132,8 +129,8 @@ export const GameScene: React.FC = () => {
         currentScene={currentScene}
         gameData={gameData}
         activeTurn={activeTurn}
-        showOnMount={shouldAnimateDeal}
-        onResetVisibility={() => setShouldAnimateDeal(true)}
+        showOnMount={false}
+        onResetVisibility={() => {}}
       />
     </GameSceneContainer>
   );
