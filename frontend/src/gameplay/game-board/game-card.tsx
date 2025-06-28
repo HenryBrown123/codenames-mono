@@ -17,15 +17,15 @@ const getIcon = (cardColor?: string) => {
 // Animations
 const dealAnimation = keyframes`
   0% {
-    transform: translateY(-100vh) rotate(720deg) scale(0);
+    transform: translateX(-100vw) translateY(-100vh) rotate(-6deg);
     opacity: 0;
   }
   60% {
-    transform: translateY(0) rotate(360deg) scale(1.1);
+    transform: translateX(0) translateY(0) rotate(2deg);
     opacity: 1;
   }
   100% {
-    transform: translateY(0) rotate(0) scale(1);
+    transform: translateX(0) translateY(0) rotate(0);
     opacity: 1;
   }
 `;
@@ -50,7 +50,8 @@ const CardContainer = styled.div`
   margin: auto;
   
   &[data-animation="dealing"] {
-    animation: ${dealAnimation} 0.8s calc(var(--index) * 50ms) cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    opacity: 0; /* Hide until animation starts */
+    animation: ${dealAnimation} 0.7s calc(var(--index) * 75ms) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   }
   
   &[data-animation="covering"] .card-inner {

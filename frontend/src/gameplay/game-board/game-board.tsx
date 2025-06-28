@@ -51,7 +51,7 @@ export const CodebreakerBoard: React.FC<BoardProps> = memo(({ showOnMount = fals
         
         return (
           <GameCard
-            key={cardId}
+            key={`${cards.map(c => c.word).join('')}-${cardId}`}
             card={card}
             cardIndex={index}
             animation={animation}
@@ -86,7 +86,7 @@ export const CodemasterBoard: React.FC<BoardProps> = memo(({ showOnMount = false
         
         return (
           <GameCard
-            key={cardId}
+            key={`${cards.map(c => c.word).join('')}-${cardId}`}
             card={card}
             cardIndex={index}
             animation={animation}
@@ -144,7 +144,7 @@ export const SpectatorBoard: React.FC<BoardProps> = memo(({ showOnMount = false 
         
         return (
           <GameCard
-            key={cardId}
+            key={`${cards.map(c => c.word).join('')}-${cardId}`}
             card={card}
             cardIndex={index}
             animation={animation}
