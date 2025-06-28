@@ -58,12 +58,13 @@ const CardContainer = styled.div`
   }
 `;
 
-const CardInner = styled.div`
+const CardInner = styled.div<{ $covered: boolean }>`
   position: relative;
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
   transition: transform 0.6s;
+  transform: ${props => props.$covered ? 'rotateY(180deg)' : 'rotateY(0deg)'};
 `;
 
 const sharedCardStyles = css`
@@ -113,14 +114,14 @@ const CardFront = styled.button<{ $backgroundColour: string; $clickable: boolean
   background-color: ${props => props.$backgroundColour};
   cursor: ${props => props.$clickable ? 'pointer' : 'default'};
   transition: transform 0.2s;
-  transform: ${props => props.$covered ? 'rotateY(180deg)' : 'rotateY(0deg)'};
+  transform: rotateY(0deg);
   
   &:hover {
-    transform: ${props => props.$clickable && !props.$covered ? 'translateY(-4px)' : props.$covered ? 'rotateY(180deg)' : 'none'};
+    transform: ${props => props.$clickable && !props.$covered ? 'translateY(-4px)' : 'rotateY(0deg)'};
   }
   
   &:active {
-    transform: ${props => props.$clickable && !props.$covered ? 'translateY(1px)' : props.$covered ? 'rotateY(180deg)' : 'none'};
+    transform: ${props => props.$clickable && !props.$covered ? 'translateY(1px)' : 'rotateY(0deg)'};
   }
 `;
 
@@ -261,7 +262,7 @@ export const GameCard = memo<GameCardProps>(
         style={{ '--index': cardIndex } as React.CSSProperties}
         onAnimationEnd={handleAnimationEnd}
       >
-        <CardInner className="card-inner">
+        <CardInner className="card-inner" $covered={card.selected}>
           <CardFrontFace
             word={card.word}
             backgroundColor={showTeamColors ? cardColor : FRONT_CARD_COLOUR}
