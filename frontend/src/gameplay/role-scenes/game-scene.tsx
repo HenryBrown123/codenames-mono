@@ -90,7 +90,7 @@ export const GameScene: React.FC = () => {
           <GameInstructions messageText="🎉 Game Over!" />
         </InstructionsContainer>
         <GameBoardContainer>
-          <SpectatorBoard showOnMount={false} />
+          <SpectatorBoard />
         </GameBoardContainer>
         <DashboardContainer>
           <div>Game Completed!</div>
@@ -100,21 +100,15 @@ export const GameScene: React.FC = () => {
   }
 
   if (showHandoff && pendingTransition) {
-
-    // Show overlay on current scene (don't switch to target scene yet)
-    const displayRole = currentRole;
-    const displayScene = currentScene;
-    
+    // Show current role's board blurred during handoff
     return (
       <GameSceneContainer>
         <BlurredBackground>
           <GameSceneContent
-            currentRole={displayRole}
-            currentScene={displayScene}
+            currentRole={currentRole}
+            currentScene={currentScene}
             gameData={gameData}
             activeTurn={activeTurn}
-            showOnMount={false}
-            onResetVisibility={() => {}}
           />
         </BlurredBackground>
         <DeviceHandoffOverlay
@@ -126,10 +120,7 @@ export const GameScene: React.FC = () => {
     );
   }
 
-  // Normal gameplay  
-  // Only animate on first load of codemaster main scene after handoff
-  const shouldShowAnimation = false; // Disabled for now to prevent breaking normal gameplay
-  
+  // Normal gameplay
   return (
     <GameSceneContainer>
       <GameSceneContent
@@ -137,23 +128,19 @@ export const GameScene: React.FC = () => {
         currentScene={currentScene}
         gameData={gameData}
         activeTurn={activeTurn}
-        showOnMount={shouldShowAnimation}
-        onResetVisibility={() => {}}
       />
     </GameSceneContainer>
   );
 };
 
 /**
- * Extracted game scene content with visibility control props
+ * Game scene content
  */
 interface GameSceneContentProps {
   currentRole: string;
   currentScene: string;
   gameData: any;
   activeTurn: any;
-  showOnMount: boolean;
-  onResetVisibility: () => void;
 }
 
 const GameSceneContent: React.FC<GameSceneContentProps> = ({
@@ -161,8 +148,6 @@ const GameSceneContent: React.FC<GameSceneContentProps> = ({
   currentScene,
   gameData,
   activeTurn,
-  showOnMount,
-  onResetVisibility,
 }) => {
   const messageText = getSceneMessage(
     currentRole,
@@ -180,11 +165,7 @@ const GameSceneContent: React.FC<GameSceneContentProps> = ({
       </InstructionsContainer>
 
       <GameBoardContainer>
-        <BoardComponent 
-          key={currentRole}
-          showOnMount={showOnMount} 
-          onResetVisibility={onResetVisibility} 
-        />
+        <BoardComponent key={currentRole} />
       </GameBoardContainer>
 
       <DashboardContainer>

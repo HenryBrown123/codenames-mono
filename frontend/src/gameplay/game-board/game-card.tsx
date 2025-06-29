@@ -1,20 +1,59 @@
+// Add missing imports at the top
 import React, { memo, useCallback } from "react";
 import styled, { css, keyframes } from "styled-components";
 import { FaStar, FaLeaf, FaSkull, FaPeace } from "react-icons/fa";
 import { Card } from "@frontend/shared-types";
+import { CardState, AnimationType } from "./use-card-visibility";
 
-const FRONT_CARD_COLOUR = "#494646";
+// Card colors
+const CARD_COLORS = {
+  neutral: "#494646",
+  assassin: "#1d2023",
+  bystander: "#697188",
+  red: "#B22222",
+  blue: "#4169E1",
+  green: "#228B22",
+} as const;
 
-const getIcon = (cardColor?: string) => {
-  if (!cardColor) return null;
-  if (cardColor.includes("#B22222")) return <FaStar />;
-  if (cardColor.includes("#228B22")) return <FaLeaf />;
-  if (cardColor.includes("#4169E1")) return <FaPeace />;
-  if (cardColor.includes("#1d2023")) return <FaSkull />;
+/**
+ * Gets icon for card based on color
+ */
+const getIcon = (cardColor: string) => {
+  if (cardColor === CARD_COLORS.red) return <FaStar />;
+  if (cardColor === CARD_COLORS.green) return <FaLeaf />;
+  if (cardColor === CARD_COLORS.blue) return <FaPeace />;
+  if (cardColor === CARD_COLORS.assassin) return <FaSkull />;
   return null;
 };
 
+/**
+ * Gets the appropriate color for a card based on its type and team
+ */
+const getCardColor = (card: Card): string => {
+  if (card.cardType === "ASSASSIN") return CARD_COLORS.assassin;
+  if (card.cardType === "BYSTANDER") return CARD_COLORS.bystander;
+  
+  const team = card.teamName?.toLowerCase();
+  if (team?.includes("red")) return CARD_COLORS.red;
+  if (team?.includes("blue")) return CARD_COLORS.blue;
+  if (team?.includes("green")) return CARD_COLORS.green;
+  
+  return CARD_COLORS.neutral;
+};
+
 // Animations
+// Add ripple animation at the top with other animations
+const rippleEffect = keyframes`
+  0% {
+    transform: scale(0);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+`;
+
 const dealAnimation = keyframes`
   0% {
     transform: translateX(-100vw) translateY(-100vh) rotate(-6deg);
@@ -39,12 +78,12 @@ const coverAnimation = keyframes`
   }
 `;
 
-const colorFadeAnimation = keyframes`
+const colorRevealAnimation = keyframes`
   0% {
-    background-color: #494646; /* FRONT_CARD_COLOUR */
+    background-color: ${CARD_COLORS.neutral};
   }
   100% {
-    background-color: var(--target-color);
+    background-color: var(--team-color);
   }
 `;
 
@@ -53,38 +92,87 @@ const CardContainer = styled.div`
   height: 100%;
   width: 100%;
   box-sizing: border-box;
-  padding: 0;
   position: relative;
   perspective: 1000px;
   margin: auto;
+  z-index: 1;
   
+  /* Raise z-index when animating or covered */
+  &[data-state="covered"] {
+    z-index: 10;
+  }
+  
+  &[data-animation="covering"] {
+    z-index: 10;
+  }
+  
+  /* Base state styles */
+  opacity: 0;
+  
+  /* State-based visibility */
+  &[data-state="visible"],
+  &[data-state="visible-grey"],
+  &[data-state="visible-colored"],
+  &[data-state="covered"] {
+    opacity: 1;
+  }
+  
+  /* State-based card colors */
+  &[data-state="visible"] .card-front,
+  &[data-state="visible-grey"] .card-front {
+    background-color: ${CARD_COLORS.neutral};
+  }
+  
+  &[data-state="visible-colored"] .card-front {
+    background-color: var(--team-color);
+  }
+  
+  /* Animation triggers */
   &[data-animation="dealing"] {
-    opacity: 0; /* Hide until animation starts */
-    animation: ${dealAnimation} 0.7s calc(var(--index) * 75ms) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    animation: ${dealAnimation} 0.7s calc(var(--card-index) * 75ms) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   }
   
   &[data-animation="covering"] .card-inner {
     animation: ${coverAnimation} 0.6s ease-in-out forwards;
   }
   
-  &[data-animation="color-fade"] {
-    .card-front {
-      animation: ${colorFadeAnimation} 0.8s ease-in-out forwards;
-    }
+  &[data-animation="color-fade"] .card-front {
+    animation: ${colorRevealAnimation} 0.8s ease-in-out forwards;
   }
 `;
 
-const CardInner = styled.div<{ $covered: boolean }>`
+const CardInner = styled.div<{ $clickable: boolean; $covered: boolean }>`
   position: relative;
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
+  transform-origin: center center;
   transition: transform 0.6s;
-  transform: ${props => props.$covered ? 'rotateY(180deg)' : 'rotateY(0deg)'};
+  
+  /* Hover effect on the entire card inner */
+  &:hover {
+    transform: ${props => props.$clickable && !props.$covered ? 'translateY(-4px)' : 'none'};
+  }
+  
+  &:active {
+    transform: ${props => props.$clickable && !props.$covered ? 'translateY(1px)' : 'none'};
+  }
+  
+  /* Flip when covered */
+  [data-state="covered"] & {
+    transform: rotateY(180deg);
+  }
+  
+  /* Combine transforms when covered and hovering */
+  [data-state="covered"] &:hover {
+    transform: rotateY(180deg);
+  }
 `;
 
-const sharedCardStyles = css`
+const cardFaceStyles = css`
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   border-radius: 12px;
@@ -123,27 +211,47 @@ const sharedCardStyles = css`
     );
   background-size: 10px 10px, 10px 10px;
   background-blend-mode: overlay;
+  word-break: break-word;
+  overflow-wrap: break-word;
 `;
 
-const CardFront = styled.button<{ $backgroundColour: string; $clickable: boolean; $covered: boolean }>`
-  ${sharedCardStyles}
-  background-color: ${props => props.$backgroundColour};
+const CardFront = styled.button<{ $teamColor: string; $clickable: boolean; $covered: boolean }>`
+  ${cardFaceStyles}
+  
+  /* Default background - will be overridden by state */
+  background-color: ${CARD_COLORS.neutral};
+  
   cursor: ${props => props.$clickable ? 'pointer' : 'default'};
   transition: transform 0.2s;
-  transform: rotateY(0deg);
+  outline: none;
+  overflow: hidden;
+  position: relative;
   
-  &:hover {
-    transform: ${props => props.$clickable && !props.$covered ? 'translateY(-4px)' : 'rotateY(0deg)'};
+  /* Ripple effect */
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300%;
+    height: 300%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%) scale(0);
+    border-radius: 50%;
+    opacity: 0;
+    transition: transform 0.5s, opacity 0.5s;
   }
-  
-  &:active {
-    transform: ${props => props.$clickable && !props.$covered ? 'translateY(1px)' : 'rotateY(0deg)'};
+
+  &:active::before {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.3;
+    animation: ${rippleEffect} 0.6s ease-out;
   }
 `;
 
-const CoverCard = styled.div<{ $backgroundColour: string }>`
-  ${sharedCardStyles}
-  background-color: ${props => props.$backgroundColour};
+const CardBack = styled.div<{ $teamColor: string }>`
+  ${cardFaceStyles}
+  background-color: ${props => props.$teamColor};
   transform: rotateY(180deg);
 `;
 
@@ -169,143 +277,77 @@ const CornerIcon = styled.div`
   font-size: clamp(0.5rem, 1vw, 2rem);
 `;
 
-// Helper function
-export const getCardColor = (
-  teamName?: string | null,
-  cardType?: string,
-): string => {
-  const type = cardType || teamName;
-  switch (type?.toLowerCase()) {
-    case "assassin":
-      return "#1d2023";
-    case "bystander":
-      return "#697188";
-    case "team":
-      if (teamName?.toLowerCase().includes("red")) return "#B22222";
-      if (teamName?.toLowerCase().includes("blue")) return "#4169E1";
-      if (teamName?.toLowerCase().includes("green")) return "#228B22";
-      return "#B22222";
-    default:
-      return "#4b7fb3";
-  }
-};
-
-// Memoized front face component
-const CardFrontFace = memo<{
-  word: string;
-  backgroundColor: string;
-  clickable: boolean;
-  covered: boolean;
-  onClick: () => void;
-}>(({ word, backgroundColor, clickable, covered, onClick }) => {
-  return (
-    <CardFront
-      className="card-front"
-      onClick={onClick}
-      $backgroundColour={backgroundColor}
-      $clickable={clickable}
-      $covered={covered}
-      aria-label={`Card with text ${word}`}
-    >
-      <CardContent>{word}</CardContent>
-    </CardFront>
-  );
-}, (prev, next) => {
-  // Only re-render if these specific props change
-  return (
-    prev.word === next.word &&
-    prev.backgroundColor === next.backgroundColor &&
-    prev.clickable === next.clickable &&
-    prev.covered === next.covered
-  );
-});
-
-CardFrontFace.displayName = "CardFrontFace";
-
-// Memoized back face component
-const CardBackFace = memo<{
-  backgroundColor: string;
-}>(({ backgroundColor }) => {
-  const icon = getIcon(backgroundColor);
-  return (
-    <CoverCard $backgroundColour={backgroundColor}>
-      {icon && <CornerIcon>{icon}</CornerIcon>}
-    </CoverCard>
-  );
-}, (prev, next) => prev.backgroundColor === next.backgroundColor);
-
-CardBackFace.displayName = "CardBackFace";
-
+/**
+ * GameCard component props
+ */
 export interface GameCardProps {
   card: Card;
-  cardIndex: number;
-  animation: 'dealing' | 'covering' | 'color-fade' | null;
+  index: number;
+  state: CardState;
+  animation: AnimationType | null;
   onAnimationComplete: () => void;
-  onCardClick: (cardWord: string) => void;
+  onClick: () => void;
   clickable: boolean;
   showTeamColors: boolean;
 }
 
 /**
- * GameCard component with decoupled faces for smooth animations
+ * Individual game card component with state-based styling
  */
-export const GameCard = memo<GameCardProps>(
-  ({
-    card,
-    cardIndex,
-    animation,
-    onAnimationComplete,
-    showTeamColors,
-    clickable,
-    onCardClick,
-  }) => {
-    const cardColor = getCardColor(card.teamName, card.cardType);
-    
-    const handleAnimationEnd = (e: React.AnimationEvent) => {
-      if (e.target === e.currentTarget) {
-        onAnimationComplete();
-      }
-    };
-    
-    const handleClick = useCallback(() => {
-      if (clickable && !card.selected) {
-        onCardClick(card.word);
-      }
-    }, [onCardClick, card, clickable]);
-    
-    return (
-      <CardContainer 
-        data-animation={animation}
-        style={{ 
-          '--index': cardIndex,
-          '--target-color': cardColor
-        } as React.CSSProperties}
-        onAnimationEnd={handleAnimationEnd}
+export const GameCard = memo<GameCardProps>(({
+  card,
+  index,
+  state,
+  animation,
+  onAnimationComplete,
+  onClick,
+  clickable,
+  showTeamColors,
+}) => {
+  const teamColor = getCardColor(card);
+  
+  const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
+    // Only handle animations on the container element
+    if (e.target === e.currentTarget && animation) {
+      onAnimationComplete();
+    }
+  }, [animation, onAnimationComplete]);
+  
+  const handleClick = useCallback(() => {
+    if (clickable && !card.selected) {
+      onClick();
+    }
+  }, [clickable, card.selected, onClick]);
+  
+  return (
+    <CardContainer 
+      data-state={state}
+      data-animation={animation}
+      style={{ '--card-index': index, '--team-color': teamColor } as React.CSSProperties}
+      onAnimationEnd={handleAnimationEnd}
+    >
+      <CardInner 
+        className="card-inner" 
+        $clickable={clickable && !card.selected}
+        $covered={card.selected}
       >
-        <CardInner className="card-inner" $covered={card.selected}>
-          <CardFrontFace
-            word={card.word}
-            backgroundColor={showTeamColors ? cardColor : FRONT_CARD_COLOUR}
-            clickable={clickable && !card.selected}
-            covered={card.selected}
-            onClick={handleClick}
-          />
-          
-          <CardBackFace backgroundColor={cardColor} />
-        </CardInner>
-      </CardContainer>
-    );
-  },
-  // Better memo comparison
-  (prevProps, nextProps) => {
-    return prevProps.card.word === nextProps.card.word &&
-      prevProps.card.selected === nextProps.card.selected &&
-      prevProps.card.teamName === nextProps.card.teamName &&
-      prevProps.showTeamColors === nextProps.showTeamColors &&
-      prevProps.clickable === nextProps.clickable &&
-      prevProps.cardIndex === nextProps.cardIndex &&
-      prevProps.animation === nextProps.animation;
-  }
-);
+        <CardFront
+          className="card-front"
+          $teamColor={teamColor}
+          $clickable={clickable && !card.selected}
+          $covered={card.selected}
+          onClick={handleClick}
+          disabled={!clickable || card.selected}
+          aria-label={`Card: ${card.word}`}
+        >
+          <CardContent>{card.word}</CardContent>
+        </CardFront>
+        <CardBack $teamColor={teamColor} className="card-back">
+          {getIcon(teamColor) && <CornerIcon>{getIcon(teamColor)}</CornerIcon>}
+        </CardBack>
+      </CardInner>
+    </CardContainer>
+  );
+});
 
-GameCard.displayName = "GameCard";
+GameCard.displayName = 'GameCard';
