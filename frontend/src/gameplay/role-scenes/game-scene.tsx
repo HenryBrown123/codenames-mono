@@ -80,7 +80,17 @@ export const GameScene: React.FC = () => {
     showHandoff,
     pendingTransition,
     completeHandoff,
+    isInitialScene,
   } = usePlayerRoleScene();
+  
+  // Track handoff completions to force re-render and animation reset
+  const [handoffCompletionKey, setHandoffCompletionKey] = React.useState(0);
+  
+  // Custom handoff completion that triggers re-render
+  const handleHandoffComplete = React.useCallback(() => {
+    completeHandoff();
+    setHandoffCompletionKey(prev => prev + 1);
+  }, [completeHandoff]);
 
   // Handle game over state
   if (gameData.currentRound?.status === "COMPLETED") {
@@ -100,12 +110,16 @@ export const GameScene: React.FC = () => {
   }
 
   if (showHandoff && pendingTransition) {
+    // Show overlay on current scene (don't switch to target scene yet)
+    const displayRole = currentRole;
+    const displayScene = currentScene;
+    
     return (
       <GameSceneContainer>
         <BlurredBackground>
           <GameSceneContent
-            currentRole={currentRole}
-            currentScene={currentScene}
+            currentRole={displayRole}
+            currentScene={displayScene}
             gameData={gameData}
             activeTurn={activeTurn}
             showOnMount={false}
@@ -115,21 +129,25 @@ export const GameScene: React.FC = () => {
         <DeviceHandoffOverlay
           gameData={gameData}
           pendingTransition={pendingTransition}
-          onContinue={completeHandoff}
+          onContinue={handleHandoffComplete}
         />
       </GameSceneContainer>
     );
   }
 
-  // Normal gameplay
+  // Normal gameplay  
+  // Show color change animation after handoff completion or on initial codemaster scene
+  const shouldShowAnimation = handoffCompletionKey > 0 || isInitialScene;
+  
   return (
     <GameSceneContainer>
       <GameSceneContent
+        key={`${currentRole}-${currentScene}-${handoffCompletionKey}`}
         currentRole={currentRole}
         currentScene={currentScene}
         gameData={gameData}
         activeTurn={activeTurn}
-        showOnMount={false}
+        showOnMount={shouldShowAnimation}
         onResetVisibility={() => {}}
       />
     </GameSceneContainer>

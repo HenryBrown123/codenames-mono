@@ -39,6 +39,15 @@ const coverAnimation = keyframes`
   }
 `;
 
+const colorFadeAnimation = keyframes`
+  0% {
+    background-color: #494646; /* FRONT_CARD_COLOUR */
+  }
+  100% {
+    background-color: var(--target-color);
+  }
+`;
+
 // Styled Components
 const CardContainer = styled.div`
   height: 100%;
@@ -56,6 +65,12 @@ const CardContainer = styled.div`
   
   &[data-animation="covering"] .card-inner {
     animation: ${coverAnimation} 0.6s ease-in-out forwards;
+  }
+  
+  &[data-animation="color-fade"] {
+    .card-front {
+      animation: ${colorFadeAnimation} 0.8s ease-in-out forwards;
+    }
   }
 `;
 
@@ -185,6 +200,7 @@ const CardFrontFace = memo<{
 }>(({ word, backgroundColor, clickable, covered, onClick }) => {
   return (
     <CardFront
+      className="card-front"
       onClick={onClick}
       $backgroundColour={backgroundColor}
       $clickable={clickable}
@@ -223,7 +239,7 @@ CardBackFace.displayName = "CardBackFace";
 export interface GameCardProps {
   card: Card;
   cardIndex: number;
-  animation: 'dealing' | 'covering' | null;
+  animation: 'dealing' | 'covering' | 'color-fade' | null;
   onAnimationComplete: () => void;
   onCardClick: (cardWord: string) => void;
   clickable: boolean;
@@ -260,7 +276,10 @@ export const GameCard = memo<GameCardProps>(
     return (
       <CardContainer 
         data-animation={animation}
-        style={{ '--index': cardIndex } as React.CSSProperties}
+        style={{ 
+          '--index': cardIndex,
+          '--target-color': cardColor
+        } as React.CSSProperties}
         onAnimationEnd={handleAnimationEnd}
       >
         <CardInner className="card-inner" $covered={card.selected}>
