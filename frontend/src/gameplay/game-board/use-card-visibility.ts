@@ -32,10 +32,23 @@ export const useCardVisibility = ({ cards, showOnMount = false }: CardVisibility
     });
     return covered;
   });
+
+  // Track which cards have had their colors revealed (for codemaster)
+  const [colorFadedCards, setColorFadedCards] = useState<Set<string>>(() => {
+    const faded = new Set<string>();
+    // Skip color fade animation if not showing on mount
+    if (!showOnMount) {
+      cards.forEach((card, i) => {
+        faded.add(`${i}-${card.word}`);
+      });
+    }
+    return faded;
+  });
   
   // Check visibility states
   const hasBeenDealt = useCallback((cardId: string) => dealtCards.has(cardId), [dealtCards]);
   const hasBeenCovered = useCallback((cardId: string) => coveredCards.has(cardId), [coveredCards]);
+  const hasBeenColorFaded = useCallback((cardId: string) => colorFadedCards.has(cardId), [colorFadedCards]);
   
   // Mark cards as having completed their animations
   const markAsDealt = useCallback((cardId: string) => {
@@ -53,11 +66,20 @@ export const useCardVisibility = ({ cards, showOnMount = false }: CardVisibility
       return next;
     });
   }, []);
+
+  const markAsColorFaded = useCallback((cardId: string) => {
+    setColorFadedCards(prev => {
+      const next = new Set(prev);
+      next.add(cardId);
+      return next;
+    });
+  }, []);
   
   // Reset visibility for re-dealing
   const resetVisibility = useCallback(() => {
     setDealtCards(new Set());
     setCoveredCards(new Set());
+    setColorFadedCards(new Set());
   }, []);
   
   // Skip animations for specific cards
@@ -79,24 +101,43 @@ export const useCardVisibility = ({ cards, showOnMount = false }: CardVisibility
     }
     return null;
   }, [hasBeenDealt, hasBeenCovered]);
+
+  // Derive what animation should play for a card on codemaster board (includes color fade)
+  const getRequiredCodemasterAnimation = useCallback((cardId: string, card: Card): 'dealing' | 'color-fade' | 'covering' | null => {
+    if (!hasBeenDealt(cardId)) {
+      return 'dealing';
+    }
+    if (hasBeenDealt(cardId) && !hasBeenColorFaded(cardId)) {
+      return 'color-fade';
+    }
+    if (card.selected && !hasBeenCovered(cardId)) {
+      return 'covering';
+    }
+    return null;
+  }, [hasBeenDealt, hasBeenColorFaded, hasBeenCovered]);
   
   // Handle animation completion
   const handleAnimationComplete = useCallback((cardId: string, animation: string | null) => {
     if (animation === 'dealing') {
       markAsDealt(cardId);
+    } else if (animation === 'color-fade') {
+      markAsColorFaded(cardId);
     } else if (animation === 'covering') {
       markAsCovered(cardId);
     }
-  }, [markAsDealt, markAsCovered]);
+  }, [markAsDealt, markAsColorFaded, markAsCovered]);
   
   return {
     hasBeenDealt,
     hasBeenCovered,
+    hasBeenColorFaded,
     markAsDealt,
     markAsCovered,
+    markAsColorFaded,
     resetVisibility,
     skipAnimations,
     getRequiredAnimation,
+    getRequiredCodemasterAnimation,
     handleAnimationComplete,
   };
 };

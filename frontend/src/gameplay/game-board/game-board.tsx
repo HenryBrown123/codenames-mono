@@ -82,7 +82,7 @@ export const CodemasterBoard: React.FC<BoardProps> = memo(({ showOnMount = false
     <CardsContainer aria-label="codemaster game board">
       {cards.map((card, index) => {
         const cardId = `${index}-${card.word}`;
-        const animation = visibility.getRequiredAnimation(cardId, card);
+        const animation = visibility.getRequiredCodemasterAnimation(cardId, card);
         
         return (
           <GameCard
