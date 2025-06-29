@@ -1,142 +1,181 @@
 import { useState, useCallback } from 'react';
 import { Card } from '@frontend/shared-types';
 
-interface CardVisibilityConfig {
-  cards: Card[];
-  showOnMount?: boolean;
+/**
+ * All possible animations for card transitions
+ */
+type AnimationType = 'dealing' | 'codemaster-reveal' | 'covering';
+
+/**
+ * Codebreaker card states - mutually exclusive
+ */
+type CodebreakerCardState = 'hidden' | 'visible' | 'covered';
+
+/**
+ * Codemaster card states - mutually exclusive  
+ */
+type CodemasterCardState = 'hidden' | 'visible-grey' | 'visible-colored' | 'covered';
+
+/**
+ * Union type for all card states
+ */
+export type CardState = CodebreakerCardState | CodemasterCardState;
+
+/**
+ * Card visibility info returned by the hook
+ */
+export interface CardVisibility {
+  state: CardState;
+  animation: AnimationType | null;
 }
 
 /**
- * Hook that tracks the visual presentation state of cards on the game board.
- * Manages which cards have been dealt (made visible) and which have been covered.
- * This state is used to determine when animations should play.
+ * State transition definition
  */
-export const useCardVisibility = ({ cards, showOnMount = false }: CardVisibilityConfig) => {
-  // Track which cards have been dealt (are visible on the board)
-  const [dealtCards, setDealtCards] = useState<Set<string>>(() => {
-    if (showOnMount) {
-      // Start with empty set - all cards will animate in
-      return new Set();
-    }
-    // Mark all cards as already dealt - skip animations
-    return new Set(cards.map((card, i) => `${i}-${card.word}`));
-  });
+interface StateTransition<TState> {
+  from: TState;
+  to: TState;
+  animation: AnimationType;
+  condition?: (card: Card) => boolean;
+}
+
+/**
+ * Codebreaker state transitions
+ */
+const CODEBREAKER_TRANSITIONS: StateTransition<CodebreakerCardState>[] = [
+  {
+    from: 'hidden',
+    to: 'visible',
+    animation: 'dealing'
+  },
+  {
+    from: 'visible',
+    to: 'covered',
+    animation: 'covering',
+    condition: (card) => card.selected
+  }
+];
+
+/**
+ * Codemaster state transitions
+ */
+const CODEMASTER_TRANSITIONS: StateTransition<CodemasterCardState>[] = [
+  {
+    from: 'hidden',
+    to: 'visible-grey',
+    animation: 'dealing'
+  },
+  {
+    from: 'visible-grey',
+    to: 'visible-colored',
+    animation: 'codemaster-reveal'
+  },
+  {
+    from: 'visible-colored',
+    to: 'covered',
+    animation: 'covering',
+    condition: (card) => card.selected
+  }
+];
+
+/**
+ * Props for the hook
+ */
+interface UseCardVisibilityProps {
+  cards: Card[];
+  role: 'codebreaker' | 'codemaster' | 'spectator';
+}
+
+/**
+ * Hook return type
+ */
+interface UseCardVisibilityReturn {
+  getCardVisibility: (index: number, card: Card) => CardVisibility;
+  completeAnimation: (index: number, animation: AnimationType) => void;
+  resetVisibility: () => void;
+}
+
+/**
+ * Manages card visibility states and animations
+ */
+export function useCardVisibility({ 
+  cards, 
+  role
+}: UseCardVisibilityProps): UseCardVisibilityReturn {
+  type RoleCardState = typeof role extends 'codemaster' ? CodemasterCardState : CodebreakerCardState;
   
-  // Track which cards have been covered (flipped to show team color)
-  const [coveredCards, setCoveredCards] = useState<Set<string>>(() => {
-    const covered = new Set<string>();
-    cards.forEach((card, i) => {
-      if (card.selected) {
-        covered.add(`${i}-${card.word}`);
+  // Initialize states - always start hidden to trigger deal animation on mount
+  const [cardStates, setCardStates] = useState<RoleCardState[]>(() => 
+    cards.map(card => {
+      // If card is already selected, it should appear covered
+      if (card.selected) return 'covered' as RoleCardState;
+      // Otherwise start hidden so deal animation plays
+      return 'hidden' as RoleCardState;
+    })
+  );
+  
+  // Select transitions based on role
+  const transitions = role === 'codemaster' 
+    ? CODEMASTER_TRANSITIONS 
+    : CODEBREAKER_TRANSITIONS;
+  
+  /**
+   * Get current visibility for a card
+   */
+  const getCardVisibility = useCallback((index: number, card: Card): CardVisibility => {
+    const state = cardStates[index];
+    if (!state) {
+      return {
+        state: 'hidden' as CardState,
+        animation: null
+      };
+    }
+    
+    // Find applicable transition from current state
+    const transition = transitions.find(t => 
+      t.from === state && (!t.condition || t.condition(card))
+    );
+    
+    return {
+      state: state as CardState,
+      animation: transition?.animation || null
+    };
+  }, [cardStates, transitions]);
+  
+  /**
+   * Complete an animation by advancing to the next state
+   */
+  const completeAnimation = useCallback((index: number, animation: AnimationType) => {
+    setCardStates(prev => {
+      const currentState = prev[index];
+      if (!currentState) return prev;
+      
+      // Find the transition that matches this animation from current state
+      const transition = transitions.find(t => 
+        t.from === currentState && t.animation === animation
+      );
+      
+      if (!transition) {
+        console.warn(`No transition found for animation '${animation}' from state '${currentState}'`);
+        return prev;
       }
-    });
-    return covered;
-  });
-
-  // Track which cards have had their colors revealed (for codemaster)
-  const [colorFadedCards, setColorFadedCards] = useState<Set<string>>(() => {
-    const faded = new Set<string>();
-    if (!showOnMount) {
-      cards.forEach((card, i) => {
-        faded.add(`${i}-${card.word}`);
-      });
-    }
-    return faded;
-  });
-  
-  // Check visibility states
-  const hasBeenDealt = useCallback((cardId: string) => dealtCards.has(cardId), [dealtCards]);
-  const hasBeenCovered = useCallback((cardId: string) => coveredCards.has(cardId), [coveredCards]);
-  const hasBeenColorFaded = useCallback((cardId: string) => colorFadedCards.has(cardId), [colorFadedCards]);
-  
-  // Mark cards as having completed their animations
-  const markAsDealt = useCallback((cardId: string) => {
-    setDealtCards(prev => {
-      const next = new Set(prev);
-      next.add(cardId);
+      
+      const next = [...prev];
+      next[index] = transition.to as RoleCardState;
       return next;
     });
-  }, []);
+  }, [transitions]);
   
-  const markAsCovered = useCallback((cardId: string) => {
-    setCoveredCards(prev => {
-      const next = new Set(prev);
-      next.add(cardId);
-      return next;
-    });
-  }, []);
-
-  const markAsColorFaded = useCallback((cardId: string) => {
-    setColorFadedCards(prev => {
-      const next = new Set(prev);
-      next.add(cardId);
-      return next;
-    });
-  }, []);
-  
-  // Reset visibility for re-dealing
+  /**
+   * Reset all cards to hidden state
+   */
   const resetVisibility = useCallback(() => {
-    setDealtCards(new Set());
-    setCoveredCards(new Set());
-    setColorFadedCards(new Set());
-  }, []);
-  
-  // Skip animations for specific cards
-  const skipAnimations = useCallback((cardIds: string[]) => {
-    setDealtCards(prev => {
-      const next = new Set(prev);
-      cardIds.forEach(id => next.add(id));
-      return next;
-    });
-  }, []);
-  
-  // Derive what animation should play for a card
-  const getRequiredAnimation = useCallback((cardId: string, card: Card): 'dealing' | 'covering' | null => {
-    if (!hasBeenDealt(cardId)) {
-      return 'dealing';
-    }
-    if (card.selected && !hasBeenCovered(cardId)) {
-      return 'covering';
-    }
-    return null;
-  }, [hasBeenDealt, hasBeenCovered]);
-
-  // Derive what animation should play for a card on codemaster board (includes color fade)
-  const getRequiredCodemasterAnimation = useCallback((cardId: string, card: Card): 'dealing' | 'color-fade' | 'covering' | null => {
-    if (!hasBeenDealt(cardId)) {
-      return 'dealing';
-    }
-    if (hasBeenDealt(cardId) && !hasBeenColorFaded(cardId)) {
-      return 'color-fade';
-    }
-    if (card.selected && !hasBeenCovered(cardId)) {
-      return 'covering';
-    }
-    return null;
-  }, [hasBeenDealt, hasBeenColorFaded, hasBeenCovered]);
-  
-  // Handle animation completion
-  const handleAnimationComplete = useCallback((cardId: string, animation: string | null) => {
-    if (animation === 'dealing') {
-      markAsDealt(cardId);
-    } else if (animation === 'color-fade') {
-      markAsColorFaded(cardId);
-    } else if (animation === 'covering') {
-      markAsCovered(cardId);
-    }
-  }, [markAsDealt, markAsColorFaded, markAsCovered]);
+    setCardStates(cards.map(() => 'hidden' as RoleCardState));
+  }, [cards]);
   
   return {
-    hasBeenDealt,
-    hasBeenCovered,
-    hasBeenColorFaded,
-    markAsDealt,
-    markAsCovered,
-    markAsColorFaded,
+    getCardVisibility,
+    completeAnimation,
     resetVisibility,
-    skipAnimations,
-    getRequiredAnimation,
-    getRequiredCodemasterAnimation,
-    handleAnimationComplete,
   };
-};
+}
