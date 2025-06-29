@@ -180,7 +180,11 @@ const GameSceneContent: React.FC<GameSceneContentProps> = ({
       </InstructionsContainer>
 
       <GameBoardContainer>
-        <BoardComponent showOnMount={showOnMount} onResetVisibility={onResetVisibility} />
+        <BoardComponent 
+          key={currentRole}
+          showOnMount={showOnMount} 
+          onResetVisibility={onResetVisibility} 
+        />
       </GameBoardContainer>
 
       <DashboardContainer>

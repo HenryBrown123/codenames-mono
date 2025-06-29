@@ -55,33 +55,23 @@ export const getDashboardComponent = (
 };
 
 /**
- * Maps scene keys to board components
+ * Maps role to board component - boards persist across scenes within a role
  * Now returns components that expect visibility control props
  */
 export const getBoardComponent = (
   role: string,
-  scene: string,
+  scene: string, // Keep parameter for compatibility but don't use it
 ): React.ComponentType<{ showOnMount?: boolean; onResetVisibility?: () => void }> => {
-  // Normalize to lowercase for consistent mapping
   const normalizedRole = role.toLowerCase();
-  const sceneKey = `${normalizedRole}.${scene}`;
-
-  //   console.log(
-  //     `[COMPONENT_MAPPINGS] Looking up board for: ${sceneKey} (original: ${role}.${scene})`,
-  //   );
-
-  switch (sceneKey) {
-    case "codebreaker.main":
-    case "codebreaker.outcome":
+  
+  // Return board based on role only - same board for all scenes within a role
+  switch (normalizedRole) {
+    case 'codebreaker':
       return CodebreakerBoard;
-    case "codemaster.main":
+    case 'codemaster':
       return CodemasterBoard;
-    case "codebreaker.waiting":
-    case "codemaster.waiting":
-    case "spectator.watching":
-    case "none.lobby":
-    case "none.dealing":
-    case "none.gameover":
+    case 'spectator':
+    case 'none':
     default:
       return SpectatorBoard;
   }

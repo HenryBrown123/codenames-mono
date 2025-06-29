@@ -36,7 +36,6 @@ export const useCardVisibility = ({ cards, showOnMount = false }: CardVisibility
   // Track which cards have had their colors revealed (for codemaster)
   const [colorFadedCards, setColorFadedCards] = useState<Set<string>>(() => {
     const faded = new Set<string>();
-    // Skip color fade animation if not showing on mount
     if (!showOnMount) {
       cards.forEach((card, i) => {
         faded.add(`${i}-${card.word}`);
