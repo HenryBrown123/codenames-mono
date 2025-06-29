@@ -4,29 +4,23 @@ import { Card } from '@frontend/shared-types';
 /**
  * All possible animations for card transitions
  */
-type AnimationType = 'dealing' | 'codemaster-reveal' | 'covering';
+export type AnimationType = 'dealing' | 'color-fade' | 'covering';
 
 /**
- * Codebreaker card states - mutually exclusive
+ * Card states for different roles
  */
-type CodebreakerCardState = 'hidden' | 'visible' | 'covered';
+export type LobbyCardState = 'hidden' | 'visible';
+export type CodebreakerCardState = 'visible' | 'covered';
+export type CodemasterCardState = 'visible' | 'visible-colored' | 'covered';
+export type CardState = LobbyCardState | CodebreakerCardState | CodemasterCardState;
 
 /**
- * Codemaster card states - mutually exclusive  
- */
-type CodemasterCardState = 'hidden' | 'visible-grey' | 'visible-colored' | 'covered';
-
-/**
- * Union type for all card states
- */
-export type CardState = CodebreakerCardState | CodemasterCardState;
-
-/**
- * Card visibility info returned by the hook
+ * Card visibility info
  */
 export interface CardVisibility {
   state: CardState;
   animation: AnimationType | null;
+  completeTransition: () => void;
 }
 
 /**
@@ -40,142 +34,118 @@ interface StateTransition<TState> {
 }
 
 /**
- * Codebreaker state transitions
+ * Role configuration
  */
-const CODEBREAKER_TRANSITIONS: StateTransition<CodebreakerCardState>[] = [
-  {
-    from: 'hidden',
-    to: 'visible',
-    animation: 'dealing'
-  },
-  {
-    from: 'visible',
-    to: 'covered',
-    animation: 'covering',
-    condition: (card) => card.selected
-  }
-];
+interface RoleConfig<TState> {
+  defaultState: (card: Card) => TState;
+  transitions: StateTransition<TState>[];
+}
 
 /**
- * Codemaster state transitions
+ * Lobby transitions - just dealing animation
  */
-const CODEMASTER_TRANSITIONS: StateTransition<CodemasterCardState>[] = [
-  {
-    from: 'hidden',
-    to: 'visible-grey',
-    animation: 'dealing'
-  },
-  {
-    from: 'visible-grey',
-    to: 'visible-colored',
-    animation: 'codemaster-reveal'
-  },
-  {
-    from: 'visible-colored',
-    to: 'covered',
-    animation: 'covering',
-    condition: (card) => card.selected
-  }
-];
+const LOBBY_CONFIG: RoleConfig<LobbyCardState> = {
+  defaultState: () => 'hidden',
+  transitions: [
+    {
+      from: 'hidden',
+      to: 'visible',
+      animation: 'dealing'
+    }
+  ]
+};
 
 /**
- * Props for the hook
+ * Codebreaker transitions - starts visible, can be covered
  */
+const CODEBREAKER_CONFIG: RoleConfig<CodebreakerCardState> = {
+  defaultState: (card) => card.selected ? 'covered' : 'visible',
+  transitions: [
+    {
+      from: 'visible',
+      to: 'covered',
+      animation: 'covering',
+      condition: (card) => card.selected
+    }
+  ]
+};
+
+/**
+ * Codemaster transitions - starts visible, animates to colored
+ */
+const CODEMASTER_CONFIG: RoleConfig<CodemasterCardState> = {
+  defaultState: (card) => card.selected ? 'covered' : 'visible',
+  transitions: [
+    {
+      from: 'visible',
+      to: 'visible-colored',
+      animation: 'color-fade'
+    }
+  ]
+};
+
+/**
+ * Get role configuration
+ */
+function getRoleConfig(role: 'lobby' | 'codebreaker' | 'codemaster' | 'spectator') {
+  switch (role) {
+    case 'lobby':
+      return LOBBY_CONFIG;
+    case 'codemaster':
+      return CODEMASTER_CONFIG;
+    case 'codebreaker':
+    case 'spectator':
+    default:
+      return CODEBREAKER_CONFIG;
+  }
+}
+
 interface UseCardVisibilityProps {
   cards: Card[];
-  role: 'codebreaker' | 'codemaster' | 'spectator';
+  role: 'lobby' | 'codebreaker' | 'codemaster' | 'spectator';
 }
 
 /**
- * Hook return type
+ * Hook that tracks card visual states using card identity
  */
-interface UseCardVisibilityReturn {
-  getCardVisibility: (index: number, card: Card) => CardVisibility;
-  completeAnimation: (index: number, animation: AnimationType) => void;
-  resetVisibility: () => void;
-}
-
-/**
- * Manages card visibility states and animations
- */
-export function useCardVisibility({ 
-  cards, 
-  role
-}: UseCardVisibilityProps): UseCardVisibilityReturn {
-  type RoleCardState = typeof role extends 'codemaster' ? CodemasterCardState : CodebreakerCardState;
+export function useCardVisibility({ cards, role }: UseCardVisibilityProps) {
+  const config = getRoleConfig(role);
+  type RoleCardState = typeof config.defaultState extends (card: Card) => infer R ? R : never;
   
-  // Initialize states - always start hidden to trigger deal animation on mount
-  const [cardStates, setCardStates] = useState<RoleCardState[]>(() => 
-    cards.map(card => {
-      // If card is already selected, it should appear covered
-      if (card.selected) return 'covered' as RoleCardState;
-      // Otherwise start hidden so deal animation plays
-      return 'hidden' as RoleCardState;
-    })
-  );
-  
-  // Select transitions based on role
-  const transitions = role === 'codemaster' 
-    ? CODEMASTER_TRANSITIONS 
-    : CODEBREAKER_TRANSITIONS;
+  // Initialize card states by card word
+  const [cardStates, setCardStates] = useState<Map<string, RoleCardState>>(() => {
+    const initialStates = new Map<string, RoleCardState>();
+    cards.forEach(card => {
+      initialStates.set(card.word, config.defaultState(card) as RoleCardState);
+    });
+    return initialStates;
+  });
   
   /**
-   * Get current visibility for a card
+   * Get the current visual state and animation for a card
    */
-  const getCardVisibility = useCallback((index: number, card: Card): CardVisibility => {
-    const state = cardStates[index];
-    if (!state) {
-      return {
-        state: 'hidden' as CardState,
-        animation: null
-      };
-    }
+  const getCardVisibility = useCallback((card: Card): CardVisibility => {
+    const state = cardStates.get(card.word) || config.defaultState(card);
     
     // Find applicable transition from current state
-    const transition = transitions.find(t => 
+    const transition = config.transitions.find(t => 
       t.from === state && (!t.condition || t.condition(card))
     );
     
     return {
       state: state as CardState,
-      animation: transition?.animation || null
+      animation: transition?.animation || null,
+      completeTransition: transition ? () => {
+        setCardStates(prev => {
+          const next = new Map(prev);
+          next.set(card.word, transition.to as RoleCardState);
+          return next;
+        });
+      } : () => {}
     };
-  }, [cardStates, transitions]);
-  
-  /**
-   * Complete an animation by advancing to the next state
-   */
-  const completeAnimation = useCallback((index: number, animation: AnimationType) => {
-    setCardStates(prev => {
-      const currentState = prev[index];
-      if (!currentState) return prev;
-      
-      // Find the transition that matches this animation from current state
-      const transition = transitions.find(t => 
-        t.from === currentState && t.animation === animation
-      );
-      
-      if (!transition) {
-        console.warn(`No transition found for animation '${animation}' from state '${currentState}'`);
-        return prev;
-      }
-      
-      const next = [...prev];
-      next[index] = transition.to as RoleCardState;
-      return next;
-    });
-  }, [transitions]);
-  
-  /**
-   * Reset all cards to hidden state
-   */
-  const resetVisibility = useCallback(() => {
-    setCardStates(cards.map(() => 'hidden' as RoleCardState));
-  }, [cards]);
+  }, [cardStates, config]);
   
   return {
     getCardVisibility,
-    completeAnimation,
-    resetVisibility,
   };
 }
