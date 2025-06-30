@@ -63,7 +63,7 @@ export type PlayerSpecificGameStateResult =
  */
 export type PlayerSpecificStateProvider = (
   gameId: PublicId,
-  playerId: string,
+  playerId: string | null,
   userId: number,
 ) => Promise<PlayerSpecificGameStateResult>;
 
@@ -104,40 +104,42 @@ export const playerSpecificStateProvider = (
    */
   const getPlayerSpecificGameState = async (
     gameId: PublicId,
-    playerId: string,
+    playerId: string | null,
     userId: number,
   ): Promise<PlayerSpecificGameStateResult> => {
-    // Find the specific player first
-    const player = await findPlayerByPublicId(playerId);
-    if (!player) {
-      return { status: "player-not-found", playerId };
-    }
-
-    // Get the game
+    // Get the game first
     const game = await getGameById(gameId);
     if (!game) {
       return { status: "game-not-found", gameId };
     }
 
-    // Verify player belongs to this game
-    if (player._gameId !== game._id) {
-      return { status: "player-not-in-game", playerId, gameId };
-    }
+    let player: PlayerResult | null = null;
+    
+    // If playerId provided, find and validate the specific player
+    if (playerId) {
+      player = await findPlayerByPublicId(playerId);
+      if (!player) {
+        return { status: "player-not-found", playerId };
+      }
 
-    // Verify user is authorized to view this player's context
-    // In single-device mode, any user in the game can view any player context
-    // In multi-device mode, user must own the specific player
-    if (game.game_type === GAME_TYPE.MULTI_DEVICE && player._userId !== userId) {
-      return { status: "user-not-authorized", userId, playerId };
-    }
+      // Verify player belongs to this game
+      if (player._gameId !== game._id) {
+        return { status: "player-not-in-game", playerId, gameId };
+      }
 
-    // For single-device mode, we still need to verify the user is a player in the game
-    if (game.game_type === GAME_TYPE.SINGLE_DEVICE) {
-      const allGamePlayers = await getPlayersByGameId(game._id);
-      const userIsPlayer = allGamePlayers.some(p => p._userId === userId);
-      if (!userIsPlayer) {
+      // Verify user is authorized to view this player's context
+      // In single-device mode, any user in the game can view any player context
+      // In multi-device mode, user must own the specific player
+      if (game.game_type === GAME_TYPE.MULTI_DEVICE && player._userId !== userId) {
         return { status: "user-not-authorized", userId, playerId };
       }
+    }
+
+    // For both cases (with/without playerId), verify the user is a player in the game
+    const allGamePlayers = await getPlayersByGameId(game._id);
+    const userIsPlayer = allGamePlayers.some(p => p._userId === userId);
+    if (!userIsPlayer) {
+      return { status: "user-not-authorized", userId, playerId: playerId || "none" };
     }
 
     // Collect all game level state
@@ -172,7 +174,7 @@ export const playerSpecificStateProvider = (
 
     // Base state for when no current round exists
     if (!latestRound) {
-      const playerContext: PlayerContext = {
+      const playerContext: PlayerContext = player ? {
         _id: player._id,
         publicId: player.publicId,
         _userId: player._userId,
@@ -181,6 +183,16 @@ export const playerSpecificStateProvider = (
         teamName: player.teamName,
         statusId: player.statusId,
         publicName: player.publicName,
+        role: PLAYER_ROLE.NONE,
+      } : {
+        _id: 0,
+        publicId: "none",
+        _userId: userId,
+        _gameId: game._id,
+        _teamId: 0,
+        teamName: "None",
+        statusId: 0,
+        publicName: "None",
         role: PLAYER_ROLE.NONE,
       };
 
@@ -220,10 +232,10 @@ export const playerSpecificStateProvider = (
     // Get current turn for role determination
     const currentTurn = turns.find((turn) => turn.status === "ACTIVE") || null;
 
-    // Determine role for this specific player
-    const playerRole = determineRoleForPlayer(player, currentTurn);
+    // Determine role for this specific player (or NONE if no player provided)
+    const playerRole = player ? determineRoleForPlayer(player, currentTurn) : PLAYER_ROLE.NONE;
 
-    const playerContext: PlayerContext = {
+    const playerContext: PlayerContext = player ? {
       _id: player._id,
       publicId: player.publicId,
       _userId: player._userId,
@@ -233,6 +245,16 @@ export const playerSpecificStateProvider = (
       statusId: player.statusId,
       publicName: player.publicName,
       role: playerRole,
+    } : {
+      _id: 0,
+      publicId: "none",
+      _userId: userId,
+      _gameId: game._id,
+      _teamId: 0,
+      teamName: "None",
+      statusId: 0,
+      publicName: "None",
+      role: PLAYER_ROLE.NONE,
     };
 
     return {

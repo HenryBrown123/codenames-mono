@@ -11,7 +11,7 @@ export const gameStateRequestSchema = z.object({
     gameId: z.string().min(1, "Game ID is required"),
   }),
   query: z.object({
-    playerId: z.string().min(1, "Player ID is required"),
+    playerId: z.string().min(1, "Player ID is required").optional(),
   }),
   auth: z.object({
     userId: z.number().int().positive("User ID must be a positive integer"),
