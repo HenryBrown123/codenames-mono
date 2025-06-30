@@ -1,4 +1,4 @@
-import type { GameplayStateProvider } from "../state/gameplay-state.provider";
+import type { PlayerSpecificStateProvider } from "../state/player-specific-state.provider";
 import type { TurnStateProvider } from "../state/turn-state.provider";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 import type { GameplayOperations } from "../gameplay-actions";
@@ -10,7 +10,7 @@ import { makeGuessController } from "./make-guess.controller";
  * Dependencies required by the make guess feature
  */
 export interface MakeGuessDependencies {
-  getGameState: GameplayStateProvider;
+  getPlayerSpecificGameState: PlayerSpecificStateProvider;
   gameplayHandler: TransactionalHandler<GameplayOperations>;
   getTurnState: TurnStateProvider; // ← Add turn state provider
 }
@@ -23,7 +23,7 @@ export interface MakeGuessDependencies {
  */
 export const makeGuess = (dependencies: MakeGuessDependencies) => {
   const makeGuessServiceInstance = makeGuessService({
-    getGameState: dependencies.getGameState,
+    getPlayerSpecificGameState: dependencies.getPlayerSpecificGameState,
     gameplayHandler: dependencies.gameplayHandler,
     getTurnState: dependencies.getTurnState, // ← Pass turn state provider
   });

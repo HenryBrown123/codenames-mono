@@ -2,9 +2,9 @@ export function createGameplayPaths() {
   return {
     "/games/{gameId}": {
       get: {
-        summary: "Get game state",
+        summary: "Get game state for specific player",
         description:
-          "Retrieves the current state of a game for the authenticated user",
+          "Retrieves the current state of a game from the perspective of a specific player. Requires playerId in request body to determine player context and data filtering.",
         tags: ["Gameplay"],
         security: [{ bearerAuth: [] }],
         parameters: [
@@ -18,6 +18,16 @@ export function createGameplayPaths() {
             description: "Public ID of the game",
           },
         ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              example: {
+                playerId: "player_abc123",
+              },
+            },
+          },
+        },
         responses: {
           "200": {
             description: "Game state retrieved successfully",
@@ -119,6 +129,67 @@ export function createGameplayPaths() {
         },
       },
     },
+    "/games/{gameId}/players": {
+      get: {
+        summary: "Get players with status",
+        description: "Retrieves all players in a game with their current status (ACTIVE/WAITING)",
+        tags: ["Gameplay"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "gameId",
+            in: "path",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description: "Public ID of the game",
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Players retrieved successfully",
+            content: {
+              "application/json": {
+                example: {
+                  success: true,
+                  data: {
+                    players: [
+                      {
+                        publicId: "player_abc123",
+                        name: "Alice",
+                        teamName: "Team Red",
+                        role: "CODEMASTER",
+                        status: "ACTIVE",
+                      },
+                      {
+                        publicId: "player_def456",
+                        name: "Bob",
+                        teamName: "Team Blue",
+                        role: "CODEBREAKER",
+                        status: "WAITING",
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+          "404": {
+            description: "Game not found",
+          },
+          "403": {
+            description: "User is not a player in this game",
+          },
+          "401": {
+            description: "Unauthorized",
+          },
+          "500": {
+            description: "Server error",
+          },
+        },
+      },
+    },
     "/games/{gameId}/rounds/{roundNumber}/clues": {
       post: {
         summary: "Give a clue",
@@ -151,6 +222,7 @@ export function createGameplayPaths() {
           content: {
             "application/json": {
               example: {
+                playerId: "player_abc123",
                 word: "animals",
                 targetCardCount: 2,
               },
@@ -238,6 +310,7 @@ export function createGameplayPaths() {
           content: {
             "application/json": {
               example: {
+                playerId: "player_def456",
                 cardWord: "dog",
               },
             },

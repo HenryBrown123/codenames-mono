@@ -1,4 +1,4 @@
-import type { GameplayStateProvider } from "../state/gameplay-state.provider";
+import type { PlayerSpecificStateProvider } from "../state/player-specific-state.provider";
 import type { TurnStateProvider } from "../state/turn-state.provider";
 import type { GameplayValidationError } from "../state/gameplay-state.validation";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
@@ -17,6 +17,7 @@ export type GiveClueInput = {
   gameId: string;
   roundNumber: number;
   userId: number;
+  playerId: string;
   word: string;
   targetCardCount: number;
 };
@@ -71,6 +72,8 @@ export const GIVE_CLUE_ERROR = {
   INVALID_CLUE_WORD: "invalid-clue-word",
   GAME_NOT_FOUND: "game-not-found",
   USER_NOT_PLAYER: "user-not-player",
+  PLAYER_NOT_FOUND: "player-not-found",
+  PLAYER_NOT_IN_GAME: "player-not-in-game",
   ROUND_NOT_FOUND: "round-not-found",
   ROUND_NOT_CURRENT: "round-not-current",
 } as const;
@@ -99,6 +102,15 @@ export type GiveClueFailure =
       userId: number;
     }
   | {
+      status: typeof GIVE_CLUE_ERROR.PLAYER_NOT_FOUND;
+      playerId: string;
+    }
+  | {
+      status: typeof GIVE_CLUE_ERROR.PLAYER_NOT_IN_GAME;
+      playerId: string;
+      gameId: string;
+    }
+  | {
       status: typeof GIVE_CLUE_ERROR.ROUND_NOT_FOUND;
       roundNumber: number;
     }
@@ -119,7 +131,7 @@ export type GiveClueResult =
  * Dependencies required by the give clue service
  */
 export type GiveClueDependencies = {
-  getGameState: GameplayStateProvider;
+  getPlayerSpecificGameState: PlayerSpecificStateProvider;
   gameplayHandler: TransactionalHandler<GameplayOperations>;
   getTurnState: TurnStateProvider; // ← Add turn state provider
 };
@@ -154,7 +166,11 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
   };
 
   return async (input: GiveClueInput): Promise<GiveClueResult> => {
-    const result = await dependencies.getGameState(input.gameId, input.userId);
+    const result = await dependencies.getPlayerSpecificGameState(
+      input.gameId,
+      input.playerId,
+      input.userId,
+    );
 
     if (result.status === "game-not-found") {
       return {
@@ -166,7 +182,28 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
       };
     }
 
-    if (result.status === "user-not-player") {
+    if (result.status === "player-not-found") {
+      return {
+        success: false,
+        error: {
+          status: GIVE_CLUE_ERROR.PLAYER_NOT_FOUND,
+          playerId: input.playerId,
+        },
+      };
+    }
+
+    if (result.status === "player-not-in-game") {
+      return {
+        success: false,
+        error: {
+          status: GIVE_CLUE_ERROR.PLAYER_NOT_IN_GAME,
+          playerId: input.playerId,
+          gameId: input.gameId,
+        },
+      };
+    }
+
+    if (result.status === "user-not-authorized") {
       return {
         success: false,
         error: {

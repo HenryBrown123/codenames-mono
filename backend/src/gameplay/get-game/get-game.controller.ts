@@ -10,6 +10,9 @@ export const gameStateRequestSchema = z.object({
   params: z.object({
     gameId: z.string().min(1, "Game ID is required"),
   }),
+  query: z.object({
+    playerId: z.string().min(1, "Player ID is required"),
+  }),
   auth: z.object({
     userId: z.number().int().positive("User ID must be a positive integer"),
   }),
@@ -39,11 +42,13 @@ export const getGameStateController =
     try {
       const validatedRequest = gameStateRequestSchema.parse({
         params: req.params,
+        query: req.query,
         auth: req.auth,
       });
 
       const result = await getGameState({
         gameId: validatedRequest.params.gameId,
+        playerId: validatedRequest.query.playerId,
         userId: validatedRequest.auth.userId,
       });
 
@@ -69,11 +74,32 @@ export const getGameStateController =
         } else if (result.error.status === "unauthorized") {
           res.status(403).json({
             success: false,
-            error: "You are not a player in this game",
+            error: "You are not authorized to view this player's context",
             details: {
-              code: "not-a-player",
-              message: "You need to join this game before you can view it",
+              code: "not-authorized",
+              message: "You can only view your own player context in multi-device mode",
               userId: result.error.userId,
+            },
+          });
+        } else if (result.error.status === "player-not-found") {
+          res.status(404).json({
+            success: false,
+            error: "Player not found",
+            details: {
+              code: "player-not-found",
+              message: "The specified player does not exist",
+              playerId: result.error.playerId,
+            },
+          });
+        } else if (result.error.status === "player-not-in-game") {
+          res.status(400).json({
+            success: false,
+            error: "Player is not in this game",
+            details: {
+              code: "player-not-in-game",
+              message: "The specified player does not belong to this game",
+              playerId: result.error.playerId,
+              gameId: result.error.gameId,
             },
           });
         } else {

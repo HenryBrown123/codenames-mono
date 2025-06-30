@@ -1,6 +1,6 @@
-import { GameplayStateProvider } from "../state/gameplay-state.provider";
 import { GameAggregate } from "../state/gameplay-state.types";
 import { PLAYER_ROLE, PlayerRole } from "@codenames/shared/types";
+import { PlayerSpecificStateProvider } from "../state/player-specific-state.provider";
 
 /**
  * Service input parameters
@@ -8,6 +8,7 @@ import { PLAYER_ROLE, PlayerRole } from "@codenames/shared/types";
 export type GetGameStateInput = {
   gameId: string;
   userId: number;
+  playerId: string;
 };
 
 export type GetGameStateResult =
@@ -66,6 +67,8 @@ export type PublicGameStateResponse = {
 export const GAME_STATE_ERROR = {
   GAME_NOT_FOUND: "game-not-found",
   UNAUTHORIZED: "unauthorized",
+  PLAYER_NOT_FOUND: "player-not-found",
+  PLAYER_NOT_IN_GAME: "player-not-in-game",
 } as const;
 
 /**
@@ -73,13 +76,15 @@ export const GAME_STATE_ERROR = {
  */
 export type GetGameStateFailure =
   | { status: typeof GAME_STATE_ERROR.GAME_NOT_FOUND; gameId: string }
-  | { status: typeof GAME_STATE_ERROR.UNAUTHORIZED; userId: number };
+  | { status: typeof GAME_STATE_ERROR.UNAUTHORIZED; userId: number }
+  | { status: typeof GAME_STATE_ERROR.PLAYER_NOT_FOUND; playerId: string }
+  | { status: typeof GAME_STATE_ERROR.PLAYER_NOT_IN_GAME; playerId: string; gameId: string };
 
 /**
  * Dependencies required by the service
  */
 export type GetGameStateDependencies = {
-  getGameState: GameplayStateProvider;
+  getPlayerSpecificGameState: PlayerSpecificStateProvider;
 };
 
 /**
@@ -87,7 +92,11 @@ export type GetGameStateDependencies = {
  */
 export const getGameStateService = (dependencies: GetGameStateDependencies) => {
   return async (input: GetGameStateInput): Promise<GetGameStateResult> => {
-    const result = await dependencies.getGameState(input.gameId, input.userId);
+    const result = await dependencies.getPlayerSpecificGameState(
+      input.gameId,
+      input.playerId,
+      input.userId,
+    );
 
     if (result.status === "game-not-found") {
       console.log(`Game not found: gameId=${input.gameId}`);
@@ -100,10 +109,31 @@ export const getGameStateService = (dependencies: GetGameStateDependencies) => {
       };
     }
 
-    if (result.status === "user-not-player") {
-      console.log(
-        `User not a player: gameId=${input.gameId}, userId=${input.userId}`,
-      );
+    if (result.status === "player-not-found") {
+      console.log(`Player not found: playerId=${input.playerId}`);
+      return {
+        success: false,
+        error: {
+          status: GAME_STATE_ERROR.PLAYER_NOT_FOUND,
+          playerId: input.playerId,
+        },
+      };
+    }
+
+    if (result.status === "player-not-in-game") {
+      console.log(`Player not in game: playerId=${input.playerId}, gameId=${input.gameId}`);
+      return {
+        success: false,
+        error: {
+          status: GAME_STATE_ERROR.PLAYER_NOT_IN_GAME,
+          playerId: input.playerId,
+          gameId: input.gameId,
+        },
+      };
+    }
+
+    if (result.status === "user-not-authorized") {
+      console.log(`User not authorized: userId=${input.userId}, playerId=${input.playerId}`);
       return {
         success: false,
         error: {

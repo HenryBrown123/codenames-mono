@@ -18,6 +18,7 @@ export const makeGuessRequestSchema = z.object({
     userId: z.number().int().positive("User ID must be a positive integer"),
   }),
   body: z.object({
+    playerId: z.string().min(1, "Player ID is required"),
     cardWord: z
       .string()
       .min(1, "Card word is required")
@@ -141,6 +142,7 @@ export const makeGuessController = ({ makeGuess }: Dependencies) => {
         gameId: params.gameId,
         roundNumber: params.roundNumber,
         userId: auth.userId,
+        playerId: body.playerId,
         cardWord: body.cardWord,
       });
 
@@ -158,7 +160,23 @@ export const makeGuessController = ({ makeGuess }: Dependencies) => {
           case "user-not-player":
             res.status(403).json({
               success: false,
-              error: "You are not a player in this game",
+              error: "You are not authorized to act as this player",
+              details: { code: result.error.status },
+            });
+            return;
+
+          case "player-not-found":
+            res.status(404).json({
+              success: false,
+              error: "Player not found",
+              details: { code: result.error.status },
+            });
+            return;
+
+          case "player-not-in-game":
+            res.status(400).json({
+              success: false,
+              error: "Player is not in this game",
               details: { code: result.error.status },
             });
             return;

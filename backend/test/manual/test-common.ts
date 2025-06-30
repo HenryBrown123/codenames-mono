@@ -138,6 +138,7 @@ export class ApiClient {
   private authToken?: string;
   private verbose: boolean;
   private timingTracker = ApiTimingTracker.getInstance();
+  private currentPlayerId?: string;
 
   constructor(verbose = false) {
     this.verbose = verbose;
@@ -145,6 +146,14 @@ export class ApiClient {
 
   setAuthToken(token: string) {
     this.authToken = token;
+  }
+
+  setCurrentPlayerId(playerId: string) {
+    this.currentPlayerId = playerId;
+  }
+
+  getCurrentPlayerId(): string | undefined {
+    return this.currentPlayerId;
   }
 
   private async request(method: string, url: string, data?: any) {
@@ -222,6 +231,70 @@ export class ApiClient {
   }
   async delete(url: string) {
     return this.request("DELETE", url);
+  }
+
+  // New helper methods for player-context-aware API calls
+  async getGameState(gameId: string, playerId?: string) {
+    const playerIdToUse = playerId || this.currentPlayerId;
+    if (!playerIdToUse) {
+      throw new Error("Player ID required for game state - call setCurrentPlayerId() or pass playerId parameter");
+    }
+    return this.request("GET", `/games/${gameId}?playerId=${encodeURIComponent(playerIdToUse)}`);
+  }
+
+  async getPlayers(gameId: string) {
+    return this.request("GET", `/games/${gameId}/players`);
+  }
+
+  async giveClue(gameId: string, roundNumber: number, clueData: { word: string; targetCardCount: number }, playerId?: string) {
+    const playerIdToUse = playerId || this.currentPlayerId;
+    if (!playerIdToUse) {
+      throw new Error("Player ID required for giving clue - call setCurrentPlayerId() or pass playerId parameter");
+    }
+    return this.request("POST", `/games/${gameId}/rounds/${roundNumber}/clues`, {
+      ...clueData,
+      playerId: playerIdToUse,
+    });
+  }
+
+  async makeGuess(gameId: string, roundNumber: number, guessData: { cardWord: string }, playerId?: string) {
+    const playerIdToUse = playerId || this.currentPlayerId;
+    if (!playerIdToUse) {
+      throw new Error("Player ID required for making guess - call setCurrentPlayerId() or pass playerId parameter");
+    }
+    return this.request("POST", `/games/${gameId}/rounds/${roundNumber}/guesses`, {
+      ...guessData,
+      playerId: playerIdToUse,
+    });
+  }
+
+  // Helper to automatically find and set the active player
+  async setActivePlayer(gameId: string) {
+    const playersResponse = await this.getPlayers(gameId);
+    const activePlayers = playersResponse.data.data.players.filter(
+      (player: any) => player.status === "ACTIVE"
+    );
+    
+    if (activePlayers.length === 0) {
+      // No active players might mean the round/game is complete
+      if (this.verbose) {
+        console.log(
+          `    ${colors.yellow}⚠ No active players found - game/round may be complete${colors.reset}`
+        );
+      }
+      return null;
+    }
+    
+    // Use the first active player
+    this.setCurrentPlayerId(activePlayers[0].publicId);
+    
+    if (this.verbose) {
+      console.log(
+        `    ${colors.cyan}👤 Set active player: ${activePlayers[0].name} (${activePlayers[0].role}) on ${activePlayers[0].teamName}${colors.reset}`
+      );
+    }
+    
+    return activePlayers[0];
   }
 
   static getTimingStats() {
