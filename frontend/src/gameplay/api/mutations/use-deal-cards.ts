@@ -35,9 +35,6 @@ export const useDealCardsMutation = (
 
   return useMutation({
     mutationFn: async ({ roundNumber, redeal = false }) => {
-      if (!currentPlayerId) {
-        throw new Error("Player ID is required to deal cards");
-      }
 
       const response: AxiosResponse<DealCardsApiResponse> = await api.post(
         `/games/${gameId}/rounds/${roundNumber}/deal`,

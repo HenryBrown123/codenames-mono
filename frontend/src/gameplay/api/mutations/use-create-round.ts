@@ -28,13 +28,9 @@ export const useCreateRoundMutation = (
 
   return useMutation({
     mutationFn: async () => {
-      if (!currentPlayerId) {
-        throw new Error("Player ID is required to create round");
-      }
-
       const response: AxiosResponse<CreateRoundApiResponse> = await api.post(
         `/games/${gameId}/rounds`,
-        { playerId: currentPlayerId }
+        { playerId: currentPlayerId}
       );
 
       if (!response.data.success) {
