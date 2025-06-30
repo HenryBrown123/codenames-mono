@@ -538,6 +538,7 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   ├── game-data
 │       │   ├── game-instructions
 │       │   ├── pages
+│       │   ├── player-context
 │       │   ├── role-scenes
 │       │   ├── shared
 │       │   │   ├── action-button
@@ -556,7 +557,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-77 directories
+78 directories
 ```
 
 ## Getting Started
