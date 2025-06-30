@@ -30,15 +30,12 @@ export const useStartRoundMutation = (
   const queryClient = useQueryClient();
   const { currentPlayerId } = usePlayerContext();
 
+
   return useMutation({
     mutationFn: async ({ roundNumber }) => {
-      if (!currentPlayerId) {
-        throw new Error("Player ID is required to start round");
-      }
-
       const response: AxiosResponse<StartRoundApiResponse> = await api.post(
         `/games/${gameId}/rounds/${roundNumber}/start`,
-        { playerId: currentPlayerId }
+        { playerId: currentPlayerId || null}
       );
 
       if (!response.data.success) {

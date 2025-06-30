@@ -48,7 +48,7 @@ export const getGameStateController =
 
       const result = await getGameState({
         gameId: validatedRequest.params.gameId,
-        playerId: validatedRequest.query.playerId,
+        playerId: validatedRequest.query.playerId || null,
         userId: validatedRequest.auth.userId,
       });
 
