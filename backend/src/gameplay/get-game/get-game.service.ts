@@ -8,7 +8,7 @@ import { PlayerSpecificStateProvider } from "../state/player-specific-state.prov
 export type GetGameStateInput = {
   gameId: string;
   userId: number;
-  playerId: string;
+  playerId?: string;
 };
 
 export type GetGameStateResult =
@@ -94,7 +94,7 @@ export const getGameStateService = (dependencies: GetGameStateDependencies) => {
   return async (input: GetGameStateInput): Promise<GetGameStateResult> => {
     const result = await dependencies.getPlayerSpecificGameState(
       input.gameId,
-      input.playerId,
+      input.playerId || null, // Pass null when no playerId provided
       input.userId,
     );
 
@@ -115,7 +115,7 @@ export const getGameStateService = (dependencies: GetGameStateDependencies) => {
         success: false,
         error: {
           status: GAME_STATE_ERROR.PLAYER_NOT_FOUND,
-          playerId: input.playerId,
+          playerId: input.playerId!, // Safe assertion - this error only occurs when playerId was provided
         },
       };
     }
@@ -126,7 +126,7 @@ export const getGameStateService = (dependencies: GetGameStateDependencies) => {
         success: false,
         error: {
           status: GAME_STATE_ERROR.PLAYER_NOT_IN_GAME,
-          playerId: input.playerId,
+          playerId: input.playerId!, // Safe assertion - this error only occurs when playerId was provided
           gameId: input.gameId,
         },
       };
