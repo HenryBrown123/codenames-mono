@@ -1,9 +1,9 @@
 import { ReactNode } from "react";
-import { GameDataProvider } from "../game-data";
-import { TurnProvider } from "../turn-management";
-import { PlayerRoleSceneProvider } from "../role-scenes";
+import { GameDataProvider, useGameData } from "../game-data";
+import { TurnProvider, useTurn } from "../turn-management";
+import { PlayerSceneProvider } from "../role-scenes";
 import { GameActionsProvider } from "../game-actions";
-import { PlayerProvider } from "../player-context/player-context.provider";
+import { PlayerProvider, usePlayerContext } from "../player-context/player-context.provider";
 
 interface GameplayProviderProps {
   gameId: string;
@@ -12,7 +12,7 @@ interface GameplayProviderProps {
 
 /**
  * Main gameplay provider that sets up the correct dependency hierarchy:
- * Player Context → Data → Turn → Role/Scene Management → Actions → UI
+ * Player Context → Data → Turn → Scene Management → Actions → UI
  */
 export const GameplayProvider = ({
   gameId,
@@ -22,11 +22,38 @@ export const GameplayProvider = ({
     <PlayerProvider>
       <GameDataProvider gameId={gameId}>
         <TurnProvider>
-          <PlayerRoleSceneProvider>
+          <GameplaySceneProvider>
             <GameActionsProvider>{children}</GameActionsProvider>
-          </PlayerRoleSceneProvider>
+          </GameplaySceneProvider>
         </TurnProvider>
       </GameDataProvider>
     </PlayerProvider>
+  );
+};
+
+/**
+ * Inner provider that handles scene management with access to all contexts
+ */
+const GameplaySceneProvider = ({ children }: { children: ReactNode }) => {
+  const { setCurrentPlayerId } = usePlayerContext();
+  const { clearActiveTurn } = useTurn();
+  const { gameData } = useGameData();
+
+  const handleTurnComplete = () => {
+    console.log(`[GAMEPLAY] handleTurnComplete called, gameType: ${gameData.gameType}`);
+    
+    // Single device: clear player to trigger handoff
+    if (gameData.gameType === "SINGLE_DEVICE") {
+      console.log(`[GAMEPLAY] Clearing player context to trigger handoff`);
+      setCurrentPlayerId(null);
+      clearActiveTurn();
+    }
+    // Multi-device: could add different logic here if needed
+  };
+
+  return (
+    <PlayerSceneProvider onTurnComplete={handleTurnComplete}>
+      {children}
+    </PlayerSceneProvider>
   );
 };

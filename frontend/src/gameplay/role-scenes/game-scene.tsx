@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { useGameData } from "@frontend/gameplay/game-data";
-import { usePlayerRoleScene } from "@frontend/gameplay/role-scenes";
+import { usePlayerScene } from "@frontend/gameplay/role-scenes";
 import { useTurn } from "@frontend/gameplay/turn-management";
 import { getSceneMessage } from "./scene-messages";
 import {
@@ -77,10 +77,9 @@ export const GameScene: React.FC = () => {
   const {
     currentRole,
     currentScene,
-    showHandoff,
-    pendingTransition,
+    requiresHandoff,
     completeHandoff,
-  } = usePlayerRoleScene();
+  } = usePlayerScene();
 
   // Handle game over state
   if (gameData.currentRound?.status === "COMPLETED") {
@@ -99,7 +98,7 @@ export const GameScene: React.FC = () => {
     );
   }
 
-  if (showHandoff && pendingTransition) {
+  if (requiresHandoff) {
     // Show current role's board blurred during handoff
     return (
       <GameSceneContainer>
@@ -113,7 +112,7 @@ export const GameScene: React.FC = () => {
         </BlurredBackground>
         <DeviceHandoffOverlay
           gameData={gameData}
-          pendingTransition={pendingTransition}
+          pendingTransition={{ stage: "NONE" as any, scene: "main" }}
           onContinue={completeHandoff}
         />
       </GameSceneContainer>
