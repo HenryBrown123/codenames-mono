@@ -99,11 +99,11 @@ function transformApiResponseToGameData(apiResponse: GameStateApiResponse): Game
   };
 }
 
-const fetchGame = async (gameId: string, playerId: string): Promise<GameData> => {
+const fetchGame = async (gameId: string, playerId?: string): Promise<GameData> => {
   const response: AxiosResponse<GameStateApiResponse> = await api.get(
     `/games/${gameId}`,
     {
-      params: { playerId }
+      params: playerId ? { playerId } : undefined
     }
   );
 
@@ -123,14 +123,15 @@ export const useGameDataQuery = (
   const { currentPlayerId } = usePlayerContext();
   
   return useQuery<GameData>({
-    queryKey: ["gameData", gameId, currentPlayerId],
+    queryKey: ["gameData", gameId, currentPlayerId], // null playerId is valid for cache key
     queryFn: () => {
-      if (!gameId || !currentPlayerId) {
-        throw new Error("Game ID and Player ID are required");
+      if (!gameId) {
+        throw new Error("Game ID is required");
       }
-      return fetchGame(gameId, currentPlayerId);
+      // Pass undefined if no playerId - backend returns NONE role view
+      return fetchGame(gameId, currentPlayerId || undefined);
     },
-    enabled: !!gameId && !!currentPlayerId,
+    enabled: !!gameId, // Don't wait for playerId - run with null to get NONE role
     refetchOnWindowFocus: true,
     staleTime: 0,
   });
