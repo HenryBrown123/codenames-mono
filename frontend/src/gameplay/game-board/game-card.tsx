@@ -1,9 +1,8 @@
-// Add missing imports at the top
 import React, { memo, useCallback } from "react";
 import styled, { css, keyframes } from "styled-components";
 import { FaStar, FaLeaf, FaSkull, FaPeace } from "react-icons/fa";
 import { Card } from "@frontend/shared-types";
-import { CardState, AnimationType } from "./use-card-visibility";
+import { VisualState, Animation } from "./use-card-visibility";
 
 // Card colors
 const CARD_COLORS = {
@@ -42,7 +41,6 @@ const getCardColor = (card: Card): string => {
 };
 
 // Animations
-// Add ripple animation at the top with other animations
 const rippleEffect = keyframes`
   0% {
     transform: scale(0);
@@ -111,15 +109,13 @@ const CardContainer = styled.div`
   
   /* State-based visibility */
   &[data-state="visible"],
-  &[data-state="visible-grey"],
   &[data-state="visible-colored"],
   &[data-state="covered"] {
     opacity: 1;
   }
   
   /* State-based card colors */
-  &[data-state="visible"] .card-front,
-  &[data-state="visible-grey"] .card-front {
+  &[data-state="visible"] .card-front {
     background-color: ${CARD_COLORS.neutral};
   }
   
@@ -141,7 +137,7 @@ const CardContainer = styled.div`
   }
 `;
 
-const CardInner = styled.div<{ $clickable: boolean; $covered: boolean }>`
+const CardInner = styled.div<{ $clickable: boolean }>`
   position: relative;
   width: 100%;
   height: 100%;
@@ -151,11 +147,11 @@ const CardInner = styled.div<{ $clickable: boolean; $covered: boolean }>`
   
   /* Hover effect on the entire card inner */
   &:hover {
-    transform: ${props => props.$clickable && !props.$covered ? 'translateY(-4px)' : 'none'};
+    transform: ${props => props.$clickable ? 'translateY(-4px)' : 'none'};
   }
   
   &:active {
-    transform: ${props => props.$clickable && !props.$covered ? 'translateY(1px)' : 'none'};
+    transform: ${props => props.$clickable ? 'translateY(1px)' : 'none'};
   }
   
   /* Flip when covered */
@@ -215,7 +211,7 @@ const cardFaceStyles = css`
   overflow-wrap: break-word;
 `;
 
-const CardFront = styled.button<{ $teamColor: string; $clickable: boolean; $covered: boolean }>`
+const CardFront = styled.button<{ $teamColor: string; $clickable: boolean }>`
   ${cardFaceStyles}
   
   /* Default background - will be overridden by state */
@@ -283,12 +279,11 @@ const CornerIcon = styled.div`
 export interface GameCardProps {
   card: Card;
   index: number;
-  state: CardState;
-  animation: AnimationType | null;
+  state: VisualState;
+  animation: Animation | null;
   onAnimationComplete: () => void;
   onClick: () => void;
   clickable: boolean;
-  showTeamColors: boolean;
 }
 
 /**
@@ -302,7 +297,6 @@ export const GameCard = memo<GameCardProps>(({
   onAnimationComplete,
   onClick,
   clickable,
-  showTeamColors,
 }) => {
   const teamColor = getCardColor(card);
   
@@ -329,13 +323,11 @@ export const GameCard = memo<GameCardProps>(({
       <CardInner 
         className="card-inner" 
         $clickable={clickable && !card.selected}
-        $covered={card.selected}
       >
         <CardFront
           className="card-front"
           $teamColor={teamColor}
           $clickable={clickable && !card.selected}
-          $covered={card.selected}
           onClick={handleClick}
           disabled={!clickable || card.selected}
           aria-label={`Card: ${card.word}`}
