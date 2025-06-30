@@ -2,148 +2,119 @@ import { useState, useCallback } from 'react';
 import { Card } from '@frontend/shared-types';
 
 /**
- * All possible animations for card transitions
+ * Visual states for cards
  */
-export type AnimationType = 'dealing' | 'color-fade' | 'covering';
+export type VisualState = 'hidden' | 'visible' | 'visible-colored' | 'covered';
 
 /**
- * Card states for different roles
+ * Animation types
  */
-export type LobbyCardState = 'hidden' | 'visible';
-export type CodebreakerCardState = 'visible' | 'covered';
-export type CodemasterCardState = 'visible' | 'visible-colored' | 'covered';
-export type CardState = LobbyCardState | CodebreakerCardState | CodemasterCardState;
+export type Animation = 'dealing' | 'color-fade' | 'covering';
+
+/**
+ * State transition definition
+ */
+interface StateTransition {
+  from: VisualState;
+  to: VisualState;
+  animation: Animation;
+  condition: (card: Card) => boolean;
+}
 
 /**
  * Card visibility info
  */
 export interface CardVisibility {
-  state: CardState;
-  animation: AnimationType | null;
+  state: VisualState;
+  animation: Animation | null;
   completeTransition: () => void;
 }
 
 /**
- * State transition definition
+ * Generic card transitions based on data
  */
-interface StateTransition<TState> {
-  from: TState;
-  to: TState;
-  animation: AnimationType;
-  condition?: (card: Card) => boolean;
-}
-
-/**
- * Role configuration
- */
-interface RoleConfig<TState> {
-  defaultState: (card: Card) => TState;
-  transitions: StateTransition<TState>[];
-}
-
-/**
- * Lobby transitions - just dealing animation
- */
-const LOBBY_CONFIG: RoleConfig<LobbyCardState> = {
-  defaultState: () => 'hidden',
-  transitions: [
-    {
-      from: 'hidden',
-      to: 'visible',
-      animation: 'dealing'
-    }
-  ]
-};
-
-/**
- * Codebreaker transitions - starts visible, can be covered
- */
-const CODEBREAKER_CONFIG: RoleConfig<CodebreakerCardState> = {
-  defaultState: (card) => card.selected ? 'covered' : 'visible',
-  transitions: [
-    {
-      from: 'visible',
-      to: 'covered',
-      animation: 'covering',
-      condition: (card) => card.selected
-    }
-  ]
-};
-
-/**
- * Codemaster transitions - starts visible, animates to colored
- */
-const CODEMASTER_CONFIG: RoleConfig<CodemasterCardState> = {
-  defaultState: (card) => card.selected ? 'covered' : 'visible',
-  transitions: [
-    {
-      from: 'visible',
-      to: 'visible-colored',
-      animation: 'color-fade'
-    }
-  ]
-};
-
-/**
- * Get role configuration
- */
-function getRoleConfig(role: 'lobby' | 'codebreaker' | 'codemaster' | 'spectator') {
-  switch (role) {
-    case 'lobby':
-      return LOBBY_CONFIG;
-    case 'codemaster':
-      return CODEMASTER_CONFIG;
-    case 'codebreaker':
-    case 'spectator':
-    default:
-      return CODEBREAKER_CONFIG;
+const CARD_TRANSITIONS: StateTransition[] = [
+  // Cards appear
+  {
+    from: 'hidden',
+    to: 'visible',
+    animation: 'dealing',
+    condition: () => true
+  },
+  // Cards reveal their team when data arrives
+  {
+    from: 'visible',
+    to: 'visible-colored',
+    animation: 'color-fade',
+    condition: (card) => !!card.teamName && !card.selected
+  },
+  // Cards cover when selected
+  {
+    from: 'visible',
+    to: 'covered',
+    animation: 'covering',
+    condition: (card) => card.selected
+  },
+  {
+    from: 'visible-colored',
+    to: 'covered',
+    animation: 'covering',
+    condition: (card) => card.selected
   }
-}
+];
 
 interface UseCardVisibilityProps {
   cards: Card[];
-  role: 'lobby' | 'codebreaker' | 'codemaster' | 'spectator';
+  initialState?: VisualState;
 }
 
 /**
- * Hook that tracks card visual states using card identity
+ * Hook that manages card visual states and animations
  */
-export function useCardVisibility({ cards, role }: UseCardVisibilityProps) {
-  const config = getRoleConfig(role);
-  type RoleCardState = typeof config.defaultState extends (card: Card) => infer R ? R : never;
-  
-  // Initialize card states by card word
-  const [cardStates, setCardStates] = useState<Map<string, RoleCardState>>(() => {
-    const initialStates = new Map<string, RoleCardState>();
+export function useCardVisibility({ 
+  cards, 
+  initialState = 'visible' 
+}: UseCardVisibilityProps) {
+  // Track visual state by card word
+  const [cardStates, setCardStates] = useState<Map<string, VisualState>>(() => {
+    const initial = new Map<string, VisualState>();
     cards.forEach(card => {
-      initialStates.set(card.word, config.defaultState(card) as RoleCardState);
+      // Respect selected state even on mount
+      if (card.selected) {
+        initial.set(card.word, 'covered');
+      } else if (initialState === 'visible' && card.teamName) {
+        // If starting visible with team data, go straight to colored
+        initial.set(card.word, 'visible-colored');
+      } else {
+        initial.set(card.word, initialState);
+      }
     });
-    return initialStates;
+    return initial;
   });
-  
+
   /**
    * Get the current visual state and animation for a card
    */
   const getCardVisibility = useCallback((card: Card): CardVisibility => {
-    const state = cardStates.get(card.word) || config.defaultState(card);
+    const currentState = cardStates.get(card.word) || initialState;
     
     // Find applicable transition from current state
-    const transition = config.transitions.find(t => 
-      t.from === state && (!t.condition || t.condition(card))
+    const transition = CARD_TRANSITIONS.find(t => 
+      t.from === currentState && t.condition(card)
     );
     
     return {
-      state: state as CardState,
+      state: currentState,
       animation: transition?.animation || null,
       completeTransition: transition ? () => {
         setCardStates(prev => {
           const next = new Map(prev);
-          next.set(card.word, transition.to as RoleCardState);
+          next.set(card.word, transition.to);
           return next;
         });
       } : () => {}
     };
-  }, [cardStates, config]);
+  }, [cardStates, initialState]);
   
   return {
     getCardVisibility,

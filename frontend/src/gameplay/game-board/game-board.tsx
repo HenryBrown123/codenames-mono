@@ -2,7 +2,6 @@ import React, { memo, useCallback } from "react";
 import styled from "styled-components";
 import { useGameData } from "@frontend/gameplay/game-data";
 import { useGameActions } from "@frontend/gameplay/game-actions";
-import { usePlayerRoleScene } from "@frontend/gameplay/role-scenes";
 import { GameCard } from "./game-card";
 import { useCardVisibility } from "./use-card-visibility";
 
@@ -23,16 +22,17 @@ const EmptyCard = styled.div`
 `;
 
 /**
- * Codebreaker board - cards are grey until selected
+ * Interactive board - for making guesses during active play
  */
-export const CodebreakerBoard = memo(() => {
+export const InteractiveBoard = memo(() => {
   const { gameData } = useGameData();
   const { makeGuess, actionState } = useGameActions();
   const cards = gameData.currentRound?.cards || [];
   
+  // Always start visible - only loaded during active play
   const { getCardVisibility } = useCardVisibility({ 
     cards, 
-    role: 'codebreaker'
+    initialState: 'visible'
   });
   
   const isLoading = actionState.status === "loading";
@@ -46,7 +46,7 @@ export const CodebreakerBoard = memo(() => {
   // Show empty state if no cards
   if (cards.length === 0) {
     return (
-      <BoardGrid aria-label="codebreaker game board">
+      <BoardGrid aria-label="interactive game board">
         {Array.from({ length: 25 }).map((_, i) => (
           <EmptyCard key={`empty-${i}`} />
         ))}
@@ -55,7 +55,7 @@ export const CodebreakerBoard = memo(() => {
   }
   
   return (
-    <BoardGrid aria-label="codebreaker game board">
+    <BoardGrid aria-label="interactive game board">
       {cards.map((card, index) => {
         const visibility = getCardVisibility(card);
         
@@ -69,7 +69,6 @@ export const CodebreakerBoard = memo(() => {
             onAnimationComplete={visibility.completeTransition}
             onClick={() => handleCardClick(card.word)}
             clickable={!isLoading && !card.selected}
-            showTeamColors={false}
           />
         );
       })}
@@ -77,24 +76,26 @@ export const CodebreakerBoard = memo(() => {
   );
 });
 
-CodebreakerBoard.displayName = "CodebreakerBoard";
+InteractiveBoard.displayName = "InteractiveBoard";
 
 /**
- * Codemaster board - shows team colors after dealing
+ * View-only board - general purpose viewing board
  */
-export const CodemasterBoard = memo(() => {
+export const ViewOnlyBoard = memo(() => {
   const { gameData } = useGameData();
   const cards = gameData.currentRound?.cards || [];
+  const isRoundSetup = gameData.currentRound?.status === 'SETUP';
   
+  // Show dealing animation during setup
   const { getCardVisibility } = useCardVisibility({ 
     cards, 
-    role: 'codemaster'
+    initialState: isRoundSetup ? 'hidden' : 'visible'
   });
   
   // Show empty state if no cards
   if (cards.length === 0) {
     return (
-      <BoardGrid aria-label="codemaster game board">
+      <BoardGrid aria-label="view-only game board">
         {Array.from({ length: 25 }).map((_, i) => (
           <EmptyCard key={`empty-${i}`} />
         ))}
@@ -103,7 +104,7 @@ export const CodemasterBoard = memo(() => {
   }
   
   return (
-    <BoardGrid aria-label="codemaster game board">
+    <BoardGrid aria-label="view-only game board">
       {cards.map((card, index) => {
         const visibility = getCardVisibility(card);
         
@@ -115,9 +116,8 @@ export const CodemasterBoard = memo(() => {
             state={visibility.state}
             animation={visibility.animation}
             onAnimationComplete={visibility.completeTransition}
-            onClick={() => {}} // Codemaster can't click cards
+            onClick={() => {}} // View-only, no clicking
             clickable={false}
-            showTeamColors={true}
           />
         );
       })}
@@ -125,56 +125,4 @@ export const CodemasterBoard = memo(() => {
   );
 });
 
-CodemasterBoard.displayName = "CodemasterBoard";
-
-/**
- * Spectator board - shows grey cards like codebreaker
- */
-export const SpectatorBoard = memo(() => {
-  const { gameData } = useGameData();
-  const { isInitialScene } = usePlayerRoleScene();
-  const cards = gameData.currentRound?.cards || [];
-  
-  // Use lobby role with dealing animation in initial scene (lobby)
-  const role = isInitialScene ? 'lobby' : 'spectator';
-  
-  const { getCardVisibility } = useCardVisibility({ 
-    cards, 
-    role
-  });
-  
-  // Show empty state if no cards
-  if (cards.length === 0) {
-    return (
-      <BoardGrid aria-label="spectator game board">
-        {Array.from({ length: 25 }).map((_, i) => (
-          <EmptyCard key={`empty-${i}`} />
-        ))}
-      </BoardGrid>
-    );
-  }
-  
-  return (
-    <BoardGrid aria-label="spectator game board">
-      {cards.map((card, index) => {
-        const visibility = getCardVisibility(card);
-        
-        return (
-          <GameCard
-            key={card.word}
-            card={card}
-            index={index}
-            state={visibility.state}
-            animation={visibility.animation}
-            onAnimationComplete={visibility.completeTransition}
-            onClick={() => {}} // Spectator can't click cards
-            clickable={false}
-            showTeamColors={false}
-          />
-        );
-      })}
-    </BoardGrid>
-  );
-});
-
-SpectatorBoard.displayName = "SpectatorBoard";
+ViewOnlyBoard.displayName = "ViewOnlyBoard";

@@ -8,7 +8,7 @@ import {
   getDashboardComponent,
   getBoardComponent,
 } from "./component-mappings";
-import { SpectatorBoard } from "../game-board";
+import { ViewOnlyBoard } from "../game-board";
 import { GameInstructions } from "../game-instructions";
 import { DeviceHandoffOverlay } from "../device-handoff";
 
@@ -90,7 +90,7 @@ export const GameScene: React.FC = () => {
           <GameInstructions messageText="🎉 Game Over!" />
         </InstructionsContainer>
         <GameBoardContainer>
-          <SpectatorBoard />
+          <ViewOnlyBoard />
         </GameBoardContainer>
         <DashboardContainer>
           <div>Game Completed!</div>
