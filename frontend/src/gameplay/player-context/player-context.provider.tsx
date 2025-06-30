@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface PlayerContextValue {
   currentPlayerId: string | null;
-  setCurrentPlayerId: (playerId: string) => void;
+  setCurrentPlayerId: (playerId: string | null) => void;
 }
 
 const PlayerContext = createContext<PlayerContextValue | undefined>(undefined);

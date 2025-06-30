@@ -4,7 +4,7 @@ import { RefreshCw } from "lucide-react";
 import { CodeWordInput } from "./codemaster-input";
 import { useGameData } from "@frontend/gameplay/game-data";
 import { useGameActions } from "@frontend/gameplay/game-actions";
-import { usePlayerRoleScene } from "@frontend/gameplay/role-scenes";
+import { usePlayerScene } from "@frontend/gameplay/role-scenes";
 import { useTurn } from "@frontend/gameplay/turn-management";
 import { Turn } from "@frontend/shared-types";
 import { ActionButton } from "@frontend/gameplay/shared/action-button";
@@ -142,10 +142,10 @@ export const CodemasterDashboardView: React.FC = () => {
 };
 
 export const OutcomeDashboardView: React.FC = () => {
-  const { handleSceneTransition } = usePlayerRoleScene();
+  const { triggerSceneTransition } = usePlayerScene();
 
   const handleContinue = () => {
-    handleSceneTransition("OUTCOME_ACKNOWLEDGED");
+    triggerSceneTransition("OUTCOME_ACKNOWLEDGED");
   };
 
   return (

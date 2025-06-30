@@ -87,6 +87,9 @@ export const createCodebreakerStateMachine = (): StateMachine => ({
             target: "main",
           },
         ],
+        TURN_ENDED: {
+          type: "END", // Manual turn end by codebreakers
+        },
       },
     },
 

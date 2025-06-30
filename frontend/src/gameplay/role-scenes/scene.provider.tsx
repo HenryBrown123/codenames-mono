@@ -1,3 +1,31 @@
+/**
+ * Player Scene Provider
+ * 
+ * Orchestrates the UI flow for each player's turn in Codenames, managing scene
+ * transitions and handoffs between players in single-device mode.
+ * 
+ * Domain Concepts:
+ * - Each player turn follows a scene-based flow (e.g., give clue → wait → outcome)
+ * - Scenes are grouped by player role (Codemaster, Codebreaker, None)
+ * - When a turn ends, the game transitions to the next active player
+ * 
+ * Single-Device Flow:
+ * 1. Player completes their turn → scene reaches END state
+ * 2. Provider triggers onTurnComplete callback
+ * 3. Parent clears player context → game returns to NONE state
+ * 4. Handoff UI shows next active player
+ * 5. Player selection → new turn begins with appropriate scene
+ * 
+ * Multi-Device Flow:
+ * - Each device maintains its own player context
+ * - END transitions reset to initial scene (no handoff needed)
+ * 
+ * This provider works with:
+ * - PlayerProvider: Manages current player identity
+ * - GameDataProvider: Supplies game state and player role
+ * - GameActionsProvider: Handles player actions that trigger scene changes
+ */
+
 import React, {
   useCallback,
   createContext,
@@ -13,45 +41,36 @@ import { GameData, TurnData } from "@frontend/shared-types";
 import { getStateMachine } from "./scene-config";
 import { evaluateConditions } from "./scene-conditions";
 
-interface UIState {
+interface PlayerSceneState {
   currentRole: PlayerRole;
   currentScene: string;
-  showHandoff: boolean;
-  pendingTransition: {
-    stage: PlayerRole;
-    scene: string;
-  } | null;
+  requiresHandoff: boolean;
 }
 
-type UIAction =
-  | { type: "TRIGGER_TRANSITION"; payload: { event: string } }
-  | { type: "COMPLETE_ROLE_TRANSITION" };
+type SceneAction = { type: "SCENE_TRANSITION"; payload: { event: string } };
 
-interface PlayerRoleSceneContextValue {
+interface PlayerSceneContextValue {
   currentRole: string;
   currentScene: string;
-  showHandoff: boolean;
-  pendingTransition: {
-    stage: PlayerRole;
-    scene: string;
-  } | null;
-  handleSceneTransition: (event: string) => void;
+  requiresHandoff: boolean;
+  triggerSceneTransition: (event: string) => void;
   completeHandoff: (playerId: string) => void;
   isInitialScene: boolean;
 }
 
-const PlayerRoleSceneContext = createContext<
-  PlayerRoleSceneContextValue | undefined
->(undefined);
+const PlayerSceneContext = createContext<PlayerSceneContextValue | undefined>(
+  undefined
+);
 
-interface PlayerRoleSceneProviderProps {
+interface PlayerSceneProviderProps {
   children: ReactNode;
+  onTurnComplete?: () => void;
 }
 
 /**
- * Finds matching transition based on conditions
+ * Finds the applicable transition based on game state conditions
  */
-const findMatchingTransition = (
+const findApplicableTransition = (
   transitions: any,
   gameData: GameData,
   activeTurn: TurnData | null,
@@ -63,11 +82,11 @@ const findMatchingTransition = (
           ? transition.condition
           : [transition.condition];
 
-        const allPass = conditionsArray.every((conditionKey: string) =>
+        const allConditionsMet = conditionsArray.every((conditionKey: string) =>
           evaluateConditions(conditionKey, gameData, activeTurn),
         );
 
-        if (allPass) {
+        if (allConditionsMet) {
           return transition;
         }
       } else if (!transition.condition) {
@@ -77,28 +96,29 @@ const findMatchingTransition = (
     return null;
   } else {
     if (transitions.condition && gameData) {
-      const passes = evaluateConditions(
+      const conditionMet = evaluateConditions(
         transitions.condition,
         gameData,
         activeTurn,
       );
-      return passes ? transitions : null;
+      return conditionMet ? transitions : null;
     }
     return transitions;
   }
 };
 
 /**
- * Pure UI Reducer with no side effects
+ * Scene reducer - manages transitions within a player's turn
+ * Pure function that only handles scene-to-scene transitions
  */
-const uiReducer = (
-  state: UIState,
-  action: UIAction,
+const sceneReducer = (
+  state: PlayerSceneState,
+  action: SceneAction,
   gameData: GameData,
   activeTurn: TurnData | null,
-): UIState => {
+): PlayerSceneState => {
   switch (action.type) {
-    case "TRIGGER_TRANSITION": {
+    case "SCENE_TRANSITION": {
       const event = action.payload.event;
       const stateMachine = getStateMachine(state.currentRole);
       const currentSceneConfig = stateMachine.scenes[state.currentScene];
@@ -108,66 +128,26 @@ const uiReducer = (
       }
 
       const transitions = currentSceneConfig.on[event];
-      const matchingTransition = findMatchingTransition(
+      const applicableTransition = findApplicableTransition(
         transitions,
         gameData,
         activeTurn,
       );
 
-      if (!matchingTransition) {
+      if (!applicableTransition) {
         return state;
       }
 
-      if (matchingTransition.type === "END") {
-        // In single device mode, always show handoff when ending a role
-        if (gameData.gameType === GAME_TYPE.SINGLE_DEVICE) {
-          return {
-            ...state,
-            showHandoff: true,
-            pendingTransition: {
-              // We don't know the next role yet - handoff will figure it out
-              stage: PLAYER_ROLE.NONE,
-              scene: 'main',
-            },
-          };
-        } else {
-          // Multi-device mode - role stays the same, just reset to initial scene
-          const stateMachine = getStateMachine(state.currentRole);
-          return {
-            ...state,
-            currentScene: stateMachine.initial,
-            showHandoff: false,
-            pendingTransition: null,
-          };
-        }
-      }
-
-      if (matchingTransition.type === "scene" && matchingTransition.target) {
+      // Scene transitions update the current scene
+      // END transitions are handled by triggerSceneTransition
+      if (applicableTransition.type === "scene" && applicableTransition.target) {
         return {
           ...state,
-          currentScene: matchingTransition.target,
+          currentScene: applicableTransition.target,
         };
       }
 
       return state;
-    }
-
-    case "COMPLETE_ROLE_TRANSITION": {
-      if (!state.pendingTransition) {
-        return state;
-      }
-
-      // Get the actual role from game data after player change
-      const newRole = gameData.playerContext?.role || PLAYER_ROLE.NONE;
-      const targetStateMachine = getStateMachine(newRole);
-
-      return {
-        ...state,
-        currentRole: newRole,
-        currentScene: targetStateMachine.initial,
-        showHandoff: false,
-        pendingTransition: null,
-      };
     }
 
     default:
@@ -176,89 +156,140 @@ const uiReducer = (
 };
 
 /**
- * Creates initial UI state - always start with NONE for single device
+ * Determines initial scene state based on game context
+ * Called on mount and when player context changes
  */
-const createInitialUIState = (gameData: GameData): UIState => {
-  const stateMachine = getStateMachine(PLAYER_ROLE.NONE);
+const determineInitialSceneState = (gameData: GameData): PlayerSceneState => {
+  // Get current player's role from game data
+  const playerRole = gameData.playerContext?.role || PLAYER_ROLE.NONE;
+  const stateMachine = getStateMachine(playerRole);
   
-  // Check if game needs player on mount (handles refresh case)
-  const needsHandoff = 
+  // In single-device mode, show handoff if game is active but no player selected
+  const requiresHandoff = 
     gameData.gameType === GAME_TYPE.SINGLE_DEVICE &&
-    gameData.currentRound?.status === 'IN_PROGRESS';
+    gameData.currentRound?.status === 'IN_PROGRESS' &&
+    playerRole === PLAYER_ROLE.NONE;
   
   return {
-    currentRole: PLAYER_ROLE.NONE,
+    currentRole: playerRole,
     currentScene: stateMachine.initial,
-    showHandoff: needsHandoff,
-    pendingTransition: needsHandoff ? {
-      stage: PLAYER_ROLE.NONE, // Handoff will determine actual role
-      scene: 'main',
-    } : null,
+    requiresHandoff: requiresHandoff,
   };
 };
 
-export const PlayerRoleSceneProvider: React.FC<
-  PlayerRoleSceneProviderProps
-> = ({ children }) => {
+export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({ 
+  children, 
+  onTurnComplete 
+}) => {
   const { gameData } = useGameData();
-  const { activeTurn, clearActiveTurn } = useTurn();
+  const { activeTurn } = useTurn();
   const { setCurrentPlayerId } = usePlayerContext();
 
   const reducerWithDependencies = useCallback(
-    (state: UIState, action: UIAction) =>
-      uiReducer(state, action, gameData, activeTurn),
+    (state: PlayerSceneState, action: SceneAction) =>
+      sceneReducer(state, action, gameData, activeTurn),
     [gameData, activeTurn],
   );
 
-  const [uiState, dispatch] = useReducer(
+  const [sceneState, dispatch] = useReducer(
     reducerWithDependencies,
     gameData,
-    createInitialUIState,
+    determineInitialSceneState,
   );
 
-  // Determine if current scene is the initial scene for the role
+  // Derive current state from game data to stay in sync
+  const currentState = React.useMemo(() => {
+    const derivedState = determineInitialSceneState(gameData);
+    
+    // If the player role changed (e.g., after handoff), use the new derived state
+    if (sceneState.currentRole !== derivedState.currentRole) {
+      return derivedState;
+    }
+    
+    // Otherwise, keep current scene but update handoff status
+    return {
+      ...sceneState,
+      requiresHandoff: derivedState.requiresHandoff,
+    };
+  }, [gameData, sceneState]);
+
+  /**
+   * Triggers scene transitions and handles turn completion
+   * END transitions invoke the onTurnComplete callback
+   */
+  const triggerSceneTransition = useCallback((event: string) => {
+    console.log(`[SCENE] triggerSceneTransition: ${event}, role: ${currentState.currentRole}, scene: ${currentState.currentScene}`);
+    
+    const stateMachine = getStateMachine(currentState.currentRole);
+    const currentSceneConfig = stateMachine.scenes[currentState.currentScene];
+    const transitions = currentSceneConfig?.on?.[event];
+    
+    if (!transitions) {
+      console.log(`[SCENE] No transitions found for event: ${event}`);
+      return;
+    }
+    
+    const applicableTransition = findApplicableTransition(
+      transitions, 
+      gameData, 
+      activeTurn
+    );
+    
+    if (!applicableTransition) {
+      console.log(`[SCENE] No applicable transition found for event: ${event}`);
+      return;
+    }
+    
+    console.log(`[SCENE] Found transition type: ${applicableTransition.type}`);
+    
+    // Turn completion (END) triggers callback to parent
+    if (applicableTransition.type === "END") {
+      console.log(`[SCENE] Triggering onTurnComplete callback`);
+      onTurnComplete?.();
+      return;
+    }
+    
+    // Scene transitions go through reducer
+    console.log(`[SCENE] Dispatching scene transition to: ${applicableTransition.target}`);
+    dispatch({ type: "SCENE_TRANSITION", payload: { event } });
+  }, [currentState, gameData, activeTurn, onTurnComplete]);
+
+  /**
+   * Completes device handoff by setting the new active player
+   * This cascades through React Query to reset the scene state
+   */
+  const completeHandoff = useCallback((playerId: string) => {
+    console.log(`[SCENE] completeHandoff called with playerId: ${playerId}`);
+    setCurrentPlayerId(playerId);
+  }, [setCurrentPlayerId]);
+
+  // Determine if at the initial scene for current role
   const isInitialScene = React.useMemo(() => {
-    const stateMachine = getStateMachine(uiState.currentRole);
-    return uiState.currentScene === stateMachine.initial;
-  }, [uiState.currentRole, uiState.currentScene]);
+    const stateMachine = getStateMachine(currentState.currentRole);
+    return currentState.currentScene === stateMachine.initial;
+  }, [currentState.currentRole, currentState.currentScene]);
 
-  const handleSceneTransition = useCallback((event: string) => {
-    dispatch({ type: "TRIGGER_TRANSITION", payload: { event } });
-  }, []);
-
-  const completeHandoff = useCallback((newPlayerId: string) => {
-    // Set the player ID - this will trigger game data refetch
-    setCurrentPlayerId(newPlayerId);
-    
-    // Clear any active turn context
-    clearActiveTurn();
-    
-    // Complete the UI transition
-    dispatch({ type: "COMPLETE_ROLE_TRANSITION" });
-  }, [setCurrentPlayerId, clearActiveTurn]);
-
-  const contextValue: PlayerRoleSceneContextValue = {
-    currentRole: uiState.currentRole,
-    currentScene: uiState.currentScene,
-    showHandoff: uiState.showHandoff,
-    pendingTransition: uiState.pendingTransition,
-    handleSceneTransition,
+  const contextValue: PlayerSceneContextValue = {
+    currentRole: currentState.currentRole,
+    currentScene: currentState.currentScene,
+    requiresHandoff: currentState.requiresHandoff,
+    triggerSceneTransition,
     completeHandoff,
     isInitialScene,
   };
 
   return (
-    <PlayerRoleSceneContext.Provider value={contextValue}>
+    <PlayerSceneContext.Provider value={contextValue}>
       {children}
-    </PlayerRoleSceneContext.Provider>
+    </PlayerSceneContext.Provider>
   );
 };
 
-export const usePlayerRoleScene = (): PlayerRoleSceneContextValue => {
-  const context = useContext(PlayerRoleSceneContext);
+export const usePlayerScene = (): PlayerSceneContextValue => {
+  const context = useContext(PlayerSceneContext);
   if (context === undefined) {
     throw new Error(
-      "usePlayerRoleScene must be used within PlayerRoleSceneProvider",
+      "usePlayerScene must be used within PlayerSceneProvider",
     );
   }
   return context;

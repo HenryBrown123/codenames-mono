@@ -15,7 +15,7 @@ import {
   useEndTurnMutation,
 } from "@frontend/gameplay/api/mutations";
 import { useGameData } from "../game-data";
-import { usePlayerRoleScene } from "../role-scenes";
+import { usePlayerScene } from "../role-scenes";
 import { useTurn } from "../turn-management";
 
 export type ActionName =
@@ -138,7 +138,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   const [actionState, setActionState] = useState<ActionState>(initialState);
 
   const { gameData, gameId } = useGameData();
-  const { handleSceneTransition } = usePlayerRoleScene();
+  const { triggerSceneTransition } = usePlayerScene();
   const { setLastActionTurnId } = useTurn();
 
   const giveClueMutation = useGiveClueMutation(gameId);
@@ -173,7 +173,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
               error: null,
             });
 
-            handleSceneTransition("GUESS_MADE");
+            triggerSceneTransition("GUESS_MADE");
           },
           onError: (error) => {
             console.error("Failed to make guess:", error);
@@ -185,7 +185,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
     [
       makeGuessMutation,
       gameData.currentRound,
-      handleSceneTransition,
+      triggerSceneTransition,
       setLastActionTurnId,
     ],
   );
@@ -210,7 +210,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
               error: null,
             });
 
-            handleSceneTransition("CLUE_GIVEN");
+            triggerSceneTransition("CLUE_GIVEN");
           },
           onError: (error) => {
             console.error("Failed to give clue:", error);
@@ -222,7 +222,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
     [
       giveClueMutation,
       gameData.currentRound,
-      handleSceneTransition,
+      triggerSceneTransition,
       setLastActionTurnId,
     ],
   );
@@ -233,14 +233,14 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
     createRoundMutation.mutate(undefined, {
       onSuccess: () => {
         setActionState({ name: "createRound", status: "success", error: null });
-        handleSceneTransition("GAME_STARTED");
+        triggerSceneTransition("GAME_STARTED");
       },
       onError: (error) => {
         console.error("Failed to create round:", error);
         setActionState({ name: "createRound", status: "error", error });
       },
     });
-  }, [createRoundMutation, handleSceneTransition]);
+  }, [createRoundMutation, triggerSceneTransition]);
 
   const startRound = useCallback(() => {
     if (!gameData.currentRound) {
@@ -259,7 +259,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
             status: "success",
             error: null,
           });
-          handleSceneTransition("ROUND_STARTED");
+          triggerSceneTransition("ROUND_STARTED");
         },
         onError: (error) => {
           console.error("Failed to start round:", error);
@@ -267,7 +267,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         },
       },
     );
-  }, [startRoundMutation, gameData.currentRound, handleSceneTransition]);
+  }, [startRoundMutation, gameData.currentRound, triggerSceneTransition]);
 
   const dealCards = useCallback((redeal: boolean = false) => {
     if (!gameData.currentRound) {
@@ -283,7 +283,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         onSuccess: () => {
           setActionState({ name: "dealCards", status: "success", error: null });
           if (!redeal) {
-            handleSceneTransition("CARDS_DEALT");
+            triggerSceneTransition("CARDS_DEALT");
           }
         },
         onError: (error) => {
@@ -292,7 +292,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         },
       },
     );
-  }, [dealCardsMutation, gameData.currentRound, handleSceneTransition]);
+  }, [dealCardsMutation, gameData.currentRound, triggerSceneTransition]);
 
   const endTurn = useCallback(() => {
     if (!gameData.currentRound) {
@@ -307,7 +307,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       {
         onSuccess: () => {
           setActionState({ name: "endTurn", status: "success", error: null });
-          handleSceneTransition("TURN_ENDED");
+          triggerSceneTransition("TURN_ENDED");
         },
         onError: (error) => {
           console.error("Failed to end turn:", error);
@@ -315,7 +315,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         },
       },
     );
-  }, [endTurnMutation, gameData.currentRound, handleSceneTransition]);
+  }, [endTurnMutation, gameData.currentRound, triggerSceneTransition]);
 
   const value: GameActionsContextValue = {
     actionState,
