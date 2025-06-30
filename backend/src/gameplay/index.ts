@@ -9,6 +9,7 @@ import { gameplayActions } from "./gameplay-actions";
 import { turnState } from "./state";
 
 import getGame from "./get-game";
+import getPlayers from "./get-players";
 import giveClue from "./give-clue";
 import makeGuess from "./make-guess";
 import getTurn from "./get-turn";
@@ -24,7 +25,7 @@ export const initialize = (
   auth: AuthMiddleware,
 ) => {
   // State "providers"
-  const { provider: getGameState } = gameplayState(db);
+  const { provider: getGameState, playerSpecificProvider: getPlayerSpecificGameState } = gameplayState(db);
   const { provider: getTurnState } = turnState(db);
 
   // Gameplay actions
@@ -33,17 +34,21 @@ export const initialize = (
   // Feature modules - each gets both read and write capabilities
 
   const { controller: getGameController } = getGame({
+    getPlayerSpecificGameState,
+  });
+
+  const { controller: getPlayersController } = getPlayers({
     getGameState,
   });
 
   const { controller: giveClueController } = giveClue({
-    getGameState,
+    getPlayerSpecificGameState,
     gameplayHandler,
     getTurnState, // ← Pass turn state provider to give clue
   });
 
   const { controller: makeGuessController } = makeGuess({
-    getGameState,
+    getPlayerSpecificGameState,
     gameplayHandler,
     getTurnState, // ← Pass turn state provider to make guess
   });
@@ -56,6 +61,7 @@ export const initialize = (
   const router = Router();
 
   router.get("/games/:gameId", auth, getGameController);
+  router.get("/games/:gameId/players", auth, getPlayersController);
   router.post(
     "/games/:gameId/rounds/:roundNumber/clues",
     auth,

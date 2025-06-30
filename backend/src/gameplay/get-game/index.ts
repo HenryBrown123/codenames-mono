@@ -1,4 +1,4 @@
-import type { GameplayStateProvider } from "../state/gameplay-state.provider";
+import type { PlayerSpecificStateProvider } from "../state/player-specific-state.provider";
 
 import { getGameStateService } from "./get-game.service";
 import { getGameStateController } from "./get-game.controller";
@@ -7,7 +7,7 @@ import { getGameStateController } from "./get-game.controller";
  * Dependencies required by the get game feature
  */
 export interface GetGameDependencies {
-  getGameState: GameplayStateProvider;
+  getPlayerSpecificGameState: PlayerSpecificStateProvider;
 }
 
 /**
@@ -18,7 +18,7 @@ export interface GetGameDependencies {
  */
 export const getGame = (dependencies: GetGameDependencies) => {
   const service = getGameStateService({
-    getGameState: dependencies.getGameState,
+    getPlayerSpecificGameState: dependencies.getPlayerSpecificGameState,
   });
 
   const controller = getGameStateController({

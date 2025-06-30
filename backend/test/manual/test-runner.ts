@@ -149,7 +149,8 @@ export async function runGameTest(
 
     await api.post(`/games/${gameId}/start`);
     await api.post(`/games/${gameId}/rounds`);
-    await api.post(`/games/${gameId}/rounds/1/deal`);
+    // Cards are automatically dealt during round creation, so skip the deal step
+    // await api.post(`/games/${gameId}/rounds/1/deal`);
     await api.post(`/games/${gameId}/rounds/1/start`);
 
     // === STRATEGIC GAMEPLAY ===
@@ -160,8 +161,9 @@ export async function runGameTest(
 
     // Show initial board analysis
     logStep("Initial Board Analysis", verbose);
-    // Get initial game state for analysis
-    const initialStateResponse = await api.get(`/games/${gameId}`);
+    // Set the first active player and get game state
+    await api.setActivePlayer(gameId);
+    const initialStateResponse = await api.getGameState(gameId);
     const initialGameState = initialStateResponse.data.data.game;
     const initialAnalysis = await strategy.analyzeBoardState(
       gameId,
@@ -190,7 +192,16 @@ export async function runGameTest(
       turnCount++;
 
       logStep(`Strategic Turn ${turnCount}`, verbose);
-      const stateResponse = await api.get(`/games/${gameId}`);
+      // Set the active player for this turn
+      const activePlayer = await api.setActivePlayer(gameId);
+      if (!activePlayer) {
+        // No active players means the round/game might be complete
+        if (verbose) {
+          console.log(`    ${colors.yellow}⚠ No active players - checking game state${colors.reset}`);
+        }
+        break;
+      }
+      const stateResponse = await api.getGameState(gameId);
       gameState = stateResponse.data.data.game;
       logGameState(gameState, verbose);
 
@@ -219,7 +230,7 @@ export async function runGameTest(
         logStep(`Strategic Clue Giving (${activeTurn.teamName})`, verbose);
         try {
           const clueWord = generateRandomClueWord();
-          await api.post(`/games/${gameId}/rounds/1/clues`, {
+          await api.giveClue(gameId, 1, {
             word: clueWord,
             targetCardCount: 2,
           });
@@ -263,12 +274,9 @@ export async function runGameTest(
 
           try {
             // 2. Make the guess
-            const guessResponse = await api.post(
-              `/games/${gameId}/rounds/1/guesses`,
-              {
-                cardWord: targetCard,
-              },
-            );
+            const guessResponse = await api.makeGuess(gameId, 1, {
+              cardWord: targetCard,
+            });
 
             // 3. Validate turn data via get-turn endpoint using the previously saved turn ID
             if (currentTurnPublicId) {
@@ -328,7 +336,7 @@ export async function runGameTest(
             // Get current turn ID before fallback guess too
             const fallbackTurnPublicId = getCurrentTurnPublicId(gameState);
 
-            await api.post(`/games/${gameId}/rounds/1/guesses`, {
+            await api.makeGuess(gameId, 1, {
               cardWord: fallbackCard,
             });
 
@@ -359,7 +367,7 @@ export async function runGameTest(
 
     // === FINAL ANALYSIS ===
     logStep("Final Analysis", verbose);
-    const finalStateResponse = await api.get(`/games/${gameId}`);
+    const finalStateResponse = await api.getGameState(gameId);
     const finalState = finalStateResponse.data.data.game;
     logGameState(finalState, verbose);
 

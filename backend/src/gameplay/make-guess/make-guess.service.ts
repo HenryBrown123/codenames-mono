@@ -1,4 +1,4 @@
-import type { GameplayStateProvider } from "../state/gameplay-state.provider";
+import type { PlayerSpecificStateProvider } from "../state/player-specific-state.provider";
 import type { TurnStateProvider } from "../state/turn-state.provider";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 import type { GameplayOperations } from "../gameplay-actions";
@@ -13,6 +13,7 @@ export type MakeGuessInput = {
   gameId: string;
   roundNumber: number;
   userId: number;
+  playerId: string;
   cardWord: string;
 };
 
@@ -66,6 +67,8 @@ export const MAKE_GUESS_ERROR = {
   INVALID_CARD: "invalid-card",
   GAME_NOT_FOUND: "game-not-found",
   USER_NOT_PLAYER: "user-not-player",
+  PLAYER_NOT_FOUND: "player-not-found",
+  PLAYER_NOT_IN_GAME: "player-not-in-game",
   ROUND_NOT_FOUND: "round-not-found",
   ROUND_NOT_CURRENT: "round-not-current",
 } as const;
@@ -94,6 +97,15 @@ export type MakeGuessFailure =
       userId: number;
     }
   | {
+      status: typeof MAKE_GUESS_ERROR.PLAYER_NOT_FOUND;
+      playerId: string;
+    }
+  | {
+      status: typeof MAKE_GUESS_ERROR.PLAYER_NOT_IN_GAME;
+      playerId: string;
+      gameId: string;
+    }
+  | {
       status: typeof MAKE_GUESS_ERROR.ROUND_NOT_FOUND;
       roundNumber: number;
     }
@@ -114,7 +126,7 @@ export type MakeGuessResult =
  * Dependencies required by the make guess service
  */
 export type MakeGuessDependencies = {
-  getGameState: GameplayStateProvider;
+  getPlayerSpecificGameState: PlayerSpecificStateProvider;
   gameplayHandler: TransactionalHandler<GameplayOperations>;
   getTurnState: TurnStateProvider; // ← Add turn state provider
 };
@@ -333,7 +345,11 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
   };
 
   return async (input: MakeGuessInput): Promise<MakeGuessResult> => {
-    const result = await dependencies.getGameState(input.gameId, input.userId);
+    const result = await dependencies.getPlayerSpecificGameState(
+      input.gameId,
+      input.playerId,
+      input.userId,
+    );
 
     if (result.status === "game-not-found") {
       return {
@@ -345,7 +361,28 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
       };
     }
 
-    if (result.status === "user-not-player") {
+    if (result.status === "player-not-found") {
+      return {
+        success: false,
+        error: {
+          status: MAKE_GUESS_ERROR.PLAYER_NOT_FOUND,
+          playerId: input.playerId,
+        },
+      };
+    }
+
+    if (result.status === "player-not-in-game") {
+      return {
+        success: false,
+        error: {
+          status: MAKE_GUESS_ERROR.PLAYER_NOT_IN_GAME,
+          playerId: input.playerId,
+          gameId: input.gameId,
+        },
+      };
+    }
+
+    if (result.status === "user-not-authorized") {
       return {
         success: false,
         error: {
