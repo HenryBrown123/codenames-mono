@@ -8,6 +8,8 @@ import React, {
 } from "react";
 import { useGameData } from "../game-data";
 import { useTurn } from "../turn-management";
+import { usePlayerContext } from "../player-context/player-context.provider";
+import { usePlayersQuery } from "../api/queries/use-players-query";
 import { PLAYER_ROLE, GAME_TYPE, PlayerRole } from "@codenames/shared/types";
 import { GameData, TurnData } from "@frontend/shared-types";
 import { getStateMachine } from "./scene-config";
@@ -260,6 +262,8 @@ export const PlayerRoleSceneProvider: React.FC<
 > = ({ children }) => {
   const { gameData } = useGameData();
   const { activeTurn, clearActiveTurn } = useTurn();
+  const { setCurrentPlayerId } = usePlayerContext();
+  const { data: players } = usePlayersQuery(gameData.publicId);
 
   const reducerWithDependencies = useCallback(
     (state: UIState, action: UIAction) =>
@@ -284,9 +288,22 @@ export const PlayerRoleSceneProvider: React.FC<
   }, []);
 
   const completeHandoff = useCallback(() => {
+    if (uiState.pendingTransition && players) {
+      // Find the player who should take control based on the pending role
+      const targetRole = uiState.pendingTransition.stage;
+      const nextPlayer = players.find(p => 
+        p.status === 'ACTIVE' && 
+        p.role === targetRole
+      );
+      
+      if (nextPlayer) {
+        setCurrentPlayerId(nextPlayer.publicId);
+      }
+    }
+    
     clearActiveTurn();
     dispatch({ type: "COMPLETE_ROLE_TRANSITION" });
-  }, []);
+  }, [players, uiState.pendingTransition, setCurrentPlayerId, clearActiveTurn]);
 
   const contextValue: PlayerRoleSceneContextValue = {
     currentRole: uiState.currentRole,
