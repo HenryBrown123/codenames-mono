@@ -4,12 +4,10 @@ import React, {
   useContext,
   ReactNode,
   useReducer,
-  useState,
 } from "react";
 import { useGameData } from "../game-data";
 import { useTurn } from "../turn-management";
 import { usePlayerContext } from "../player-context/player-context.provider";
-import { usePlayersQuery } from "../api/queries/use-players-query";
 import { PLAYER_ROLE, GAME_TYPE, PlayerRole } from "@codenames/shared/types";
 import { GameData, TurnData } from "@frontend/shared-types";
 import { getStateMachine } from "./scene-config";
@@ -38,7 +36,7 @@ interface PlayerRoleSceneContextValue {
     scene: string;
   } | null;
   handleSceneTransition: (event: string) => void;
-  completeHandoff: () => void;
+  completeHandoff: (playerId: string) => void;
   isInitialScene: boolean;
 }
 
@@ -49,50 +47,6 @@ const PlayerRoleSceneContext = createContext<
 interface PlayerRoleSceneProviderProps {
   children: ReactNode;
 }
-
-/**
- * Determines the correct role based on actual game state
- */
-const determineCorrectRole = (gameData: GameData): PlayerRole => {
-  if (gameData.status !== "IN_PROGRESS") {
-    return PLAYER_ROLE.NONE;
-  }
-
-  if (!gameData.currentRound) {
-    return PLAYER_ROLE.NONE;
-  }
-
-  if (gameData.currentRound.status === "SETUP") {
-    return PLAYER_ROLE.NONE;
-  }
-
-  if (gameData.currentRound.status === "COMPLETED") {
-    return PLAYER_ROLE.NONE;
-  }
-
-  if (gameData.currentRound.status === "IN_PROGRESS") {
-    const assignedRole = gameData.playerContext?.role || PLAYER_ROLE.SPECTATOR;
-    return assignedRole;
-  }
-
-  return PLAYER_ROLE.NONE;
-};
-
-/**
- * Checks if a role transition requires device handoff
- */
-const requiresDeviceHandoff = (
-  currentRole: PlayerRole,
-  newRole: PlayerRole,
-  gameData: GameData,
-): boolean => {
-  return (
-    gameData.gameType === GAME_TYPE.SINGLE_DEVICE &&
-    currentRole !== newRole &&
-    newRole !== PLAYER_ROLE.NONE &&
-    newRole !== PLAYER_ROLE.SPECTATOR
-  );
-};
 
 /**
  * Finds matching transition based on conditions
@@ -165,29 +119,23 @@ const uiReducer = (
       }
 
       if (matchingTransition.type === "END") {
-        const serverRole = determineCorrectRole(gameData);
-        const needsHandoff = requiresDeviceHandoff(
-          state.currentRole,
-          serverRole,
-          gameData,
-        );
-        const targetStateMachine = getStateMachine(serverRole);
-
-        if (needsHandoff) {
+        // In single device mode, always show handoff when ending a role
+        if (gameData.gameType === GAME_TYPE.SINGLE_DEVICE) {
           return {
             ...state,
-            currentRole: PLAYER_ROLE.NONE,
             showHandoff: true,
             pendingTransition: {
-              stage: serverRole,
-              scene: targetStateMachine.initial,
+              // We don't know the next role yet - handoff will figure it out
+              stage: PLAYER_ROLE.NONE,
+              scene: 'main',
             },
           };
         } else {
+          // Multi-device mode - role stays the same, just reset to initial scene
+          const stateMachine = getStateMachine(state.currentRole);
           return {
             ...state,
-            currentRole: serverRole,
-            currentScene: targetStateMachine.initial,
+            currentScene: stateMachine.initial,
             showHandoff: false,
             pendingTransition: null,
           };
@@ -209,10 +157,14 @@ const uiReducer = (
         return state;
       }
 
+      // Get the actual role from game data after player change
+      const newRole = gameData.playerContext?.role || PLAYER_ROLE.NONE;
+      const targetStateMachine = getStateMachine(newRole);
+
       return {
         ...state,
-        currentRole: state.pendingTransition.stage,
-        currentScene: state.pendingTransition.scene,
+        currentRole: newRole,
+        currentScene: targetStateMachine.initial,
         showHandoff: false,
         pendingTransition: null,
       };
@@ -224,36 +176,24 @@ const uiReducer = (
 };
 
 /**
- * Creates initial UI state with handoff detection
+ * Creates initial UI state - always start with NONE for single device
  */
 const createInitialUIState = (gameData: GameData): UIState => {
-  const initialRole =
-    gameData.gameType === GAME_TYPE.SINGLE_DEVICE
-      ? PLAYER_ROLE.NONE
-      : determineCorrectRole(gameData);
-
-  const stateMachine = getStateMachine(initialRole);
-  const serverRole = determineCorrectRole(gameData);
-  const needsHandoff = requiresDeviceHandoff(initialRole, serverRole, gameData);
-
-  if (needsHandoff) {
-    const targetStateMachine = getStateMachine(serverRole);
-    return {
-      currentRole: initialRole,
-      currentScene: stateMachine.initial,
-      showHandoff: true,
-      pendingTransition: {
-        stage: serverRole,
-        scene: targetStateMachine.initial,
-      },
-    };
-  }
-
+  const stateMachine = getStateMachine(PLAYER_ROLE.NONE);
+  
+  // Check if game needs player on mount (handles refresh case)
+  const needsHandoff = 
+    gameData.gameType === GAME_TYPE.SINGLE_DEVICE &&
+    gameData.currentRound?.status === 'IN_PROGRESS';
+  
   return {
-    currentRole: initialRole,
+    currentRole: PLAYER_ROLE.NONE,
     currentScene: stateMachine.initial,
-    showHandoff: false,
-    pendingTransition: null,
+    showHandoff: needsHandoff,
+    pendingTransition: needsHandoff ? {
+      stage: PLAYER_ROLE.NONE, // Handoff will determine actual role
+      scene: 'main',
+    } : null,
   };
 };
 
@@ -263,7 +203,6 @@ export const PlayerRoleSceneProvider: React.FC<
   const { gameData } = useGameData();
   const { activeTurn, clearActiveTurn } = useTurn();
   const { setCurrentPlayerId } = usePlayerContext();
-  const { data: players } = usePlayersQuery(gameData.publicId);
 
   const reducerWithDependencies = useCallback(
     (state: UIState, action: UIAction) =>
@@ -287,23 +226,16 @@ export const PlayerRoleSceneProvider: React.FC<
     dispatch({ type: "TRIGGER_TRANSITION", payload: { event } });
   }, []);
 
-  const completeHandoff = useCallback(() => {
-    if (uiState.pendingTransition && players) {
-      // Find the player who should take control based on the pending role
-      const targetRole = uiState.pendingTransition.stage;
-      const nextPlayer = players.find(p => 
-        p.status === 'ACTIVE' && 
-        p.role === targetRole
-      );
-      
-      if (nextPlayer) {
-        setCurrentPlayerId(nextPlayer.publicId);
-      }
-    }
+  const completeHandoff = useCallback((newPlayerId: string) => {
+    // Set the player ID - this will trigger game data refetch
+    setCurrentPlayerId(newPlayerId);
     
+    // Clear any active turn context
     clearActiveTurn();
+    
+    // Complete the UI transition
     dispatch({ type: "COMPLETE_ROLE_TRANSITION" });
-  }, [players, uiState.pendingTransition, setCurrentPlayerId, clearActiveTurn]);
+  }, [setCurrentPlayerId, clearActiveTurn]);
 
   const contextValue: PlayerRoleSceneContextValue = {
     currentRole: uiState.currentRole,

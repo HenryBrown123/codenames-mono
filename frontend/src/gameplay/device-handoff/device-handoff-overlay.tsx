@@ -2,6 +2,7 @@ import React from "react";
 import styled, { keyframes } from "styled-components";
 import { PlayerRole, PLAYER_ROLE } from "@codenames/shared/types";
 import { GameData } from "@frontend/shared-types";
+import { usePlayersQuery } from "@frontend/gameplay/api/queries/use-players-query";
 import { FaHandPaper, FaGamepad, FaCrown, FaSearch } from "react-icons/fa";
 
 const fadeIn = keyframes`
@@ -21,6 +22,15 @@ const pulse = keyframes`
   }
   50% {
     transform: scale(1.05);
+  }
+`;
+
+const spin = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 `;
 
@@ -60,6 +70,30 @@ const HandoffCard = styled.div`
     0 20px 40px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.05);
   animation: ${fadeIn} 0.6s ease-out;
+`;
+
+const LoadingCard = styled(HandoffCard)`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+`;
+
+const LoadingSpinner = styled.div`
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border-top-color: #4dabf7;
+  animation: ${spin} 1s linear infinite;
+  margin-bottom: 1.5rem;
+`;
+
+const LoadingText = styled.p`
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.1rem;
+  margin: 0;
 `;
 
 const HandoffIcon = styled.div<{ $color: string }>`
@@ -170,16 +204,10 @@ const ContinueButton = styled.button`
   }
 `;
 
-const RoundInfo = styled.div`
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 0.5rem 1rem;
-  border-radius: 12px;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.9rem;
-  font-weight: 500;
+const ErrorText = styled.p`
+  color: #ef4444;
+  font-size: 1.1rem;
+  margin: 1rem 0;
 `;
 
 interface DeviceHandoffOverlayProps {
@@ -188,88 +216,155 @@ interface DeviceHandoffOverlayProps {
     stage: PlayerRole;
     scene: string;
   };
-  onContinue: () => void;
+  onContinue: (playerId: string) => void;
 }
 
 /**
- * Device handoff overlay with fancy styling but integrated with new state machine
+ * Gets icon for a role
+ */
+const getRoleIcon = (role: string) => {
+  switch (role) {
+    case PLAYER_ROLE.CODEMASTER:
+      return <FaCrown />;
+    case PLAYER_ROLE.CODEBREAKER:
+      return <FaSearch />;
+    case PLAYER_ROLE.SPECTATOR:
+      return <FaGamepad />;
+    default:
+      return <FaHandPaper />;
+  }
+};
+
+/**
+ * Gets color for a role
+ */
+const getRoleColor = (role: string) => {
+  switch (role) {
+    case PLAYER_ROLE.CODEMASTER:
+      return "linear-gradient(135deg, #f59e0b, #d97706)";
+    case PLAYER_ROLE.CODEBREAKER:
+      return "linear-gradient(135deg, #3b82f6, #2563eb)";
+    case PLAYER_ROLE.SPECTATOR:
+      return "linear-gradient(135deg, #6b7280, #4b5563)";
+    default:
+      return "linear-gradient(135deg, #10b981, #059669)";
+  }
+};
+
+/**
+ * Gets team color
+ */
+const getTeamColor = (teamName: string) => {
+  if (teamName.toLowerCase().includes("red")) return "#dc2626";
+  if (teamName.toLowerCase().includes("blue")) return "#2563eb";
+  if (teamName.toLowerCase().includes("green")) return "#059669";
+  return "#6b7280";
+};
+
+/**
+ * Formats role name for display
+ */
+const formatRoleName = (role: string) => {
+  return role.charAt(0) + role.slice(1).toLowerCase();
+};
+
+/**
+ * Gets action text based on role
+ */
+const getActionText = (role: PlayerRole): string => {
+  switch (role) {
+    case PLAYER_ROLE.CODEMASTER:
+      return "Hide the screen! You're about to see which cards belong to each team. Don't let the codebreakers peek!";
+    case PLAYER_ROLE.CODEBREAKER:
+      return "Time to guess! Work together to decode your codemaster's clue and find your team's cards.";
+    case PLAYER_ROLE.SPECTATOR:
+      return "Watch the game unfold!";
+    default:
+      return "Continue playing";
+  }
+};
+
+/**
+ * Device handoff overlay - queries players to determine next player
  */
 export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
   gameData,
   pendingTransition,
   onContinue,
 }) => {
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case PLAYER_ROLE.CODEMASTER:
-        return <FaCrown />;
-      case PLAYER_ROLE.CODEBREAKER:
-        return <FaSearch />;
-      case PLAYER_ROLE.SPECTATOR:
-        return <FaGamepad />;
-      default:
-        return <FaHandPaper />;
-    }
-  };
-
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case PLAYER_ROLE.CODEMASTER:
-        return "linear-gradient(135deg, #f59e0b, #d97706)";
-      case PLAYER_ROLE.CODEBREAKER:
-        return "linear-gradient(135deg, #3b82f6, #2563eb)";
-      case PLAYER_ROLE.SPECTATOR:
-        return "linear-gradient(135deg, #6b7280, #4b5563)";
-      default:
-        return "linear-gradient(135deg, #10b981, #059669)";
-    }
-  };
-
-  const getTeamColor = (teamName: string) => {
-    if (teamName.toLowerCase().includes("red")) return "#dc2626";
-    if (teamName.toLowerCase().includes("blue")) return "#2563eb";
-    if (teamName.toLowerCase().includes("green")) return "#059669";
-    return "#6b7280";
-  };
-
-  const formatRoleName = (role: string) => {
-    return role.charAt(0) + role.slice(1).toLowerCase();
-  };
-
-  const getActionText = (role: PlayerRole): string => {
-    switch (role) {
-      case PLAYER_ROLE.CODEMASTER:
-        return "Hide the screen! You're about to see which cards belong to each team. Don't let the codebreakers peek!";
-      case PLAYER_ROLE.CODEBREAKER:
-        return "Time to guess! Work together to decode your codemaster's clue and find your team's cards.";
-      case PLAYER_ROLE.SPECTATOR:
-        return "Watch the game unfold!";
-      default:
-        return "Continue playing";
-    }
-  };
-
-  const getPlayerName = (role: PlayerRole, teamName: string, playerName?: string): string => {
-    if (role === PLAYER_ROLE.CODEMASTER && playerName) {
-      return playerName;
-    } else if (role === PLAYER_ROLE.CODEBREAKER) {
-      return `${teamName} Codebreakers`;
-    }
-    return `${teamName} ${formatRoleName(role)}`;
-  };
-
-  const targetRole = pendingTransition.stage;
-  const targetTeam = gameData.playerContext.teamName;
-  const playerName = gameData.playerContext.playerName;
-  const targetPlayer = getPlayerName(targetRole, targetTeam, playerName);
-  const actionText = getActionText(targetRole);
+  // Query players to find who's active
+  const { data: players, isLoading, error } = usePlayersQuery(gameData.publicId);
+  
+  // Find the next active player
+  const nextPlayer = players?.find(p => p.status === 'ACTIVE');
+  
+  // Show loading state while querying
+  if (isLoading) {
+    return (
+      <OverlayContainer>
+        <BackgroundBlur />
+        <LoadingCard>
+          <LoadingSpinner />
+          <LoadingText>Finding next player...</LoadingText>
+        </LoadingCard>
+      </OverlayContainer>
+    );
+  }
+  
+  // Show error if query failed
+  if (error) {
+    return (
+      <OverlayContainer>
+        <BackgroundBlur />
+        <HandoffCard>
+          <Title>Error</Title>
+          <ErrorText>Failed to determine next player</ErrorText>
+          <ContinueButton onClick={() => window.location.reload()}>
+            Reload Game
+          </ContinueButton>
+        </HandoffCard>
+      </OverlayContainer>
+    );
+  }
+  
+  // Show error if no active player found
+  if (!nextPlayer) {
+    return (
+      <OverlayContainer>
+        <BackgroundBlur />
+        <HandoffCard>
+          <Title>No Active Player</Title>
+          <ErrorText>Unable to find an active player. This shouldn't happen!</ErrorText>
+          <ContinueButton onClick={() => window.location.reload()}>
+            Reload Game
+          </ContinueButton>
+        </HandoffCard>
+      </OverlayContainer>
+    );
+  }
+  
+  // Now we have the next player, determine display details
+  const targetRole = nextPlayer.role;
+  const targetTeam = nextPlayer.teamName;
   const teamColor = getTeamColor(targetTeam);
-
+  
+  // Display name based on role
+  const displayName = targetRole === PLAYER_ROLE.CODEMASTER 
+    ? nextPlayer.name 
+    : `${targetTeam} Codebreakers`;
+  
+  const actionText = getActionText(targetRole);
+  
+  const handleContinue = () => {
+    // Pass the player ID to parent for context update
+    onContinue(nextPlayer.publicId);
+  };
+  
   return (
     <OverlayContainer>
       <BackgroundBlur />
       <HandoffCard>
-        <HandoffIcon $color={teamColor}>
+        <HandoffIcon $color={getRoleColor(targetRole)}>
           {getRoleIcon(targetRole)}
         </HandoffIcon>
 
@@ -278,7 +373,7 @@ export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
 
         <PlayerInfo>
           <PlayerName $teamColor={targetRole === PLAYER_ROLE.CODEBREAKER ? teamColor : undefined}>
-            {targetPlayer}
+            {displayName}
           </PlayerName>
 
           {targetRole === PLAYER_ROLE.CODEMASTER && (
@@ -292,7 +387,7 @@ export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
           <ActionText>{actionText}</ActionText>
         </PlayerInfo>
 
-        <ContinueButton onClick={onContinue}>
+        <ContinueButton onClick={handleContinue}>
           I'm Ready
         </ContinueButton>
       </HandoffCard>
