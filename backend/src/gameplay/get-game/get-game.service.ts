@@ -8,7 +8,7 @@ import { PlayerSpecificStateProvider } from "../state/player-specific-state.prov
 export type GetGameStateInput = {
   gameId: string;
   userId: number;
-  playerId?: string;
+  playerId: string | null;
 };
 
 export type GetGameStateResult =
@@ -94,7 +94,7 @@ export const getGameStateService = (dependencies: GetGameStateDependencies) => {
   return async (input: GetGameStateInput): Promise<GetGameStateResult> => {
     const result = await dependencies.getPlayerSpecificGameState(
       input.gameId,
-      input.playerId || null, // Pass null when no playerId provided
+      input.playerId || null,
       input.userId,
     );
 
