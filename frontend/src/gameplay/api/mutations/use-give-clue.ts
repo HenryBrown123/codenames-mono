@@ -6,6 +6,7 @@ import {
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
 import { TurnData } from "../queries/use-turn-query";
+import { usePlayerContext } from "../../player-context/player-context.provider";
 
 interface GiveClueApiResponse {
   success: boolean;
@@ -105,12 +106,21 @@ export const useGiveClueMutation = (
   gameId: string,
 ): UseMutationResult<ClueGivenResult, Error, GiveClueInput> => {
   const queryClient = useQueryClient();
+  const { currentPlayerId } = usePlayerContext();
 
   return useMutation({
     mutationFn: async ({ word, targetCardCount, roundNumber }) => {
+      if (!currentPlayerId) {
+        throw new Error("Player ID is required to give clue");
+      }
+
       const response: AxiosResponse<GiveClueApiResponse> = await api.post(
         `/games/${gameId}/rounds/${roundNumber}/clues`,
-        { word, targetCardCount },
+        { 
+          word, 
+          targetCardCount,
+          playerId: currentPlayerId
+        },
       );
 
       if (!response.data.success) {

@@ -2,6 +2,7 @@ import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
 import { GameData } from "@frontend/shared-types/domain-types";
+import { usePlayerContext } from "../../player-context/player-context.provider";
 
 interface GameStateApiResponse {
   success: boolean;
@@ -98,9 +99,12 @@ function transformApiResponseToGameData(apiResponse: GameStateApiResponse): Game
   };
 }
 
-const fetchGame = async (gameId: string): Promise<GameData> => {
+const fetchGame = async (gameId: string, playerId: string): Promise<GameData> => {
   const response: AxiosResponse<GameStateApiResponse> = await api.get(
     `/games/${gameId}`,
+    {
+      params: { playerId }
+    }
   );
 
   if (!response.data.success) {
@@ -116,15 +120,17 @@ const fetchGame = async (gameId: string): Promise<GameData> => {
 export const useGameDataQuery = (
   gameId: string | null,
 ): UseQueryResult<GameData, Error> => {
+  const { currentPlayerId } = usePlayerContext();
+  
   return useQuery<GameData>({
-    queryKey: ["gameData", gameId],
+    queryKey: ["gameData", gameId, currentPlayerId],
     queryFn: () => {
-      if (!gameId) {
-        throw new Error("Game ID is required");
+      if (!gameId || !currentPlayerId) {
+        throw new Error("Game ID and Player ID are required");
       }
-      return fetchGame(gameId);
+      return fetchGame(gameId, currentPlayerId);
     },
-    enabled: !!gameId,
+    enabled: !!gameId && !!currentPlayerId,
     refetchOnWindowFocus: true,
     staleTime: 0,
   });

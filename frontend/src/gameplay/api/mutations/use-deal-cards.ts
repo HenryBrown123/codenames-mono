@@ -5,6 +5,7 @@ import {
 } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
+import { usePlayerContext } from "../../player-context/player-context.provider";
 
 interface DealCardsApiResponse {
   success: boolean;
@@ -30,12 +31,17 @@ export const useDealCardsMutation = (
   gameId: string,
 ): UseMutationResult<void, Error, DealCardsInput> => {
   const queryClient = useQueryClient();
+  const { currentPlayerId } = usePlayerContext();
 
   return useMutation({
     mutationFn: async ({ roundNumber, redeal = false }) => {
+      if (!currentPlayerId) {
+        throw new Error("Player ID is required to deal cards");
+      }
+
       const response: AxiosResponse<DealCardsApiResponse> = await api.post(
         `/games/${gameId}/rounds/${roundNumber}/deal`,
-        { redeal }
+        { redeal, playerId: currentPlayerId }
       );
 
       if (!response.data.success) {

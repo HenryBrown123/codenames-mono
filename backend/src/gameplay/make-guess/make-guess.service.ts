@@ -439,19 +439,18 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
       );
 
       // Handle outcome with appropriate game progression
-      let finalGameState;
       switch (guessResult.outcome) {
         case CODEBREAKER_OUTCOME.CORRECT_TEAM_CARD:
-          finalGameState = await handleCorrectTeamCard(ops, guessResult, input);
+          await handleCorrectTeamCard(ops, guessResult, input);
           break;
         case CODEBREAKER_OUTCOME.OTHER_TEAM_CARD:
-          finalGameState = await handleWrongTeamCard(ops, guessResult, input);
+          await handleWrongTeamCard(ops, guessResult, input);
           break;
         case CODEBREAKER_OUTCOME.BYSTANDER_CARD:
-          finalGameState = await handleBystanderCard(ops, guessResult, input);
+          await handleBystanderCard(ops, guessResult, input);
           break;
         case CODEBREAKER_OUTCOME.ASSASSIN_CARD:
-          finalGameState = await handleAssassinCard(ops, guessResult, input);
+          await handleAssassinCard(ops, guessResult, input);
           break;
         default:
           throw new Error(`Unknown outcome: ${guessResult.outcome}`);
@@ -460,7 +459,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
       return { guessResult };
     });
 
-    // ← CRITICAL FIX: Fetch complete turn data after transaction completes
+
     const currentTurn = complexProperties.getCurrentTurnOrThrow(gameData);
     const completeTurnData = await getCompleteTurnData(currentTurn.publicId);
 
@@ -472,7 +471,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
           outcome: operationResult.guessResult.outcome,
           createdAt: operationResult.guessResult.createdAt,
         },
-        turn: completeTurnData, // ← Return complete enriched turn data
+        turn: completeTurnData, 
       },
     };
   };

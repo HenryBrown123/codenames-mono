@@ -6,6 +6,7 @@ import {
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
 import { TurnData } from "../queries/use-turn-query";
+import { usePlayerContext } from "../../player-context/player-context.provider";
 
 interface MakeGuessApiResponse {
   success: boolean;
@@ -65,12 +66,17 @@ export const useMakeGuessMutation = (
   gameId: string,
 ): UseMutationResult<GuessResult, Error, MakeGuessInput> => {
   const queryClient = useQueryClient();
+  const { currentPlayerId } = usePlayerContext();
 
   return useMutation({
     mutationFn: async ({ cardWord, roundNumber }) => {
+      if (!currentPlayerId) {
+        throw new Error("Player ID is required to make guess");
+      }
+
       const response: AxiosResponse<MakeGuessApiResponse> = await api.post(
         `/games/${gameId}/rounds/${roundNumber}/guesses`,
-        { cardWord },
+        { cardWord, playerId: currentPlayerId },
       );
 
       if (!response.data.success) {
