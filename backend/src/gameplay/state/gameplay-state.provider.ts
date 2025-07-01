@@ -13,6 +13,7 @@ import {
   PlayerFinderAll,
   PlayerResult,
   PlayerContextFinder,
+  PlayerFinderByPublicId,
 } from "@backend/common/data-access/repositories/players.repository";
 
 import {
@@ -54,7 +55,10 @@ export type PlayerContext = {
 export type GameStateResult =
   | { status: "found"; data: GameAggregate }
   | { status: "game-not-found"; gameId: string }
-  | { status: "user-not-player"; gameId: string; userId: number };
+  | { status: "user-not-player"; gameId: string; userId: number }
+  | { status: "player-not-found"; playerId: string }
+  | { status: "player-not-in-game"; playerId: string; gameId: string }
+  | { status: "user-not-authorized"; userId: number; playerId: string };
 
 /**
  * Type representing the function returned by the provider
@@ -62,72 +66,34 @@ export type GameStateResult =
 export type GameplayStateProvider = (
   gameId: PublicId,
   userId: number,
+  playerId?: string | null,
 ) => Promise<GameStateResult>;
 
 /**
- * Pure function to determine which role should be active for current turn
- */
-const deriveActiveRoleForTurn = (currentTurn: any | null): PlayerRole => {
-  if (!currentTurn) return PLAYER_ROLE.NONE;
-  if (!currentTurn.clue) return PLAYER_ROLE.CODEMASTER;
-  return PLAYER_ROLE.CODEBREAKER;
-};
-
-/**
- * Pure function to determine which team should be active for current turn
- */
-const deriveActiveTeamForTurn = (currentTurn: any | null): number | null => {
-  if (!currentTurn) return null;
-  return currentTurn._teamId;
-};
-
-/**
- * Pure function to select the appropriate player from user's players
- */
-const selectPlayerForRole = (
-  userPlayers: PlayerResult[],
-  targetRole: PlayerRole,
-  targetTeamId?: number | null,
-): PlayerResult | null => {
-  if (userPlayers.length === 0) return null;
-
-  // Filter by team if specified
-  const eligiblePlayers = targetTeamId
-    ? userPlayers.filter((p) => p._teamId === targetTeamId)
-    : userPlayers;
-
-  // Find first player with target role on the right team
-  const playerWithRole = eligiblePlayers.find((p) => p.role === targetRole);
-
-  // Fallback to first eligible player on the team, or any user player
-  return playerWithRole || eligiblePlayers[0] || userPlayers[0];
-};
-
-/**
- * Determines the appropriate player context based on game mode and current turn
+ * Determines the appropriate player context based on game mode and specific player ID
  */
 const determinePlayerContext = (
   userPlayers: PlayerResult[],
-  currentTurn: any,
+  specificPlayer: PlayerResult | null,
   gameType: string,
 ): PlayerContext | null => {
-  if (userPlayers.length === 0) return null;
-
-  // Multi-device: Return user's specific player (validation will handle permissions)
-  if (gameType === GAME_TYPE.MULTI_DEVICE) {
-    return userPlayers[0]; // User should only have one player in multi-device
+  // If specific player provided, use that player's actual role
+  if (specificPlayer) {
+    return {
+      _id: specificPlayer._id,
+      publicId: specificPlayer.publicId,
+      _userId: specificPlayer._userId,
+      _gameId: specificPlayer._gameId,
+      _teamId: specificPlayer._teamId,
+      teamName: specificPlayer.teamName,
+      statusId: specificPlayer.statusId,
+      publicName: specificPlayer.publicName,
+      role: specificPlayer.role, // Use assigned role, not calculated!
+    };
   }
 
-  // Single-device: Return contextually appropriate player
-  if (gameType === GAME_TYPE.SINGLE_DEVICE) {
-    const activeRole = deriveActiveRoleForTurn(currentTurn);
-    const activeTeamId = deriveActiveTeamForTurn(currentTurn);
-
-    return selectPlayerForRole(userPlayers, activeRole, activeTeamId);
-  }
-
-  // Fallback
-  return userPlayers[0];
+  // For general game state (no specific player), return null
+  return null;  // No player context when no player specified
 };
 
 /**
@@ -141,6 +107,7 @@ const determinePlayerContext = (
  * @param getLatestRound - Function to retrieve the latest round for a game
  * @param getAllRounds - Function to retrieve all rounds for a game
  * @param getPlayerContext - Function to retrieve player context info
+ * @param findPlayerByPublicId - Function to find player by public ID
  * @returns Function that provides the complete game state for a given game ID and user
  */
 export const gameplayStateProvider = (
@@ -152,20 +119,39 @@ export const gameplayStateProvider = (
   getLatestRound: RoundFinder<InternalId>,
   getAllRounds: RoundFinderAll<InternalId>,
   getPlayerContext: PlayerContextFinder,
+  findPlayerByPublicId: PlayerFinderByPublicId,
 ): GameplayStateProvider => {
   /**
    * Retrieves and assembles the complete game state for a given game
    *
    * @param gameId - Public identifier of the game
    * @param userId - ID of the user requesting the state
+   * @param playerId - Optional specific player ID for player-specific context
    * @returns Complete game state object or error status
    */
   const getGameplayState = async (
     gameId: PublicId,
     userId: number,
+    playerId?: string | null,
   ): Promise<GameStateResult> => {
     const game = await getGameById(gameId);
     if (!game) return { status: "game-not-found", gameId };
+
+    // If playerId provided, validate and find the specific player
+    let specificPlayer: PlayerResult | null = null;
+    if (playerId) {
+      specificPlayer = await findPlayerByPublicId(playerId);
+      if (!specificPlayer) {
+        return { status: "player-not-found", playerId };
+      }
+      if (specificPlayer._gameId !== game._id) {
+        return { status: "player-not-in-game", playerId, gameId };
+      }
+      // In multi-device mode, user must own the specific player
+      if (game.game_type === GAME_TYPE.MULTI_DEVICE && specificPlayer._userId !== userId) {
+        return { status: "user-not-authorized", userId, playerId };
+      }
+    }
 
     // Collect all game level state - players belong to GAMES not rounds!
     const [teams, allRounds, latestRound, players] = await Promise.all([
@@ -175,12 +161,16 @@ export const gameplayStateProvider = (
       getPlayersByGameId(game._id),
     ]);
 
-    // Get user's players for this game/round
-    const roundId = latestRound?._id || null;
-    const userPlayers = await getPlayerContext(game._id, userId, roundId);
-    if (!userPlayers || userPlayers.length === 0) {
+    // Verify user is a player in the game first
+    const allGamePlayers = await getPlayersByGameId(game._id);
+    const userIsPlayer = allGamePlayers.some(p => p._userId === userId);
+    if (!userIsPlayer) {
       return { status: "user-not-player", gameId, userId };
     }
+
+    // Get user's players for this game/round (for general context)
+    const roundId = latestRound?._id || null;
+    const userPlayers = await getPlayerContext(game._id, userId, roundId);
 
     // Transform teams data and populate with players immediately
     const teamsWithPlayers = teams.map((team: TeamResult) => ({
@@ -207,12 +197,12 @@ export const gameplayStateProvider = (
     // Base state for when no current round exists
     if (!latestRound) {
       const playerContext = determinePlayerContext(
-        userPlayers,
-        null,
+        userPlayers || [],
+        specificPlayer,
         game.game_type,
       );
 
-      if (!playerContext) return { status: "user-not-player", gameId, userId };
+      // playerContext can be null when no specific player is provided - this is valid
 
       return {
         status: "found",
@@ -247,17 +237,14 @@ export const gameplayStateProvider = (
       selected: card.selected,
     }));
 
-    // Get current turn for context determination
-    const currentTurn = turns.find((turn) => turn.status === "ACTIVE") || null;
-
-    // Determine appropriate player context based on game mode and current state
+    // Determine appropriate player context based on specific player or user's players
     const playerContext = determinePlayerContext(
-      userPlayers,
-      currentTurn,
+      userPlayers || [],
+      specificPlayer,
       game.game_type,
     );
 
-    if (!playerContext) return { status: "user-not-player", gameId, userId };
+    // playerContext can be null when no specific player is provided - this is valid
 
     return {
       status: "found",

@@ -25,7 +25,7 @@ export const initialize = (
   auth: AuthMiddleware,
 ) => {
   // State "providers"
-  const { provider: getGameState, playerSpecificProvider: getPlayerSpecificGameState } = gameplayState(db);
+  const { provider: getGameState } = gameplayState(db);
   const { provider: getTurnState } = turnState(db);
 
   // Gameplay actions
@@ -34,7 +34,7 @@ export const initialize = (
   // Feature modules - each gets both read and write capabilities
 
   const { controller: getGameController } = getGame({
-    getPlayerSpecificGameState,
+    getGameState,
   });
 
   const { controller: getPlayersController } = getPlayers({
@@ -42,13 +42,13 @@ export const initialize = (
   });
 
   const { controller: giveClueController } = giveClue({
-    getPlayerSpecificGameState,
+    getGameState,
     gameplayHandler,
     getTurnState, // ← Pass turn state provider to give clue
   });
 
   const { controller: makeGuessController } = makeGuess({
-    getPlayerSpecificGameState,
+    getGameState,
     gameplayHandler,
     getTurnState, // ← Pass turn state provider to make guess
   });
