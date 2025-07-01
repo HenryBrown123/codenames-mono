@@ -1,6 +1,6 @@
 import { GameAggregate } from "../state/gameplay-state.types";
 import { PLAYER_ROLE, PlayerRole } from "@codenames/shared/types";
-import { PlayerSpecificStateProvider } from "../state/player-specific-state.provider";
+import { GameplayStateProvider } from "../state/gameplay-state.provider";
 
 /**
  * Service input parameters
@@ -58,7 +58,7 @@ export type PublicGameStateResponse = {
     playerName: string;
     teamName: string;
     role: PlayerRole;
-  };
+  } | null;
 };
 
 /**
@@ -84,7 +84,7 @@ export type GetGameStateFailure =
  * Dependencies required by the service
  */
 export type GetGameStateDependencies = {
-  getPlayerSpecificGameState: PlayerSpecificStateProvider;
+  getGameState: GameplayStateProvider;
 };
 
 /**
@@ -92,10 +92,10 @@ export type GetGameStateDependencies = {
  */
 export const getGameStateService = (dependencies: GetGameStateDependencies) => {
   return async (input: GetGameStateInput): Promise<GetGameStateResult> => {
-    const result = await dependencies.getPlayerSpecificGameState(
+    const result = await dependencies.getGameState(
       input.gameId,
-      input.playerId || null,
       input.userId,
+      input.playerId,
     );
 
     if (result.status === "game-not-found") {
@@ -105,6 +105,17 @@ export const getGameStateService = (dependencies: GetGameStateDependencies) => {
         error: {
           status: GAME_STATE_ERROR.GAME_NOT_FOUND,
           gameId: input.gameId,
+        },
+      };
+    }
+
+    if (result.status === "user-not-player") {
+      console.log(`User not player: gameId=${input.gameId}, userId=${input.userId}`);
+      return {
+        success: false,
+        error: {
+          status: GAME_STATE_ERROR.UNAUTHORIZED,
+          userId: input.userId,
         },
       };
     }
@@ -143,7 +154,7 @@ export const getGameStateService = (dependencies: GetGameStateDependencies) => {
       };
     }
 
-    // result.status === 'found'
+    // result.status === 'found' (all other cases handled above)
     return {
       success: true,
       data: transformGameState(result.data),
@@ -155,7 +166,7 @@ export const getGameStateService = (dependencies: GetGameStateDependencies) => {
  * Transforms the internal game state to the public API format
  */
 function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
-  const playerRole = gameData.playerContext.role;
+  const playerRole = gameData.playerContext?.role || PLAYER_ROLE.NONE;
 
   return {
     publicId: gameData.public_id,
@@ -202,11 +213,11 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
         }
       : null,
 
-    playerContext: {
+    playerContext: gameData.playerContext ? {
       playerName: gameData.playerContext.publicName,
       teamName: gameData.playerContext.teamName,
-      role: playerRole,
-    },
+      role: gameData.playerContext.role,
+    } : null,
   };
 }
 

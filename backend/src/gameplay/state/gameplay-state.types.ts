@@ -157,7 +157,7 @@ export const gameplayBaseSchema = z.object({
   teams: z.array(teamSchema),
   currentRound: currentRoundSchema.optional().nullable(),
   historicalRounds: z.array(historicalRoundSchema).optional().default([]),
-  playerContext: playerContextSchema,
+  playerContext: playerContextSchema.nullable(),
   createdAt: z.date(),
   updatedAt: z.date().optional().nullable(),
 });

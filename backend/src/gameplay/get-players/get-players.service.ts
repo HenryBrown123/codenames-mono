@@ -92,6 +92,14 @@ export const createGetPlayersService = (
       return { status: "user-not-player" };
     }
 
+    // These cases shouldn't occur when no playerId is provided, but handle them defensively
+    if (gameStateResult.status === "player-not-found" || 
+        gameStateResult.status === "player-not-in-game" || 
+        gameStateResult.status === "user-not-authorized") {
+      return { status: "user-not-player" }; // Treat as user not being a player
+    }
+
+    // gameStateResult.status === 'found' (all other cases handled above)
     const gameState = gameStateResult.data;
 
     // Collect all players from all teams

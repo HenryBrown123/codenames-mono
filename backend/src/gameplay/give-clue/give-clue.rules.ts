@@ -21,7 +21,7 @@ const clueGivingRules = {
    * Checks if the player is a codemaster
    */
   isPlayerCodemaster(game: GameAggregate): boolean {
-    return game.playerContext.role === PLAYER_ROLE.CODEMASTER;
+    return game.playerContext?.role === PLAYER_ROLE.CODEMASTER || false;
   },
 
   /**
@@ -30,7 +30,9 @@ const clueGivingRules = {
   isPlayersTurn(game: GameAggregate): boolean {
     const currentTurn = complexProperties.getCurrentTurn(game);
     return (
-      currentTurn !== null && currentTurn._teamId === game.playerContext._teamId
+      currentTurn !== null && 
+      game.playerContext !== null && 
+      currentTurn._teamId === game.playerContext._teamId
     );
   },
 

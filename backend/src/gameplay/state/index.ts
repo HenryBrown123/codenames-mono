@@ -12,7 +12,6 @@ import * as turnsRepository from "@backend/common/data-access/repositories/turns
 
 import { turnStateProvider } from "./turn-state.provider";
 import { gameplayStateProvider } from "./gameplay-state.provider";
-import { playerSpecificStateProvider } from "./player-specific-state.provider";
 
 /**
  * Creates a turn state provider with the given database context
@@ -58,30 +57,10 @@ const createGameplayStateProvider = (
     roundsRepository.getLatestRound(dbContext),
     roundsRepository.getRoundsByGameId(dbContext),
     playerRepository.getPlayerContext(dbContext),
-  );
-};
-
-/**
- * Creates a player-specific state provider with the given database context
- * Works with both regular db connections and transaction contexts
- *
- * @param dbContext - Database connection or transaction context
- * @returns Player-specific state provider that uses the given context
- */
-const createPlayerSpecificStateProvider = (
-  dbContext: DbContext | TransactionContext,
-) => {
-  return playerSpecificStateProvider(
-    gameRepository.findGameByPublicId(dbContext),
-    teamsRepository.getTeamsByGameId(dbContext),
-    cardsRepository.getCardsByRoundId(dbContext),
-    turnsRepository.getTurnsByRoundId(dbContext),
-    playerRepository.findPlayersByGameId(dbContext),
-    roundsRepository.getLatestRound(dbContext),
-    roundsRepository.getRoundsByGameId(dbContext),
     playerRepository.findPlayerByPublicId(dbContext),
   );
 };
+
 
 /**
  * Creates gameplay state components with all repository dependencies pre-wired
@@ -92,6 +71,5 @@ const createPlayerSpecificStateProvider = (
 export const gameplayState = (dbContext: DbContext | TransactionContext) => {
   return {
     provider: createGameplayStateProvider(dbContext),
-    playerSpecificProvider: createPlayerSpecificStateProvider(dbContext),
   };
 };

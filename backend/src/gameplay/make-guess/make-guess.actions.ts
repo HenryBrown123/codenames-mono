@@ -105,6 +105,10 @@ export const createMakeGuessAction = (deps: {
       selected: true,
     });
 
+    if (!gameState.playerContext) {
+      throw new Error("Player context is required for making guesses");
+    }
+    
     const outcome = determineOutcome(card, gameState.playerContext._teamId);
 
     const newGuessesRemaining =

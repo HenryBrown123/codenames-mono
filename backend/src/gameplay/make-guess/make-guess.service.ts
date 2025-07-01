@@ -1,4 +1,4 @@
-import type { PlayerSpecificStateProvider } from "../state/player-specific-state.provider";
+import type { GameplayStateProvider } from "../state/gameplay-state.provider";
 import type { TurnStateProvider } from "../state/turn-state.provider";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 import type { GameplayOperations } from "../gameplay-actions";
@@ -126,7 +126,7 @@ export type MakeGuessResult =
  * Dependencies required by the make guess service
  */
 export type MakeGuessDependencies = {
-  getPlayerSpecificGameState: PlayerSpecificStateProvider;
+  getGameState: GameplayStateProvider;
   gameplayHandler: TransactionalHandler<GameplayOperations>;
   getTurnState: TurnStateProvider; // ← Add turn state provider
 };
@@ -345,10 +345,10 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
   };
 
   return async (input: MakeGuessInput): Promise<MakeGuessResult> => {
-    const result = await dependencies.getPlayerSpecificGameState(
+    const result = await dependencies.getGameState(
       input.gameId,
-      input.playerId,
       input.userId,
+      input.playerId,
     );
 
     if (result.status === "game-not-found") {
@@ -357,6 +357,17 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
         error: {
           status: MAKE_GUESS_ERROR.GAME_NOT_FOUND,
           gameId: input.gameId,
+        },
+      };
+    }
+
+    if (result.status === "user-not-player") {
+      return {
+        success: false,
+        error: {
+          status: MAKE_GUESS_ERROR.USER_NOT_PLAYER,
+          gameId: input.gameId,
+          userId: input.userId,
         },
       };
     }
@@ -393,6 +404,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
       };
     }
 
+    // result.status === 'found' (all other cases handled above)
     const gameData = result.data;
 
     // Validate round exists and is current
