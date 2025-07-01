@@ -71,6 +71,7 @@ export type RandomWordsSelector = (
   count: number,
   deck?: string,
   languageCode?: string,
+  excludeWords?: string[],
 ) => Promise<string[]>;
 
 /**
@@ -293,14 +294,22 @@ export const getRandomWords =
    * @param count - Number of words to retrieve
    * @param deck - Deck identifier (defaults to "BASE")
    * @param languageCode - Optional language code filter (defaults to 'en')
+   * @param excludeWords - Optional array of words to exclude from selection
    * @returns Array of random words
    * @throws {UnexpectedRepositoryError} If retrieving words fails
    */
-  async (count, deck = "BASE", languageCode = "en") => {
-    const words = await db
+  async (count, deck = "BASE", languageCode = "en", excludeWords?: string[]) => {
+    let query = db
       .selectFrom("decks")
       .where("language_code", "=", languageCode)
-      .where("deck", "=", deck)
+      .where("deck", "=", deck);
+    
+    // Exclude words already in use
+    if (excludeWords && excludeWords.length > 0) {
+      query = query.where("word", "not in", excludeWords);
+    }
+    
+    const words = await query
       .select("word")
       .orderBy(sql<number>`random()`)
       .limit(count)

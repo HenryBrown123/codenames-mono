@@ -80,6 +80,7 @@ const RefreshButton = styled.button`
 // ============================================================================
 
 export const CodebreakerDashboardView: React.FC = () => {
+  const { gameData } = useGameData();
   const { activeTurn } = useTurn();
   const { endTurn, actionState } = useGameActions();
 
@@ -87,9 +88,17 @@ export const CodebreakerDashboardView: React.FC = () => {
     endTurn();
   };
 
-  const hasClueWithWord =
-    activeTurn?.clue !== null && activeTurn?.clue !== undefined;
-  const canEndTurn = hasClueWithWord && (activeTurn?.guessesRemaining || 0) > 0;
+  // Check if this player can end the turn
+  const canEndTurn = React.useMemo(() => {
+    // Must have an active turn with a clue
+    if (!activeTurn || !activeTurn.clue) return false;
+    
+    // Must be the player's team's turn
+    if (gameData.playerContext?.teamName !== activeTurn.teamName) return false;
+    
+    // Must have guesses remaining to end early
+    return activeTurn.guessesRemaining > 0;
+  }, [activeTurn, gameData.playerContext]);
 
   if (!activeTurn || activeTurn.clue === null) {
     return <Container />;

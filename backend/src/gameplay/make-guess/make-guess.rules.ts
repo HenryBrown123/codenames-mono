@@ -9,6 +9,7 @@ import {
   GameAggregate,
   Card,
   HistoricalRound,
+  Turn,
 } from "../state/gameplay-state.types";
 import {
   gameplayBaseSchema,
@@ -23,6 +24,7 @@ import {
   ValidatedGameState,
   GameplayValidationResult,
 } from "../state/gameplay-state.validation";
+import { complexProperties } from "../state/gameplay-state.helpers";
 import { z } from "zod";
 
 /**
@@ -37,8 +39,43 @@ const makeGuessActionSchema = gameplayBaseSchema.extend({
   }),
   playerContext: playerContextSchema.extend({
     role: z.literal(PLAYER_ROLE.CODEBREAKER),
-  }),
-});
+  }), 
+})
+  .refine((data) => {
+    const currentTurn = complexProperties.getCurrentTurn(data);
+    return currentTurn !== null;
+  }, {
+    message: "No active turn found",
+    path: ["currentRound", "turns"],
+  })
+  .refine((data) => {
+    const currentTurn = complexProperties.getCurrentTurn(data);
+    return currentTurn && currentTurn._teamId === data.playerContext._teamId;
+  }, {
+    message: "It's not your team's turn",
+    path: ["playerContext", "teamId"],
+  })
+  .refine((data) => {
+    const currentTurn = complexProperties.getCurrentTurn(data);
+    return currentTurn && currentTurn.status === "ACTIVE";
+  }, {
+    message: "Current turn is not active",
+    path: ["currentRound", "turns"],
+  })
+  .refine((data) => {
+    const currentTurn = complexProperties.getCurrentTurn(data);
+    return currentTurn && currentTurn.clue !== null && currentTurn.clue !== undefined;
+  }, {
+    message: "No clue has been given for this turn",
+    path: ["currentRound", "turns"],
+  })
+  .refine((data) => {
+    const currentTurn = complexProperties.getCurrentTurn(data);
+    return currentTurn && currentTurn.guessesRemaining > 0;
+  }, {
+    message: "No guesses remaining for this turn",
+    path: ["currentRound", "turns"],
+  });
 
 const endTurnSchema = gameplayBaseSchema.extend({
   status: z.literal(GAME_STATE.IN_PROGRESS),
@@ -74,6 +111,31 @@ export type StartTurnValidGameState = ValidatedGameState<
   typeof startTurnSchema
 >;
 export type EndRoundValidGameState = ValidatedGameState<typeof endRoundSchema>;
+
+/**
+ * Helper function to validate turn state for guessing
+ */
+export function validateTurnForGuessing(
+  turn: Turn | null
+): { valid: boolean; error?: string } {
+  if (!turn) {
+    return { valid: false, error: "No active turn" };
+  }
+  
+  if (turn.status !== "ACTIVE") {
+    return { valid: false, error: "Turn is not active" };
+  }
+  
+  if (!turn.clue) {
+    return { valid: false, error: "No clue given yet" };
+  }
+  
+  if (turn.guessesRemaining <= 0) {
+    return { valid: false, error: "No guesses remaining" };
+  }
+  
+  return { valid: true };
+}
 
 /**
  * Validation functions

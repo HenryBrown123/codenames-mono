@@ -1,7 +1,8 @@
-import React, { memo, useCallback } from "react";
+import React, { memo, useCallback, useMemo } from "react";
 import styled from "styled-components";
 import { useGameData } from "@frontend/gameplay/game-data";
 import { useGameActions } from "@frontend/gameplay/game-actions";
+import { useTurn } from "@frontend/gameplay/turn-management";
 import { GameCard } from "./game-card";
 import { useCardVisibility } from "./use-card-visibility";
 
@@ -27,6 +28,7 @@ const EmptyCard = styled.div`
 export const InteractiveBoard = memo(() => {
   const { gameData } = useGameData();
   const { makeGuess, actionState } = useGameActions();
+  const { activeTurn } = useTurn();
   const cards = gameData.currentRound?.cards || [];
   
   // Always start visible - only loaded during active play
@@ -37,11 +39,31 @@ export const InteractiveBoard = memo(() => {
   
   const isLoading = actionState.status === "loading";
   
+  // Determine if the current player can make guesses
+  const canMakeGuess = useMemo(() => {
+    // Must be a codebreaker
+    if (gameData.playerContext?.role !== 'CODEBREAKER') return false;
+    
+    // Must have an active turn
+    if (!activeTurn || activeTurn.status !== 'ACTIVE') return false;
+    
+    // Must be the player's team's turn
+    if (activeTurn.teamName !== gameData.playerContext.teamName) return false;
+    
+    // Must have a clue
+    if (!activeTurn.clue) return false;
+    
+    // Must have guesses remaining
+    if (activeTurn.guessesRemaining <= 0) return false;
+    
+    return true;
+  }, [gameData.playerContext, activeTurn]);
+  
   const handleCardClick = useCallback((word: string) => {
-    if (!isLoading) {
+    if (!isLoading && canMakeGuess) {
       makeGuess(word);
     }
-  }, [makeGuess, isLoading]);
+  }, [makeGuess, isLoading, canMakeGuess]);
   
   // Show empty state if no cards
   if (cards.length === 0) {
@@ -68,7 +90,7 @@ export const InteractiveBoard = memo(() => {
             animation={visibility.animation}
             onAnimationComplete={visibility.completeTransition}
             onClick={() => handleCardClick(card.word)}
-            clickable={!isLoading && !card.selected}
+            clickable={canMakeGuess && !isLoading && !card.selected}
           />
         );
       })}
@@ -85,6 +107,9 @@ export const ViewOnlyBoard = memo(() => {
   const { gameData } = useGameData();
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === 'SETUP';
+  
+  // In ViewOnlyBoard, add logging to track cards
+  console.log('[ViewOnlyBoard] Cards:', cards.map((c, i) => `${i}: ${c.word}`));
   
   // Show dealing animation during setup
   const { getCardVisibility } = useCardVisibility({ 
