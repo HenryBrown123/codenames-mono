@@ -37,7 +37,15 @@ export const dealCardsToRound = (
     const cardsWithoutWords = allocateInitialCardTypes(startingTeam, otherTeam);
     const shuffledCards = shuffleCards(cardsWithoutWords);
 
-    const words = await getRandomWords(shuffledCards.length);
+    // Get current words to exclude (if redealing)
+    const currentWords = gameState.currentRound.cards?.map(c => c.word) || [];
+    
+    const words = await getRandomWords(
+      shuffledCards.length, 
+      "BASE", 
+      "en", 
+      currentWords // Pass words to exclude
+    );
 
     const cardInputs: CardInput[] = words.map((word, position) => ({
       word,
