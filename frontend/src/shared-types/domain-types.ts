@@ -49,7 +49,7 @@ export interface GameData {
     playerName: string;
     teamName: string;
     role: PlayerRole;
-  };
+  } | null;
 }
 
 export interface Card {
