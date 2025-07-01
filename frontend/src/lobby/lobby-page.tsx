@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { Plus, X, Users, Play, Edit2, Check } from "lucide-react";
 import {
-  addPlayer,
-  removePlayer,
-  modifyPlayer,
-  startGame,
-  getLobbyState,
+  useLobbyQuery,
+  useAddPlayer,
+  useRemovePlayer,
+  useRenamePlayer,
+  useMovePlayerToTeam,
+  useStartGame,
   type LobbyData,
   type LobbyPlayer,
-} from "@frontend/lobby/api/lobby-api";
+} from "@frontend/lobby/api";
 
 // Interface for props
 interface LobbyInterfaceProps {
@@ -374,12 +375,30 @@ const EditableInput = styled.input`
 
 export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
   const navigate = useNavigate();
-  const [lobbyData, setLobbyData] = useState<LobbyData>(mockLobbyData);
   const [editingPlayer, setEditingPlayer] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [initialLoading, setInitialLoading] = useState(true);
+  
+  // React Query hooks
+  const { data: lobbyData, isLoading: initialLoading, error: queryError } = useLobbyQuery(gameId);
+  const addPlayerMutation = useAddPlayer(gameId);
+  const removePlayerMutation = useRemovePlayer(gameId);
+  const renamePlayerMutation = useRenamePlayer(gameId);
+  const movePlayerMutation = useMovePlayerToTeam(gameId);
+  const startGameMutation = useStartGame(gameId);
+  
+  // Derived loading and error states
+  const isLoading = addPlayerMutation.isPending || 
+                   removePlayerMutation.isPending || 
+                   renamePlayerMutation.isPending || 
+                   movePlayerMutation.isPending || 
+                   startGameMutation.isPending;
+                   
+  const error = queryError?.message || 
+               addPlayerMutation.error?.message || 
+               removePlayerMutation.error?.message || 
+               renamePlayerMutation.error?.message || 
+               movePlayerMutation.error?.message || 
+               startGameMutation.error?.message;
 
   // Separate input state for each team
   const [teamRedInput, setTeamRedInput] = useState("");
@@ -392,43 +411,12 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
   } | null>(null);
   const [dragOverTeam, setDragOverTeam] = useState<string | null>(null);
 
-  // Load lobby state on component mount
-  useEffect(() => {
-    const loadLobbyState = async () => {
-      try {
-        console.log("Loading lobby state for game:", gameId);
-        setInitialLoading(true);
-        const response = await getLobbyState(gameId);
-        console.log("Raw API response:", response);
-
-        // Your API returns LobbyData directly
-        const lobbyData = response;
-        console.log("Extracted lobby data:", lobbyData);
-        console.log(
-          "Available teams:",
-          lobbyData?.teams?.map((t) => t.name),
-        );
-
-        if (lobbyData && lobbyData.teams) {
-          setLobbyData(lobbyData);
-        } else {
-          console.error("No game data or teams in response:", response);
-          setError("Invalid game data received");
-        }
-      } catch (err) {
-        console.error("Failed to load lobby state:", err);
-        setError(`Failed to load lobby data`);
-      } finally {
-        setInitialLoading(false);
-      }
-    };
-
-    loadLobbyState();
-  }, [gameId]);
+  // Use fallback data when lobbyData is not available
+  const currentLobbyData = lobbyData || mockLobbyData;
 
   // Add debugging info to see what data we have
-  console.log("Current lobbyData:", lobbyData);
-  console.log("Teams:", lobbyData?.teams);
+  console.log("Current lobbyData:", currentLobbyData);
+  console.log("Teams:", currentLobbyData?.teams);
 
   const teamColors = {
     "Team Red": "#ef4444",
@@ -437,68 +425,38 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
 
   // Calculate stats - add safety checks
   const totalPlayers =
-    lobbyData?.teams?.reduce(
+    currentLobbyData?.teams?.reduce(
       (sum, team) => sum + (team?.players?.length || 0),
       0,
     ) || 0;
   const canStartGame =
     totalPlayers >= 4 &&
-    (lobbyData?.teams?.every((team) => (team?.players?.length || 0) >= 2) ||
+    (currentLobbyData?.teams?.every((team) => (team?.players?.length || 0) >= 2) ||
       false);
 
-  const handleQuickAdd = async (teamName: string) => {
+  const handleQuickAdd = (teamName: string) => {
     // Get the correct input value based on team
     const playerName =
       teamName === "Team Red" ? teamRedInput.trim() : teamBlueInput.trim();
     if (!playerName) return;
 
-    setIsLoading(true);
-    try {
-      // Debug what we're sending
-      console.log("Adding player with:", { gameId, playerName, teamName });
-
-      // Use your actual API - addPlayer expects (gameId, playerName, teamName)
-      const result = await addPlayer(gameId, playerName, teamName);
-      console.log("Add player result:", result);
-
-      // Reload lobby state after adding player
-      const response = await getLobbyState(gameId);
-      const lobbyData = response;
-      console.log("Refreshed lobby data after add:", lobbyData);
-      setLobbyData(lobbyData);
-
-      // Clear the correct input
-      if (teamName === "Team Red") {
-        setTeamRedInput("");
-      } else {
-        setTeamBlueInput("");
+    addPlayerMutation.mutate(
+      { playerName, teamName },
+      {
+        onSuccess: () => {
+          // Clear the correct input
+          if (teamName === "Team Red") {
+            setTeamRedInput("");
+          } else {
+            setTeamBlueInput("");
+          }
+        },
       }
-
-      setError(null);
-    } catch (err) {
-      console.error("Failed to add player:", err);
-      setError("Failed to add player");
-    } finally {
-      setIsLoading(false);
-    }
+    );
   };
 
-  const handleRemovePlayer = async (playerId: string) => {
-    setIsLoading(true);
-    try {
-      await removePlayer(gameId, playerId);
-
-      const response = await getLobbyState(gameId);
-      const lobbyData = response;
-      setLobbyData(lobbyData);
-
-      setError(null);
-    } catch (err) {
-      console.error("Failed to remove player:", err);
-      setError("Failed to remove player");
-    } finally {
-      setIsLoading(false);
-    }
+  const handleRemovePlayer = (playerId: string) => {
+    removePlayerMutation.mutate(playerId);
   };
 
   const handleEditPlayer = (player: LobbyPlayer) => {
@@ -506,44 +464,28 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
     setEditName(player.name);
   };
 
-  const handleSaveEdit = async () => {
+  const handleSaveEdit = () => {
     if (!editingPlayer || !editName.trim()) return;
 
-    setIsLoading(true);
-    try {
-      await modifyPlayer(gameId, editingPlayer, {
-        playerId: editingPlayer,
-        playerName: editName.trim(),
-      });
-
-      const response = await getLobbyState(gameId);
-      const lobbyData = response;
-      setLobbyData(lobbyData);
-
-      setEditingPlayer(null);
-      setEditName("");
-      setError(null);
-    } catch (err) {
-      console.error("Failed to update player name:", err);
-      setError("Failed to update player name");
-    } finally {
-      setIsLoading(false);
-    }
+    renamePlayerMutation.mutate(
+      { playerId: editingPlayer, newPlayerName: editName.trim() },
+      {
+        onSuccess: () => {
+          setEditingPlayer(null);
+          setEditName("");
+        },
+      }
+    );
   };
 
-  const handleStartGame = async () => {
+  const handleStartGame = () => {
     if (!canStartGame) return;
 
-    setIsLoading(true);
-    try {
-      await startGame(gameId);
-      navigate(`/game/${gameId}`);
-    } catch (err) {
-      console.error("Failed to start game:", err);
-      setError("Failed to start game");
-    } finally {
-      setIsLoading(false);
-    }
+    startGameMutation.mutate(undefined, {
+      onSuccess: () => {
+        navigate(`/game/${gameId}`);
+      },
+    });
   };
 
   // Drag and drop handlers
@@ -569,7 +511,7 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
     }
   };
 
-  const handleDrop = async (e: React.DragEvent, toTeam: string) => {
+  const handleDrop = (e: React.DragEvent, toTeam: string) => {
     e.preventDefault();
     setDragOverTeam(null);
 
@@ -578,27 +520,17 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      // Use your actual API to move player to new team
-      await modifyPlayer(gameId, draggedPlayer.player.publicId, {
-        playerId: draggedPlayer.player.publicId,
-        teamName: toTeam,
-      });
-
-      // Reload lobby state after moving player
-      const response = await getLobbyState(gameId);
-      const lobbyData = response;
-      setLobbyData(lobbyData);
-
-      setError(null);
-    } catch (err) {
-      console.error("Failed to move player:", err);
-      setError("Failed to move player");
-    } finally {
-      setIsLoading(false);
-      setDraggedPlayer(null);
-    }
+    movePlayerMutation.mutate(
+      { playerId: draggedPlayer.player.publicId, newTeamName: toTeam },
+      {
+        onSuccess: () => {
+          setDraggedPlayer(null);
+        },
+        onError: () => {
+          setDraggedPlayer(null);
+        },
+      }
+    );
   };
 
   const handleDragEnd = () => {
@@ -623,7 +555,7 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
                 marginTop: "1rem",
               }}
             >
-              {JSON.stringify(lobbyData, null, 2)}
+              {JSON.stringify(currentLobbyData, null, 2)}
             </pre>
           </div>
         </MainContent>
@@ -652,7 +584,7 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
           <Title>Game Lobby</Title>
           <GameInfo>
             <InfoItem>
-              <strong>Game ID:</strong> {lobbyData?.publicId || "Loading..."}
+              <strong>Game ID:</strong> {currentLobbyData?.publicId || "Loading..."}
             </InfoItem>
             <InfoItem>
               <Users size={20} />
@@ -665,7 +597,7 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
         </Header>
 
         <TeamsGrid>
-          {lobbyData?.teams?.map((team) => (
+          {currentLobbyData?.teams?.map((team) => (
             <TeamTile
               key={team.name}
               teamColor={

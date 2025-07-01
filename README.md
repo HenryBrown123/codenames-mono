@@ -549,6 +549,8 @@ Frontend and backend extend these base types with their specific requirements.
 │       ├── lib
 │       ├── lobby
 │       │   └── api
+│       │       ├── mutations
+│       │       └── queries
 │       ├── shared-types
 │       └── style
 └── shared
@@ -557,7 +559,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-78 directories
+80 directories
 ```
 
 ## Getting Started
