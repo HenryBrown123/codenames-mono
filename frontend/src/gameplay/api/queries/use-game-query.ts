@@ -50,7 +50,7 @@ interface GameStateApiResponse {
         playerName: string;
         teamName: string;
         role: string;
-      };
+      } | null;
     };
   };
 }
@@ -91,11 +91,11 @@ function transformApiResponseToGameData(apiResponse: GameStateApiResponse): Game
         guesses: turn.guesses,
       })),
     } : null,
-    playerContext: {
+    playerContext: game.playerContext ? {
       playerName: game.playerContext.playerName,
       teamName: game.playerContext.teamName,
       role: game.playerContext.role as any, // Will be validated by backend
-    },
+    } : null,
   };
 }
 
