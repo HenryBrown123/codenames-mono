@@ -4,5 +4,14 @@
   },
   "explorer.excludeGitIgnore": false,
   "typescript.validate.enable": true,
-  "typescript.tsserver.experimental.enableProjectDiagnostics": true
+  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
+  "prettier.configPath": "./.prettierrc",
+  "prettier.ignorePath": "./.prettierignore",
+  "prettier.requireConfig": true,
+  "prettier.resolveGlobalModules": false,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  }
 }
