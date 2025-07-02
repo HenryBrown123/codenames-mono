@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { PlayerRole, PLAYER_ROLE } from "@codenames/shared/types";
 import { GameData } from "@frontend/shared-types";
@@ -13,6 +13,17 @@ const fadeIn = keyframes`
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+`;
+
+const fadeOutBlur = keyframes`
+  from {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+  to {
+    opacity: 0;
+    backdrop-filter: blur(0px);
   }
 `;
 
@@ -34,7 +45,7 @@ const spin = keyframes`
   }
 `;
 
-const OverlayContainer = styled.div`
+const OverlayContainer = styled.div<{ $isExiting?: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
@@ -45,6 +56,7 @@ const OverlayContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  animation: ${(props) => (props.$isExiting ? fadeOutBlur : "none")} 0.6s ease-out forwards;
 `;
 
 const BackgroundBlur = styled.div`
@@ -138,7 +150,9 @@ const PlayerName = styled.h2<{ $teamColor?: string }>`
   font-size: 1.8rem;
   font-weight: bold;
   margin: 0 0 0.5rem;
-  ${props => props.$teamColor && `
+  ${(props) =>
+    props.$teamColor &&
+    `
     background: linear-gradient(135deg, ${props.$teamColor}dd, ${props.$teamColor}99);
     padding: 0.5rem 1.5rem;
     border-radius: 12px;
@@ -212,10 +226,6 @@ const ErrorText = styled.p`
 
 interface DeviceHandoffOverlayProps {
   gameData: GameData;
-  pendingTransition: {
-    stage: PlayerRole;
-    scene: string;
-  };
   onContinue: (playerId: string) => void;
 }
 
@@ -289,28 +299,36 @@ const getActionText = (role: PlayerRole): string => {
  */
 export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
   gameData,
-  pendingTransition,
   onContinue,
 }) => {
+  const [isExiting, setIsExiting] = useState(false);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+
   // Query players to find who's active
   const { data: players, isLoading, error } = usePlayersQuery(gameData.publicId);
-  
+
   // Find the next active player
-  const nextPlayer = players?.find(p => p.status === 'ACTIVE');
-  
-  // Show loading state while querying
-  if (isLoading) {
-    return (
-      <OverlayContainer>
-        <BackgroundBlur />
-        <LoadingCard>
-          <LoadingSpinner />
-          <LoadingText>Finding next player...</LoadingText>
-        </LoadingCard>
-      </OverlayContainer>
-    );
-  }
-  
+  const nextPlayer = players?.find((p) => p.status === "ACTIVE");
+
+  /**
+   * Handle continue button click - start exit animation
+   */
+  const handleContinueClick = (playerId: string) => {
+    setSelectedPlayerId(playerId);
+    setIsExiting(true);
+  };
+
+  /**
+   * Handle animation end - trigger actual handoff
+   */
+  const handleAnimationEnd = (e: React.AnimationEvent) => {
+    if (e.animationName === fadeOutBlur.getName() && selectedPlayerId) {
+      onContinue(selectedPlayerId);
+    }
+  };
+
+  // Skip loading state to avoid flashes
+
   // Show error if query failed
   if (error) {
     return (
@@ -319,54 +337,47 @@ export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
         <HandoffCard>
           <Title>Error</Title>
           <ErrorText>Failed to determine next player</ErrorText>
-          <ContinueButton onClick={() => window.location.reload()}>
-            Reload Game
-          </ContinueButton>
+          <ContinueButton onClick={() => window.location.reload()}>Reload Game</ContinueButton>
         </HandoffCard>
       </OverlayContainer>
     );
   }
-  
-  // Show error if no active player found
-  if (!nextPlayer) {
+
+  // Show error if no active player found (but only if not loading to avoid flash)
+  if (!nextPlayer && !isLoading) {
     return (
       <OverlayContainer>
         <BackgroundBlur />
         <HandoffCard>
           <Title>No Active Player</Title>
           <ErrorText>Unable to find an active player. This shouldn't happen!</ErrorText>
-          <ContinueButton onClick={() => window.location.reload()}>
-            Reload Game
-          </ContinueButton>
+          <ContinueButton onClick={() => window.location.reload()}>Reload Game</ContinueButton>
         </HandoffCard>
       </OverlayContainer>
     );
   }
-  
+
+  // Return null while loading to avoid flash
+  if (isLoading || !nextPlayer) {
+    return null;
+  }
+
   // Now we have the next player, determine display details
   const targetRole = nextPlayer.role;
   const targetTeam = nextPlayer.teamName;
   const teamColor = getTeamColor(targetTeam);
-  
+
   // Display name based on role
-  const displayName = targetRole === PLAYER_ROLE.CODEMASTER 
-    ? nextPlayer.name 
-    : `${targetTeam} Codebreakers`;
-  
+  const displayName =
+    targetRole === PLAYER_ROLE.CODEMASTER ? nextPlayer.name : `${targetTeam} Codebreakers`;
+
   const actionText = getActionText(targetRole);
-  
-  const handleContinue = () => {
-    // Pass the player ID to parent for context update
-    onContinue(nextPlayer.publicId);
-  };
-  
+
   return (
-    <OverlayContainer>
+    <OverlayContainer $isExiting={isExiting} onAnimationEnd={handleAnimationEnd}>
       <BackgroundBlur />
       <HandoffCard>
-        <HandoffIcon $color={getRoleColor(targetRole)}>
-          {getRoleIcon(targetRole)}
-        </HandoffIcon>
+        <HandoffIcon $color={getRoleColor(targetRole)}>{getRoleIcon(targetRole)}</HandoffIcon>
 
         <Title>Pass the Device</Title>
         <Subtitle>It's time for the next player to take their turn</Subtitle>
@@ -378,16 +389,14 @@ export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
 
           {targetRole === PLAYER_ROLE.CODEMASTER && (
             <RoleInfo>
-              <TeamInfo $teamColor={teamColor}>
-                {targetTeam} Codemaster
-              </TeamInfo>
+              <TeamInfo $teamColor={teamColor}>{targetTeam} Codemaster</TeamInfo>
             </RoleInfo>
           )}
 
           <ActionText>{actionText}</ActionText>
         </PlayerInfo>
 
-        <ContinueButton onClick={handleContinue}>
+        <ContinueButton onClick={() => handleContinueClick(nextPlayer.publicId)}>
           I'm Ready
         </ContinueButton>
       </HandoffCard>

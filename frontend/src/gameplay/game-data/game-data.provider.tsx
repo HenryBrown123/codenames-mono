@@ -14,26 +14,8 @@ interface GameDataProviderProps {
   gameId: string;
 }
 
-export const GameDataProvider = ({
-  children,
-  gameId,
-}: GameDataProviderProps) => {
+export const GameDataProvider = ({ children, gameId }: GameDataProviderProps) => {
   const gameDataQuery = useGameDataQuery(gameId);
-
-  if (gameDataQuery.isPending) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <div>Loading game...</div>
-      </div>
-    );
-  }
 
   if (gameDataQuery.isError) {
     return (

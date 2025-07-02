@@ -1,13 +1,10 @@
-import React from "react";
-import styled, { keyframes } from "styled-components";
+import React, { Suspense } from "react";
+import styled from "styled-components";
 import { useGameData } from "@frontend/gameplay/game-data";
 import { usePlayerScene } from "@frontend/gameplay/role-scenes";
 import { useTurn } from "@frontend/gameplay/turn-management";
 import { getSceneMessage } from "./scene-messages";
-import {
-  getDashboardComponent,
-  getBoardComponent,
-} from "./component-mappings";
+import { getDashboardComponent, getBoardComponent } from "./component-mappings";
 import { ViewOnlyBoard } from "../game-board";
 import { GameInstructions } from "../game-instructions";
 import { DeviceHandoffOverlay } from "../device-handoff";
@@ -18,6 +15,7 @@ const GameSceneContainer = styled.div`
   height: 100vh;
   width: 100%;
   overflow: hidden;
+  position: relative;
 `;
 
 const InstructionsContainer = styled.div`
@@ -60,51 +58,47 @@ const DashboardContainer = styled.div`
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 `;
 
-const blurIn = keyframes`
-  from {
-    filter: blur(0px);
-  }
-  to {
-    filter: blur(8px);
+const SkeletonPulse = styled.div`
+  background: linear-gradient(90deg, rgba(65, 63, 63, 0.4) 25%, rgba(65, 63, 63, 0.6) 50%, rgba(65, 63, 63, 0.4) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  border-radius: 8px;
+
+  @keyframes skeleton-pulse {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
   }
 `;
 
-const blurOut = keyframes`
-  from {
-    filter: blur(8px);
-  }
-  to {
-    filter: blur(0px);
-  }
-`;
+const GameSceneSkeleton: React.FC = () => (
+  <>
+    <InstructionsContainer>
+      <SkeletonPulse style={{ width: '80%', height: '60%' }} />
+    </InstructionsContainer>
 
-const BlurredBackground = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.3;
-  filter: blur(8px);
-  pointer-events: none;
-  animation: ${blurIn} 0.6s ease-out;
-`;
+    <GameBoardContainer>
+      <SkeletonPulse style={{ 
+        width: '90%', 
+        height: '80%',
+        maxWidth: 'min(90vw, 80vh)',
+        aspectRatio: '5/4'
+      }} />
+    </GameBoardContainer>
 
-const GameSceneContentWrapper = styled.div<{ $animate?: boolean }>`
-  width: 100%;
-  height: 100%;
-  animation: ${props => props.$animate ? blurOut : 'none'} 0.6s ease-out;
-`;
+    <DashboardContainer>
+      <SkeletonPulse style={{ width: '70%', height: '50%' }} />
+    </DashboardContainer>
+  </>
+);
 
 export const GameScene: React.FC = () => {
   const { gameData } = useGameData();
   const { activeTurn } = useTurn();
-  const {
-    currentRole,
-    currentScene,
-    requiresHandoff,
-    completeHandoff,
-  } = usePlayerScene();
+  const { currentRole, currentScene, requiresHandoff, completeHandoff } = usePlayerScene();
 
   // Handle game over state
   if (gameData.currentRound?.status === "COMPLETED") {
@@ -124,37 +118,32 @@ export const GameScene: React.FC = () => {
   }
 
   if (requiresHandoff) {
-    // Show current role's board blurred during handoff
     return (
       <GameSceneContainer>
-        <BlurredBackground>
+        <Suspense fallback={<GameSceneSkeleton />}>
           <GameSceneContent
             currentRole={currentRole}
             currentScene={currentScene}
             gameData={gameData}
             activeTurn={activeTurn}
           />
-        </BlurredBackground>
-        <DeviceHandoffOverlay
-          gameData={gameData}
-          pendingTransition={{ stage: "NONE" as any, scene: "main" }}
-          onContinue={completeHandoff}
-        />
+        </Suspense>
+        <DeviceHandoffOverlay gameData={gameData} onContinue={completeHandoff} />
       </GameSceneContainer>
     );
   }
 
-  // Normal gameplay - animate blur out on mount
+  // Normal gameplay
   return (
     <GameSceneContainer>
-      <GameSceneContentWrapper key={currentRole} $animate>
+      <Suspense fallback={<GameSceneSkeleton />}>
         <GameSceneContent
           currentRole={currentRole}
           currentScene={currentScene}
           gameData={gameData}
           activeTurn={activeTurn}
         />
-      </GameSceneContentWrapper>
+      </Suspense>
     </GameSceneContainer>
   );
 };
@@ -175,12 +164,7 @@ const GameSceneContent: React.FC<GameSceneContentProps> = ({
   gameData,
   activeTurn,
 }) => {
-  const messageText = getSceneMessage(
-    currentRole,
-    currentScene,
-    gameData,
-    activeTurn,
-  );
+  const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
   const BoardComponent = getBoardComponent(currentRole, currentScene);
 
