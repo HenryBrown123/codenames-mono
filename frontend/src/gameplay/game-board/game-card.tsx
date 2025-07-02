@@ -1,8 +1,9 @@
-import React, { memo, useCallback } from "react";
+import { memo, useCallback } from "react";
 import styled, { css, keyframes } from "styled-components";
 import { FaStar, FaLeaf, FaSkull, FaPeace } from "react-icons/fa";
 import { Card } from "@frontend/shared-types";
-import { VisualState, Animation } from "./use-card-visibility";
+import { useCardVisibility } from './use-card-visibility';
+import type { VisualState } from './card-visibility-provider';
 
 // Card colors
 const CARD_COLORS = {
@@ -96,11 +97,11 @@ const CardContainer = styled.div`
   z-index: 1;
   
   /* Raise z-index when animating or covered */
-  &[data-state="covered"] {
+  &[data-state="revealed"] {
     z-index: 10;
   }
   
-  &[data-animation="covering"] {
+  &[data-animation="reveal"] {
     z-index: 10;
   }
   
@@ -109,8 +110,9 @@ const CardContainer = styled.div`
   
   /* State-based visibility */
   &[data-state="visible"],
-  &[data-state="visible-colored"],
-  &[data-state="covered"] {
+  &[data-state="dealing"],
+  &[data-state="selected"],
+  &[data-state="revealed"] {
     opacity: 1;
   }
   
@@ -119,20 +121,28 @@ const CardContainer = styled.div`
     background-color: ${CARD_COLORS.neutral};
   }
   
-  &[data-state="visible-colored"] .card-front {
+  &[data-state="dealing"] .card-front {
+    background-color: ${CARD_COLORS.neutral};
+  }
+  
+  &[data-state="selected"] .card-front {
+    background-color: var(--team-color);
+  }
+  
+  &[data-state="revealed"] .card-front {
     background-color: var(--team-color);
   }
   
   /* Animation triggers */
-  &[data-animation="dealing"] {
+  &[data-animation="deal"] {
     animation: ${dealAnimation} 0.7s calc(var(--card-index) * 75ms) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   }
   
-  &[data-animation="covering"] .card-inner {
+  &[data-animation="reveal"] .card-inner {
     animation: ${coverAnimation} 0.6s ease-in-out forwards;
   }
   
-  &[data-animation="color-fade"] .card-front {
+  &[data-animation="select"] .card-front {
     animation: ${colorRevealAnimation} 0.8s ease-in-out forwards;
   }
 `;
@@ -154,13 +164,13 @@ const CardInner = styled.div<{ $clickable: boolean }>`
     transform: ${props => props.$clickable ? 'translateY(1px)' : 'none'};
   }
   
-  /* Flip when covered */
-  [data-state="covered"] & {
+  /* Flip when revealed */
+  [data-state="revealed"] & {
     transform: rotateY(180deg);
   }
   
-  /* Combine transforms when covered and hovering */
-  [data-state="covered"] &:hover {
+  /* Combine transforms when revealed and hovering */
+  [data-state="revealed"] &:hover {
     transform: rotateY(180deg);
   }
 `;
@@ -279,11 +289,9 @@ const CornerIcon = styled.div`
 export interface GameCardProps {
   card: Card;
   index: number;
-  state: VisualState;
-  animation: Animation | null;
-  onAnimationComplete: () => void;
   onClick: () => void;
   clickable: boolean;
+  initialVisibility: VisualState;
 }
 
 /**
@@ -292,20 +300,19 @@ export interface GameCardProps {
 export const GameCard = memo<GameCardProps>(({
   card,
   index,
-  state,
-  animation,
-  onAnimationComplete,
   onClick,
   clickable,
+  initialVisibility,
 }) => {
   const teamColor = getCardColor(card);
+  const visibility = useCardVisibility(card, index, initialVisibility);
   
   const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
     // Only handle animations on the container element
-    if (e.target === e.currentTarget && animation) {
-      onAnimationComplete();
+    if (e.target === e.currentTarget && visibility.animation) {
+      visibility.completeTransition();
     }
-  }, [animation, onAnimationComplete]);
+  }, [visibility.animation, visibility.completeTransition]);
   
   const handleClick = useCallback(() => {
     if (clickable && !card.selected) {
@@ -315,8 +322,8 @@ export const GameCard = memo<GameCardProps>(({
   
   return (
     <CardContainer 
-      data-state={state}
-      data-animation={animation}
+      data-state={visibility.state}
+      data-animation={visibility.animation}
       style={{ '--card-index': index, '--team-color': teamColor } as React.CSSProperties}
       onAnimationEnd={handleAnimationEnd}
     >
