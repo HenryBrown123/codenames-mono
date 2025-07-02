@@ -1,5 +1,5 @@
 import React from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { useGameData } from "@frontend/gameplay/game-data";
 import { usePlayerScene } from "@frontend/gameplay/role-scenes";
 import { useTurn } from "@frontend/gameplay/turn-management";
@@ -60,6 +60,24 @@ const DashboardContainer = styled.div`
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 `;
 
+const blurIn = keyframes`
+  from {
+    filter: blur(0px);
+  }
+  to {
+    filter: blur(8px);
+  }
+`;
+
+const blurOut = keyframes`
+  from {
+    filter: blur(8px);
+  }
+  to {
+    filter: blur(0px);
+  }
+`;
+
 const BlurredBackground = styled.div`
   position: absolute;
   top: 0;
@@ -67,8 +85,15 @@ const BlurredBackground = styled.div`
   width: 100%;
   height: 100%;
   opacity: 0.3;
-  filter: blur(4px);
+  filter: blur(8px);
   pointer-events: none;
+  animation: ${blurIn} 0.6s ease-out;
+`;
+
+const GameSceneContentWrapper = styled.div<{ $animate?: boolean }>`
+  width: 100%;
+  height: 100%;
+  animation: ${props => props.$animate ? blurOut : 'none'} 0.6s ease-out;
 `;
 
 export const GameScene: React.FC = () => {
@@ -119,15 +144,17 @@ export const GameScene: React.FC = () => {
     );
   }
 
-  // Normal gameplay
+  // Normal gameplay - animate blur out on mount
   return (
     <GameSceneContainer>
-      <GameSceneContent
-        currentRole={currentRole}
-        currentScene={currentScene}
-        gameData={gameData}
-        activeTurn={activeTurn}
-      />
+      <GameSceneContentWrapper key={currentRole} $animate>
+        <GameSceneContent
+          currentRole={currentRole}
+          currentScene={currentScene}
+          gameData={gameData}
+          activeTurn={activeTurn}
+        />
+      </GameSceneContentWrapper>
     </GameSceneContainer>
   );
 };
