@@ -4,7 +4,7 @@ import { useGameData } from "@frontend/gameplay/game-data";
 import { useGameActions } from "@frontend/gameplay/game-actions";
 import { useTurn } from "@frontend/gameplay/turn-management";
 import { GameCard } from "./game-card";
-import { useCardVisibility } from "./use-card-visibility";
+import { CardVisibilityProvider } from "./card-visibility-provider";
 
 const BoardGrid = styled.div`
   display: grid;
@@ -30,12 +30,6 @@ export const InteractiveBoard = memo(() => {
   const { makeGuess, actionState } = useGameActions();
   const { activeTurn } = useTurn();
   const cards = gameData.currentRound?.cards || [];
-  
-  // Always start visible - only loaded during active play
-  const { getCardVisibility } = useCardVisibility({ 
-    cards, 
-    initialState: 'visible'
-  });
   
   const isLoading = actionState.status === "loading";
   
@@ -77,24 +71,20 @@ export const InteractiveBoard = memo(() => {
   }
   
   return (
-    <BoardGrid aria-label="interactive game board">
-      {cards.map((card, index) => {
-        const visibility = getCardVisibility(card);
-        
-        return (
+    <CardVisibilityProvider>
+      <BoardGrid aria-label="interactive game board">
+        {cards.map((card, index) => (
           <GameCard
             key={card.word}
             card={card}
             index={index}
-            state={visibility.state}
-            animation={visibility.animation}
-            onAnimationComplete={visibility.completeTransition}
             onClick={() => handleCardClick(card.word)}
             clickable={canMakeGuess && !isLoading && !card.selected}
+            initialVisibility="visible"
           />
-        );
-      })}
-    </BoardGrid>
+        ))}
+      </BoardGrid>
+    </CardVisibilityProvider>
   );
 });
 
@@ -108,15 +98,6 @@ export const ViewOnlyBoard = memo(() => {
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === 'SETUP';
   
-  // In ViewOnlyBoard, add logging to track cards
-  console.log('[ViewOnlyBoard] Cards:', cards.map((c, i) => `${i}: ${c.word}`));
-  
-  // Show dealing animation during setup
-  const { getCardVisibility } = useCardVisibility({ 
-    cards, 
-    initialState: isRoundSetup ? 'hidden' : 'visible'
-  });
-  
   // Show empty state if no cards
   if (cards.length === 0) {
     return (
@@ -129,24 +110,20 @@ export const ViewOnlyBoard = memo(() => {
   }
   
   return (
-    <BoardGrid aria-label="view-only game board">
-      {cards.map((card, index) => {
-        const visibility = getCardVisibility(card);
-        
-        return (
+    <CardVisibilityProvider>
+      <BoardGrid aria-label="view-only game board">
+        {cards.map((card, index) => (
           <GameCard
             key={card.word}
             card={card}
             index={index}
-            state={visibility.state}
-            animation={visibility.animation}
-            onAnimationComplete={visibility.completeTransition}
-            onClick={() => {}} // View-only, no clicking
+            onClick={() => {}}
             clickable={false}
+            initialVisibility={isRoundSetup ? 'hidden' : 'visible'}
           />
-        );
-      })}
-    </BoardGrid>
+        ))}
+      </BoardGrid>
+    </CardVisibilityProvider>
   );
 });
 
