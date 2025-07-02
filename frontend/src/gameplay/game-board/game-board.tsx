@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import styled from "styled-components";
 import { useGameData } from "@frontend/gameplay/game-data";
 import { useGameActions } from "@frontend/gameplay/game-actions";
@@ -35,19 +35,10 @@ export const InteractiveBoard = memo(() => {
   
   // Determine if the current player can make guesses
   const canMakeGuess = useMemo(() => {
-    // Must be a codebreaker
     if (gameData.playerContext?.role !== 'CODEBREAKER') return false;
-    
-    // Must have an active turn
     if (!activeTurn || activeTurn.status !== 'ACTIVE') return false;
-    
-    // Must be the player's team's turn
     if (activeTurn.teamName !== gameData.playerContext.teamName) return false;
-    
-    // Must have a clue
     if (!activeTurn.clue) return false;
-    
-    // Must have guesses remaining
     if (activeTurn.guessesRemaining <= 0) return false;
     
     return true;
@@ -59,7 +50,6 @@ export const InteractiveBoard = memo(() => {
     }
   }, [makeGuess, isLoading, canMakeGuess]);
   
-  // Show empty state if no cards
   if (cards.length === 0) {
     return (
       <BoardGrid aria-label="interactive game board">
@@ -98,7 +88,6 @@ export const ViewOnlyBoard = memo(() => {
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === 'SETUP';
   
-  // Show empty state if no cards
   if (cards.length === 0) {
     return (
       <BoardGrid aria-label="view-only game board">

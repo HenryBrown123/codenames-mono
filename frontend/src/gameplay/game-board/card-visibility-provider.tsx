@@ -23,14 +23,15 @@
  * - Board: Simply wraps children in provider, no visibility logic needed
  */
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
-export type VisualState = 'hidden' | 'dealing' | 'visible' | 'selected' | 'revealed';
-export type AnimationType = 'deal' | 'select' | 'reveal' | 'flip' | null;
+export type VisualState = 'hidden' | 'visible' | 'visible-colored' | 'covered';
+export type AnimationType = 'dealing' | 'color-fade' | 'covering' | null;
 
 interface CardVisibilityState {
-  cards: Map<string, VisualState>;
-  updateCard: (word: string, state: VisualState) => void;
+  registerCard: (word: string, initialState: VisualState) => void;
+  getCardState: (word: string) => VisualState | undefined;
+  transitionCard: (word: string, newState: VisualState) => void;
 }
 
 const CardVisibilityContext = createContext<CardVisibilityState | null>(null);
@@ -45,16 +46,29 @@ interface CardVisibilityProviderProps {
 export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({ children }) => {
   const [cards, setCards] = useState(new Map<string, VisualState>());
   
-  const updateCard = useCallback((word: string, state: VisualState) => {
+  const registerCard = useCallback((word: string, initialState: VisualState) => {
+    setCards(prev => {
+      if (prev.has(word)) return prev; // Already registered
+      const next = new Map(prev);
+      next.set(word, initialState);
+      return next;
+    });
+  }, []);
+  
+  const getCardState = useCallback((word: string) => {
+    return cards.get(word);
+  }, [cards]);
+  
+  const transitionCard = useCallback((word: string, newState: VisualState) => {
     setCards(prev => {
       const next = new Map(prev);
-      next.set(word, state);
+      next.set(word, newState);
       return next;
     });
   }, []);
   
   return (
-    <CardVisibilityContext.Provider value={{ cards, updateCard }}>
+    <CardVisibilityContext.Provider value={{ registerCard, getCardState, transitionCard }}>
       {children}
     </CardVisibilityContext.Provider>
   );

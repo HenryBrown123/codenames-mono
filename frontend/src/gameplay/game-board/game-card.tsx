@@ -97,11 +97,11 @@ const CardContainer = styled.div`
   z-index: 1;
   
   /* Raise z-index when animating or covered */
-  &[data-state="revealed"] {
+  &[data-state="covered"] {
     z-index: 10;
   }
   
-  &[data-animation="reveal"] {
+  &[data-animation="covering"] {
     z-index: 10;
   }
   
@@ -110,9 +110,8 @@ const CardContainer = styled.div`
   
   /* State-based visibility */
   &[data-state="visible"],
-  &[data-state="dealing"],
-  &[data-state="selected"],
-  &[data-state="revealed"] {
+  &[data-state="visible-colored"],
+  &[data-state="covered"] {
     opacity: 1;
   }
   
@@ -121,28 +120,20 @@ const CardContainer = styled.div`
     background-color: ${CARD_COLORS.neutral};
   }
   
-  &[data-state="dealing"] .card-front {
-    background-color: ${CARD_COLORS.neutral};
-  }
-  
-  &[data-state="selected"] .card-front {
-    background-color: var(--team-color);
-  }
-  
-  &[data-state="revealed"] .card-front {
+  &[data-state="visible-colored"] .card-front {
     background-color: var(--team-color);
   }
   
   /* Animation triggers */
-  &[data-animation="deal"] {
+  &[data-animation="dealing"] {
     animation: ${dealAnimation} 0.7s calc(var(--card-index) * 75ms) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   }
   
-  &[data-animation="reveal"] .card-inner {
+  &[data-animation="covering"] .card-inner {
     animation: ${coverAnimation} 0.6s ease-in-out forwards;
   }
   
-  &[data-animation="select"] .card-front {
+  &[data-animation="color-fade"] .card-front {
     animation: ${colorRevealAnimation} 0.8s ease-in-out forwards;
   }
 `;
@@ -164,13 +155,13 @@ const CardInner = styled.div<{ $clickable: boolean }>`
     transform: ${props => props.$clickable ? 'translateY(1px)' : 'none'};
   }
   
-  /* Flip when revealed */
-  [data-state="revealed"] & {
+  /* Flip when covered */
+  [data-state="covered"] & {
     transform: rotateY(180deg);
   }
   
-  /* Combine transforms when revealed and hovering */
-  [data-state="revealed"] &:hover {
+  /* Combine transforms when covered and hovering */
+  [data-state="covered"] &:hover {
     transform: rotateY(180deg);
   }
 `;
