@@ -64,7 +64,7 @@ export const InteractiveBoard = memo(() => {
   }
 
   return (
-    <CardVisibilityProvider>
+    <CardVisibilityProvider cards={cards} initialState="visible">
       <BoardGrid aria-label="interactive game board">
         {cards.map((card, index) => (
           <GameCard
@@ -101,8 +101,10 @@ export const ViewOnlyBoard = memo(() => {
     );
   }
 
+  console.log("Rendering ViewOnlyBoard");
+
   return (
-    <CardVisibilityProvider>
+    <CardVisibilityProvider cards={cards} initialState={isRoundSetup ? "hidden" : "visible"}>
       <BoardGrid aria-label="view-only game board">
         {cards.map((card, index) => (
           <GameCard

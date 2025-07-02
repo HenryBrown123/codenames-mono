@@ -5,13 +5,13 @@
  * Each card subscribes to its own state changes via the useCardVisibility hook.
  */
 
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { Card } from "@frontend/shared-types";
 
 export type VisualState = "hidden" | "visible" | "visible-colored" | "covered";
 export type AnimationType = "dealing" | "color-fade" | "covering" | null;
 
 interface CardVisibilityState {
-  registerCard: (word: string, initialState: VisualState) => void;
   getCardState: (word: string) => VisualState | undefined;
   transitionCard: (word: string, newState: VisualState) => void;
 }
@@ -20,32 +20,37 @@ const CardVisibilityContext = createContext<CardVisibilityState | null>(null);
 
 interface CardVisibilityProviderProps {
   children: ReactNode;
+  cards: Card[];
+  initialState: VisualState;
 }
 
 /**
  * Provider that manages visibility state for all cards
+ * Initializes all cards upfront to avoid render-time updates
  */
-export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({ children }) => {
-  const [cards, setCards] = useState(new Map<string, VisualState>());
-
-  const registerCard = useCallback((word: string, initialState: VisualState) => {
-    setCards((prev) => {
-      if (prev.has(word)) return prev; // Already registered
-      const next = new Map(prev);
-      next.set(word, initialState);
-      return next;
+export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
+  children,
+  cards,
+  initialState,
+}) => {
+  const [cardStates, setCardStates] = useState(() => {
+    // Initialize all cards at provider creation
+    const initial = new Map<string, VisualState>();
+    cards.forEach((card) => {
+      initial.set(card.word, card.selected ? "covered" : initialState);
     });
-  }, []);
+    return initial;
+  });
 
   const getCardState = useCallback(
     (word: string) => {
-      return cards.get(word);
+      return cardStates.get(word);
     },
-    [cards],
+    [cardStates],
   );
 
   const transitionCard = useCallback((word: string, newState: VisualState) => {
-    setCards((prev) => {
+    setCardStates((prev) => {
       const next = new Map(prev);
       next.set(word, newState);
       return next;
@@ -53,7 +58,7 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({ 
   }, []);
 
   return (
-    <CardVisibilityContext.Provider value={{ registerCard, getCardState, transitionCard }}>
+    <CardVisibilityContext.Provider value={{ getCardState, transitionCard }}>
       {children}
     </CardVisibilityContext.Provider>
   );
