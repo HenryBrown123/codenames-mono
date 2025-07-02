@@ -59,7 +59,12 @@ const DashboardContainer = styled.div`
 `;
 
 const SkeletonPulse = styled.div`
-  background: linear-gradient(90deg, rgba(65, 63, 63, 0.4) 25%, rgba(65, 63, 63, 0.6) 50%, rgba(65, 63, 63, 0.4) 75%);
+  background: linear-gradient(
+    90deg,
+    rgba(65, 63, 63, 0.4) 25%,
+    rgba(65, 63, 63, 0.6) 50%,
+    rgba(65, 63, 63, 0.4) 75%
+  );
   background-size: 200% 100%;
   animation: skeleton-pulse 1.5s ease-in-out infinite;
   border-radius: 8px;
@@ -77,20 +82,22 @@ const SkeletonPulse = styled.div`
 const GameSceneSkeleton: React.FC = () => (
   <>
     <InstructionsContainer>
-      <SkeletonPulse style={{ width: '80%', height: '60%' }} />
+      <SkeletonPulse style={{ width: "80%", height: "60%" }} />
     </InstructionsContainer>
 
     <GameBoardContainer>
-      <SkeletonPulse style={{ 
-        width: '90%', 
-        height: '80%',
-        maxWidth: 'min(90vw, 80vh)',
-        aspectRatio: '5/4'
-      }} />
+      <SkeletonPulse
+        style={{
+          width: "90%",
+          height: "80%",
+          maxWidth: "min(90vw, 80vh)",
+          aspectRatio: "5/4",
+        }}
+      />
     </GameBoardContainer>
 
     <DashboardContainer>
-      <SkeletonPulse style={{ width: '70%', height: '50%' }} />
+      <SkeletonPulse style={{ width: "70%", height: "50%" }} />
     </DashboardContainer>
   </>
 );
@@ -120,14 +127,13 @@ export const GameScene: React.FC = () => {
   if (requiresHandoff) {
     return (
       <GameSceneContainer>
-        <Suspense fallback={<GameSceneSkeleton />}>
-          <GameSceneContent
-            currentRole={currentRole}
-            currentScene={currentScene}
-            gameData={gameData}
-            activeTurn={activeTurn}
-          />
-        </Suspense>
+        <GameSceneContent
+          currentRole={currentRole}
+          currentScene={currentScene}
+          gameData={gameData}
+          activeTurn={activeTurn}
+        />
+
         <DeviceHandoffOverlay gameData={gameData} onContinue={completeHandoff} />
       </GameSceneContainer>
     );
@@ -136,14 +142,12 @@ export const GameScene: React.FC = () => {
   // Normal gameplay
   return (
     <GameSceneContainer>
-      <Suspense fallback={<GameSceneSkeleton />}>
-        <GameSceneContent
-          currentRole={currentRole}
-          currentScene={currentScene}
-          gameData={gameData}
-          activeTurn={activeTurn}
-        />
-      </Suspense>
+      <GameSceneContent
+        currentRole={currentRole}
+        currentScene={currentScene}
+        gameData={gameData}
+        activeTurn={activeTurn}
+      />
     </GameSceneContainer>
   );
 };
