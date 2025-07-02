@@ -6,7 +6,7 @@
  */
 
 import { useCallback } from "react";
-import type { Card } from "@frontend/shared-types";
+import { Card } from "@frontend/shared-types";
 import { useCardVisibilityContext } from "./card-visibility-provider";
 import type { VisualState, AnimationType } from "./card-visibility-provider";
 
@@ -59,26 +59,22 @@ export interface CardVisibility {
 
 /**
  * Hook for individual card visibility management
+ * Cards are pre-registered in the provider, so this just reads/updates state
  */
 export const useCardVisibility = (
   card: Card,
   index: number,
   initialState: VisualState = "visible",
 ): CardVisibility => {
-  const { registerCard, getCardState, transitionCard } = useCardVisibilityContext();
+  const { getCardState, transitionCard } = useCardVisibilityContext();
 
-  const currentState = getCardState(card.word);
-  if (!currentState) {
-    registerCard(card.word, card.selected ? "covered" : initialState);
-  }
-
-  // Use the current state or initial state
-  const state = currentState || initialState;
+  // Get current state - cards are pre-registered in provider
+  const state = getCardState(card.word) || initialState;
 
   // Find applicable transition based on current state and card properties
   const transition = CARD_TRANSITIONS.find((t) => t.from === state && t.condition(card));
 
-  // Animation completion handler - must always be called in same order
+  // Animation completion handler
   const completeTransition = useCallback(() => {
     if (transition) {
       transitionCard(card.word, transition.to);
