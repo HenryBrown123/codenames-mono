@@ -1,38 +1,42 @@
-import { useRef, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useCardVisibilityContext, VisualState, AnimationType } from './card-visibility-provider';
 import type { Card } from '@frontend/shared-types';
 
 interface CardTransition {
   from: VisualState;
   to: VisualState;
-  condition: (card: Card) => boolean;
   animation: AnimationType;
+  condition: (card: Card) => boolean;
 }
 
 const CARD_TRANSITIONS: CardTransition[] = [
+  // Cards appear with dealing animation
   {
     from: 'hidden',
-    to: 'dealing',
-    condition: () => true,
-    animation: 'deal',
-  },
-  {
-    from: 'dealing',
     to: 'visible',
+    animation: 'dealing',
     condition: () => true,
-    animation: null,
   },
+  // Cards reveal their team when data arrives (codemaster view)
   {
     from: 'visible',
-    to: 'selected',
-    condition: (card) => card.selected,
-    animation: 'select',
+    to: 'visible-colored',
+    animation: 'color-fade',
+    condition: (card) => !!card.teamName && !card.selected,
   },
+  // Cards cover when selected (from neutral state)
   {
-    from: 'selected',
-    to: 'revealed',
-    condition: (card) => card.selected && card.cardType !== undefined,
-    animation: 'reveal',
+    from: 'visible',
+    to: 'covered',
+    animation: 'covering',
+    condition: (card) => card.selected,
+  },
+  // Cards cover when selected (from colored state)
+  {
+    from: 'visible-colored',
+    to: 'covered',
+    animation: 'covering',
+    condition: (card) => card.selected,
   },
 ];
 
@@ -50,14 +54,17 @@ export const useCardVisibility = (
   index: number, 
   initialState: VisualState = 'visible'
 ): CardVisibility => {
-  const { cards, updateCard } = useCardVisibilityContext();
-  const currentState = cards.get(card.word) || initialState;
+  const { registerCard, getCardState, transitionCard } = useCardVisibilityContext();
   
-  // Initialize this card's state if not already in provider
-  const isInitialized = useRef(false);
-  if (!isInitialized.current && !cards.has(card.word)) {
-    updateCard(card.word, initialState);
-    isInitialized.current = true;
+  // Get current state or register if new
+  const currentState = getCardState(card.word);
+  if (!currentState) {
+    registerCard(card.word, initialState);
+    return { 
+      state: initialState, 
+      animation: null, 
+      completeTransition: () => {} 
+    };
   }
   
   // Find applicable transition based on current state and card properties
@@ -65,20 +72,12 @@ export const useCardVisibility = (
     t.from === currentState && t.condition(card)
   );
   
-  // Schedule dealing animation if needed
-  const timerRef = useRef<NodeJS.Timeout>();
-  if (currentState === 'hidden' && !timerRef.current) {
-    timerRef.current = setTimeout(() => {
-      updateCard(card.word, 'dealing');
-      timerRef.current = undefined;
-    }, index * 50); // Stagger animations by index
-  }
-  
+  // Animation completion handler
   const completeTransition = useCallback(() => {
     if (transition) {
-      updateCard(card.word, transition.to);
+      transitionCard(card.word, transition.to);
     }
-  }, [transition, card.word, updateCard]);
+  }, [transition, card.word, transitionCard]);
   
   return {
     state: currentState,
