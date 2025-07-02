@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React from "react";
 import styled from "styled-components";
 import { useGameData } from "@frontend/gameplay/game-data";
 import { usePlayerScene } from "@frontend/gameplay/role-scenes";

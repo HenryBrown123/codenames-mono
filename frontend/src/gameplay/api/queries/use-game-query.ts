@@ -140,5 +140,6 @@ export const useGameDataQuery = (
     staleTime: 30000,
     gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
+    // enabled: !!gameId,
   });
 };
