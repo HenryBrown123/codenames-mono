@@ -58,17 +58,17 @@ const RefreshButton = styled.button`
   padding: 0.25rem;
   border-radius: 4px;
   transition: all 0.2s;
-  
+
   &:hover {
     color: rgba(255, 255, 255, 0.8);
     background: rgba(255, 255, 255, 0.1);
   }
-  
+
   &:disabled {
     cursor: not-allowed;
     opacity: 0.3;
   }
-  
+
   svg {
     width: 1rem;
     height: 1rem;
@@ -92,10 +92,10 @@ export const CodebreakerDashboardView: React.FC = () => {
   const canEndTurn = React.useMemo(() => {
     // Must have an active turn with a clue
     if (!activeTurn || !activeTurn.clue) return false;
-    
+
     // Must be the player's team's turn
     if (gameData.playerContext?.teamName !== activeTurn.teamName) return false;
-    
+
     // Must have guesses remaining to end early
     return activeTurn.guessesRemaining > 0;
   }, [activeTurn, gameData.playerContext]);
@@ -115,9 +115,7 @@ export const CodebreakerDashboardView: React.FC = () => {
       <ButtonWrapper>
         <ActionButton
           onClick={handleEndTurn}
-          text={
-            actionState.status === "loading" ? "Ending Turn..." : "End Turn"
-          }
+          text={actionState.status === "loading" ? "Ending Turn..." : "End Turn"}
           enabled={(canEndTurn && actionState.status !== "loading") || false}
         />
       </ButtonWrapper>
@@ -168,9 +166,9 @@ export const LobbyDashboardView: React.FC = () => {
   const { gameData } = useGameData();
   const { createRound, startRound, dealCards, actionState } = useGameActions();
 
-  const canRedeal = 
-    gameData?.currentRound?.status === "SETUP" && 
-    gameData.currentRound.cards && 
+  const canRedeal =
+    gameData?.currentRound?.status === "SETUP" &&
+    gameData.currentRound.cards &&
     gameData.currentRound.cards.length > 0;
 
   const handleClick = () => {
@@ -213,10 +211,7 @@ export const LobbyDashboardView: React.FC = () => {
       return "Deal Cards";
     }
 
-    if (
-      gameData.currentRound?.status === "SETUP" &&
-      gameData.currentRound.cards?.length > 0
-    ) {
+    if (gameData.currentRound?.status === "SETUP" && gameData.currentRound.cards?.length > 0) {
       return "Start Round";
     }
 
@@ -224,7 +219,7 @@ export const LobbyDashboardView: React.FC = () => {
   };
 
   return (
-    <Container style={{ position: 'relative' }}>
+    <Container style={{ position: "relative" }}>
       {canRedeal && (
         <RefreshButton
           onClick={handleRedeal}
@@ -243,22 +238,6 @@ export const LobbyDashboardView: React.FC = () => {
       </ButtonWrapper>
     </Container>
   );
-};
-
-export const DealingDashboardView: React.FC = () => {
-  return (
-    <Container>
-      <LoadingSpinner />
-    </Container>
-  );
-};
-
-export const WaitingDashboardView: React.FC = () => {
-  return <Container />;
-};
-
-export const SpectatorDashboardView: React.FC = () => {
-  return <Container />;
 };
 
 export const GameoverDashboardView: React.FC = () => {

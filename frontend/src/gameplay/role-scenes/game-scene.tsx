@@ -1,5 +1,5 @@
 import React from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { useGameData } from "@frontend/gameplay/game-data";
 import { usePlayerScene } from "@frontend/gameplay/role-scenes";
 import { useTurn } from "@frontend/gameplay/turn-management";
@@ -33,6 +33,7 @@ const InstructionsContainer = styled.div`
   border-radius: 16px;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
   overflow-y: auto;
+  position: relative;
 `;
 
 const GameBoardContainer = styled.div`
@@ -58,54 +59,48 @@ const DashboardContainer = styled.div`
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 `;
 
-const SkeletonPulse = styled.div`
-  background: linear-gradient(
-    90deg,
-    rgba(65, 63, 63, 0.4) 25%,
-    rgba(65, 63, 63, 0.6) 50%,
-    rgba(65, 63, 63, 0.4) 75%
-  );
-  background-size: 200% 100%;
-  animation: skeleton-pulse 1.5s ease-in-out infinite;
-  border-radius: 8px;
-
-  @keyframes skeleton-pulse {
-    0% {
-      background-position: 200% 0;
-    }
-    100% {
-      background-position: -200% 0;
-    }
+const pulse = keyframes`
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
   }
 `;
 
-const GameSceneSkeleton: React.FC = () => (
-  <>
-    <InstructionsContainer>
-      <SkeletonPulse style={{ width: "80%", height: "60%" }} />
-    </InstructionsContainer>
-
-    <GameBoardContainer>
-      <SkeletonPulse
-        style={{
-          width: "90%",
-          height: "80%",
-          maxWidth: "min(90vw, 80vh)",
-          aspectRatio: "5/4",
-        }}
-      />
-    </GameBoardContainer>
-
-    <DashboardContainer>
-      <SkeletonPulse style={{ width: "70%", height: "50%" }} />
-    </DashboardContainer>
-  </>
-);
+const RefetchIndicator = styled.div`
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #4dabf7;
+  animation: ${pulse} 1.5s ease-in-out infinite;
+`;
 
 export const GameScene: React.FC = () => {
-  const { gameData } = useGameData();
+  const { gameData, isRefetching } = useGameData();
   const { activeTurn } = useTurn();
   const { currentRole, currentScene, requiresHandoff, completeHandoff } = usePlayerScene();
+
+  // If we're refetching and about to show handoff, show a loading state
+  if (isRefetching && gameData.gameType === "SINGLE_DEVICE" && currentRole === "NONE") {
+    return (
+      <GameSceneContainer>
+        <InstructionsContainer>
+          <GameInstructions messageText="Loading next turn..." />
+        </InstructionsContainer>
+        <GameBoardContainer>
+          <ViewOnlyBoard />
+        </GameBoardContainer>
+        <DashboardContainer>{/* Empty dashboard during transition */}</DashboardContainer>
+      </GameSceneContainer>
+    );
+  }
 
   // Handle game over state
   if (gameData.currentRound?.status === "COMPLETED") {
@@ -132,6 +127,7 @@ export const GameScene: React.FC = () => {
           currentScene={currentScene}
           gameData={gameData}
           activeTurn={activeTurn}
+          isRefetching={isRefetching}
         />
 
         <DeviceHandoffOverlay gameData={gameData} onContinue={completeHandoff} />
@@ -147,6 +143,7 @@ export const GameScene: React.FC = () => {
         currentScene={currentScene}
         gameData={gameData}
         activeTurn={activeTurn}
+        isRefetching={isRefetching}
       />
     </GameSceneContainer>
   );
@@ -160,6 +157,7 @@ interface GameSceneContentProps {
   currentScene: string;
   gameData: any;
   activeTurn: any;
+  isRefetching: boolean;
 }
 
 const GameSceneContent: React.FC<GameSceneContentProps> = ({
@@ -167,6 +165,7 @@ const GameSceneContent: React.FC<GameSceneContentProps> = ({
   currentScene,
   gameData,
   activeTurn,
+  isRefetching,
 }) => {
   const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
@@ -175,6 +174,7 @@ const GameSceneContent: React.FC<GameSceneContentProps> = ({
   return (
     <>
       <InstructionsContainer>
+        {isRefetching && <RefetchIndicator />}
         <GameInstructions messageText={messageText} />
       </InstructionsContainer>
 

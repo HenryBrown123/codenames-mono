@@ -1,9 +1,4 @@
-import {
-  useQuery,
-  UseQueryResult,
-  useSuspenseQuery,
-  UseSuspenseQueryResult,
-} from "@tanstack/react-query";
+import { useQuery, UseQueryResult, keepPreviousData } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
 import { GameData } from "@frontend/shared-types/domain-types";
@@ -65,9 +60,9 @@ function transformApiResponseToGameData(apiResponse: GameStateApiResponse): Game
 
   return {
     publicId: game.publicId,
-    status: game.status as any, // Will be validated by backend
-    gameType: game.gameType as any, // Will be validated by backend
-    gameFormat: game.gameFormat as any, // Will be validated by backend
+    status: game.status as any,
+    gameType: game.gameType as any,
+    gameFormat: game.gameFormat as any,
     createdAt: new Date(game.createdAt),
     teams: game.teams.map((team) => ({
       name: team.name,
@@ -81,7 +76,7 @@ function transformApiResponseToGameData(apiResponse: GameStateApiResponse): Game
     currentRound: game.currentRound
       ? {
           roundNumber: game.currentRound.roundNumber,
-          status: game.currentRound.status as any, // Will be validated by backend
+          status: game.currentRound.status as any,
           cards: game.currentRound.cards.map((card) => ({
             word: card.word,
             selected: card.selected,
@@ -102,7 +97,7 @@ function transformApiResponseToGameData(apiResponse: GameStateApiResponse): Game
       ? {
           playerName: game.playerContext.playerName,
           teamName: game.playerContext.teamName,
-          role: game.playerContext.role as any, // Will be validated by backend
+          role: game.playerContext.role as any,
         }
       : null,
   };
@@ -122,24 +117,24 @@ const fetchGame = async (gameId: string, playerId?: string): Promise<GameData> =
 
 /**
  * Fetches and caches game state data.
+ * Uses regular query to avoid suspense on refetch.
  */
-export const useGameDataQuery = (
-  gameId: string | null,
-): UseSuspenseQueryResult<GameData, Error> => {
+export const useGameDataQuery = (gameId: string | null): UseQueryResult<GameData, Error> => {
   const { currentPlayerId } = usePlayerContext();
 
-  return useSuspenseQuery<GameData>({
-    queryKey: ["gameData", gameId, currentPlayerId], // null playerId is valid for cache key
+  return useQuery<GameData>({
+    queryKey: ["gameData", gameId, currentPlayerId],
     queryFn: () => {
       if (!gameId) {
         throw new Error("Game ID is required");
       }
-      // Pass undefined if no playerId - backend returns NONE role view
       return fetchGame(gameId, currentPlayerId || undefined);
     },
-    staleTime: 30000,
+    enabled: !!gameId,
+    staleTime: 0, // Always refetch to ensure fresh data
     gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
-    // enabled: !!gameId,
+    // Keep showing previous data while fetching new data
+    placeholderData: (previousData) => previousData,
   });
 };

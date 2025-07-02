@@ -1,25 +1,17 @@
 import React from "react";
 import {
   LobbyDashboardView,
-  SpectatorDashboardView,
   CodemasterDashboardView,
   CodebreakerDashboardView,
-  WaitingDashboardView,
   OutcomeDashboardView,
 } from "@frontend/gameplay/dashboard";
-import {
-  InteractiveBoard,
-  ViewOnlyBoard,
-} from "@frontend/gameplay/game-board";
+import { InteractiveBoard, ViewOnlyBoard } from "@frontend/gameplay/game-board";
 
 /**
  * Maps scene keys to dashboard components
  * Handles both uppercase and lowercase role names for consistency
  */
-export const getDashboardComponent = (
-  role: string,
-  scene: string,
-): React.ComponentType<any> => {
+export const getDashboardComponent = (role: string, scene: string): React.ComponentType<any> => {
   // Normalize to lowercase for consistent mapping
   const normalizedRole = role.toLowerCase();
   const sceneKey = `${normalizedRole}.${scene}`;
@@ -30,13 +22,13 @@ export const getDashboardComponent = (
     case "codebreaker.outcome":
       return OutcomeDashboardView;
     case "codebreaker.waiting":
-      return WaitingDashboardView;
+      return LobbyDashboardView;
     case "codemaster.main":
       return CodemasterDashboardView;
     case "codemaster.waiting":
-      return WaitingDashboardView;
+      return LobbyDashboardView;
     case "spectator.watching":
-      return SpectatorDashboardView;
+      return LobbyDashboardView;
     case "none.lobby":
     case "none.dealing":
     case "none.gameover":
@@ -45,7 +37,7 @@ export const getDashboardComponent = (
       console.warn(
         `No dashboard component found for ${sceneKey}, falling back to SpectatorDashboardView`,
       );
-      return SpectatorDashboardView;
+      return LobbyDashboardView;
   }
 };
 
@@ -57,14 +49,14 @@ export const getBoardComponent = (
   scene: string, // Keep parameter for compatibility but don't use it
 ): React.ComponentType => {
   const normalizedRole = role.toLowerCase();
-  
+
   // Return board based on role only - same board for all scenes within a role
   switch (normalizedRole) {
-    case 'codebreaker':
+    case "codebreaker":
       return InteractiveBoard;
-    case 'codemaster':
-    case 'spectator':
-    case 'none':
+    case "codemaster":
+    case "spectator":
+    case "none":
     default:
       return ViewOnlyBoard;
   }

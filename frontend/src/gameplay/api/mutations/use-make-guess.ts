@@ -1,8 +1,4 @@
-import {
-  useMutation,
-  useQueryClient,
-  UseMutationResult,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient, UseMutationResult } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
 import { TurnData } from "../queries/use-turn-query";
@@ -84,7 +80,7 @@ export const useMakeGuessMutation = (
       }
 
       const { guess, turn } = response.data.data;
-      
+
       return {
         guess: {
           cardWord: guess.cardWord,
@@ -98,23 +94,27 @@ export const useMakeGuessMutation = (
           guessesRemaining: turn.guessesRemaining,
           createdAt: new Date(turn.createdAt),
           completedAt: turn.completedAt ? new Date(turn.completedAt) : null,
-          clue: turn.clue ? {
-            word: turn.clue.word,
-            number: turn.clue.number,
-            createdAt: new Date(turn.clue.createdAt)
-          } : null,
+          clue: turn.clue
+            ? {
+                word: turn.clue.word,
+                number: turn.clue.number,
+                createdAt: new Date(turn.clue.createdAt),
+              }
+            : null,
           hasGuesses: turn.hasGuesses,
-          lastGuess: turn.lastGuess ? {
-            cardWord: turn.lastGuess.cardWord,
-            playerName: turn.lastGuess.playerName,
-            outcome: turn.lastGuess.outcome,
-            createdAt: new Date(turn.lastGuess.createdAt)
-          } : null,
-          prevGuesses: turn.prevGuesses.map(g => ({
+          lastGuess: turn.lastGuess
+            ? {
+                cardWord: turn.lastGuess.cardWord,
+                playerName: turn.lastGuess.playerName,
+                outcome: turn.lastGuess.outcome,
+                createdAt: new Date(turn.lastGuess.createdAt),
+              }
+            : null,
+          prevGuesses: turn.prevGuesses.map((g) => ({
             cardWord: g.cardWord,
             playerName: g.playerName,
             outcome: g.outcome,
-            createdAt: new Date(g.createdAt)
+            createdAt: new Date(g.createdAt),
           })),
         },
       };
@@ -122,7 +122,7 @@ export const useMakeGuessMutation = (
     onSuccess: async (data) => {
       const turnData = data.turn;
       queryClient.setQueryData(["turn", turnData.id], turnData);
-      await queryClient.refetchQueries({ queryKey: ["gameData", gameId] });
+      await queryClient.refetchQueries({ queryKey: ["gameData", gameId, currentPlayerId] });
     },
   });
 };
