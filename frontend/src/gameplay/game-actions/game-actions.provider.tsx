@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useState,
-  useCallback,
-  useContext,
-  ReactNode,
-} from "react";
+import React, { createContext, useState, useCallback, useContext, ReactNode } from "react";
 import styled from "styled-components";
 import {
   useGiveClueMutation,
@@ -17,6 +11,8 @@ import {
 import { useGameData } from "../game-data";
 import { usePlayerScene } from "../role-scenes";
 import { useTurn } from "../turn-management";
+import { useQueryClient } from "@tanstack/react-query";
+import { usePlayerContext } from "../player-context/player-context.provider";
 
 export type ActionName =
   | "giveClue"
@@ -43,9 +39,7 @@ export interface GameActionsContextValue {
   endTurn: () => void;
 }
 
-const GameActionsContext = createContext<GameActionsContextValue | undefined>(
-  undefined,
-);
+const GameActionsContext = createContext<GameActionsContextValue | undefined>(undefined);
 
 const initialState: ActionState = {
   name: null,
@@ -140,6 +134,8 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   const { gameData, gameId } = useGameData();
   const { triggerSceneTransition } = usePlayerScene();
   const { setLastActionTurnId } = useTurn();
+  const queryClient = useQueryClient();
+  const { currentPlayerId } = usePlayerContext();
 
   const giveClueMutation = useGiveClueMutation(gameId);
   const makeGuessMutation = useMakeGuessMutation(gameId);
@@ -164,8 +160,13 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       makeGuessMutation.mutate(
         { cardWord: word, roundNumber },
         {
-          onSuccess: (res) => {
+          onSuccess: async (res) => {
             setLastActionTurnId(res.turn.id);
+
+            // Wait for game data to be refreshed before transitioning
+            await queryClient.invalidateQueries({
+              queryKey: ["gameData", gameId, currentPlayerId],
+            });
 
             setActionState({
               name: "makeGuess",
@@ -187,6 +188,9 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       gameData.currentRound,
       triggerSceneTransition,
       setLastActionTurnId,
+      queryClient,
+      gameId,
+      currentPlayerId,
     ],
   );
 
@@ -202,8 +206,14 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       giveClueMutation.mutate(
         { word, targetCardCount: count, roundNumber },
         {
-          onSuccess: (res) => {
+          onSuccess: async (res) => {
             setLastActionTurnId(res.turn.id);
+
+            // Wait for game data to be refreshed before transitioning
+            await queryClient.refetchQueries({
+              queryKey: ["gameData", gameId, currentPlayerId],
+            });
+
             setActionState({
               name: "giveClue",
               status: "success",
@@ -224,6 +234,9 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       gameData.currentRound,
       triggerSceneTransition,
       setLastActionTurnId,
+      queryClient,
+      gameId,
+      currentPlayerId,
     ],
   );
 
@@ -231,7 +244,12 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
     setActionState({ name: "createRound", status: "loading", error: null });
 
     createRoundMutation.mutate(undefined, {
-      onSuccess: () => {
+      onSuccess: async () => {
+        // Wait for game data to be refreshed before transitioning
+        await queryClient.refetchQueries({
+          queryKey: ["gameData", gameId, currentPlayerId],
+        });
+
         setActionState({ name: "createRound", status: "success", error: null });
         triggerSceneTransition("GAME_STARTED");
       },
@@ -240,7 +258,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         setActionState({ name: "createRound", status: "error", error });
       },
     });
-  }, [createRoundMutation, triggerSceneTransition]);
+  }, [createRoundMutation, triggerSceneTransition, queryClient, gameId, currentPlayerId]);
 
   const startRound = useCallback(() => {
     if (!gameData.currentRound) {
@@ -253,7 +271,12 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
     startRoundMutation.mutate(
       { roundNumber },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
+          // Wait for game data to be refreshed before transitioning
+          await queryClient.refetchQueries({
+            queryKey: ["gameData", gameId, currentPlayerId],
+          });
+
           setActionState({
             name: "startRound",
             status: "success",
@@ -267,32 +290,54 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         },
       },
     );
-  }, [startRoundMutation, gameData.currentRound, triggerSceneTransition]);
+  }, [
+    startRoundMutation,
+    gameData.currentRound,
+    triggerSceneTransition,
+    queryClient,
+    gameId,
+    currentPlayerId,
+  ]);
 
-  const dealCards = useCallback((redeal: boolean = false) => {
-    if (!gameData.currentRound) {
-      return;
-    }
+  const dealCards = useCallback(
+    (redeal: boolean = false) => {
+      if (!gameData.currentRound) {
+        return;
+      }
 
-    const roundNumber = gameData.currentRound.roundNumber;
-    setActionState({ name: "dealCards", status: "loading", error: null });
+      const roundNumber = gameData.currentRound.roundNumber;
+      setActionState({ name: "dealCards", status: "loading", error: null });
 
-    dealCardsMutation.mutate(
-      { roundNumber, redeal },
-      {
-        onSuccess: () => {
-          setActionState({ name: "dealCards", status: "success", error: null });
-          if (!redeal) {
-            triggerSceneTransition("CARDS_DEALT");
-          }
+      dealCardsMutation.mutate(
+        { roundNumber, redeal },
+        {
+          onSuccess: async () => {
+            // Wait for game data to be refreshed before transitioning
+            await queryClient.refetchQueries({
+              queryKey: ["gameData", gameId, currentPlayerId],
+            });
+
+            setActionState({ name: "dealCards", status: "success", error: null });
+            if (!redeal) {
+              triggerSceneTransition("CARDS_DEALT");
+            }
+          },
+          onError: (error) => {
+            console.error("Failed to deal cards:", error);
+            setActionState({ name: "dealCards", status: "error", error });
+          },
         },
-        onError: (error) => {
-          console.error("Failed to deal cards:", error);
-          setActionState({ name: "dealCards", status: "error", error });
-        },
-      },
-    );
-  }, [dealCardsMutation, gameData.currentRound, triggerSceneTransition]);
+      );
+    },
+    [
+      dealCardsMutation,
+      gameData.currentRound,
+      triggerSceneTransition,
+      queryClient,
+      gameId,
+      currentPlayerId,
+    ],
+  );
 
   const endTurn = useCallback(() => {
     if (!gameData.currentRound) {
@@ -305,7 +350,12 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
     endTurnMutation.mutate(
       { roundNumber },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
+          // Wait for game data to be refreshed before transitioning
+          await queryClient.refetchQueries({
+            queryKey: ["gameData", gameId, currentPlayerId],
+          });
+
           setActionState({ name: "endTurn", status: "success", error: null });
           triggerSceneTransition("TURN_ENDED");
         },
@@ -315,7 +365,14 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         },
       },
     );
-  }, [endTurnMutation, gameData.currentRound, triggerSceneTransition]);
+  }, [
+    endTurnMutation,
+    gameData.currentRound,
+    triggerSceneTransition,
+    queryClient,
+    gameId,
+    currentPlayerId,
+  ]);
 
   const value: GameActionsContextValue = {
     actionState,
@@ -338,19 +395,13 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
           <ErrorMessage>
             {actionState.error?.message || "Something went wrong. This might be a temporary issue."}
           </ErrorMessage>
-          <ReloadButton onClick={() => window.location.reload()}>
-            Reload Game
-          </ReloadButton>
+          <ReloadButton onClick={() => window.location.reload()}>Reload Game</ReloadButton>
         </ErrorCard>
       </ErrorContainer>
     );
   }
 
-  return (
-    <GameActionsContext.Provider value={value}>
-      {children}
-    </GameActionsContext.Provider>
-  );
+  return <GameActionsContext.Provider value={value}>{children}</GameActionsContext.Provider>;
 };
 
 export const useGameActions = (): GameActionsContextValue => {

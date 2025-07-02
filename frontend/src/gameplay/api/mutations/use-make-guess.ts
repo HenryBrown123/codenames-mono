@@ -119,10 +119,10 @@ export const useMakeGuessMutation = (
         },
       };
     },
-    onSuccess: async (data) => {
+    onSuccess: (data) => {
       const turnData = data.turn;
       queryClient.setQueryData(["turn", turnData.id], turnData);
-      await queryClient.refetchQueries({ queryKey: ["gameData", gameId, currentPlayerId] });
+      // await queryClient.refetchQueries({ queryKey: ["gameData", gameId, currentPlayerId] });
     },
   });
 };
