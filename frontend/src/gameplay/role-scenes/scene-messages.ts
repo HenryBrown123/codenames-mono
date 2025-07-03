@@ -36,10 +36,9 @@ const wasPerfectTurn = (activeTurn: TurnData | null): boolean => {
   if (!activeTurn?.clue || !activeTurn.hasGuesses || !activeTurn.lastGuess) {
     return false;
   }
-  const correctGuesses = [
-    activeTurn.lastGuess,
-    ...activeTurn.prevGuesses,
-  ].filter((guess) => guess.outcome === "CORRECT_TEAM_CARD").length;
+  const correctGuesses = [activeTurn.lastGuess, ...activeTurn.prevGuesses].filter(
+    (guess) => guess.outcome === "CORRECT_TEAM_CARD",
+  ).length;
 
   return correctGuesses === activeTurn.clue.number;
 };
@@ -57,14 +56,11 @@ const wasTargetReached = (activeTurn: TurnData | null): boolean => {
     return false;
   }
 
-  const correctGuesses = [
-    activeTurn.lastGuess,
-    ...activeTurn.prevGuesses,
-  ].filter((guess) => guess.outcome === "CORRECT_TEAM_CARD").length;
+  const correctGuesses = [activeTurn.lastGuess, ...activeTurn.prevGuesses].filter(
+    (guess) => guess.outcome === "CORRECT_TEAM_CARD",
+  ).length;
 
-  return (
-    correctGuesses === activeTurn.clue.number && activeTurn.guessesRemaining > 0
-  );
+  return correctGuesses === activeTurn.clue.number && activeTurn.guessesRemaining > 0;
 };
 
 /**
@@ -73,12 +69,14 @@ const wasTargetReached = (activeTurn: TurnData | null): boolean => {
 export const getSceneMessage = (
   role: string,
   scene: string,
-  gameData: GameData,
+  gameData: GameData | null,
   activeTurn: TurnData | null,
 ): string => {
   const normalizedRole = role.toLowerCase();
   const messageKey = `${normalizedRole}.${scene}`;
   const teamName = activeTurn?.teamName || "Your team";
+
+  if (!gameData) return "";
 
   switch (messageKey) {
     case "codebreaker.main":
@@ -110,10 +108,7 @@ export const getSceneMessage = (
       }
 
       // Check if it was a perfect turn (found exactly the clued number)
-      if (
-        activeTurn.lastGuess.outcome === "CORRECT_TEAM_CARD" &&
-        wasPerfectTurn(activeTurn)
-      ) {
+      if (activeTurn.lastGuess.outcome === "CORRECT_TEAM_CARD" && wasPerfectTurn(activeTurn)) {
         return "Well done, perfect turn! Over to the next team";
       }
 
@@ -137,9 +132,7 @@ export const getSceneMessage = (
       return "Waiting for your team...";
 
     case "spectator.watching":
-      const currentActiveTurn = gameData.currentRound?.turns?.find(
-        (t) => t.status === "ACTIVE",
-      );
+      const currentActiveTurn = gameData.currentRound?.turns?.find((t) => t.status === "ACTIVE");
 
       if (currentActiveTurn?.clue) {
         const remaining = currentActiveTurn.guessesRemaining || 0;

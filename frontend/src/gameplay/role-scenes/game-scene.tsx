@@ -1,6 +1,6 @@
 import React from "react";
 import styled, { keyframes } from "styled-components";
-import { useGameData } from "../game-data/game-data.provider";
+import { useGameData, useGameDataRequired } from "../game-data/game-data.provider";
 import { usePlayerScene } from "@frontend/gameplay/role-scenes";
 import { useTurn } from "@frontend/gameplay/turn-management";
 import { getSceneMessage } from "./scene-messages";
@@ -96,19 +96,19 @@ const AnimatedGameSceneContainer = styled(GameSceneContainer)<{ $animate?: boole
  * Main game scene component that handles loading states
  */
 export const GameScene: React.FC = () => {
-  const { gameData, isPending, isError, error, refetch, isFetching } = useGameData();
+  const { gameData, isPending, isError, error, refetch, isFetching } = useGameDataRequired();
 
   // Show skeleton during initial load
-  if (isPending || !gameData) {
+  if (isPending && !gameData) {
     return (
       <GameSceneContainer>
-        <InstructionsContainer style={{ opacity: 0.5 }}>
-          <GameInstructions messageText="Loading game..." />
+        <InstructionsContainer>
+          <GameInstructions messageText="" />
         </InstructionsContainer>
         <GameBoardContainer>
           <ViewOnlyBoard />
         </GameBoardContainer>
-        <DashboardContainer style={{ opacity: 0.5 }} />
+        <DashboardContainer />
       </GameSceneContainer>
     );
   }
@@ -130,7 +130,7 @@ export const GameScene: React.FC = () => {
 };
 
 interface GameSceneLayoutProps {
-  gameData: GameData;
+  gameData: GameData | null;
   isFetching: boolean;
 }
 
@@ -142,7 +142,7 @@ const GameSceneLayout: React.FC<GameSceneLayoutProps> = ({ gameData, isFetching 
   const { currentRole, currentScene, requiresHandoff, completeHandoff } = usePlayerScene();
 
   // Handle game over state
-  if (gameData.currentRound?.status === "COMPLETED") {
+  if (gameData?.currentRound?.status === "COMPLETED") {
     return (
       <GameSceneContainer>
         <InstructionsContainer>
@@ -180,7 +180,9 @@ const GameSceneLayout: React.FC<GameSceneLayoutProps> = ({ gameData, isFetching 
         <DashboardContainer>
           <DashboardComponent />
         </DashboardContainer>
-        <DeviceHandoffOverlay gameData={gameData} onContinue={completeHandoff} />
+        {gameData !== null && (
+          <DeviceHandoffOverlay gameData={gameData} onContinue={completeHandoff} />
+        )}
       </GameSceneContainer>
     );
   }

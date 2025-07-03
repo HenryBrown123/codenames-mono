@@ -26,7 +26,14 @@
  * - GameActionsProvider: Handles player actions that trigger scene changes
  */
 
-import React, { useCallback, createContext, useContext, ReactNode, useReducer } from "react";
+import React, {
+  useCallback,
+  createContext,
+  useContext,
+  ReactNode,
+  useReducer,
+  useEffect,
+} from "react";
 import { useGameDataRequired } from "../game-data/game-data.provider";
 import { useTurn } from "../turn-management";
 import { usePlayerContext } from "../player-context/player-context.provider";
@@ -168,6 +175,11 @@ export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
   const { gameData } = useGameDataRequired();
   const { activeTurn } = useTurn();
   const { setCurrentPlayerId } = usePlayerContext();
+
+  useEffect(() => {
+    console.log("[PlayerSceneProvider] MOUNTED");
+    return () => console.log("[PlayerSceneProvider] UNMOUNTED");
+  }, []);
 
   const reducerWithDependencies = useCallback(
     (state: PlayerSceneState, action: SceneAction) =>
