@@ -198,10 +198,6 @@ const ErrorText = styled.p`
 
 interface DeviceHandoffOverlayProps {
   gameData: GameData;
-  pendingTransition: {
-    stage: PlayerRole;
-    scene: string;
-  };
   onContinue: (playerId: string) => void;
 }
 
@@ -268,7 +264,6 @@ const getActionText = (role: PlayerRole): string => {
  */
 export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
   gameData,
-  pendingTransition,
   onContinue,
 }) => {
   const [isExiting, setIsExiting] = useState(false);

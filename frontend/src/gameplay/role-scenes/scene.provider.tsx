@@ -257,14 +257,25 @@ export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
     return currentState.currentScene === stateMachine.initial;
   }, [currentState.currentRole, currentState.currentScene]);
 
-  const contextValue: PlayerSceneContextValue = {
-    currentRole: currentState.currentRole,
-    currentScene: currentState.currentScene,
-    requiresHandoff: currentState.requiresHandoff,
-    triggerSceneTransition,
-    completeHandoff,
-    isInitialScene,
-  };
+  const contextValue: PlayerSceneContextValue = gameData
+    ? {
+        currentRole: currentState.currentRole,
+        currentScene: currentState.currentScene,
+        requiresHandoff: currentState.requiresHandoff,
+        triggerSceneTransition,
+        completeHandoff,
+        isInitialScene,
+      }
+    : {
+        currentRole: PLAYER_ROLE.NONE,
+        currentScene: "lobby",
+        requiresHandoff: false,
+        triggerSceneTransition: () => {},
+        completeHandoff: () => {},
+        isInitialScene: true,
+      };
+
+  console.log(contextValue);
 
   return <PlayerSceneContext.Provider value={contextValue}>{children}</PlayerSceneContext.Provider>;
 };
