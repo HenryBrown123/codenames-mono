@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useState,
-  useCallback,
-  useContext,
-  ReactNode,
-} from "react";
+import React, { createContext, useState, useCallback, useContext, ReactNode } from "react";
 import styled from "styled-components";
 import {
   useGiveClueMutation,
@@ -14,7 +8,7 @@ import {
   useDealCardsMutation,
   useEndTurnMutation,
 } from "@frontend/gameplay/api/mutations";
-import { useGameData } from "../game-data";
+import { useGameDataRequired } from "../game-data/game-data.provider";
 import { usePlayerScene } from "../role-scenes";
 import { useTurn } from "../turn-management";
 
@@ -43,9 +37,7 @@ export interface GameActionsContextValue {
   endTurn: () => void;
 }
 
-const GameActionsContext = createContext<GameActionsContextValue | undefined>(
-  undefined,
-);
+const GameActionsContext = createContext<GameActionsContextValue | undefined>(undefined);
 
 const initialState: ActionState = {
   name: null,
@@ -137,7 +129,7 @@ interface GameActionsProviderProps {
 export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   const [actionState, setActionState] = useState<ActionState>(initialState);
 
-  const { gameData, gameId } = useGameData();
+  const { gameData, gameId } = useGameDataRequired();
   const { triggerSceneTransition } = usePlayerScene();
   const { setLastActionTurnId } = useTurn();
 
@@ -182,12 +174,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         },
       );
     },
-    [
-      makeGuessMutation,
-      gameData.currentRound,
-      triggerSceneTransition,
-      setLastActionTurnId,
-    ],
+    [makeGuessMutation, gameData.currentRound, triggerSceneTransition, setLastActionTurnId],
   );
 
   const giveClue = useCallback(
@@ -219,12 +206,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         },
       );
     },
-    [
-      giveClueMutation,
-      gameData.currentRound,
-      triggerSceneTransition,
-      setLastActionTurnId,
-    ],
+    [giveClueMutation, gameData.currentRound, triggerSceneTransition, setLastActionTurnId],
   );
 
   const createRound = useCallback(() => {
@@ -269,30 +251,33 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
     );
   }, [startRoundMutation, gameData.currentRound, triggerSceneTransition]);
 
-  const dealCards = useCallback((redeal: boolean = false) => {
-    if (!gameData.currentRound) {
-      return;
-    }
+  const dealCards = useCallback(
+    (redeal: boolean = false) => {
+      if (!gameData.currentRound) {
+        return;
+      }
 
-    const roundNumber = gameData.currentRound.roundNumber;
-    setActionState({ name: "dealCards", status: "loading", error: null });
+      const roundNumber = gameData.currentRound.roundNumber;
+      setActionState({ name: "dealCards", status: "loading", error: null });
 
-    dealCardsMutation.mutate(
-      { roundNumber, redeal },
-      {
-        onSuccess: () => {
-          setActionState({ name: "dealCards", status: "success", error: null });
-          if (!redeal) {
-            triggerSceneTransition("CARDS_DEALT");
-          }
+      dealCardsMutation.mutate(
+        { roundNumber, redeal },
+        {
+          onSuccess: () => {
+            setActionState({ name: "dealCards", status: "success", error: null });
+            if (!redeal) {
+              triggerSceneTransition("CARDS_DEALT");
+            }
+          },
+          onError: (error) => {
+            console.error("Failed to deal cards:", error);
+            setActionState({ name: "dealCards", status: "error", error });
+          },
         },
-        onError: (error) => {
-          console.error("Failed to deal cards:", error);
-          setActionState({ name: "dealCards", status: "error", error });
-        },
-      },
-    );
-  }, [dealCardsMutation, gameData.currentRound, triggerSceneTransition]);
+      );
+    },
+    [dealCardsMutation, gameData.currentRound, triggerSceneTransition],
+  );
 
   const endTurn = useCallback(() => {
     if (!gameData.currentRound) {
@@ -338,19 +323,13 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
           <ErrorMessage>
             {actionState.error?.message || "Something went wrong. This might be a temporary issue."}
           </ErrorMessage>
-          <ReloadButton onClick={() => window.location.reload()}>
-            Reload Game
-          </ReloadButton>
+          <ReloadButton onClick={() => window.location.reload()}>Reload Game</ReloadButton>
         </ErrorCard>
       </ErrorContainer>
     );
   }
 
-  return (
-    <GameActionsContext.Provider value={value}>
-      {children}
-    </GameActionsContext.Provider>
-  );
+  return <GameActionsContext.Provider value={value}>{children}</GameActionsContext.Provider>;
 };
 
 export const useGameActions = (): GameActionsContextValue => {

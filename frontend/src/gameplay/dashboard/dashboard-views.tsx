@@ -2,7 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import { RefreshCw } from "lucide-react";
 import { CodeWordInput } from "./codemaster-input";
-import { useGameData } from "@frontend/gameplay/game-data";
+import { useGameDataRequired } from "../game-data/game-data.provider";
 import { useGameActions } from "@frontend/gameplay/game-actions";
 import { usePlayerScene } from "@frontend/gameplay/role-scenes";
 import { useTurn } from "@frontend/gameplay/turn-management";
@@ -58,17 +58,17 @@ const RefreshButton = styled.button`
   padding: 0.25rem;
   border-radius: 4px;
   transition: all 0.2s;
-  
+
   &:hover {
     color: rgba(255, 255, 255, 0.8);
     background: rgba(255, 255, 255, 0.1);
   }
-  
+
   &:disabled {
     cursor: not-allowed;
     opacity: 0.3;
   }
-  
+
   svg {
     width: 1rem;
     height: 1rem;
@@ -80,7 +80,7 @@ const RefreshButton = styled.button`
 // ============================================================================
 
 export const CodebreakerDashboardView: React.FC = () => {
-  const { gameData } = useGameData();
+  const { gameData } = useGameDataRequired();
   const { activeTurn } = useTurn();
   const { endTurn, actionState } = useGameActions();
 
@@ -92,10 +92,10 @@ export const CodebreakerDashboardView: React.FC = () => {
   const canEndTurn = React.useMemo(() => {
     // Must have an active turn with a clue
     if (!activeTurn || !activeTurn.clue) return false;
-    
+
     // Must be the player's team's turn
     if (gameData.playerContext?.teamName !== activeTurn.teamName) return false;
-    
+
     // Must have guesses remaining to end early
     return activeTurn.guessesRemaining > 0;
   }, [activeTurn, gameData.playerContext]);
@@ -115,9 +115,7 @@ export const CodebreakerDashboardView: React.FC = () => {
       <ButtonWrapper>
         <ActionButton
           onClick={handleEndTurn}
-          text={
-            actionState.status === "loading" ? "Ending Turn..." : "End Turn"
-          }
+          text={actionState.status === "loading" ? "Ending Turn..." : "End Turn"}
           enabled={(canEndTurn && actionState.status !== "loading") || false}
         />
       </ButtonWrapper>
@@ -165,12 +163,12 @@ export const OutcomeDashboardView: React.FC = () => {
 };
 
 export const LobbyDashboardView: React.FC = () => {
-  const { gameData } = useGameData();
+  const { gameData } = useGameDataRequired();
   const { createRound, startRound, dealCards, actionState } = useGameActions();
 
-  const canRedeal = 
-    gameData?.currentRound?.status === "SETUP" && 
-    gameData.currentRound.cards && 
+  const canRedeal =
+    gameData?.currentRound?.status === "SETUP" &&
+    gameData.currentRound.cards &&
     gameData.currentRound.cards.length > 0;
 
   const handleClick = () => {
@@ -213,10 +211,7 @@ export const LobbyDashboardView: React.FC = () => {
       return "Deal Cards";
     }
 
-    if (
-      gameData.currentRound?.status === "SETUP" &&
-      gameData.currentRound.cards?.length > 0
-    ) {
+    if (gameData.currentRound?.status === "SETUP" && gameData.currentRound.cards?.length > 0) {
       return "Start Round";
     }
 
@@ -224,7 +219,7 @@ export const LobbyDashboardView: React.FC = () => {
   };
 
   return (
-    <Container style={{ position: 'relative' }}>
+    <Container style={{ position: "relative" }}>
       {canRedeal && (
         <RefreshButton
           onClick={handleRedeal}

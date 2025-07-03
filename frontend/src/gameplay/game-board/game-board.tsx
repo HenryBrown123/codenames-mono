@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useMemo } from "react";
 import styled from "styled-components";
-import { useGameData } from "@frontend/gameplay/game-data";
+import { useGameDataRequired } from "../game-data/game-data.provider";
 import { useGameActions } from "@frontend/gameplay/game-actions";
 import { useTurn } from "@frontend/gameplay/turn-management";
 import { GameCard } from "./game-card";
@@ -17,16 +17,16 @@ const BoardGrid = styled.div`
 `;
 
 const EmptyCard = styled.div`
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(27, 9, 9, 0.25);
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.123);
 `;
 
 /**
  * Interactive board - for making guesses during active play
  */
 export const InteractiveBoard = memo(() => {
-  const { gameData } = useGameData();
+  const { gameData } = useGameDataRequired();
   const { makeGuess, actionState } = useGameActions();
   const { activeTurn } = useTurn();
   const cards = gameData.currentRound?.cards || [];
@@ -87,7 +87,7 @@ InteractiveBoard.displayName = "InteractiveBoard";
  * View-only board - general purpose viewing board
  */
 export const ViewOnlyBoard = memo(() => {
-  const { gameData } = useGameData();
+  const { gameData } = useGameDataRequired();
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === "SETUP";
 

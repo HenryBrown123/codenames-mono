@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 import { useTurnDataQuery } from "../api/queries/use-turn-query";
 import { TurnData } from "@frontend/shared-types";
-import { useGameData } from "../game-data";
+import { useGameDataRequired as useGameData } from "../game-data/game-data.provider";
 
 /**
  * Turn context type definition
@@ -60,9 +60,7 @@ export const TurnProvider = ({ children }: TurnProviderProps) => {
     queryData: turnQuery.data,
   });
 
-  return (
-    <TurnContext.Provider value={contextValue}>{children}</TurnContext.Provider>
-  );
+  return <TurnContext.Provider value={contextValue}>{children}</TurnContext.Provider>;
 };
 
 /**
