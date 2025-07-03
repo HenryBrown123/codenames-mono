@@ -37,6 +37,8 @@ export const TurnProvider = ({ children }: TurnProviderProps) => {
   // after the active turn has changed.
   const [lastActionTurnId, setLastActionTurnId] = useState<string | null>(null);
 
+  console.log("Last active turn id in TurnProvider ", lastActionTurnId);
+
   // Auto-populate with current active turn ID if none is being tracked by last action
   const activeTurnId =
     lastActionTurnId ||
