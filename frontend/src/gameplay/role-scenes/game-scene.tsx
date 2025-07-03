@@ -107,15 +107,12 @@ const blurOut = keyframes`
 `;
 
 const BlurredBackground = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.3;
-  filter: blur(8px);
-  pointer-events: none;
-  animation: ${blurIn} 0.6s ease-out;
+  display: contents; // This makes it not affect layout
+
+  & > * {
+    filter: blur(8px);
+    opacity: 0.3;
+  }
 `;
 
 const AnimatedGameSceneContainer = styled(GameSceneContainer)<{ $animate?: boolean }>`

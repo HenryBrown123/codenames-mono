@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { GameDataProvider, useGameData } from "../game-data";
+import { useGameDataRequired } from "../game-data/game-data.provider";
 import { TurnProvider } from "../turn-management";
 import { PlayerSceneProvider } from "../role-scenes";
 import { GameActionsProvider } from "../game-actions";
@@ -83,7 +84,7 @@ const GameplayContent = ({ gameId, children }: GameplayProviderProps) => {
   const { gameData, isPending, isError, error, refetch } = useGameData();
 
   // Show skeleton during initial load
-  if (isPending || !gameData) {
+  if (!gameData) {
     return (
       <LoadingContainer>
         <BoardGrid style={{ opacity: 0.5 }}>
