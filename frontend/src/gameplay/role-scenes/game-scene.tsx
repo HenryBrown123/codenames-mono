@@ -88,35 +88,8 @@ const ErrorContainer = styled.div`
   color: white;
 `;
 
-const blurIn = keyframes`
-  from {
-    filter: blur(0px);
-  }
-  to {
-    filter: blur(8px);
-  }
-`;
-
-const blurOut = keyframes`
-  from {
-    filter: blur(8px);
-  }
-  to {
-    filter: blur(0px);
-  }
-`;
-
-const BlurredBackground = styled.div`
-  display: contents; // This makes it not affect layout
-
-  & > * {
-    filter: blur(8px);
-    opacity: 0.3;
-  }
-`;
-
 const AnimatedGameSceneContainer = styled(GameSceneContainer)<{ $animate?: boolean }>`
-  animation: ${(props) => (props.$animate ? blurOut : "none")} 0.6s ease-out;
+  animation: ${(props) => (props.$animate ? "none" : "none")} 0.6s ease-out;
 `;
 
 /**
@@ -195,20 +168,18 @@ const GameSceneLayout: React.FC<GameSceneLayoutProps> = ({ gameData, isFetching 
   if (requiresHandoff) {
     return (
       <GameSceneContainer>
-        <BlurredBackground>
-          <InstructionsContainer>
-            {isFetching && <RefetchIndicator />}
-            <GameInstructions messageText={messageText} />
-          </InstructionsContainer>
+        <InstructionsContainer>
+          {isFetching && <RefetchIndicator />}
+          <GameInstructions messageText={messageText} />
+        </InstructionsContainer>
 
-          <GameBoardContainer>
-            <BoardComponent key={currentRole} />
-          </GameBoardContainer>
+        <GameBoardContainer>
+          <BoardComponent key={currentRole} />
+        </GameBoardContainer>
 
-          <DashboardContainer>
-            <DashboardComponent />
-          </DashboardContainer>
-        </BlurredBackground>
+        <DashboardContainer>
+          <DashboardComponent />
+        </DashboardContainer>
         <DeviceHandoffOverlay gameData={gameData} onContinue={completeHandoff} />
       </GameSceneContainer>
     );
