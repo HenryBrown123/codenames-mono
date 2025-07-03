@@ -189,7 +189,7 @@ const GameSceneLayout: React.FC<GameSceneLayoutProps> = ({ gameData, isFetching 
 
   // Normal gameplay
   return (
-    <AnimatedGameSceneContainer key={currentRole} $animate>
+    <AnimatedGameSceneContainer $animate>
       <InstructionsContainer>
         {isFetching && <RefetchIndicator />}
         <GameInstructions messageText={messageText} />
