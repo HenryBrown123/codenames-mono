@@ -3,13 +3,8 @@ import { useGameDataQuery } from "../api/queries";
 import { GameData } from "@frontend/shared-types";
 
 interface GameDataContextValue {
-  gameData: GameData | undefined;
+  gameData: GameData;
   gameId: string;
-  isPending: boolean;
-  isError: boolean;
-  error: Error | null;
-  refetch: () => void;
-  isFetching: boolean;
 }
 
 const GameDataContext = createContext<GameDataContextValue | null>(null);
@@ -25,17 +20,44 @@ export const GameDataProvider = ({
 }: GameDataProviderProps) => {
   const gameDataQuery = useGameDataQuery(gameId);
 
-  // Just provide the query state - no UI decisions!
+  if (gameDataQuery.isPending) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <div>Loading game...</div>
+      </div>
+    );
+  }
+
+  if (gameDataQuery.isError) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <h2>Failed to load game</h2>
+        <p>{gameDataQuery.error?.message || "Unknown error"}</p>
+        <button onClick={() => window.location.reload()}>Retry</button>
+      </div>
+    );
+  }
+
   return (
     <GameDataContext.Provider
       value={{
         gameData: gameDataQuery.data,
         gameId,
-        isPending: gameDataQuery.isPending,
-        isError: gameDataQuery.isError,
-        error: gameDataQuery.error,
-        refetch: gameDataQuery.refetch,
-        isFetching: gameDataQuery.isFetching,
       }}
     >
       {children}
@@ -45,7 +67,7 @@ export const GameDataProvider = ({
 
 /**
  * Hook to access game data from context
- * Returns loading/error states along with data
+ * GUARANTEED to return GameData, never null or undefined
  */
 export const useGameData = () => {
   const context = useContext(GameDataContext);
