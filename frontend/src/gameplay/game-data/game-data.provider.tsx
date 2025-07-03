@@ -1,4 +1,4 @@
-import React, { useContext, createContext, ReactNode } from "react";
+import React, { useContext, createContext, ReactNode, useRef } from "react";
 import { useGameDataQuery } from "../api/queries";
 import { GameData } from "@frontend/shared-types";
 
@@ -22,11 +22,23 @@ interface GameDataProviderProps {
 export const GameDataProvider = ({ children, gameId }: GameDataProviderProps) => {
   const gameDataQuery = useGameDataQuery(gameId);
 
-  // Always render children - no UI here!
+  const cachedGameData = useRef<GameData | undefined>(undefined);
+
+  // Update cache when we get new valid data
+  if (gameDataQuery.data) {
+    cachedGameData.current = gameDataQuery.data;
+  }
+
+  console.log("Cached data: ", cachedGameData.current);
+  console.log("Query data: ", gameDataQuery.data);
+
+  // Determine what game data to provide
+  const gameData = gameDataQuery.data || cachedGameData.current;
+
   return (
     <GameDataContext.Provider
       value={{
-        gameData: gameDataQuery.data,
+        gameData: gameData,
         gameId,
         isPending: gameDataQuery.isPending,
         isError: gameDataQuery.isError,

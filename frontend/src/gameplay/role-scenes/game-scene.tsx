@@ -192,6 +192,8 @@ const GameSceneLayout: React.FC<GameSceneLayoutProps> = ({ gameData, isFetching 
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
   const BoardComponent = getBoardComponent(currentRole, currentScene);
 
+  console.log(currentRole, currentScene);
+
   // Handle handoff state
   if (requiresHandoff) {
     return (
@@ -210,11 +212,7 @@ const GameSceneLayout: React.FC<GameSceneLayoutProps> = ({ gameData, isFetching 
             <DashboardComponent />
           </DashboardContainer>
         </BlurredBackground>
-        <DeviceHandoffOverlay
-          gameData={gameData}
-          pendingTransition={{ stage: "NONE" as any, scene: "main" }}
-          onContinue={completeHandoff}
-        />
+        <DeviceHandoffOverlay gameData={gameData} onContinue={completeHandoff} />
       </GameSceneContainer>
     );
   }
