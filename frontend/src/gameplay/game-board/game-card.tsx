@@ -330,3 +330,42 @@ export const GameCard = memo<GameCardProps>(
 );
 
 GameCard.displayName = "GameCard";
+
+const EmptyCardContainer = styled.div`
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  margin: auto;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  /* Match the card texture from real cards */
+  background-image:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.03) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.03) 25%, transparent 25%);
+  background-size: 10px 10px;
+`;
+
+interface EmptyCardProps {
+  animate?: boolean;
+  animationDelay?: string;
+}
+
+export const EmptyCard = memo<EmptyCardProps>(({ animate = false, animationDelay = "0s" }) => {
+  return (
+    <EmptyCardContainer
+      style={
+        animate
+          ? {
+              animation: `pulse 2s ease-in-out infinite`,
+              animationDelay,
+            }
+          : undefined
+      }
+    />
+  );
+});
+
+EmptyCard.displayName = "EmptyCard";

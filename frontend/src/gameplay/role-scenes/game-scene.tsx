@@ -11,6 +11,8 @@ import {
 import { ViewOnlyBoard } from "../game-board";
 import { GameInstructions } from "../game-instructions";
 import { DeviceHandoffOverlay } from "../device-handoff";
+import { ActionButton } from "../shared";
+import { GameData } from "@frontend/shared-types";
 
 const GameSceneContainer = styled.div`
   display: flex;
@@ -60,6 +62,41 @@ const DashboardContainer = styled.div`
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 `;
 
+const BoardGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 0.5rem;
+  width: 100%;
+  height: 100%;
+  padding: 1rem;
+`;
+
+const pulse = keyframes`
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+`;
+
+const EmptyCard = styled.div`
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+const ErrorContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  text-align: center;
+  color: white;
+`;
+
 const blurIn = keyframes`
   from {
     filter: blur(0px);
@@ -96,8 +133,64 @@ const GameSceneContentWrapper = styled.div<{ $animate?: boolean }>`
   animation: ${props => props.$animate ? blurOut : 'none'} 0.6s ease-out;
 `;
 
+const RefetchIndicator = styled.div`
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #4dabf7;
+  animation: ${pulse} 1.5s ease-in-out infinite;
+`;
+
 export const GameScene: React.FC = () => {
-  const { gameData } = useGameData();
+  const { gameData, isPending, isError, error, refetch, isFetching } = useGameData();
+  
+  // Show skeleton during initial load
+  if (isPending || !gameData) {
+    return (
+      <GameSceneContainer>
+        <InstructionsContainer style={{ opacity: 0.5 }}>
+          <GameInstructions messageText="Loading game..." />
+        </InstructionsContainer>
+        <GameBoardContainer>
+          <BoardGrid aria-label="loading game board">
+            {Array.from({ length: 25 }).map((_, i) => (
+              <EmptyCard key={`skeleton-${i}`} style={{ 
+                animation: `${pulse} 2s ease-in-out infinite`,
+                animationDelay: `${i * 0.05}s` 
+              }} />
+            ))}
+          </BoardGrid>
+        </GameBoardContainer>
+        <DashboardContainer style={{ opacity: 0.5 }} />
+      </GameSceneContainer>
+    );
+  }
+
+  if (isError) {
+    return (
+      <GameSceneContainer>
+        <ErrorContainer>
+          <h2>Failed to load game</h2>
+          <p>{error?.message || "Unknown error"}</p>
+          <ActionButton onClick={refetch} text="Retry" enabled={true} />
+        </ErrorContainer>
+      </GameSceneContainer>
+    );
+  }
+
+  // Now we have gameData for sure
+  return <GameSceneWithData gameData={gameData} isFetching={isFetching} />;
+};
+
+interface GameSceneWithDataProps {
+  gameData: GameData;
+  isFetching: boolean;
+}
+
+const GameSceneWithData: React.FC<GameSceneWithDataProps> = ({ gameData, isFetching }) => {
   const { activeTurn } = useTurn();
   const {
     currentRole,
@@ -133,6 +226,7 @@ export const GameScene: React.FC = () => {
             currentScene={currentScene}
             gameData={gameData}
             activeTurn={activeTurn}
+            isRefetching={isFetching}
           />
         </BlurredBackground>
         <DeviceHandoffOverlay
@@ -153,20 +247,19 @@ export const GameScene: React.FC = () => {
           currentScene={currentScene}
           gameData={gameData}
           activeTurn={activeTurn}
+          isRefetching={isFetching}
         />
       </GameSceneContentWrapper>
     </GameSceneContainer>
   );
 };
 
-/**
- * Game scene content
- */
 interface GameSceneContentProps {
   currentRole: string;
   currentScene: string;
   gameData: any;
   activeTurn: any;
+  isRefetching: boolean;
 }
 
 const GameSceneContent: React.FC<GameSceneContentProps> = ({
@@ -174,6 +267,7 @@ const GameSceneContent: React.FC<GameSceneContentProps> = ({
   currentScene,
   gameData,
   activeTurn,
+  isRefetching,
 }) => {
   const messageText = getSceneMessage(
     currentRole,
@@ -187,6 +281,7 @@ const GameSceneContent: React.FC<GameSceneContentProps> = ({
   return (
     <>
       <InstructionsContainer>
+        {isRefetching && <RefetchIndicator />}
         <GameInstructions messageText={messageText} />
       </InstructionsContainer>
 

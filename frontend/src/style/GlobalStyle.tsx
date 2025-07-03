@@ -1,4 +1,13 @@
-import { createGlobalStyle } from "styled-components";
+import { createGlobalStyle, keyframes } from "styled-components";
+
+const pulse = keyframes`
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+`;
 
 export const GlobalStyle = createGlobalStyle<{ theme: ThemeType }>`
   * {
@@ -29,6 +38,15 @@ export const GlobalStyle = createGlobalStyle<{ theme: ThemeType }>`
     margin: 0;
     padding: 0;
     background-size: var(--color-background-size);
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 0.3;
+    }
+    50% {
+      opacity: 0.6;
+    }
   }
 `;
 

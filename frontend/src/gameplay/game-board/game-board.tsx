@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { useGameData } from "@frontend/gameplay/game-data";
 import { useGameActions } from "@frontend/gameplay/game-actions";
 import { useTurn } from "@frontend/gameplay/turn-management";
-import { GameCard } from "./game-card";
+import { GameCard, EmptyCard } from "./game-card";
 import { CardVisibilityProvider } from "./card-visibility-provider";
 
 const BoardGrid = styled.div`
@@ -16,11 +16,6 @@ const BoardGrid = styled.div`
   padding: 1rem;
 `;
 
-const EmptyCard = styled.div`
-  background-color: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-`;
 
 /**
  * Interactive board - for making guesses during active play
@@ -29,8 +24,18 @@ export const InteractiveBoard = memo(() => {
   const { gameData } = useGameData();
   const { makeGuess, actionState } = useGameActions();
   const { activeTurn } = useTurn();
+  
+  if (!gameData) {
+    return (
+      <BoardGrid aria-label="interactive game board">
+        {Array.from({ length: 25 }).map((_, i) => (
+          <EmptyCard key={`empty-${i}`} />
+        ))}
+      </BoardGrid>
+    );
+  }
+  
   const cards = gameData.currentRound?.cards || [];
-
   const isLoading = actionState.status === "loading";
 
   // Determine if the current player can make guesses
@@ -88,6 +93,17 @@ InteractiveBoard.displayName = "InteractiveBoard";
  */
 export const ViewOnlyBoard = memo(() => {
   const { gameData } = useGameData();
+  
+  if (!gameData) {
+    return (
+      <BoardGrid aria-label="view-only game board">
+        {Array.from({ length: 25 }).map((_, i) => (
+          <EmptyCard key={`empty-${i}`} />
+        ))}
+      </BoardGrid>
+    );
+  }
+  
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === "SETUP";
 
