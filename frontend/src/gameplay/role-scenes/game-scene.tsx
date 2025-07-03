@@ -18,6 +18,7 @@ const GameSceneContainer = styled.div`
   gap: 1rem;
   padding: 1rem;
   box-sizing: border-box;
+  overflow: hidden;
 `;
 
 const InstructionsContainer = styled.div`
@@ -30,11 +31,13 @@ const InstructionsContainer = styled.div`
   padding: 1rem;
   font-size: clamp(0.9rem, 2vw, 1.4rem);
   position: relative;
-  margin: 0 5%; /* Just add some margin on sides */
+  height: 100%;
+  width: 95%;
+  margin: 0 auto;
 `;
 
 const GameBoardContainer = styled.div`
-  padding: 0 5%; /* Match the margin of other containers */
+  padding: 0 5%;
   height: 100%;
   display: flex;
   align-items: center;
@@ -48,7 +51,9 @@ const DashboardContainer = styled.div`
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  margin: 0 5%; /* Just add some margin on sides */
+  height: 100%;
+  width: 95%;
+  margin: 0 auto;
 `;
 
 const pulse = keyframes`
@@ -113,12 +118,13 @@ const BlurredBackground = styled.div`
   animation: ${blurIn} 0.6s ease-out;
 `;
 
-const GameSceneContentWrapper = styled.div<{ $animate?: boolean }>`
-  width: 100%;
-  height: 100%;
+const AnimatedGameSceneContainer = styled(GameSceneContainer)<{ $animate?: boolean }>`
   animation: ${(props) => (props.$animate ? blurOut : "none")} 0.6s ease-out;
 `;
 
+/**
+ * Main game scene component that handles loading states
+ */
 export const GameScene: React.FC = () => {
   const { gameData, isPending, isError, error, refetch, isFetching } = useGameData();
 
@@ -150,15 +156,18 @@ export const GameScene: React.FC = () => {
   }
 
   // Now we have gameData for sure
-  return <GameSceneWithData gameData={gameData} isFetching={isFetching} />;
+  return <GameSceneLayout gameData={gameData} isFetching={isFetching} />;
 };
 
-interface GameSceneWithDataProps {
+interface GameSceneLayoutProps {
   gameData: GameData;
   isFetching: boolean;
 }
 
-const GameSceneWithData: React.FC<GameSceneWithDataProps> = ({ gameData, isFetching }) => {
+/**
+ * Game scene layout that handles different game states (playing, handoff, game over)
+ */
+const GameSceneLayout: React.FC<GameSceneLayoutProps> = ({ gameData, isFetching }) => {
   const { activeTurn } = useTurn();
   const { currentRole, currentScene, requiresHandoff, completeHandoff } = usePlayerScene();
 
@@ -179,18 +188,27 @@ const GameSceneWithData: React.FC<GameSceneWithDataProps> = ({ gameData, isFetch
     );
   }
 
+  const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
+  const DashboardComponent = getDashboardComponent(currentRole, currentScene);
+  const BoardComponent = getBoardComponent(currentRole, currentScene);
+
+  // Handle handoff state
   if (requiresHandoff) {
-    // Show current role's board blurred during handoff
     return (
       <GameSceneContainer>
         <BlurredBackground>
-          <GameSceneContent
-            currentRole={currentRole}
-            currentScene={currentScene}
-            gameData={gameData}
-            activeTurn={activeTurn}
-            isRefetching={isFetching}
-          />
+          <InstructionsContainer>
+            {isFetching && <RefetchIndicator />}
+            <GameInstructions messageText={messageText} />
+          </InstructionsContainer>
+
+          <GameBoardContainer>
+            <BoardComponent key={currentRole} />
+          </GameBoardContainer>
+
+          <DashboardContainer>
+            <DashboardComponent />
+          </DashboardContainer>
         </BlurredBackground>
         <DeviceHandoffOverlay
           gameData={gameData}
@@ -201,45 +219,11 @@ const GameSceneWithData: React.FC<GameSceneWithDataProps> = ({ gameData, isFetch
     );
   }
 
-  // Normal gameplay - animate blur out on mount
+  // Normal gameplay
   return (
-    <GameSceneContainer>
-      <GameSceneContentWrapper key={currentRole} $animate>
-        <GameSceneContent
-          currentRole={currentRole}
-          currentScene={currentScene}
-          gameData={gameData}
-          activeTurn={activeTurn}
-          isRefetching={isFetching}
-        />
-      </GameSceneContentWrapper>
-    </GameSceneContainer>
-  );
-};
-
-interface GameSceneContentProps {
-  currentRole: string;
-  currentScene: string;
-  gameData: any;
-  activeTurn: any;
-  isRefetching: boolean;
-}
-
-const GameSceneContent: React.FC<GameSceneContentProps> = ({
-  currentRole,
-  currentScene,
-  gameData,
-  activeTurn,
-  isRefetching,
-}) => {
-  const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
-  const DashboardComponent = getDashboardComponent(currentRole, currentScene);
-  const BoardComponent = getBoardComponent(currentRole, currentScene);
-
-  return (
-    <>
+    <AnimatedGameSceneContainer key={currentRole} $animate>
       <InstructionsContainer>
-        {isRefetching && <RefetchIndicator />}
+        {isFetching && <RefetchIndicator />}
         <GameInstructions messageText={messageText} />
       </InstructionsContainer>
 
@@ -250,6 +234,6 @@ const GameSceneContent: React.FC<GameSceneContentProps> = ({
       <DashboardContainer>
         <DashboardComponent />
       </DashboardContainer>
-    </>
+    </AnimatedGameSceneContainer>
   );
 };
