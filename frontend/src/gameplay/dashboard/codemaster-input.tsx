@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import { ActionButton } from "@frontend/gameplay/shared/action-button";
-import { useGameData } from "@frontend/gameplay/game-data";
+import { useGameDataRequired } from "../game-data/game-data.provider";
 import { Card } from "@frontend/shared-types";
 
 const Container = styled.div`
@@ -20,8 +20,7 @@ const InputContainer = styled.div`
   width: 100%;
   text-align: center;
   font-size: clamp(0.9rem, 2.5vw, 2.5rem);
-  background-color: ${({ theme }) =>
-    theme.inputBackground || "rgba(0,0,0,0.1)"};
+  background-color: ${({ theme }) => theme.inputBackground || "rgba(0,0,0,0.1)"};
   border-radius: 8px;
   padding: 1rem;
 
@@ -46,8 +45,7 @@ const UnderlinedTextInput = styled.input<{ isError: boolean }>`
   padding: 0.2rem;
   font-size: inherit;
   border: none;
-  border-bottom: 2px solid
-    ${({ isError, theme }) => (isError ? theme.error : theme.text)};
+  border-bottom: 2px solid ${({ isError, theme }) => (isError ? theme.error : theme.text)};
   background: transparent;
   outline: none;
   text-align: center;
@@ -56,8 +54,7 @@ const UnderlinedTextInput = styled.input<{ isError: boolean }>`
   color: ${({ theme }) => theme.text};
 
   &:focus {
-    border-bottom: 2px solid
-      ${({ isError, theme }) => (isError ? theme.error : theme.primary)};
+    border-bottom: 2px solid ${({ isError, theme }) => (isError ? theme.error : theme.primary)};
   }
 `;
 
@@ -105,7 +102,7 @@ export function CodeWordInput({
   isLoading = false,
   onSubmit,
 }: CodeWordInputProps) {
-  const { gameData } = useGameData();
+  const { gameData } = useGameDataRequired();
   const [inputCodeWord, setInputCodeWord] = useState(codeWord);
   const [inputNumberOfCards, setInputNumberOfCards] = useState(numberOfCards);
   const [errorMessage, setErrorMessage] = useState("");
@@ -131,11 +128,7 @@ export function CodeWordInput({
       return;
     }
 
-    if (
-      !inputNumberOfCards ||
-      inputNumberOfCards < 1 ||
-      inputNumberOfCards > 9
-    ) {
+    if (!inputNumberOfCards || inputNumberOfCards < 1 || inputNumberOfCards > 9) {
       setErrorMessage("Number of cards must be between 1 and 9");
       return;
     }

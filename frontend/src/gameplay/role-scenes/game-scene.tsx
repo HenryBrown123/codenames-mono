@@ -1,13 +1,10 @@
 import React from "react";
 import styled, { keyframes } from "styled-components";
-import { useGameData } from "@frontend/gameplay/game-data";
+import { useGameDataRequired } from "../game-data/game-data.provider";
 import { usePlayerScene } from "@frontend/gameplay/role-scenes";
 import { useTurn } from "@frontend/gameplay/turn-management";
 import { getSceneMessage } from "./scene-messages";
-import {
-  getDashboardComponent,
-  getBoardComponent,
-} from "./component-mappings";
+import { getDashboardComponent, getBoardComponent } from "./component-mappings";
 import { ViewOnlyBoard } from "../game-board";
 import { GameInstructions } from "../game-instructions";
 import { DeviceHandoffOverlay } from "../device-handoff";
@@ -93,18 +90,13 @@ const BlurredBackground = styled.div`
 const GameSceneContentWrapper = styled.div<{ $animate?: boolean }>`
   width: 100%;
   height: 100%;
-  animation: ${props => props.$animate ? blurOut : 'none'} 0.6s ease-out;
+  animation: ${(props) => (props.$animate ? blurOut : "none")} 0.6s ease-out;
 `;
 
 export const GameScene: React.FC = () => {
-  const { gameData } = useGameData();
+  const { gameData } = useGameDataRequired();
   const { activeTurn } = useTurn();
-  const {
-    currentRole,
-    currentScene,
-    requiresHandoff,
-    completeHandoff,
-  } = usePlayerScene();
+  const { currentRole, currentScene, requiresHandoff, completeHandoff } = usePlayerScene();
 
   // Handle game over state
   if (gameData.currentRound?.status === "COMPLETED") {
@@ -175,12 +167,7 @@ const GameSceneContent: React.FC<GameSceneContentProps> = ({
   gameData,
   activeTurn,
 }) => {
-  const messageText = getSceneMessage(
-    currentRole,
-    currentScene,
-    gameData,
-    activeTurn,
-  );
+  const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
   const BoardComponent = getBoardComponent(currentRole, currentScene);
 
