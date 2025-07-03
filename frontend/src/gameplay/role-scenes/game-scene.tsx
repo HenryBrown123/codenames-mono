@@ -1,6 +1,6 @@
 import React from "react";
 import styled, { keyframes } from "styled-components";
-import { useGameDataRequired } from "../game-data/game-data.provider";
+import { useGameData } from "../game-data/game-data.provider";
 import { usePlayerScene } from "@frontend/gameplay/role-scenes";
 import { useTurn } from "@frontend/gameplay/turn-management";
 import { getSceneMessage } from "./scene-messages";
@@ -8,53 +8,79 @@ import { getDashboardComponent, getBoardComponent } from "./component-mappings";
 import { ViewOnlyBoard } from "../game-board";
 import { GameInstructions } from "../game-instructions";
 import { DeviceHandoffOverlay } from "../device-handoff";
+import { ActionButton } from "@frontend/gameplay/shared/action-button";
+import { GameData } from "@frontend/shared-types";
 
 const GameSceneContainer = styled.div`
-  display: flex;
-  flex-direction: column;
   height: 100vh;
-  width: 100%;
-  overflow: hidden;
+  display: grid;
+  grid-template-rows: 150px 1fr 150px;
+  gap: 1rem;
+  padding: 1rem;
+  box-sizing: border-box;
 `;
 
 const InstructionsContainer = styled.div`
-  flex: 0 0 auto;
-  width: 90%;
-  height: 20vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: clamp(0.7rem, 2vw, 2rem);
-  text-align: center;
-  padding: 1rem;
-  margin: 1rem auto 0;
   background-color: rgba(65, 63, 63, 0.8);
   border-radius: 16px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-  overflow-y: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1rem;
+  font-size: clamp(0.9rem, 2vw, 1.4rem);
+  position: relative;
+  margin: 0 5%; /* Just add some margin on sides */
 `;
 
 const GameBoardContainer = styled.div`
-  flex: 1;
+  padding: 0 5%; /* Match the margin of other containers */
+  height: 100%;
   display: flex;
-  justify-content: center;
   align-items: center;
-  padding: 1rem;
-  overflow: hidden;
+  justify-content: center;
 `;
 
 const DashboardContainer = styled.div`
-  flex: 0 0 auto;
-  width: 90%;
-  height: 20vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 1rem;
-  margin: 0 auto 1rem;
   background-color: rgba(65, 63, 63, 0.8);
   border-radius: 16px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  margin: 0 5%; /* Just add some margin on sides */
+`;
+
+const pulse = keyframes`
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+`;
+
+const RefetchIndicator = styled.div`
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #4dabf7;
+  animation: ${pulse} 1.5s ease-in-out infinite;
+`;
+
+const ErrorContainer = styled.div`
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  text-align: center;
+  color: white;
 `;
 
 const blurIn = keyframes`
@@ -94,7 +120,45 @@ const GameSceneContentWrapper = styled.div<{ $animate?: boolean }>`
 `;
 
 export const GameScene: React.FC = () => {
-  const { gameData } = useGameDataRequired();
+  const { gameData, isPending, isError, error, refetch, isFetching } = useGameData();
+
+  // Show skeleton during initial load
+  if (isPending || !gameData) {
+    return (
+      <GameSceneContainer>
+        <InstructionsContainer style={{ opacity: 0.5 }}>
+          <GameInstructions messageText="Loading game..." />
+        </InstructionsContainer>
+        <GameBoardContainer>
+          <ViewOnlyBoard />
+        </GameBoardContainer>
+        <DashboardContainer style={{ opacity: 0.5 }} />
+      </GameSceneContainer>
+    );
+  }
+
+  if (isError) {
+    return (
+      <GameSceneContainer>
+        <ErrorContainer>
+          <h2>Failed to load game</h2>
+          <p>{error?.message || "Unknown error"}</p>
+          <ActionButton onClick={refetch} text="Retry" enabled={true} />
+        </ErrorContainer>
+      </GameSceneContainer>
+    );
+  }
+
+  // Now we have gameData for sure
+  return <GameSceneWithData gameData={gameData} isFetching={isFetching} />;
+};
+
+interface GameSceneWithDataProps {
+  gameData: GameData;
+  isFetching: boolean;
+}
+
+const GameSceneWithData: React.FC<GameSceneWithDataProps> = ({ gameData, isFetching }) => {
   const { activeTurn } = useTurn();
   const { currentRole, currentScene, requiresHandoff, completeHandoff } = usePlayerScene();
 
@@ -125,6 +189,7 @@ export const GameScene: React.FC = () => {
             currentScene={currentScene}
             gameData={gameData}
             activeTurn={activeTurn}
+            isRefetching={isFetching}
           />
         </BlurredBackground>
         <DeviceHandoffOverlay
@@ -145,20 +210,19 @@ export const GameScene: React.FC = () => {
           currentScene={currentScene}
           gameData={gameData}
           activeTurn={activeTurn}
+          isRefetching={isFetching}
         />
       </GameSceneContentWrapper>
     </GameSceneContainer>
   );
 };
 
-/**
- * Game scene content
- */
 interface GameSceneContentProps {
   currentRole: string;
   currentScene: string;
   gameData: any;
   activeTurn: any;
+  isRefetching: boolean;
 }
 
 const GameSceneContent: React.FC<GameSceneContentProps> = ({
@@ -166,6 +230,7 @@ const GameSceneContent: React.FC<GameSceneContentProps> = ({
   currentScene,
   gameData,
   activeTurn,
+  isRefetching,
 }) => {
   const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
@@ -174,6 +239,7 @@ const GameSceneContent: React.FC<GameSceneContentProps> = ({
   return (
     <>
       <InstructionsContainer>
+        {isRefetching && <RefetchIndicator />}
         <GameInstructions messageText={messageText} />
       </InstructionsContainer>
 

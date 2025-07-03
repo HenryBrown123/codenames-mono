@@ -11,9 +11,8 @@ const BoardGrid = styled.div`
   grid-template-columns: repeat(5, 1fr);
   grid-template-rows: repeat(5, 1fr);
   gap: 0.5rem;
-  width: 100%;
   height: 100%;
-  padding: 1rem;
+  width: 100%;
 `;
 
 const EmptyCard = styled.div`
