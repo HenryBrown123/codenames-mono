@@ -35,12 +35,10 @@ import React, {
   useEffect,
 } from "react";
 import { useGameDataRequired } from "../game-data/game-data.provider";
-import { useTurn } from "../turn-management";
 import { usePlayerContext } from "../player-context/player-context.provider";
 import { PLAYER_ROLE, GAME_TYPE, PlayerRole } from "@codenames/shared/types";
-import { GameData, TurnData } from "@frontend/shared-types";
+import { GameData } from "@frontend/shared-types";
 import { getStateMachine } from "./scene-config";
-import { evaluateConditions } from "./scene-conditions";
 
 interface PlayerSceneState {
   currentRole: PlayerRole;
@@ -67,51 +65,12 @@ interface PlayerSceneProviderProps {
 }
 
 /**
- * Finds the applicable transition based on game state conditions
- */
-const findApplicableTransition = (
-  transitions: any,
-  gameData: GameData,
-  activeTurn: TurnData | null,
-): any => {
-  if (Array.isArray(transitions)) {
-    for (const transition of transitions) {
-      if (transition.condition && gameData) {
-        const conditionsArray = Array.isArray(transition.condition)
-          ? transition.condition
-          : [transition.condition];
-
-        const allConditionsMet = conditionsArray.every((conditionKey: string) =>
-          evaluateConditions(conditionKey, gameData, activeTurn),
-        );
-
-        if (allConditionsMet) {
-          return transition;
-        }
-      } else if (!transition.condition) {
-        return transition;
-      }
-    }
-    return null;
-  } else {
-    if (transitions.condition && gameData) {
-      const conditionMet = evaluateConditions(transitions.condition, gameData, activeTurn);
-      return conditionMet ? transitions : null;
-    }
-    return transitions;
-  }
-};
-
-/**
  * Scene reducer - manages transitions within a player's turn
- * Pure function that only handles scene-to-scene transitions
+ * Now uses explicit events without conditions
  */
-const sceneReducer = (
-  state: PlayerSceneState,
-  action: SceneAction,
-  gameData: GameData,
-  activeTurn: TurnData | null,
-): PlayerSceneState => {
+const sceneReducer = (state: PlayerSceneState, action: SceneAction): PlayerSceneState => {
+  console.log("[REDUCER] Current state:", state, "Action:", action);
+
   switch (action.type) {
     case "SCENE_TRANSITION": {
       const event = action.payload.event;
@@ -122,19 +81,14 @@ const sceneReducer = (
         return state;
       }
 
-      const transitions = currentSceneConfig.on[event];
-      const applicableTransition = findApplicableTransition(transitions, gameData, activeTurn);
-
-      if (!applicableTransition) {
-        return state;
-      }
+      const transition = currentSceneConfig.on[event];
 
       // Scene transitions update the current scene
       // END transitions are handled by triggerSceneTransition
-      if (applicableTransition.type === "scene" && applicableTransition.target) {
+      if (transition.type === "scene" && transition.target) {
         return {
           ...state,
-          currentScene: applicableTransition.target,
+          currentScene: transition.target,
         };
       }
 
@@ -173,7 +127,6 @@ export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
   onTurnComplete,
 }) => {
   const { gameData } = useGameDataRequired();
-  const { activeTurn } = useTurn();
   const { setCurrentPlayerId } = usePlayerContext();
 
   useEffect(() => {
@@ -181,17 +134,7 @@ export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
     return () => console.log("[PlayerSceneProvider] UNMOUNTED");
   }, []);
 
-  const reducerWithDependencies = useCallback(
-    (state: PlayerSceneState, action: SceneAction) =>
-      sceneReducer(state, action, gameData, activeTurn),
-    [gameData, activeTurn],
-  );
-
-  const [sceneState, dispatch] = useReducer(
-    reducerWithDependencies,
-    gameData,
-    determineInitialSceneState,
-  );
+  const [sceneState, dispatch] = useReducer(sceneReducer, gameData, determineInitialSceneState);
 
   // Derive current state from game data to stay in sync
   const currentState = React.useMemo(() => {
@@ -221,34 +164,27 @@ export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
 
       const stateMachine = getStateMachine(currentState.currentRole);
       const currentSceneConfig = stateMachine.scenes[currentState.currentScene];
-      const transitions = currentSceneConfig?.on?.[event];
+      const transition = currentSceneConfig?.on?.[event];
 
-      if (!transitions) {
-        console.log(`[SCENE] No transitions found for event: ${event}`);
+      if (!transition) {
+        console.log(`[SCENE] No transition found for event: ${event}`);
         return;
       }
 
-      const applicableTransition = findApplicableTransition(transitions, gameData, activeTurn);
-
-      if (!applicableTransition) {
-        console.log(`[SCENE] No applicable transition found for event: ${event}`);
-        return;
-      }
-
-      console.log(`[SCENE] Found transition type: ${applicableTransition.type}`);
+      console.log(`[SCENE] Found transition type: ${transition.type}`);
 
       // Turn completion (END) triggers callback to parent
-      if (applicableTransition.type === "END") {
+      if (transition.type === "END") {
         console.log(`[SCENE] Triggering onTurnComplete callback`);
         onTurnComplete?.();
         return;
       }
 
       // Scene transitions go through reducer
-      console.log(`[SCENE] Dispatching scene transition to: ${applicableTransition.target}`);
+      console.log(`[SCENE] Dispatching scene transition to: ${transition.target}`);
       dispatch({ type: "SCENE_TRANSITION", payload: { event } });
     },
-    [currentState, gameData, activeTurn, onTurnComplete],
+    [currentState, onTurnComplete],
   );
 
   /**
@@ -269,23 +205,14 @@ export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
     return currentState.currentScene === stateMachine.initial;
   }, [currentState.currentRole, currentState.currentScene]);
 
-  const contextValue: PlayerSceneContextValue = gameData
-    ? {
-        currentRole: currentState.currentRole,
-        currentScene: currentState.currentScene,
-        requiresHandoff: currentState.requiresHandoff,
-        triggerSceneTransition,
-        completeHandoff,
-        isInitialScene,
-      }
-    : {
-        currentRole: PLAYER_ROLE.NONE,
-        currentScene: "lobby",
-        requiresHandoff: false,
-        triggerSceneTransition: () => {},
-        completeHandoff: () => {},
-        isInitialScene: true,
-      };
+  const contextValue: PlayerSceneContextValue = {
+    currentRole: currentState.currentRole,
+    currentScene: currentState.currentScene,
+    requiresHandoff: currentState.requiresHandoff,
+    triggerSceneTransition,
+    completeHandoff,
+    isInitialScene,
+  };
 
   console.log(contextValue);
 

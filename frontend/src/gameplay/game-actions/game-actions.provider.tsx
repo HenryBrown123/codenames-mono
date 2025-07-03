@@ -95,17 +95,6 @@ const ErrorMessage = styled.p`
   line-height: 1.5;
 `;
 
-const ErrorDetails = styled.pre`
-  background: rgba(0, 0, 0, 0.3);
-  padding: 1rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  text-align: left;
-  overflow-x: auto;
-  margin-bottom: 1.5rem;
-  color: rgba(255, 255, 255, 0.7);
-`;
-
 const ReloadButton = styled.button`
   background: #ef4444;
   color: white;
@@ -165,7 +154,19 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
               error: null,
             });
 
-            triggerSceneTransition("GUESS_MADE");
+            // Explicit state transitions based on guess outcome
+            if (res.guess.outcome === "CORRECT_TEAM_CARD") {
+              if (res.turn.guessesRemaining > 0) {
+                triggerSceneTransition("CORRECT_GUESS_CONTINUE");
+              } else {
+                triggerSceneTransition("CORRECT_GUESS_TURN_OVER");
+              }
+            } else if (res.guess.outcome === "ASSASSIN_CARD") {
+              triggerSceneTransition("ASSASSIN_FOUND");
+            } else {
+              // Wrong guess (other team or bystander)
+              triggerSceneTransition("WRONG_GUESS");
+            }
           },
           onError: (error) => {
             console.error("Failed to make guess:", error);
@@ -215,7 +216,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
     createRoundMutation.mutate(undefined, {
       onSuccess: () => {
         setActionState({ name: "createRound", status: "success", error: null });
-        triggerSceneTransition("GAME_STARTED");
+        triggerSceneTransition("ROUND_CREATED");
       },
       onError: (error) => {
         console.error("Failed to create round:", error);
@@ -292,7 +293,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       {
         onSuccess: () => {
           setActionState({ name: "endTurn", status: "success", error: null });
-          triggerSceneTransition("TURN_ENDED");
+          triggerSceneTransition("TURN_ENDED_MANUALLY");
         },
         onError: (error) => {
           console.error("Failed to end turn:", error);
