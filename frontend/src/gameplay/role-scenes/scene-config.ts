@@ -1,13 +1,13 @@
+// frontend/src/gameplay/role-scenes/scene-config.ts
 import { PLAYER_ROLE } from "@codenames/shared/types";
 
 interface StateTransition {
-  condition?: string | string[];
   type: "scene" | "END";
   target?: string;
 }
 
 interface SceneConfig {
-  on?: Record<string, StateTransition | StateTransition[]>;
+  on?: Record<string, StateTransition>;
 }
 
 interface StateMachine {
@@ -16,22 +16,22 @@ interface StateMachine {
 }
 
 /**
- * None/Lobby state machine - pre-game state with proper transitions
+ * None/Lobby state machine - pre-game state
  */
 export const createNoneStateMachine = (): StateMachine => ({
   initial: "lobby",
   scenes: {
     lobby: {
       on: {
-        GAME_STARTED: {
+        ROUND_CREATED: {
           type: "scene",
           target: "dealing",
         },
         CARDS_DEALT: {
-          type: "END", // Cards dealt means we're ready to transition to player role
+          type: "END",
         },
         ROUND_STARTED: {
-          type: "END", // Round started means game is active, transition to player role
+          type: "END",
         },
       },
     },
@@ -43,14 +43,14 @@ export const createNoneStateMachine = (): StateMachine => ({
           target: "lobby",
         },
         ROUND_STARTED: {
-          type: "END", // If round starts during dealing, transition to player role
+          type: "END",
         },
       },
     },
 
     gameover: {
       on: {
-        GAME_STARTED: {
+        ROUND_CREATED: {
           type: "scene",
           target: "dealing",
         },
@@ -60,35 +60,27 @@ export const createNoneStateMachine = (): StateMachine => ({
 });
 
 /**
- * Codebreaker state machine - handles guessing flow
+ * Codebreaker state machine - outcome driven
  */
 export const createCodebreakerStateMachine = (): StateMachine => ({
   initial: "main",
   scenes: {
     main: {
       on: {
-        GUESS_MADE: [
-          // Check if round/game ended first
-          {
-            condition: ["roundCompleted"],
-            type: "END",
-          },
-          {
-            condition: ["gameEnded"],
-            type: "END",
-          },
-          {
-            condition: ["codebreakerTurnEnded"],
-            type: "scene",
-            target: "outcome",
-          },
-          {
-            type: "scene",
-            target: "main",
-          },
-        ],
+        CORRECT_GUESS: {
+          type: "scene",
+          target: "main", // Stay in main for another guess
+        },
+        WRONG_GUESS: {
+          type: "scene",
+          target: "outcome", // Show outcome
+        },
+        TURN_COMPLETED: {
+          type: "scene",
+          target: "outcome", // Turn over, show outcome
+        },
         TURN_ENDED: {
-          type: "END", // Manual turn end by codebreakers
+          type: "END", // Manual end turn
         },
       },
     },
@@ -96,7 +88,7 @@ export const createCodebreakerStateMachine = (): StateMachine => ({
     outcome: {
       on: {
         OUTCOME_ACKNOWLEDGED: {
-          type: "END", // Move to next role (usually codemaster of other team)
+          type: "END",
         },
       },
     },
@@ -113,7 +105,7 @@ export const createCodebreakerStateMachine = (): StateMachine => ({
 });
 
 /**
- * Codemaster state machine - handles clue giving
+ * Codemaster state machine
  */
 export const createCodemasterStateMachine = (): StateMachine => ({
   initial: "main",
@@ -121,7 +113,7 @@ export const createCodemasterStateMachine = (): StateMachine => ({
     main: {
       on: {
         CLUE_GIVEN: {
-          type: "END", // Clue given, transition to codebreaker role
+          type: "END",
         },
       },
     },
@@ -138,7 +130,7 @@ export const createCodemasterStateMachine = (): StateMachine => ({
 });
 
 /**
- * Spectator state machine - simple watching
+ * Spectator state machine
  */
 export const createSpectatorStateMachine = (): StateMachine => ({
   initial: "watching",
@@ -147,7 +139,7 @@ export const createSpectatorStateMachine = (): StateMachine => ({
       on: {
         TURN_CHANGED: {
           type: "scene",
-          target: "watching", // Stay watching
+          target: "watching",
         },
       },
     },

@@ -20,7 +20,7 @@ export const getDashboardComponent = (role: string, scene: string): React.Compon
     case "codebreaker.main":
       return CodebreakerDashboardView;
     case "codebreaker.outcome":
-      return OutcomeDashboardView;
+      return CodebreakerDashboardView;
     case "codebreaker.waiting":
       return LobbyDashboardView;
     case "codemaster.main":
