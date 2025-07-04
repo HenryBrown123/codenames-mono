@@ -137,8 +137,7 @@ const GameplaySceneProvider = ({ children, gameData }: GameplaySceneProviderProp
   const { clearActiveTurn } = useTurn();
 
   const handleTurnComplete = () => {
-    console.log(`[GAMEPLAY] handleTurnComplete called - THIS SHOULD ONLY HAPPEN ON END TRANSITION`);
-    console.log(new Error().stack); // See where it's being called from
+    console.log(`[GAMEPLAY] handleTurnComplete called, gameType: ${gameData.gameType}`);
 
     // Single device: clear player to trigger handoff
     if (gameData.gameType === "SINGLE_DEVICE") {
