@@ -1,14 +1,14 @@
 import { ReactNode } from "react";
 import { GameDataProvider, useGameData } from "../game-data";
-import { useGameDataRequired } from "../game-data/game-data.provider";
 import { TurnProvider } from "../turn-management";
 import { PlayerSceneProvider } from "../role-scenes";
 import { GameActionsProvider } from "../game-actions";
-import { PlayerProvider, usePlayerContext } from "../player-context/player-context.provider";
+import { PlayerProvider } from "../player-context/player-context.provider";
+import { SingleDeviceManager } from "../single-device";
 import styled from "styled-components";
 import { ActionButton } from "../shared";
-import { useTurn } from "../turn-management";
 import { GameData } from "@frontend/shared-types";
+import { GAME_TYPE } from "@codenames/shared/types";
 
 interface GameplayProviderProps {
   gameId: string;
@@ -130,26 +130,13 @@ interface GameplaySceneProviderProps {
 }
 
 /**
- * Inner provider that handles scene management with guaranteed game data
+ * Scene wrapper that conditionally uses SingleDeviceManager for single-device games
  */
 const GameplaySceneProvider = ({ children, gameData }: GameplaySceneProviderProps) => {
-  const { setCurrentPlayerId } = usePlayerContext();
-  const { clearActiveTurn } = useTurn();
+  console.log("[GameplaySceneProvider] running with", gameData);
+  if (gameData.gameType === GAME_TYPE.SINGLE_DEVICE) {
+    return <SingleDeviceManager gameData={gameData}>{children}</SingleDeviceManager>;
+  }
 
-  const handleTurnComplete = () => {
-    console.log(`[GAMEPLAY] handleTurnComplete called, gameType: ${gameData.gameType}`);
-
-    // Single device: clear player to trigger handoff
-    if (gameData.gameType === "SINGLE_DEVICE") {
-      console.log(`[GAMEPLAY] Clearing player context to trigger handoff`);
-      setCurrentPlayerId(null);
-      clearActiveTurn();
-    }
-  };
-
-  return (
-    <PlayerSceneProvider key={gameData.playerContext?.role} onTurnComplete={handleTurnComplete}>
-      {children}
-    </PlayerSceneProvider>
-  );
+  return <PlayerSceneProvider>{children}</PlayerSceneProvider>;
 };

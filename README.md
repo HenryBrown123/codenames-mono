@@ -544,6 +544,7 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   │   ├── action-button
 │       │   │   ├── error-message
 │       │   │   └── loading-spinner
+│       │   ├── single-device
 │       │   ├── state
 │       │   └── turn-management
 │       ├── lib
@@ -559,7 +560,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-80 directories
+81 directories
 ```
 
 ## Getting Started

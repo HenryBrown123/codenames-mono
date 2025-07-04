@@ -1,15 +1,13 @@
 import React from "react";
 import styled, { keyframes } from "styled-components";
-import { useGameData, useGameDataRequired } from "../game-data/game-data.provider";
+import { useGameDataRequired } from "../game-data/game-data.provider";
 import { usePlayerScene } from "@frontend/gameplay/role-scenes";
 import { useTurn } from "@frontend/gameplay/turn-management";
 import { getSceneMessage } from "./scene-messages";
 import { getDashboardComponent, getBoardComponent } from "./component-mappings";
 import { ViewOnlyBoard } from "../game-board";
 import { GameInstructions } from "../game-instructions";
-import { DeviceHandoffOverlay } from "../device-handoff";
 import { ActionButton } from "@frontend/gameplay/shared/action-button";
-import { GameData } from "@frontend/shared-types";
 
 const GameSceneContainer = styled.div`
   height: 100vh;
@@ -88,15 +86,17 @@ const ErrorContainer = styled.div`
   color: white;
 `;
 
-const AnimatedGameSceneContainer = styled(GameSceneContainer)<{ $animate?: boolean }>`
-  animation: ${(props) => (props.$animate ? "none" : "none")} 0.6s ease-out;
-`;
 
 /**
- * Main game scene component that handles loading states
+ * Game Scene Component
+ * 
+ * Pure UI component that renders the game interface.
+ * No handoff logic - that's handled by SingleDeviceManager when needed.
  */
 export const GameScene: React.FC = () => {
   const { gameData, isPending, isError, error, refetch, isFetching } = useGameDataRequired();
+  const { activeTurn } = useTurn();
+  const { currentRole, currentScene } = usePlayerScene();
 
   // Show skeleton during initial load
   if (isPending && !gameData) {
@@ -124,23 +124,7 @@ export const GameScene: React.FC = () => {
       </GameSceneContainer>
     );
   }
-
-  // Now we have gameData for sure
-  return <GameSceneLayout gameData={gameData} isFetching={isFetching} />;
-};
-
-interface GameSceneLayoutProps {
-  gameData: GameData | null;
-  isFetching: boolean;
-}
-
-/**
- * Game scene layout that handles different game states (playing, handoff, game over)
- */
-const GameSceneLayout: React.FC<GameSceneLayoutProps> = ({ gameData, isFetching }) => {
-  const { activeTurn } = useTurn();
-  const { currentRole, currentScene, requiresHandoff, completeHandoff } = usePlayerScene();
-
+  
   // Handle game over state
   if (gameData?.currentRound?.status === "COMPLETED") {
     return (
@@ -157,51 +141,25 @@ const GameSceneLayout: React.FC<GameSceneLayoutProps> = ({ gameData, isFetching 
       </GameSceneContainer>
     );
   }
-
+  
   const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
   const BoardComponent = getBoardComponent(currentRole, currentScene);
-
-  console.log(currentRole, currentScene);
-
-  // Handle handoff state
-  if (requiresHandoff) {
-    return (
-      <GameSceneContainer>
-        <InstructionsContainer>
-          {isFetching && <RefetchIndicator />}
-          <GameInstructions messageText={messageText} />
-        </InstructionsContainer>
-
-        <GameBoardContainer>
-          <BoardComponent key={currentRole} />
-        </GameBoardContainer>
-
-        <DashboardContainer>
-          <DashboardComponent />
-        </DashboardContainer>
-        {gameData !== null && (
-          <DeviceHandoffOverlay gameData={gameData} onContinue={completeHandoff} />
-        )}
-      </GameSceneContainer>
-    );
-  }
-
-  // Normal gameplay
+  
   return (
-    <AnimatedGameSceneContainer $animate>
+    <GameSceneContainer>
       <InstructionsContainer>
         {isFetching && <RefetchIndicator />}
         <GameInstructions messageText={messageText} />
       </InstructionsContainer>
-
+      
       <GameBoardContainer>
         <BoardComponent key={currentRole} />
       </GameBoardContainer>
-
+      
       <DashboardContainer>
         <DashboardComponent />
       </DashboardContainer>
-    </AnimatedGameSceneContainer>
+    </GameSceneContainer>
   );
 };
