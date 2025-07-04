@@ -31,22 +31,14 @@ import React, {
   createContext,
   useContext,
   ReactNode,
-  useReducer,
-  useEffect,
+  useState,
+  useRef,
+  useMemo,
 } from "react";
 import { useGameDataRequired } from "../game-data/game-data.provider";
 import { usePlayerContext } from "../player-context/player-context.provider";
 import { PLAYER_ROLE, GAME_TYPE, PlayerRole } from "@codenames/shared/types";
-import { GameData } from "@frontend/shared-types";
 import { getStateMachine } from "./scene-config";
-
-interface PlayerSceneState {
-  currentRole: PlayerRole;
-  currentScene: string;
-  requiresHandoff: boolean;
-}
-
-type SceneAction = { type: "SCENE_TRANSITION"; payload: { event: string } };
 
 interface PlayerSceneContextValue {
   currentRole: string;
@@ -64,64 +56,6 @@ interface PlayerSceneProviderProps {
   onTurnComplete?: () => void;
 }
 
-/**
- * Scene reducer - manages transitions within a player's turn
- * Now uses explicit events without conditions
- */
-const sceneReducer = (state: PlayerSceneState, action: SceneAction): PlayerSceneState => {
-  console.log("[REDUCER] Current state:", state, "Action:", action);
-
-  switch (action.type) {
-    case "SCENE_TRANSITION": {
-      const event = action.payload.event;
-      const stateMachine = getStateMachine(state.currentRole);
-      const currentSceneConfig = stateMachine.scenes[state.currentScene];
-
-      if (!currentSceneConfig?.on?.[event]) {
-        return state;
-      }
-
-      const transition = currentSceneConfig.on[event];
-
-      // Scene transitions update the current scene
-      // END transitions are handled by triggerSceneTransition
-      if (transition.type === "scene" && transition.target) {
-        return {
-          ...state,
-          currentScene: transition.target,
-        };
-      }
-
-      return state;
-    }
-
-    default:
-      return state;
-  }
-};
-
-/**
- * Determines initial scene state based on game context
- * Called on mount and when player context changes
- */
-const determineInitialSceneState = (gameData: GameData): PlayerSceneState => {
-  // Get current player's role from game data
-  const playerRole = gameData.playerContext?.role || PLAYER_ROLE.NONE;
-  const stateMachine = getStateMachine(playerRole);
-
-  // In single-device mode, show handoff if game is active but no player selected
-  const requiresHandoff =
-    gameData.gameType === GAME_TYPE.SINGLE_DEVICE &&
-    gameData.currentRound?.status === "IN_PROGRESS" &&
-    playerRole === PLAYER_ROLE.NONE;
-
-  return {
-    currentRole: playerRole,
-    currentScene: stateMachine.initial,
-    requiresHandoff: requiresHandoff,
-  };
-};
-
 export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
   children,
   onTurnComplete,
@@ -129,28 +63,40 @@ export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
   const { gameData } = useGameDataRequired();
   const { setCurrentPlayerId } = usePlayerContext();
 
-  useEffect(() => {
-    console.log("[PlayerSceneProvider] MOUNTED");
-    return () => console.log("[PlayerSceneProvider] UNMOUNTED");
-  }, []);
+  // Get current role from game data
+  const currentRole = gameData.playerContext?.role || PLAYER_ROLE.NONE;
 
-  const [sceneState, dispatch] = useReducer(sceneReducer, gameData, determineInitialSceneState);
-
-  // Derive current state from game data to stay in sync
-  const currentState = React.useMemo(() => {
-    const derivedState = determineInitialSceneState(gameData);
-
-    // If the player role changed (e.g., after handoff), use the new derived state
-    if (sceneState.currentRole !== derivedState.currentRole) {
-      return derivedState;
-    }
-
-    // Otherwise, keep current scene but update handoff status
+  // Track the role and scene together
+  const [roleScene, setRoleScene] = useState(() => {
+    const stateMachine = getStateMachine(currentRole);
     return {
-      ...sceneState,
-      requiresHandoff: derivedState.requiresHandoff,
+      role: currentRole,
+      scene: stateMachine.initial,
     };
-  }, [gameData, sceneState]);
+  });
+
+  // If role changed, update state (but not during render)
+  React.useEffect(() => {
+    if (roleScene.role !== currentRole) {
+      console.log(
+        `[SCENE] Role changed from ${roleScene.role} to ${currentRole}, resetting to initial scene`,
+      );
+      const stateMachine = getStateMachine(currentRole);
+      setRoleScene({
+        role: currentRole,
+        scene: stateMachine.initial,
+      });
+    }
+  }, [currentRole, roleScene.role]);
+
+  // Get the state machine for the current role
+  const stateMachine = useMemo(() => getStateMachine(roleScene.role), [roleScene.role]);
+
+  // Determine handoff requirement
+  const requiresHandoff =
+    gameData.gameType === GAME_TYPE.SINGLE_DEVICE &&
+    gameData.currentRound?.status === "IN_PROGRESS" &&
+    currentRole === PLAYER_ROLE.NONE;
 
   /**
    * Triggers scene transitions and handles turn completion
@@ -159,11 +105,10 @@ export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
   const triggerSceneTransition = useCallback(
     (event: string) => {
       console.log(
-        `[SCENE] triggerSceneTransition: ${event}, role: ${currentState.currentRole}, scene: ${currentState.currentScene}`,
+        `[SCENE] triggerSceneTransition: ${event}, role: ${roleScene.role}, scene: ${roleScene.scene}`,
       );
 
-      const stateMachine = getStateMachine(currentState.currentRole);
-      const currentSceneConfig = stateMachine.scenes[currentState.currentScene];
+      const currentSceneConfig = stateMachine.scenes[roleScene.scene];
       const transition = currentSceneConfig?.on?.[event];
 
       if (!transition) {
@@ -180,11 +125,16 @@ export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
         return;
       }
 
-      // Scene transitions go through reducer
-      console.log(`[SCENE] Dispatching scene transition to: ${transition.target}`);
-      dispatch({ type: "SCENE_TRANSITION", payload: { event } });
+      // Scene transitions update state
+      if (transition.type === "scene" && transition.target) {
+        console.log(`[SCENE] Transitioning to scene: ${transition.target}`);
+        setRoleScene((prev) => ({
+          ...prev,
+          scene: transition.target!,
+        }));
+      }
     },
-    [currentState, onTurnComplete],
+    [roleScene, stateMachine, onTurnComplete],
   );
 
   /**
@@ -200,15 +150,12 @@ export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
   );
 
   // Determine if at the initial scene for current role
-  const isInitialScene = React.useMemo(() => {
-    const stateMachine = getStateMachine(currentState.currentRole);
-    return currentState.currentScene === stateMachine.initial;
-  }, [currentState.currentRole, currentState.currentScene]);
+  const isInitialScene = roleScene.scene === stateMachine.initial;
 
   const contextValue: PlayerSceneContextValue = {
-    currentRole: currentState.currentRole,
-    currentScene: currentState.currentScene,
-    requiresHandoff: currentState.requiresHandoff,
+    currentRole: roleScene.role,
+    currentScene: roleScene.scene,
+    requiresHandoff,
     triggerSceneTransition,
     completeHandoff,
     isInitialScene,
