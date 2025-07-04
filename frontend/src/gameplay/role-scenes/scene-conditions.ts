@@ -10,25 +10,12 @@ export const conditions: Record<
   (gameData: GameData, activeTurn: TurnData | null) => boolean
 > = {
   codebreakerTurnEnded: (gameData, activeTurn) => {
-    console.log(
-      "[CONDITION] codebreakerTurnEnded - turnCompleted:",
-      gameData,
-      activeTurn,
-    );
     // Turn ended if turn is completed OR if server says you're no longer codebreaker
     const turnCompleted = activeTurn?.status === "COMPLETED";
     const serverSaysNotCodebreaker =
       gameData.playerContext?.role !== "CODEBREAKER";
 
     const result = turnCompleted || serverSaysNotCodebreaker;
-    console.log(
-      "[CONDITION] codebreakerTurnEnded - turnCompleted:",
-      turnCompleted,
-      "serverRole:",
-      gameData.playerContext?.role,
-      "result:",
-      result,
-    );
     return result;
   },
   // Game state conditions - these are straightforward

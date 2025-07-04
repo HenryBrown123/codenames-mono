@@ -21,24 +21,10 @@ interface GameDataProviderProps {
 
 export const GameDataProvider = ({ children, gameId }: GameDataProviderProps) => {
   const gameDataQuery = useGameDataQuery(gameId);
-
-  const cachedGameData = useRef<GameData | undefined>(undefined);
-
-  // Update cache when we get new valid data
-  if (gameDataQuery.data) {
-    cachedGameData.current = gameDataQuery.data;
-  }
-
-  console.log("Cached data: ", cachedGameData.current);
-  console.log("Query data: ", gameDataQuery.data);
-
-  // Determine what game data to provide
-  const gameData = gameDataQuery.data || cachedGameData.current;
-
   return (
     <GameDataContext.Provider
       value={{
-        gameData: gameData,
+        gameData: gameDataQuery.data,
         gameId,
         isPending: gameDataQuery.isPending,
         isError: gameDataQuery.isError,

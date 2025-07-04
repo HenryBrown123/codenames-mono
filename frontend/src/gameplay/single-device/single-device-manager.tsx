@@ -26,11 +26,6 @@ export const SingleDeviceManager: React.FC<SingleDeviceManagerProps> = ({ childr
   const { currentPlayerId, setCurrentPlayerId } = usePlayerContext();
   const { clearActiveTurn } = useTurn();
 
-  console.log(
-    "[SingleDeviceManager] running singledevice manager with ",
-    currentPlayerId,
-    gameData,
-  );
 
   /**
    * Determines if handoff UI should be shown

@@ -133,7 +133,6 @@ interface GameplaySceneProviderProps {
  * Scene wrapper that conditionally uses SingleDeviceManager for single-device games
  */
 const GameplaySceneProvider = ({ children, gameData }: GameplaySceneProviderProps) => {
-  console.log("[GameplaySceneProvider] running with", gameData);
   if (gameData.gameType === GAME_TYPE.SINGLE_DEVICE) {
     return <SingleDeviceManager gameData={gameData}>{children}</SingleDeviceManager>;
   }
