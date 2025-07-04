@@ -61,36 +61,24 @@ export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
   onTurnComplete,
 }) => {
   const { gameData } = useGameDataRequired();
-  const { setCurrentPlayerId } = usePlayerContext();
-
+  const { currentPlayerId, setCurrentPlayerId } = usePlayerContext();
+  const [currentScene, setCurrentScene] = useState<string | null>(null);
   // Get current role from game data
   const currentRole = gameData.playerContext?.role || PLAYER_ROLE.NONE;
 
-  // Track the role and scene together
-  const [roleScene, setRoleScene] = useState(() => {
-    const stateMachine = getStateMachine(currentRole);
-    return {
-      role: currentRole,
-      scene: stateMachine.initial,
-    };
-  });
-
-  // If role changed, update state (but not during render)
   React.useEffect(() => {
-    if (roleScene.role !== currentRole) {
-      console.log(
-        `[SCENE] Role changed from ${roleScene.role} to ${currentRole}, resetting to initial scene`,
-      );
-      const stateMachine = getStateMachine(currentRole);
-      setRoleScene({
-        role: currentRole,
-        scene: stateMachine.initial,
-      });
-    }
-  }, [currentRole, roleScene.role]);
+    console.log("[MOUNTING] PlayerSceneProvider with ", gameData, currentPlayerId);
+    return () => {
+      console.log("[UNMOUNTING] PlayerSceneProvider");
+    };
+  }, []);
 
   // Get the state machine for the current role
-  const stateMachine = useMemo(() => getStateMachine(roleScene.role), [roleScene.role]);
+  const stateMachine = useMemo(() => getStateMachine(currentRole), [currentRole]);
+  const sceneConfig = useMemo(
+    () => stateMachine.scenes[currentScene || stateMachine.initial],
+    [stateMachine, currentScene],
+  );
 
   // Determine handoff requirement
   const requiresHandoff =
@@ -105,11 +93,10 @@ export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
   const triggerSceneTransition = useCallback(
     (event: string) => {
       console.log(
-        `[SCENE] triggerSceneTransition: ${event}, role: ${roleScene.role}, scene: ${roleScene.scene}`,
+        `[SCENE] triggerSceneTransition: ${event}, role: ${currentRole}, scene: ${currentScene}`,
       );
 
-      const currentSceneConfig = stateMachine.scenes[roleScene.scene];
-      const transition = currentSceneConfig?.on?.[event];
+      const transition = sceneConfig?.on?.[event];
 
       if (!transition) {
         console.log(`[SCENE] No transition found for event: ${event}`);
@@ -128,13 +115,11 @@ export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
       // Scene transitions update state
       if (transition.type === "scene" && transition.target) {
         console.log(`[SCENE] Transitioning to scene: ${transition.target}`);
-        setRoleScene((prev) => ({
-          ...prev,
-          scene: transition.target!,
-        }));
+        setCurrentScene(transition.target);
+        return;
       }
     },
-    [roleScene, stateMachine, onTurnComplete],
+    [currentScene, stateMachine, onTurnComplete],
   );
 
   /**
@@ -143,18 +128,23 @@ export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
    */
   const completeHandoff = useCallback(
     (playerId: string) => {
-      console.log(`[SCENE] completeHandoff called with playerId: ${playerId}`);
+      console.log(
+        `[SCENE] completeHandoff called with playerId: ${playerId}`,
+        stateMachine,
+        currentScene,
+      );
       setCurrentPlayerId(playerId);
+      setCurrentScene(stateMachine.initial);
     },
-    [setCurrentPlayerId],
+    [setCurrentScene, setCurrentPlayerId, stateMachine],
   );
 
   // Determine if at the initial scene for current role
-  const isInitialScene = roleScene.scene === stateMachine.initial;
+  const isInitialScene = currentScene === stateMachine.initial;
 
   const contextValue: PlayerSceneContextValue = {
-    currentRole: roleScene.role,
-    currentScene: roleScene.scene,
+    currentRole: currentRole,
+    currentScene: currentScene || stateMachine.initial,
     requiresHandoff,
     triggerSceneTransition,
     completeHandoff,

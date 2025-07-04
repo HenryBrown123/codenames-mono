@@ -147,5 +147,9 @@ const GameplaySceneProvider = ({ children, gameData }: GameplaySceneProviderProp
     }
   };
 
-  return <PlayerSceneProvider onTurnComplete={handleTurnComplete}>{children}</PlayerSceneProvider>;
+  return (
+    <PlayerSceneProvider key={gameData.playerContext?.role} onTurnComplete={handleTurnComplete}>
+      {children}
+    </PlayerSceneProvider>
+  );
 };
