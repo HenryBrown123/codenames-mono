@@ -86,10 +86,9 @@ const ErrorContainer = styled.div`
   color: white;
 `;
 
-
 /**
  * Game Scene Component
- * 
+ *
  * Pure UI component that renders the game interface.
  * No handoff logic - that's handled by SingleDeviceManager when needed.
  */
@@ -124,7 +123,7 @@ export const GameScene: React.FC = () => {
       </GameSceneContainer>
     );
   }
-  
+
   // Handle game over state
   if (gameData?.currentRound?.status === "COMPLETED") {
     return (
@@ -141,22 +140,22 @@ export const GameScene: React.FC = () => {
       </GameSceneContainer>
     );
   }
-  
+
   const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
   const BoardComponent = getBoardComponent(currentRole, currentScene);
-  
+
   return (
     <GameSceneContainer>
       <InstructionsContainer>
         {isFetching && <RefetchIndicator />}
         <GameInstructions messageText={messageText} />
       </InstructionsContainer>
-      
+
       <GameBoardContainer>
-        <BoardComponent key={currentRole} />
+        <BoardComponent />
       </GameBoardContainer>
-      
+
       <DashboardContainer>
         <DashboardComponent />
       </DashboardContainer>
