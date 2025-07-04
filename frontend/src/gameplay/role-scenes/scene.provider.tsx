@@ -78,6 +78,7 @@ const sceneReducer = (state: PlayerSceneState, action: SceneAction): PlayerScene
       const currentSceneConfig = stateMachine.scenes[state.currentScene];
 
       if (!currentSceneConfig?.on?.[event]) {
+        console.log("[REDUCER] No transition found for event:", event);
         return state;
       }
 
@@ -86,10 +87,12 @@ const sceneReducer = (state: PlayerSceneState, action: SceneAction): PlayerScene
       // Scene transitions update the current scene
       // END transitions are handled by triggerSceneTransition
       if (transition.type === "scene" && transition.target) {
-        return {
+        const newState = {
           ...state,
           currentScene: transition.target,
         };
+        console.log("[REDUCER] New state:", newState);
+        return newState;
       }
 
       return state;
@@ -134,62 +137,51 @@ export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
     return () => console.log("[PlayerSceneProvider] UNMOUNTED");
   }, []);
 
-  const [sceneState, dispatch] = useReducer(sceneReducer, gameData, determineInitialSceneState);
+  // Initialize reducer only once
+  const [sceneState, dispatch] = useReducer(sceneReducer, undefined, () =>
+    determineInitialSceneState(gameData),
+  );
 
-  // Derive current state from game data to stay in sync
-  const currentState = React.useMemo(() => {
-    const derivedState = determineInitialSceneState(gameData);
-
-    // If the player role changed (e.g., after handoff), use the new derived state
-    if (sceneState.currentRole !== derivedState.currentRole) {
-      return derivedState;
-    }
-
-    // Otherwise, keep current scene but update handoff status
-    return {
-      ...sceneState,
-      requiresHandoff: derivedState.requiresHandoff,
-    };
-  }, [gameData, sceneState]);
+  // Check if we need handoff (computed, not stored)
+  const requiresHandoff =
+    gameData.gameType === GAME_TYPE.SINGLE_DEVICE &&
+    gameData.currentRound?.status === "IN_PROGRESS" &&
+    (gameData.playerContext?.role || PLAYER_ROLE.NONE) === PLAYER_ROLE.NONE;
 
   /**
    * Triggers scene transitions and handles turn completion
    * END transitions invoke the onTurnComplete callback
    */
-  const triggerSceneTransition = useCallback(
-    (event: string) => {
-      console.log(
-        `[SCENE] triggerSceneTransition: ${event}, role: ${currentState.currentRole}, scene: ${currentState.currentScene}`,
-      );
+  const triggerSceneTransition = (event: string) => {
+    console.log(
+      `[SCENE] triggerSceneTransition: ${event}, role: ${sceneState.currentRole}, scene: ${sceneState.currentScene}`,
+    );
 
-      const stateMachine = getStateMachine(currentState.currentRole);
-      const currentSceneConfig = stateMachine.scenes[currentState.currentScene];
-      const transition = currentSceneConfig?.on?.[event];
+    const stateMachine = getStateMachine(sceneState.currentRole);
+    const currentSceneConfig = stateMachine.scenes[sceneState.currentScene];
+    const transition = currentSceneConfig?.on?.[event];
 
-      if (!transition) {
-        console.log(`[SCENE] No transition found for event: ${event}`);
-        return;
-      }
+    if (!transition) {
+      console.log(`[SCENE] No transition found for event: ${event}`);
+      return;
+    }
 
-      console.log(`[SCENE] Found transition type: ${transition.type}`);
+    console.log(`[SCENE] Found transition type: ${transition.type}`);
 
-      // Turn completion (END) triggers callback to parent
-      if (transition.type === "END") {
-        console.log(`[SCENE] Triggering onTurnComplete callback`);
-        onTurnComplete?.();
-        return;
-      }
+    // Turn completion (END) triggers callback to parent
+    if (transition.type === "END") {
+      console.log(`[SCENE] Triggering onTurnComplete callback`);
+      onTurnComplete?.();
+      return;
+    }
 
-      // Scene transitions go through reducer
-      console.log(`[SCENE] Dispatching scene transition to: ${transition.target}`);
-      dispatch({ type: "SCENE_TRANSITION", payload: { event } });
-    },
-    [currentState, onTurnComplete],
-  );
+    // Scene transitions go through reducer
+    console.log(`[SCENE] Dispatching scene transition to: ${transition.target}`);
+    dispatch({ type: "SCENE_TRANSITION", payload: { event } });
+  };
 
   /**
    * Completes device handoff by setting the new active player
-   * This cascades through React Query to reset the scene state
    */
   const completeHandoff = useCallback(
     (playerId: string) => {
@@ -201,14 +193,14 @@ export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
 
   // Determine if at the initial scene for current role
   const isInitialScene = React.useMemo(() => {
-    const stateMachine = getStateMachine(currentState.currentRole);
-    return currentState.currentScene === stateMachine.initial;
-  }, [currentState.currentRole, currentState.currentScene]);
+    const stateMachine = getStateMachine(sceneState.currentRole);
+    return sceneState.currentScene === stateMachine.initial;
+  }, [sceneState.currentRole, sceneState.currentScene]);
 
   const contextValue: PlayerSceneContextValue = {
-    currentRole: currentState.currentRole,
-    currentScene: currentState.currentScene,
-    requiresHandoff: currentState.requiresHandoff,
+    currentRole: sceneState.currentRole,
+    currentScene: sceneState.currentScene,
+    requiresHandoff,
     triggerSceneTransition,
     completeHandoff,
     isInitialScene,
