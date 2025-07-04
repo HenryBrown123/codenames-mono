@@ -100,7 +100,6 @@ export const ViewOnlyBoard = memo(() => {
     );
   }
 
-  console.log("Rendering ViewOnlyBoard");
 
   return (
     <CardVisibilityProvider cards={cards} initialState={isRoundSetup ? "hidden" : "visible"}>
