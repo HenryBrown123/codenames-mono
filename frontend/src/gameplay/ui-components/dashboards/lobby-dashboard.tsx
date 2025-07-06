@@ -15,6 +15,13 @@ const Container = styled.div`
   padding: 1rem;
   gap: 2rem;
 
+  /* Vertical layout in sidebar mode */
+  @media (min-width: 769px) and (orientation: landscape) {
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+
   @media (max-width: 768px) {
     padding: 0.5rem;
     gap: 1rem;

@@ -12,6 +12,12 @@ const Container = styled.div`
   width: 100%;
   position: relative;
 
+  /* Vertical in sidebar */
+  @media (min-width: 769px) and (orientation: landscape) {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
   @media (max-width: 480px) {
     flex-direction: column;
   }
@@ -26,10 +32,18 @@ const InputContainer = styled.div`
   width: auto;
   text-align: left;
   font-size: clamp(0.9rem, 2.5vw, 2.5rem);
-  background-color: ${({ theme }) => theme.inputBackground || "rgba(0,0,0,0.1)"};
+  background-color: transparent;
   border-radius: 8px;
   padding: 1rem;
   flex: 1;
+
+  /* Stack in sidebar */
+  @media (min-width: 769px) and (orientation: landscape) {
+    flex-direction: column;
+    text-align: center;
+    width: 100%;
+    font-size: clamp(1rem, 1.5vw, 1.8rem);
+  }
 
   @media (max-width: 768px) {
     font-size: clamp(0.8rem, 2vw, 1.2rem);

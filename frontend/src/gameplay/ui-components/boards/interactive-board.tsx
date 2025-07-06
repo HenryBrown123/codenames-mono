@@ -10,18 +10,20 @@ const BoardGrid = styled.div`
   grid-template-columns: repeat(5, 1fr);
   grid-template-rows: repeat(5, 1fr);
   gap: 0.5rem;
-  height: 100%;
-  width: 100%;
+  aspect-ratio: 1;
 
-  @media (max-width: 1024px) {
-    gap: 0.4rem;
+  /* Use viewport units more carefully */
+  @media (min-width: 769px) and (orientation: landscape) {
+    /* 80% of the smaller viewport dimension */
+    width: min(80vh, 80vw);
+    height: min(80vh, 80vw);
+    margin: auto;
   }
 
   @media (max-width: 768px) {
     gap: 0.3rem;
-    max-width: min(90vw, 100%);
-    max-height: min(50vh, 100%);
-    aspect-ratio: 1;
+    width: min(90vw, 50vh);
+    height: min(90vw, 50vh);
     margin: auto;
   }
 
@@ -96,4 +98,3 @@ export const InteractiveBoard = memo(() => {
 });
 
 InteractiveBoard.displayName = "InteractiveBoard";
-
