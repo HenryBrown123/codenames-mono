@@ -1,9 +1,9 @@
 import React, { useCallback, ReactNode } from "react";
-import { usePlayerContext } from "../player-context/player-context.provider";
-import { useTurn } from "../turn-management";
+import { usePlayerContext } from "../shared/providers/player-context-provider";
+import { useTurn } from "../shared/providers/turn-data-provider";
 import { GameData } from "@frontend/shared-types";
 import { PLAYER_ROLE } from "@codenames/shared/types";
-import { PlayerSceneProvider } from "../role-scenes";
+import { PlayerSceneProvider } from "../player-scenes";
 import { DeviceHandoffOverlay } from "../device-handoff";
 
 interface SingleDeviceManagerProps {
@@ -17,15 +17,13 @@ interface SingleDeviceManagerProps {
  * Manages the pass-and-play flow for single-device games:
  * - Detects when device handoff is needed
  * - Shows handoff overlay between players
- * - Clears player context after turns
+ * - Clears player context after players turn is over
  * - Ensures smooth transitions in local play
  *
- * Only used when gameType === SINGLE_DEVICE
  */
 export const SingleDeviceManager: React.FC<SingleDeviceManagerProps> = ({ children, gameData }) => {
   const { currentPlayerId, setCurrentPlayerId } = usePlayerContext();
   const { clearActiveTurn } = useTurn();
-
 
   /**
    * Determines if handoff UI should be shown

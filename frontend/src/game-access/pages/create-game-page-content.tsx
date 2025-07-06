@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useCreateNewGame } from "@frontend/game-access/api/query-hooks/use-create-new-game";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { LoadingSpinner, ActionButton } from "@frontend/gameplay/shared";
+import { LoadingSpinner, ActionButton } from "@frontend/gameplay/shared/components";
 import {
   GAME_TYPE,
   GAME_FORMAT,

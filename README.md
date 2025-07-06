@@ -528,25 +528,27 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   │   └── query-hooks
 │       │   └── pages
 │       ├── gameplay
-│       │   ├── api
-│       │   │   ├── mutations
-│       │   │   └── queries
-│       │   ├── dashboard
 │       │   ├── device-handoff
-│       │   ├── game-actions
-│       │   ├── game-board
-│       │   ├── game-data
-│       │   ├── game-instructions
 │       │   ├── pages
-│       │   ├── player-context
-│       │   ├── role-scenes
+│       │   ├── player-actions
+│       │   │   └── api
+│       │   ├── player-scenes
+│       │   ├── round-management
+│       │   │   └── api
 │       │   ├── shared
-│       │   │   ├── action-button
-│       │   │   ├── error-message
-│       │   │   └── loading-spinner
+│       │   │   ├── api
+│       │   │   ├── components
+│       │   │   │   ├── action-button
+│       │   │   │   ├── error-message
+│       │   │   │   └── loading-spinner
+│       │   │   └── providers
 │       │   ├── single-device
 │       │   ├── state
-│       │   └── turn-management
+│       │   └── ui-components
+│       │       ├── boards
+│       │       ├── cards
+│       │       ├── dashboards
+│       │       └── game-instructions
 │       ├── lib
 │       ├── lobby
 │       │   └── api
@@ -560,7 +562,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-81 directories
+83 directories
 ```
 
 ## Getting Started
