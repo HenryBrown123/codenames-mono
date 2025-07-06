@@ -1,13 +1,12 @@
 import React from "react";
 import styled, { keyframes } from "styled-components";
-import { useGameDataRequired } from "../shared/providers/game-data-provider";
+import { useGameDataRequired, useTurn } from "../shared/providers";
 import { usePlayerScene } from "./";
-import { useTurn } from "../shared/providers/turn-data-provider";
 import { getSceneMessage } from "./scene-messages";
 import { getDashboardComponent, getBoardComponent } from "./component-mappings";
 import { ViewOnlyBoard } from "../ui-components/boards";
 import { GameInstructions } from "../ui-components/game-instructions";
-import { ActionButton } from "../shared/components/action-button";
+import { ActionButton } from "../shared/components";
 
 const GameSceneContainer = styled.div`
   height: 100vh;

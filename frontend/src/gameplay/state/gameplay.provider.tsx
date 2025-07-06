@@ -1,10 +1,10 @@
 import { ReactNode } from "react";
 import { GameDataProvider, useGameData } from "../shared/providers/game-data-provider";
-import { TurnProvider } from "../shared/providers/turn-data-provider";
+import { TurnDataProvider } from "../shared/providers";
 import { PlayerSceneProvider } from "../player-scenes";
 import { GameActionsProvider } from "../player-actions/game-actions-provider";
 import { PlayerProvider } from "../shared/providers/player-context-provider";
-import { SingleDeviceManager } from "../single-device/single-device-manager";
+import { DeviceModeManager } from "../device-mode";
 import styled from "styled-components";
 import { ActionButton } from "../shared/components/action-button";
 import { GameData } from "@frontend/shared-types";
@@ -71,16 +71,16 @@ export const GameplayProvider = ({ gameId, children }: GameplayProviderProps) =>
   return (
     <PlayerProvider>
       <GameDataProvider gameId={gameId}>
-        <GameplayContent gameId={gameId}>{children}</GameplayContent>
+        <ActiveGameProviders gameId={gameId}>{children}</ActiveGameProviders>
       </GameDataProvider>
     </PlayerProvider>
   );
 };
 
 /**
- * Inner component that can use the game data hook
+ * Providers that require game data to be loaded
  */
-const GameplayContent = ({ gameId, children }: GameplayProviderProps) => {
+const ActiveGameProviders = ({ gameId, children }: GameplayProviderProps) => {
   const { gameData, isPending, isError, error, refetch } = useGameData();
 
   // Show skeleton during initial load
@@ -115,11 +115,11 @@ const GameplayContent = ({ gameId, children }: GameplayProviderProps) => {
 
   // Now we have gameData for sure
   return (
-    <TurnProvider>
+    <TurnDataProvider>
       <GameplaySceneProvider gameId={gameId} gameData={gameData}>
         <GameActionsProvider>{children}</GameActionsProvider>
       </GameplaySceneProvider>
-    </TurnProvider>
+    </TurnDataProvider>
   );
 };
 
@@ -130,11 +130,11 @@ interface GameplaySceneProviderProps {
 }
 
 /**
- * Scene wrapper that conditionally uses SingleDeviceManager for single-device games
+ * Device mode wrapper that handles both single and multi-device games
  */
 const GameplaySceneProvider = ({ children, gameData }: GameplaySceneProviderProps) => {
   if (gameData.gameType === GAME_TYPE.SINGLE_DEVICE) {
-    return <SingleDeviceManager gameData={gameData}>{children}</SingleDeviceManager>;
+    return <DeviceModeManager gameData={gameData}>{children}</DeviceModeManager>;
   }
 
   return <PlayerSceneProvider>{children}</PlayerSceneProvider>;
