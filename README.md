@@ -193,16 +193,20 @@ The frontend implements a functional React architecture with minimal external de
 
 ### State Management
 
-@tanstack/react-query manages all server state synchronization and mutations. The architecture uses multiple focused providers:
+@tanstack/react-query manages all server state synchronization and mutations. The architecture uses multiple focused providers with clear dependency hierarchy:
 
 ```typescript
-<GameDataProvider gameId={gameId}>
-  <ActiveTurnProvider>
-    <PlayerRoleSceneProvider>
-      <GameActionsProvider>{children}</GameActionsProvider>
-    </PlayerRoleSceneProvider>
-  </ActiveTurnProvider>
-</GameDataProvider>
+<PlayerContextProvider>
+  <GameDataProvider gameId={gameId}>
+    <ActiveGameProviders>
+      <TurnDataProvider>
+        <DeviceModeManager gameData={gameData}>
+          <GameActionsProvider>{children}</GameActionsProvider>
+        </DeviceModeManager>
+      </TurnDataProvider>
+    </ActiveGameProviders>
+  </GameDataProvider>
+</PlayerContextProvider>
 ```
 
 @tanstack/react-query handles:
@@ -214,12 +218,12 @@ The frontend implements a functional React architecture with minimal external de
 Example usage:
 ```typescript
 const { gameData, isLoading, error } = useGameData();
-const { mutate: giveClue, isPending } = useGiveClue();
+const { mutate: giveClue, isPending } = useGiveClueMutation();
 ```
 
 ### UI Architecture
 
-The Scene component orchestrates gameplay UI based on role-specific state machines. These state machines handle complex UI transitions for different player perspectives:
+The GameScene component orchestrates gameplay UI based on role-specific state machines managed by the PlayerSceneProvider. These state machines handle complex UI transitions for different player perspectives:
 
 ```typescript
 const determineCorrectRole = (gameData: GameData): PlayerRole => {
@@ -295,7 +299,82 @@ export const getStateMachine = (role: string): StateMachine => {
 
 The GameScene component composes different boards, dashboards, and message panels based on the current player's state machine scene. This modular approach supports different player perspectives without conditional rendering complexity.
 
-Device handoff is managed seamlessly for single-device games, showing transition overlays when switching between players.
+## Device Handoff System
+
+The game supports both multi-device and single-device modes. In single-device mode, multiple players share one device, requiring a **device handoff system** to manage transitions between players while maintaining game security and state consistency.
+
+### What is Device Handoff?
+
+Device handoff solves the challenge of pass-and-play gaming where:
+- Multiple players take turns on the same device
+- Each player should only see information appropriate to their role
+- The game must smoothly transition between player perspectives
+- Turn completion must trigger handoff to the next player
+
+### Implementation Architecture
+
+The `DeviceModeManager` orchestrates device handoff through several key mechanisms:
+
+```typescript
+export const DeviceModeManager: React.FC<DeviceModeManagerProps> = ({ 
+  children, 
+  gameData 
+}) => {
+  const { currentPlayerId, setCurrentPlayerId } = usePlayerContext();
+  const { clearActiveTurn } = useTurn();
+
+  // Determines when handoff UI should be shown
+  const requiresHandoff =
+    gameData.currentRound?.status === "IN_PROGRESS" &&
+    (gameData.playerContext?.role || PLAYER_ROLE.NONE) === PLAYER_ROLE.NONE &&
+    !currentPlayerId;
+
+  return (
+    <>
+      <PlayerSceneProvider 
+        key={gameData.playerContext?.role} 
+        onTurnComplete={handleTurnComplete}
+      >
+        {children}
+      </PlayerSceneProvider>
+      {requiresHandoff && (
+        <DeviceHandoffOverlay 
+          gameData={gameData} 
+          onContinue={handleHandoffComplete} 
+        />
+      )}
+    </>
+  );
+};
+```
+
+### Handoff Flow
+
+1. **Turn Completion**: When a player completes their turn, `onTurnComplete` is triggered
+2. **Context Clearing**: The current player ID is cleared, removing role-specific access
+3. **Neutral State**: Game enters a neutral state where no player-specific information is visible
+4. **Handoff Detection**: `requiresHandoff` becomes true when no player is active
+5. **Overlay Display**: `DeviceHandoffOverlay` shows transition UI
+6. **Player Selection**: Next player selects themselves from available players
+7. **Context Restoration**: New player ID is set, restoring appropriate role perspective
+
+### Security Considerations
+
+- **Information Hiding**: When no player is active, only neutral game state is visible
+- **Role Isolation**: Each player only sees information appropriate to their role
+- **Turn Validation**: Server validates that actions come from the correct player
+- **State Transitions**: Clean transitions prevent information leakage between players
+
+### User Experience
+
+The handoff overlay provides:
+- Clear indication that device should change hands
+- Visual list of available players
+- Role-based icons and team colors
+- Smooth animations between player perspectives
+- Quick player selection to minimize game interruption
+
+This system enables seamless local multiplayer while maintaining the strategic secrecy essential to Codenames gameplay.
 
 The architecture avoids `useEffect` for data synchronization, relying on @tanstack/react-query for all server state management. Effects are limited to complex form validation and debug logging.
 
@@ -315,24 +394,28 @@ When these states don't match, an animation plays to transition the visual state
 
 ## Key Components
 
-### `useCardVisibility` Hook
+### `CardVisibilityProvider` and `useCardVisibility` Hook
 
-The heart of the animation system. This hook tracks two sets of visual state:
+The heart of the animation system. The provider manages centralized state while individual cards use the hook to determine their animations:
 
 ```typescript
-const visibility = useCardVisibility({ 
-  cards,           // Current cards from server
-  showOnMount      // Whether to animate cards in on first render
-});
+// Provider manages all card states centrally
+<CardVisibilityProvider cards={cards} initialState="visible">
+  {/* Cards rendered here */}
+</CardVisibilityProvider>
+
+// Hook determines individual card animations
+const visibility = useCardVisibility(card, index, initialVisibility);
 ```
 
-**Tracked States:**
-- `dealtCards`: Set of card IDs that have been dealt (shown) to the player
-- `coveredCards`: Set of card IDs that have been covered (flipped to show team color)
+**Provider Manages:**
+- Central visibility state for all cards
+- State transitions between `hidden`, `visible`, `visible-colored`, and `covered`
 
-**Key Methods:**
-- `getRequiredAnimation(cardId, card)`: Returns `'dealing'`, `'covering'`, or `null`
-- `handleAnimationComplete(cardId, animation)`: Updates visual state after animation finishes
+**Hook Provides:**
+- `state`: Current visual state of the card
+- `animation`: Current animation type (`dealing`, `covering`, `color-fade`, etc.)
+- `completeTransition()`: Callback to complete animation state
 
 ### Animation Flow
 
@@ -370,22 +453,21 @@ Different scenes have different animation requirements:
 
 ```typescript
 // In a board component
-const visibility = useCardVisibility({ cards, showOnMount: false });
-
-return cards.map((card, index) => {
-  const cardId = `${index}-${card.word}`;
-  const animation = visibility.getRequiredAnimation(cardId, card);
-  
-  return (
-    <GameCard
-      key={cardId}
-      card={card}
-      animation={animation}
-      onAnimationComplete={() => visibility.handleAnimationComplete(cardId, animation)}
-      // ... other props
-    />
-  );
-});
+<CardVisibilityProvider cards={cards} initialState="visible">
+  {cards.map((card, index) => {
+    const visibility = useCardVisibility(card, index, "visible");
+    
+    return (
+      <GameCard
+        key={card.word}
+        card={card}
+        index={index}
+        initialVisibility="visible"
+        // GameCard internally uses visibility.state and visibility.animation
+      />
+    );
+  })}
+</CardVisibilityProvider>
 ```
 
 ## Benefits
