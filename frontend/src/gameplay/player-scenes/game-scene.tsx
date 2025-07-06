@@ -11,11 +11,32 @@ import { ActionButton } from "../shared/components";
 const GameSceneContainer = styled.div`
   height: 100vh;
   display: grid;
-  grid-template-rows: 150px 1fr 150px;
+  grid-template-rows: auto 1fr auto;
   gap: 1rem;
   padding: 1rem;
   box-sizing: border-box;
   overflow: hidden;
+
+  /* Tablet Portrait */
+  @media (max-width: 1024px) {
+    grid-template-rows: 120px 1fr 150px;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  /* Mobile Landscape & Small Tablet */
+  @media (max-width: 768px) {
+    grid-template-rows: 100px 1fr 140px;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  /* Mobile Portrait */
+  @media (max-width: 480px) {
+    grid-template-rows: 80px 1fr 120px;
+    gap: 0.4rem;
+    padding: 0.4rem;
+  }
 `;
 
 const InstructionsContainer = styled.div`
@@ -31,6 +52,12 @@ const InstructionsContainer = styled.div`
   height: 100%;
   width: 95%;
   margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 0.75rem;
+    font-size: clamp(0.8rem, 3vw, 1rem);
+    border-radius: 12px;
+  }
 `;
 
 const GameBoardContainer = styled.div`
@@ -39,6 +66,11 @@ const GameBoardContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+
+  @media (max-width: 768px) {
+    padding: 0;
+    overflow: hidden;
+  }
 `;
 
 const DashboardContainer = styled.div`
@@ -51,6 +83,12 @@ const DashboardContainer = styled.div`
   height: 100%;
   width: 95%;
   margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 0.75rem;
+    border-radius: 12px;
+    min-height: 100px;
+  }
 `;
 
 const pulse = keyframes`

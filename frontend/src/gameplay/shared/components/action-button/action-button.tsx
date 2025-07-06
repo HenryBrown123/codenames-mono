@@ -58,6 +58,24 @@ const StyledButton = styled.button<{ enabled: boolean }>`
     opacity: 0.3;
     animation: ${rippleEffect} 0.6s ease-out;
   }
+
+  @media (max-width: 1024px) {
+    font-size: clamp(1rem, 2.2vh, 2rem);
+    padding: 0.7rem 1.8rem;
+  }
+
+  @media (max-width: 768px) {
+    font-size: clamp(0.9rem, 2vh, 1.2rem);
+    padding: 0.6rem 1.5rem;
+    border-radius: 35px;
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1rem;
+    padding: 0.5rem 1.2rem;
+  }
 `;
 
 type ButtonProp = {

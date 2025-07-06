@@ -30,6 +30,15 @@ export const GlobalStyle = createGlobalStyle<{ theme: ThemeType }>`
     padding: 0;
     background-size: var(--color-background-size);
   }
+
+  @media (max-width: 768px) {
+    body {
+      overflow: hidden;
+      position: fixed;
+      width: 100%;
+      height: 100%;
+    }
+  }
 `;
 
 export interface ThemeType {
