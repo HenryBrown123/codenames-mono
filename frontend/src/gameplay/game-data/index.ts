@@ -1,1 +1,0 @@
-export { GameDataProvider, useGameData } from './game-data.provider';

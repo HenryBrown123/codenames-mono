@@ -1,6 +1,6 @@
 import React from "react";
 import { GameplayProvider } from "@frontend/gameplay/state";
-import { GameScene } from "@frontend/gameplay/role-scenes/game-scene";
+import { GameScene } from "../player-scenes";
 
 interface GameplayPageContentProps {
   gameId: string;

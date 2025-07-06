@@ -1,12 +1,12 @@
 import { ReactNode } from "react";
-import { GameDataProvider, useGameData } from "../game-data";
-import { TurnProvider } from "../turn-management";
-import { PlayerSceneProvider } from "../role-scenes";
-import { GameActionsProvider } from "../game-actions";
-import { PlayerProvider } from "../player-context/player-context.provider";
-import { SingleDeviceManager } from "../single-device";
+import { GameDataProvider, useGameData } from "../shared/providers/game-data-provider";
+import { TurnProvider } from "../shared/providers/turn-data-provider";
+import { PlayerSceneProvider } from "../player-scenes";
+import { GameActionsProvider } from "../player-actions/game-actions-provider";
+import { PlayerProvider } from "../shared/providers/player-context-provider";
+import { SingleDeviceManager } from "../single-device/single-device-manager";
 import styled from "styled-components";
-import { ActionButton } from "../shared";
+import { ActionButton } from "../shared/components/action-button";
 import { GameData } from "@frontend/shared-types";
 import { GAME_TYPE } from "@codenames/shared/types";
 

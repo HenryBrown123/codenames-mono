@@ -74,4 +74,4 @@ export interface Turn {
   }>;
 }
 
-export type { TurnData } from "../gameplay/api/queries/use-turn-query";
+export type { TurnData } from "../gameplay/shared/api/use-turn-query";

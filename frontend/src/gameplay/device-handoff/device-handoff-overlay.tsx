@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { PlayerRole, PLAYER_ROLE } from "@codenames/shared/types";
 import { GameData } from "@frontend/shared-types";
-import { usePlayersQuery } from "@frontend/gameplay/api/queries/use-players-query";
+import { usePlayersQuery } from "../shared/api/use-players-query";
 import { FaHandPaper, FaGamepad, FaCrown, FaSearch } from "react-icons/fa";
 
 const fadeIn = keyframes`
