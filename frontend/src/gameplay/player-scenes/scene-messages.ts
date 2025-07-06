@@ -69,14 +69,13 @@ const wasTargetReached = (activeTurn: TurnData | null): boolean => {
 export const getSceneMessage = (
   role: string,
   scene: string,
-  gameData: GameData | null,
+  gameData: GameData,
   activeTurn: TurnData | null,
 ): string => {
   const normalizedRole = role.toLowerCase();
   const messageKey = `${normalizedRole}.${scene}`;
   const teamName = activeTurn?.teamName || "Your team";
 
-  if (!gameData) return "";
 
   switch (messageKey) {
     case "codebreaker.main":

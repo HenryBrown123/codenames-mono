@@ -154,7 +154,6 @@ export const createSpectatorStateMachine = (): StateMachine => ({
  * Factory function to get state machine for role
  */
 export const getStateMachine = (role: string): StateMachine => {
-  console.log(`[STATE_MACHINE] Getting state machine for role: ${role}`);
 
   switch (role.toUpperCase()) {
     case PLAYER_ROLE.CODEBREAKER:

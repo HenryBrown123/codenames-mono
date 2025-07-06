@@ -21,7 +21,7 @@ const TurnContext = createContext<TurnContextType | undefined>(undefined);
 /**
  * Turn provider props
  */
-interface TurnProviderProps {
+interface TurnDataProviderProps {
   children: ReactNode;
 }
 
@@ -29,7 +29,7 @@ interface TurnProviderProps {
  * Turn provider component
  * Automatically populates with current active turn from game data
  */
-export const TurnProvider = ({ children }: TurnProviderProps) => {
+export const TurnDataProvider = ({ children }: TurnDataProviderProps) => {
   const { gameData } = useGameData();
 
   // Track the turn ID of recently executed actions to allow outcomes to be presented even
@@ -60,13 +60,13 @@ export const TurnProvider = ({ children }: TurnProviderProps) => {
 
 /**
  * Hook to access turn context
- * Must be used within a TurnProvider
+ * Must be used within a TurnDataProvider
  */
 export const useTurn = (): TurnContextType => {
   const context = useContext(TurnContext);
 
   if (context === undefined) {
-    throw new Error("useTurn must be used within a TurnProvider");
+    throw new Error("useTurn must be used within a TurnDataProvider");
   }
 
   return context;

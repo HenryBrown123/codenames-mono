@@ -5,7 +5,7 @@
  */
 
 import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo } from "react";
-import { useGameDataRequired } from "../shared/providers/game-data-provider";
+import { useGameDataRequired } from "../shared/providers";
 import { PLAYER_ROLE } from "@codenames/shared/types";
 import { getStateMachine } from "./scene-config";
 

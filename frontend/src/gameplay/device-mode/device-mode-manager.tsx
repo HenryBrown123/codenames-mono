@@ -1,27 +1,25 @@
 import React, { useCallback, ReactNode } from "react";
-import { usePlayerContext } from "../shared/providers/player-context-provider";
-import { useTurn } from "../shared/providers/turn-data-provider";
+import { usePlayerContext, useTurn } from "../shared/providers";
 import { GameData } from "@frontend/shared-types";
 import { PLAYER_ROLE } from "@codenames/shared/types";
 import { PlayerSceneProvider } from "../player-scenes";
-import { DeviceHandoffOverlay } from "../device-handoff";
+import { DeviceHandoffOverlay } from "./device-handoff-overlay";
 
-interface SingleDeviceManagerProps {
+interface DeviceModeManagerProps {
   children: ReactNode;
   gameData: GameData;
 }
 
 /**
- * Single Device Manager
+ * Device Mode Manager
  *
- * Manages the pass-and-play flow for single-device games:
- * - Detects when device handoff is needed
- * - Shows handoff overlay between players
- * - Clears player context after players turn is over
- * - Ensures smooth transitions in local play
- *
+ * Manages device-specific game flow for both single and multi-device games:
+ * - For single-device: Shows handoff overlay between players
+ * - For multi-device: Direct scene management without handoff
+ * - Clears player context after turn completion
+ * - Ensures smooth transitions across device modes
  */
-export const SingleDeviceManager: React.FC<SingleDeviceManagerProps> = ({ children, gameData }) => {
+export const DeviceModeManager: React.FC<DeviceModeManagerProps> = ({ children, gameData }) => {
   const { currentPlayerId, setCurrentPlayerId } = usePlayerContext();
   const { clearActiveTurn } = useTurn();
 
