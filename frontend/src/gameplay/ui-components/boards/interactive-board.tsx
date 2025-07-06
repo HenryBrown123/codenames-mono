@@ -12,6 +12,22 @@ const BoardGrid = styled.div`
   gap: 0.5rem;
   height: 100%;
   width: 100%;
+
+  @media (max-width: 1024px) {
+    gap: 0.4rem;
+  }
+
+  @media (max-width: 768px) {
+    gap: 0.3rem;
+    max-width: min(90vw, 100%);
+    max-height: min(50vh, 100%);
+    aspect-ratio: 1;
+    margin: auto;
+  }
+
+  @media (max-width: 480px) {
+    gap: 0.2rem;
+  }
 `;
 
 const EmptyCard = styled.div`

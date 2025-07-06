@@ -7,21 +7,26 @@ import { ActionButton } from "../../shared/components";
 
 const Container = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   width: 100%;
   height: 100%;
   padding: 1rem;
+  gap: 2rem;
+
+  @media (max-width: 768px) {
+    padding: 0.5rem;
+    gap: 1rem;
+  }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.5rem;
+  }
 `;
 
-const ButtonWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-`;
 
 const RefreshButton = styled.button`
   position: absolute;
@@ -108,7 +113,7 @@ export const LobbyDashboard: React.FC = () => {
   };
 
   return (
-    <Container style={{ position: "relative" }}>
+    <Container style={{ position: "relative", justifyContent: 'center' }}>
       {canRedeal && (
         <RefreshButton
           onClick={handleRedeal}
@@ -118,13 +123,11 @@ export const LobbyDashboard: React.FC = () => {
           <RefreshCw />
         </RefreshButton>
       )}
-      <ButtonWrapper>
-        <ActionButton
-          onClick={handleClick}
-          text={getButtonText()}
-          enabled={actionState.status !== "loading"}
-        />
-      </ButtonWrapper>
+      <ActionButton
+        onClick={handleClick}
+        text={getButtonText()}
+        enabled={actionState.status !== "loading"}
+      />
     </Container>
   );
 };

@@ -6,12 +6,24 @@ import { useTurn } from "../../shared/providers";
 
 const Container = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   width: 100%;
   height: 100%;
   padding: 1rem;
+  gap: 2rem;
+
+  @media (max-width: 768px) {
+    padding: 0.5rem;
+    gap: 1rem;
+  }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.5rem;
+  }
 `;
 
 export const CodemasterDashboard: React.FC = () => {

@@ -137,6 +137,11 @@ const CardContainer = styled.div`
   &[data-animation="color-fade"] .card-front {
     animation: ${colorRevealAnimation} 0.8s ease-in-out forwards;
   }
+
+  @media (max-width: 768px) {
+    min-height: 0;
+    min-width: 0;
+  }
 `;
 
 const CardInner = styled.div<{ $clickable: boolean }>`
@@ -202,6 +207,21 @@ const cardFaceStyles = css`
   background-blend-mode: overlay;
   word-break: break-word;
   overflow-wrap: break-word;
+
+  @media (max-width: 1024px) {
+    font-size: clamp(0.7rem, 2.8vw, 1.5rem);
+  }
+
+  @media (max-width: 768px) {
+    font-size: clamp(0.6rem, 3vw, 1rem);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  @media (max-width: 480px) {
+    font-size: clamp(0.5rem, 2.5vw, 0.9rem);
+    border-radius: 6px;
+  }
 `;
 
 const CardFront = styled.button<{ $teamColor: string; $clickable: boolean }>`
@@ -266,6 +286,12 @@ const CornerIcon = styled.div`
   left: 8px;
   color: rgba(255, 255, 255, 0.8);
   font-size: clamp(0.5rem, 1vw, 2rem);
+
+  @media (max-width: 768px) {
+    top: 4px;
+    left: 4px;
+    font-size: clamp(0.4rem, 2vw, 1rem);
+  }
 `;
 
 /**

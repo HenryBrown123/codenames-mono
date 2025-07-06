@@ -8,21 +8,26 @@ import { CodeWordInput } from "./codemaster-input";
 
 const Container = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   width: 100%;
   height: 100%;
   padding: 1rem;
+  gap: 2rem;
+
+  @media (max-width: 768px) {
+    padding: 0.5rem;
+    gap: 1rem;
+  }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.5rem;
+  }
 `;
 
-const ButtonWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-`;
 
 const LoadingSpinner = styled.div`
   width: 3rem;
@@ -77,9 +82,9 @@ export const OutcomeDashboard: React.FC = () => {
   };
 
   return (
-    <ButtonWrapper>
+    <Container style={{ justifyContent: 'center' }}>
       <ActionButton onClick={handleContinue} text="Continue" enabled={true} />
-    </ButtonWrapper>
+    </Container>
   );
 };
 
@@ -103,12 +108,12 @@ export const GameoverDashboard: React.FC = () => {
   };
 
   return (
-    <ButtonWrapper>
+    <Container style={{ justifyContent: 'center' }}>
       <ActionButton
         onClick={handleNewGame}
         text="New Game"
         enabled={actionState.status !== "loading"}
       />
-    </ButtonWrapper>
+    </Container>
   );
 };

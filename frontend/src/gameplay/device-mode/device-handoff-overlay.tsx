@@ -82,6 +82,18 @@ const HandoffCard = styled.div`
     0 20px 40px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.05);
   animation: ${fadeIn} 0.6s ease-out;
+
+  @media (max-width: 768px) {
+    padding: 2rem;
+    width: 95%;
+    max-width: 400px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 1.5rem;
+    width: 90%;
+    border-radius: 16px;
+  }
 `;
 
 const HandoffIcon = styled.div<{ $color: string }>`
@@ -96,6 +108,13 @@ const HandoffIcon = styled.div<{ $color: string }>`
   font-size: 2rem;
   color: white;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+
+  @media (max-width: 480px) {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
 `;
 
 const Title = styled.h1`
@@ -104,6 +123,15 @@ const Title = styled.h1`
   font-weight: bold;
   margin: 0 0 1rem;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
 `;
 
 const Subtitle = styled.p`
@@ -111,6 +139,11 @@ const Subtitle = styled.p`
   font-size: 1.1rem;
   margin: 0 0 2rem;
   line-height: 1.5;
+
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
 `;
 
 const PlayerInfo = styled.div`
@@ -119,6 +152,12 @@ const PlayerInfo = styled.div`
   padding: 1.5rem;
   margin: 2rem 0;
   border: 1px solid rgba(255, 255, 255, 0.1);
+
+  @media (max-width: 480px) {
+    padding: 1rem;
+    margin: 1.5rem 0;
+    border-radius: 12px;
+  }
 `;
 
 const PlayerName = styled.h2<{ $teamColor?: string }>`
@@ -134,6 +173,15 @@ const PlayerName = styled.h2<{ $teamColor?: string }>`
     border-radius: 12px;
     display: inline-block;
   `}
+
+  @media (max-width: 768px) {
+    font-size: 1.4rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.2rem;
+    padding: 0.4rem 1rem;
+  }
 `;
 
 const TeamInfo = styled.div<{ $teamColor: string }>`
@@ -154,6 +202,12 @@ const ActionText = styled.p`
   margin: 1.5rem 0 0;
   line-height: 1.6;
   white-space: pre-wrap;
+
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    line-height: 1.4;
+  }
 `;
 
 const ContinueButton = styled.button`
@@ -172,6 +226,8 @@ const ContinueButton = styled.button`
   align-items: center;
   gap: 0.5rem;
   margin: 2rem auto 0;
+  min-height: 44px;
+  min-width: 44px;
 
   &:hover:not(:disabled) {
     transform: translateY(-2px);
@@ -187,6 +243,18 @@ const ContinueButton = styled.button`
     opacity: 0.5;
     cursor: not-allowed;
     animation: none;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.9rem 2rem;
+    font-size: 1.1rem;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    margin-top: 1.5rem;
+    border-radius: 12px;
   }
 `;
 

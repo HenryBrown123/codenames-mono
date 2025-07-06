@@ -6,26 +6,39 @@ import { Card } from "@frontend/shared-types";
 
 const Container = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
+  gap: 1rem;
   width: 100%;
+  position: relative;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+  }
 `;
 
 const InputContainer = styled.div`
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.5rem;
-  width: 100%;
-  text-align: center;
+  width: auto;
+  text-align: left;
   font-size: clamp(0.9rem, 2.5vw, 2.5rem);
   background-color: ${({ theme }) => theme.inputBackground || "rgba(0,0,0,0.1)"};
   border-radius: 8px;
   padding: 1rem;
+  flex: 1;
 
-  @media (max-width: 600px) {
-    flex-direction: column;
+  @media (max-width: 768px) {
+    font-size: clamp(0.8rem, 2vw, 1.2rem);
+    padding: 0.5rem;
+  }
+
+  @media (max-width: 480px) {
+    width: 100%;
+    justify-content: center;
   }
 `;
 
@@ -64,22 +77,22 @@ const UnderlinedNumberInput = styled(UnderlinedTextInput)`
 
 const ErrorMessage = styled.div`
   color: white;
-  font-size: clamp(1rem, 2vw, 1.5rem);
-  width: 100%;
+  font-size: clamp(0.8rem, 1.5vw, 1rem);
   text-align: center;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-  order: 1;
+  padding: 0.5rem;
   background-color: ${({ theme }) => theme.error};
+  border-radius: 8px;
+  position: absolute;
+  bottom: -2rem;
+  left: 0;
+  right: 0;
+
+  @media (max-width: 480px) {
+    position: static;
+    margin-top: 0.5rem;
+  }
 `;
 
-const ButtonWrapper = styled.div`
-  order: 3;
-  display: flex;
-  justify-content: center;
-  margin-top: 1rem;
-  width: 100%;
-`;
 
 const StyledActionButton = styled(ActionButton)`
   font-size: clamp(1rem, 2vw, 1.5rem);
@@ -187,17 +200,15 @@ export function CodeWordInput({
         </InlineGroup>
       </InputContainer>
 
-      {hasError && <ErrorMessage>{errorMessage}</ErrorMessage>}
-
       {isEditable && (
-        <ButtonWrapper>
-          <StyledActionButton
-            onClick={handleSubmit}
-            text={isLoading ? "Submitting..." : "Submit Clue"}
-            enabled={!isLoading}
-          />
-        </ButtonWrapper>
+        <StyledActionButton
+          onClick={handleSubmit}
+          text={isLoading ? "Submitting..." : "Submit Clue"}
+          enabled={!isLoading}
+        />
       )}
+
+      {hasError && <ErrorMessage>{errorMessage}</ErrorMessage>}
     </Container>
   );
 }
