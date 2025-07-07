@@ -14,14 +14,21 @@ const Container = styled.div`
   padding: 1rem;
   gap: 2rem;
 
-  /* Vertical layout in sidebar mode */
+  /* Desktop/Tablet sidebar - vertical */
   @media (min-width: 769px) and (orientation: landscape) {
     flex-direction: column;
     justify-content: center;
     gap: 1.5rem;
   }
 
-  @media (max-width: 768px) {
+  /* Mobile landscape - keep horizontal */
+  @media (max-width: 768px) and (orientation: landscape) {
+    flex-direction: row;
+    padding: 0.5rem;
+    gap: 1rem;
+  }
+
+  @media (max-width: 768px) and (orientation: portrait) {
     padding: 0.5rem;
     gap: 1rem;
   }

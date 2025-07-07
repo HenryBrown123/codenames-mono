@@ -9,21 +9,22 @@ const BoardGrid = styled.div`
   grid-template-columns: repeat(5, 1fr);
   grid-template-rows: repeat(5, 1fr);
   gap: 0.5rem;
-  aspect-ratio: 1;
 
-  /* Use viewport units more carefully */
-  @media (min-width: 769px) and (orientation: landscape) {
-    /* 80% of the smaller viewport dimension */
-    width: min(80vh, 80vw);
-    height: min(80vh, 80vw);
-    margin: auto;
+  /* Fill the entire container */
+  width: 100%;
+  height: 100%;
+
+  /* Mobile landscape - tighter gaps */
+  @media (max-width: 768px) and (orientation: landscape) {
+    gap: 0.2rem;
+  }
+
+  @media (max-width: 1024px) {
+    gap: 0.4rem;
   }
 
   @media (max-width: 768px) {
     gap: 0.3rem;
-    width: min(90vw, 50vh);
-    height: min(90vw, 50vh);
-    margin: auto;
   }
 
   @media (max-width: 480px) {
