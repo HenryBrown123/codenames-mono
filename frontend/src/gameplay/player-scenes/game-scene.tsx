@@ -32,12 +32,12 @@ const GameSceneContainer = styled.div`
     padding: 0.75rem;
   }
 
-  /* Mobile Landscape */
+  /* Mobile Landscape - Stack vertically like portrait */
   @media (max-width: 768px) and (orientation: landscape) {
-    grid-template-columns: 180px 1fr;
-    grid-template-rows: 60px 1fr;
-    gap: 0.5rem;
-    padding: 0.5rem;
+    grid-template-columns: 1fr;
+    grid-template-rows: 50px 1fr 100px;
+    gap: 0.3rem;
+    padding: 0.3rem;
   }
 
   /* Portrait modes remain the same */
@@ -74,10 +74,17 @@ const InstructionsContainer = styled.div`
   width: 95%;
   margin: 0 auto;
 
-  /* Desktop & Landscape - Spans full width */
+  /* Desktop & Tablet Landscape - Spans full width */
   @media (min-width: 769px) and (orientation: landscape) {
     grid-column: 1 / -1;
     width: 100%;
+  }
+
+  /* Mobile landscape - very compact */
+  @media (max-width: 768px) and (orientation: landscape) {
+    padding: 0.3rem;
+    font-size: clamp(0.7rem, 2vw, 0.9rem);
+    border-radius: 8px;
   }
 
   @media (max-width: 768px) {
@@ -100,22 +107,21 @@ const SidebarContainer = styled.div`
 `;
 
 const GameBoardContainer = styled.div`
-  padding: 0 5%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0.5rem;
+  overflow: hidden;
 
-  /* Desktop & Landscape - Board takes main area */
   @media (min-width: 769px) and (orientation: landscape) {
     grid-column: 2;
     grid-row: 2;
-    padding: 0 2%;
+    padding: 1rem;
   }
 
   @media (max-width: 768px) {
-    padding: 0;
-    overflow: hidden;
+    padding: 0.25rem;
   }
 `;
 
@@ -130,12 +136,18 @@ const DashboardContainer = styled.div`
   width: 95%;
   margin: 0 auto;
 
-  /* Desktop & Landscape - Full height in sidebar */
+  /* Desktop & Tablet Landscape - Full height in sidebar */
   @media (min-width: 769px) and (orientation: landscape) {
     width: 100%;
     height: 100%;
     margin: 0;
     flex-direction: column;
+  }
+
+  /* Mobile landscape - horizontal layout */
+  @media (max-width: 768px) and (orientation: landscape) {
+    padding: 0.5rem;
+    border-radius: 8px;
   }
 
   @media (max-width: 768px) {
@@ -236,20 +248,20 @@ export const GameScene: React.FC = () => {
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
   const BoardComponent = getBoardComponent(currentRole, currentScene);
 
-  // Check if we should use sidebar layout
-  const [isLandscape, setIsLandscape] = React.useState(
+  // Check if we should use sidebar layout (exclude mobile landscape)
+  const [isLandscapeDesktop, setIsLandscapeDesktop] = React.useState(
     window.matchMedia('(min-width: 769px) and (orientation: landscape)').matches
   );
 
   React.useEffect(() => {
     const mediaQuery = window.matchMedia('(min-width: 769px) and (orientation: landscape)');
-    const handleChange = (e: MediaQueryListEvent) => setIsLandscape(e.matches);
+    const handleChange = (e: MediaQueryListEvent) => setIsLandscapeDesktop(e.matches);
     
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  if (isLandscape) {
+  if (isLandscapeDesktop) {
     return (
       <GameSceneContainer>
         <InstructionsContainer>
@@ -270,7 +282,7 @@ export const GameScene: React.FC = () => {
     );
   }
 
-  // Original portrait layout
+  // For mobile landscape and all portrait modes, use the same layout
   return (
     <GameSceneContainer>
       <InstructionsContainer>
