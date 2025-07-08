@@ -1,0 +1,688 @@
+/*
+==================================
+CODENAMES - DESIGN SYSTEM
+UNIFIED STYLESHEET
+==================================
+1.  :root & Base Styles
+2.  Layout & Utility Classes
+3.  Component: Panels & Headers
+4.  Component: Buttons
+5.  Component: Game Board
+6.  Component: Game Cards (Static)
+7.  Component: Spy Cards (Design System)
+8.  Component: Misc UI (Design System)
+9.  Animations
+==================================
+*/
+
+/* 1. :root & Base Styles */
+/* ---------------------------------------------- */
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap");
+
+:root {
+  /* Core Colors */
+  --color-background: #0a0a0f;
+  --color-surface-1: rgba(255, 255, 255, 0.02);
+  --color-surface-2: rgba(255, 255, 255, 0.05);
+  --color-surface-3: rgba(255, 255, 255, 0.08);
+
+  /* Mission Colors */
+  --color-team-red: #ff0040;
+  --color-team-blue: #00d4ff;
+  --color-neutral: #888888;
+  --color-assassin: #000000;
+
+  /* UI Colors */
+  --color-primary: #00ff88;
+  --color-primary-hover: #00cc6a;
+  --color-accent: #ff0080;
+  --color-text: rgba(255, 255, 255, 0.95);
+  --color-text-muted: rgba(255, 255, 255, 0.6);
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-hover: rgba(255, 255, 255, 0.3);
+
+  /* Spacing Scale */
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+
+  /* Border Radius */
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Transitions */
+  --transition-normal: 250ms ease;
+
+  /* Typography */
+  --font-family: "JetBrains Mono", "Courier New", monospace;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  background:
+    radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 0, 128, 0.1) 0%, transparent 50%),
+    var(--color-background);
+  color: var(--color-text);
+  position: relative;
+}
+
+/* Base body for game app */
+body.game-app {
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* Base body for design system */
+body.design-system-app {
+  padding: var(--space-xl);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.01) 2px,
+    rgba(255, 255, 255, 0.01) 4px
+  );
+  pointer-events: none;
+  z-index: 999;
+}
+
+h1,
+h2,
+h3 {
+  animation: glitch 4s infinite;
+}
+
+/* 2. Layout & Utility Classes */
+/* ---------------------------------------------- */
+.game-container {
+  height: 100vh;
+  display: grid;
+  padding: var(--space-md);
+  gap: var(--space-md);
+  transition: all 0.3s ease;
+}
+
+@media (min-width: 1200px) {
+  .game-container {
+    grid-template-columns: 300px 1fr;
+    grid-template-rows: 1fr;
+  }
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1199px) {
+  .game-container {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+  }
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+.game-container.instructions-hidden {
+  grid-template-rows: 0fr minmax(0, 1fr) auto;
+}
+
+.design-system-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+  opacity: 0;
+  animation: declassify 1s ease forwards;
+}
+
+.section {
+  margin-bottom: var(--space-xl);
+}
+
+.section-title {
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  text-transform: uppercase;
+}
+
+/* 3. Component: Panels & Headers */
+/* ---------------------------------------------- */
+.panel {
+  background-color: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+.panel::before {
+  content: "INTEL";
+  position: absolute;
+  top: 0.5rem;
+  right: 1rem;
+  font-size: 0.7rem;
+  color: var(--color-primary);
+  opacity: 0.3;
+  letter-spacing: 0.2em;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.mobile-header,
+.mobile-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.instructions-hidden .mobile-header {
+  opacity: 0;
+  transform: translateY(-20px);
+  pointer-events: none;
+  height: 0;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.clue-display {
+  text-align: center;
+  background: linear-gradient(135deg, var(--color-surface-3) 0%, var(--color-surface-2) 100%);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+}
+.clue-display h4 {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-sm);
+  text-transform: uppercase;
+}
+.clue-display .clue-text {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-primary);
+  text-shadow: 0 0 20px var(--color-primary);
+}
+
+/* 4. Component: Buttons */
+/* ---------------------------------------------- */
+.btn {
+  padding: var(--space-md) var(--space-lg);
+  border: 1px solid;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: var(--font-size-md);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: var(--font-family);
+  background-color: transparent;
+  width: 100%;
+  color: var(--color-text);
+  text-align: center;
+}
+.btn-primary {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.btn-primary:hover {
+  background-color: var(--color-primary);
+  color: #000;
+  box-shadow: 0 5px 15px rgba(0, 255, 136, 0.4);
+}
+.help-button {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
+.help-button:hover {
+  transform: scale(1.1);
+}
+.help-button.active {
+  background: var(--color-primary);
+  color: #000000;
+  transform: rotate(180deg);
+}
+
+/* 5. Component: Game Board */
+/* ---------------------------------------------- */
+.board-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  min-height: 0;
+  background: linear-gradient(
+    90deg,
+    #8b6939 0%,
+    #a0743f 20%,
+    #7d5d33 40%,
+    #946b3a 60%,
+    #8b6939 80%,
+    #a0743f 100%
+  );
+  border: 1px solid var(--color-border);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.game-board {
+  width: 100%;
+  max-width: 900px;
+  aspect-ratio: 5 / 4;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-lg);
+  perspective: 1000px;
+  margin: auto;
+}
+
+@media (max-width: 768px) {
+  .board-area {
+    padding: var(--space-md);
+  }
+  .game-board {
+    gap: var(--space-md);
+    aspect-ratio: 1;
+  }
+}
+@media (max-width: 480px) {
+  .board-area {
+    padding: var(--space-sm);
+  }
+  .game-board {
+    gap: var(--space-sm);
+  }
+}
+
+/* 6. Component: Game Cards (Static) */
+/* This is the original card style used by the JS. */
+/* It can be phased out later. */
+/* ---------------------------------------------- */
+.card-container {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease;
+}
+.card-container:hover {
+  transform: translateZ(10px) translateY(-2px);
+}
+.base-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #f4f1e8;
+  border: 1px solid #d4d1c8;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  font-weight: 700;
+  color: #2a2a3e;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: clamp(0.6rem, 2vw, 1.2rem);
+  z-index: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.2),
+    0 2px 0 rgba(0, 0, 0, 0.2),
+    0 3px 0 rgba(0, 0, 0, 0.2),
+    0 4px 0 rgba(0, 0, 0, 0.2),
+    0 5px 0 rgba(0, 0, 0, 0.2),
+    0 6px 15px rgba(0, 0, 0, 0.3);
+}
+.base-card:hover {
+  transform: translateY(-4px) scale(1.02);
+}
+.word-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  text-align: center;
+  z-index: 3;
+}
+.cover-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transform: translateZ(10px);
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 rgba(0, 0, 0, 0.25),
+    0 3px 5px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+.cover-card.visible {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+}
+.cover-card.red {
+  background: #b85555;
+  border: 2px solid #660000;
+}
+.cover-card.blue {
+  background: #5588b8;
+  border: 2px solid #002244;
+}
+.cover-card.neutral {
+  background: #999088;
+  border: 2px solid #333333;
+}
+.cover-card.assassin {
+  background: #0a0a0a;
+  border: 2px solid #ffff00;
+}
+.cover-symbol {
+  font-size: clamp(4rem, 15vw, 8rem);
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.4);
+}
+.cover-symbol.assassin {
+  color: #ffff00;
+  animation: electric-flicker 2s ease-in-out infinite;
+}
+.spymaster-red {
+  background: #b85555 !important;
+  border: 2px solid #660000 !important;
+}
+.spymaster-blue {
+  background: #5588b8 !important;
+  border: 2px solid #002244 !important;
+}
+.spymaster-neutral {
+  background: #999088 !important;
+  border: 2px solid #333333 !important;
+}
+.spymaster-assassin {
+  background: #0a0a0a !important;
+  border: 2px solid #ffff00 !important;
+  color: #ffffff !important;
+}
+.spymaster-symbol {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  font-size: clamp(4rem, 15vw, 8rem);
+  opacity: 0;
+  z-index: 1;
+  color: rgba(0, 0, 0, 0.2);
+}
+.spymaster-symbol.visible {
+  animation: stampReveal 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+.paper-texture {
+  position: absolute;
+  inset: 0;
+  background: url('data:image/svg+xml,%3Csvg width="100" height="100" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="6" /%3E%3CfeColorMatrix values="0 0 0 0 0.9 0 0 0 0 0.9 0 0 0 0 0.85 0 0 0 0.15 0"/%3E%3C/filter%3E%3Crect width="100" height="100" filter="url(%23noise)"/%3E%3C/svg%3E');
+  opacity: 0.6;
+  border-radius: 8px;
+  pointer-events: none;
+}
+.base-card.dealing {
+  animation: dealCard 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation-delay: calc(var(--card-index) * 50ms);
+  opacity: 0;
+}
+.cover-card.dealing {
+  animation: dealCover 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation-delay: calc(var(--card-index) * 50ms);
+  opacity: 0;
+}
+
+/* 7. Component: Spy Cards (Design System) */
+/* ---------------------------------------------- */
+.spy-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-lg);
+}
+.spy-card {
+  aspect-ratio: 4/3;
+  perspective: 1000px;
+  cursor: pointer;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8));
+}
+.spy-card-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.6s;
+}
+.spy-card-front,
+.spy-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.spy-card-front {
+  background: #f4f1e8;
+  color: #1a1a1a;
+  border: 1px solid #d4d1c8;
+}
+.spy-card-back {
+  transform: rotateY(180deg);
+  background: linear-gradient(135deg, #d4c4a0 0%, #c4b490 100%);
+}
+.spy-card-word {
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #2a2a3e;
+}
+.spy-card:hover .spy-card-inner {
+  transform: translateY(-10px) rotateZ(0deg) scale(1.05);
+}
+
+/* 8. Component: Misc UI (Design System) */
+/* ---------------------------------------------- */
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-md);
+}
+.color-box {
+  height: 80px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.surface {
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.surface-glass {
+  background-color: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+}
+.code-block {
+  background-color: #000000;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  font-size: var(--font-size-sm);
+  overflow-x: auto;
+  margin-top: var(--space-sm);
+  color: var(--color-primary);
+}
+
+/* 9. Animations */
+/* ---------------------------------------------- */
+@keyframes glitch {
+  0%,
+  100% {
+    text-shadow:
+      0 0 2px var(--color-primary),
+      0 0 4px var(--color-primary);
+  }
+  25% {
+    text-shadow:
+      -2px 0 var(--color-team-red),
+      2px 0 var(--color-team-blue);
+  }
+  50% {
+    text-shadow:
+      2px 0 var(--color-accent),
+      -2px 0 var(--color-primary);
+  }
+  75% {
+    text-shadow:
+      0 0 2px var(--color-team-blue),
+      0 0 4px var(--color-team-blue);
+  }
+}
+@keyframes declassify {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+@keyframes electric-flicker {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  10% {
+    opacity: 1;
+  }
+  20% {
+    opacity: 0.7;
+  }
+  30% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 1;
+  }
+}
+@keyframes stampReveal {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0) rotate(-180deg);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.3) rotate(20deg);
+  }
+  75% {
+    transform: translate(-50%, -50%) scale(0.9) rotate(-5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+}
+@keyframes dealCard {
+  from {
+    transform: translateX(-100vw) translateY(-100vh) rotate(-6deg);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes dealCover {
+  from {
+    transform: translateX(-100vw) translateY(-100vh) rotate(-6deg) translateZ(10px);
+    opacity: 0;
+    visibility: visible;
+  }
+  to {
+    transform: translateZ(10px);
+    opacity: 1;
+    visibility: visible;
+  }
+}
