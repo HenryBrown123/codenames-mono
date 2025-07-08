@@ -4,31 +4,55 @@ import { useGameDataRequired } from "../../shared/providers";
 import { GameCard } from "../cards/game-card";
 import { CardVisibilityProvider } from "../cards/card-visibility-provider";
 
+const BoardAspectWrapper = styled.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  @media (max-width: 768px) and (orientation: portrait) {
+    width: 90vw;
+    max-width: 100%;
+    aspect-ratio: 5 / 6;
+    max-height: 60vh;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 480px) {
+    aspect-ratio: 5 / 5.5;
+    width: 85vw;
+  }
+
+  @media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
+    aspect-ratio: 5 / 6.5;
+    width: 80vw;
+    max-height: 70vh;
+  }
+`;
+
 const BoardGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   grid-template-rows: repeat(5, 1fr);
   gap: 0.5rem;
-
-  /* Fill the entire container */
   width: 100%;
   height: 100%;
+  
+  @media (max-width: 768px) and (orientation: portrait) {
+    gap: 0.3rem;
+  }
+  
+  @media (max-width: 480px) {
+    gap: 0.2rem;
+  }
 
-  /* Mobile landscape - tighter gaps */
   @media (max-width: 768px) and (orientation: landscape) {
     gap: 0.2rem;
   }
 
   @media (max-width: 1024px) {
     gap: 0.4rem;
-  }
-
-  @media (max-width: 768px) {
-    gap: 0.3rem;
-  }
-
-  @media (max-width: 480px) {
-    gap: 0.2rem;
   }
 `;
 
@@ -48,28 +72,32 @@ export const ViewOnlyBoard = memo(() => {
 
   if (cards.length === 0) {
     return (
-      <BoardGrid aria-label="view-only game board">
-        {Array.from({ length: 25 }).map((_, i) => (
-          <EmptyCard key={`empty-${i}`} />
-        ))}
-      </BoardGrid>
+      <BoardAspectWrapper>
+        <BoardGrid aria-label="view-only game board">
+          {Array.from({ length: 25 }).map((_, i) => (
+            <EmptyCard key={`empty-${i}`} />
+          ))}
+        </BoardGrid>
+      </BoardAspectWrapper>
     );
   }
 
   return (
     <CardVisibilityProvider cards={cards} initialState={isRoundSetup ? "hidden" : "visible"}>
-      <BoardGrid aria-label="view-only game board">
-        {cards.map((card, index) => (
-          <GameCard
-            key={card.word}
-            card={card}
-            index={index}
-            onClick={() => {}}
-            clickable={false}
-            initialVisibility={isRoundSetup ? "hidden" : "visible"}
-          />
-        ))}
-      </BoardGrid>
+      <BoardAspectWrapper>
+        <BoardGrid aria-label="view-only game board">
+          {cards.map((card, index) => (
+            <GameCard
+              key={card.word}
+              card={card}
+              index={index}
+              onClick={() => {}}
+              clickable={false}
+              initialVisibility={isRoundSetup ? "hidden" : "visible"}
+            />
+          ))}
+        </BoardGrid>
+      </BoardAspectWrapper>
     </CardVisibilityProvider>
   );
 });

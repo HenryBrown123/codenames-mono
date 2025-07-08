@@ -1,0 +1,1029 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Codenames Card Design System</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap");
+
+      body {
+        font-family: "JetBrains Mono", "Courier New", monospace;
+        background: #0a0a0f;
+        color: white;
+        padding: 2rem;
+        min-height: 100vh;
+        margin: 0;
+      }
+
+      .examples-container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        text-align: center;
+        color: #00ff88;
+        margin-bottom: 3rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+      }
+
+      .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 3rem;
+        margin-bottom: 2rem;
+      }
+
+      .card-container {
+        position: relative;
+        width: 200px;
+        height: 150px;
+        margin: 0 auto;
+        transform-style: preserve-3d;
+        transform: perspective(1000px) rotateX(15deg);
+      }
+
+      /* Base card dealing animation - only for unclassified */
+      .unclassified .base-card {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #f4f1e8;
+        border: 1px solid #d4d1c8;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #2a2a3e;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 1.2rem;
+        z-index: 1;
+        transform-style: preserve-3d;
+        /* Card thickness effect with 3D - thicker base */
+        box-shadow:
+          0 1px 0 rgba(0, 0, 0, 0.2),
+          0 2px 0 rgba(0, 0, 0, 0.2),
+          0 3px 0 rgba(0, 0, 0, 0.2),
+          0 4px 0 rgba(0, 0, 0, 0.2),
+          0 5px 0 rgba(0, 0, 0, 0.2),
+          0 6px 0 rgba(0, 0, 0, 0.2),
+          0 7px 0 rgba(0, 0, 0, 0.2),
+          0 8px 0 rgba(0, 0, 0, 0.2),
+          0 9px 0 rgba(0, 0, 0, 0.2),
+          0 10px 0 rgba(0, 0, 0, 0.2),
+          0 12px 20px rgba(0, 0, 0, 0.3);
+
+        /* One-time dealing animation */
+        opacity: 0;
+        animation: dealCard 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      }
+
+      /* Natural random positioning for each card */
+      .unclassified:nth-child(1) .base-card {
+        transform: rotate(-0.5deg) translateX(1px);
+      }
+      .unclassified:nth-child(2) .base-card {
+        transform: rotate(0.3deg) translateY(-1px);
+      }
+      .unclassified:nth-child(3) .base-card {
+        transform: rotate(-0.2deg) translateX(-1px);
+      }
+      .unclassified:nth-child(4) .base-card {
+        transform: rotate(0.4deg) translateY(1px);
+      }
+
+      .unclassified .base-card .word-text {
+        position: absolute;
+        top: 2rem;
+      }
+
+      /* Static base card for classified - no animation */
+      .classified .base-card {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #f4f1e8;
+        border: 1px solid #d4d1c8;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #2a2a3e;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 1.2rem;
+        z-index: 1;
+        opacity: 1;
+        transform-style: preserve-3d;
+        /* Card thickness effect with 3D - thicker base */
+        box-shadow:
+          0 1px 0 rgba(0, 0, 0, 0.2),
+          0 2px 0 rgba(0, 0, 0, 0.2),
+          0 3px 0 rgba(0, 0, 0, 0.2),
+          0 4px 0 rgba(0, 0, 0, 0.2),
+          0 5px 0 rgba(0, 0, 0, 0.2),
+          0 6px 0 rgba(0, 0, 0, 0.2),
+          0 7px 0 rgba(0, 0, 0, 0.2),
+          0 8px 0 rgba(0, 0, 0, 0.2),
+          0 9px 0 rgba(0, 0, 0, 0.2),
+          0 10px 0 rgba(0, 0, 0, 0.2),
+          0 12px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Natural random positioning for each card */
+      .classified:nth-child(1) .base-card {
+        transform: rotate(0.6deg) translateY(1px);
+      }
+      .classified:nth-child(2) .base-card {
+        transform: rotate(-0.4deg) translateX(1px);
+      }
+      .classified:nth-child(3) .base-card {
+        transform: rotate(0.3deg) translateY(-1px);
+      }
+      .classified:nth-child(4) .base-card {
+        transform: rotate(-0.5deg) translateX(-1px);
+      }
+
+      .classified .base-card .word-text {
+        position: absolute;
+        top: 2rem;
+      }
+
+      /* Spymaster base card */
+      .spymaster .base-card {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #2a2a3e;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 1.2rem;
+        z-index: 1;
+        opacity: 1;
+        transform-style: preserve-3d;
+        /* Card thickness effect with 3D - thicker base */
+        box-shadow:
+          0 1px 0 rgba(0, 0, 0, 0.2),
+          0 2px 0 rgba(0, 0, 0, 0.2),
+          0 3px 0 rgba(0, 0, 0, 0.2),
+          0 4px 0 rgba(0, 0, 0, 0.2),
+          0 5px 0 rgba(0, 0, 0, 0.2),
+          0 6px 0 rgba(0, 0, 0, 0.2),
+          0 7px 0 rgba(0, 0, 0, 0.2),
+          0 8px 0 rgba(0, 0, 0, 0.2),
+          0 9px 0 rgba(0, 0, 0, 0.2),
+          0 10px 0 rgba(0, 0, 0, 0.2),
+          0 12px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Natural random positioning for each card */
+      .spymaster:nth-child(1) .base-card {
+        transform: rotate(-0.3deg) translateX(-1px);
+      }
+      .spymaster:nth-child(2) .base-card {
+        transform: rotate(0.5deg) translateY(1px);
+      }
+      .spymaster:nth-child(3) .base-card {
+        transform: rotate(-0.4deg) translateX(1px);
+      }
+      .spymaster:nth-child(4) .base-card {
+        transform: rotate(0.2deg) translateY(-1px);
+      }
+
+      @keyframes dealCard {
+        0% {
+          transform: translateX(-100vw) translateY(-100vh) rotate(-6deg);
+          opacity: 0;
+        }
+        60% {
+          transform: translateX(0) translateY(0) rotate(2deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateX(0) translateY(0) rotate(0);
+          opacity: 1;
+        }
+      }
+
+      /* Paper texture */
+      .paper-texture {
+        position: absolute;
+        inset: 0;
+        background:
+          url('data:image/svg+xml,%3Csvg width="100" height="100" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="6" /%3E%3CfeColorMatrix values="0 0 0 0 0.9 0 0 0 0 0.9 0 0 0 0 0.85 0 0 0 0.15 0"/%3E%3C/filter%3E%3Crect width="100" height="100" filter="url(%23noise)"/%3E%3C/svg%3E'),
+          repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 0, 0, 0.04) 2px,
+            rgba(0, 0, 0, 0.04) 3px
+          ),
+          radial-gradient(ellipse at 20% 30%, rgba(139, 119, 101, 0.1) 0%, transparent 50%),
+          radial-gradient(ellipse at 80% 70%, rgba(139, 119, 101, 0.08) 0%, transparent 40%);
+        background-size:
+          150px 150px,
+          4px 4px,
+          200px 200px,
+          180px 180px;
+        opacity: 0.6;
+        border-radius: 8px;
+      }
+
+      /* Consistent word text styling for all cards */
+      .word-text {
+        font-size: 1.2rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        z-index: 1;
+        position: relative;
+        text-shadow:
+          0.5px 0.5px 0px rgba(255, 255, 255, 0.15),
+          -0.5px -0.5px 0.5px rgba(0, 0, 0, 0.4);
+        filter: drop-shadow(0.5px 0.5px 0.5px rgba(255, 255, 255, 0.05))
+          drop-shadow(-0.5px -0.5px 0.5px rgba(0, 0, 0, 0.2));
+      }
+
+      /* Tapered underline for all text */
+      .word-text::after {
+        content: "";
+        position: absolute;
+        bottom: -0.1rem;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: currentColor;
+        clip-path: polygon(0 50%, 50% 0, 100% 50%, 50% 100%);
+        /* Same embossed effect */
+        filter: drop-shadow(0.5px 0.5px 0.5px rgba(255, 255, 255, 0.05))
+          drop-shadow(-0.5px -0.5px 0.5px rgba(0, 0, 0, 0.2));
+      }
+
+      /* Cover card animations - only deal when triggered */
+      .standalone-card {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        transform: translate(8px, -8px) rotate(3deg) translateZ(10px);
+        transform-style: preserve-3d;
+        /* Thick card shadow with 3D */
+        box-shadow:
+          0 1px 0 rgba(0, 0, 0, 0.25),
+          0 2px 0 rgba(0, 0, 0, 0.25),
+          0 3px 0 rgba(0, 0, 0, 0.25),
+          0 4px 0 rgba(0, 0, 0, 0.25),
+          0 5px 0 rgba(0, 0, 0, 0.25),
+          0 6px 0 rgba(0, 0, 0, 0.25),
+          0 7px 0 rgba(0, 0, 0, 0.25),
+          0 8px 0 rgba(0, 0, 0, 0.25),
+          0 10px 20px rgba(0, 0, 0, 0.4);
+        z-index: 2;
+        opacity: 0;
+      }
+
+      /* Natural variation in cover cards too */
+      .classified:nth-child(1) .standalone-card {
+        transform: translate(12px, -6px) rotate(-4.2deg) translateZ(10px);
+        --cover-rotation: -4.2deg;
+        --cover-x: 12px;
+        --cover-y: -6px;
+      }
+      .classified:nth-child(2) .standalone-card {
+        transform: translate(6px, -10px) rotate(5.1deg) translateZ(10px);
+        --cover-rotation: 5.1deg;
+        --cover-x: 6px;
+        --cover-y: -10px;
+      }
+      .classified:nth-child(3) .standalone-card {
+        transform: translate(10px, -8px) rotate(-2.7deg) translateZ(10px);
+        --cover-rotation: -2.7deg;
+        --cover-x: 10px;
+        --cover-y: -8px;
+      }
+      .classified:nth-child(4) .standalone-card {
+        transform: translate(7px, -9px) rotate(3.8deg) translateZ(10px);
+        --cover-rotation: 3.8deg;
+        --cover-x: 7px;
+        --cover-y: -9px;
+      }
+
+      /* Cover dealing animation - triggered by class */
+      .standalone-card.animate-deal {
+        animation: dealCover 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      }
+
+      @keyframes dealCover {
+        0% {
+          transform: translate(var(--cover-x, 8px), var(--cover-y, -8px))
+            rotate(var(--cover-rotation, 3deg)) translateZ(10px) translateX(-100vw)
+            translateY(-100vh) rotate(-6deg);
+          opacity: 0;
+        }
+        60% {
+          transform: translate(var(--cover-x, 8px), var(--cover-y, -8px))
+            rotate(var(--cover-rotation, 3deg)) translateZ(10px) translateX(0) translateY(0)
+            rotate(2deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translate(var(--cover-x, 8px), var(--cover-y, -8px))
+            rotate(var(--cover-rotation, 3deg)) translateZ(10px);
+          opacity: 1;
+        }
+      }
+
+      /* Spymaster reveal animation - no blur, just fade and scale */
+      .spymaster-decode.animate-reveal {
+        animation: spymasterReveal 0.6s ease-out forwards;
+      }
+
+      .spymaster-decode.animate-reveal .corner-symbol {
+        animation: stampReveal 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.3s forwards;
+      }
+
+      @keyframes spymasterReveal {
+        0% {
+          transform: scale(0.98);
+        }
+        50% {
+          transform: scale(1.02);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      @keyframes stampReveal {
+        0% {
+          opacity: 0;
+          transform: scale(0) rotate(-180deg);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.3) rotate(20deg);
+        }
+        75% {
+          transform: scale(0.9) rotate(-5deg);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1) rotate(0deg);
+        }
+      }
+
+      /* Animate buttons */
+      .animate-btn {
+        background: linear-gradient(135deg, #00ff88, #00cc6a);
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        color: #000000;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        margin-left: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        transition: all 0.2s;
+      }
+
+      .animate-btn:hover {
+        background: linear-gradient(135deg, #00cc6a, #009950);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+      }
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 3rem 0 2rem;
+      }
+
+      /* Wood table surface for each section */
+      .table-surface {
+        position: relative;
+        background: 
+          /* Wood grain pattern */
+          linear-gradient(
+            90deg,
+            #8b6939 0%,
+            #a0743f 20%,
+            #7d5d33 40%,
+            #946b3a 60%,
+            #8b6939 80%,
+            #a0743f 100%
+          ),
+          /* Additional grain details */
+            linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.1) 50%, transparent 100%);
+        background-size:
+          200px 100%,
+          100% 100%;
+        padding: 3rem 2rem;
+        margin-bottom: 3rem;
+        border-radius: 20px;
+        box-shadow:
+          inset 0 2px 4px rgba(0, 0, 0, 0.3),
+          0 5px 20px rgba(0, 0, 0, 0.5);
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Wood texture overlay */
+      .table-surface::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image:
+          repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 0, 0, 0.1) 2px,
+            rgba(0, 0, 0, 0.1) 4px
+          ),
+          repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 1px,
+            rgba(0, 0, 0, 0.05) 1px,
+            rgba(0, 0, 0, 0.05) 2px
+          );
+        background-size:
+          100px 100px,
+          100px 100px;
+        opacity: 0.3;
+        border-radius: 20px;
+      }
+
+      /* Light reflection on wood */
+      .table-surface::after {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(255, 255, 255, 0.1) 0%,
+          rgba(255, 255, 255, 0.05) 30%,
+          transparent 70%
+        );
+        transform: rotate(-15deg);
+        pointer-events: none;
+      }
+
+      .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 3rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      .standalone-card.alpha-hard {
+        background: #b85555;
+        border: 2px solid #660000;
+      }
+
+      .standalone-card.bravo-hard {
+        background: #5588b8;
+        border: 2px solid #002244;
+      }
+
+      .standalone-card.neutral-hard {
+        background: #999088;
+        border: 2px solid #333333;
+      }
+
+      .standalone-card.assassin-hard {
+        background: #0a0a0a;
+        border: 2px solid #ffff00;
+        position: relative;
+        transform-style: preserve-3d;
+        /* Thick card shadow with 3D */
+        box-shadow:
+          0 1px 0 rgba(0, 0, 0, 0.25),
+          0 2px 0 rgba(0, 0, 0, 0.25),
+          0 3px 0 rgba(0, 0, 0, 0.25),
+          0 4px 0 rgba(0, 0, 0, 0.25),
+          0 5px 0 rgba(0, 0, 0, 0.25),
+          0 6px 0 rgba(0, 0, 0, 0.25),
+          0 7px 0 rgba(0, 0, 0, 0.25),
+          0 8px 0 rgba(0, 0, 0, 0.25),
+          0 10px 20px rgba(0, 0, 0, 0.4);
+      }
+
+      .standalone-card.assassin-hard::before {
+        content: "";
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          transparent 30%,
+          #ffff00 40%,
+          #00ffff 45%,
+          #ffff00 50%,
+          transparent 60%,
+          transparent 100%
+        );
+        background-size: 300% 100%;
+        background-position: -100% 50%;
+        border-radius: 8px;
+        opacity: 0;
+        z-index: -1;
+      }
+
+      .standalone-card.assassin-hard.animate-deal {
+        animation: dealCover 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      }
+
+      .standalone-card.assassin-hard.animate-deal::before {
+        animation: assassin-sweep 0.8s linear 0.7s forwards;
+        opacity: 1;
+      }
+
+      .standalone-symbol {
+        font-size: 4rem;
+        font-weight: 900;
+        color: rgba(0, 0, 0, 0.4);
+        text-shadow:
+          1px 1px 0px rgba(255, 255, 255, 0.2),
+          -1px -1px 1px rgba(0, 0, 0, 0.6);
+        z-index: 2;
+        /* Stamped/embossed effect */
+        filter: drop-shadow(1px 1px 1px rgba(255, 255, 255, 0.1))
+          drop-shadow(-1px -1px 1px rgba(0, 0, 0, 0.4));
+      }
+
+      /* Cover card symbols - all centered */
+      .standalone-card .standalone-symbol {
+        position: relative;
+      }
+
+      .standalone-symbol.assassin {
+        color: #ffff00;
+        text-shadow:
+          0 0 20px rgba(255, 255, 0, 0.8),
+          0 0 40px rgba(0, 255, 255, 0.6);
+        /* Same embossed effect as other symbols */
+        filter: drop-shadow(1px 1px 1px rgba(255, 255, 255, 0.1))
+          drop-shadow(-1px -1px 1px rgba(0, 0, 0, 0.4));
+        opacity: 1;
+        animation: electric-flicker 2s ease-in-out infinite;
+      }
+
+      /* Spymaster decoded view - Same as cover cards but corner positioned */
+      .spymaster-decode {
+        position: relative;
+        /* Default state - plain white, no border */
+        background: #f4f1e8;
+        border: 2px solid transparent;
+        transition: all 0.6s ease-out;
+      }
+
+      /* Team-specific styles - same as standalone cards */
+      .spymaster-decode.alpha-decode.animate-reveal {
+        background: #b85555;
+        border: 2px solid #660000;
+        box-shadow:
+          0 1px 0 rgba(0, 0, 0, 0.2),
+          0 2px 0 rgba(0, 0, 0, 0.2),
+          0 3px 0 rgba(0, 0, 0, 0.2),
+          0 4px 0 rgba(0, 0, 0, 0.2),
+          0 5px 0 rgba(0, 0, 0, 0.2),
+          0 6px 0 rgba(0, 0, 0, 0.2),
+          0 8px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .spymaster-decode.bravo-decode.animate-reveal {
+        background: #5588b8;
+        border: 2px solid #002244;
+        box-shadow:
+          0 1px 0 rgba(0, 0, 0, 0.2),
+          0 2px 0 rgba(0, 0, 0, 0.2),
+          0 3px 0 rgba(0, 0, 0, 0.2),
+          0 4px 0 rgba(0, 0, 0, 0.2),
+          0 5px 0 rgba(0, 0, 0, 0.2),
+          0 6px 0 rgba(0, 0, 0, 0.2),
+          0 8px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .spymaster-decode.neutral-decode.animate-reveal {
+        background: #999088;
+        border: 2px solid #333333;
+        box-shadow:
+          0 1px 0 rgba(0, 0, 0, 0.2),
+          0 2px 0 rgba(0, 0, 0, 0.2),
+          0 3px 0 rgba(0, 0, 0, 0.2),
+          0 4px 0 rgba(0, 0, 0, 0.2),
+          0 5px 0 rgba(0, 0, 0, 0.2),
+          0 6px 0 rgba(0, 0, 0, 0.2),
+          0 8px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .spymaster-decode.assassin-decode.animate-reveal {
+        background: #0a0a0a;
+        border: 2px solid #ffff00;
+        color: #ffffff;
+        position: relative;
+        box-shadow:
+          0 1px 0 rgba(0, 0, 0, 0.2),
+          0 2px 0 rgba(0, 0, 0, 0.2),
+          0 3px 0 rgba(0, 0, 0, 0.2),
+          0 4px 0 rgba(0, 0, 0, 0.2),
+          0 5px 0 rgba(0, 0, 0, 0.2),
+          0 6px 0 rgba(0, 0, 0, 0.2),
+          0 8px 15px rgba(0, 0, 0, 0.3);
+        animation: spymasterReveal 0.6s ease-out forwards;
+      }
+
+      .spymaster-decode.assassin-decode.animate-reveal::before {
+        content: "";
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          transparent 30%,
+          #ffff00 40%,
+          #00ffff 45%,
+          #ffff00 50%,
+          transparent 60%,
+          transparent 100%
+        );
+        border: #ffff00;
+        background-size: 300% 100%;
+        background-position: -200% 0%;
+        border-radius: 8px;
+        opacity: 1;
+        z-index: -1;
+        animation: assassin-sweep 0.8s linear 1s forwards;
+      }
+
+      .decode-overlay {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 1;
+      }
+
+      .decode-overlay .word-text {
+        position: absolute;
+        top: 2rem;
+      }
+
+      /* Stamped corner symbol - same styling as standalone symbols */
+      .corner-symbol {
+        position: absolute;
+        bottom: 1.5rem;
+        font-size: 4rem;
+        font-weight: 900;
+        opacity: 0;
+        z-index: 2;
+        transform: scale(0) rotate(-180deg);
+
+        /* Same styling as standalone symbols */
+        color: rgba(0, 0, 0, 0.4);
+        text-shadow:
+          1px 1px 0px rgba(255, 255, 255, 0.2),
+          -1px -1px 1px rgba(0, 0, 0, 0.6);
+        filter: drop-shadow(1px 1px 1px rgba(255, 255, 255, 0.1))
+          drop-shadow(-1px -1px 1px rgba(0, 0, 0, 0.4));
+      }
+
+      .corner-symbol.danger {
+        /* Same as standalone assassin symbol */
+        color: #ffff00;
+        text-shadow:
+          0 0 20px rgba(255, 255, 0, 0.8),
+          0 0 40px rgba(0, 255, 255, 0.6);
+        /* Same embossed effect as other symbols */
+        filter: drop-shadow(1px 1px 1px rgba(255, 255, 255, 0.1))
+          drop-shadow(-1px -1px 1px rgba(0, 0, 0, 0.4));
+      }
+
+      .corner-symbol.danger.animate-danger {
+        animation: danger-blink 1.5s infinite;
+      }
+
+      @keyframes electric-flicker {
+        0%,
+        100% {
+          opacity: 0.6;
+          filter: brightness(0.8);
+        }
+        10% {
+          opacity: 1;
+          filter: brightness(1.5);
+        }
+        20% {
+          opacity: 0.7;
+          filter: brightness(0.9);
+        }
+        30% {
+          opacity: 1;
+          filter: brightness(1.3);
+        }
+        50% {
+          opacity: 1;
+          filter: brightness(1.2);
+        }
+        70% {
+          opacity: 0.8;
+          filter: brightness(1);
+        }
+        90% {
+          opacity: 1;
+          filter: brightness(1.4);
+        }
+      }
+
+      /* One-time assassin sweep animation that fades out */
+      @keyframes assassin-sweep {
+        0% {
+          background-position: -100% 50%;
+          opacity: 1;
+        }
+        90% {
+          background-position: 200% 50%;
+          opacity: 1;
+        }
+        100% {
+          background-position: 200% 50%;
+          opacity: 0;
+        }
+      }
+
+      @keyframes danger-blink {
+        0%,
+        50% {
+          opacity: 1;
+          text-shadow:
+            0 0 10px rgba(0, 255, 255, 1),
+            0 0 20px rgba(0, 255, 255, 0.8),
+            0 0 30px rgba(0, 255, 255, 0.6);
+        }
+        75% {
+          opacity: 1;
+          text-shadow:
+            0 0 15px rgba(0, 255, 255, 1),
+            0 0 30px rgba(0, 255, 255, 1),
+            0 0 45px rgba(0, 255, 255, 0.8),
+            0 0 60px rgba(0, 255, 255, 0.6);
+        }
+        100% {
+          opacity: 1;
+          text-shadow:
+            0 0 10px rgba(0, 255, 255, 1),
+            0 0 20px rgba(0, 255, 255, 0.8),
+            0 0 30px rgba(0, 255, 255, 0.6);
+        }
+      }
+
+      /* Animation for corner symbols to match standalone opacity */
+      .spymaster-decode.animate-reveal .corner-symbol {
+        animation: stampReveal 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.3s forwards;
+      }
+
+      /* Ensure symbols maintain full opacity after animation */
+      .spymaster-decode.animate-reveal .corner-symbol:not(.danger) {
+        opacity: 1;
+      }
+
+      .spymaster-decode.animate-reveal .corner-symbol.danger {
+        opacity: 1;
+        animation:
+          stampReveal 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.3s forwards,
+          electric-flicker 2s ease-in-out 0.8s infinite;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="examples-container">
+      <h1>Codenames Card Design System</h1>
+
+      <div class="section-header">
+        <h2 style="color: #00ff88; text-transform: uppercase">Unclassified Cards - Base State</h2>
+        <button class="animate-btn" onclick="animateUnclassified()">Deal Cards</button>
+      </div>
+
+      <div class="table-surface">
+        <div class="cards-grid">
+          <div class="card-container unclassified">
+            <div class="base-card">
+              <div class="paper-texture"></div>
+              <span class="word-text">DECODE</span>
+            </div>
+          </div>
+
+          <div class="card-container unclassified">
+            <div class="base-card">
+              <div class="paper-texture"></div>
+              <span class="word-text">CIPHER</span>
+            </div>
+          </div>
+
+          <div class="card-container unclassified">
+            <div class="base-card">
+              <div class="paper-texture"></div>
+              <span class="word-text">INTEL</span>
+            </div>
+          </div>
+
+          <div class="card-container unclassified">
+            <div class="base-card">
+              <div class="paper-texture"></div>
+              <span class="word-text">SHADOW</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <h2 style="color: #00ff88; text-transform: uppercase">Classified Cards - Agents View</h2>
+        <button class="animate-btn" onclick="animateClassified()">Animate Cover</button>
+      </div>
+
+      <div class="table-surface">
+        <div class="cards-grid">
+          <div class="card-container classified">
+            <div class="base-card">
+              <div class="paper-texture"></div>
+              <span class="word-text">DECODE</span>
+            </div>
+            <div class="standalone-card alpha-hard">
+              <div class="paper-texture"></div>
+              <div class="standalone-symbol">★</div>
+            </div>
+          </div>
+
+          <div class="card-container classified">
+            <div class="base-card">
+              <div class="paper-texture"></div>
+              <span class="word-text">CIPHER</span>
+            </div>
+            <div class="standalone-card bravo-hard">
+              <div class="paper-texture"></div>
+              <div class="standalone-symbol">♦</div>
+            </div>
+          </div>
+
+          <div class="card-container classified">
+            <div class="base-card">
+              <div class="paper-texture"></div>
+              <span class="word-text">INTEL</span>
+            </div>
+            <div class="standalone-card neutral-hard">
+              <div class="paper-texture"></div>
+              <div class="standalone-symbol">●</div>
+            </div>
+          </div>
+
+          <div class="card-container classified">
+            <div class="base-card">
+              <div class="paper-texture"></div>
+              <span class="word-text">SHADOW</span>
+            </div>
+            <div class="standalone-card assassin-hard">
+              <div class="paper-texture"></div>
+              <div class="standalone-symbol assassin">☠</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <h2 style="color: #00ff88; text-transform: uppercase">Spymaster Intel - Decoded Grid</h2>
+        <button class="animate-btn" onclick="animateSpymaster()">Animate Decode</button>
+      </div>
+
+      <div class="table-surface">
+        <div class="cards-grid">
+          <div class="card-container spymaster">
+            <div class="base-card spymaster-decode alpha-decode">
+              <div class="paper-texture"></div>
+              <div class="decode-overlay">
+                <span class="word-text">DECODE</span>
+                <div class="corner-symbol">★</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-container spymaster">
+            <div class="base-card spymaster-decode bravo-decode">
+              <div class="paper-texture"></div>
+              <div class="decode-overlay">
+                <span class="word-text">CIPHER</span>
+                <div class="corner-symbol">♦</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-container spymaster">
+            <div class="base-card spymaster-decode neutral-decode">
+              <div class="paper-texture"></div>
+              <div class="decode-overlay">
+                <span class="word-text">INTEL</span>
+                <div class="corner-symbol">●</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-container spymaster">
+            <div class="base-card spymaster-decode assassin-decode">
+              <div class="paper-texture"></div>
+              <div class="decode-overlay">
+                <span class="word-text">SHADOW</span>
+                <div class="corner-symbol danger">☠</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function animateUnclassified() {
+        const baseCards = document.querySelectorAll(".unclassified .base-card");
+        baseCards.forEach((card, index) => {
+          card.style.opacity = "0";
+          card.style.animation = "none";
+          // Reset with delay for cascade effect
+          setTimeout(() => {
+            card.style.animation = `dealCard 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`;
+          }, index * 150);
+        });
+      }
+
+      function animateClassified() {
+        const coverCards = document.querySelectorAll(".classified .standalone-card");
+        coverCards.forEach((card, index) => {
+          card.classList.remove("animate-deal");
+          // Reset with delay for cascade effect
+          setTimeout(() => {
+            card.classList.add("animate-deal");
+          }, index * 100);
+        });
+      }
+
+      function animateSpymaster() {
+        const spymasterCards = document.querySelectorAll(".spymaster .spymaster-decode");
+        const dangerSymbols = document.querySelectorAll(".spymaster .corner-symbol.danger");
+
+        // Trigger reveal animation on cards
+        spymasterCards.forEach((card, index) => {
+          card.classList.remove("animate-reveal");
+          setTimeout(() => {
+            card.classList.add("animate-reveal");
+          }, index * 100);
+        });
+
+        // Also trigger danger blink
+        dangerSymbols.forEach((symbol) => {
+          symbol.classList.toggle("animate-danger");
+        });
+      }
+    </script>
+  </body>
+</html>

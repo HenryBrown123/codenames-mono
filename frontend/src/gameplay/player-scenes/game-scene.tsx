@@ -17,22 +17,30 @@ const GameSceneContainer = styled.div`
   box-sizing: border-box;
   overflow: hidden;
 
-  /* Desktop - Let board take ALL available space */
+  /* Desktop - Keep existing */
   @media (min-width: 1025px) {
-    grid-template-columns: 280px 1fr;  /* Fixed sidebar, board gets rest */
-    grid-template-rows: 80px 1fr;      /* Fixed header, board gets rest */
-    gap: 1rem;
-  }
-
-  /* Tablet Landscape */
-  @media (min-width: 769px) and (max-width: 1024px) and (orientation: landscape) {
-    grid-template-columns: 220px 1fr;
-    grid-template-rows: 70px 1fr;
+    grid-template-columns: minmax(300px, 1.2fr) 3fr;
+    grid-template-rows: minmax(60px, auto) 1fr;
     gap: 0.75rem;
     padding: 0.75rem;
   }
 
-  /* Mobile Landscape - Stack vertically like portrait */
+  /* Tablet Landscape */
+  @media (min-width: 769px) and (max-width: 1024px) and (orientation: landscape) {
+    grid-template-columns: minmax(250px, 1fr) 2.5fr;
+    grid-template-rows: minmax(50px, auto) 1fr;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  /* Tablet Portrait */
+  @media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
+    grid-template-rows: 100px 1fr 140px;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  /* Mobile Landscape */
   @media (max-width: 768px) and (orientation: landscape) {
     grid-template-columns: 1fr;
     grid-template-rows: 50px 1fr 100px;
@@ -40,21 +48,16 @@ const GameSceneContainer = styled.div`
     padding: 0.3rem;
   }
 
-  /* Portrait modes remain the same */
-  @media (max-width: 1024px) and (orientation: portrait) {
-    grid-template-rows: 120px 1fr 150px;
-    gap: 0.75rem;
-    padding: 0.75rem;
-  }
-
+  /* Mobile Portrait - More dashboard space */
   @media (max-width: 768px) and (orientation: portrait) {
-    grid-template-rows: 100px 1fr 140px;
+    grid-template-rows: 80px 1fr 140px;  /* 140px for dashboard */
     gap: 0.5rem;
     padding: 0.5rem;
   }
 
+  /* Small Mobile */
   @media (max-width: 480px) {
-    grid-template-rows: 80px 1fr 120px;
+    grid-template-rows: 70px 1fr 130px;  /* Still good dashboard space */
     gap: 0.4rem;
     padding: 0.4rem;
   }
