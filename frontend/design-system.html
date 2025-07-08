@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Codenames Design System - Classified</title>
+
+    <!-- Link to the single source of truth for styles -->
+    <link rel="stylesheet" href="design-system.css" />
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+  </head>
+  <body class="design-system-app">
+    <div class="design-system-container">
+      <h1>Codenames Design System</h1>
+
+      <!-- Colors Section -->
+      <section class="section">
+        <h2 class="section-title">Color Palette</h2>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="color-box" style="background-color: var(--color-team-red)">Red Team</div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-box" style="background-color: var(--color-team-blue)">Blue Team</div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-box" style="background-color: var(--color-neutral)">Neutral</div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-box" style="background-color: var(--color-primary); color: #000">
+              Primary UI
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panels Section -->
+      <section class="section">
+        <h2 class="section-title">Interface Panels</h2>
+        <div class="panel">
+          <h3>Standard Intel Panel</h3>
+          <p style="color: var(--color-text-muted)">
+            This is a standard panel for displaying information, mission briefings, or controls.
+          </p>
+        </div>
+      </section>
+
+      <!-- Buttons Section -->
+      <section class="section">
+        <h2 class="section-title">Command Buttons</h2>
+        <div style="display: flex; gap: 1rem">
+          <button class="btn btn-primary">Execute Action</button>
+          <button
+            class="btn"
+            style="border-color: var(--color-text-muted); color: var(--color-text-muted)"
+          >
+            Secondary Action
+          </button>
+        </div>
+      </section>
+
+      <!-- Spy Cards Section -->
+      <section class="section">
+        <h2 class="section-title">Spy Cards Showcase</h2>
+        <div class="spy-cards-grid">
+          <div class="spy-card">
+            <div class="spy-card-inner">
+              <div class="spy-card-front">
+                <div class="spy-card-word">MOSCOW</div>
+              </div>
+              <div class="spy-card-back"></div>
+            </div>
+          </div>
+          <div class="spy-card">
+            <div class="spy-card-inner">
+              <div class="spy-card-front">
+                <div class="spy-card-word">LASER</div>
+              </div>
+              <div class="spy-card-back"></div>
+            </div>
+          </div>
+          <div class="spy-card">
+            <div class="spy-card-inner">
+              <div class="spy-card-front">
+                <div class="spy-card-word">DECODE</div>
+              </div>
+              <div class="spy-card-back"></div>
+            </div>
+          </div>
+          <div class="spy-card">
+            <div class="spy-card-inner">
+              <div class="spy-card-front">
+                <div class.spy-card-word>SHADOW</div>
+              </div>
+              <div class="spy-card-back"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Code Block Section -->
+      <section class="section">
+        <h2 class="section-title">Terminal Output</h2>
+        <div class="code-block">
+          <pre><code>mission_status: ACTIVE
+agents_remaining: 8
+clue: "OCEAN 3"</code></pre>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>
