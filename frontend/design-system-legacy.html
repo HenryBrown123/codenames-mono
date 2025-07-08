@@ -1,0 +1,1432 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Codenames Design System - Classified</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap");
+
+      :root {
+        /* Core Colors - Top Secret */
+        --color-background: #0a0a0f;
+        --color-surface-1: rgba(255, 255, 255, 0.02);
+        --color-surface-2: rgba(255, 255, 255, 0.05);
+        --color-surface-3: rgba(255, 255, 255, 0.08);
+        --color-surface-4: rgba(255, 255, 255, 0.12);
+
+        /* Mission Critical Colors */
+        --color-team-red: #ff0040;
+        --color-team-blue: #00d4ff;
+        --color-team-green: #00ff88;
+        --color-neutral: #888888;
+        --color-assassin: #000000;
+        --color-danger: #ff0040;
+        --color-warning: #ffaa00;
+        --color-success: #00ff88;
+
+        /* UI Colors */
+        --color-primary: #00ff88;
+        --color-primary-hover: #00cc6a;
+        --color-primary-active: #009950;
+        --color-accent: #ff0080;
+        --color-text: rgba(255, 255, 255, 0.95);
+        --color-text-muted: rgba(255, 255, 255, 0.6);
+        --color-border: rgba(255, 255, 255, 0.1);
+        --color-border-hover: rgba(255, 255, 255, 0.3);
+
+        /* Spy Tech Colors */
+        --color-hologram: #00ffff;
+        --color-laser: #ff0040;
+        --color-night-vision: #00ff00;
+        --color-stealth: #4a0080;
+
+        /* Spacing Scale */
+        --space-xs: 0.25rem;
+        --space-sm: 0.5rem;
+        --space-md: 1rem;
+        --space-lg: 1.5rem;
+        --space-xl: 2rem;
+        --space-2xl: 3rem;
+
+        /* Border Radius */
+        --radius-sm: 4px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --radius-xl: 16px;
+        --radius-full: 9999px;
+
+        /* Shadows */
+        --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+        --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.5);
+        --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.6);
+        --shadow-xl: 0 16px 32px rgba(0, 0, 0, 0.8);
+        --shadow-glow: 0 0 20px;
+
+        /* Transitions */
+        --transition-fast: 150ms ease;
+        --transition-normal: 250ms ease;
+        --transition-slow: 350ms ease;
+
+        /* Typography */
+        --font-family: "JetBrains Mono", "Courier New", monospace;
+        --font-size-xs: 0.75rem;
+        --font-size-sm: 0.875rem;
+        --font-size-md: 1rem;
+        --font-size-lg: 1.25rem;
+        --font-size-xl: 1.5rem;
+        --font-size-2xl: 2rem;
+        --font-size-3xl: 3rem;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      /* Animated background */
+      html {
+        background: #0a0a0f;
+        overflow-x: hidden;
+      }
+
+      body {
+        font-family: var(--font-family);
+        background:
+          radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 80% 80%, rgba(255, 0, 128, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 40% 20%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+          var(--color-background);
+        color: var(--color-text);
+        line-height: 1.5;
+        padding: var(--space-xl);
+        min-height: 100vh;
+        position: relative;
+      }
+
+      /* Scanlines effect */
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(255, 255, 255, 0.01) 2px,
+          rgba(255, 255, 255, 0.01) 4px
+        );
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      /* Loading animation */
+      .design-system {
+        max-width: 1400px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 2;
+        opacity: 0;
+        animation: declassify 1s ease forwards;
+      }
+
+      @keyframes declassify {
+        0% {
+          opacity: 0;
+          transform: translateY(20px);
+          filter: blur(10px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0);
+          filter: blur(0);
+        }
+      }
+
+      /* Glitch text effect */
+      @keyframes glitch {
+        0%,
+        100% {
+          text-shadow:
+            0 0 2px #00ff88,
+            0 0 4px #00ff88;
+        }
+        25% {
+          text-shadow:
+            -2px 0 #ff0040,
+            2px 0 #00d4ff;
+        }
+        50% {
+          text-shadow:
+            2px 0 #ff0080,
+            -2px 0 #00ff88;
+        }
+        75% {
+          text-shadow:
+            0 0 2px #00d4ff,
+            0 0 4px #00d4ff;
+        }
+      }
+
+      h1 {
+        font-size: var(--font-size-3xl);
+        margin-bottom: 3rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        position: relative;
+        animation: glitch 4s infinite;
+      }
+
+      /* Classified stamp */
+      h1::after {
+        content: "[CLASSIFIED]";
+        position: absolute;
+        top: -1rem;
+        right: 0;
+        font-size: 0.8rem;
+        color: var(--color-danger);
+        background: rgba(255, 0, 64, 0.1);
+        padding: 0.2rem 0.8rem;
+        border: 1px solid var(--color-danger);
+        transform: rotate(3deg);
+        animation: pulse 2s infinite;
+      }
+
+      .section {
+        margin-bottom: var(--space-2xl);
+      }
+
+      .section-title {
+        font-size: var(--font-size-2xl);
+        margin-bottom: var(--space-xl);
+        padding-bottom: var(--space-md);
+        border-bottom: 1px solid var(--color-border);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        position: relative;
+      }
+
+      /* Animated border */
+      .section-title::after {
+        content: "";
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 100px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+        animation: scan 3s linear infinite;
+      }
+
+      @keyframes scan {
+        0% {
+          transform: translateX(-100px);
+        }
+        100% {
+          transform: translateX(calc(100vw - 100px));
+        }
+      }
+
+      .subsection {
+        margin-bottom: var(--space-xl);
+      }
+
+      .subsection-title {
+        font-size: var(--font-size-lg);
+        margin-bottom: var(--space-lg);
+        color: var(--color-text-muted);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+      }
+
+      .subsection-title::before {
+        content: ">";
+        color: var(--color-primary);
+        animation: blink 1s infinite;
+      }
+
+      @keyframes blink {
+        0%,
+        50% {
+          opacity: 1;
+        }
+        51%,
+        100% {
+          opacity: 0;
+        }
+      }
+
+      .component-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--space-lg);
+        margin-bottom: var(--space-xl);
+      }
+
+      /* Color Swatches - Mission Briefing Style */
+      .color-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: var(--space-md);
+      }
+
+      .color-swatch {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-sm);
+        position: relative;
+      }
+
+      .color-box {
+        height: 80px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--color-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: var(--font-size-sm);
+        font-weight: 700;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        position: relative;
+        overflow: hidden;
+        transition: all var(--transition-normal);
+      }
+
+      .color-box:hover {
+        transform: scale(1.05);
+        border-color: currentColor;
+        box-shadow: var(--shadow-glow) currentColor;
+      }
+
+      /* Animated corner brackets */
+      .color-box::before,
+      .color-box::after {
+        content: "";
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        border: 1px solid currentColor;
+        opacity: 0;
+        transition: opacity var(--transition-normal);
+      }
+
+      .color-box::before {
+        top: 4px;
+        left: 4px;
+        border-right: none;
+        border-bottom: none;
+      }
+
+      .color-box::after {
+        bottom: 4px;
+        right: 4px;
+        border-left: none;
+        border-top: none;
+      }
+
+      .color-box:hover::before,
+      .color-box:hover::after {
+        opacity: 1;
+      }
+
+      .color-label {
+        font-size: var(--font-size-sm);
+        color: var(--color-text-muted);
+        font-family: var(--font-family);
+      }
+
+      /* Surface Textures - High Tech */
+      .surface {
+        padding: var(--space-lg);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--color-border);
+        min-height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        transition: all var(--transition-normal);
+      }
+
+      .surface:hover {
+        border-color: var(--color-primary);
+        box-shadow: inset 0 0 20px rgba(0, 255, 136, 0.1);
+      }
+
+      .surface-1 {
+        background-color: rgba(255, 255, 255, 0.02);
+      }
+
+      .surface-2 {
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+
+      .surface-3 {
+        background-color: rgba(255, 255, 255, 0.08);
+      }
+
+      .surface-glass {
+        background-color: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.05);
+      }
+
+      .surface-hologram {
+        background:
+          repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 255, 255, 0.03) 2px,
+            rgba(0, 255, 255, 0.03) 4px
+          ),
+          linear-gradient(
+            90deg,
+            rgba(0, 255, 255, 0.05) 0%,
+            rgba(0, 255, 255, 0.1) 50%,
+            rgba(0, 255, 255, 0.05) 100%
+          );
+        animation: hologram 2s linear infinite;
+      }
+
+      @keyframes hologram {
+        0% {
+          filter: hue-rotate(0deg);
+        }
+        100% {
+          filter: hue-rotate(360deg);
+        }
+      }
+
+      .surface-radar {
+        background-color: #001100;
+        background-image:
+          radial-gradient(circle at center, transparent 30%, rgba(0, 255, 0, 0.1) 30%),
+          radial-gradient(circle at center, transparent 60%, rgba(0, 255, 0, 0.05) 60%);
+        position: relative;
+      }
+
+      .surface-radar::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.8), transparent);
+        transform-origin: left center;
+        animation: radar-sweep 3s linear infinite;
+      }
+
+      @keyframes radar-sweep {
+        0% {
+          transform: translate(-50%, -50%) rotate(0deg);
+        }
+        100% {
+          transform: translate(-50%, -50%) rotate(360deg);
+        }
+      }
+
+      /* Spy Cards - Physical Paper Cards on Desk */
+      .card-showcase {
+        margin-top: 1rem;
+      }
+
+      .showcase-row {
+        margin-bottom: 2rem;
+      }
+
+      .spy-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: var(--space-lg);
+      }
+
+      .spy-card {
+        aspect-ratio: 4/3; /* Landscape orientation */
+        perspective: 1000px;
+        cursor: pointer;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8));
+      }
+
+      .spy-card-inner {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        transform-style: preserve-3d;
+        transition: transform 0.6s;
+        transform: rotateZ(-2deg) rotateX(5deg);
+      }
+
+      .spy-card:nth-child(2) .spy-card-inner {
+        transform: rotateZ(1deg) rotateX(5deg);
+      }
+
+      .spy-card:nth-child(3) .spy-card-inner {
+        transform: rotateZ(-1deg) rotateX(5deg);
+      }
+
+      .spy-card:nth-child(4) .spy-card-inner {
+        transform: rotateZ(2deg) rotateX(5deg);
+      }
+
+      .spy-card.flipped .spy-card-inner {
+        transform: rotateY(180deg) rotateZ(0deg);
+      }
+
+      .spy-card-front,
+      .spy-card-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .spy-card-back {
+        transform: rotateY(180deg);
+      }
+
+      /* Paper Card Texture */
+      .card-texture {
+        position: absolute;
+        inset: 0;
+        opacity: 1;
+        background: 
+                /* Paper fibers */
+          url('data:image/svg+xml,%3Csvg width="100" height="100" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" /%3E%3CfeColorMatrix values="0 0 0 0 0.95 0 0 0 0 0.95 0 0 0 0 0.9 0 0 0 0.08 0"/%3E%3C/filter%3E%3Crect width="100" height="100" filter="url(%23noise)"/%3E%3C/svg%3E'),
+          /* Subtle grain */
+            repeating-linear-gradient(
+              0deg,
+              transparent,
+              transparent 1px,
+              rgba(0, 0, 0, 0.03) 1px,
+              rgba(0, 0, 0, 0.03) 2px
+            ),
+          /* Worn edges */
+            radial-gradient(ellipse at top left, transparent 0%, rgba(0, 0, 0, 0.05) 100%),
+          radial-gradient(ellipse at bottom right, transparent 0%, rgba(0, 0, 0, 0.05) 100%);
+        background-size:
+          200px 200px,
+          3px 3px,
+          100% 100%,
+          100% 100%;
+        mix-blend-mode: multiply;
+      }
+
+      /* Front Card Styles - Aged Paper */
+      .spy-card-front {
+        background: #f4f1e8;
+        color: #1a1a1a;
+        border: 1px solid #d4d1c8;
+        box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.05);
+      }
+
+      .spy-card-front.neutral {
+        background: linear-gradient(135deg, #f4f1e8 0%, #e8e5dc 100%);
+      }
+
+      .card-content {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        padding: var(--space-md);
+      }
+
+      .card-word {
+        font-size: 1.3rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: #2a2a3e;
+        text-shadow: none;
+        font-family: "Courier New", monospace;
+        /* Typewriter effect */
+        background: linear-gradient(to right, #2a2a3e 0%, #3a3a4e 50%, #2a2a3e 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      /* Back Card Styles - Paper with Cover */
+      .spy-card-back {
+        background: #f4f1e8;
+        color: #1a1a1a;
+        border: 1px solid #d4d1c8;
+        position: relative;
+        overflow: hidden;
+        box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.05);
+      }
+
+      /* Cover overlay - like a folder or envelope over the card */
+      .spy-card-back::before {
+        content: "";
+        position: absolute;
+        inset: -10%;
+        background: 
+                /* Manila folder texture */ linear-gradient(
+          135deg,
+          #d4c4a0 0%,
+          #c4b490 50%,
+          #d4c4a0 100%
+        );
+        transform: rotate(-5deg);
+        box-shadow:
+          0 2px 5px rgba(0, 0, 0, 0.3),
+          inset 0 0 30px rgba(0, 0, 0, 0.1);
+        z-index: 3;
+      }
+
+      /* Cover stamp/marking */
+      .spy-card-back::after {
+        content: "CLASSIFIED";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-15deg);
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        color: #cc0020;
+        text-transform: uppercase;
+        font-family: var(--font-family);
+        z-index: 4;
+        padding: 0.3rem 0.8rem;
+        border: 3px solid #cc0020;
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Different stamps for different card types */
+      .spy-card-back.team-alpha::after {
+        content: "ALPHA EYES ONLY";
+        color: #cc0020;
+        border-color: #cc0020;
+        font-size: 1rem;
+      }
+
+      .spy-card-back.team-bravo::after {
+        content: "BRAVO INTEL";
+        color: #0066cc;
+        border-color: #0066cc;
+        font-size: 1rem;
+        transform: translate(-50%, -50%) rotate(10deg);
+      }
+
+      .spy-card-back.civilian::after {
+        content: "UNCLASSIFIED";
+        color: #666666;
+        border-color: #666666;
+        font-size: 1rem;
+        transform: translate(-50%, -50%) rotate(-8deg);
+      }
+
+      .spy-card-back.assassin::after {
+        content: "⚠ DANGER ⚠";
+        color: #ff0040;
+        border-color: #ff0040;
+        font-size: 1.2rem;
+        background: rgba(0, 0, 0, 0.9);
+        transform: translate(-50%, -50%) rotate(0deg);
+        animation: danger-stamp 2s infinite;
+      }
+
+      @keyframes danger-stamp {
+        0%,
+        100% {
+          transform: translate(-50%, -50%) rotate(0deg) scale(1);
+        }
+        50% {
+          transform: translate(-50%, -50%) rotate(0deg) scale(1.1);
+        }
+      }
+
+      .card-classified-content {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        padding: var(--space-md);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-sm);
+        opacity: 0; /* Content is hidden under the cover */
+      }
+
+      /* Only show faction details when card is revealed (not in this view) */
+      .spy-card-back.revealed .card-classified-content {
+        opacity: 1;
+      }
+
+      .spy-card-back.revealed.team-alpha {
+        background: linear-gradient(135deg, #f4f1e8 0%, #f8e8e8 100%);
+        border: 1px solid #d4d1c8;
+      }
+
+      .spy-card-back.revealed.team-alpha .faction-stamp {
+        color: #cc0020;
+        transform: rotate(-15deg);
+        border: 3px solid #cc0020;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.8);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .spy-card-back.revealed.team-bravo {
+        background: linear-gradient(135deg, #f4f1e8 0%, #e8f0f8 100%);
+        border: 1px solid #d4d1c8;
+      }
+
+      .spy-card-back.revealed.team-bravo .faction-stamp {
+        color: #0066cc;
+        transform: rotate(10deg);
+        border: 3px solid #0066cc;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.8);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .spy-card-back.revealed.civilian {
+        background: linear-gradient(135deg, #f4f1e8 0%, #e8e8e8 100%);
+        border: 1px solid #d4d1c8;
+      }
+
+      .spy-card-back.revealed.civilian .faction-stamp {
+        color: #666666;
+        border: 3px solid #666666;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.8);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .spy-card-back.revealed.assassin {
+        background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+        color: #ffffff;
+        border: 1px solid #000000;
+      }
+
+      .spy-card-back.revealed.assassin .faction-stamp {
+        color: #ff0040;
+        animation: none;
+        border: 3px solid #ff0040;
+        padding: 0.5rem 1rem;
+        background: rgba(0, 0, 0, 0.8);
+        text-shadow: 0 0 10px #ff0040;
+      }
+
+      .faction-stamp {
+        font-size: 1.1rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        text-shadow: none;
+        font-family: "Courier New", monospace;
+        display: inline-block;
+        transform: rotate(-5deg);
+      }
+
+      .classification {
+        font-size: 0.7rem;
+        opacity: 0.6;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        font-family: "Courier New", monospace;
+        margin-top: 0.5rem;
+      }
+
+      .card-id {
+        font-size: 0.7rem;
+        font-family: var(--font-family);
+        opacity: 0.4;
+        letter-spacing: 0.05em;
+        position: absolute;
+        bottom: 0.5rem;
+        right: 0.5rem;
+      }
+
+      /* Hover Effects - Pick up card */
+      .spy-card:hover .spy-card-inner {
+        transform: translateY(-10px) rotateZ(0deg) scale(1.05);
+        transition: all 0.3s ease;
+      }
+
+      .spy-card.flipped:hover .spy-card-inner {
+        transform: rotateY(180deg) translateY(-10px) scale(1.05);
+      }
+
+      /* Game Cards - Mission Assets */
+      .card-examples {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: var(--space-md);
+      }
+
+      .game-card {
+        aspect-ratio: 1;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all var(--transition-normal);
+        border: 2px solid var(--color-border);
+        position: relative;
+        overflow: hidden;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      /* Cyber grid background */
+      .game-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 20px 20px;
+        transform: perspective(100px) rotateX(60deg);
+        opacity: 0;
+        transition: opacity var(--transition-normal);
+      }
+
+      .game-card:hover::before {
+        opacity: 1;
+      }
+
+      .game-card-default {
+        background-color: #1a1a2e;
+        color: #00ff88;
+      }
+
+      .game-card-default:hover {
+        background-color: #2a2a3e;
+        border-color: #00ff88;
+        transform: translateY(-4px) scale(1.05);
+        box-shadow:
+          0 10px 20px rgba(0, 0, 0, 0.5),
+          0 0 20px rgba(0, 255, 136, 0.3);
+      }
+
+      .game-card-red {
+        background-color: #330011;
+        border-color: #ff0040;
+        color: #ff0040;
+        animation: red-pulse 2s infinite;
+      }
+
+      @keyframes red-pulse {
+        0%,
+        100% {
+          box-shadow: inset 0 0 20px rgba(255, 0, 64, 0.3);
+        }
+        50% {
+          box-shadow: inset 0 0 30px rgba(255, 0, 64, 0.5);
+        }
+      }
+
+      .game-card-blue {
+        background-color: #001133;
+        border-color: #00d4ff;
+        color: #00d4ff;
+        animation: blue-pulse 2s infinite;
+      }
+
+      @keyframes blue-pulse {
+        0%,
+        100% {
+          box-shadow: inset 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+        50% {
+          box-shadow: inset 0 0 30px rgba(0, 212, 255, 0.5);
+        }
+      }
+
+      .game-card-neutral {
+        background-color: #222222;
+        border-color: #888888;
+        color: #888888;
+      }
+
+      .game-card-assassin {
+        background-color: #000000;
+        border-color: #ff0040;
+        color: #ff0040;
+        position: relative;
+        animation: danger-flash 1s infinite;
+      }
+
+      @keyframes danger-flash {
+        0%,
+        100% {
+          border-color: #ff0040;
+        }
+        50% {
+          border-color: #ffffff;
+        }
+      }
+
+      .game-card-assassin::before {
+        content: "⚠";
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        font-size: 1rem;
+        color: #ff0040;
+        animation: blink 0.5s infinite;
+      }
+
+      /* Buttons - Mission Controls */
+      .button-examples {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-md);
+        align-items: center;
+      }
+
+      .btn {
+        padding: var(--space-md) var(--space-xl);
+        border: 1px solid;
+        border-radius: var(--radius-md);
+        font-weight: 700;
+        font-size: var(--font-size-md);
+        cursor: pointer;
+        transition: all var(--transition-normal);
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-sm);
+        position: relative;
+        overflow: hidden;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-family: var(--font-family);
+      }
+
+      /* Scanning effect on hover */
+      .btn::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s;
+      }
+
+      .btn:hover::before {
+        left: 100%;
+      }
+
+      .btn-primary {
+        background-color: transparent;
+        color: #00ff88;
+        border-color: #00ff88;
+      }
+
+      .btn-primary:hover {
+        background-color: #00ff88;
+        color: #000000;
+        transform: translateY(-2px);
+        box-shadow:
+          0 5px 15px rgba(0, 255, 136, 0.4),
+          inset 0 0 20px rgba(0, 255, 136, 0.2);
+      }
+
+      .btn-danger {
+        background-color: transparent;
+        color: #ff0040;
+        border-color: #ff0040;
+      }
+
+      .btn-danger:hover {
+        background-color: #ff0040;
+        color: #ffffff;
+        box-shadow:
+          0 5px 15px rgba(255, 0, 64, 0.4),
+          inset 0 0 20px rgba(255, 0, 64, 0.2);
+      }
+
+      .btn-stealth {
+        background-color: rgba(0, 0, 0, 0.5);
+        color: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      .btn-stealth:hover {
+        color: rgba(255, 255, 255, 0.8);
+        border-color: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+      }
+
+      .btn-icon {
+        padding: var(--space-md);
+        border-radius: var(--radius-full);
+        aspect-ratio: 1;
+      }
+
+      /* Special Effects - Spy Gadgets */
+      .effect-examples {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: var(--space-lg);
+      }
+
+      .effect-card {
+        padding: var(--space-xl);
+        background-color: rgba(0, 0, 0, 0.5);
+        border-radius: var(--radius-lg);
+        text-align: center;
+        transition: all var(--transition-normal);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .effect-laser {
+        background: linear-gradient(
+          45deg,
+          transparent 40%,
+          rgba(255, 0, 64, 0.5) 50%,
+          transparent 60%
+        );
+        background-size: 200% 200%;
+        animation: laser-scan 2s linear infinite;
+      }
+
+      @keyframes laser-scan {
+        0% {
+          background-position: 200% 200%;
+        }
+        100% {
+          background-position: -100% -100%;
+        }
+      }
+
+      .effect-night-vision {
+        background-color: #001100;
+        color: #00ff00;
+        position: relative;
+      }
+
+      .effect-night-vision::after {
+        content: "+";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2rem;
+        color: #00ff00;
+        opacity: 0.3;
+      }
+
+      .effect-scramble {
+        position: relative;
+      }
+
+      .effect-scramble:hover {
+        animation: scramble 0.3s;
+      }
+
+      @keyframes scramble {
+        0%,
+        100% {
+          filter: none;
+        }
+        20% {
+          filter: blur(1px);
+          transform: translateX(-2px);
+        }
+        40% {
+          filter: blur(1px);
+          transform: translateX(2px);
+        }
+        60% {
+          filter: blur(1px);
+          transform: translateY(-2px);
+        }
+        80% {
+          filter: blur(1px);
+          transform: translateY(2px);
+        }
+      }
+
+      /* Panels - Intelligence Reports */
+      .panel {
+        background-color: rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(0, 255, 136, 0.3);
+        border-radius: var(--radius-lg);
+        padding: var(--space-lg);
+        margin-bottom: var(--space-md);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .panel::before {
+        content: "INTEL";
+        position: absolute;
+        top: 0.5rem;
+        right: 1rem;
+        font-size: 0.7rem;
+        color: var(--color-primary);
+        opacity: 0.3;
+        letter-spacing: 0.2em;
+      }
+
+      .panel-alert {
+        border-color: #ff0040;
+        animation: alert-pulse 1s infinite;
+      }
+
+      @keyframes alert-pulse {
+        0%,
+        100% {
+          border-color: #ff0040;
+          box-shadow: 0 0 20px rgba(255, 0, 64, 0.2);
+        }
+        50% {
+          border-color: #ffffff;
+          box-shadow: 0 0 30px rgba(255, 0, 64, 0.4);
+        }
+      }
+
+      /* Code Display - Terminal Style */
+      .code-block {
+        background-color: #000000;
+        border: 1px solid #00ff88;
+        border-radius: var(--radius-md);
+        padding: var(--space-md);
+        font-family: var(--font-family);
+        font-size: var(--font-size-sm);
+        overflow-x: auto;
+        margin-top: var(--space-sm);
+        color: #00ff88;
+        position: relative;
+      }
+
+      .code-block::before {
+        content: "> ";
+        color: #00ff88;
+      }
+
+      /* Mission Badge */
+      .mission-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #000000, #1a1a1a);
+        border: 2px solid #00ff88;
+        border-radius: var(--radius-md);
+        padding: var(--space-sm) var(--space-md);
+        font-size: var(--font-size-sm);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #00ff88;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .mission-badge::after {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(0, 255, 136, 0.3), transparent);
+        transform: rotate(45deg);
+        animation: shine 3s infinite;
+      }
+
+      @keyframes shine {
+        0% {
+          transform: translateX(-100%) translateY(-100%) rotate(45deg);
+        }
+        100% {
+          transform: translateX(100%) translateY(100%) rotate(45deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="design-system">
+      <h1>Codenames Design System</h1>
+
+      <!-- Mission Status -->
+      <div style="margin-bottom: 3rem">
+        <span class="mission-badge">Mission Status: Active</span>
+      </div>
+
+      <!-- Colors Section -->
+      <section class="section">
+        <h2 class="section-title">Faction Identifiers</h2>
+
+        <div class="subsection">
+          <h3 class="subsection-title">Team Designations</h3>
+          <div class="card-showcase">
+            <!-- Card Fronts -->
+            <div class="showcase-row">
+              <h4 style="color: var(--color-text-muted); margin-bottom: 1rem; font-size: 0.9rem">
+                CARD FRONT - UNCLASSIFIED
+              </h4>
+              <div class="spy-cards-grid">
+                <div class="spy-card">
+                  <div class="spy-card-inner">
+                    <div class="spy-card-front neutral">
+                      <div class="card-texture"></div>
+                      <div class="card-content">
+                        <div class="card-word">MOSCOW</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="spy-card">
+                  <div class="spy-card-inner">
+                    <div class="spy-card-front neutral">
+                      <div class="card-texture"></div>
+                      <div class="card-content">
+                        <div class="card-word">LASER</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="spy-card">
+                  <div class="spy-card-inner">
+                    <div class="spy-card-front neutral">
+                      <div class="card-texture"></div>
+                      <div class="card-content">
+                        <div class="card-word">DECODE</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="spy-card">
+                  <div class="spy-card-inner">
+                    <div class="spy-card-front neutral">
+                      <div class="card-texture"></div>
+                      <div class="card-content">
+                        <div class="card-word">SHADOW</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card Backs -->
+            <div class="showcase-row" style="margin-top: 2rem">
+              <h4 style="color: var(--color-text-muted); margin-bottom: 1rem; font-size: 0.9rem">
+                CARD BACK - CLASSIFIED INTEL
+              </h4>
+              <div class="spy-cards-grid">
+                <div class="spy-card flipped">
+                  <div class="spy-card-inner">
+                    <div class="spy-card-back team-alpha">
+                      <div class="card-texture"></div>
+                      <div class="card-classified-content">
+                        <div class="faction-stamp">ALPHA</div>
+                        <div class="classification">TOP SECRET</div>
+                        <div class="card-id">A-7734</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="spy-card flipped">
+                  <div class="spy-card-inner">
+                    <div class="spy-card-back team-bravo">
+                      <div class="card-texture"></div>
+                      <div class="card-classified-content">
+                        <div class="faction-stamp">BRAVO</div>
+                        <div class="classification">CLASSIFIED</div>
+                        <div class="card-id">B-2319</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="spy-card flipped">
+                  <div class="spy-card-inner">
+                    <div class="spy-card-back civilian">
+                      <div class="card-texture"></div>
+                      <div class="card-classified-content">
+                        <div class="faction-stamp">CIVILIAN</div>
+                        <div class="classification">NEUTRAL</div>
+                        <div class="card-id">N-0001</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="spy-card flipped">
+                  <div class="spy-card-inner">
+                    <div class="spy-card-back assassin">
+                      <div class="card-texture"></div>
+                      <div class="card-classified-content">
+                        <div class="faction-stamp">⚠ HOSTILE ⚠</div>
+                        <div class="classification">TERMINATE</div>
+                        <div class="card-id">X-0000</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="subsection">
+          <h3 class="subsection-title">System Status Indicators</h3>
+          <div class="color-grid">
+            <div class="color-swatch">
+              <div class="color-box" style="background-color: #00ff88; color: #000000">ONLINE</div>
+              <span class="color-label">All Systems Go</span>
+            </div>
+            <div class="color-swatch">
+              <div class="color-box" style="background-color: #ffaa00; color: #000000">STANDBY</div>
+              <span class="color-label">Awaiting Orders</span>
+            </div>
+            <div class="color-swatch">
+              <div class="color-box" style="background-color: #ff0080; color: #ffffff">ALERT</div>
+              <span class="color-label">High Priority</span>
+            </div>
+            <div class="color-swatch">
+              <div class="color-box" style="background-color: #4a0080; color: #ffffff">STEALTH</div>
+              <span class="color-label">Dark Mode</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Surfaces Section -->
+      <section class="section">
+        <h2 class="section-title">Interface Modules</h2>
+
+        <div class="component-grid">
+          <div>
+            <div class="surface surface-glass">Tactical Glass</div>
+            <code class="code-block">initiate_cloaking_device();</code>
+          </div>
+          <div>
+            <div class="surface surface-hologram">Hologram Display</div>
+            <code class="code-block">project_hologram(target);</code>
+          </div>
+          <div>
+            <div class="surface surface-radar">Radar Sweep</div>
+            <code class="code-block">scan_perimeter(radius);</code>
+          </div>
+        </div>
+      </section>
+
+      <!-- Game Cards Section -->
+      <section class="section">
+        <h2 class="section-title">Asset Cards - Top Secret</h2>
+
+        <div class="subsection">
+          <h3 class="subsection-title">Operative Status</h3>
+          <div class="card-examples">
+            <div class="game-card game-card-default">AGENT</div>
+            <div class="game-card game-card-default" style="border-color: #00ff88">ACTIVE</div>
+            <div class="game-card game-card-red">ALPHA</div>
+            <div class="game-card game-card-blue">BRAVO</div>
+            <div class="game-card game-card-neutral">CIVILIAN</div>
+            <div class="game-card game-card-assassin">HOSTILE</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Buttons Section -->
+      <section class="section">
+        <h2 class="section-title">Command Interface</h2>
+
+        <div class="subsection">
+          <h3 class="subsection-title">Action Protocols</h3>
+          <div class="button-examples">
+            <button class="btn btn-primary">EXECUTE</button>
+            <button class="btn btn-danger">ABORT MISSION</button>
+            <button class="btn btn-stealth">GO DARK</button>
+            <button class="btn btn-primary btn-icon">🎯</button>
+            <button class="btn btn-danger btn-icon">⚠</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panels Section -->
+      <section class="section">
+        <h2 class="section-title">Intelligence Reports</h2>
+
+        <div class="panel">
+          <h3>Mission Briefing</h3>
+          <p style="color: rgba(255, 255, 255, 0.6)">
+            Target acquisition in progress. Maintain radio silence.
+          </p>
+        </div>
+
+        <div class="panel panel-alert">
+          <h3>⚠ PRIORITY ALERT</h3>
+          <p style="color: #ff0040">
+            Hostile agent detected in sector 7. Immediate action required.
+          </p>
+        </div>
+      </section>
+
+      <!-- Effects Section -->
+      <section class="section">
+        <h2 class="section-title">Spy Tech Arsenal</h2>
+
+        <div class="effect-examples">
+          <div class="effect-card effect-laser">
+            <div>🔴</div>
+            <div>Laser Grid</div>
+          </div>
+          <div class="effect-card effect-night-vision">
+            <div>👁</div>
+            <div>Night Vision</div>
+          </div>
+          <div class="effect-card effect-scramble">
+            <div>📡</div>
+            <div>Signal Jam</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      // Add some interactive spy effects
+      document.querySelectorAll(".game-card").forEach((card) => {
+        card.addEventListener("mouseenter", () => {
+          const beep = new Audio(
+            "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmFgU7k9n1notKChhaq+ztrVkUBkCY3/PLfCsGJXLJ8N+PSAoWY7Ts6aJQDAVEnODyxWsrCAxNq+PwtGMcBjiS1/HMeS0GI3fH8N+RQAoUXrTp66hVFApGnt/yvmwhBSuBzvLZiTYIG2m+8OScTgwOUarm7blmFgU7k9n1notKChhaq+ztrVkUBkCY3/PLfCsGJXLJ8N+PSAoWY7Ts6aJQDAVEnODyxWsrCAxNq+PwtGMcBjiS1/HMeS0GI3fH8d+RQAoUXrTp66hVFApGnt/yv2wiBSx/zPDaiTYIG2m+8OScTgwOUarm7blmFgU7k9n1notKChhaq+ztrVkUBkCY3/PLfCsGJXLJ8N+PSAoWY7Ts6aJQDAVEnODyxWsrCAxNq+PwtGMcBjiS1/HMeS0GI3fH8d+RQAoUXrTp66hVFApGnt/yv2wiBSx/zPDaiTYIG2m+8OScTgwOUarm7blmFgU7k9n1notKChhaq+ztrVkUBkCY3/PLfCsGJXLJ8N+PSAoWY7Ts6aJQDAVEnODyxWsrCAxNq+PwtGMcBjiS1/HMeS0GI3fH8d+RQAoUXrTp66hVFApGnt/yv2wiBSx/zPDaiTYIG2m+8OScTgwOUarm7blmFgU7k9n1notKChhaq+ztrVkUBkCY3/PLfCsGJXLJ8N+PSAoWY7Ts6aJQDAVEnODyxWsrCAxNq+PwtGMcBjiS1/HMeS0GI3fH8d+RQAoUXrTp66hVFApGnt/yv2wiBSx/zPDaiTYIG2m+8OScTgwOUarm7blmFgU7k9n1notKChhaq+ztrVkUBkCY3/PLfCsGJXLJ8N+PSAoWY7Ts6aJQDAVEnODyxWsrCAxNq+PwtGMcBjiS1/HMeS0GI3fH8d+RQAoUXrTp66hVFApGnt/yv2wiBSx/zPDaiTYIG2m+8OScTgwOUarm7blmFgU7k9n1notKChhaq+ztrVkUBkCY3/PLfCsGJXLJ8N+PSAoWY7Ts6aJQDAVEnODyxWsrCAxNq+PwtGMcBjiS1/HMeS0GI3fH8d+RQAoUXrTp66hVFApGnt/yv2wiBSx/zPDaiTYIG2m+8OScTgwOUarm7blmFgU7k9n1notKChhZq+3urVkUBkCY3/PLfCsGJXLJ8N+PSAoWY7Ts6aJQDAVEnODyxWsrCAxNq+PwtGMcBjiS1/HMeS0GI3fH8d+RQAoUXrTp66hVFApGnt/yv2wiBSx/zPDaiTYIG2m+8OScTgwOUarm7blmFgU7k9n1notKChhZq+3urVkUBkCY3/PLfCsGJXLJ8N+PSAoWY7Ts6aJQDAVEnODyxWsrCAxNq+PwtGMcBjiS1/HMeS0GI3fH8d+RQAoUXrTp66hVFApGnt/yv2wiBSx/zPDaiTYIG2m+8OScTgwOUarm7blmFgU7k9n1notKChhZq+3urVkUBkCY3/PLfCsGJXLJ8N+PSAoWY7Ts6aJQDAVEnODyxWsrCA==",
+          );
+          beep.volume = 0.1;
+          beep.play().catch(() => {});
+        });
+      });
+
+      // Terminal typing effect
+      document.querySelectorAll(".code-block").forEach((block) => {
+        const text = block.textContent;
+        block.textContent = "";
+        let i = 0;
+        const type = () => {
+          if (i < text.length) {
+            block.textContent += text.charAt(i);
+            i++;
+            setTimeout(type, 50);
+          }
+        };
+        type();
+      });
+    </script>
+  </body>
+</html>
