@@ -17,18 +17,34 @@ export const GlobalStyle = createGlobalStyle<{ theme: ThemeType }>`
     --color-secondary: ${({ theme }) => theme.secondary};
     --color-card: ${({ theme }) => theme.card};
     --color-dashboard: ${({ theme }) => theme.dashboard};
-    --color-team1: ${({ theme }) => theme.team1} | "red";
-    --color-team2: ${({ theme }) => theme.team2} | "green";
-    --color-background-size: "cover"
+    --color-team1: ${({ theme }) => theme.team1};
+    --color-team2: ${({ theme }) => theme.team2};
   }
 
   body {
     color: var(--color-text);
-    background-image: var(--color-background);
-    //background-repeat: no-repeat; // Prevents the background from repeating
+    background: ${({ theme }) => theme.background};  /* Direct theme access instead of CSS variable */
     margin: 0;
     padding: 0;
-    background-size: var(--color-background-size);
+    min-height: 100vh;  /* Ensure body covers full viewport */
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 255, 0, 0.03) 2px,
+      rgba(0, 255, 0, 0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
   }
 
   @media (max-width: 768px) {
@@ -59,44 +75,38 @@ export interface ThemeType {
   disabledBackground: string;
 }
 
-// @ts-ignore
-import lightBackgroundImage from "/background-light.webp";
-
 export const lightTheme: ThemeType = {
   text: "white",
-  background: `url(${lightBackgroundImage})`,
-  primary: "#44a85a",
-  secondary: "#a6eb25ba",
+  background: "radial-gradient(ellipse at top, #1a1a2e 0%, #0a0a0f 100%)",
+  primary: "#00ff88",
+  secondary: "#00cc6a",
   card: "#00000096",
-  dashboard: "#1a1a1a",
-  team1: "#ae3751e1",
-  team2: "rgb(71 134 64)",
+  dashboard: "rgba(20, 20, 20, 0.8)",
+  team1: "#B85555",
+  team2: "#5588B8",
   error: "#cc2e2e",
-  primaryHover: "#3b954f",
+  primaryHover: "#00cc6a",
   buttonText: "white",
-  shadowColor: "gray",
+  shadowColor: "rgba(0, 0, 0, 0.3)",
   shadowDark: "black",
-  shadowLight: "white",
-  disabledBackground: "lightgray",
+  shadowLight: "rgba(255, 255, 255, 0.1)",
+  disabledBackground: "rgba(255, 255, 255, 0.1)",
 };
-
-// @ts-ignore
-import darkBackgroundImage from "/background-dark-2.webp";
 
 export const darkTheme: ThemeType = {
   text: "white",
-  background: `url(${darkBackgroundImage})`,
-  primary: "#1e8c4a",
-  secondary: "#7bcf22",
+  background: "radial-gradient(ellipse at top, #1a1a2e 0%, #0a0a0f 100%)",
+  primary: "#00ff88",
+  secondary: "#00cc6a",
   card: "#2e2e2e",
-  dashboard: "#1a1a1a",
-  team1: "#ae3751e1",
-  team2: "rgb(71 134 64)",
+  dashboard: "rgba(20, 20, 20, 0.8)",
+  team1: "#B85555",
+  team2: "#5588B8",
   error: "#cc2e2e",
-  primaryHover: "#176c3c",
+  primaryHover: "#00cc6a",
   buttonText: "white",
-  shadowColor: "darkgray",
+  shadowColor: "rgba(0, 0, 0, 0.3)",
   shadowDark: "black",
-  shadowLight: "gray",
-  disabledBackground: "#2e2e2e",
+  shadowLight: "rgba(255, 255, 255, 0.1)",
+  disabledBackground: "rgba(255, 255, 255, 0.1)",
 };

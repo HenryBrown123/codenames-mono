@@ -35,24 +35,28 @@ const BoardGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   grid-template-rows: repeat(5, 1fr);
-  gap: 0.5rem;
+  gap: 1rem;
   width: 100%;
   height: 100%;
   
+  /* Tablet portrait */
+  @media (max-width: 1024px) {
+    gap: 0.6rem;
+  }
+  
+  /* Mobile portrait */
   @media (max-width: 768px) and (orientation: portrait) {
     gap: 0.3rem;
   }
   
-  @media (max-width: 480px) {
-    gap: 0.2rem;
-  }
-
+  /* Mobile landscape */
   @media (max-width: 768px) and (orientation: landscape) {
     gap: 0.2rem;
   }
-
-  @media (max-width: 1024px) {
-    gap: 0.4rem;
+  
+  /* Small mobile */
+  @media (max-width: 480px) {
+    gap: 0.2rem;
   }
 `;
 
