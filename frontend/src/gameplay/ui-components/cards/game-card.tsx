@@ -8,7 +8,7 @@ import type { VisualState } from "./card-visibility-provider";
 // Card colors
 const CARD_COLORS = {
   neutral: "#494646",
-  assassin: "#1d2023",
+  assassin: "#0a0a0a",
   bystander: "#697188",
   red: "#B22222",
   blue: "#4169E1",
@@ -93,6 +93,52 @@ const colorRevealAnimation = keyframes`
   }
 `;
 
+const assassinSweep = keyframes`
+  0% {
+    background-position: -100% 50%;
+    opacity: 1;
+  }
+  90% {
+    background-position: 200% 50%;
+    opacity: 1;
+  }
+  100% {
+    background-position: 200% 50%;
+    opacity: 0;
+  }
+`;
+
+const electricFlicker = keyframes`
+  0%, 100% {
+    opacity: 0.6;
+    filter: brightness(0.8);
+  }
+  10% {
+    opacity: 1;
+    filter: brightness(1.5);
+  }
+  20% {
+    opacity: 0.7;
+    filter: brightness(0.9);
+  }
+  30% {
+    opacity: 1;
+    filter: brightness(1.3);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.2);
+  }
+  70% {
+    opacity: 0.8;
+    filter: brightness(1);
+  }
+  90% {
+    opacity: 1;
+    filter: brightness(1.4);
+  }
+`;
+
 // Styled Components
 const CardContainer = styled.div`
   height: 100%;
@@ -155,7 +201,18 @@ const BaseCard = styled.button<{ $teamColor: string; $clickable: boolean }>`
   text-align: center;
   padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.2),
+    0 2px 0 rgba(0, 0, 0, 0.2),
+    0 3px 0 rgba(0, 0, 0, 0.2),
+    0 4px 0 rgba(0, 0, 0, 0.2),
+    0 5px 0 rgba(0, 0, 0, 0.2),
+    0 6px 0 rgba(0, 0, 0, 0.2),
+    0 7px 0 rgba(0, 0, 0, 0.2),
+    0 8px 0 rgba(0, 0, 0, 0.2),
+    0 9px 0 rgba(0, 0, 0, 0.2),
+    0 10px 0 rgba(0, 0, 0, 0.2),
+    0 12px 20px rgba(0, 0, 0, 0.3);
 
   /* Base card color */
   background-color: ${CARD_COLORS.neutral};
@@ -250,11 +307,23 @@ const CoverCard = styled.div<{ $teamColor: string }>`
   overflow: hidden;
   transform: translate(8px, -8px) rotate(3deg) translateZ(10px);
   transform-style: preserve-3d;
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 rgba(0, 0, 0, 0.25),
+    0 3px 0 rgba(0, 0, 0, 0.25),
+    0 4px 0 rgba(0, 0, 0, 0.25),
+    0 5px 0 rgba(0, 0, 0, 0.25),
+    0 6px 0 rgba(0, 0, 0, 0.25),
+    0 7px 0 rgba(0, 0, 0, 0.25),
+    0 8px 0 rgba(0, 0, 0, 0.25),
+    0 10px 20px rgba(0, 0, 0, 0.4);
   z-index: 2;
   opacity: 0;
   background-color: ${(props) => props.$teamColor};
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: ${(props) =>
+    props.$teamColor === CARD_COLORS.assassin
+      ? "2px solid #ffff00"
+      : "1px solid rgba(255, 255, 255, 0.5)"};
   pointer-events: none; /* Don't block clicks when invisible */
 
   /* Card texture - same as base */
@@ -267,6 +336,37 @@ const CoverCard = styled.div<{ $teamColor: string }>`
     10px 10px,
     10px 10px;
   background-blend-mode: overlay;
+
+  /* Electric border effect for assassin cards */
+  &[data-team-color="${CARD_COLORS.assassin}"]::before {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      transparent 30%,
+      #ffff00 40%,
+      #00ffff 45%,
+      #ffff00 50%,
+      transparent 60%,
+      transparent 100%
+    );
+    background-size: 300% 100%;
+    background-position: -100% 50%;
+    border-radius: 12px;
+    opacity: 0;
+    z-index: -1;
+  }
+
+  /* Trigger electric sweep when covering animation plays */
+  [data-animation="covering"] &[data-team-color="${CARD_COLORS.assassin}"]::before {
+    animation: ${assassinSweep} 0.8s linear 0.7s forwards;
+    opacity: 1;
+  }
 
   /* Animate in when covering */
   [data-animation="covering"] & {
@@ -282,7 +382,10 @@ const CoverCard = styled.div<{ $teamColor: string }>`
 
   @media (max-width: 768px) {
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: ${(props) =>
+      props.$teamColor === CARD_COLORS.assassin
+        ? "2px solid #ffff00"
+        : "1px solid rgba(255, 255, 255, 0.3)"};
   }
 
   @media (max-width: 480px) {
@@ -305,11 +408,26 @@ const CardContent = styled.div`
 `;
 
 const CenterIcon = styled.div`
-  color: rgba(255, 255, 255, 0.8);
-  font-size: clamp(2rem, 4vw, 4rem);
+  font-size: 4rem;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.4);
+  text-shadow:
+    1px 1px 0px rgba(255, 255, 255, 0.2),
+    -1px -1px 1px rgba(0, 0, 0, 0.6);
+  filter: drop-shadow(1px 1px 1px rgba(255, 255, 255, 0.1))
+    drop-shadow(-1px -1px 1px rgba(0, 0, 0, 0.4));
+
+  /* Assassin electric effect */
+  &.assassin {
+    color: #ffff00;
+    text-shadow:
+      0 0 20px rgba(255, 255, 0, 0.8),
+      0 0 40px rgba(0, 255, 255, 0.6);
+    animation: ${electricFlicker} 2s ease-in-out infinite;
+  }
 
   @media (max-width: 768px) {
-    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-size: 2.5rem;
   }
 `;
 
@@ -368,8 +486,12 @@ export const GameCard = memo<GameCardProps>(
           <CardContent>{card.word}</CardContent>
         </BaseCard>
 
-        <CoverCard className="cover-card" $teamColor={teamColor}>
-          {getIcon(teamColor) && <CenterIcon>{getIcon(teamColor)}</CenterIcon>}
+        <CoverCard className="cover-card" $teamColor={teamColor} data-team-color={teamColor}>
+          {getIcon(teamColor) && (
+            <CenterIcon className={teamColor === CARD_COLORS.assassin ? "assassin" : ""}>
+              {getIcon(teamColor)}
+            </CenterIcon>
+          )}
         </CoverCard>
       </CardContainer>
     );
