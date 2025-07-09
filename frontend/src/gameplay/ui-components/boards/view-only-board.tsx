@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import { memo } from "react";
 import styled from "styled-components";
 import { useGameDataRequired } from "../../shared/providers";
 import { GameCard } from "../cards/game-card";
@@ -34,25 +34,20 @@ const BoardAspectWrapper = styled.div`
 const BoardGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(5, 1fr);
-  gap: 0.5rem;
+  gap: 1rem;
   width: 100%;
-  height: 100%;
+  max-width: 900px;
+  aspect-ratio: 5 / 4;
+  perspective: 1000px;
+  margin: auto;
   
-  @media (max-width: 768px) and (orientation: portrait) {
-    gap: 0.3rem;
+  @media (max-width: 768px) {
+    gap: 0.5rem;
+    aspect-ratio: 1;
   }
   
   @media (max-width: 480px) {
-    gap: 0.2rem;
-  }
-
-  @media (max-width: 768px) and (orientation: landscape) {
-    gap: 0.2rem;
-  }
-
-  @media (max-width: 1024px) {
-    gap: 0.4rem;
+    gap: 0.3rem;
   }
 `;
 

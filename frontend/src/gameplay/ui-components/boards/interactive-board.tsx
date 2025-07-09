@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import styled from "styled-components";
 import { useGameDataRequired, useTurn } from "../../shared/providers";
 import { useGameActions } from "../../player-actions";
@@ -11,7 +11,7 @@ const BoardAspectWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   @media (max-width: 768px) and (orientation: portrait) {
     width: 90vw;
     max-width: 100%;
@@ -35,25 +35,20 @@ const BoardAspectWrapper = styled.div`
 const BoardGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(5, 1fr);
-  gap: 0.5rem;
+  gap: 1rem;
   width: 100%;
-  height: 100%;
-  
-  @media (max-width: 768px) and (orientation: portrait) {
-    gap: 0.3rem;
+  max-width: 900px;
+  aspect-ratio: 5 / 4;
+  perspective: 1000px;
+  margin: auto;
+
+  @media (max-width: 768px) {
+    gap: 0.5rem;
+    aspect-ratio: 1;
   }
-  
+
   @media (max-width: 480px) {
-    gap: 0.2rem;
-  }
-
-  @media (max-width: 768px) and (orientation: landscape) {
-    gap: 0.2rem;
-  }
-
-  @media (max-width: 1024px) {
-    gap: 0.4rem;
+    gap: 0.3rem;
   }
 `;
 
@@ -74,6 +69,10 @@ export const InteractiveBoard = memo(() => {
 
   const isLoading = actionState.status === "loading";
 
+  console.log("isLoading", isLoading);
+  console.log("actionState", actionState);
+  console.log("activeTurn", activeTurn);
+
   // Determine if the current player can make guesses
   const canMakeGuess = useMemo(() => {
     if (gameData.playerContext?.role !== "CODEBREAKER") return false;
@@ -83,12 +82,15 @@ export const InteractiveBoard = memo(() => {
     if (activeTurn.guessesRemaining <= 0) return false;
 
     return true;
-  }, [gameData.playerContext, activeTurn]);
+  }, [isLoading, gameData.playerContext, activeTurn]);
+
+  console.log("canMakeGuess", canMakeGuess);
 
   const handleCardClick = useCallback(
     (word: string) => {
       if (!isLoading && canMakeGuess) {
         makeGuess(word);
+        console.log("Makin a guess!");
       }
     },
     [makeGuess, isLoading, canMakeGuess],

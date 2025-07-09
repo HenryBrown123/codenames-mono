@@ -13,25 +13,38 @@ const rippleEffect = keyframes`
 `;
 
 const StyledButton = styled.button<{ enabled: boolean }>`
-  font-size: clamp(1rem, 2.5vh, 3vh);
-  padding: 0.8rem 2rem;
-  font-weight: bold;
-  border: none;
-  color: ${({ theme }) => theme.buttonText};
-  background: ${({ theme }) =>
-    `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`};
-  border-radius: 50px;
+  padding: 1rem 1.5rem;
+  border: 1px solid #00ff88;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
   cursor: ${({ enabled }) => (enabled ? "pointer" : "not-allowed")};
-  overflow: hidden;
+  transition: all 250ms ease;
   position: relative;
-  outline: none;
-  transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
-  opacity: ${({ enabled }) => (enabled ? 1 : 0.6)};
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  background-color: transparent;
+  width: 100%;
+  color: #00ff88;
+  text-align: center;
+  opacity: ${({ enabled }) => (enabled ? 1 : 0.5)};
 
   &:hover {
-    transform: ${({ enabled }) => (enabled ? "scale(1.05)" : "none")};
-    box-shadow: ${({ enabled, theme }) =>
-      enabled ? `0 4px 15px ${theme.shadowColor}` : "none"};
+    background-color: ${({ enabled }) => enabled ? '#00ff88' : 'transparent'};
+    color: ${({ enabled }) => enabled ? '#000' : '#00ff88'};
+    box-shadow: ${({ enabled }) => enabled ? '0 5px 15px rgba(0, 255, 136, 0.4)' : 'none'};
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    &:hover {
+      background-color: transparent;
+      color: #00ff88;
+      box-shadow: none;
+    }
   }
 
   &:active {
@@ -46,7 +59,7 @@ const StyledButton = styled.button<{ enabled: boolean }>`
     left: 50%;
     width: 300%;
     height: 300%;
-    background: ${({ theme }) => theme.primaryHover};
+    background: rgba(255, 255, 255, 0.3);
     transform: translate(-50%, -50%) scale(0);
     border-radius: 50%;
     opacity: 0;
@@ -59,22 +72,9 @@ const StyledButton = styled.button<{ enabled: boolean }>`
     animation: ${rippleEffect} 0.6s ease-out;
   }
 
-  @media (max-width: 1024px) {
-    font-size: clamp(1rem, 2.2vh, 2rem);
-    padding: 0.7rem 1.8rem;
-  }
-
   @media (max-width: 768px) {
-    font-size: clamp(0.9rem, 2vh, 1.2rem);
-    padding: 0.6rem 1.5rem;
-    border-radius: 35px;
-    min-height: 44px;
-    min-width: 44px;
-  }
-
-  @media (max-width: 480px) {
-    font-size: 1rem;
-    padding: 0.5rem 1.2rem;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
   }
 `;
 
@@ -97,3 +97,4 @@ const ActionButton: React.FC<ButtonProp> = ({
 };
 
 export default ActionButton;
+export { ActionButton };

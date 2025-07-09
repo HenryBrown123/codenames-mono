@@ -65,23 +65,29 @@ const InlineGroup = styled.div`
 
 const InlineText = styled.span`
   font-size: inherit;
-  color: ${({ theme }) => theme.text};
+  color: rgba(255, 255, 255, 0.95);
+  font-family: "JetBrains Mono", "Courier New", monospace;
 `;
 
 const UnderlinedTextInput = styled.input<{ isError: boolean }>`
   padding: 0.2rem;
   font-size: inherit;
+  font-weight: 700;
   border: none;
-  border-bottom: 2px solid ${({ isError, theme }) => (isError ? theme.error : theme.text)};
+  border-bottom: 2px solid ${({ isError }) => (isError ? '#ff0080' : '#00ff88')};
   background: transparent;
   outline: none;
   text-align: center;
   width: auto;
   min-width: 60px;
-  color: ${({ theme }) => theme.text};
+  color: #00ff88;
+  text-shadow: 0 0 20px #00ff88;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: "JetBrains Mono", "Courier New", monospace;
 
   &:focus {
-    border-bottom: 2px solid ${({ isError, theme }) => (isError ? theme.error : theme.primary)};
+    border-bottom: 2px solid ${({ isError }) => (isError ? '#ff0080' : '#00cc6a')};
   }
 `;
 
@@ -94,7 +100,7 @@ const ErrorMessage = styled.div`
   font-size: clamp(0.8rem, 1.5vw, 1rem);
   text-align: center;
   padding: 0.5rem;
-  background-color: ${({ theme }) => theme.error};
+  background-color: #ff0080;
   border-radius: 8px;
   position: absolute;
   bottom: -2rem;
@@ -110,8 +116,16 @@ const ErrorMessage = styled.div`
 
 const StyledActionButton = styled(ActionButton)`
   font-size: clamp(1rem, 2vw, 1.5rem);
-  background-color: ${({ theme }) => theme.primary};
-  color: ${({ theme }) => theme.buttonText};
+`;
+
+const ClueText = styled.div`
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #00ff88;
+  text-shadow: 0 0 20px #00ff88;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: "JetBrains Mono", "Courier New", monospace;
 `;
 
 type CodeWordInputProps = {
@@ -185,34 +199,40 @@ export function CodeWordInput({
 
   return (
     <Container>
-      <InputContainer>
-        <InlineGroup>
-          <UnderlinedTextInput
-            ref={textInputRef}
-            type="text"
-            value={inputCodeWord ?? undefined}
-            onChange={(e) => setInputCodeWord(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={!isEditable || isLoading}
-            isError={hasError}
-            placeholder="word"
-          />
-        </InlineGroup>
-        <InlineGroup>
-          <InlineText>for</InlineText>
-          <UnderlinedNumberInput
-            type="number"
-            min="1"
-            max="9"
-            value={inputNumberOfCards ?? ""}
-            onChange={(e) => setInputNumberOfCards(Number(e.target.value))}
-            onKeyDown={handleKeyDown}
-            disabled={!isEditable || isLoading}
-            isError={hasError}
-          />
-          <InlineText>cards</InlineText>
-        </InlineGroup>
-      </InputContainer>
+      {isEditable ? (
+        <InputContainer>
+          <InlineGroup>
+            <UnderlinedTextInput
+              ref={textInputRef}
+              type="text"
+              value={inputCodeWord ?? undefined}
+              onChange={(e) => setInputCodeWord(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={!isEditable || isLoading}
+              isError={hasError}
+              placeholder="word"
+            />
+          </InlineGroup>
+          <InlineGroup>
+            <InlineText>for</InlineText>
+            <UnderlinedNumberInput
+              type="number"
+              min="1"
+              max="9"
+              value={inputNumberOfCards ?? ""}
+              onChange={(e) => setInputNumberOfCards(Number(e.target.value))}
+              onKeyDown={handleKeyDown}
+              disabled={!isEditable || isLoading}
+              isError={hasError}
+            />
+            <InlineText>cards</InlineText>
+          </InlineGroup>
+        </InputContainer>
+      ) : (
+        <ClueText>
+          {inputCodeWord} {inputNumberOfCards}
+        </ClueText>
+      )}
 
       {isEditable && (
         <StyledActionButton

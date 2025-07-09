@@ -3,32 +3,47 @@ import { createGlobalStyle } from "styled-components";
 export const GlobalStyle = createGlobalStyle<{ theme: ThemeType }>`
   * {
     box-sizing: border-box;
-    font-family: 'Courier New', monospace;
-  }
-
-  div {
-    // border: 1px dashed red; // for layout debugging
+    margin: 0;
+    padding: 0;
   }
 
   html {
-    --color-text: ${({ theme }) => theme.text};
-    --color-background: ${({ theme }) => theme.background};
-    --color-primary: ${({ theme }) => theme.primary};
-    --color-secondary: ${({ theme }) => theme.secondary};
-    --color-card: ${({ theme }) => theme.card};
-    --color-dashboard: ${({ theme }) => theme.dashboard};
-    --color-team1: ${({ theme }) => theme.team1} | "red";
-    --color-team2: ${({ theme }) => theme.team2} | "green";
-    --color-background-size: "cover"
+    --color-text: rgba(255, 255, 255, 0.95);
+    --color-background: #0a0a0f;
+    --color-primary: #00ff88;
+    --color-secondary: #ff0080;
+    --color-team-red: #ff0040;
+    --color-team-blue: #00d4ff;
+    --color-card: rgba(255, 255, 255, 0.02);
+    --color-dashboard: rgba(255, 255, 255, 0.05);
   }
 
   body {
-    color: var(--color-text);
-    background-image: var(--color-background);
-    //background-repeat: no-repeat; // Prevents the background from repeating
+    font-family: "JetBrains Mono", "Courier New", monospace;
+    background: #0a0a0f;
+    color: rgba(255, 255, 255, 0.95);
     margin: 0;
     padding: 0;
-    background-size: var(--color-background-size);
+    min-height: 100vh;
+    position: relative;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.01) 2px,
+      rgba(255, 255, 255, 0.01) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
   }
 
   @media (max-width: 768px) {
@@ -59,44 +74,38 @@ export interface ThemeType {
   disabledBackground: string;
 }
 
-// @ts-ignore
-import lightBackgroundImage from "/background-light.webp";
-
 export const lightTheme: ThemeType = {
-  text: "white",
-  background: `url(${lightBackgroundImage})`,
-  primary: "#44a85a",
-  secondary: "#a6eb25ba",
-  card: "#00000096",
-  dashboard: "#1a1a1a",
-  team1: "#ae3751e1",
-  team2: "rgb(71 134 64)",
-  error: "#cc2e2e",
-  primaryHover: "#3b954f",
-  buttonText: "white",
-  shadowColor: "gray",
-  shadowDark: "black",
-  shadowLight: "white",
-  disabledBackground: "lightgray",
+  text: "rgba(255, 255, 255, 0.95)",
+  background: "#0a0a0f",
+  primary: "#00ff88",
+  secondary: "#ff0080",
+  card: "rgba(255, 255, 255, 0.02)",
+  dashboard: "rgba(255, 255, 255, 0.05)",
+  team1: "#ff0040",
+  team2: "#00d4ff",
+  error: "#ff0080",
+  primaryHover: "#00cc6a",
+  buttonText: "#000",
+  shadowColor: "rgba(0, 0, 0, 0.3)",
+  shadowDark: "rgba(0, 0, 0, 0.5)",
+  shadowLight: "rgba(255, 255, 255, 0.1)",
+  disabledBackground: "rgba(255, 255, 255, 0.05)",
 };
 
-// @ts-ignore
-import darkBackgroundImage from "/background-dark-2.webp";
-
 export const darkTheme: ThemeType = {
-  text: "white",
-  background: `url(${darkBackgroundImage})`,
-  primary: "#1e8c4a",
-  secondary: "#7bcf22",
-  card: "#2e2e2e",
-  dashboard: "#1a1a1a",
-  team1: "#ae3751e1",
-  team2: "rgb(71 134 64)",
-  error: "#cc2e2e",
-  primaryHover: "#176c3c",
-  buttonText: "white",
-  shadowColor: "darkgray",
-  shadowDark: "black",
-  shadowLight: "gray",
-  disabledBackground: "#2e2e2e",
+  text: "rgba(255, 255, 255, 0.95)",
+  background: "#0a0a0f",
+  primary: "#00ff88",
+  secondary: "#ff0080",
+  card: "rgba(255, 255, 255, 0.02)",
+  dashboard: "rgba(255, 255, 255, 0.05)",
+  team1: "#ff0040",
+  team2: "#00d4ff",
+  error: "#ff0080",
+  primaryHover: "#00cc6a",
+  buttonText: "#000",
+  shadowColor: "rgba(0, 0, 0, 0.3)",
+  shadowDark: "rgba(0, 0, 0, 0.5)",
+  shadowLight: "rgba(255, 255, 255, 0.1)",
+  disabledBackground: "rgba(255, 255, 255, 0.05)",
 };

@@ -6,37 +6,36 @@ import { useTurn } from "../../shared/providers";
 
 const Container = styled.div`
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   width: 100%;
   height: 100%;
+  gap: 1.5rem;
+`;
+
+const ClueDisplay = styled.div`
+  text-align: center;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-radius: 8px;
   padding: 1rem;
-  gap: 2rem;
-
-  /* Desktop/Tablet sidebar - vertical */
-  @media (min-width: 769px) and (orientation: landscape) {
-    flex-direction: column;
-    justify-content: center;
-    gap: 1.5rem;
+  width: 100%;
+  
+  h4 {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    margin: 0;
+    font-family: "JetBrains Mono", "Courier New", monospace;
   }
-
-  /* Mobile landscape - keep horizontal */
-  @media (max-width: 768px) and (orientation: landscape) {
-    flex-direction: row;
-    padding: 0.5rem;
-    gap: 1rem;
-  }
-
-  @media (max-width: 768px) and (orientation: portrait) {
-    padding: 0.5rem;
-    gap: 1rem;
-  }
-
-  @media (max-width: 480px) {
-    flex-direction: column;
-    justify-content: center;
-    gap: 0.5rem;
+  
+  .clue-text {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #00ff88;
+    text-shadow: 0 0 20px #00ff88;
+    font-family: "JetBrains Mono", "Courier New", monospace;
   }
 `;
 
@@ -54,13 +53,16 @@ export const CodemasterDashboard: React.FC = () => {
 
   return (
     <Container>
-      <CodeWordInput
-        codeWord=""
-        numberOfCards={null}
-        isEditable={true}
-        isLoading={actionState.status === "loading"}
-        onSubmit={handleSubmitClue}
-      />
+      <ClueDisplay>
+        <h4>Current Intel</h4>
+        <CodeWordInput
+          codeWord=""
+          numberOfCards={null}
+          isEditable={true}
+          isLoading={actionState.status === "loading"}
+          onSubmit={handleSubmitClue}
+        />
+      </ClueDisplay>
     </Container>
   );
 };

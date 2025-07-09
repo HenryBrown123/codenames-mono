@@ -3,41 +3,74 @@ import styled from "styled-components";
 import { CodeWordInput } from "./codemaster-input";
 import { useGameDataRequired, useTurn } from "../../shared/providers";
 import { useGameActions } from "../../player-actions";
-import { ActionButton } from "../../shared/components";
 
 const Container = styled.div`
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   width: 100%;
   height: 100%;
+  gap: 1.5rem;
+`;
+
+const ClueDisplay = styled.div`
+  text-align: center;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-radius: 8px;
   padding: 1rem;
-  gap: 2rem;
-
-  /* Desktop/Tablet sidebar - vertical */
-  @media (min-width: 769px) and (orientation: landscape) {
-    flex-direction: column;
-    justify-content: center;
-    gap: 1.5rem;
+  width: 100%;
+  
+  h4 {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    margin: 0;
+    font-family: "JetBrains Mono", "Courier New", monospace;
   }
-
-  /* Mobile landscape - keep horizontal */
-  @media (max-width: 768px) and (orientation: landscape) {
-    flex-direction: row;
-    padding: 0.5rem;
-    gap: 1rem;
+  
+  .clue-text {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #00ff88;
+    text-shadow: 0 0 20px #00ff88;
+    font-family: "JetBrains Mono", "Courier New", monospace;
   }
+`;
 
-  @media (max-width: 768px) and (orientation: portrait) {
-    padding: 0.5rem;
-    gap: 1rem;
+const StyledButton = styled.button`
+  padding: 1rem 1.5rem;
+  border: 1px solid #00ff88;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 250ms ease;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  background-color: transparent;
+  width: 100%;
+  color: #00ff88;
+  text-align: center;
+  
+  &:hover {
+    background-color: #00ff88;
+    color: #000;
+    box-shadow: 0 5px 15px rgba(0, 255, 136, 0.4);
   }
-
-  @media (max-width: 480px) {
-    flex-direction: column;
-    justify-content: center;
-    gap: 0.5rem;
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    &:hover {
+      background-color: transparent;
+      color: #00ff88;
+      box-shadow: none;
+    }
   }
 `;
 
@@ -67,17 +100,21 @@ export const CodebreakerDashboard: React.FC = () => {
 
   return (
     <Container>
-      <CodeWordInput
-        codeWord={activeTurn.clue.word}
-        numberOfCards={activeTurn.clue.number}
-        isEditable={false}
-        isLoading={false}
-      />
-      <ActionButton
+      <ClueDisplay>
+        <h4>Current Intel</h4>
+        <CodeWordInput
+          codeWord={activeTurn.clue.word}
+          numberOfCards={activeTurn.clue.number}
+          isEditable={false}
+          isLoading={false}
+        />
+      </ClueDisplay>
+      <StyledButton
         onClick={endTurn}
-        text={actionState.status === "loading" ? "Ending Turn..." : "End Turn"}
-        enabled={(canEndTurn && actionState.status !== "loading") || false}
-      />
+        disabled={!canEndTurn || actionState.status === "loading"}
+      >
+        {actionState.status === "loading" ? "Ending Turn..." : "End Turn"}
+      </StyledButton>
     </Container>
   );
 };

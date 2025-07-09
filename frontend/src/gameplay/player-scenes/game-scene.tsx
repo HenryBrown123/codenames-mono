@@ -5,158 +5,181 @@ import { usePlayerScene } from "./";
 import { getSceneMessage } from "./scene-messages";
 import { getDashboardComponent, getBoardComponent } from "./component-mappings";
 import { ViewOnlyBoard } from "../ui-components/boards";
-import { GameInstructions } from "../ui-components/game-instructions";
 import { ActionButton } from "../shared/components";
+import { GameInstructions } from "../ui-components/game-instructions";
+import { designSystemTheme, panelStyles, glitchAnimation } from "../shared/design-system-theme";
 
 const GameSceneContainer = styled.div`
   height: 100vh;
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: 1rem;
-  padding: 1rem;
-  box-sizing: border-box;
+  padding: ${designSystemTheme.space.md};
+  gap: ${designSystemTheme.space.md};
+  transition: all 0.3s ease;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 0, 128, 0.1) 0%, transparent 50%),
+    ${designSystemTheme.colors.background};
+  color: ${designSystemTheme.colors.text};
+  font-family: ${designSystemTheme.font.family};
   overflow: hidden;
 
-  /* Desktop - Keep existing */
-  @media (min-width: 1025px) {
-    grid-template-columns: minmax(300px, 1.2fr) 3fr;
-    grid-template-rows: minmax(60px, auto) 1fr;
-    gap: 0.75rem;
-    padding: 0.75rem;
+  @media (min-width: 1200px) {
+    grid-template-columns: 300px 1fr;
+    grid-template-rows: 1fr;
   }
 
-  /* Tablet Landscape */
-  @media (min-width: 769px) and (max-width: 1024px) and (orientation: landscape) {
-    grid-template-columns: minmax(250px, 1fr) 2.5fr;
-    grid-template-rows: minmax(50px, auto) 1fr;
-    gap: 0.5rem;
-    padding: 0.5rem;
-  }
-
-  /* Tablet Portrait */
-  @media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
-    grid-template-rows: 100px 1fr 140px;
-    gap: 0.75rem;
-    padding: 0.75rem;
-  }
-
-  /* Mobile Landscape */
-  @media (max-width: 768px) and (orientation: landscape) {
+  @media (max-width: 1199px) {
+    grid-template-rows: auto minmax(0, 1fr) auto;
     grid-template-columns: 1fr;
-    grid-template-rows: 50px 1fr 100px;
-    gap: 0.3rem;
-    padding: 0.3rem;
+    gap: ${designSystemTheme.space.sm};
+    padding: ${designSystemTheme.space.sm};
   }
 
-  /* Mobile Portrait - More dashboard space */
-  @media (max-width: 768px) and (orientation: portrait) {
-    grid-template-rows: 80px 1fr 140px;  /* 140px for dashboard */
-    gap: 0.5rem;
-    padding: 0.5rem;
+  &.instructions-hidden {
+    grid-template-rows: 0fr minmax(0, 1fr) auto;
   }
 
-  /* Small Mobile */
-  @media (max-width: 480px) {
-    grid-template-rows: 70px 1fr 130px;  /* Still good dashboard space */
-    gap: 0.4rem;
-    padding: 0.4rem;
-  }
-`;
-
-const InstructionsContainer = styled.div`
-  background-color: rgba(65, 63, 63, 0.8);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 1rem;
-  font-size: clamp(0.9rem, 2vw, 1.4rem);
-  position: relative;
-  height: 100%;
-  width: 95%;
-  margin: 0 auto;
-
-  /* Desktop & Tablet Landscape - Spans full width */
-  @media (min-width: 769px) and (orientation: landscape) {
-    grid-column: 1 / -1;
-    width: 100%;
-  }
-
-  /* Mobile landscape - very compact */
-  @media (max-width: 768px) and (orientation: landscape) {
-    padding: 0.3rem;
-    font-size: clamp(0.7rem, 2vw, 0.9rem);
-    border-radius: 8px;
-  }
-
-  @media (max-width: 768px) {
-    padding: 0.75rem;
-    font-size: clamp(0.8rem, 3vw, 1rem);
-    border-radius: 12px;
-  }
-`;
-
-const SidebarContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  height: 100%;
-
-  @media (min-width: 769px) and (orientation: landscape) {
-    grid-column: 1;
-    grid-row: 2;
-  }
-`;
-
-const GameBoardContainer = styled.div`
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem;
-  overflow: hidden;
-
-  @media (min-width: 769px) and (orientation: landscape) {
-    grid-column: 2;
-    grid-row: 2;
-    padding: 1rem;
-  }
-
-  @media (max-width: 768px) {
-    padding: 0.25rem;
-  }
-`;
-
-const DashboardContainer = styled.div`
-  background-color: rgba(65, 63, 63, 0.8);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  height: 100%;
-  width: 95%;
-  margin: 0 auto;
-
-  /* Desktop & Tablet Landscape - Full height in sidebar */
-  @media (min-width: 769px) and (orientation: landscape) {
+  /* Scanline effect overlay */
+  &::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.01) 2px,
+      rgba(255, 255, 255, 0.01) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+`;
+
+const MobileHeader = styled.header`
+  ${panelStyles}
+  display: flex;
+  flex-direction: column;
+  gap: ${designSystemTheme.space.md};
+  transition: all 0.3s ease;
+  
+  @media (min-width: 1200px) {
+    display: none !important;
+  }
+  
+  .instructions-hidden & {
+    opacity: 0;
+    transform: translateY(-20px);
+    pointer-events: none;
+    height: 0;
+    min-height: 0;
+    padding: 0;
     margin: 0;
-    flex-direction: column;
   }
-
-  /* Mobile landscape - horizontal layout */
-  @media (max-width: 768px) and (orientation: landscape) {
-    padding: 0.5rem;
-    border-radius: 8px;
+  
+  h3 {
+    ${glitchAnimation}
+    margin: 0;
   }
+  
+  p {
+    color: ${designSystemTheme.colors.textMuted};
+    margin: 0;
+  }
+`;
 
+const Sidebar = styled.aside`
+  display: flex;
+  flex-direction: column;
+  gap: ${designSystemTheme.space.lg};
+  
+  @media (max-width: 1199px) {
+    display: none !important;
+  }
+`;
+
+const BoardArea = styled.main`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: ${designSystemTheme.radius.lg};
+  padding: ${designSystemTheme.space.xl};
+  min-height: 0;
+  background: linear-gradient(
+    90deg,
+    #8b6939 0%,
+    #a0743f 20%,
+    #7d5d33 40%,
+    #946b3a 60%,
+    #8b6939 80%,
+    #a0743f 100%
+  );
+  border: 1px solid ${designSystemTheme.colors.border};
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+  
   @media (max-width: 768px) {
-    padding: 0.75rem;
-    border-radius: 12px;
-    min-height: 100px;
+    padding: ${designSystemTheme.space.md};
+  }
+  
+  @media (max-width: 480px) {
+    padding: ${designSystemTheme.space.sm};
+  }
+`;
+
+const MobileDashboard = styled.div`
+  ${panelStyles}
+  display: flex;
+  flex-direction: column;
+  gap: ${designSystemTheme.space.md};
+  
+  @media (min-width: 1200px) {
+    display: none !important;
+  }
+`;
+
+const Panel = styled.div`
+  ${panelStyles}
+  
+  h3 {
+    ${glitchAnimation}
+  }
+`;
+
+const HelpButton = styled.button`
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid ${designSystemTheme.colors.border};
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${designSystemTheme.colors.primary};
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  
+  &:hover {
+    transform: scale(1.1);
+  }
+  
+  &.active {
+    background: ${designSystemTheme.colors.primary};
+    color: #000000;
+    transform: rotate(180deg);
+  }
+  
+  @media (min-width: 1200px) {
+    display: none !important;
   }
 `;
 
@@ -192,6 +215,7 @@ const ErrorContainer = styled.div`
   color: white;
 `;
 
+
 /**
  * Game Scene Component
  *
@@ -202,18 +226,20 @@ export const GameScene: React.FC = () => {
   const { gameData, isPending, isError, error, refetch, isFetching } = useGameDataRequired();
   const { activeTurn } = useTurn();
   const { currentRole, currentScene } = usePlayerScene();
+  const [instructionsHidden, setInstructionsHidden] = React.useState(false);
 
   // Show skeleton during initial load
   if (isPending && !gameData) {
     return (
       <GameSceneContainer>
-        <InstructionsContainer>
-          <GameInstructions messageText="" />
-        </InstructionsContainer>
-        <GameBoardContainer>
+        <MobileHeader>
+          <h3>Mission Briefing</h3>
+          <p>Loading game data...</p>
+        </MobileHeader>
+        <BoardArea>
           <ViewOnlyBoard />
-        </GameBoardContainer>
-        <DashboardContainer />
+        </BoardArea>
+        <MobileDashboard />
       </GameSceneContainer>
     );
   }
@@ -234,15 +260,22 @@ export const GameScene: React.FC = () => {
   if (gameData?.currentRound?.status === "COMPLETED") {
     return (
       <GameSceneContainer>
-        <InstructionsContainer>
-          <GameInstructions messageText="🎉 Game Over!" />
-        </InstructionsContainer>
-        <GameBoardContainer>
+        <MobileHeader>
+          <h3>Mission Briefing</h3>
+          <p>🎉 Game Over!</p>
+        </MobileHeader>
+        <Sidebar>
+          <Panel>
+            <h3>Mission Complete</h3>
+            <p>🎉 Game Over!</p>
+          </Panel>
+        </Sidebar>
+        <BoardArea>
           <ViewOnlyBoard />
-        </GameBoardContainer>
-        <DashboardContainer>
+        </BoardArea>
+        <MobileDashboard>
           <div>Game Completed!</div>
-        </DashboardContainer>
+        </MobileDashboard>
       </GameSceneContainer>
     );
   }
@@ -251,55 +284,43 @@ export const GameScene: React.FC = () => {
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
   const BoardComponent = getBoardComponent(currentRole, currentScene);
 
-  // Check if we should use sidebar layout (exclude mobile landscape)
-  const [isLandscapeDesktop, setIsLandscapeDesktop] = React.useState(
-    window.matchMedia('(min-width: 769px) and (orientation: landscape)').matches
-  );
-
-  React.useEffect(() => {
-    const mediaQuery = window.matchMedia('(min-width: 769px) and (orientation: landscape)');
-    const handleChange = (e: MediaQueryListEvent) => setIsLandscapeDesktop(e.matches);
-    
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-
-  if (isLandscapeDesktop) {
-    return (
-      <GameSceneContainer>
-        <InstructionsContainer>
-          {isFetching && <RefetchIndicator />}
-          <GameInstructions messageText={messageText} />
-        </InstructionsContainer>
-
-        <SidebarContainer>
-          <DashboardContainer>
-            <DashboardComponent />
-          </DashboardContainer>
-        </SidebarContainer>
-
-        <GameBoardContainer>
-          <BoardComponent />
-        </GameBoardContainer>
-      </GameSceneContainer>
-    );
-  }
-
-  // For mobile landscape and all portrait modes, use the same layout
   return (
-    <GameSceneContainer>
-      <InstructionsContainer>
+    <GameSceneContainer className={instructionsHidden ? "instructions-hidden" : ""}>
+      {/* Mobile Header */}
+      <MobileHeader>
         {isFetching && <RefetchIndicator />}
-        <GameInstructions messageText={messageText} />
-      </InstructionsContainer>
+        <h3>Mission Briefing</h3>
+        <p>{messageText}</p>
+      </MobileHeader>
 
-      <GameBoardContainer>
+      {/* Desktop Sidebar */}
+      <Sidebar>
+        <Panel>
+          <GameInstructions messageText={messageText} />
+        </Panel>
+        
+        <Panel>
+          <DashboardComponent />
+        </Panel>
+      </Sidebar>
+
+      {/* Board Area */}
+      <BoardArea>
         <BoardComponent />
-      </GameBoardContainer>
+      </BoardArea>
 
-      <DashboardContainer>
+      {/* Mobile Dashboard */}
+      <MobileDashboard>
         <DashboardComponent />
-      </DashboardContainer>
+      </MobileDashboard>
+      
+      {/* Help Button */}
+      <HelpButton 
+        className={instructionsHidden ? "active" : ""}
+        onClick={() => setInstructionsHidden(!instructionsHidden)}
+      >
+        {instructionsHidden ? "!" : "?"}
+      </HelpButton>
     </GameSceneContainer>
   );
 };
