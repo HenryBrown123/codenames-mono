@@ -68,12 +68,19 @@ const dealAnimation = keyframes`
   }
 `;
 
-const coverAnimation = keyframes`
+// Cover card dealing animation from prototype
+const coverDealAnimation = keyframes`
   0% {
-    transform: rotateY(0deg);
+    transform: translate(8px, -8px) rotate(3deg) translateZ(10px) translateX(-100vw) translateY(-100vh) rotate(-6deg);
+    opacity: 0;
+  }
+  60% {
+    transform: translate(8px, -8px) rotate(3deg) translateZ(10px) translateX(0) translateY(0) rotate(2deg);
+    opacity: 1;
   }
   100% {
-    transform: rotateY(180deg);
+    transform: translate(8px, -8px) rotate(3deg) translateZ(10px);
+    opacity: 1;
   }
 `;
 
@@ -115,26 +122,13 @@ const CardContainer = styled.div`
     opacity: 1;
   }
 
-  /* State-based card colors */
-  &[data-state="visible"] .card-front {
-    background-color: ${CARD_COLORS.neutral};
-  }
-
-  &[data-state="visible-colored"] .card-front {
-    background-color: var(--team-color);
-  }
-
   /* Animation triggers */
   &[data-animation="dealing"] {
     animation: ${dealAnimation} 0.7s calc(var(--card-index) * 75ms)
       cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   }
 
-  &[data-animation="covering"] .card-inner {
-    animation: ${coverAnimation} 0.6s ease-in-out forwards;
-  }
-
-  &[data-animation="color-fade"] .card-front {
+  &[data-animation="color-fade"] .base-card {
     animation: ${colorRevealAnimation} 0.8s ease-in-out forwards;
   }
 
@@ -144,35 +138,8 @@ const CardContainer = styled.div`
   }
 `;
 
-const CardInner = styled.div<{ $clickable: boolean }>`
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
-  transform-origin: center center;
-  transition: transform 0.6s;
-
-  /* Hover effect on the entire card inner */
-  &:hover {
-    transform: ${(props) => (props.$clickable ? "translateY(-4px)" : "none")};
-  }
-
-  &:active {
-    transform: ${(props) => (props.$clickable ? "translateY(1px)" : "none")};
-  }
-
-  /* Flip when covered */
-  [data-state="covered"] & {
-    transform: rotateY(180deg);
-  }
-
-  /* Combine transforms when covered and hovering */
-  [data-state="covered"] &:hover {
-    transform: rotateY(180deg);
-  }
-`;
-
-const cardFaceStyles = css`
+// Base card that's always visible
+const BaseCard = styled.button<{ $teamColor: string; $clickable: boolean }>`
   position: absolute;
   top: 0;
   left: 0;
@@ -189,7 +156,20 @@ const cardFaceStyles = css`
   padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
-  backface-visibility: hidden;
+
+  /* Base card color */
+  background-color: ${CARD_COLORS.neutral};
+
+  /* State-based colors */
+  [data-state="visible-colored"] & {
+    background-color: var(--team-color);
+  }
+
+  cursor: ${(props) => (props.$clickable ? "pointer" : "default")};
+  transition: transform 0.2s;
+  outline: none;
+  overflow: hidden;
+  position: relative;
 
   /* Force hardware acceleration */
   transform: translateZ(0);
@@ -208,33 +188,14 @@ const cardFaceStyles = css`
   word-break: break-word;
   overflow-wrap: break-word;
 
-  @media (max-width: 1024px) {
-    font-size: clamp(0.7rem, 2.8vw, 1.5rem);
+  /* Hover effect */
+  &:hover {
+    transform: ${(props) => (props.$clickable ? "translateY(-4px)" : "none")};
   }
 
-  @media (max-width: 768px) {
-    font-size: clamp(0.6rem, 3vw, 1rem);
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+  &:active {
+    transform: ${(props) => (props.$clickable ? "translateY(1px)" : "none")};
   }
-
-  @media (max-width: 480px) {
-    font-size: clamp(0.5rem, 2.5vw, 0.9rem);
-    border-radius: 6px;
-  }
-`;
-
-const CardFront = styled.button<{ $teamColor: string; $clickable: boolean }>`
-  ${cardFaceStyles}
-
-  /* Default background - will be overridden by state */
-  background-color: ${CARD_COLORS.neutral};
-
-  cursor: ${(props) => (props.$clickable ? "pointer" : "default")};
-  transition: transform 0.2s;
-  outline: none;
-  overflow: hidden;
-  position: relative;
 
   /* Ripple effect */
   &::before {
@@ -258,12 +219,75 @@ const CardFront = styled.button<{ $teamColor: string; $clickable: boolean }>`
     opacity: 0.3;
     animation: ${rippleEffect} 0.6s ease-out;
   }
+
+  @media (max-width: 1024px) {
+    font-size: clamp(0.7rem, 2.8vw, 1.5rem);
+  }
+
+  @media (max-width: 768px) {
+    font-size: clamp(0.6rem, 3vw, 1rem);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  @media (max-width: 480px) {
+    font-size: clamp(0.5rem, 2.5vw, 0.9rem);
+    border-radius: 6px;
+  }
 `;
 
-const CardBack = styled.div<{ $teamColor: string }>`
-  ${cardFaceStyles}
+// Cover card that appears on top when selected
+const CoverCard = styled.div<{ $teamColor: string }>`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transform: translate(8px, -8px) rotate(3deg) translateZ(10px);
+  transform-style: preserve-3d;
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+  opacity: 0;
   background-color: ${(props) => props.$teamColor};
-  transform: rotateY(180deg);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  pointer-events: none; /* Don't block clicks when invisible */
+
+  /* Card texture - same as base */
+  background-image:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%),
+    radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.05), transparent 20%),
+    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.05), transparent 20%);
+  background-size:
+    10px 10px,
+    10px 10px;
+  background-blend-mode: overlay;
+
+  /* Animate in when covering */
+  [data-animation="covering"] & {
+    animation: ${coverDealAnimation} 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  /* Stay visible when covered */
+  [data-state="covered"] & {
+    opacity: 1;
+    transform: translate(8px, -8px) rotate(3deg) translateZ(10px);
+    pointer-events: all; /* Re-enable pointer events when visible */
+  }
+
+  @media (max-width: 768px) {
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  @media (max-width: 480px) {
+    border-radius: 6px;
+  }
 `;
 
 const CardContent = styled.div`
@@ -280,17 +304,12 @@ const CardContent = styled.div`
   padding: 0;
 `;
 
-const CornerIcon = styled.div`
-  position: absolute;
-  top: 8px;
-  left: 8px;
+const CenterIcon = styled.div`
   color: rgba(255, 255, 255, 0.8);
-  font-size: clamp(0.5rem, 1vw, 2rem);
+  font-size: clamp(2rem, 4vw, 4rem);
 
   @media (max-width: 768px) {
-    top: 4px;
-    left: 4px;
-    font-size: clamp(0.4rem, 2vw, 1rem);
+    font-size: clamp(1.5rem, 3vw, 2rem);
   }
 `;
 
@@ -338,21 +357,20 @@ export const GameCard = memo<GameCardProps>(
         style={{ "--card-index": index, "--team-color": teamColor } as React.CSSProperties}
         onAnimationEnd={handleAnimationEnd}
       >
-        <CardInner className="card-inner" $clickable={clickable && !card.selected}>
-          <CardFront
-            className="card-front"
-            $teamColor={teamColor}
-            $clickable={clickable && !card.selected}
-            onClick={handleClick}
-            disabled={!clickable || card.selected}
-            aria-label={`Card: ${card.word}`}
-          >
-            <CardContent>{card.word}</CardContent>
-          </CardFront>
-          <CardBack $teamColor={teamColor} className="card-back">
-            {getIcon(teamColor) && <CornerIcon>{getIcon(teamColor)}</CornerIcon>}
-          </CardBack>
-        </CardInner>
+        <BaseCard
+          className="base-card"
+          $teamColor={teamColor}
+          $clickable={clickable && !card.selected}
+          onClick={handleClick}
+          disabled={!clickable || card.selected}
+          aria-label={`Card: ${card.word}`}
+        >
+          <CardContent>{card.word}</CardContent>
+        </BaseCard>
+
+        <CoverCard className="cover-card" $teamColor={teamColor}>
+          {getIcon(teamColor) && <CenterIcon>{getIcon(teamColor)}</CenterIcon>}
+        </CoverCard>
       </CardContainer>
     );
   },
