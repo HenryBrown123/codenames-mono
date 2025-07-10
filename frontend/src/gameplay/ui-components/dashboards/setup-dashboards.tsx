@@ -5,54 +5,56 @@ import { useGameDataRequired } from "../../shared/providers";
 import { useGameActions } from "../../player-actions";
 import { ActionButton } from "../../shared/components";
 
+/**
+ * MOBILE-FIRST: Dashboard container that adapts to layout context
+ */
 const Container = styled.div`
+  /* Mobile-first: Horizontal layout for bottom dashboard */
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   width: 100%;
   height: 100%;
-  padding: 1rem;
-  gap: 2rem;
+  padding: 0.5rem;
+  gap: 1rem;
+  position: relative;
 
-  /* Desktop/Tablet sidebar - vertical */
+  /* PROGRESSIVE ENHANCEMENT: Large tablet landscape - vertical in sidebar */
   @media (min-width: 769px) and (orientation: landscape) {
     flex-direction: column;
     justify-content: center;
     gap: 1.5rem;
+    padding: 1rem;
   }
 
-  /* Mobile landscape - keep horizontal */
-  @media (max-width: 768px) and (orientation: landscape) {
-    flex-direction: row;
-    padding: 0.5rem;
-    gap: 1rem;
-  }
-
-  @media (max-width: 768px) and (orientation: portrait) {
-    padding: 0.5rem;
-    gap: 1rem;
-  }
-
-  @media (max-width: 480px) {
-    flex-direction: column;
-    justify-content: center;
-    gap: 0.5rem;
+  /* PROGRESSIVE ENHANCEMENT: Desktop - more space */
+  @media (min-width: 1025px) {
+    gap: 2rem;
+    padding: 1.5rem;
   }
 `;
 
-
+/**
+ * MOBILE-FIRST: Refresh button positioned appropriately
+ */
 const RefreshButton = styled.button`
+  /* Mobile-first: Top-right corner, touch-friendly */
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
+  top: 0.25rem;
+  right: 0.25rem;
   background: transparent;
   border: none;
   color: rgba(255, 255, 255, 0.5);
   cursor: pointer;
-  padding: 0.25rem;
+  padding: 0.5rem;
   border-radius: 4px;
   transition: all 0.2s;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
     color: rgba(255, 255, 255, 0.8);
@@ -65,11 +67,35 @@ const RefreshButton = styled.button`
   }
 
   svg {
-    width: 1rem;
-    height: 1rem;
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+
+  /* PROGRESSIVE ENHANCEMENT: Desktop - smaller, refined */
+  @media (min-width: 1025px) {
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.25rem;
+    min-width: 32px;
+    min-height: 32px;
+
+    svg {
+      width: 1rem;
+      height: 1rem;
+    }
   }
 `;
 
+/**
+ * MOBILE-FIRST: Centered button layout
+ */
+const CenteredContainer = styled(Container)`
+  justify-content: center;
+`;
+
+/**
+ * Lobby Dashboard - Mobile-first with refresh functionality
+ */
 export const LobbyDashboard: React.FC = () => {
   const { gameData } = useGameDataRequired();
   const { createRound, startRound, dealCards, actionState } = useGameActions();
@@ -127,7 +153,7 @@ export const LobbyDashboard: React.FC = () => {
   };
 
   return (
-    <Container style={{ position: "relative", justifyContent: 'center' }}>
+    <CenteredContainer>
       {canRedeal && (
         <RefreshButton
           onClick={handleRedeal}
@@ -142,6 +168,59 @@ export const LobbyDashboard: React.FC = () => {
         text={getButtonText()}
         enabled={actionState.status !== "loading"}
       />
-    </Container>
+    </CenteredContainer>
   );
+};
+
+/**
+ * Generic waiting dashboard
+ */
+export const WaitingDashboard: React.FC = () => {
+  return <Container />;
+};
+
+/**
+ * Spectator dashboard
+ */
+export const SpectatorDashboard: React.FC = () => {
+  return <Container />;
+};
+
+/**
+ * Dealing dashboard with loading indicator
+ */
+export const DealingDashboard: React.FC = () => {
+  return (
+    <CenteredContainer>
+      <div>Dealing cards...</div>
+    </CenteredContainer>
+  );
+};
+
+/**
+ * Game over dashboard
+ */
+export const GameoverDashboard: React.FC = () => {
+  const { createRound, actionState } = useGameActions();
+
+  const handleNewGame = () => {
+    createRound();
+  };
+
+  return (
+    <CenteredContainer>
+      <ActionButton
+        onClick={handleNewGame}
+        text="New Game"
+        enabled={actionState.status !== "loading"}
+      />
+    </CenteredContainer>
+  );
+};
+
+/**
+ * Outcome dashboard - Shows round outcome
+ */
+export const OutcomeDashboard: React.FC = () => {
+  return <Container />;
 };

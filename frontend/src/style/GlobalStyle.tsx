@@ -6,29 +6,26 @@ export const GlobalStyle = createGlobalStyle<{ theme: ThemeType }>`
     font-family: 'Courier New', monospace;
   }
 
-  div {
-    // border: 1px dashed red; // for layout debugging
-  }
-
+  /* MOBILE VIEWPORT FIXES - Critical for Android Chrome */
   html {
-    --color-text: ${({ theme }) => theme.text};
-    --color-background: ${({ theme }) => theme.background};
-    --color-primary: ${({ theme }) => theme.primary};
-    --color-secondary: ${({ theme }) => theme.secondary};
-    --color-card: ${({ theme }) => theme.card};
-    --color-dashboard: ${({ theme }) => theme.dashboard};
-    --color-team1: ${({ theme }) => theme.team1};
-    --color-team2: ${({ theme }) => theme.team2};
+    height: 100%;
+    height: -webkit-fill-available; /* Chrome mobile fix */
   }
 
   body {
-    color: var(--color-text);
-    background: ${({ theme }) => theme.background};  /* Direct theme access instead of CSS variable */
+    /* Mobile viewport bug fixes */
     margin: 0;
     padding: 0;
-    min-height: 100vh;  /* Ensure body covers full viewport */
+    min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height */
+    min-height: -webkit-fill-available; /* WebKit/Chrome mobile fix */
+    
+    color: ${({ theme }) => theme.text};
+    background: ${({ theme }) => theme.background};
+    position: relative;
   }
 
+  /* Mobile browser-specific fixes */
   body::before {
     content: "";
     position: fixed;
@@ -47,13 +44,18 @@ export const GlobalStyle = createGlobalStyle<{ theme: ThemeType }>`
     z-index: 1;
   }
 
+  /* Force mobile browsers to respect viewport */
+  #root {
+    min-height: 100vh;
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
+  }
+
   @media (max-width: 768px) {
     body {
-      overflow: hidden;
-      //position: fixed;
-      width: 100%;
-      height: 100%;
-      /* background: ${({ theme }) => theme.background}; */
+      /* Additional mobile-specific fixes */
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
     }
   }
 `;
