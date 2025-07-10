@@ -1,4 +1,4 @@
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 import styled, { css, keyframes } from "styled-components";
 import { FaStar, FaLeaf, FaSkull, FaPeace } from "react-icons/fa";
 import { Card } from "@frontend/shared-types";
@@ -19,10 +19,11 @@ const CARD_COLORS = {
  * Gets icon for card based on color
  */
 const getIcon = (cardColor: string) => {
-  if (cardColor === CARD_COLORS.red) return <FaStar />;
+  if (cardColor === CARD_COLORS.red) return <>★</>; // Star symbol from prototype
+  if (cardColor === CARD_COLORS.blue) return <>♦</>; // Diamond symbol from prototype
   if (cardColor === CARD_COLORS.green) return <FaLeaf />;
-  if (cardColor === CARD_COLORS.blue) return <FaPeace />;
-  if (cardColor === CARD_COLORS.assassin) return <FaSkull />;
+  if (cardColor === CARD_COLORS.assassin) return <>☠</>; // Skull symbol from prototype
+  if (cardColor === CARD_COLORS.bystander) return <>●</>; // Circle symbol from prototype
   return null;
 };
 
@@ -68,18 +69,14 @@ const dealAnimation = keyframes`
   }
 `;
 
-// Cover card dealing animation from prototype
+// Cover card dealing animation
 const coverDealAnimation = keyframes`
   0% {
-    transform: translate(8px, -8px) rotate(3deg) translateZ(10px) translateX(-100vw) translateY(-100vh) rotate(-6deg);
+    transform: translateX(-100vw) translateY(-100vh) rotate(-180deg);
     opacity: 0;
   }
-  60% {
-    transform: translate(8px, -8px) rotate(3deg) translateZ(10px) translateX(0) translateY(0) rotate(2deg);
-    opacity: 1;
-  }
   100% {
-    transform: translate(8px, -8px) rotate(3deg) translateZ(10px);
+    transform: translate(0, 0) rotate(0deg);
     opacity: 1;
   }
 `;
@@ -139,6 +136,25 @@ const electricFlicker = keyframes`
   }
 `;
 
+// Add stamp reveal animation
+const stampReveal = keyframes`
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(-180deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.3) rotate(20deg);
+  }
+  75% {
+    transform: scale(0.9) rotate(-5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+`;
+
 // Styled Components
 const CardContainer = styled.div`
   height: 100%;
@@ -174,6 +190,10 @@ const CardContainer = styled.div`
       cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   }
 
+  &[data-animation="color-fade"] {
+    /* Animation on container for proper event handling */
+  }
+
   &[data-animation="color-fade"] .base-card {
     animation: ${colorRevealAnimation} 0.8s ease-in-out forwards;
   }
@@ -191,16 +211,20 @@ const BaseCard = styled.button<{ $teamColor: string; $clickable: boolean }>`
   left: 0;
   width: 100%;
   height: 100%;
-  border-radius: 12px;
-  color: white;
+  border-radius: 8px; /* Changed to match prototype */
+  color: #2a2a3e; /* Changed to dark text like prototype */
   font-family: sans-serif;
-  font-size: clamp(0.3rem, 2.5vw, 2rem);
+  font-size: 1.2rem; /* Match prototype size */
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   display: flex;
-  justify-content: center;
+  flex-direction: column; /* Changed for positioning */
   align-items: center;
+  justify-content: center;
   text-align: center;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid #d4d1c8; /* Match prototype border */
   box-shadow:
     0 1px 0 rgba(0, 0, 0, 0.2),
     0 2px 0 rgba(0, 0, 0, 0.2),
@@ -214,12 +238,23 @@ const BaseCard = styled.button<{ $teamColor: string; $clickable: boolean }>`
     0 10px 0 rgba(0, 0, 0, 0.2),
     0 12px 20px rgba(0, 0, 0, 0.3);
 
-  /* Base card color */
-  background-color: ${CARD_COLORS.neutral};
+  /* Base card color - default beige */
+  background: #f4f1e8;
 
-  /* State-based colors */
+  /* State-based colors for spymaster view */
   [data-state="visible-colored"] & {
     background-color: var(--team-color);
+    color: ${(props) => (props.$teamColor === CARD_COLORS.assassin ? "#ffffff" : "#2a2a3e")};
+    border: ${(props) =>
+      props.$teamColor === CARD_COLORS.assassin
+        ? "2px solid #ffff00"
+        : props.$teamColor === CARD_COLORS.red
+          ? "2px solid #660000"
+          : props.$teamColor === CARD_COLORS.blue
+            ? "2px solid #002244"
+            : props.$teamColor === CARD_COLORS.bystander
+              ? "2px solid #333333"
+              : "1px solid #d4d1c8"};
   }
 
   cursor: ${(props) => (props.$clickable ? "pointer" : "default")};
@@ -232,18 +267,32 @@ const BaseCard = styled.button<{ $teamColor: string; $clickable: boolean }>`
   transform: translateZ(0);
   will-change: transform;
 
-  /* Card texture */
-  background-image:
-    linear-gradient(45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%),
-    linear-gradient(-45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%),
-    radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.05), transparent 20%),
-    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.05), transparent 20%);
-  background-size:
-    10px 10px,
-    10px 10px;
-  background-blend-mode: overlay;
-  word-break: break-word;
-  overflow-wrap: break-word;
+  /* Paper texture overlay */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      url('data:image/svg+xml,%3Csvg width="100" height="100" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="6" /%3E%3CfeColorMatrix values="0 0 0 0 0.9 0 0 0 0 0.9 0 0 0 0 0.85 0 0 0 0.15 0"/%3E%3C/filter%3E%3Crect width="100" height="100" filter="url(%23noise)"/%3E%3C/svg%3E'),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.04) 2px,
+        rgba(0, 0, 0, 0.04) 3px
+      ),
+      radial-gradient(ellipse at 20% 30%, rgba(139, 119, 101, 0.1) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 70%, rgba(139, 119, 101, 0.08) 0%, transparent 40%);
+    background-size:
+      150px 150px,
+      4px 4px,
+      200px 200px,
+      180px 180px;
+    opacity: 0.6;
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 1; /* Keep texture above background but below content */
+  }
 
   /* Hover effect */
   &:hover {
@@ -269,6 +318,7 @@ const BaseCard = styled.button<{ $teamColor: string; $clickable: boolean }>`
     transition:
       transform 0.5s,
       opacity 0.5s;
+    z-index: 5;
   }
 
   &:active::before {
@@ -294,7 +344,10 @@ const BaseCard = styled.button<{ $teamColor: string; $clickable: boolean }>`
 `;
 
 // Cover card that appears on top when selected
-const CoverCard = styled.div<{ $teamColor: string }>`
+const CoverCard = styled.div<{
+  $teamColor: string;
+  $transformPx: { translateaX: string; translateY: string; rotate: string };
+}>`
   position: absolute;
   top: 0;
   left: 0;
@@ -305,7 +358,13 @@ const CoverCard = styled.div<{ $teamColor: string }>`
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  transform: translate(8px, -8px) rotate(3deg) translateZ(10px);
+  transform:
+    translate(
+        ${(props) => props.$transformPx?.translateaX || 0}px,
+        ${(props) => props.$transformPx?.translateY || 0}px
+      )
+      rotate(${(props) => props.$transformPx?.rotate || 0}deg),
+    translateZ(10px);
   transform-style: preserve-3d;
   box-shadow:
     0 1px 0 rgba(0, 0, 0, 0.25),
@@ -376,7 +435,13 @@ const CoverCard = styled.div<{ $teamColor: string }>`
   /* Stay visible when covered */
   [data-state="covered"] & {
     opacity: 1;
-    transform: translate(8px, -8px) rotate(3deg) translateZ(10px);
+    transform:
+      translate(
+          ${(props) => props.$transformPx?.translateaX || 0}px,
+          ${(props) => props.$transformPx?.translateY || 0}px
+        )
+        rotate(${(props) => props.$transformPx?.rotate || 0}deg),
+      translateZ(10px);
     pointer-events: all; /* Re-enable pointer events when visible */
   }
 
@@ -399,12 +464,23 @@ const CardContent = styled.div`
   justify-content: center;
   align-items: center;
   width: 100%;
-  height: 100%;
   text-align: center;
   word-wrap: break-word;
   overflow-wrap: break-word;
   margin: 0;
   padding: 0;
+  z-index: 1;
+
+  /* Embossed text effect from prototype */
+  text-shadow:
+    0.5px 0.5px 0px rgba(255, 255, 255, 0.15),
+    -0.5px -0.5px 0.5px rgba(0, 0, 0, 0.4);
+  filter: drop-shadow(0.5px 0.5px 0.5px rgba(255, 255, 255, 0.05))
+    drop-shadow(-0.5px -0.5px 0.5px rgba(0, 0, 0, 0.2));
+
+  /* Position at top of card */
+  position: absolute;
+  top: 2rem;
 `;
 
 const CenterIcon = styled.div`
@@ -431,6 +507,49 @@ const CenterIcon = styled.div`
   }
 `;
 
+const SpymasterIcon = styled.div`
+  position: absolute;
+  bottom: 1.5rem;
+  font-size: 4rem;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.4);
+  text-shadow:
+    1px 1px 0px rgba(255, 255, 255, 0.2),
+    -1px -1px 1px rgba(0, 0, 0, 0.6);
+  filter: drop-shadow(1px 1px 1px rgba(255, 255, 255, 0.1))
+    drop-shadow(-1px -1px 1px rgba(0, 0, 0, 0.4));
+  z-index: 2;
+  opacity: 0;
+  transform: scale(0) rotate(-180deg);
+
+  /* Show and animate when in colored state */
+  [data-state="visible-colored"] & {
+    animation: ${stampReveal} 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.3s forwards;
+  }
+
+  /* Assassin special styling */
+  &.assassin {
+    color: #ffff00;
+    text-shadow:
+      0 0 20px rgba(255, 255, 0, 0.8),
+      0 0 40px rgba(0, 255, 255, 0.6);
+    filter: drop-shadow(1px 1px 1px rgba(255, 255, 255, 0.1))
+      drop-shadow(-1px -1px 1px rgba(0, 0, 0, 0.4));
+  }
+
+  /* Electric flicker for assassin after stamp animation */
+  [data-state="visible-colored"] &.assassin {
+    animation:
+      ${stampReveal} 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.3s forwards,
+      ${electricFlicker} 2s ease-in-out 0.8s infinite;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 2.5rem;
+    bottom: 1rem;
+  }
+`;
+
 /**
  * GameCard component props
  */
@@ -450,16 +569,30 @@ export const GameCard = memo<GameCardProps>(
     const teamColor = getCardColor(card);
     const visibility = useCardVisibility(card, index, initialVisibility);
 
+    // Simple random transform values
+    const coverTransform = useMemo(
+      () => ({
+        x: Math.random() * 12 - 6, // -6 to 6
+        y: Math.random() * 12 - 6, // -6 to 6
+        rotate: Math.random() * 10 - 5, // -5 to 5
+      }),
+      [],
+    );
+
     /**
-     * Completes the visibiblity transition after the animation ends.
+     * Completes the visibility transition after the animation ends.
      */
     const handleAnimationEnd = useCallback(
       (e: React.AnimationEvent) => {
+        console.log(
+          `Animation ended for ${card.word}: target=${e.target}, currentTarget=${e.currentTarget}, animation=${visibility.animation}`,
+        );
         if (e.target === e.currentTarget && visibility.animation) {
+          console.log(`Completing transition for ${card.word}`);
           visibility.completeTransition();
         }
       },
-      [visibility.animation, visibility.completeTransition],
+      [visibility.animation, visibility.completeTransition, card.word],
     );
 
     const handleClick = useCallback(() => {
@@ -473,17 +606,23 @@ export const GameCard = memo<GameCardProps>(
         data-state={visibility.state}
         data-animation={visibility.animation}
         style={{ "--card-index": index, "--team-color": teamColor } as React.CSSProperties}
-        onAnimationEnd={handleAnimationEnd}
       >
         <BaseCard
           className="base-card"
           $teamColor={teamColor}
           $clickable={clickable && !card.selected}
           onClick={handleClick}
+          onAnimationEnd={handleAnimationEnd}
           disabled={!clickable || card.selected}
           aria-label={`Card: ${card.word}`}
         >
           <CardContent>{card.word}</CardContent>
+          {/* Add icon for spymaster view */}
+          {visibility.state === "visible-colored" && getIcon(teamColor) && (
+            <SpymasterIcon className={teamColor === CARD_COLORS.assassin ? "assassin" : ""}>
+              {getIcon(teamColor)}
+            </SpymasterIcon>
+          )}
         </BaseCard>
 
         <CoverCard className="cover-card" $teamColor={teamColor} data-team-color={teamColor}>
