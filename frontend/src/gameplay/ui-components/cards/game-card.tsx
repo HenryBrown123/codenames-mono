@@ -72,9 +72,11 @@ const dealAnimation = keyframes`
 // Cover card dealing animation - only defines the start
 const coverDealAnimation = keyframes`
   0% {
+    background-color: var(--team-color);
     transform: translateX(-100vw) translateY(-100vh) rotate(-180deg);
     opacity: 0;
   }
+
 `;
 
 const colorRevealAnimation = keyframes`
@@ -83,6 +85,7 @@ const colorRevealAnimation = keyframes`
   }
   100% {
     background-color: var(--team-color);
+    color: white;
   }
 `;
 
@@ -147,6 +150,35 @@ const stampReveal = keyframes`
   100% {
     opacity: 1;
     transform: scale(1) rotate(0deg);
+  }
+`;
+
+// Shared paper texture styles
+const paperTextureStyles = css`
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      url('data:image/svg+xml,%3Csvg width="100" height="100" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="6" /%3E%3CfeColorMatrix values="0 0 0 0 0.9 0 0 0 0 0.9 0 0 0 0 0.85 0 0 0 0.15 0"/%3E%3C/filter%3E%3Crect width="100" height="100" filter="url(%23noise)"/%3E%3C/svg%3E'),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.04) 2px,
+        rgba(0, 0, 0, 0.04) 3px
+      ),
+      radial-gradient(ellipse at 20% 30%, rgba(139, 119, 101, 0.1) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 70%, rgba(139, 119, 101, 0.08) 0%, transparent 40%);
+    background-size:
+      150px 150px,
+      4px 4px,
+      200px 200px,
+      180px 180px;
+    opacity: 0.6;
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 1;
   }
 `;
 
@@ -232,9 +264,19 @@ const BaseCard = styled.button<{ $teamColor: string; $clickable: boolean }>`
   /* Base card color - default beige */
   background: #f4f1e8;
 
-  /* State-based colors for spymaster view */
+  /* State-based colors for spymaster view - with transparency */
   [data-state="visible-colored"] & {
-    background-color: var(--team-color);
+    background-color: ${(props) =>
+      props.$teamColor === CARD_COLORS.assassin
+        ? "rgba(10, 10, 10, 0.9)"
+        : props.$teamColor === CARD_COLORS.red
+          ? "rgba(178, 34, 34, 0.85)"
+          : props.$teamColor === CARD_COLORS.blue
+            ? "rgba(65, 105, 225, 0.85)"
+            : props.$teamColor === CARD_COLORS.bystander
+              ? "rgba(105, 113, 136, 0.85)"
+              : "rgba(73, 70, 70, 0.85)"};
+
     color: ${(props) => (props.$teamColor === CARD_COLORS.assassin ? "#ffffff" : "#2a2a3e")};
     border: ${(props) =>
       props.$teamColor === CARD_COLORS.assassin
@@ -259,31 +301,7 @@ const BaseCard = styled.button<{ $teamColor: string; $clickable: boolean }>`
   will-change: transform;
 
   /* Paper texture overlay */
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-      url('data:image/svg+xml,%3Csvg width="100" height="100" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="6" /%3E%3CfeColorMatrix values="0 0 0 0 0.9 0 0 0 0 0.9 0 0 0 0 0.85 0 0 0 0.15 0"/%3E%3C/filter%3E%3Crect width="100" height="100" filter="url(%23noise)"/%3E%3C/svg%3E'),
-      repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0, 0, 0, 0.04) 2px,
-        rgba(0, 0, 0, 0.04) 3px
-      ),
-      radial-gradient(ellipse at 20% 30%, rgba(139, 119, 101, 0.1) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 70%, rgba(139, 119, 101, 0.08) 0%, transparent 40%);
-    background-size:
-      150px 150px,
-      4px 4px,
-      200px 200px,
-      180px 180px;
-    opacity: 0.6;
-    border-radius: 8px;
-    pointer-events: none;
-    z-index: 1;
-  }
+  ${paperTextureStyles}
 
   /* Hover effect */
   &:hover {
@@ -377,17 +395,6 @@ const CoverCard = styled.div<{
       : "1px solid rgba(255, 255, 255, 0.5)"};
   pointer-events: none;
 
-  /* Card texture - same as base */
-  background-image:
-    linear-gradient(45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%),
-    linear-gradient(-45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%),
-    radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.05), transparent 20%),
-    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.05), transparent 20%);
-  background-size:
-    10px 10px,
-    10px 10px;
-  background-blend-mode: overlay;
-
   /* Electric border effect for assassin cards */
   &[data-team-color="${CARD_COLORS.assassin}"]::before {
     content: "";
@@ -414,20 +421,20 @@ const CoverCard = styled.div<{
   }
 
   /* Trigger electric sweep when covering animation plays */
-  [data-animation="covering"] &[data-team-color="${CARD_COLORS.assassin}"]::before {
+  &[data-animation="covering"][data-team-color="${CARD_COLORS.assassin}"]::before {
     animation: ${assassinSweep} 0.8s linear 0.7s forwards;
     opacity: 1;
   }
 
   /* Animate FROM keyframe TO the transform defined above */
-  [data-animation="covering"] & {
+  &[data-animation="covering"] {
     animation: ${coverDealAnimation} 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
     opacity: 1;
   }
 
   /* Stay visible when covered */
-  [data-state="covered"] & {
-    opacity: 1;
+  &[data-state="covered"] {
+    opacity: 1 !important;
     pointer-events: all;
   }
 
@@ -445,7 +452,10 @@ const CoverCard = styled.div<{
 `;
 
 const CardContent = styled.div`
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -454,8 +464,8 @@ const CardContent = styled.div`
   word-wrap: break-word;
   overflow-wrap: break-word;
   margin: 0;
-  padding: 0;
-  z-index: 1;
+  padding: 0 1rem;
+  z-index: 3; /* Above icons */
 
   /* Embossed text effect from prototype */
   text-shadow:
@@ -463,14 +473,34 @@ const CardContent = styled.div`
     -0.5px -0.5px 0.5px rgba(0, 0, 0, 0.4);
   filter: drop-shadow(0.5px 0.5px 0.5px rgba(255, 255, 255, 0.05))
     drop-shadow(-0.5px -0.5px 0.5px rgba(0, 0, 0, 0.2));
-
-  /* Position at top of card */
-  position: absolute;
-  top: 2rem;
 `;
 
+// Background icon for base card - always present but only visible when colored
+const BackgroundIcon = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 6rem;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.08); /* Very subtle watermark */
+  z-index: 0; /* Behind everything */
+  pointer-events: none;
+
+  /* Assassin styling - slightly more visible */
+  &.assassin {
+    color: rgba(255, 255, 0, 0.12);
+    text-shadow: 0 0 10px rgba(255, 255, 0, 0.2);
+  }
+
+  @media (max-width: 768px) {
+    font-size: 4rem;
+  }
+`;
+
+// Cover card icon - centered and visible
 const CenterIcon = styled.div`
-  font-size: 4rem;
+  font-size: 6rem;
   font-weight: 900;
   color: rgba(0, 0, 0, 0.4);
   text-shadow:
@@ -489,50 +519,7 @@ const CenterIcon = styled.div`
   }
 
   @media (max-width: 768px) {
-    font-size: 2.5rem;
-  }
-`;
-
-const SpymasterIcon = styled.div`
-  position: absolute;
-  bottom: 1.5rem;
-  font-size: 4rem;
-  font-weight: 900;
-  color: rgba(0, 0, 0, 0.4);
-  text-shadow:
-    1px 1px 0px rgba(255, 255, 255, 0.2),
-    -1px -1px 1px rgba(0, 0, 0, 0.6);
-  filter: drop-shadow(1px 1px 1px rgba(255, 255, 255, 0.1))
-    drop-shadow(-1px -1px 1px rgba(0, 0, 0, 0.4));
-  z-index: 2;
-  opacity: 0;
-  transform: scale(0) rotate(-180deg);
-
-  /* Show and animate when in colored state */
-  [data-state="visible-colored"] & {
-    animation: ${stampReveal} 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.3s forwards;
-  }
-
-  /* Assassin special styling */
-  &.assassin {
-    color: #ffff00;
-    text-shadow:
-      0 0 20px rgba(255, 255, 0, 0.8),
-      0 0 40px rgba(0, 255, 255, 0.6);
-    filter: drop-shadow(1px 1px 1px rgba(255, 255, 255, 0.1))
-      drop-shadow(-1px -1px 1px rgba(0, 0, 0, 0.4));
-  }
-
-  /* Electric flicker for assassin after stamp animation */
-  [data-state="visible-colored"] &.assassin {
-    animation:
-      ${stampReveal} 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.3s forwards,
-      ${electricFlicker} 2s ease-in-out 0.8s infinite;
-  }
-
-  @media (max-width: 768px) {
-    font-size: 2.5rem;
-    bottom: 1rem;
+    font-size: 4rem;
   }
 `;
 
@@ -598,12 +585,14 @@ export const GameCard = memo<GameCardProps>(
           disabled={!clickable || card.selected}
           aria-label={`Card: ${card.word}`}
         >
-          <CardContent>{card.word}</CardContent>
-          {visibility.state === "visible-colored" && getIcon(teamColor) && (
-            <SpymasterIcon className={teamColor === CARD_COLORS.assassin ? "assassin" : ""}>
+          {/* Background watermark - always present, shows through transparent colored backgrounds */}
+          {getIcon(teamColor) && (
+            <BackgroundIcon className={teamColor === CARD_COLORS.assassin ? "assassin" : ""}>
               {getIcon(teamColor)}
-            </SpymasterIcon>
+            </BackgroundIcon>
           )}
+
+          <CardContent>{card.word}</CardContent>
         </BaseCard>
 
         <CoverCard
@@ -611,6 +600,8 @@ export const GameCard = memo<GameCardProps>(
           $teamColor={teamColor}
           $transformPx={coverTransform}
           data-team-color={teamColor}
+          data-state={visibility.state}
+          data-animation={visibility.animation}
         >
           {getIcon(teamColor) && (
             <CenterIcon className={teamColor === CARD_COLORS.assassin ? "assassin" : ""}>
