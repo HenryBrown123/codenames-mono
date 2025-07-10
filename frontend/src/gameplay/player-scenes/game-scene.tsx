@@ -12,7 +12,7 @@ import { ActionButton } from "../shared/components";
  * MOBILE-FIRST: Game scene with collapsible instructions
  */
 const GameSceneContainer = styled.div`
-  /* Mobile-first: Tighter layout to fit everything */
+  /* Mobile-first: Two-section layout - board + dashboard */
   width: 100%;
   height: 100%;
   min-height: 100vh;
@@ -21,9 +21,9 @@ const GameSceneContainer = styled.div`
 
   display: flex;
   flex-direction: column;
-  gap: 0.3rem; /* Smaller gap */
-  padding: 0.3rem; /* Smaller padding */
-  padding-bottom: 0.5rem; /* Small bottom padding */
+  gap: 0.5rem;
+  padding: 0.5rem;
+  padding-bottom: 1rem;
   box-sizing: border-box;
   position: relative;
 
@@ -233,14 +233,13 @@ const SidebarContainer = styled.div`
  * MOBILE-FIRST: Game board that takes maximum space
  */
 const GameBoardContainer = styled.div`
-  /* Mobile-first: Board with tighter constraints */
+  /* Mobile-first: Board takes most space */
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.2rem;
-  min-height: 250px; /* Smaller minimum for mobile */
-  max-height: 60vh; /* Constrain height to leave room for dashboard */
+  padding: 0.25rem;
+  min-height: 300px;
   overflow: hidden;
 
   /* PROGRESSIVE ENHANCEMENT: Large tablet landscape - grid placement */
@@ -255,16 +254,16 @@ const GameBoardContainer = styled.div`
  * MOBILE-FIRST: Dashboard that stays accessible
  */
 const DashboardContainer = styled.div`
-  /* Mobile-first: More compact dashboard */
+  /* Mobile-first: Compact dashboard */
   background-color: rgba(65, 63, 63, 0.9);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem;
+  padding: 0.75rem;
   flex-shrink: 0;
-  min-height: 60px;
-  max-height: 80px; /* Tighter constraint */
+  min-height: 70px;
+  max-height: 100px;
 
   /* PROGRESSIVE ENHANCEMENT: Large tablet landscape - full height in sidebar */
   @media (min-width: 769px) and (orientation: landscape) {
