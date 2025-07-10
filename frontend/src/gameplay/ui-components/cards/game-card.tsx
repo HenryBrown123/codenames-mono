@@ -69,14 +69,12 @@ const dealAnimation = keyframes`
   }
 `;
 
-// Cover card dealing animation - only defines the start
 const coverDealAnimation = keyframes`
   0% {
     background-color: var(--team-color);
     transform: translateX(-100vw) translateY(-100vh) rotate(-180deg);
     opacity: 0;
   }
-
 `;
 
 const colorRevealAnimation = keyframes`
@@ -135,24 +133,6 @@ const electricFlicker = keyframes`
   }
 `;
 
-const stampReveal = keyframes`
-  0% {
-    opacity: 0;
-    transform: scale(0) rotate(-180deg);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.3) rotate(20deg);
-  }
-  75% {
-    transform: scale(0.9) rotate(-5deg);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) rotate(0deg);
-  }
-`;
-
 // Shared paper texture styles
 const paperTextureStyles = css`
   &::after {
@@ -182,7 +162,9 @@ const paperTextureStyles = css`
   }
 `;
 
-// Styled Components
+/**
+ * MOBILE-FIRST: Base styles for smallest screens
+ */
 const CardContainer = styled.div`
   height: 100%;
   width: 100%;
@@ -192,16 +174,7 @@ const CardContainer = styled.div`
   margin: auto;
   z-index: 1;
 
-  /* Raise z-index when animating or covered */
-  &[data-state="covered"] {
-    z-index: 10;
-  }
-
-  &[data-animation="covering"] {
-    z-index: 10;
-  }
-
-  /* Base state styles */
+  /* Base state - hidden until animated in */
   opacity: 0;
 
   /* State-based visibility */
@@ -209,6 +182,12 @@ const CardContainer = styled.div`
   &[data-state="visible-colored"],
   &[data-state="covered"] {
     opacity: 1;
+  }
+
+  /* Raise z-index when animating or covered */
+  &[data-state="covered"],
+  &[data-animation="covering"] {
+    z-index: 10;
   }
 
   /* Animation triggers */
@@ -220,51 +199,89 @@ const CardContainer = styled.div`
   &[data-animation="color-fade"] .base-card {
     animation: ${colorRevealAnimation} 0.8s ease-in-out forwards;
   }
-
-  @media (max-width: 768px) {
-    min-height: 0;
-    min-width: 0;
-  }
 `;
 
-// Base card that's always visible
+/**
+ * MOBILE-FIRST: Base card optimized for mobile readability
+ */
 const BaseCard = styled.button<{ $teamColor: string; $clickable: boolean }>`
+  /* Mobile-first base styles */
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  border-radius: 8px;
+  min-height: 60px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   color: #2a2a3e;
   font-family: sans-serif;
-  font-size: 1.2rem;
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.05em;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 0;
-  border: 1px solid #d4d1c8;
+  padding: 0.2rem;
+  cursor: ${(props) => (props.$clickable ? "pointer" : "default")};
+  transition: transform 0.2s;
+  outline: none;
+  overflow: hidden;
+  position: relative;
+  transform: translateZ(0);
+  will-change: transform;
+
+  /* Mobile background - default beige */
+  background: #f4f1e8;
+
+  /* Mobile paper texture */
+  ${paperTextureStyles}
+
+  /* Mobile shadow - simplified */
   box-shadow:
     0 1px 0 rgba(0, 0, 0, 0.2),
     0 2px 0 rgba(0, 0, 0, 0.2),
     0 3px 0 rgba(0, 0, 0, 0.2),
     0 4px 0 rgba(0, 0, 0, 0.2),
-    0 5px 0 rgba(0, 0, 0, 0.2),
-    0 6px 0 rgba(0, 0, 0, 0.2),
-    0 7px 0 rgba(0, 0, 0, 0.2),
-    0 8px 0 rgba(0, 0, 0, 0.2),
-    0 9px 0 rgba(0, 0, 0, 0.2),
-    0 10px 0 rgba(0, 0, 0, 0.2),
-    0 12px 20px rgba(0, 0, 0, 0.3);
+    0 5px 10px rgba(0, 0, 0, 0.3);
 
-  /* Base card color - default beige */
-  background: #f4f1e8;
+  /* Mobile interactions */
+  &:hover {
+    transform: ${(props) => (props.$clickable ? "translateY(-2px)" : "none")};
+  }
 
-  /* State-based colors for spymaster view - with transparency */
+  &:active {
+    transform: ${(props) => (props.$clickable ? "translateY(1px)" : "none")};
+  }
+
+  /* Mobile ripple effect */
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300%;
+    height: 300%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%) scale(0);
+    border-radius: 50%;
+    opacity: 0;
+    transition:
+      transform 0.5s,
+      opacity 0.5s;
+    z-index: 5;
+  }
+
+  &:active::before {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.3;
+    animation: ${rippleEffect} 0.6s ease-out;
+  }
+
+  /* State-based colors for spymaster view */
   [data-state="visible-colored"] & {
     background-color: ${(props) =>
       props.$teamColor === CARD_COLORS.assassin
@@ -290,110 +307,96 @@ const BaseCard = styled.button<{ $teamColor: string; $clickable: boolean }>`
               : "1px solid #d4d1c8"};
   }
 
-  cursor: ${(props) => (props.$clickable ? "pointer" : "default")};
-  transition: transform 0.2s;
-  outline: none;
-  overflow: hidden;
-  position: relative;
-
-  /* Force hardware acceleration */
-  transform: translateZ(0);
-  will-change: transform;
-
-  /* Paper texture overlay */
-  ${paperTextureStyles}
-
-  /* Hover effect */
-  &:hover {
-    transform: ${(props) => (props.$clickable ? "translateY(-4px)" : "none")};
-  }
-
-  &:active {
-    transform: ${(props) => (props.$clickable ? "translateY(1px)" : "none")};
-  }
-
-  /* Ripple effect */
-  &::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 300%;
-    height: 300%;
-    background: rgba(255, 255, 255, 0.3);
-    transform: translate(-50%, -50%) scale(0);
-    border-radius: 50%;
-    opacity: 0;
-    transition:
-      transform 0.5s,
-      opacity 0.5s;
-    z-index: 5;
-  }
-
-  &:active::before {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0.3;
-    animation: ${rippleEffect} 0.6s ease-out;
-  }
-
-  @media (max-width: 1024px) {
-    font-size: clamp(0.7rem, 2.8vw, 1.5rem);
-  }
-
-  @media (max-width: 768px) {
-    font-size: clamp(0.6rem, 3vw, 1rem);
+  /* PROGRESSIVE ENHANCEMENT: Tablet improvements */
+  @media (min-width: 481px) {
+    min-height: 70px;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    padding: 0.25rem;
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+
+    /* Enhanced shadow for larger screens */
+    box-shadow:
+      0 1px 0 rgba(0, 0, 0, 0.2),
+      0 2px 0 rgba(0, 0, 0, 0.2),
+      0 3px 0 rgba(0, 0, 0, 0.2),
+      0 4px 0 rgba(0, 0, 0, 0.2),
+      0 5px 0 rgba(0, 0, 0, 0.2),
+      0 6px 0 rgba(0, 0, 0, 0.2),
+      0 7px 15px rgba(0, 0, 0, 0.3);
   }
 
-  @media (max-width: 480px) {
-    font-size: clamp(0.5rem, 2.5vw, 0.9rem);
-    border-radius: 6px;
+  /* PROGRESSIVE ENHANCEMENT: Desktop enhancements */
+  @media (min-width: 769px) {
+    min-height: 80px;
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    padding: 0.5rem;
+
+    /* Full desktop shadow stack */
+    box-shadow:
+      0 1px 0 rgba(0, 0, 0, 0.2),
+      0 2px 0 rgba(0, 0, 0, 0.2),
+      0 3px 0 rgba(0, 0, 0, 0.2),
+      0 4px 0 rgba(0, 0, 0, 0.2),
+      0 5px 0 rgba(0, 0, 0, 0.2),
+      0 6px 0 rgba(0, 0, 0, 0.2),
+      0 7px 0 rgba(0, 0, 0, 0.2),
+      0 8px 0 rgba(0, 0, 0, 0.2),
+      0 9px 0 rgba(0, 0, 0, 0.2),
+      0 10px 0 rgba(0, 0, 0, 0.2),
+      0 12px 20px rgba(0, 0, 0, 0.3);
+
+    &:hover {
+      transform: ${(props) => (props.$clickable ? "translateY(-4px)" : "none")};
+    }
+  }
+
+  /* PROGRESSIVE ENHANCEMENT: Large desktop */
+  @media (min-width: 1025px) {
+    font-size: 1.2rem;
+    min-height: 100px;
   }
 `;
 
-// Cover card that appears on top when selected
+/**
+ * MOBILE-FIRST: Cover card for selected states
+ */
 const CoverCard = styled.div<{
   $teamColor: string;
   $transformPx: { translateX: number; translateY: number; rotate: number };
 }>`
+  /* Mobile-first cover card */
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  border-radius: 12px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-
-  /* This is the single source of truth for the final position */
   transform: translate(
       ${(props) => props.$transformPx.translateX}px,
       ${(props) => props.$transformPx.translateY}px
     )
     rotate(${(props) => props.$transformPx.rotate}deg) translateZ(10px);
-
   transform-style: preserve-3d;
-  box-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.25),
-    0 2px 0 rgba(0, 0, 0, 0.25),
-    0 3px 0 rgba(0, 0, 0, 0.25),
-    0 4px 0 rgba(0, 0, 0, 0.25),
-    0 5px 0 rgba(0, 0, 0, 0.25),
-    0 6px 0 rgba(0, 0, 0, 0.25),
-    0 7px 0 rgba(0, 0, 0, 0.25),
-    0 8px 0 rgba(0, 0, 0, 0.25),
-    0 10px 20px rgba(0, 0, 0, 0.4);
   z-index: 2;
   opacity: 0;
   background-color: ${(props) => props.$teamColor};
   border: ${(props) =>
     props.$teamColor === CARD_COLORS.assassin
       ? "2px solid #ffff00"
-      : "1px solid rgba(255, 255, 255, 0.5)"};
+      : "1px solid rgba(255, 255, 255, 0.3)"};
   pointer-events: none;
+
+  /* Mobile shadow - simplified */
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.25),
+    0 2px 0 rgba(0, 0, 0, 0.25),
+    0 3px 5px rgba(0, 0, 0, 0.3);
 
   /* Electric border effect for assassin cards */
   &[data-team-color="${CARD_COLORS.assassin}"]::before {
@@ -415,7 +418,7 @@ const CoverCard = styled.div<{
     );
     background-size: 300% 100%;
     background-position: -100% 50%;
-    border-radius: 12px;
+    border-radius: 6px;
     opacity: 0;
     z-index: -1;
   }
@@ -426,28 +429,49 @@ const CoverCard = styled.div<{
     opacity: 1;
   }
 
-  /* Animate FROM keyframe TO the transform defined above */
+  /* Animation states */
   &[data-animation="covering"] {
     animation: ${coverDealAnimation} 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
     opacity: 1;
   }
 
-  /* Stay visible when covered */
   &[data-state="covered"] {
     opacity: 1 !important;
     pointer-events: all;
   }
 
-  @media (max-width: 768px) {
+  /* PROGRESSIVE ENHANCEMENT: Tablet improvements */
+  @media (min-width: 481px) {
     border-radius: 8px;
     border: ${(props) =>
       props.$teamColor === CARD_COLORS.assassin
         ? "2px solid #ffff00"
-        : "1px solid rgba(255, 255, 255, 0.3)"};
+        : "1px solid rgba(255, 255, 255, 0.5)"};
+
+    /* Enhanced shadow */
+    box-shadow:
+      0 1px 0 rgba(0, 0, 0, 0.25),
+      0 2px 0 rgba(0, 0, 0, 0.25),
+      0 3px 0 rgba(0, 0, 0, 0.25),
+      0 4px 0 rgba(0, 0, 0, 0.25),
+      0 5px 10px rgba(0, 0, 0, 0.4);
   }
 
-  @media (max-width: 480px) {
-    border-radius: 6px;
+  /* PROGRESSIVE ENHANCEMENT: Desktop enhancements */
+  @media (min-width: 769px) {
+    border-radius: 12px;
+
+    /* Full desktop shadow stack */
+    box-shadow:
+      0 1px 0 rgba(0, 0, 0, 0.25),
+      0 2px 0 rgba(0, 0, 0, 0.25),
+      0 3px 0 rgba(0, 0, 0, 0.25),
+      0 4px 0 rgba(0, 0, 0, 0.25),
+      0 5px 0 rgba(0, 0, 0, 0.25),
+      0 6px 0 rgba(0, 0, 0, 0.25),
+      0 7px 0 rgba(0, 0, 0, 0.25),
+      0 8px 0 rgba(0, 0, 0, 0.25),
+      0 10px 20px rgba(0, 0, 0, 0.4);
   }
 `;
 
@@ -464,52 +488,56 @@ const CardContent = styled.div`
   word-wrap: break-word;
   overflow-wrap: break-word;
   margin: 0;
-  padding: 0 1rem;
-  z-index: 3; /* Above icons */
+  padding: 0 0.5rem;
+  z-index: 3;
 
-  /* Embossed text effect from prototype */
+  /* Mobile text shadow - simplified */
   text-shadow:
     0.5px 0.5px 0px rgba(255, 255, 255, 0.15),
     -0.5px -0.5px 0.5px rgba(0, 0, 0, 0.4);
-  filter: drop-shadow(0.5px 0.5px 0.5px rgba(255, 255, 255, 0.05))
-    drop-shadow(-0.5px -0.5px 0.5px rgba(0, 0, 0, 0.2));
+
+  /* PROGRESSIVE ENHANCEMENT: Desktop text effects */
+  @media (min-width: 769px) {
+    padding: 0 1rem;
+    filter: drop-shadow(0.5px 0.5px 0.5px rgba(255, 255, 255, 0.05))
+      drop-shadow(-0.5px -0.5px 0.5px rgba(0, 0, 0, 0.2));
+  }
 `;
 
-// Background icon for base card - always present but only visible when colored
 const BackgroundIcon = styled.div`
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 6rem;
+  font-size: 3rem;
   font-weight: 900;
-  color: rgba(0, 0, 0, 0.08); /* Very subtle watermark */
-  z-index: 0; /* Behind everything */
+  color: rgba(0, 0, 0, 0.08);
+  z-index: 0;
   pointer-events: none;
 
-  /* Assassin styling - slightly more visible */
   &.assassin {
     color: rgba(255, 255, 0, 0.12);
     text-shadow: 0 0 10px rgba(255, 255, 0, 0.2);
   }
 
-  @media (max-width: 768px) {
+  /* PROGRESSIVE ENHANCEMENT: Larger icons on bigger screens */
+  @media (min-width: 481px) {
     font-size: 4rem;
+  }
+
+  @media (min-width: 769px) {
+    font-size: 6rem;
   }
 `;
 
-// Cover card icon - centered and visible
 const CenterIcon = styled.div`
-  font-size: 6rem;
+  font-size: 3rem;
   font-weight: 900;
   color: rgba(0, 0, 0, 0.4);
   text-shadow:
     1px 1px 0px rgba(255, 255, 255, 0.2),
     -1px -1px 1px rgba(0, 0, 0, 0.6);
-  filter: drop-shadow(1px 1px 1px rgba(255, 255, 255, 0.1))
-    drop-shadow(-1px -1px 1px rgba(0, 0, 0, 0.4));
 
-  /* Assassin electric effect */
   &.assassin {
     color: #ffff00;
     text-shadow:
@@ -518,8 +546,15 @@ const CenterIcon = styled.div`
     animation: ${electricFlicker} 2s ease-in-out infinite;
   }
 
-  @media (max-width: 768px) {
+  /* PROGRESSIVE ENHANCEMENT: Larger icons on bigger screens */
+  @media (min-width: 481px) {
     font-size: 4rem;
+  }
+
+  @media (min-width: 769px) {
+    font-size: 6rem;
+    filter: drop-shadow(1px 1px 1px rgba(255, 255, 255, 0.1))
+      drop-shadow(-1px -1px 1px rgba(0, 0, 0, 0.4));
   }
 `;
 
@@ -535,14 +570,13 @@ export interface GameCardProps {
 }
 
 /**
- * Individual game card component with state-based styling
+ * Individual game card component with mobile-first responsive design
  */
 export const GameCard = memo<GameCardProps>(
   ({ card, index, onClick, clickable, initialVisibility }) => {
     const teamColor = getCardColor(card);
     const visibility = useCardVisibility(card, index, initialVisibility);
 
-    // Simple random transform values
     const coverTransform = useMemo(
       () => ({
         translateX: Math.random() * 12 - 6,
@@ -552,9 +586,6 @@ export const GameCard = memo<GameCardProps>(
       [],
     );
 
-    /**
-     * Completes the visibility transition after the animation ends.
-     */
     const handleAnimationEnd = useCallback(
       (e: React.AnimationEvent) => {
         if (e.target === e.currentTarget && visibility.animation) {
@@ -585,7 +616,6 @@ export const GameCard = memo<GameCardProps>(
           disabled={!clickable || card.selected}
           aria-label={`Card: ${card.word}`}
         >
-          {/* Background watermark - always present, shows through transparent colored backgrounds */}
           {getIcon(teamColor) && (
             <BackgroundIcon className={teamColor === CARD_COLORS.assassin ? "assassin" : ""}>
               {getIcon(teamColor)}

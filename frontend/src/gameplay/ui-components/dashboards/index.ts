@@ -1,4 +1,11 @@
-export { CodemasterDashboard } from './codemaster-dashboard';
-export { CodebreakerDashboard } from './codebreaker-dashboard';
-export { LobbyDashboard } from './lobby-dashboard';
-export { WaitingDashboard, OutcomeDashboard, DealingDashboard, SpectatorDashboard, GameoverDashboard } from './waiting-dashboard';
+export {
+  LobbyDashboard,
+  WaitingDashboard,
+  SpectatorDashboard,
+  DealingDashboard,
+  GameoverDashboard,
+  OutcomeDashboard,
+} from "./setup-dashboards";
+export { CodemasterDashboard } from "./codemaster-dashboard";
+export { CodebreakerDashboard } from "./codebreaker-dashboard";
+export { CodeWordInput } from "./codemaster-input";

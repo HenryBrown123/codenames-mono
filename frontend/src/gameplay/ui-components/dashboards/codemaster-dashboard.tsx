@@ -4,42 +4,38 @@ import { CodeWordInput } from "./codemaster-input";
 import { useGameActions } from "../../player-actions";
 import { useTurn } from "../../shared/providers";
 
+/**
+ * MOBILE-FIRST: Dashboard container that adapts to layout context
+ */
 const Container = styled.div`
+  /* Mobile-first: Horizontal layout for bottom dashboard */
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   width: 100%;
   height: 100%;
-  padding: 1rem;
-  gap: 2rem;
+  padding: 0.5rem;
+  gap: 1rem;
 
-  /* Desktop/Tablet sidebar - vertical */
+  /* PROGRESSIVE ENHANCEMENT: Large tablet landscape - vertical in sidebar */
   @media (min-width: 769px) and (orientation: landscape) {
     flex-direction: column;
     justify-content: center;
     gap: 1.5rem;
+    padding: 1rem;
   }
 
-  /* Mobile landscape - keep horizontal */
-  @media (max-width: 768px) and (orientation: landscape) {
-    flex-direction: row;
-    padding: 0.5rem;
-    gap: 1rem;
-  }
-
-  @media (max-width: 768px) and (orientation: portrait) {
-    padding: 0.5rem;
-    gap: 1rem;
-  }
-
-  @media (max-width: 480px) {
-    flex-direction: column;
-    justify-content: center;
-    gap: 0.5rem;
+  /* PROGRESSIVE ENHANCEMENT: Desktop - more space */
+  @media (min-width: 1025px) {
+    gap: 2rem;
+    padding: 1.5rem;
   }
 `;
 
+/**
+ * Codemaster Dashboard - Handles clue input
+ */
 export const CodemasterDashboard: React.FC = () => {
   const { giveClue, actionState } = useGameActions();
   const { activeTurn } = useTurn();
