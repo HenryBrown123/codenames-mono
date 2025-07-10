@@ -33,7 +33,7 @@ const CARD_TRANSITIONS: CardTransition[] = [
     from: "visible",
     to: "visible-colored",
     animation: "color-fade",
-    condition: (card) => !!card.teamName && !card.selected,
+    condition: (card) => !!card.cardType && !card.selected,
   },
   // Cards cover when selected (from neutral state)
   {

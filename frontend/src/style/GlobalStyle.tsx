@@ -50,9 +50,10 @@ export const GlobalStyle = createGlobalStyle<{ theme: ThemeType }>`
   @media (max-width: 768px) {
     body {
       overflow: hidden;
-      position: fixed;
+      //position: fixed;
       width: 100%;
       height: 100%;
+      /* background: ${({ theme }) => theme.background}; */
     }
   }
 `;
