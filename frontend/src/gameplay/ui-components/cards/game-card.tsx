@@ -19,11 +19,11 @@ const CARD_COLORS = {
  * Gets icon for card based on color
  */
 const getIcon = (cardColor: string) => {
-  if (cardColor === CARD_COLORS.red) return <>★</>; // Star symbol from prototype
-  if (cardColor === CARD_COLORS.blue) return <>♦</>; // Diamond symbol from prototype
+  if (cardColor === CARD_COLORS.red) return <>★</>;
+  if (cardColor === CARD_COLORS.blue) return <>♦</>;
   if (cardColor === CARD_COLORS.green) return <FaLeaf />;
-  if (cardColor === CARD_COLORS.assassin) return <>☠</>; // Skull symbol from prototype
-  if (cardColor === CARD_COLORS.bystander) return <>●</>; // Circle symbol from prototype
+  if (cardColor === CARD_COLORS.assassin) return <>☠</>;
+  if (cardColor === CARD_COLORS.bystander) return <>●</>;
   return null;
 };
 
@@ -69,15 +69,11 @@ const dealAnimation = keyframes`
   }
 `;
 
-// Cover card dealing animation
+// Cover card dealing animation - only defines the start
 const coverDealAnimation = keyframes`
   0% {
     transform: translateX(-100vw) translateY(-100vh) rotate(-180deg);
     opacity: 0;
-  }
-  100% {
-    transform: translate(0, 0) rotate(0deg);
-    opacity: 1;
   }
 `;
 
@@ -136,7 +132,6 @@ const electricFlicker = keyframes`
   }
 `;
 
-// Add stamp reveal animation
 const stampReveal = keyframes`
   0% {
     opacity: 0;
@@ -190,10 +185,6 @@ const CardContainer = styled.div`
       cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   }
 
-  &[data-animation="color-fade"] {
-    /* Animation on container for proper event handling */
-  }
-
   &[data-animation="color-fade"] .base-card {
     animation: ${colorRevealAnimation} 0.8s ease-in-out forwards;
   }
@@ -211,20 +202,20 @@ const BaseCard = styled.button<{ $teamColor: string; $clickable: boolean }>`
   left: 0;
   width: 100%;
   height: 100%;
-  border-radius: 8px; /* Changed to match prototype */
-  color: #2a2a3e; /* Changed to dark text like prototype */
+  border-radius: 8px;
+  color: #2a2a3e;
   font-family: sans-serif;
-  font-size: 1.2rem; /* Match prototype size */
+  font-size: 1.2rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   display: flex;
-  flex-direction: column; /* Changed for positioning */
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
   padding: 0;
-  border: 1px solid #d4d1c8; /* Match prototype border */
+  border: 1px solid #d4d1c8;
   box-shadow:
     0 1px 0 rgba(0, 0, 0, 0.2),
     0 2px 0 rgba(0, 0, 0, 0.2),
@@ -291,7 +282,7 @@ const BaseCard = styled.button<{ $teamColor: string; $clickable: boolean }>`
     opacity: 0.6;
     border-radius: 8px;
     pointer-events: none;
-    z-index: 1; /* Keep texture above background but below content */
+    z-index: 1;
   }
 
   /* Hover effect */
@@ -346,7 +337,7 @@ const BaseCard = styled.button<{ $teamColor: string; $clickable: boolean }>`
 // Cover card that appears on top when selected
 const CoverCard = styled.div<{
   $teamColor: string;
-  $transformPx: { translateaX: string; translateY: string; rotate: string };
+  $transformPx: { translateX: number; translateY: number; rotate: number };
 }>`
   position: absolute;
   top: 0;
@@ -358,13 +349,14 @@ const CoverCard = styled.div<{
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  transform:
-    translate(
-        ${(props) => props.$transformPx?.translateaX || 0}px,
-        ${(props) => props.$transformPx?.translateY || 0}px
-      )
-      rotate(${(props) => props.$transformPx?.rotate || 0}deg),
-    translateZ(10px);
+
+  /* This is the single source of truth for the final position */
+  transform: translate(
+      ${(props) => props.$transformPx.translateX}px,
+      ${(props) => props.$transformPx.translateY}px
+    )
+    rotate(${(props) => props.$transformPx.rotate}deg) translateZ(10px);
+
   transform-style: preserve-3d;
   box-shadow:
     0 1px 0 rgba(0, 0, 0, 0.25),
@@ -383,7 +375,7 @@ const CoverCard = styled.div<{
     props.$teamColor === CARD_COLORS.assassin
       ? "2px solid #ffff00"
       : "1px solid rgba(255, 255, 255, 0.5)"};
-  pointer-events: none; /* Don't block clicks when invisible */
+  pointer-events: none;
 
   /* Card texture - same as base */
   background-image:
@@ -427,22 +419,16 @@ const CoverCard = styled.div<{
     opacity: 1;
   }
 
-  /* Animate in when covering */
+  /* Animate FROM keyframe TO the transform defined above */
   [data-animation="covering"] & {
-    animation: ${coverDealAnimation} 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    animation: ${coverDealAnimation} 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
+    opacity: 1;
   }
 
   /* Stay visible when covered */
   [data-state="covered"] & {
     opacity: 1;
-    transform:
-      translate(
-          ${(props) => props.$transformPx?.translateaX || 0}px,
-          ${(props) => props.$transformPx?.translateY || 0}px
-        )
-        rotate(${(props) => props.$transformPx?.rotate || 0}deg),
-      translateZ(10px);
-    pointer-events: all; /* Re-enable pointer events when visible */
+    pointer-events: all;
   }
 
   @media (max-width: 768px) {
@@ -572,9 +558,9 @@ export const GameCard = memo<GameCardProps>(
     // Simple random transform values
     const coverTransform = useMemo(
       () => ({
-        x: Math.random() * 12 - 6, // -6 to 6
-        y: Math.random() * 12 - 6, // -6 to 6
-        rotate: Math.random() * 10 - 5, // -5 to 5
+        translateX: Math.random() * 12 - 6,
+        translateY: Math.random() * 12 - 6,
+        rotate: Math.random() * 10 - 5,
       }),
       [],
     );
@@ -584,15 +570,11 @@ export const GameCard = memo<GameCardProps>(
      */
     const handleAnimationEnd = useCallback(
       (e: React.AnimationEvent) => {
-        console.log(
-          `Animation ended for ${card.word}: target=${e.target}, currentTarget=${e.currentTarget}, animation=${visibility.animation}`,
-        );
         if (e.target === e.currentTarget && visibility.animation) {
-          console.log(`Completing transition for ${card.word}`);
           visibility.completeTransition();
         }
       },
-      [visibility.animation, visibility.completeTransition, card.word],
+      [visibility.animation, visibility.completeTransition],
     );
 
     const handleClick = useCallback(() => {
@@ -606,18 +588,17 @@ export const GameCard = memo<GameCardProps>(
         data-state={visibility.state}
         data-animation={visibility.animation}
         style={{ "--card-index": index, "--team-color": teamColor } as React.CSSProperties}
+        onAnimationEnd={handleAnimationEnd}
       >
         <BaseCard
           className="base-card"
           $teamColor={teamColor}
           $clickable={clickable && !card.selected}
           onClick={handleClick}
-          onAnimationEnd={handleAnimationEnd}
           disabled={!clickable || card.selected}
           aria-label={`Card: ${card.word}`}
         >
           <CardContent>{card.word}</CardContent>
-          {/* Add icon for spymaster view */}
           {visibility.state === "visible-colored" && getIcon(teamColor) && (
             <SpymasterIcon className={teamColor === CARD_COLORS.assassin ? "assassin" : ""}>
               {getIcon(teamColor)}
@@ -625,7 +606,12 @@ export const GameCard = memo<GameCardProps>(
           )}
         </BaseCard>
 
-        <CoverCard className="cover-card" $teamColor={teamColor} data-team-color={teamColor}>
+        <CoverCard
+          className="cover-card"
+          $teamColor={teamColor}
+          $transformPx={coverTransform}
+          data-team-color={teamColor}
+        >
           {getIcon(teamColor) && (
             <CenterIcon className={teamColor === CARD_COLORS.assassin ? "assassin" : ""}>
               {getIcon(teamColor)}
