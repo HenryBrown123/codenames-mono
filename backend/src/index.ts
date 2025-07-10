@@ -2,10 +2,7 @@ import express from "express";
 import cors from "cors";
 import { createServer } from "http";
 import cookieParser from "cookie-parser";
-import {
-  errorHandler,
-  notFoundHandler,
-} from "./common/http-middleware/error-handler.middleware";
+import { errorHandler, notFoundHandler } from "./common/http-middleware/error-handler.middleware";
 import * as postgresDb from "./common/db";
 import { createOpenApiSpec } from "@codenames/shared/api";
 import { loadEnvFromPackageDir } from "./common/config";
@@ -53,6 +50,7 @@ const corsOptions = {
     "http://127.0.0.1:8000",
     "http://localhost:3000", // In case you run frontend on 3000
     "http://127.0.0.1:3000",
+    "http://192.168.1.156:8000",
   ],
   credentials: true, // Essential for cookies
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -63,6 +61,7 @@ const corsOptions = {
     "Accept",
     "Authorization",
     "Cookie",
+    "Access-Control-Allow-Origin",
   ],
   exposedHeaders: ["Set-Cookie"],
 };
