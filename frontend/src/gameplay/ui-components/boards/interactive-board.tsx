@@ -1,9 +1,23 @@
-import React, { memo, useCallback, useMemo } from "react";
+import React, { memo, useCallback, useMemo, useState } from "react";
 import styled from "styled-components";
 import { useGameDataRequired, useTurn } from "../../shared/providers";
 import { useGameActions } from "../../player-actions";
 import { GameCard } from "../cards/game-card";
 import { CardVisibilityProvider } from "../cards/card-visibility-provider";
+import { 
+  ARToggleButton,
+  ARGlassesHUD,
+  ARVisor,
+  ARGlare,
+  ARScanlines,
+  ARHUDContent,
+  ARHUDTop,
+  ARHUDStatus,
+  ARHUDLine,
+  ARCornerBrackets,
+  ARCorner,
+  ARCrosshair
+} from "../cards/ar-overlay-components";
 
 /**
  * MOBILE-FIRST: Board wrapper that handles different viewport constraints
@@ -111,12 +125,16 @@ const EmptyCard = styled.div`
 /**
  * Interactive board - for making guesses during active play
  * Mobile-first responsive design with adaptive grid
+ * Includes AR mode toggle for enhanced gameplay
  */
 export const InteractiveBoard = memo(() => {
   const { gameData } = useGameDataRequired();
   const { makeGuess, actionState } = useGameActions();
   const { activeTurn } = useTurn();
   const cards = gameData.currentRound?.cards || [];
+  
+  // AR mode state - local to this board component
+  const [arMode, setArMode] = useState(false);
 
   const isLoading = actionState.status === "loading";
 
@@ -145,19 +163,61 @@ export const InteractiveBoard = memo(() => {
   if (cards.length === 0) {
     return (
       <BoardAspectWrapper>
-        <BoardGrid aria-label="interactive game board">
+        <BoardGrid aria-label="interactive game board" data-ar-mode={arMode}>
           {Array.from({ length: 25 }).map((_, i) => (
             <EmptyCard key={`empty-${i}`} />
           ))}
         </BoardGrid>
+        
+        {/* AR Toggle Button */}
+        <ARToggleButton 
+          $arMode={arMode}
+          onClick={() => setArMode(!arMode)}
+        >
+          {arMode ? 'DISABLE AR' : 'ACTIVATE AR'}
+        </ARToggleButton>
       </BoardAspectWrapper>
     );
   }
 
   return (
     <CardVisibilityProvider cards={cards} initialState="visible">
-      <BoardAspectWrapper>
-        <BoardGrid aria-label="interactive game board">
+      <BoardAspectWrapper data-ar-mode={arMode}>
+        {/* AR HUD Overlay - Full screen glasses effect */}
+        {arMode && (
+          <ARGlassesHUD>
+            <ARVisor />
+            <ARGlare />
+            <ARScanlines />
+            
+            <ARHUDContent>
+              <ARHUDTop>
+                <ARHUDStatus>
+                  <ARHUDLine>SYSTEM: OPERATIVE MODE</ARHUDLine>
+                  <ARHUDLine>ROLE: FIELD AGENT</ARHUDLine>
+                  <ARHUDLine>STATUS: MISSION ACTIVE</ARHUDLine>
+                </ARHUDStatus>
+                
+                <ARHUDStatus style={{ textAlign: 'right' }}>
+                  <ARHUDLine>GUESSES: {activeTurn?.guessesRemaining || 0}</ARHUDLine>
+                  <ARHUDLine>CLUE: {activeTurn?.clue?.word || 'WAITING'}</ARHUDLine>
+                  <ARHUDLine>TARGET: {activeTurn?.clue?.count || 0}</ARHUDLine>
+                </ARHUDStatus>
+              </ARHUDTop>
+              
+              <ARCrosshair />
+              
+              <ARCornerBrackets>
+                <ARCorner $position="tl" />
+                <ARCorner $position="tr" />
+                <ARCorner $position="bl" />
+                <ARCorner $position="br" />
+              </ARCornerBrackets>
+            </ARHUDContent>
+          </ARGlassesHUD>
+        )}
+        
+        <BoardGrid aria-label="interactive game board" data-ar-mode={arMode}>
           {cards.map((card, index) => (
             <GameCard
               key={card.word}
@@ -169,6 +229,14 @@ export const InteractiveBoard = memo(() => {
             />
           ))}
         </BoardGrid>
+        
+        {/* AR Toggle Button */}
+        <ARToggleButton 
+          $arMode={arMode}
+          onClick={() => setArMode(!arMode)}
+        >
+          {arMode ? 'DISABLE AR' : 'ACTIVATE AR'}
+        </ARToggleButton>
       </BoardAspectWrapper>
     </CardVisibilityProvider>
   );

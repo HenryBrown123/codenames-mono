@@ -4,6 +4,14 @@ import { FaStar, FaLeaf, FaSkull, FaPeace } from "react-icons/fa";
 import { Card } from "@frontend/shared-types";
 import { useCardVisibility } from "./use-card-visibility";
 import type { VisualState } from "./card-visibility-provider";
+import {
+  ARScanGrid,
+  ARWordOverlay, 
+  WordBracket,
+  ARInfoTag,
+  ARClassification,
+  ARTargetBracket
+} from "./ar-overlay-components";
 
 // Card colors
 const CARD_COLORS = {
@@ -593,12 +601,39 @@ export interface GameCardProps {
 }
 
 /**
+ * Helper function to determine team type for AR elements
+ */
+const getTeamType = (card: Card): string => {
+  if (card.cardType === "ASSASSIN") return "assassin";
+  if (card.cardType === "BYSTANDER") return "neutral";
+  
+  const team = card.teamName?.toLowerCase();
+  if (team?.includes("red")) return "red";
+  if (team?.includes("blue")) return "blue";
+  if (team?.includes("green")) return "green";
+  
+  return "neutral";
+};
+
+/**
+ * Helper function to determine if this is your team (for targeting brackets)
+ * TODO: This should be derived from actual player/team context
+ */
+const isYourTeam = (card: Card): boolean => {
+  const team = card.teamName?.toLowerCase();
+  // For now, assume red team is "your team" - this should be dynamic
+  return team?.includes("red") || false;
+};
+
+/**
  * Individual game card component with mobile-first responsive design
  */
 export const GameCard = memo<GameCardProps>(
   ({ card, index, onClick, clickable, initialVisibility }) => {
     const teamColor = getCardColor(card);
     const visibility = useCardVisibility(card, index, initialVisibility);
+    const teamType = getTeamType(card);
+    const isOwnTeam = isYourTeam(card);
 
     const coverTransform = useMemo(
       () => ({
@@ -628,6 +663,7 @@ export const GameCard = memo<GameCardProps>(
       <CardContainer
         data-state={visibility.state}
         data-animation={visibility.animation}
+        data-team-color={teamColor}
         style={{ "--card-index": index, "--team-color": teamColor } as React.CSSProperties}
         onAnimationEnd={handleAnimationEnd}
       >
@@ -647,6 +683,30 @@ export const GameCard = memo<GameCardProps>(
 
           <CardContent>{card.word}</CardContent>
         </BaseCard>
+
+        {/* AR Elements - Hidden by default, shown in AR mode via CSS */}
+        <ARScanGrid />
+        
+        <ARWordOverlay 
+          $teamColor={teamColor} 
+          $isYourTeam={isOwnTeam}
+        >
+          {card.word}
+          
+          {/* Targeting brackets for your team */}
+          {isOwnTeam && (
+            <>
+              <WordBracket className="tl" $bracketColor={teamColor} />
+              <WordBracket className="tr" $bracketColor={teamColor} />
+              <WordBracket className="bl" $bracketColor={teamColor} />
+              <WordBracket className="br" $bracketColor={teamColor} />
+            </>
+          )}
+        </ARWordOverlay>
+        
+        <ARInfoTag $teamType={teamType} />
+        <ARClassification $teamType={teamType} />
+        <ARTargetBracket />
 
         <CoverCard
           className="cover-card"

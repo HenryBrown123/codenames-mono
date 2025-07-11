@@ -509,7 +509,7 @@ const DesktopInstructionsContainer = styled.div`
     min-height: 50px;
     max-height: 80px;
     overflow: hidden;
-    grid-column: 1 / -1;
+    /* REMOVED: grid-column: 1 / -1; - Now stays within sidebar */
     font-family: "JetBrains Mono", "Courier New", monospace;
     position: relative;
     box-shadow:
@@ -764,11 +764,12 @@ export const GameScene: React.FC = () => {
     return (
       <GameSceneContainer>
         <SidebarContainer>
+          <DesktopInstructionsContainer>
+            {isFetching && <RefetchIndicator />}
+            <GameInstructions messageText={messageText} />
+          </DesktopInstructionsContainer>
+          
           <DashboardContainer>
-            <DesktopInstructionsContainer>
-              {isFetching && <RefetchIndicator />}
-              <GameInstructions messageText={messageText} />
-            </DesktopInstructionsContainer>
             <DashboardComponent onOpenCluePanel={() => setShowCluePanel(true)} />
           </DashboardContainer>
         </SidebarContainer>
