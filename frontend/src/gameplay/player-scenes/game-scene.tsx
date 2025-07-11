@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styled, { keyframes } from "styled-components";
 import { useGameDataRequired, useTurn } from "../shared/providers";
 import { usePlayerScene } from "./";
@@ -10,6 +10,53 @@ import { ActionButton } from "../shared/components";
 import { Z_INDEX } from "@frontend/style/z-index";
 import { CodeWordInput } from "../ui-components/dashboards/codemaster-input";
 import { useGameActions } from "../player-actions";
+
+const hackerPulse = keyframes`
+  0%, 100% {
+    border-color: rgba(0, 255, 136, 0.3);
+    box-shadow: 
+      0 0 10px rgba(0, 255, 136, 0.2),
+      inset 0 0 10px rgba(0, 255, 136, 0.05);
+  }
+  50% {
+    border-color: rgba(0, 255, 136, 0.6);
+    box-shadow: 
+      0 0 20px rgba(0, 255, 136, 0.4),
+      inset 0 0 20px rgba(0, 255, 136, 0.1);
+  }
+`;
+
+const scanlineAnimation = keyframes`
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+`;
+
+const glitchAnimation = keyframes`
+  0%, 100% {
+    text-shadow: 
+      0 0 2px var(--color-primary, #00ff88),
+      0 0 4px var(--color-primary, #00ff88);
+  }
+  25% {
+    text-shadow: 
+      -2px 0 var(--color-accent, #ff0080),
+      2px 0 var(--color-team-blue, #00d4ff);
+  }
+  50% {
+    text-shadow: 
+      2px 0 var(--color-accent, #ff0080),
+      -2px 0 var(--color-primary, #00ff88);
+  }
+  75% {
+    text-shadow: 
+      0 0 2px var(--color-team-blue, #00d4ff),
+      0 0 4px var(--color-team-blue, #00d4ff);
+  }
+`;
 
 /**
  * MOBILE-FIRST: Game scene with collapsible instructions
@@ -50,7 +97,7 @@ const GameSceneContainer = styled.div`
  * MOBILE: Floating help button
  */
 const HelpButton = styled.button<{ $isActive: boolean }>`
-  /* Mobile-first: Floating help button */
+  /* Mobile-first: Floating help button with hacker aesthetic */
   position: fixed;
   top: 1rem;
   right: 1rem;
@@ -58,12 +105,15 @@ const HelpButton = styled.button<{ $isActive: boolean }>`
   height: 44px;
   border-radius: 50%;
   background: ${({ $isActive }) =>
-    $isActive ? "var(--color-primary, #00ff88)" : "rgba(65, 63, 63, 0.9)"};
+    $isActive 
+      ? "linear-gradient(135deg, rgba(0, 255, 136, 0.2) 0%, rgba(0, 255, 136, 0.1) 100%)"
+      : "linear-gradient(135deg, rgba(10, 10, 15, 0.95) 0%, rgba(26, 26, 46, 0.95) 100%)"};
   border: 2px solid ${({ $isActive }) => 
-    ($isActive ? "var(--color-primary, #00ff88)" : "rgba(255, 255, 255, 0.3)")};
-  color: ${({ $isActive }) => ($isActive ? "#000" : "#fff")};
+    ($isActive ? "var(--color-primary, #00ff88)" : "rgba(0, 255, 136, 0.3)")};
+  color: ${({ $isActive }) => ($isActive ? "var(--color-primary, #00ff88)" : "#fff")};
   font-size: 1.2rem;
   font-weight: bold;
+  font-family: "JetBrains Mono", "Courier New", monospace;
   cursor: pointer;
   transition: all 0.3s ease;
   z-index: ${Z_INDEX.FIXED_BUTTONS};
@@ -71,11 +121,17 @@ const HelpButton = styled.button<{ $isActive: boolean }>`
   align-items: center;
   justify-content: center;
   backdrop-filter: blur(10px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(0, 255, 136, 0.2);
+  animation: ${({ $isActive }) => ($isActive ? glitchAnimation : "none")} 2s infinite;
 
   &:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1) rotate(360deg);
+    box-shadow: 
+      0 6px 16px rgba(0, 0, 0, 0.4),
+      0 0 30px rgba(0, 255, 136, 0.4);
+    animation: ${glitchAnimation} 1s infinite;
   }
 
   &:active {
@@ -92,48 +148,75 @@ const HelpButton = styled.button<{ $isActive: boolean }>`
  * MOBILE: Slide-down instructions panel
  */
 const InstructionsPanel = styled.div<{ $isVisible: boolean }>`
-  /* Mobile-first: Slide-down panel from top */
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   background: linear-gradient(
     180deg,
-    rgba(65, 63, 63, 0.98) 0%,
-    rgba(65, 63, 63, 0.95) 100%
+    rgba(10, 10, 15, 0.98) 0%,
+    rgba(26, 26, 46, 0.95) 100%
   );
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 2px solid var(--color-primary, #00ff88);
   z-index: ${Z_INDEX.INSTRUCTIONS_PANEL};
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(0, 255, 136, 0.2);
 
-  /* Slide animation */
+  /* Smooth slide animation */
   transform: translateY(${({ $isVisible }) => ($isVisible ? "0" : "-100%")});
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  /* Don't allow interaction - it's temporary */
+  pointer-events: ${({ $isVisible }) => ($isVisible ? "none" : "none")};
 
-  /* Account for safe areas */
   padding-top: env(safe-area-inset-top);
+  
+  /* Terminal effect */
+  &::after {
+    content: "MISSION UPDATE";
+    position: absolute;
+    top: max(env(safe-area-inset-top), 1rem);
+    left: 1rem;
+    font-size: 0.7rem;
+    color: var(--color-primary, #00ff88);
+    opacity: 0.5;
+    letter-spacing: 0.2em;
+    font-family: "JetBrains Mono", monospace;
+    animation: ${glitchAnimation} 2s infinite;
+  }
 
-  /* PROGRESSIVE ENHANCEMENT: Hide on desktop/tablet landscape */
   @media (min-width: 769px) and (orientation: landscape) {
     display: none;
   }
 `;
 
 const PanelContent = styled.div`
-  padding: 1rem 1.5rem 1.5rem 1.5rem;
+  padding: 2rem 1.5rem;
   text-align: center;
   font-size: 0.9rem;
   line-height: 1.4;
   color: white;
-
-  /* Make room for close button */
-  margin-top: 2.5rem;
   
   /* Add max-width for readability */
   max-width: 400px;
   margin-left: auto;
   margin-right: auto;
+  
+  /* Fade in animation */
+  animation: fadeIn 0.3s ease-out;
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 `;
 
 const CloseButton = styled.button`
@@ -143,25 +226,44 @@ const CloseButton = styled.button`
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
+  background: linear-gradient(135deg, rgba(10, 10, 15, 0.9) 0%, rgba(26, 26, 46, 0.9) 100%);
+  border: 2px solid var(--color-primary, #00ff88);
+  color: var(--color-primary, #00ff88);
   font-size: 1.2rem;
+  font-family: "JetBrains Mono", "Courier New", monospace;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
   backdrop-filter: blur(10px);
+  box-shadow: 
+    0 0 10px rgba(0, 255, 136, 0.3),
+    inset 0 0 10px rgba(0, 255, 136, 0.05);
 
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.1);
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%);
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 
+      0 0 20px rgba(0, 255, 136, 0.5),
+      inset 0 0 20px rgba(0, 255, 136, 0.1);
+    animation: ${glitchAnimation} 1s infinite;
   }
 
   &:active {
     transform: scale(0.95);
   }
+`;
+
+const ProgressBar = styled.div<{ $isVisible: boolean }>`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: var(--color-primary, #00ff88);
+  width: ${({ $isVisible }) => ($isVisible ? "0%" : "100%")};
+  transition: width 3s linear;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.8);
 `;
 
 /**
@@ -269,7 +371,7 @@ const ClueCloseButton = styled.button`
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
+  background: transparent;
   border: 1px solid var(--color-primary, #00ff88);
   color: var(--color-primary, #00ff88);
   font-size: 1.5rem;
@@ -279,10 +381,19 @@ const ClueCloseButton = styled.button`
   justify-content: center;
   transition: all 0.2s ease;
   backdrop-filter: blur(10px);
+  font-family: "JetBrains Mono", monospace;
+  font-weight: bold;
+  
+  /* Match button glow effects */
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
 
   &:hover {
-    background: rgba(0, 255, 136, 0.1);
-    transform: scale(1.1);
+    background: var(--color-primary, #00ff88);
+    color: #000;
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 
+      0 0 30px rgba(0, 255, 136, 0.5),
+      inset 0 0 20px rgba(0, 255, 136, 0.2);
   }
 
   &:active {
@@ -345,7 +456,8 @@ const DesktopInstructionsContainer = styled.div`
   /* PROGRESSIVE ENHANCEMENT: Show on tablet landscape+ */
   @media (min-width: 769px) and (orientation: landscape) {
     display: flex;
-    background-color: rgba(65, 63, 63, 0.9);
+    background: linear-gradient(135deg, rgba(10, 10, 15, 0.95) 0%, rgba(26, 26, 46, 0.95) 100%);
+    border: 2px solid var(--color-primary, #00ff88);
     border-radius: 8px;
     align-items: center;
     justify-content: center;
@@ -358,6 +470,25 @@ const DesktopInstructionsContainer = styled.div`
     max-height: 80px;
     overflow: hidden;
     grid-column: 1 / -1;
+    font-family: "JetBrains Mono", "Courier New", monospace;
+    position: relative;
+    box-shadow: 
+      0 0 20px rgba(0, 255, 136, 0.3),
+      inset 0 0 20px rgba(0, 255, 136, 0.05);
+    
+    /* Corner accents */
+    &::before {
+      content: "";
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, var(--color-primary, #00ff88) 0%, transparent 50%, var(--color-primary, #00ff88) 100%);
+      border-radius: 8px;
+      z-index: -1;
+      animation: ${hackerPulse} 4s ease-in-out infinite;
+    }
   }
 
   @media (min-width: 481px) {
@@ -426,8 +557,13 @@ const DashboardContainer = styled.div`
   right: 0;
   
   height: 80px;
-  background-color: rgba(65, 63, 63, 0.9);
-  border-radius: 8px 8px 0 0;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 10, 15, 0.95) 0%,
+    rgba(26, 26, 46, 0.98) 100%
+  );
+  border-top: 2px solid var(--color-primary, #00ff88);
+  border-radius: 16px 16px 0 0;
   z-index: ${Z_INDEX.DASHBOARD};
   
   padding-bottom: env(safe-area-inset-bottom);
@@ -439,7 +575,27 @@ const DashboardContainer = styled.div`
   align-items: center;
   justify-content: center;
   backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  
+  /* Hacker glow effect */
+  animation: ${hackerPulse} 3s ease-in-out infinite;
+  
+  /* Scanline effect */
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(0, 255, 136, 0.8) 50%,
+      transparent 100%
+    );
+    animation: ${scanlineAnimation} 4s linear infinite;
+    pointer-events: none;
+  }
 
   @media (min-width: 769px) and (orientation: landscape) {
     position: relative;
@@ -449,6 +605,8 @@ const DashboardContainer = styled.div`
     flex-direction: column;
     border-radius: 16px;
     z-index: auto;
+    border: 2px solid var(--color-primary, #00ff88);
+    border-top: 2px solid var(--color-primary, #00ff88);
   }
 
   @media (min-width: 1025px) {
@@ -495,9 +653,64 @@ export const GameScene: React.FC = () => {
   const { gameData, isPending, isError, error, refetch, isFetching } = useGameDataRequired();
   const { activeTurn } = useTurn();
   const { currentRole, currentScene } = usePlayerScene();
-  const [showInstructions, setShowInstructions] = useState(false);
   const [showCluePanel, setShowCluePanel] = useState(false);
   const { giveClue, actionState } = useGameActions();
+  
+  // Auto-show instructions state
+  const [showInstructions, setShowInstructions] = useState(false);
+  const previousMessageRef = useRef<string>("");
+  const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Get current message
+  const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
+  
+  // Auto-show instructions when message changes
+  useEffect(() => {
+    // Check if message actually changed (not just a re-render)
+    if (messageText !== previousMessageRef.current && messageText) {
+      previousMessageRef.current = messageText;
+      
+      // Clear any existing timer
+      if (hideTimerRef.current) {
+        clearTimeout(hideTimerRef.current);
+      }
+      
+      // Show instructions
+      setShowInstructions(true);
+      
+      // Hide after 3 seconds
+      hideTimerRef.current = setTimeout(() => {
+        setShowInstructions(false);
+        hideTimerRef.current = null;
+      }, 3000);
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      if (hideTimerRef.current) {
+        clearTimeout(hideTimerRef.current);
+      }
+    };
+  }, [messageText]);
+  
+  // Manual toggle function (for help button if you want to keep it)
+  const toggleInstructions = () => {
+    if (hideTimerRef.current) {
+      clearTimeout(hideTimerRef.current);
+      hideTimerRef.current = null;
+    }
+    
+    if (!showInstructions) {
+      setShowInstructions(true);
+      // Auto-hide after 3 seconds when manually shown
+      hideTimerRef.current = setTimeout(() => {
+        setShowInstructions(false);
+        hideTimerRef.current = null;
+      }, 3000);
+    } else {
+      setShowInstructions(false);
+    }
+  };
 
   // Show skeleton during initial load
   if (isPending && !gameData) {
@@ -537,7 +750,6 @@ export const GameScene: React.FC = () => {
     );
   }
 
-  const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
   const BoardComponent = getBoardComponent(currentRole, currentScene);
 
@@ -581,28 +793,16 @@ export const GameScene: React.FC = () => {
     );
   }
 
-  // Mobile layout - board + dashboard with slide-down instructions
+  // Mobile layout - board + dashboard with auto-animated instructions
   return (
     <GameSceneContainer>
-      {/* Mobile slide-down backdrop */}
-      <PanelBackdrop $isVisible={showInstructions} onClick={() => setShowInstructions(false)} />
-
-      {/* Mobile slide-down instructions panel */}
+      {/* Mobile slide-down instructions panel - auto-animated */}
       <InstructionsPanel $isVisible={showInstructions}>
-        <CloseButton onClick={() => setShowInstructions(false)}>×</CloseButton>
         <PanelContent>
           {isFetching && <RefetchIndicator />}
           <GameInstructions messageText={messageText} />
-
-          {/* TODO: Future expansion area for settings/options */}
-          {/* 
-          <div style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-            <h4>Game Options</h4>
-            <button>Settings</button>
-            <button>Rules</button>
-          </div>
-          */}
         </PanelContent>
+        <ProgressBar $isVisible={showInstructions} />
       </InstructionsPanel>
 
       {/* MOBILE CLUE PANEL - FULL SCREEN TAKEOVER */}
@@ -627,12 +827,13 @@ export const GameScene: React.FC = () => {
         </CluePanelContent>
       </CluePanel>
 
-      {/* Mobile floating help button */}
+      {/* Optional: Keep help button but make it less prominent */}
       <HelpButton
         $isActive={showInstructions}
-        onClick={() => setShowInstructions(!showInstructions)}
+        onClick={toggleInstructions}
+        style={{ opacity: 0.3 }}
       >
-        {showInstructions ? "?" : "?"}
+        ?
       </HelpButton>
 
       <GameBoardContainer>
