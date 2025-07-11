@@ -12,22 +12,21 @@ import { ActionButton } from "../shared/components";
  * MOBILE-FIRST: Game scene with collapsible instructions
  */
 const GameSceneContainer = styled.div`
-  /* Mobile-first: Two-section layout - board + dashboard */
+  /* Mobile-first: Simple full-height container */
   width: 100%;
-  height: 100%;
-  min-height: 100vh;
-  min-height: 100dvh;
-  min-height: -webkit-fill-available;
+  height: 100vh;
+  height: 100dvh;
+  height: -webkit-fill-available;
 
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   padding: 0.5rem;
-  padding-bottom: 1rem;
+  padding-bottom: 0; /* Let fixed dashboard handle bottom spacing */
   box-sizing: border-box;
   position: relative;
 
-  /* PROGRESSIVE ENHANCEMENT: Large tablet landscape - sidebar layout */
+  /* PROGRESSIVE ENHANCEMENT: Large tablet landscape - return to grid */
   @media (min-width: 769px) and (orientation: landscape) {
     grid-template-columns: minmax(250px, 1fr) 2.5fr;
     grid-template-rows: auto 1fr;
@@ -36,7 +35,6 @@ const GameSceneContainer = styled.div`
     padding: 1rem;
   }
 
-  /* PROGRESSIVE ENHANCEMENT: Desktop - full sidebar */
   @media (min-width: 1025px) {
     grid-template-columns: minmax(300px, 1.2fr) 3fr;
     grid-template-rows: auto 1fr;
@@ -233,7 +231,7 @@ const SidebarContainer = styled.div`
  * MOBILE-FIRST: Game board that takes maximum space
  */
 const GameBoardContainer = styled.div`
-  /* Mobile-first: Board takes most space */
+  /* Mobile-first: Account for fixed dashboard at bottom */
   flex: 1;
   display: flex;
   align-items: center;
@@ -242,35 +240,51 @@ const GameBoardContainer = styled.div`
   min-height: 300px;
   overflow: hidden;
 
-  /* PROGRESSIVE ENHANCEMENT: Large tablet landscape - grid placement */
+  /* Critical: Add bottom padding to prevent overlap with fixed dashboard */
+  padding-bottom: calc(80px + 0.5rem); /* Dashboard height + gap */
+
+  /* PROGRESSIVE ENHANCEMENT: Large tablet landscape - remove bottom padding */
   @media (min-width: 769px) and (orientation: landscape) {
     grid-column: 2;
     grid-row: 2;
     padding: 1rem;
+    padding-bottom: 1rem; /* Reset to normal */
   }
 `;
 
 /**
- * MOBILE-FIRST: Dashboard that stays accessible
+ * MOBILE-FIRST: Dashboard with fixed positioning approach
  */
 const DashboardContainer = styled.div`
-  /* Mobile-first: Compact dashboard */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  
+  height: 80px;
   background-color: rgba(65, 63, 63, 0.9);
-  border-radius: 8px;
+  border-radius: 8px 8px 0 0;
+  z-index: 100;
+  
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-top: 0.75rem;
+  
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem;
-  flex-shrink: 0;
-  min-height: 70px;
-  max-height: 100px;
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 
-  /* PROGRESSIVE ENHANCEMENT: Large tablet landscape - full height in sidebar */
   @media (min-width: 769px) and (orientation: landscape) {
+    position: relative;
+    bottom: auto;
     height: 100%;
     max-height: none;
     flex-direction: column;
     border-radius: 16px;
+    z-index: auto;
   }
 
   @media (min-width: 1025px) {

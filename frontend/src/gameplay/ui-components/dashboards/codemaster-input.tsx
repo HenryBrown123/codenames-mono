@@ -137,7 +137,11 @@ export function CodeWordInput({
 
   useEffect(() => {
     if (isEditable && textInputRef.current) {
-      textInputRef.current.focus();
+      // Only auto-focus on desktop, not mobile
+      const isMobile = window.matchMedia("(max-width: 768px)").matches;
+      if (!isMobile) {
+        textInputRef.current.focus();
+      }
     }
   }, [isEditable]);
 
