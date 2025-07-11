@@ -1,6 +1,5 @@
 import React from "react";
 import styled from "styled-components";
-import { CodeWordInput } from "./codemaster-input";
 import { useGameDataRequired, useTurn } from "../../shared/providers";
 import { useGameActions } from "../../player-actions";
 import { ActionButton } from "../../shared/components";
@@ -35,26 +34,24 @@ const Container = styled.div`
 `;
 
 /**
- * MOBILE-FIRST: Clue display optimized for mobile
+ * MOBILE-FIRST: Clue display optimized for tight mobile space
  */
 const ClueDisplay = styled.div`
-  /* Mobile-first: Compact clue display */
+  /* Mobile-first: Ultra-compact clue display */
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 0.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 0.5rem;
   flex: 1;
   min-width: 0; /* Allow shrinking */
 
-  /* PROGRESSIVE ENHANCEMENT: Tablet */
-  @media (min-width: 481px) {
+  /* PROGRESSIVE ENHANCEMENT: Tablet landscape - back to stacked */
+  @media (min-width: 769px) and (orientation: landscape) {
+    flex-direction: column;
+    text-align: center;
     padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   /* PROGRESSIVE ENHANCEMENT: Desktop */
@@ -64,18 +61,39 @@ const ClueDisplay = styled.div`
   }
 `;
 
-const ClueWord = styled.div`
-  /* Mobile-first: Readable clue text */
-  font-size: 1.1rem;
+/**
+ * MOBILE: Single-line clue text
+ */
+const ClueText = styled.div`
+  /* Mobile-first: One line, bold and readable */
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
   font-weight: 700;
   color: var(--color-primary, #00ff88);
-  text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
-  margin-bottom: 0.25rem;
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
-  /* PROGRESSIVE ENHANCEMENT: Tablet */
-  @media (min-width: 481px) {
+  /* PROGRESSIVE ENHANCEMENT: Tablet landscape - stacked layout */
+  @media (min-width: 769px) and (orientation: landscape) {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: normal;
+    overflow: visible;
+  }
+`;
+
+const ClueWord = styled.span`
+  /* Mobile: inline with quotes */
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+
+  /* PROGRESSIVE ENHANCEMENT: Tablet - larger */
+  @media (min-width: 769px) and (orientation: landscape) {
     font-size: 1.3rem;
-    margin-bottom: 0.5rem;
+    display: block;
   }
 
   /* PROGRESSIVE ENHANCEMENT: Desktop */
@@ -84,15 +102,16 @@ const ClueWord = styled.div`
   }
 `;
 
-const ClueNumber = styled.div`
-  /* Mobile-first: Clear number display */
-  font-size: 0.9rem;
+const ClueNumber = styled.span`
+  /* Mobile: inline, slightly muted */
   color: var(--color-text-muted, rgba(255, 255, 255, 0.7));
+  font-size: 0.9rem;
   font-weight: 500;
 
-  /* PROGRESSIVE ENHANCEMENT: Tablet */
-  @media (min-width: 481px) {
+  /* PROGRESSIVE ENHANCEMENT: Tablet - separate line */
+  @media (min-width: 769px) and (orientation: landscape) {
     font-size: 1rem;
+    display: block;
   }
 
   /* PROGRESSIVE ENHANCEMENT: Desktop */
@@ -102,23 +121,26 @@ const ClueNumber = styled.div`
 `;
 
 /**
- * MOBILE-FIRST: Button container for end turn action
+ * MOBILE-FIRST: Compact button styling
  */
-const ButtonContainer = styled.div`
-  /* Mobile-first: Compact button area */
-  display: flex;
-  align-items: center;
-  justify-content: center;
+const CompactButton = styled(ActionButton)`
+  /* Mobile: Override default button sizing */
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  min-height: 36px;
   flex-shrink: 0;
 
-  /* PROGRESSIVE ENHANCEMENT: Sidebar layout - full width button */
+  /* PROGRESSIVE ENHANCEMENT: Tablet - normal size */
   @media (min-width: 769px) and (orientation: landscape) {
+    padding: 0.8rem 2rem;
+    font-size: 1rem;
+    min-height: 44px;
     width: 100%;
   }
 `;
 
 /**
- * Codebreaker Dashboard - Shows clue and end turn option
+ * Codebreaker Dashboard - Compact mobile design, expanded on desktop
  */
 export const CodebreakerDashboard: React.FC = () => {
   const { gameData } = useGameDataRequired();
@@ -146,17 +168,17 @@ export const CodebreakerDashboard: React.FC = () => {
   return (
     <Container>
       <ClueDisplay>
-        <ClueWord>"{activeTurn.clue.word}"</ClueWord>
-        <ClueNumber>for {activeTurn.clue.number} cards</ClueNumber>
+        <ClueText>
+          <ClueWord>"{activeTurn.clue.word}"</ClueWord>
+          <ClueNumber>for {activeTurn.clue.number}</ClueNumber>
+        </ClueText>
       </ClueDisplay>
 
-      <ButtonContainer>
-        <ActionButton
-          onClick={endTurn}
-          text={actionState.status === "loading" ? "Ending..." : "End Turn"}
-          enabled={(canEndTurn && actionState.status !== "loading") || false}
-        />
-      </ButtonContainer>
+      <CompactButton
+        onClick={endTurn}
+        text={actionState.status === "loading" ? "..." : "End Turn"}
+        enabled={(canEndTurn && actionState.status !== "loading") || false}
+      />
     </Container>
   );
 };
