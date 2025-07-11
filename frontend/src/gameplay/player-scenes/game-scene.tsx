@@ -58,6 +58,50 @@ const glitchAnimation = keyframes`
   }
 `;
 
+const instructionsReveal = keyframes`
+  /* Hidden phase */
+  0% {
+    transform: translateY(-120%);
+    opacity: 0;
+  }
+  
+  /* Slide in */
+  5% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  
+  /* Stay visible - wait 3 seconds after typewriter finishes */
+  85% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  
+  /* Slide out */
+  95% {
+    transform: translateY(-120%);
+    opacity: 0;
+  }
+  
+  /* Stay hidden */
+  100% {
+    transform: translateY(-120%);
+    opacity: 0;
+  }
+`;
+
+const progressShrink = keyframes`
+  0% {
+    transform: scaleX(1);
+  }
+  85% {
+    transform: scaleX(0);
+  }
+  100% {
+    transform: scaleX(0);
+  }
+`;
+
 /**
  * MOBILE-FIRST: Game scene with collapsible instructions
  */
@@ -105,11 +149,11 @@ const HelpButton = styled.button<{ $isActive: boolean }>`
   height: 44px;
   border-radius: 50%;
   background: ${({ $isActive }) =>
-    $isActive 
+    $isActive
       ? "linear-gradient(135deg, rgba(0, 255, 136, 0.2) 0%, rgba(0, 255, 136, 0.1) 100%)"
       : "linear-gradient(135deg, rgba(10, 10, 15, 0.95) 0%, rgba(26, 26, 46, 0.95) 100%)"};
-  border: 2px solid ${({ $isActive }) => 
-    ($isActive ? "var(--color-primary, #00ff88)" : "rgba(0, 255, 136, 0.3)")};
+  border: 2px solid
+    ${({ $isActive }) => ($isActive ? "var(--color-primary, #00ff88)" : "rgba(0, 255, 136, 0.3)")};
   color: ${({ $isActive }) => ($isActive ? "var(--color-primary, #00ff88)" : "#fff")};
   font-size: 1.2rem;
   font-weight: bold;
@@ -121,14 +165,14 @@ const HelpButton = styled.button<{ $isActive: boolean }>`
   align-items: center;
   justify-content: center;
   backdrop-filter: blur(10px);
-  box-shadow: 
+  box-shadow:
     0 4px 12px rgba(0, 0, 0, 0.3),
     0 0 20px rgba(0, 255, 136, 0.2);
   animation: ${({ $isActive }) => ($isActive ? glitchAnimation : "none")} 2s infinite;
 
   &:hover {
     transform: scale(1.1) rotate(360deg);
-    box-shadow: 
+    box-shadow:
       0 6px 16px rgba(0, 0, 0, 0.4),
       0 0 30px rgba(0, 255, 136, 0.4);
     animation: ${glitchAnimation} 1s infinite;
@@ -147,32 +191,29 @@ const HelpButton = styled.button<{ $isActive: boolean }>`
 /**
  * MOBILE: Slide-down instructions panel
  */
-const InstructionsPanel = styled.div<{ $isVisible: boolean }>`
+const InstructionsPanel = styled.div`
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(10, 10, 15, 0.98) 0%,
-    rgba(26, 26, 46, 0.95) 100%
-  );
+  background: linear-gradient(180deg, rgba(10, 10, 15, 0.98) 0%, rgba(26, 26, 46, 0.95) 100%);
   backdrop-filter: blur(20px);
   border-bottom: 2px solid var(--color-primary, #00ff88);
   z-index: ${Z_INDEX.INSTRUCTIONS_PANEL};
-  box-shadow: 
+  box-shadow:
     0 10px 30px rgba(0, 0, 0, 0.5),
     0 0 30px rgba(0, 255, 136, 0.2);
 
-  /* Smooth slide animation */
-  transform: translateY(${({ $isVisible }) => ($isVisible ? "0" : "-100%")});
-  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  
-  /* Don't allow interaction - it's temporary */
-  pointer-events: ${({ $isVisible }) => ($isVisible ? "none" : "none")};
+  /* Initial hidden state */
+  transform: translateY(-120%);
+  opacity: 0;
+
+  /* Animation triggered by key change */
+  animation: ${instructionsReveal} 6s ease-out;
+  animation-fill-mode: both;
 
   padding-top: env(safe-area-inset-top);
-  
+
   /* Terminal effect */
   &::after {
     content: "MISSION UPDATE";
@@ -184,7 +225,6 @@ const InstructionsPanel = styled.div<{ $isVisible: boolean }>`
     opacity: 0.5;
     letter-spacing: 0.2em;
     font-family: "JetBrains Mono", monospace;
-    animation: ${glitchAnimation} 2s infinite;
   }
 
   @media (min-width: 769px) and (orientation: landscape) {
@@ -198,15 +238,15 @@ const PanelContent = styled.div`
   font-size: 0.9rem;
   line-height: 1.4;
   color: white;
-  
+
   /* Add max-width for readability */
   max-width: 400px;
   margin-left: auto;
   margin-right: auto;
-  
+
   /* Fade in animation */
   animation: fadeIn 0.3s ease-out;
-  
+
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -237,14 +277,14 @@ const CloseButton = styled.button`
   justify-content: center;
   transition: all 0.2s ease;
   backdrop-filter: blur(10px);
-  box-shadow: 
+  box-shadow:
     0 0 10px rgba(0, 255, 136, 0.3),
     inset 0 0 10px rgba(0, 255, 136, 0.05);
 
   &:hover {
     background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%);
     transform: scale(1.1) rotate(90deg);
-    box-shadow: 
+    box-shadow:
       0 0 20px rgba(0, 255, 136, 0.5),
       inset 0 0 20px rgba(0, 255, 136, 0.1);
     animation: ${glitchAnimation} 1s infinite;
@@ -255,15 +295,19 @@ const CloseButton = styled.button`
   }
 `;
 
-const ProgressBar = styled.div<{ $isVisible: boolean }>`
+const ProgressBar = styled.div`
   position: absolute;
   bottom: 0;
   left: 0;
   height: 2px;
   background: var(--color-primary, #00ff88);
-  width: ${({ $isVisible }) => ($isVisible ? "0%" : "100%")};
-  transition: width 3s linear;
   box-shadow: 0 0 10px rgba(0, 255, 136, 0.8);
+  width: 100%;
+  transform-origin: left;
+
+  /* Shrink animation synced with panel */
+  animation: ${progressShrink} 5.1s linear 0.3s; /* Delay to start when panel is visible */
+  animation-fill-mode: both;
 `;
 
 /**
@@ -300,14 +344,10 @@ const CluePanel = styled.div<{ $isVisible: boolean }>`
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(10, 10, 15, 0.98) 0%,
-    rgba(26, 26, 46, 0.98) 100%
-  );
+  background: linear-gradient(135deg, rgba(10, 10, 15, 0.98) 0%, rgba(26, 26, 46, 0.98) 100%);
   backdrop-filter: blur(20px);
   z-index: ${Z_INDEX.MODAL_CONTENT};
-  
+
   /* Slide animation from bottom */
   transform: translateY(${({ $isVisible }) => ($isVisible ? "0" : "100%")});
   transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
@@ -341,10 +381,10 @@ const HackerTitle = styled.h1`
   text-transform: uppercase;
   letter-spacing: 0.15em;
   margin: 0;
-  text-shadow: 
+  text-shadow:
     0 0 20px rgba(0, 255, 136, 0.5),
     0 0 40px rgba(0, 255, 136, 0.3);
-    
+
   @media (max-width: 480px) {
     font-size: 1.5rem;
   }
@@ -357,7 +397,7 @@ const CluePanelContent = styled.div`
   align-items: center;
   justify-content: center;
   padding: 2rem 1.5rem;
-  
+
   /* Max width for readability */
   width: 100%;
   max-width: 500px;
@@ -383,7 +423,7 @@ const ClueCloseButton = styled.button`
   backdrop-filter: blur(10px);
   font-family: "JetBrains Mono", monospace;
   font-weight: bold;
-  
+
   /* Match button glow effects */
   box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
 
@@ -391,7 +431,7 @@ const ClueCloseButton = styled.button`
     background: var(--color-primary, #00ff88);
     color: #000;
     transform: scale(1.1) rotate(90deg);
-    box-shadow: 
+    box-shadow:
       0 0 30px rgba(0, 255, 136, 0.5),
       inset 0 0 20px rgba(0, 255, 136, 0.2);
   }
@@ -417,9 +457,9 @@ const HackerDecoration = styled.div`
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  
+
   &::before {
-    content: 'CLASSIFIED';
+    content: "CLASSIFIED";
     transform: rotate(-45deg);
   }
 `;
@@ -472,10 +512,10 @@ const DesktopInstructionsContainer = styled.div`
     grid-column: 1 / -1;
     font-family: "JetBrains Mono", "Courier New", monospace;
     position: relative;
-    box-shadow: 
+    box-shadow:
       0 0 20px rgba(0, 255, 136, 0.3),
       inset 0 0 20px rgba(0, 255, 136, 0.05);
-    
+
     /* Corner accents */
     &::before {
       content: "";
@@ -484,7 +524,12 @@ const DesktopInstructionsContainer = styled.div`
       left: -2px;
       right: -2px;
       bottom: -2px;
-      background: linear-gradient(45deg, var(--color-primary, #00ff88) 0%, transparent 50%, var(--color-primary, #00ff88) 100%);
+      background: linear-gradient(
+        45deg,
+        var(--color-primary, #00ff88) 0%,
+        transparent 50%,
+        var(--color-primary, #00ff88) 100%
+      );
       border-radius: 8px;
       z-index: -1;
       animation: ${hackerPulse} 4s ease-in-out infinite;
@@ -555,30 +600,26 @@ const DashboardContainer = styled.div`
   bottom: 0;
   left: 0;
   right: 0;
-  
+
   height: 80px;
-  background: linear-gradient(
-    180deg,
-    rgba(10, 10, 15, 0.95) 0%,
-    rgba(26, 26, 46, 0.98) 100%
-  );
+  background: linear-gradient(180deg, rgba(10, 10, 15, 0.95) 0%, rgba(26, 26, 46, 0.98) 100%);
   border-top: 2px solid var(--color-primary, #00ff88);
   border-radius: 16px 16px 0 0;
   z-index: ${Z_INDEX.DASHBOARD};
-  
+
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: 0.5rem;
   padding-right: 0.5rem;
   padding-top: 0.75rem;
-  
+
   display: flex;
   align-items: center;
   justify-content: center;
   backdrop-filter: blur(10px);
-  
+
   /* Hacker glow effect */
   animation: ${hackerPulse} 3s ease-in-out infinite;
-  
+
   /* Scanline effect */
   &::before {
     content: "";
@@ -655,62 +696,9 @@ export const GameScene: React.FC = () => {
   const { currentRole, currentScene } = usePlayerScene();
   const [showCluePanel, setShowCluePanel] = useState(false);
   const { giveClue, actionState } = useGameActions();
-  
-  // Auto-show instructions state
-  const [showInstructions, setShowInstructions] = useState(false);
-  const previousMessageRef = useRef<string>("");
-  const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
-  
   // Get current message
   const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
-  
-  // Auto-show instructions when message changes
-  useEffect(() => {
-    // Check if message actually changed (not just a re-render)
-    if (messageText !== previousMessageRef.current && messageText) {
-      previousMessageRef.current = messageText;
-      
-      // Clear any existing timer
-      if (hideTimerRef.current) {
-        clearTimeout(hideTimerRef.current);
-      }
-      
-      // Show instructions
-      setShowInstructions(true);
-      
-      // Hide after 3 seconds
-      hideTimerRef.current = setTimeout(() => {
-        setShowInstructions(false);
-        hideTimerRef.current = null;
-      }, 3000);
-    }
-    
-    // Cleanup on unmount
-    return () => {
-      if (hideTimerRef.current) {
-        clearTimeout(hideTimerRef.current);
-      }
-    };
-  }, [messageText]);
-  
-  // Manual toggle function (for help button if you want to keep it)
-  const toggleInstructions = () => {
-    if (hideTimerRef.current) {
-      clearTimeout(hideTimerRef.current);
-      hideTimerRef.current = null;
-    }
-    
-    if (!showInstructions) {
-      setShowInstructions(true);
-      // Auto-hide after 3 seconds when manually shown
-      hideTimerRef.current = setTimeout(() => {
-        setShowInstructions(false);
-        hideTimerRef.current = null;
-      }, 3000);
-    } else {
-      setShowInstructions(false);
-    }
-  };
+  const [toggleMessage, setToggleMessage] = useState(false);
 
   // Show skeleton during initial load
   if (isPending && !gameData) {
@@ -775,13 +763,12 @@ export const GameScene: React.FC = () => {
     // Sidebar layout for tablet landscape and desktop
     return (
       <GameSceneContainer>
-        <DesktopInstructionsContainer>
-          {isFetching && <RefetchIndicator />}
-          <GameInstructions messageText={messageText} />
-        </DesktopInstructionsContainer>
-
         <SidebarContainer>
           <DashboardContainer>
+            <DesktopInstructionsContainer>
+              {isFetching && <RefetchIndicator />}
+              <GameInstructions messageText={messageText} />
+            </DesktopInstructionsContainer>
             <DashboardComponent onOpenCluePanel={() => setShowCluePanel(true)} />
           </DashboardContainer>
         </SidebarContainer>
@@ -793,29 +780,29 @@ export const GameScene: React.FC = () => {
     );
   }
 
-  // Mobile layout - board + dashboard with auto-animated instructions
+  // Mobile layout - board + dashboard with pure CSS animated instructions
   return (
     <GameSceneContainer>
-      {/* Mobile slide-down instructions panel - auto-animated */}
-      <InstructionsPanel $isVisible={showInstructions}>
+      {/* Instructions panel with pure CSS animation */}
+      <InstructionsPanel key={`instruction-${messageText}-${toggleMessage}`}>
         <PanelContent>
           {isFetching && <RefetchIndicator />}
           <GameInstructions messageText={messageText} />
         </PanelContent>
-        <ProgressBar $isVisible={showInstructions} />
+        <ProgressBar key={messageText} />
       </InstructionsPanel>
 
       {/* MOBILE CLUE PANEL - FULL SCREEN TAKEOVER */}
       <CluePanelBackdrop $isVisible={showCluePanel} onClick={() => setShowCluePanel(false)} />
-      
+
       <CluePanel $isVisible={showCluePanel}>
         <HackerDecoration />
-        
+
         <CluePanelHeader>
           <ClueCloseButton onClick={() => setShowCluePanel(false)}>×</ClueCloseButton>
           <HackerTitle>TRANSMIT CLUE</HackerTitle>
         </CluePanelHeader>
-        
+
         <CluePanelContent>
           <CodeWordInput
             codeWord=""
@@ -827,12 +814,8 @@ export const GameScene: React.FC = () => {
         </CluePanelContent>
       </CluePanel>
 
-      {/* Optional: Keep help button but make it less prominent */}
-      <HelpButton
-        $isActive={showInstructions}
-        onClick={toggleInstructions}
-        style={{ opacity: 0.3 }}
-      >
+      {/* Help button to manually show instructions */}
+      <HelpButton $isActive={false} onClick={() => setToggleMessage(!toggleMessage)}>
         ?
       </HelpButton>
 

@@ -173,6 +173,8 @@ const CardContainer = styled.div`
   perspective: 1000px;
   margin: auto;
   z-index: 1;
+  aspect-ratio: 2.4 / 3;
+  padding: 10% 0; /* Add 10% padding to top and bottom */
 
   /* Base state - hidden until animated in */
   opacity: 0;
@@ -212,6 +214,7 @@ const BaseCard = styled.button<{ $teamColor: string; $clickable: boolean }>`
   width: 100%;
   height: 100%;
   min-height: 60px;
+  aspect-ratio: 2.4 / 3;
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   color: #2a2a3e;
@@ -368,11 +371,12 @@ const CoverCard = styled.div<{
 }>`
   /* Mobile-first cover card */
   position: absolute;
-  top: 0;
+  top: 10%;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: 80%;
   border-radius: 6px;
+  aspect-ratio: 2.4 / 3;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -509,52 +513,71 @@ const BackgroundIcon = styled.div`
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 3rem;
+  font-size: 4rem;
   font-weight: 900;
-  color: rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.4);
   z-index: 0;
   pointer-events: none;
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.3));
 
   &.assassin {
-    color: rgba(255, 255, 0, 0.12);
-    text-shadow: 0 0 10px rgba(255, 255, 0, 0.2);
+    color: rgba(255, 255, 0, 0.5);
+    text-shadow: 
+      0 0 10px rgba(255, 255, 0, 0.4),
+      0 0 20px rgba(255, 255, 0, 0.2);
+    filter: drop-shadow(0 0 8px rgba(255, 255, 0, 0.5));
   }
 
   /* PROGRESSIVE ENHANCEMENT: Larger icons on bigger screens */
   @media (min-width: 481px) {
-    font-size: 4rem;
+    font-size: 5rem;
+    color: rgba(0, 0, 0, 0.45);
+    
+    &.assassin {
+      color: rgba(255, 255, 0, 0.55);
+    }
   }
 
   @media (min-width: 769px) {
-    font-size: 6rem;
+    font-size: 7rem;
+    color: rgba(0, 0, 0, 0.5);
+    
+    &.assassin {
+      color: rgba(255, 255, 0, 0.6);
+    }
   }
 `;
 
 const CenterIcon = styled.div`
   font-size: 3rem;
   font-weight: 900;
-  color: rgba(0, 0, 0, 0.4);
+  color: rgba(0, 0, 0, 0.6);
   text-shadow:
-    1px 1px 0px rgba(255, 255, 255, 0.2),
-    -1px -1px 1px rgba(0, 0, 0, 0.6);
+    1px 1px 0px rgba(255, 255, 255, 0.3),
+    -1px -1px 1px rgba(0, 0, 0, 0.8);
+  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.5));
 
   &.assassin {
     color: #ffff00;
     text-shadow:
       0 0 20px rgba(255, 255, 0, 0.8),
       0 0 40px rgba(0, 255, 255, 0.6);
+    filter: drop-shadow(0 0 12px rgba(255, 255, 0, 0.8));
     animation: ${electricFlicker} 2s ease-in-out infinite;
   }
 
   /* PROGRESSIVE ENHANCEMENT: Larger icons on bigger screens */
   @media (min-width: 481px) {
     font-size: 4rem;
+    color: rgba(0, 0, 0, 0.7);
   }
 
   @media (min-width: 769px) {
     font-size: 6rem;
+    color: rgba(0, 0, 0, 0.8);
     filter: drop-shadow(1px 1px 1px rgba(255, 255, 255, 0.1))
-      drop-shadow(-1px -1px 1px rgba(0, 0, 0, 0.4));
+      drop-shadow(-1px -1px 1px rgba(0, 0, 0, 0.4))
+      drop-shadow(0 0 8px rgba(0, 0, 0, 0.6));
   }
 `;
 
@@ -579,9 +602,9 @@ export const GameCard = memo<GameCardProps>(
 
     const coverTransform = useMemo(
       () => ({
-        translateX: Math.random() * 12 - 6,
-        translateY: Math.random() * 12 - 6,
-        rotate: Math.random() * 10 - 5,
+        translateX: 0,
+        translateY: 0,
+        rotate: 0,
       }),
       [],
     );
