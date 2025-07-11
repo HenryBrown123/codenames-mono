@@ -7,6 +7,7 @@ import { getDashboardComponent, getBoardComponent } from "./component-mappings";
 import { ViewOnlyBoard } from "../ui-components/boards";
 import { GameInstructions } from "../ui-components/game-instructions";
 import { ActionButton } from "../shared/components";
+import { Z_INDEX } from "@frontend/style/z-index";
 
 /**
  * MOBILE-FIRST: Game scene with collapsible instructions
@@ -55,21 +56,24 @@ const HelpButton = styled.button<{ $isActive: boolean }>`
   height: 44px;
   border-radius: 50%;
   background: ${({ $isActive }) =>
-    $isActive ? "rgba(0, 255, 136, 0.9)" : "rgba(65, 63, 63, 0.9)"};
-  border: 2px solid ${({ $isActive }) => ($isActive ? "#00ff88" : "rgba(255, 255, 255, 0.3)")};
+    $isActive ? "var(--color-primary, #00ff88)" : "rgba(65, 63, 63, 0.9)"};
+  border: 2px solid ${({ $isActive }) => 
+    ($isActive ? "var(--color-primary, #00ff88)" : "rgba(255, 255, 255, 0.3)")};
   color: ${({ $isActive }) => ($isActive ? "#000" : "#fff")};
   font-size: 1.2rem;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
-  z-index: 1000;
+  z-index: ${Z_INDEX.FIXED_BUTTONS};
   display: flex;
   align-items: center;
   justify-content: center;
   backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 
   &:hover {
     transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
   }
 
   &:active {
@@ -91,17 +95,22 @@ const InstructionsPanel = styled.div<{ $isVisible: boolean }>`
   top: 0;
   left: 0;
   right: 0;
-  background: rgba(65, 63, 63, 0.98);
+  background: linear-gradient(
+    180deg,
+    rgba(65, 63, 63, 0.98) 0%,
+    rgba(65, 63, 63, 0.95) 100%
+  );
   backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  z-index: 998;
+  z-index: ${Z_INDEX.INSTRUCTIONS_PANEL};
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 
   /* Slide animation */
   transform: translateY(${({ $isVisible }) => ($isVisible ? "0" : "-100%")});
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Account for safe areas */
-  padding-top: max(env(safe-area-inset-top), 1rem);
+  padding-top: env(safe-area-inset-top);
 
   /* PROGRESSIVE ENHANCEMENT: Hide on desktop/tablet landscape */
   @media (min-width: 769px) and (orientation: landscape) {
@@ -117,15 +126,20 @@ const PanelContent = styled.div`
   color: white;
 
   /* Make room for close button */
-  margin-top: 2rem;
+  margin-top: 2.5rem;
+  
+  /* Add max-width for readability */
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
 `;
 
 const CloseButton = styled.button`
   position: absolute;
-  top: 1rem;
+  top: max(env(safe-area-inset-top), 1rem);
   right: 1rem;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -136,6 +150,7 @@ const CloseButton = styled.button`
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
 
   &:hover {
     background: rgba(255, 255, 255, 0.2);
@@ -158,7 +173,7 @@ const PanelBackdrop = styled.div<{ $isVisible: boolean }>`
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.3);
-  z-index: 997;
+  z-index: ${Z_INDEX.INSTRUCTIONS_BACKDROP};
 
   /* Fade animation */
   opacity: ${({ $isVisible }) => ($isVisible ? 1 : 0)};
@@ -264,7 +279,7 @@ const DashboardContainer = styled.div`
   height: 80px;
   background-color: rgba(65, 63, 63, 0.9);
   border-radius: 8px 8px 0 0;
-  z-index: 100;
+  z-index: ${Z_INDEX.DASHBOARD};
   
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: 0.5rem;
