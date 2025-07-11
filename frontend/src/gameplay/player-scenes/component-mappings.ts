@@ -1,11 +1,11 @@
 import React from "react";
 import {
-  LobbyDashboard as LobbyDashboardView,
-  SpectatorDashboard as SpectatorDashboardView,
-  CodemasterDashboard as CodemasterDashboardView,
-  CodebreakerDashboard as CodebreakerDashboardView,
-  WaitingDashboard as WaitingDashboardView,
-  OutcomeDashboard as OutcomeDashboardView,
+  LobbyDashboard,
+  SpectatorDashboard,
+  CodemasterDashboard,
+  CodebreakerDashboard,
+  WaitingDashboard,
+  OutcomeDashboard,
 } from "../ui-components/dashboards";
 import {
   InteractiveBoard,
@@ -26,26 +26,26 @@ export const getDashboardComponent = (
 
   switch (sceneKey) {
     case "codebreaker.main":
-      return CodebreakerDashboardView;
+      return CodebreakerDashboard;  // FIXED: removed View suffix
     case "codebreaker.outcome":
-      return OutcomeDashboardView;
+      return OutcomeDashboard;      // FIXED: removed View suffix
     case "codebreaker.waiting":
-      return WaitingDashboardView;
+      return WaitingDashboard;      // FIXED: removed View suffix
     case "codemaster.main":
-      return CodemasterDashboardView;
+      return CodemasterDashboard;   // FIXED: removed View suffix
     case "codemaster.waiting":
-      return WaitingDashboardView;
+      return WaitingDashboard;      // FIXED: removed View suffix
     case "spectator.watching":
-      return SpectatorDashboardView;
+      return SpectatorDashboard;    // FIXED: removed View suffix
     case "none.lobby":
     case "none.dealing":
     case "none.gameover":
-      return LobbyDashboardView;
+      return LobbyDashboard;        // FIXED: removed View suffix
     default:
       console.warn(
-        `No dashboard component found for ${sceneKey}, falling back to SpectatorDashboardView`,
+        `No dashboard component found for ${sceneKey}, falling back to SpectatorDashboard`,
       );
-      return SpectatorDashboardView;
+      return SpectatorDashboard;    // FIXED: removed View suffix
   }
 };
 

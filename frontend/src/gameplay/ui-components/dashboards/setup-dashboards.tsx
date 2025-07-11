@@ -4,6 +4,7 @@ import { RefreshCw } from "lucide-react";
 import { useGameDataRequired } from "../../shared/providers";
 import { useGameActions } from "../../player-actions";
 import { ActionButton } from "../../shared/components";
+import { usePlayerScene } from "../../player-scenes";
 
 /**
  * MOBILE-FIRST: Dashboard container that adapts to layout context
@@ -222,5 +223,19 @@ export const GameoverDashboard: React.FC = () => {
  * Outcome dashboard - Shows round outcome
  */
 export const OutcomeDashboard: React.FC = () => {
-  return <Container />;
+  const { triggerSceneTransition } = usePlayerScene();
+  
+  const handleContinue = () => {
+    triggerSceneTransition("OUTCOME_ACKNOWLEDGED");
+  };
+
+  return (
+    <CenteredContainer>
+      <ActionButton
+        onClick={handleContinue}
+        text="Continue"
+        enabled={true}
+      />
+    </CenteredContainer>
+  );
 };
