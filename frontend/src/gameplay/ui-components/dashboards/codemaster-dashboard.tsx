@@ -7,32 +7,62 @@ import { ActionButton } from "../../shared/components";
 import { Z_INDEX } from "@frontend/style/z-index";
 
 /**
- * MOBILE-FIRST: Simple button to trigger modal
+ * MOBILE-FIRST: Drag handle at bottom to trigger overlay
  */
-const Container = styled.div`
+const DragTriggerContainer = styled.div`
+  /* Mobile-first: Fixed at bottom for drag trigger */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
   display: flex;
-  flex-direction: row;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 100%;
-  padding: 0.5rem;
-
-  @media (min-width: 769px) and (orientation: landscape) {
-    flex-direction: column;
-    justify-content: center;
-    gap: 1.5rem;
-    padding: 1rem;
+  background: rgba(10, 10, 15, 0.9);
+  border-top: 2px solid var(--color-primary, #00ff88);
+  z-index: ${Z_INDEX.DASHBOARD};
+  cursor: grab;
+  
+  /* Safe area handling */
+  padding-bottom: env(safe-area-inset-bottom);
+  
+  /* Visual feedback */
+  &:active {
+    cursor: grabbing;
   }
-
-  @media (min-width: 1025px) {
-    gap: 2rem;
-    padding: 1.5rem;
+  
+  /* Drag handle visual */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 48px;
+    height: 5px;
+    background: var(--color-primary, #00ff88);
+    border-radius: 3px;
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+  }
+  
+  /* PROGRESSIVE ENHANCEMENT: Hide on desktop/tablet landscape */
+  @media (min-width: 769px) and (orientation: landscape) {
+    display: none;
   }
 `;
 
+const TriggerText = styled.div`
+  color: var(--color-primary, #00ff88);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.9rem;
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+`;
+
 /**
- * MOBILE: Full-screen hacker overlay with drag-to-dismiss
+ * MOBILE: Full-screen hacker overlay
  */
 const ClueOverlay = styled.div<{ $isVisible: boolean }>`
   position: fixed;
@@ -59,8 +89,7 @@ const OverlayBackdrop = styled.div<{ $isVisible: boolean }>`
 `;
 
 const CluePanel = styled.div<{ 
-  $isVisible: boolean;
-  $dragOffset: number;
+  $translateY: string;
 }>`
   position: absolute;
   top: 0;
@@ -72,13 +101,10 @@ const CluePanel = styled.div<{
     rgba(10, 10, 15, 0.98) 0%,
     rgba(26, 26, 46, 0.98) 100%
   );
-  transform: translateY(${({ $isVisible, $dragOffset }) => 
-    $isVisible ? `${$dragOffset}px` : '100%'
-  });
-  transition: ${({ $dragOffset }) => 
-    $dragOffset !== 0 ? 'none' : 'transform 0.4s cubic-bezier(0.32, 0.72, 0, 1)'
-  };
+  transform: translateY(${({ $translateY }) => $translateY});
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
   z-index: ${Z_INDEX.MODAL_CONTENT};
+  will-change: transform;
   
   /* Hacker aesthetic border */
   border-top: 2px solid var(--color-primary, #00ff88);
@@ -107,13 +133,6 @@ const CluePanel = styled.div<{
     opacity: 0.5;
     transition: opacity 0.2s;
   }
-  
-  /* Visual feedback during drag */
-  ${({ $dragOffset }) => $dragOffset !== 0 && `
-    &::before {
-      opacity: 0.8;
-    }
-  `}
 `;
 
 const PanelHeader = styled.div`
@@ -200,7 +219,7 @@ const HackerDecoration = styled.div`
 `;
 
 /**
- * DESKTOP: Inline input for larger screens
+ * DESKTOP: Container with button for larger screens
  */
 const DesktopContainer = styled.div`
   display: none;
@@ -213,41 +232,40 @@ const DesktopContainer = styled.div`
     width: 100%;
     height: 100%;
     gap: 1.5rem;
+    padding: 0.5rem;
   }
 `;
 
 /**
- * Drag threshold in pixels
+ * Drag thresholds
  */
-const DRAG_THRESHOLD = 100;
+const DRAG_UP_THRESHOLD = 50; // pixels to trigger open
+const DRAG_DOWN_THRESHOLD = 100; // pixels to trigger close
 const VELOCITY_THRESHOLD = 0.5;
 
 /**
- * Codemaster Dashboard - Mobile full-screen hacker overlay + desktop inline
+ * Codemaster Dashboard - Mobile drag-up trigger + desktop button
  */
 export const CodemasterDashboard: React.FC = () => {
   const { giveClue, actionState } = useGameActions();
   const { activeTurn } = useTurn();
-  const [showClueModal, setShowClueModal] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const dragStartY = useRef(0);
   const dragStartTime = useRef(0);
-  const panelRef = useRef<HTMLDivElement>(null);
 
   const handleSubmitClue = (word: string, count: number) => {
     giveClue(word, count);
-    setShowClueModal(false);
-    setDragOffset(0);
+    setIsOpen(false);
   };
 
-  const handleCloseModal = () => {
-    setShowClueModal(false);
-    setDragOffset(0);
+  const handleClose = () => {
+    setIsOpen(false);
   };
 
-  // Touch handlers for drag-to-dismiss
-  const handleTouchStart = (e: React.TouchEvent) => {
+  // Touch handlers for drag trigger
+  const handleTriggerTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length !== 1) return;
     
     const touch = e.touches[0];
@@ -256,7 +274,44 @@ export const CodemasterDashboard: React.FC = () => {
     setIsDragging(true);
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const handleTriggerTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || e.touches.length !== 1) return;
+    
+    const touch = e.touches[0];
+    const deltaY = dragStartY.current - touch.clientY; // Inverted for drag up
+    
+    // Only track upward drags
+    if (deltaY > 0) {
+      setDragOffset(Math.min(deltaY, 100)); // Cap at 100px
+    }
+  };
+
+  const handleTriggerTouchEnd = () => {
+    if (!isDragging) return;
+    
+    const dragDuration = Date.now() - dragStartTime.current;
+    const velocity = dragOffset / dragDuration;
+    
+    // Check if we should open
+    if (dragOffset > DRAG_UP_THRESHOLD || velocity > VELOCITY_THRESHOLD) {
+      setIsOpen(true);
+    }
+    
+    setDragOffset(0);
+    setIsDragging(false);
+  };
+
+  // Touch handlers for panel dismiss
+  const handlePanelTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    
+    const touch = e.touches[0];
+    dragStartY.current = touch.clientY;
+    dragStartTime.current = Date.now();
+    setIsDragging(true);
+  };
+
+  const handlePanelTouchMove = (e: React.TouchEvent) => {
     if (!isDragging || e.touches.length !== 1) return;
     
     const touch = e.touches[0];
@@ -268,15 +323,15 @@ export const CodemasterDashboard: React.FC = () => {
     }
   };
 
-  const handleTouchEnd = () => {
+  const handlePanelTouchEnd = () => {
     if (!isDragging) return;
     
     const dragDuration = Date.now() - dragStartTime.current;
     const velocity = dragOffset / dragDuration;
     
     // Check if we should dismiss
-    if (dragOffset > DRAG_THRESHOLD || velocity > VELOCITY_THRESHOLD) {
-      handleCloseModal();
+    if (dragOffset > DRAG_DOWN_THRESHOLD || velocity > VELOCITY_THRESHOLD) {
+      handleClose();
     } else {
       // Snap back
       setDragOffset(0);
@@ -285,47 +340,61 @@ export const CodemasterDashboard: React.FC = () => {
     setIsDragging(false);
   };
 
-  // Reset drag offset when modal closes
-  useEffect(() => {
-    if (!showClueModal) {
-      setDragOffset(0);
-    }
-  }, [showClueModal]);
+  // Calculate panel transform
+  const getPanelTransform = () => {
+    if (!isOpen) return '100%';
+    if (isDragging && dragOffset > 0) return `${dragOffset}px`;
+    return '0';
+  };
 
   if (!activeTurn || activeTurn.clue !== null) {
-    return <Container />;
+    return (
+      <>
+        {/* Desktop only - no action needed */}
+        <DesktopContainer />
+      </>
+    );
   }
 
   return (
     <>
-      {/* Mobile: Simple button trigger */}
-      <Container>
-        <ActionButton
-          onClick={() => setShowClueModal(true)}
-          text="Give Clue"
-          enabled={actionState.status !== "loading"}
-        />
-      </Container>
+      {/* Mobile: Drag trigger at bottom */}
+      <DragTriggerContainer
+        onTouchStart={handleTriggerTouchStart}
+        onTouchMove={handleTriggerTouchMove}
+        onTouchEnd={handleTriggerTouchEnd}
+        onTouchCancel={() => {
+          setDragOffset(0);
+          setIsDragging(false);
+        }}
+        style={{
+          transform: isDragging ? `translateY(-${dragOffset}px)` : 'none',
+          transition: isDragging ? 'none' : 'transform 0.3s ease'
+        }}
+      >
+        <TriggerText>⬆ TRANSMIT CLUE ⬆</TriggerText>
+      </DragTriggerContainer>
 
       {/* Mobile: Full-screen hacker overlay */}
-      <ClueOverlay $isVisible={showClueModal}>
+      <ClueOverlay $isVisible={isOpen}>
         <OverlayBackdrop 
-          $isVisible={showClueModal} 
-          onClick={handleCloseModal}
+          $isVisible={isOpen} 
+          onClick={handleClose}
         />
         <CluePanel 
-          ref={panelRef}
-          $isVisible={showClueModal}
-          $dragOffset={dragOffset}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          onTouchCancel={handleTouchEnd}
+          $translateY={getPanelTransform()}
+          onTouchStart={handlePanelTouchStart}
+          onTouchMove={handlePanelTouchMove}
+          onTouchEnd={handlePanelTouchEnd}
+          onTouchCancel={() => {
+            setDragOffset(0);
+            setIsDragging(false);
+          }}
         >
           <HackerDecoration />
           
           <PanelHeader>
-            <CloseButton onClick={handleCloseModal}>×</CloseButton>
+            <CloseButton onClick={handleClose}>×</CloseButton>
             <HackerTitle>Transmit Clue</HackerTitle>
           </PanelHeader>
           
@@ -341,14 +410,12 @@ export const CodemasterDashboard: React.FC = () => {
         </CluePanel>
       </ClueOverlay>
 
-      {/* Desktop: Inline input */}
+      {/* Desktop: Button trigger + inline input */}
       <DesktopContainer>
-        <CodeWordInput
-          codeWord=""
-          numberOfCards={null}
-          isEditable={true}
-          isLoading={actionState.status === "loading"}
-          onSubmit={handleSubmitClue}
+        <ActionButton
+          onClick={() => setIsOpen(true)}
+          text="Give Clue"
+          enabled={actionState.status !== "loading"}
         />
       </DesktopContainer>
     </>
