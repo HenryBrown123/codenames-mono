@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { CodeWordInput } from "./codemaster-input";
 import { useGameActions } from "../../player-actions";
 import { useTurn } from "../../shared/providers";
+import { ActionButton } from "../../shared/components";
 
 /**
  * MOBILE-FIRST: Simple button container for dashboard
@@ -30,49 +31,6 @@ const Container = styled.div`
 `;
 
 /**
- * MOBILE: Trigger button styled like hacker terminal
- */
-const MobileTriggerButton = styled.button`
-  background: rgba(10, 10, 15, 0.9);
-  border: none;
-  border-top: 2px solid var(--color-primary, #00ff88);
-  color: var(--color-primary, #00ff88);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-size: 0.9rem;
-  padding: 0.75rem 2rem;
-  border-radius: 8px;
-  cursor: pointer;
-  position: relative;
-  transition: all 0.2s ease;
-  text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
-  
-  /* Visual drag indicator */
-  &::before {
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 4px;
-    background: var(--color-primary, #00ff88);
-    border-radius: 2px;
-    box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-  }
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
-  }
-  
-  &:active {
-    transform: translateY(0);
-  }
-`;
-
-/**
  * DESKTOP: Container for desktop layout
  */
 const DesktopContainer = styled.div`
@@ -86,6 +44,32 @@ const DesktopContainer = styled.div`
     width: 100%;
     height: 100%;
     gap: 1.5rem;
+  }
+`;
+
+/**
+ * MOBILE: Styled action button with visual indicator
+ */
+const MobileTransmitButton = styled(ActionButton)`
+  position: relative;
+  
+  /* Visual drag indicator like a handle */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background: var(--color-primary, #00ff88);
+    border-radius: 2px;
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+  }
+  
+  /* Hide on desktop */
+  @media (min-width: 769px) and (orientation: landscape) {
+    display: none;
   }
 `;
 
@@ -111,14 +95,12 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({ onOpen
 
   return (
     <Container>
-      {/* Mobile: Just the trigger button */}
-      <MobileTriggerButton 
+      {/* Mobile: ActionButton with handle indicator */}
+      <MobileTransmitButton 
         onClick={onOpenCluePanel}
-        disabled={actionState.status === "loading"}
-        className="mobile-only"
-      >
-        TRANSMIT CLUE
-      </MobileTriggerButton>
+        text="TRANSMIT CLUE"
+        enabled={actionState.status !== "loading"}
+      />
 
       {/* Desktop: Inline input */}
       <DesktopContainer>

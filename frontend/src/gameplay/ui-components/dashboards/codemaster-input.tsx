@@ -108,11 +108,6 @@ const ErrorMessage = styled.div`
 `;
 
 
-const StyledActionButton = styled(ActionButton)`
-  font-size: clamp(1rem, 2vw, 1.5rem);
-  background-color: ${({ theme }) => theme.primary};
-  color: ${({ theme }) => theme.buttonText};
-`;
 
 type CodeWordInputProps = {
   codeWord?: string;
@@ -219,9 +214,9 @@ export function CodeWordInput({
       </InputContainer>
 
       {isEditable && (
-        <StyledActionButton
+        <ActionButton
           onClick={handleSubmit}
-          text={isLoading ? "Submitting..." : "Submit Clue"}
+          text={isLoading ? "TRANSMITTING..." : "SUBMIT CLUE"}
           enabled={!isLoading}
         />
       )}
