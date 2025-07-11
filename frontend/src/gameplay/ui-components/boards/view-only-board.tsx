@@ -33,10 +33,10 @@ const BoardAspectWrapper = styled.div`
  * MOBILE-FIRST: Adaptive grid that works across all screen sizes
  */
 const BoardGrid = styled.div`
-  /* Mobile-first: Adaptive grid with minimum card sizes */
+  /* Mobile-first: Adaptive grid with minimum card sizes - more vertical space */
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-  gap: 0.25rem;
+  gap: 0.75rem;
   width: 100%;
   height: 100%;
   max-height: 100%; /* Use available height */
@@ -50,7 +50,7 @@ const BoardGrid = styled.div`
   /* PROGRESSIVE ENHANCEMENT: Small tablet */
   @media (min-width: 481px) {
     grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-    gap: 0.4rem;
+    gap: 1rem;
 
     & > * {
       min-height: 70px;
@@ -60,7 +60,7 @@ const BoardGrid = styled.div`
   /* PROGRESSIVE ENHANCEMENT: Large tablet */
   @media (min-width: 769px) {
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 0.6rem;
+    gap: 1.25rem;
 
     & > * {
       min-height: 80px;
@@ -71,7 +71,7 @@ const BoardGrid = styled.div`
   @media (min-width: 1025px) {
     grid-template-columns: repeat(5, 1fr);
     grid-template-rows: repeat(5, 1fr);
-    gap: 1rem;
+    gap: 2rem;
     overflow-y: visible;
 
     & > * {
@@ -88,6 +88,7 @@ const EmptyCard = styled.div`
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.123);
   min-height: 60px;
+  aspect-ratio: 2.4 / 3;
 
   /* PROGRESSIVE ENHANCEMENT: Tablet */
   @media (min-width: 481px) {
