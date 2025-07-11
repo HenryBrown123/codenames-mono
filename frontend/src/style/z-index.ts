@@ -10,6 +10,12 @@ export const Z_INDEX = {
   CARD_COVERED: 10,
   CARD_ANIMATING: 15,
   
+  // AR Spymaster elements (layered above cards)
+  SPYMASTER_AR_GRID: 20,      // Scan grid effect over cards
+  SPYMASTER_AR_BORDER: 25,    // Team borders and brackets
+  SPYMASTER_AR_OVERLAY: 30,   // Word overlays with targeting
+  SPYMASTER_AR_HUD: 50,       // Full-screen AR glasses overlay
+  
   // Fixed UI elements
   FIXED_BUTTONS: 100,
   DASHBOARD: 100,
