@@ -47,7 +47,11 @@ const PageSection = styled.div`
 /**
  * Draggable debug widget for mobile development
  */
-const DraggableDebugTool: React.FC<{ viewportHeight: number }> = ({ viewportHeight }) => {
+const DraggableDebugTool: React.FC<{
+  viewportHeight: number;
+  visualViewportHeight: number;
+  screenHeight: number;
+}> = ({ viewportHeight, visualViewportHeight, screenHeight }) => {
   const [position, setPosition] = useState({ x: 10, y: 10 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -108,24 +112,35 @@ const DraggableDebugTool: React.FC<{ viewportHeight: number }> = ({ viewportHeig
     };
   }, [isDragging, dragStart]);
 
+  const safeAreaBottom =
+    getComputedStyle(document.documentElement).getPropertyValue("padding-bottom") || "0px";
+  const userAgent = navigator.userAgent.includes("Samsung")
+    ? "Samsung"
+    : navigator.userAgent.includes("Chrome")
+      ? "Chrome"
+      : navigator.userAgent.includes("Firefox")
+        ? "Firefox"
+        : "Other";
+
   return (
     <div
       style={{
         position: "fixed",
         left: `${position.x}px`,
         top: `${position.y}px`,
-        background: "rgba(0,0,0,0.85)",
+        background: "rgba(0,0,0,0.9)",
         color: "lime",
-        padding: "8px",
-        fontSize: "10px",
+        padding: "6px",
+        fontSize: "9px",
         zIndex: 9999,
-        borderRadius: "6px",
+        borderRadius: "4px",
         fontFamily: "monospace",
         border: "1px solid lime",
-        minWidth: isMinimized ? "60px" : "100px",
+        minWidth: isMinimized ? "50px" : "140px",
         cursor: isDragging ? "grabbing" : "grab",
         userSelect: "none",
         touchAction: "none",
+        lineHeight: 1.2,
       }}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
@@ -135,7 +150,7 @@ const DraggableDebugTool: React.FC<{ viewportHeight: number }> = ({ viewportHeig
         <div style={{ textAlign: "center" }}>
           📱
           <br />
-          {viewportHeight}px
+          {viewportHeight}
         </div>
       ) : (
         <>
@@ -144,10 +159,10 @@ const DraggableDebugTool: React.FC<{ viewportHeight: number }> = ({ viewportHeig
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginBottom: "4px",
+              marginBottom: "3px",
             }}
           >
-            <span>📱 Debug</span>
+            <span>📱 Viewport Debug</span>
             <button
               style={{
                 background: "none",
@@ -165,36 +180,49 @@ const DraggableDebugTool: React.FC<{ viewportHeight: number }> = ({ viewportHeig
               −
             </button>
           </div>
-          <div>VH: {viewportHeight}px</div>
-          <div>Inner: {window.innerHeight}px</div>
-          {window.visualViewport && <div>Visual: {Math.round(window.visualViewport.height)}px</div>}
-          <div>Ratio: {window.devicePixelRatio}x</div>
-          <div>
-            Safe-B:{" "}
-            {getComputedStyle(document.documentElement).getPropertyValue("padding-bottom") || "0px"}
-          </div>
+          <div>Inner H: {viewportHeight}px</div>
+          <div>Visual H: {visualViewportHeight}px</div>
+          <div>Screen H: {screenHeight}px</div>
+          <div>DPR: {window.devicePixelRatio}x</div>
+          <div>Safe-B: {safeAreaBottom}</div>
+          <div>Browser: {userAgent}</div>
+          <div>Diff: {viewportHeight - visualViewportHeight}px</div>
         </>
       )}
     </div>
   );
 };
+
 const useMobileViewportHeight = () => {
-  const [height, setHeight] = useState(window.innerHeight);
+  const [heights, setHeights] = useState({
+    innerHeight: window.innerHeight,
+    visualHeight: window.visualViewport?.height || window.innerHeight,
+    screenHeight: screen.height,
+  });
 
   useEffect(() => {
-    const updateHeight = () => {
-      setHeight(window.innerHeight);
+    const updateHeights = () => {
+      const newHeights = {
+        innerHeight: window.innerHeight,
+        visualHeight: window.visualViewport?.height || window.innerHeight,
+        screenHeight: screen.height,
+      };
+
+      setHeights(newHeights);
     };
 
-    updateHeight();
-    window.addEventListener("resize", updateHeight);
-    window.addEventListener("orientationchange", updateHeight);
+    updateHeights();
+    window.addEventListener("resize", updateHeights);
+    window.addEventListener("orientationchange", updateHeights);
 
-    // iOS specific - handle viewport changes when address bar shows/hides
     const handleVisualViewportChange = () => {
-      if (window.visualViewport) {
-        setHeight(window.visualViewport.height);
-      }
+      const newHeights = {
+        innerHeight: window.innerHeight,
+        visualHeight: window.visualViewport?.height || window.innerHeight,
+        screenHeight: screen.height,
+      };
+
+      setHeights(newHeights);
     };
 
     if (window.visualViewport) {
@@ -202,39 +230,26 @@ const useMobileViewportHeight = () => {
     }
 
     return () => {
-      window.removeEventListener("resize", updateHeight);
-      window.removeEventListener("orientationchange", updateHeight);
+      window.removeEventListener("resize", updateHeights);
+      window.removeEventListener("orientationchange", updateHeights);
       if (window.visualViewport) {
         window.visualViewport.removeEventListener("resize", handleVisualViewportChange);
       }
     };
   }, []);
 
-  return height;
+  return heights;
 };
 
 const queryClient = new QueryClient();
 
 const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const viewportHeight = useMobileViewportHeight();
+  const { innerHeight, visualHeight, screenHeight } = useMobileViewportHeight();
 
   const toggleTheme = () => {
     setIsDarkMode((prevMode) => !prevMode);
   };
-
-  // Debug info for real device testing
-  useEffect(() => {
-    console.log("=== VIEWPORT DEBUG INFO ===");
-    console.log("Window inner height:", window.innerHeight);
-    console.log("Screen height:", screen.height);
-    console.log("Device pixel ratio:", window.devicePixelRatio);
-    if (window.visualViewport) {
-      console.log("Visual viewport height:", window.visualViewport.height);
-      console.log("Visual viewport offset:", window.visualViewport.offsetTop);
-    }
-    console.log("=========================");
-  }, [viewportHeight]);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -247,8 +262,11 @@ const App: React.FC = () => {
             </PageSection>
           </SectionsContainer>
 
-          {/* Draggable floaty debug tool for mobile development */}
-          <DraggableDebugTool viewportHeight={viewportHeight} />
+          <DraggableDebugTool
+            viewportHeight={innerHeight}
+            visualViewportHeight={visualHeight}
+            screenHeight={screenHeight}
+          />
         </AppContainer>
       </ThemeProvider>
       <ReactQueryDevtools initialIsOpen={false} />
