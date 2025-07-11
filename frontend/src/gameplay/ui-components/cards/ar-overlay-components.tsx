@@ -7,7 +7,7 @@
  */
 
 import React from "react";
-import styled, { keyframes } from "styled-components";
+import styled, { keyframes, css } from "styled-components";
 import { Z_INDEX } from "@frontend/style/z-index";
 
 // Animations from the prototype
@@ -100,9 +100,10 @@ export const ARScanGrid = styled.div`
   pointer-events: none;
   z-index: ${Z_INDEX.SPYMASTER_AR_GRID};
   
-  /* Show in AR mode */
-  [data-ar-mode="true"] [data-state="visible-colored"] & {
-    opacity: 1;
+  /* Show in AR mode - make it more visible for testing */
+  [data-ar-mode="true"] & {
+    opacity: 0.8;
+    background-color: rgba(0, 255, 136, 0.1);
     animation: ${gridPulse} 2s ease-in-out infinite;
   }
 `;
@@ -134,13 +135,16 @@ export const ARWordOverlay = styled.div<{ $teamColor: string; $isYourTeam: boole
   transition: opacity 0.5s ease;
   pointer-events: none;
 
-  /* Show in AR mode */
-  [data-ar-mode="true"] [data-state="visible-colored"] & {
+  /* Show in AR mode - for any visible card */
+  [data-ar-mode="true"] & {
     opacity: 1;
+    background: rgba(0, 255, 136, 0.9);
+    color: #000;
+    font-weight: 900;
   }
   
   /* Assassin gets special danger styling */
-  [data-ar-mode="true"] [data-state="visible-colored"][data-team-color="#0a0a0a"] & {
+  [data-ar-mode="true"] [data-team-color="#0a0a0a"] & {
     background: rgba(255, 0, 0, 0.8);
     box-shadow: 
       0 0 0 3px rgba(255, 255, 0, 0.9),
@@ -260,7 +264,7 @@ export const ARInfoTag = styled.div<{ $teamType: string }>`
           &::before { content: "● N-00"; }
         `;
       case 'assassin':
-        return `
+        return css`
           border-color: rgba(255, 255, 0, 0.9);
           color: rgba(255, 255, 0, 0.9);
           box-shadow: 0 0 15px rgba(255, 255, 0, 0.5);
@@ -333,7 +337,7 @@ export const ARClassification = styled.div<{ $teamType: string }>`
           &::before { content: "CIVILIAN"; }
         `;
       case 'assassin':
-        return `
+        return css`
           color: #ffff00;
           border-color: #ffff00;
           box-shadow: 0 0 30px rgba(255, 255, 0, 0.7);
@@ -366,7 +370,7 @@ export const ARTargetBracket = styled.div`
   z-index: ${Z_INDEX.SPYMASTER_AR_OVERLAY};
   
   /* Show on hover in AR mode */
-  [data-ar-mode="true"] *:hover & {
+  [data-ar-mode="true"] &:hover {
     inset: 10%;
     opacity: 1;
     border-color: rgba(0, 255, 136, 0.5);
@@ -401,16 +405,10 @@ export const ARGlassesHUD = styled.div`
   position: fixed;
   inset: 0;
   pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.5s ease;
+  opacity: 1; /* Always visible when rendered */
   z-index: ${Z_INDEX.SPYMASTER_AR_HUD};
   display: flex;
   flex-direction: column;
-  
-  /* Show when AR mode is active */
-  [data-ar-mode="true"] & {
-    opacity: 1;
-  }
 `;
 
 /**
@@ -514,7 +512,7 @@ export const ARHUDLine = styled.div<{ $alert?: boolean }>`
     opacity: 0.5;
   }
   
-  ${props => props.$alert && `
+  ${props => props.$alert && css`
     color: #ffff00;
     animation: ${subtleBlink} 1s ease-in-out infinite;
   `}
