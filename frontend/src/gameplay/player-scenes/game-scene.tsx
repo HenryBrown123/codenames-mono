@@ -8,6 +8,8 @@ import { ViewOnlyBoard } from "../ui-components/boards";
 import { GameInstructions } from "../ui-components/game-instructions";
 import { ActionButton } from "../shared/components";
 import { Z_INDEX } from "@frontend/style/z-index";
+import { CodeWordInput } from "../ui-components/dashboards/codemaster-input";
+import { useGameActions } from "../player-actions";
 
 /**
  * MOBILE-FIRST: Game scene with collapsible instructions
@@ -187,6 +189,153 @@ const PanelBackdrop = styled.div<{ $isVisible: boolean }>`
 `;
 
 /**
+ * MOBILE: Full-screen clue panel - EXACTLY like instructions but MORE
+ */
+const CluePanel = styled.div<{ $isVisible: boolean }>`
+  /* Mobile-first: Full screen takeover from bottom */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(10, 10, 15, 0.98) 0%,
+    rgba(26, 26, 46, 0.98) 100%
+  );
+  backdrop-filter: blur(20px);
+  z-index: ${Z_INDEX.MODAL_CONTENT};
+  
+  /* Slide animation from bottom */
+  transform: translateY(${({ $isVisible }) => ($isVisible ? "0" : "100%")});
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* Safe areas */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+
+  /* Layout */
+  display: flex;
+  flex-direction: column;
+
+  /* PROGRESSIVE ENHANCEMENT: Hide on desktop/tablet landscape */
+  @media (min-width: 769px) and (orientation: landscape) {
+    display: none;
+  }
+`;
+
+const CluePanelHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 2rem 1rem 1rem;
+`;
+
+const HackerTitle = styled.h1`
+  color: var(--color-primary, #00ff88);
+  font-size: 2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin: 0;
+  text-shadow: 
+    0 0 20px rgba(0, 255, 136, 0.5),
+    0 0 40px rgba(0, 255, 136, 0.3);
+    
+  @media (max-width: 480px) {
+    font-size: 1.5rem;
+  }
+`;
+
+const CluePanelContent = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  
+  /* Max width for readability */
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+`;
+
+const ClueCloseButton = styled.button`
+  position: absolute;
+  top: max(env(safe-area-inset-top), 2rem);
+  right: 1rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-primary, #00ff88);
+  color: var(--color-primary, #00ff88);
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+
+  &:hover {
+    background: rgba(0, 255, 136, 0.1);
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+`;
+
+const HackerDecoration = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300%;
+  height: 300%;
+  opacity: 0.03;
+  pointer-events: none;
+  font-size: 20vw;
+  font-weight: 900;
+  color: var(--color-primary, #00ff88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  
+  &::before {
+    content: 'CLASSIFIED';
+    transform: rotate(-45deg);
+  }
+`;
+
+/**
+ * MOBILE: Clue panel backdrop
+ */
+const CluePanelBackdrop = styled.div<{ $isVisible: boolean }>`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: ${Z_INDEX.MODAL_BACKDROP};
+
+  opacity: ${({ $isVisible }) => ($isVisible ? 1 : 0)};
+  pointer-events: ${({ $isVisible }) => ($isVisible ? "all" : "none")};
+  transition: opacity 0.3s ease;
+
+  /* PROGRESSIVE ENHANCEMENT: Hide on desktop/tablet landscape */
+  @media (min-width: 769px) and (orientation: landscape) {
+    display: none;
+  }
+`;
+
+/**
  * DESKTOP: Fixed instructions for larger screens
  */
 const DesktopInstructionsContainer = styled.div`
@@ -347,6 +496,8 @@ export const GameScene: React.FC = () => {
   const { activeTurn } = useTurn();
   const { currentRole, currentScene } = usePlayerScene();
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showCluePanel, setShowCluePanel] = useState(false);
+  const { giveClue, actionState } = useGameActions();
 
   // Show skeleton during initial load
   if (isPending && !gameData) {
@@ -390,6 +541,11 @@ export const GameScene: React.FC = () => {
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
   const BoardComponent = getBoardComponent(currentRole, currentScene);
 
+  const handleSubmitClue = (word: string, count: number) => {
+    giveClue(word, count);
+    setShowCluePanel(false);
+  };
+
   // Check if we should use sidebar layout
   const [isLandscapeTablet, setIsLandscapeTablet] = React.useState(
     window.matchMedia("(min-width: 769px) and (orientation: landscape)").matches,
@@ -414,7 +570,7 @@ export const GameScene: React.FC = () => {
 
         <SidebarContainer>
           <DashboardContainer>
-            <DashboardComponent />
+            <DashboardComponent onOpenCluePanel={() => setShowCluePanel(true)} />
           </DashboardContainer>
         </SidebarContainer>
 
@@ -449,6 +605,28 @@ export const GameScene: React.FC = () => {
         </PanelContent>
       </InstructionsPanel>
 
+      {/* MOBILE CLUE PANEL - FULL SCREEN TAKEOVER */}
+      <CluePanelBackdrop $isVisible={showCluePanel} onClick={() => setShowCluePanel(false)} />
+      
+      <CluePanel $isVisible={showCluePanel}>
+        <HackerDecoration />
+        
+        <CluePanelHeader>
+          <ClueCloseButton onClick={() => setShowCluePanel(false)}>×</ClueCloseButton>
+          <HackerTitle>TRANSMIT CLUE</HackerTitle>
+        </CluePanelHeader>
+        
+        <CluePanelContent>
+          <CodeWordInput
+            codeWord=""
+            numberOfCards={null}
+            isEditable={true}
+            isLoading={actionState.status === "loading"}
+            onSubmit={handleSubmitClue}
+          />
+        </CluePanelContent>
+      </CluePanel>
+
       {/* Mobile floating help button */}
       <HelpButton
         $isActive={showInstructions}
@@ -462,7 +640,7 @@ export const GameScene: React.FC = () => {
       </GameBoardContainer>
 
       <DashboardContainer>
-        <DashboardComponent />
+        <DashboardComponent onOpenCluePanel={() => setShowCluePanel(true)} />
       </DashboardContainer>
     </GameSceneContainer>
   );
