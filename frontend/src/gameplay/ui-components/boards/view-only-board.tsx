@@ -2,7 +2,7 @@ import React, { memo, useState } from "react";
 import styled from "styled-components";
 import { useGameDataRequired } from "../../shared/providers";
 import { GameCard } from "../cards/game-card";
-import { CardVisibilityProvider } from "../cards/card-visibility-provider";
+import { CardVisibilityProvider, useCardVisibilityContext } from "../cards/card-visibility-provider";
 import { 
   ARToggleButton,
   ARGlassesHUD,
@@ -122,6 +122,84 @@ const EmptyCard = styled.div`
 `;
 
 /**
+ * Internal component that uses the card visibility context
+ */
+const BoardContent = memo<{
+  cards: any[];
+  isRoundSetup: boolean;
+  arMode: boolean;
+  onARToggle: () => void;
+}>(({ cards, isRoundSetup, arMode, onARToggle }) => {
+  const { toggleColorVisibility } = useCardVisibilityContext();
+
+  const handleARToggle = () => {
+    onARToggle();
+    toggleColorVisibility(); // Toggle between visible and visible-colored
+  };
+
+  return (
+    <BoardAspectWrapper data-ar-mode={arMode}>
+      {/* AR HUD Overlay - Full screen glasses effect */}
+      {arMode && (
+        <ARGlassesHUD>
+          <ARVisor />
+          <ARGlare />
+          <ARScanlines />
+          
+          <ARHUDContent>
+            <ARHUDTop>
+              <ARHUDStatus>
+                <ARHUDLine>SYSTEM: TACTICAL ANALYSIS MODE</ARHUDLine>
+                <ARHUDLine>VIEW: SPYMASTER INTEL</ARHUDLine>
+                <ARHUDLine $alert>WARNING: CLASSIFIED DATA</ARHUDLine>
+              </ARHUDStatus>
+              
+              <ARHUDStatus style={{ textAlign: 'right' }}>
+                <ARHUDLine>SIGNAL: STRONG</ARHUDLine>
+                <ARHUDLine>MODE: ACTIVE</ARHUDLine>
+                <ARHUDLine>STATUS: OPERATIONAL</ARHUDLine>
+              </ARHUDStatus>
+            </ARHUDTop>
+            
+            <ARCrosshair />
+            
+            <ARCornerBrackets>
+              <ARCorner $position="tl" />
+              <ARCorner $position="tr" />
+              <ARCorner $position="bl" />
+              <ARCorner $position="br" />
+            </ARCornerBrackets>
+          </ARHUDContent>
+        </ARGlassesHUD>
+      )}
+      
+      <BoardGrid aria-label="view-only game board" data-ar-mode={arMode}>
+        {cards.map((card, index) => (
+          <GameCard
+            key={card.word}
+            card={card}
+            index={index}
+            onClick={() => {}}
+            clickable={false}
+            initialVisibility={isRoundSetup ? "hidden" : "visible"}
+          />
+        ))}
+      </BoardGrid>
+      
+      {/* AR Toggle Button - only show when cards are visible */}
+      {!isRoundSetup && (
+        <ARToggleButton 
+          $arMode={arMode}
+          onClick={handleARToggle}
+        >
+          {arMode ? 'DISABLE AR' : 'ACTIVATE AR'}
+        </ARToggleButton>
+      )}
+    </BoardAspectWrapper>
+  );
+});
+
+/**
  * View-only board - general purpose viewing board
  * Mobile-first responsive design with adaptive grid
  * Includes AR mode toggle for spymaster view
@@ -156,64 +234,12 @@ export const ViewOnlyBoard = memo(() => {
 
   return (
     <CardVisibilityProvider cards={cards} initialState={isRoundSetup ? "hidden" : "visible"}>
-      <BoardAspectWrapper data-ar-mode={arMode}>
-        {/* AR HUD Overlay - Full screen glasses effect */}
-        {arMode && (
-          <ARGlassesHUD>
-            <ARVisor />
-            <ARGlare />
-            <ARScanlines />
-            
-            <ARHUDContent>
-              <ARHUDTop>
-                <ARHUDStatus>
-                  <ARHUDLine>SYSTEM: TACTICAL ANALYSIS MODE</ARHUDLine>
-                  <ARHUDLine>VIEW: SPYMASTER INTEL</ARHUDLine>
-                  <ARHUDLine $alert>WARNING: CLASSIFIED DATA</ARHUDLine>
-                </ARHUDStatus>
-                
-                <ARHUDStatus style={{ textAlign: 'right' }}>
-                  <ARHUDLine>SIGNAL: STRONG</ARHUDLine>
-                  <ARHUDLine>MODE: ACTIVE</ARHUDLine>
-                  <ARHUDLine>STATUS: OPERATIONAL</ARHUDLine>
-                </ARHUDStatus>
-              </ARHUDTop>
-              
-              <ARCrosshair />
-              
-              <ARCornerBrackets>
-                <ARCorner $position="tl" />
-                <ARCorner $position="tr" />
-                <ARCorner $position="bl" />
-                <ARCorner $position="br" />
-              </ARCornerBrackets>
-            </ARHUDContent>
-          </ARGlassesHUD>
-        )}
-        
-        <BoardGrid aria-label="view-only game board" data-ar-mode={arMode}>
-          {cards.map((card, index) => (
-            <GameCard
-              key={card.word}
-              card={card}
-              index={index}
-              onClick={() => {}}
-              clickable={false}
-              initialVisibility={isRoundSetup ? "hidden" : "visible"}
-            />
-          ))}
-        </BoardGrid>
-        
-        {/* AR Toggle Button - only show when cards are visible */}
-        {!isRoundSetup && (
-          <ARToggleButton 
-            $arMode={arMode}
-            onClick={() => setArMode(!arMode)}
-          >
-            {arMode ? 'DISABLE AR' : 'ACTIVATE AR'}
-          </ARToggleButton>
-        )}
-      </BoardAspectWrapper>
+      <BoardContent
+        cards={cards}
+        isRoundSetup={isRoundSetup}
+        arMode={arMode}
+        onARToggle={() => setArMode(!arMode)}
+      />
     </CardVisibilityProvider>
   );
 });

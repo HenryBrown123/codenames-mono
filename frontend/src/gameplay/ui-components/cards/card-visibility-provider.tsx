@@ -14,6 +14,7 @@ export type AnimationType = "dealing" | "color-fade" | "covering" | null;
 interface CardVisibilityState {
   getCardState: (word: string) => VisualState | undefined;
   transitionCard: (word: string, newState: VisualState) => void;
+  toggleColorVisibility: () => void; // Toggle between visible and visible-colored for AR mode
 }
 
 const CardVisibilityContext = createContext<CardVisibilityState | null>(null);
@@ -57,8 +58,34 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
     });
   }, []);
 
+  // Toggle between visible and visible-colored states for AR mode
+  const toggleColorVisibility = useCallback(() => {
+    setCardStates((prev) => {
+      const next = new Map(prev);
+      cards.forEach((card) => {
+        const currentState = prev.get(card.word);
+        
+        // Only toggle cards that aren't covered and have team/card type data
+        if (currentState !== "covered" && (card.cardType || card.teamName)) {
+          if (currentState === "visible") {
+            next.set(card.word, "visible-colored");
+          } else if (currentState === "visible-colored") {
+            next.set(card.word, "visible");
+          }
+        }
+      });
+      return next;
+    });
+  }, [cards]);
+
   return (
-    <CardVisibilityContext.Provider value={{ getCardState, transitionCard }}>
+    <CardVisibilityContext.Provider 
+      value={{ 
+        getCardState, 
+        transitionCard,
+        toggleColorVisibility
+      }}
+    >
       {children}
     </CardVisibilityContext.Provider>
   );
