@@ -8,7 +8,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
 import { Card } from "@frontend/shared-types";
 
-export type VisualState = "hidden" | "visible" | "visible-colored" | "covered";
+export type VisualState = "hidden" | "visible" | "visible-reveal-ready" | "visible-colored" | "covered";
 export type AnimationType = "dealing" | "color-fade" | "covering" | null;
 
 interface CardVisibilityState {
@@ -58,7 +58,7 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
     });
   }, []);
 
-  // Toggle between visible and visible-colored states for AR mode
+  // Toggle between visible and visible-colored states for AR mode via intermediate state
   const toggleColorVisibility = useCallback(() => {
     setCardStates((prev) => {
       const next = new Map(prev);
@@ -68,6 +68,8 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
         // Only toggle cards that aren't covered and have team/card type data
         if (currentState !== "covered" && (card.cardType || card.teamName)) {
           if (currentState === "visible") {
+            next.set(card.word, "visible-reveal-ready");
+          } else if (currentState === "visible-reveal-ready") {
             next.set(card.word, "visible-colored");
           } else if (currentState === "visible-colored") {
             next.set(card.word, "visible");

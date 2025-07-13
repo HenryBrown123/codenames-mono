@@ -28,16 +28,30 @@ const CARD_TRANSITIONS: CardTransition[] = [
     animation: "dealing",
     condition: () => true,
   },
-  // Cards reveal their team when data arrives (codemaster view)
+  // Cards prepare for reveal when data arrives but wait for explicit toggle
   {
     from: "visible",
+    to: "visible-reveal-ready",
+    animation: null,
+    condition: (card) => !!card.cardType && !card.selected,
+  },
+  // Cards reveal their team when explicitly toggled
+  {
+    from: "visible-reveal-ready",
     to: "visible-colored",
     animation: "color-fade",
-    condition: (card) => !!card.cardType && !card.selected,
+    condition: () => true, // This transition is only triggered manually via toggleColorVisibility
   },
   // Cards cover when selected (from neutral state)
   {
     from: "visible",
+    to: "covered",
+    animation: "covering",
+    condition: (card) => card.selected,
+  },
+  // Cards cover when selected (from reveal-ready state)
+  {
+    from: "visible-reveal-ready",
     to: "covered",
     animation: "covering",
     condition: (card) => card.selected,
