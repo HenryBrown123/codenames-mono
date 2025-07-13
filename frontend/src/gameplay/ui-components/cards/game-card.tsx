@@ -189,6 +189,7 @@ const CardContainer = styled.div`
 
   /* State-based visibility */
   &[data-state="visible"],
+  &[data-state="visible-reveal-ready"],
   &[data-state="visible-colored"],
   &[data-state="covered"] {
     opacity: 1;
