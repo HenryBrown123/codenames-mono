@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { useGameDataRequired, useTurn } from "../../shared/providers";
 import { useGameActions } from "../../player-actions";
 import { GameCard } from "../cards/game-card";
-import { CardVisibilityProvider } from "../cards/card-visibility-provider";
+import { CardVisibilityProvider, useCardVisibilityContext } from "../cards/card-visibility-provider";
 import { 
   ARToggleButton,
   ARGlassesHUD,
@@ -123,6 +123,85 @@ const EmptyCard = styled.div`
 `;
 
 /**
+ * Internal component that uses the card visibility context
+ */
+const InteractiveBoardContent = memo<{
+  cards: any[];
+  arMode: boolean;
+  onARToggle: () => void;
+  canMakeGuess: boolean;
+  isLoading: boolean;
+  activeTurn: any;
+  onCardClick: (word: string) => void;
+}>(({ cards, arMode, onARToggle, canMakeGuess, isLoading, activeTurn, onCardClick }) => {
+  const { toggleColorVisibility } = useCardVisibilityContext();
+
+  const handleARToggle = () => {
+    onARToggle();
+    toggleColorVisibility(); // Toggle between visible and visible-colored
+  };
+
+  return (
+    <BoardAspectWrapper data-ar-mode={arMode}>
+      {/* AR HUD Overlay - Full screen glasses effect */}
+      {arMode && (
+        <ARGlassesHUD>
+          <ARVisor />
+          <ARGlare />
+          <ARScanlines />
+          
+          <ARHUDContent>
+            <ARHUDTop>
+              <ARHUDStatus>
+                <ARHUDLine>SYSTEM: OPERATIVE MODE</ARHUDLine>
+                <ARHUDLine>ROLE: FIELD AGENT</ARHUDLine>
+                <ARHUDLine>STATUS: MISSION ACTIVE</ARHUDLine>
+              </ARHUDStatus>
+              
+              <ARHUDStatus style={{ textAlign: 'right' }}>
+                <ARHUDLine>GUESSES: {activeTurn?.guessesRemaining || 0}</ARHUDLine>
+                <ARHUDLine>CLUE: {activeTurn?.clue?.word || 'WAITING'}</ARHUDLine>
+                <ARHUDLine>TARGET: {activeTurn?.clue?.count || 0}</ARHUDLine>
+              </ARHUDStatus>
+            </ARHUDTop>
+            
+            <ARCrosshair />
+            
+            <ARCornerBrackets>
+              <ARCorner $position="tl" />
+              <ARCorner $position="tr" />
+              <ARCorner $position="bl" />
+              <ARCorner $position="br" />
+            </ARCornerBrackets>
+          </ARHUDContent>
+        </ARGlassesHUD>
+      )}
+      
+      <BoardGrid aria-label="interactive game board" data-ar-mode={arMode}>
+        {cards.map((card, index) => (
+          <GameCard
+            key={card.word}
+            card={card}
+            index={index}
+            onClick={() => onCardClick(card.word)}
+            clickable={canMakeGuess && !isLoading && !card.selected}
+            initialVisibility="visible"
+          />
+        ))}
+      </BoardGrid>
+      
+      {/* AR Toggle Button */}
+      <ARToggleButton 
+        $arMode={arMode}
+        onClick={handleARToggle}
+      >
+        {arMode ? 'DISABLE AR' : 'ACTIVATE AR'}
+      </ARToggleButton>
+    </BoardAspectWrapper>
+  );
+});
+
+/**
  * Interactive board - for making guesses during active play
  * Mobile-first responsive design with adaptive grid
  * Includes AR mode toggle for enhanced gameplay
@@ -182,62 +261,15 @@ export const InteractiveBoard = memo(() => {
 
   return (
     <CardVisibilityProvider cards={cards} initialState="visible">
-      <BoardAspectWrapper data-ar-mode={arMode}>
-        {/* AR HUD Overlay - Full screen glasses effect */}
-        {arMode && (
-          <ARGlassesHUD>
-            <ARVisor />
-            <ARGlare />
-            <ARScanlines />
-            
-            <ARHUDContent>
-              <ARHUDTop>
-                <ARHUDStatus>
-                  <ARHUDLine>SYSTEM: OPERATIVE MODE</ARHUDLine>
-                  <ARHUDLine>ROLE: FIELD AGENT</ARHUDLine>
-                  <ARHUDLine>STATUS: MISSION ACTIVE</ARHUDLine>
-                </ARHUDStatus>
-                
-                <ARHUDStatus style={{ textAlign: 'right' }}>
-                  <ARHUDLine>GUESSES: {activeTurn?.guessesRemaining || 0}</ARHUDLine>
-                  <ARHUDLine>CLUE: {activeTurn?.clue?.word || 'WAITING'}</ARHUDLine>
-                  <ARHUDLine>TARGET: {activeTurn?.clue?.count || 0}</ARHUDLine>
-                </ARHUDStatus>
-              </ARHUDTop>
-              
-              <ARCrosshair />
-              
-              <ARCornerBrackets>
-                <ARCorner $position="tl" />
-                <ARCorner $position="tr" />
-                <ARCorner $position="bl" />
-                <ARCorner $position="br" />
-              </ARCornerBrackets>
-            </ARHUDContent>
-          </ARGlassesHUD>
-        )}
-        
-        <BoardGrid aria-label="interactive game board" data-ar-mode={arMode}>
-          {cards.map((card, index) => (
-            <GameCard
-              key={card.word}
-              card={card}
-              index={index}
-              onClick={() => handleCardClick(card.word)}
-              clickable={canMakeGuess && !isLoading && !card.selected}
-              initialVisibility="visible"
-            />
-          ))}
-        </BoardGrid>
-        
-        {/* AR Toggle Button */}
-        <ARToggleButton 
-          $arMode={arMode}
-          onClick={() => setArMode(!arMode)}
-        >
-          {arMode ? 'DISABLE AR' : 'ACTIVATE AR'}
-        </ARToggleButton>
-      </BoardAspectWrapper>
+      <InteractiveBoardContent
+        cards={cards}
+        arMode={arMode}
+        onARToggle={() => setArMode(!arMode)}
+        canMakeGuess={canMakeGuess}
+        isLoading={isLoading}
+        activeTurn={activeTurn}
+        onCardClick={handleCardClick}
+      />
     </CardVisibilityProvider>
   );
 });

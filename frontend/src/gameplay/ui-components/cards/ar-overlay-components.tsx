@@ -100,8 +100,8 @@ export const ARScanGrid = styled.div`
   pointer-events: none;
   z-index: ${Z_INDEX.SPYMASTER_AR_GRID};
   
-  /* Show in AR mode - make it more visible for testing */
-  [data-ar-mode="true"] & {
+  /* Show in AR mode when cards are colored (spymaster view) */
+  [data-ar-mode="true"] [data-state="visible-colored"] & {
     opacity: 0.8;
     background-color: rgba(0, 255, 136, 0.1);
     animation: ${gridPulse} 2s ease-in-out infinite;
@@ -135,8 +135,8 @@ export const ARWordOverlay = styled.div<{ $teamColor: string; $isYourTeam: boole
   transition: opacity 0.5s ease;
   pointer-events: none;
 
-  /* Show in AR mode - for any visible card */
-  [data-ar-mode="true"] & {
+  /* Show in AR mode when cards are colored (spymaster view) */
+  [data-ar-mode="true"] [data-state="visible-colored"] & {
     opacity: 1;
     background: rgba(0, 255, 136, 0.9);
     color: #000;
