@@ -2,8 +2,11 @@ import React, { memo, useState } from "react";
 import styled from "styled-components";
 import { useGameDataRequired } from "../../shared/providers";
 import { GameCard } from "../cards/game-card";
-import { CardVisibilityProvider, useCardVisibilityContext } from "../cards/card-visibility-provider";
-import { 
+import {
+  CardVisibilityProvider,
+  useCardVisibilityContext,
+} from "../cards/card-visibility-provider";
+import {
   ARToggleButton,
   ARGlassesHUD,
   ARVisor,
@@ -15,7 +18,7 @@ import {
   ARHUDLine,
   ARCornerBrackets,
   ARCorner,
-  ARCrosshair
+  ARCrosshair,
 } from "../cards/ar-overlay-components";
 
 /**
@@ -130,11 +133,12 @@ const BoardContent = memo<{
   arMode: boolean;
   onARToggle: () => void;
 }>(({ cards, isRoundSetup, arMode, onARToggle }) => {
-  const { toggleColorVisibility } = useCardVisibilityContext();
+  const { triggerVisibilityChange } = useCardVisibilityContext();
 
   const handleARToggle = () => {
+    console.log(arMode);
+    triggerVisibilityChange(arMode ? "hide" : "reveal");
     onARToggle();
-    toggleColorVisibility(); // Toggle between visible and visible-colored
   };
 
   return (
@@ -145,7 +149,7 @@ const BoardContent = memo<{
           <ARVisor />
           <ARGlare />
           <ARScanlines />
-          
+
           <ARHUDContent>
             <ARHUDTop>
               <ARHUDStatus>
@@ -153,16 +157,16 @@ const BoardContent = memo<{
                 <ARHUDLine>VIEW: SPYMASTER INTEL</ARHUDLine>
                 <ARHUDLine $alert>WARNING: CLASSIFIED DATA</ARHUDLine>
               </ARHUDStatus>
-              
-              <ARHUDStatus style={{ textAlign: 'right' }}>
+
+              <ARHUDStatus style={{ textAlign: "right" }}>
                 <ARHUDLine>SIGNAL: STRONG</ARHUDLine>
                 <ARHUDLine>MODE: ACTIVE</ARHUDLine>
                 <ARHUDLine>STATUS: OPERATIONAL</ARHUDLine>
               </ARHUDStatus>
             </ARHUDTop>
-            
+
             <ARCrosshair />
-            
+
             <ARCornerBrackets>
               <ARCorner $position="tl" />
               <ARCorner $position="tr" />
@@ -172,7 +176,7 @@ const BoardContent = memo<{
           </ARHUDContent>
         </ARGlassesHUD>
       )}
-      
+
       <BoardGrid aria-label="view-only game board" data-ar-mode={arMode}>
         {cards.map((card, index) => (
           <GameCard
@@ -185,14 +189,11 @@ const BoardContent = memo<{
           />
         ))}
       </BoardGrid>
-      
+
       {/* AR Toggle Button - only show when cards are visible */}
       {!isRoundSetup && (
-        <ARToggleButton 
-          $arMode={arMode}
-          onClick={handleARToggle}
-        >
-          {arMode ? 'DISABLE AR' : 'ACTIVATE AR'}
+        <ARToggleButton $arMode={arMode} onClick={handleARToggle}>
+          {arMode ? "DISABLE AR" : "ACTIVATE AR"}
         </ARToggleButton>
       )}
     </BoardAspectWrapper>
@@ -208,7 +209,7 @@ export const ViewOnlyBoard = memo(() => {
   const { gameData } = useGameDataRequired();
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === "SETUP";
-  
+
   // AR mode state - local to this board component
   const [arMode, setArMode] = useState(false);
 
@@ -220,13 +221,10 @@ export const ViewOnlyBoard = memo(() => {
             <EmptyCard key={`empty-${i}`} />
           ))}
         </BoardGrid>
-        
+
         {/* AR Toggle Button - only show for spymaster view when cards visible */}
-        <ARToggleButton 
-          $arMode={arMode}
-          onClick={() => setArMode(!arMode)}
-        >
-          {arMode ? 'DISABLE AR' : 'ACTIVATE AR'}
+        <ARToggleButton $arMode={arMode} onClick={() => setArMode(!arMode)}>
+          {arMode ? "DISABLE AR" : "ACTIVATE AR"}
         </ARToggleButton>
       </BoardAspectWrapper>
     );

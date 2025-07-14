@@ -28,19 +28,19 @@ const CARD_TRANSITIONS: CardTransition[] = [
     animation: "dealing",
     condition: () => true,
   },
-  // Cards prepare for reveal when data arrives but wait for explicit toggle
-  {
-    from: "visible",
-    to: "visible-reveal-ready",
-    animation: null,
-    condition: (card) => !!card.cardType && !card.selected,
-  },
-  // Cards reveal their team when explicitly toggled
+  // Cards reveal their team when explicitly toggled (immediate transition)
   {
     from: "visible-reveal-ready",
     to: "visible-colored",
-    animation: "color-fade",
-    condition: () => true, // This transition is only triggered manually via toggleColorVisibility
+    animation: null,
+    condition: () => true, // Auto-transition immediately after manual trigger
+  },
+  // Cards hide their team colors when toggled back (immediate transition)
+  {
+    from: "visible-reveal-hide",
+    to: "visible",
+    animation: null,
+    condition: () => true, // Auto-transition immediately after manual trigger
   },
   // Cards cover when selected (from neutral state)
   {
@@ -52,6 +52,13 @@ const CARD_TRANSITIONS: CardTransition[] = [
   // Cards cover when selected (from reveal-ready state)
   {
     from: "visible-reveal-ready",
+    to: "covered",
+    animation: "covering",
+    condition: (card) => card.selected,
+  },
+  // Cards cover when selected (from reveal-hide state)
+  {
+    from: "visible-reveal-hide",
     to: "covered",
     animation: "covering",
     condition: (card) => card.selected,
@@ -94,6 +101,12 @@ export const useCardVisibility = (
       transitionCard(card.word, transition.to);
     }
   }, [transition, card.word, transitionCard]);
+
+  // Auto-trigger immediate transitions for intermediate states
+  if (transition && transition.animation === null && (state === "visible-reveal-ready" || state === "visible-reveal-hide")) {
+    // Trigger immediate transition
+    setTimeout(() => completeTransition(), 0);
+  }
 
   return {
     state,
