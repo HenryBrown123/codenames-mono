@@ -14,7 +14,7 @@ interface CardTransition {
   from: VisualState;
   to: VisualState;
   animation: AnimationType;
-  condition: (card: Card, view: { showTeamColors: boolean }) => boolean;
+  condition: (card: Card, viewMode: 'player' | 'spymaster') => boolean;
 }
 
 /**
@@ -33,14 +33,14 @@ const CARD_TRANSITIONS: CardTransition[] = [
     from: "visible",
     to: "visible-colored",
     animation: "color-fade",
-    condition: (card, view) => view.showTeamColors && !!(card.cardType || card.teamName),
+    condition: (card, viewMode) => viewMode === 'spymaster' && !!(card.cardType || card.teamName),
   },
   // Cards hide their team colors when leaving spymaster view
   {
     from: "visible-colored",
     to: "visible",
     animation: "color-fade",
-    condition: (_, view) => !view.showTeamColors,
+    condition: (_, viewMode) => viewMode === 'player',
   },
   // Cards cover when selected (from neutral state)
   {
@@ -73,13 +73,13 @@ export const useCardVisibility = (
   _index: number,
   initialState: VisualState = "visible",
 ): CardVisibility => {
-  const { getCardState, transitionCard, view } = useCardVisibilityContext();
+  const { getCardState, transitionCard, viewMode } = useCardVisibilityContext();
 
   // Get current state - cards are pre-registered in provider
   const state = getCardState(card.word) || initialState;
 
   // Find applicable transition based on current state and card properties
-  const transition = CARD_TRANSITIONS.find((t) => t.from === state && t.condition(card, view));
+  const transition = CARD_TRANSITIONS.find((t) => t.from === state && t.condition(card, viewMode));
 
   // Animation completion handler that encapsulates completion logic
   const handleAnimationEnd = useCallback(() => {

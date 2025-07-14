@@ -17,17 +17,14 @@ export type AnimationType = "dealing" | "color-fade" | "covering" | null;
 
 interface VisibilityTriggers {
   reveal: (active: boolean) => void;
-}
-
-interface VisibilityView {
-  showTeamColors: boolean;
+  toggleSpymasterView: () => void;
 }
 
 interface CardVisibilityState {
   getCardState: (word: string) => VisualState | undefined;
   transitionCard: (word: string, newState: VisualState) => void;
   triggers: VisibilityTriggers;
-  view: VisibilityView;
+  viewMode: 'player' | 'spymaster';
 }
 
 const CardVisibilityContext = createContext<CardVisibilityState | null>(null);
@@ -78,11 +75,9 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
     reveal: useCallback((active: boolean) => {
       setViewMode(active ? 'spymaster' : 'player');
     }, []),
-  };
-  
-  // Derived view object
-  const view = {
-    showTeamColors: viewMode === 'spymaster',
+    toggleSpymasterView: useCallback(() => {
+      setViewMode(prev => prev === 'spymaster' ? 'player' : 'spymaster');
+    }, []),
   };
 
   return (
@@ -91,7 +86,7 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
         getCardState,
         transitionCard,
         triggers,
-        view,
+        viewMode,
       }}
     >
       {children}

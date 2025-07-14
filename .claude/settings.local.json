@@ -12,7 +12,8 @@
       "Bash(mv:*)",
       "Bash(find:*)",
       "Bash(grep:*)",
-      "mcp__ide__executeCode"
+      "mcp__ide__executeCode",
+      "Bash(touch:*)"
     ]
   },
   "enableAllProjectMcpServers": false
