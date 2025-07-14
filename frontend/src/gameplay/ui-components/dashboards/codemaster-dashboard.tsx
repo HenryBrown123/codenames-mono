@@ -97,7 +97,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({ onOpen
     <Container>
       {/* Mobile: ActionButton with handle indicator */}
       <MobileTransmitButton 
-        onClick={onOpenCluePanel}
+        onClick={onOpenCluePanel || (() => {})}
         text="TRANSMIT CLUE"
         enabled={actionState.status !== "loading"}
       />

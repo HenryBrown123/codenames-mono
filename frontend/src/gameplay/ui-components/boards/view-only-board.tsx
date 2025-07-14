@@ -133,11 +133,10 @@ const BoardContent = memo<{
   arMode: boolean;
   onARToggle: () => void;
 }>(({ cards, isRoundSetup, arMode, onARToggle }) => {
-  const { triggerVisibilityChange } = useCardVisibilityContext();
+  const { triggers } = useCardVisibilityContext();
 
   const handleARToggle = () => {
-    console.log(arMode);
-    triggerVisibilityChange(arMode ? "hide" : "reveal");
+    triggers.reveal(!arMode);
     onARToggle();
   };
 

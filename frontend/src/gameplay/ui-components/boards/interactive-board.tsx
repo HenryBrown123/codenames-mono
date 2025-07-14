@@ -137,10 +137,10 @@ const InteractiveBoardContent = memo<{
   activeTurn: any;
   onCardClick: (word: string) => void;
 }>(({ cards, arMode, onARToggle, canMakeGuess, isLoading, activeTurn, onCardClick }) => {
-  const { triggerVisibilityChange } = useCardVisibilityContext();
+  const { triggers } = useCardVisibilityContext();
 
   const handleARToggle = () => {
-    triggerVisibilityChange(arMode ? "hide" : "reveal");
+    triggers.reveal(!arMode);
     onARToggle();
   };
 
