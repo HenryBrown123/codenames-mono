@@ -8,13 +8,19 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
 import { Card } from "@frontend/shared-types";
 
-export type VisualState = "hidden" | "visible" | "visible-reveal-ready" | "visible-colored" | "covered";
+export type VisualState =
+  | "hidden"
+  | "visible"
+  | "visible-reveal-ready"
+  | "visible-colored"
+  | "visible-reveal-hide"
+  | "covered";
 export type AnimationType = "dealing" | "color-fade" | "covering" | null;
 
 interface CardVisibilityState {
   getCardState: (word: string) => VisualState | undefined;
   transitionCard: (word: string, newState: VisualState) => void;
-  toggleColorVisibility: () => void; // Toggle between visible and visible-colored for AR mode
+  triggerVisibilityChange: (trigger: "reveal" | "hide" | "reset") => void;
 }
 
 const CardVisibilityContext = createContext<CardVisibilityState | null>(null);
@@ -58,34 +64,54 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
     });
   }, []);
 
-  // Toggle between visible and visible-colored states for AR mode via intermediate state
-  const toggleColorVisibility = useCallback(() => {
-    setCardStates((prev) => {
-      const next = new Map(prev);
-      cards.forEach((card) => {
-        const currentState = prev.get(card.word);
-        
-        // Only toggle cards that aren't covered and have team/card type data
-        if (currentState !== "covered" && (card.cardType || card.teamName)) {
-          if (currentState === "visible") {
-            next.set(card.word, "visible-reveal-ready");
-          } else if (currentState === "visible-reveal-ready") {
-            next.set(card.word, "visible-colored");
-          } else if (currentState === "visible-colored") {
-            next.set(card.word, "visible");
-          }
+  // Explicit visibility state triggers for AR mode
+  const triggerVisibilityChange = useCallback(
+    (trigger: "reveal" | "hide" | "reset") => {
+      setCardStates((prev) => {
+        const next = new Map(prev);
+        console.log("trigger");
+
+        switch (trigger) {
+          case "reveal":
+            cards.forEach((card) => {
+              const currentState = prev.get(card.word);
+              if (currentState === "visible" && (card.cardType || card.teamName)) {
+                next.set(card.word, "visible-reveal-ready");
+              }
+            });
+            break;
+
+          case "hide":
+            cards.forEach((card) => {
+              const currentState = prev.get(card.word);
+              console.log(currentState);
+              if (currentState === "visible-colored") {
+                next.set(card.word, "visible-reveal-hide");
+              }
+            });
+            break;
+
+          case "reset":
+            cards.forEach((card) => {
+              if (prev.get(card.word) !== "covered") {
+                next.set(card.word, card.selected ? "covered" : "visible");
+              }
+            });
+            break;
         }
+
+        return next;
       });
-      return next;
-    });
-  }, [cards]);
+    },
+    [cards],
+  );
 
   return (
-    <CardVisibilityContext.Provider 
-      value={{ 
-        getCardState, 
+    <CardVisibilityContext.Provider
+      value={{
+        getCardState,
         transitionCard,
-        toggleColorVisibility
+        triggerVisibilityChange,
       }}
     >
       {children}

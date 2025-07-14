@@ -3,8 +3,11 @@ import styled from "styled-components";
 import { useGameDataRequired, useTurn } from "../../shared/providers";
 import { useGameActions } from "../../player-actions";
 import { GameCard } from "../cards/game-card";
-import { CardVisibilityProvider, useCardVisibilityContext } from "../cards/card-visibility-provider";
-import { 
+import {
+  CardVisibilityProvider,
+  useCardVisibilityContext,
+} from "../cards/card-visibility-provider";
+import {
   ARToggleButton,
   ARGlassesHUD,
   ARVisor,
@@ -16,7 +19,7 @@ import {
   ARHUDLine,
   ARCornerBrackets,
   ARCorner,
-  ARCrosshair
+  ARCrosshair,
 } from "../cards/ar-overlay-components";
 
 /**
@@ -134,11 +137,11 @@ const InteractiveBoardContent = memo<{
   activeTurn: any;
   onCardClick: (word: string) => void;
 }>(({ cards, arMode, onARToggle, canMakeGuess, isLoading, activeTurn, onCardClick }) => {
-  const { toggleColorVisibility } = useCardVisibilityContext();
+  const { triggerVisibilityChange } = useCardVisibilityContext();
 
   const handleARToggle = () => {
+    triggerVisibilityChange(arMode ? "hide" : "reveal");
     onARToggle();
-    toggleColorVisibility(); // Toggle between visible and visible-colored
   };
 
   return (
@@ -149,7 +152,7 @@ const InteractiveBoardContent = memo<{
           <ARVisor />
           <ARGlare />
           <ARScanlines />
-          
+
           <ARHUDContent>
             <ARHUDTop>
               <ARHUDStatus>
@@ -157,16 +160,16 @@ const InteractiveBoardContent = memo<{
                 <ARHUDLine>ROLE: FIELD AGENT</ARHUDLine>
                 <ARHUDLine>STATUS: MISSION ACTIVE</ARHUDLine>
               </ARHUDStatus>
-              
-              <ARHUDStatus style={{ textAlign: 'right' }}>
+
+              <ARHUDStatus style={{ textAlign: "right" }}>
                 <ARHUDLine>GUESSES: {activeTurn?.guessesRemaining || 0}</ARHUDLine>
-                <ARHUDLine>CLUE: {activeTurn?.clue?.word || 'WAITING'}</ARHUDLine>
+                <ARHUDLine>CLUE: {activeTurn?.clue?.word || "WAITING"}</ARHUDLine>
                 <ARHUDLine>TARGET: {activeTurn?.clue?.count || 0}</ARHUDLine>
               </ARHUDStatus>
             </ARHUDTop>
-            
+
             <ARCrosshair />
-            
+
             <ARCornerBrackets>
               <ARCorner $position="tl" />
               <ARCorner $position="tr" />
@@ -176,7 +179,7 @@ const InteractiveBoardContent = memo<{
           </ARHUDContent>
         </ARGlassesHUD>
       )}
-      
+
       <BoardGrid aria-label="interactive game board" data-ar-mode={arMode}>
         {cards.map((card, index) => (
           <GameCard
@@ -189,13 +192,10 @@ const InteractiveBoardContent = memo<{
           />
         ))}
       </BoardGrid>
-      
+
       {/* AR Toggle Button */}
-      <ARToggleButton 
-        $arMode={arMode}
-        onClick={handleARToggle}
-      >
-        {arMode ? 'DISABLE AR' : 'ACTIVATE AR'}
+      <ARToggleButton $arMode={arMode} onClick={handleARToggle}>
+        {arMode ? "DISABLE AR" : "ACTIVATE AR"}
       </ARToggleButton>
     </BoardAspectWrapper>
   );
@@ -211,7 +211,7 @@ export const InteractiveBoard = memo(() => {
   const { makeGuess, actionState } = useGameActions();
   const { activeTurn } = useTurn();
   const cards = gameData.currentRound?.cards || [];
-  
+
   // AR mode state - local to this board component
   const [arMode, setArMode] = useState(false);
 
@@ -247,13 +247,10 @@ export const InteractiveBoard = memo(() => {
             <EmptyCard key={`empty-${i}`} />
           ))}
         </BoardGrid>
-        
+
         {/* AR Toggle Button */}
-        <ARToggleButton 
-          $arMode={arMode}
-          onClick={() => setArMode(!arMode)}
-        >
-          {arMode ? 'DISABLE AR' : 'ACTIVATE AR'}
+        <ARToggleButton $arMode={arMode} onClick={() => setArMode(!arMode)}>
+          {arMode ? "DISABLE AR" : "ACTIVATE AR"}
         </ARToggleButton>
       </BoardAspectWrapper>
     );

@@ -191,6 +191,7 @@ const CardContainer = styled.div`
   &[data-state="visible"],
   &[data-state="visible-reveal-ready"],
   &[data-state="visible-colored"],
+  &[data-state="visible-reveal-hide"],
   &[data-state="covered"] {
     opacity: 1;
   }
