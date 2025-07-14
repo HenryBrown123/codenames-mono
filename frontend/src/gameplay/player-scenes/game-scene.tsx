@@ -4,7 +4,7 @@ import { useGameDataRequired, useTurn } from "../shared/providers";
 import { usePlayerScene } from "./";
 import { getSceneMessage } from "./scene-messages";
 import { getDashboardComponent, getBoardComponent } from "./component-mappings";
-import { ViewOnlyBoard } from "../ui-components/boards";
+import { SpectatorBoard } from "../ui-components/boards";
 import { GameInstructions } from "../ui-components/game-instructions";
 import { ActionButton } from "../shared/components";
 import { Z_INDEX } from "@frontend/style/z-index";
@@ -705,7 +705,7 @@ export const GameScene: React.FC = () => {
     return (
       <GameSceneContainer>
         <GameBoardContainer>
-          <ViewOnlyBoard />
+          <SpectatorBoard />
         </GameBoardContainer>
         <DashboardContainer />
       </GameSceneContainer>
@@ -729,7 +729,7 @@ export const GameScene: React.FC = () => {
     return (
       <GameSceneContainer>
         <GameBoardContainer>
-          <ViewOnlyBoard />
+          <SpectatorBoard />
         </GameBoardContainer>
         <DashboardContainer>
           <div>Game Completed!</div>
