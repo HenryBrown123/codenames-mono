@@ -1,5 +1,4 @@
 import React, { memo, useCallback, useMemo } from "react";
-import styled from "styled-components";
 import { useGameDataRequired, useTurn } from "../../shared/providers";
 import { useGameActions } from "../../player-actions";
 import { GameCard } from "../cards/game-card";
@@ -7,6 +6,8 @@ import {
   CardVisibilityProvider,
   useCardVisibilityContext,
 } from "../cards/card-visibility-provider";
+import { GameBoardLayout } from "./board-layout";
+import { EmptyCard } from "./board-styles";
 import {
   ARToggleButton,
   ARGlassesHUD,
@@ -22,113 +23,11 @@ import {
   ARCrosshair,
 } from "../cards/ar-overlay-components";
 
-/**
- * MOBILE-FIRST: Board wrapper that handles different viewport constraints
- */
-const BoardAspectWrapper = styled.div`
-  /* Mobile-first: Use available space efficiently */
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem;
-
-  /* PROGRESSIVE ENHANCEMENT: Tablet - more breathing room */
-  @media (min-width: 481px) {
-    padding: 0.5rem;
-  }
-
-  /* PROGRESSIVE ENHANCEMENT: Desktop - maintain aspect ratio */
-  @media (min-width: 1025px) {
-    max-width: 900px;
-    aspect-ratio: 5 / 4;
-    padding: 1rem;
-  }
-`;
-
-/**
- * MOBILE-FIRST: Adaptive grid that works across all screen sizes
- */
-const BoardGrid = styled.div`
-  /* Mobile-first: Adaptive grid with minimum card sizes - more vertical space */
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-  gap: 0.75rem;
-  width: 100%;
-  height: 100%;
-  max-height: 100%; /* Use available height */
-  overflow-y: auto; /* Scroll if needed */
-
-  /* Ensure minimum touch targets */
-  & > * {
-    min-height: 60px;
-  }
-
-  /* PROGRESSIVE ENHANCEMENT: Small tablet */
-  @media (min-width: 481px) {
-    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-    gap: 1rem;
-
-    & > * {
-      min-height: 70px;
-    }
-  }
-
-  /* PROGRESSIVE ENHANCEMENT: Large tablet */
-  @media (min-width: 769px) {
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 1.25rem;
-
-    & > * {
-      min-height: 80px;
-    }
-  }
-
-  /* PROGRESSIVE ENHANCEMENT: Desktop - return to 5x5 grid */
-  @media (min-width: 1025px) {
-    grid-template-columns: repeat(5, 1fr);
-    grid-template-rows: repeat(5, 1fr);
-    gap: 2rem;
-    overflow-y: visible;
-
-    & > * {
-      min-height: 100px;
-    }
-  }
-`;
-
-/**
- * Mobile-first empty card for loading/skeleton states
- */
-const EmptyCard = styled.div`
-  background-color: rgba(27, 9, 9, 0.25);
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.123);
-  min-height: 60px;
-  aspect-ratio: 2.4 / 3;
-
-  /* PROGRESSIVE ENHANCEMENT: Tablet */
-  @media (min-width: 481px) {
-    border-radius: 8px;
-    min-height: 70px;
-  }
-
-  /* PROGRESSIVE ENHANCEMENT: Desktop */
-  @media (min-width: 769px) {
-    border-radius: 12px;
-    min-height: 80px;
-  }
-
-  @media (min-width: 1025px) {
-    min-height: 100px;
-  }
-`;
 
 /**
  * Internal component that uses the card visibility context
  */
-const InteractiveBoardContent = memo<{
+const CodebreakerBoardContent = memo<{
   cards: any[];
   canMakeGuess: boolean;
   isLoading: boolean;
@@ -142,7 +41,7 @@ const InteractiveBoardContent = memo<{
   };
 
   return (
-    <BoardAspectWrapper data-ar-mode={viewMode === 'spymaster'}>
+    <>
       {/* AR HUD Overlay - Full screen glasses effect */}
       {viewMode === 'spymaster' && (
         <ARGlassesHUD>
@@ -177,7 +76,7 @@ const InteractiveBoardContent = memo<{
         </ARGlassesHUD>
       )}
 
-      <BoardGrid aria-label="interactive game board" data-ar-mode={viewMode === 'spymaster'}>
+      <GameBoardLayout data-ar-mode={viewMode === 'spymaster'}>
         {cards.length > 0 ? cards.map((card, index) => (
           <GameCard
             key={card.word}
@@ -190,22 +89,22 @@ const InteractiveBoardContent = memo<{
         )) : Array.from({ length: 25 }).map((_, i) => (
           <EmptyCard key={`empty-${i}`} />
         ))}
-      </BoardGrid>
+      </GameBoardLayout>
 
       {/* AR Toggle Button */}
       <ARToggleButton $arMode={viewMode === 'spymaster'} onClick={handleARToggle}>
         {viewMode === 'spymaster' ? "DISABLE AR" : "ACTIVATE AR"}
       </ARToggleButton>
-    </BoardAspectWrapper>
+    </>
   );
 });
 
 /**
- * Interactive board - for making guesses during active play
+ * CodebreakerBoard - Interactive board for making guesses during active play
  * Mobile-first responsive design with adaptive grid
  * Includes AR mode toggle for enhanced gameplay
  */
-export const InteractiveBoard = memo(() => {
+export const CodebreakerBoard = memo(() => {
   const { gameData } = useGameDataRequired();
   const { makeGuess, actionState } = useGameActions();
   const { activeTurn } = useTurn();
@@ -238,7 +137,7 @@ export const InteractiveBoard = memo(() => {
   if (cards.length === 0) {
     return (
       <CardVisibilityProvider cards={[]} initialState="visible">
-        <InteractiveBoardContent
+        <CodebreakerBoardContent
           cards={[]}
           canMakeGuess={false}
           isLoading={false}
@@ -251,7 +150,7 @@ export const InteractiveBoard = memo(() => {
 
   return (
     <CardVisibilityProvider cards={cards} initialState="visible">
-      <InteractiveBoardContent
+      <CodebreakerBoardContent
         cards={cards}
         canMakeGuess={canMakeGuess}
         isLoading={isLoading}
@@ -262,4 +161,4 @@ export const InteractiveBoard = memo(() => {
   );
 });
 
-InteractiveBoard.displayName = "InteractiveBoard";
+CodebreakerBoard.displayName = "CodebreakerBoard";

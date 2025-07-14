@@ -8,8 +8,9 @@ import {
   OutcomeDashboard,
 } from "../ui-components/dashboards";
 import {
-  InteractiveBoard,
-  ViewOnlyBoard,
+  SpymasterBoard,
+  SpectatorBoard,
+  CodebreakerBoard,
 } from "../ui-components/boards";
 
 /**
@@ -61,11 +62,14 @@ export const getBoardComponent = (
   // Return board based on role only - same board for all scenes within a role
   switch (normalizedRole) {
     case 'codebreaker':
-      return InteractiveBoard;
+      return CodebreakerBoard;
     case 'codemaster':
+      return SpymasterBoard;
     case 'spectator':
+      return SpectatorBoard;
     case 'none':
     default:
-      return ViewOnlyBoard;
+      // Lobby/setup scenes don't need overlay
+      return SpectatorBoard;
   }
 };
