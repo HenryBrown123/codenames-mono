@@ -189,9 +189,7 @@ const CardContainer = styled.div`
 
   /* State-based visibility */
   &[data-state="visible"],
-  &[data-state="visible-reveal-ready"],
   &[data-state="visible-colored"],
-  &[data-state="visible-reveal-hide"],
   &[data-state="covered"] {
     opacity: 1;
   }
@@ -649,10 +647,10 @@ export const GameCard = memo<GameCardProps>(
     const handleAnimationEnd = useCallback(
       (e: React.AnimationEvent) => {
         if (e.target === e.currentTarget && visibility.animation) {
-          visibility.completeTransition();
+          visibility.handleAnimationEnd();
         }
       },
-      [visibility.animation, visibility.completeTransition],
+      [visibility.animation, visibility.handleAnimationEnd],
     );
 
     const handleClick = useCallback(() => {

@@ -11,7 +11,8 @@
       "Bash(vite build)",
       "Bash(mv:*)",
       "Bash(find:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "mcp__ide__executeCode"
     ]
   },
   "enableAllProjectMcpServers": false

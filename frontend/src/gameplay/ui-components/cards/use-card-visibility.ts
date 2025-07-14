@@ -14,11 +14,11 @@ interface CardTransition {
   from: VisualState;
   to: VisualState;
   animation: AnimationType;
-  condition: (card: Card) => boolean;
+  condition: (card: Card, view: { showTeamColors: boolean }) => boolean;
 }
 
 /**
- * State transitions matching the original implementation
+ * Simplified state transitions
  */
 const CARD_TRANSITIONS: CardTransition[] = [
   // Cards appear with dealing animation
@@ -28,37 +28,23 @@ const CARD_TRANSITIONS: CardTransition[] = [
     animation: "dealing",
     condition: () => true,
   },
-  // Cards reveal their team when explicitly toggled (immediate transition)
+  // Cards reveal their team colors when in spymaster view
   {
-    from: "visible-reveal-ready",
+    from: "visible",
     to: "visible-colored",
-    animation: null,
-    condition: () => true, // Auto-transition immediately after manual trigger
+    animation: "color-fade",
+    condition: (card, view) => view.showTeamColors && !!(card.cardType || card.teamName),
   },
-  // Cards hide their team colors when toggled back (immediate transition)
+  // Cards hide their team colors when leaving spymaster view
   {
-    from: "visible-reveal-hide",
+    from: "visible-colored",
     to: "visible",
-    animation: null,
-    condition: () => true, // Auto-transition immediately after manual trigger
+    animation: "color-fade",
+    condition: (_, view) => !view.showTeamColors,
   },
   // Cards cover when selected (from neutral state)
   {
     from: "visible",
-    to: "covered",
-    animation: "covering",
-    condition: (card) => card.selected,
-  },
-  // Cards cover when selected (from reveal-ready state)
-  {
-    from: "visible-reveal-ready",
-    to: "covered",
-    animation: "covering",
-    condition: (card) => card.selected,
-  },
-  // Cards cover when selected (from reveal-hide state)
-  {
-    from: "visible-reveal-hide",
     to: "covered",
     animation: "covering",
     condition: (card) => card.selected,
@@ -75,7 +61,7 @@ const CARD_TRANSITIONS: CardTransition[] = [
 export interface CardVisibility {
   state: VisualState;
   animation: AnimationType;
-  completeTransition: () => void;
+  handleAnimationEnd: () => void;
 }
 
 /**
@@ -84,33 +70,27 @@ export interface CardVisibility {
  */
 export const useCardVisibility = (
   card: Card,
-  index: number,
+  _index: number,
   initialState: VisualState = "visible",
 ): CardVisibility => {
-  const { getCardState, transitionCard } = useCardVisibilityContext();
+  const { getCardState, transitionCard, view } = useCardVisibilityContext();
 
   // Get current state - cards are pre-registered in provider
   const state = getCardState(card.word) || initialState;
 
   // Find applicable transition based on current state and card properties
-  const transition = CARD_TRANSITIONS.find((t) => t.from === state && t.condition(card));
+  const transition = CARD_TRANSITIONS.find((t) => t.from === state && t.condition(card, view));
 
-  // Animation completion handler
-  const completeTransition = useCallback(() => {
+  // Animation completion handler that encapsulates completion logic
+  const handleAnimationEnd = useCallback(() => {
     if (transition) {
       transitionCard(card.word, transition.to);
     }
   }, [transition, card.word, transitionCard]);
 
-  // Auto-trigger immediate transitions for intermediate states
-  if (transition && transition.animation === null && (state === "visible-reveal-ready" || state === "visible-reveal-hide")) {
-    // Trigger immediate transition
-    setTimeout(() => completeTransition(), 0);
-  }
-
   return {
     state,
     animation: transition?.animation || null,
-    completeTransition,
+    handleAnimationEnd,
   };
 };

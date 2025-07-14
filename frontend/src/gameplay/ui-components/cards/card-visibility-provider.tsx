@@ -11,16 +11,23 @@ import { Card } from "@frontend/shared-types";
 export type VisualState =
   | "hidden"
   | "visible"
-  | "visible-reveal-ready"
   | "visible-colored"
-  | "visible-reveal-hide"
   | "covered";
 export type AnimationType = "dealing" | "color-fade" | "covering" | null;
+
+interface VisibilityTriggers {
+  reveal: (active: boolean) => void;
+}
+
+interface VisibilityView {
+  showTeamColors: boolean;
+}
 
 interface CardVisibilityState {
   getCardState: (word: string) => VisualState | undefined;
   transitionCard: (word: string, newState: VisualState) => void;
-  triggerVisibilityChange: (trigger: "reveal" | "hide" | "reset") => void;
+  triggers: VisibilityTriggers;
+  view: VisibilityView;
 }
 
 const CardVisibilityContext = createContext<CardVisibilityState | null>(null);
@@ -48,6 +55,8 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
     });
     return initial;
   });
+  
+  const [viewMode, setViewMode] = useState<'player' | 'spymaster'>('player');
 
   const getCardState = useCallback(
     (word: string) => {
@@ -64,54 +73,25 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
     });
   }, []);
 
-  // Explicit visibility state triggers for AR mode
-  const triggerVisibilityChange = useCallback(
-    (trigger: "reveal" | "hide" | "reset") => {
-      setCardStates((prev) => {
-        const next = new Map(prev);
-        console.log("trigger");
-
-        switch (trigger) {
-          case "reveal":
-            cards.forEach((card) => {
-              const currentState = prev.get(card.word);
-              if (currentState === "visible" && (card.cardType || card.teamName)) {
-                next.set(card.word, "visible-reveal-ready");
-              }
-            });
-            break;
-
-          case "hide":
-            cards.forEach((card) => {
-              const currentState = prev.get(card.word);
-              console.log(currentState);
-              if (currentState === "visible-colored") {
-                next.set(card.word, "visible-reveal-hide");
-              }
-            });
-            break;
-
-          case "reset":
-            cards.forEach((card) => {
-              if (prev.get(card.word) !== "covered") {
-                next.set(card.word, card.selected ? "covered" : "visible");
-              }
-            });
-            break;
-        }
-
-        return next;
-      });
-    },
-    [cards],
-  );
+  // Simplified triggers object
+  const triggers = {
+    reveal: useCallback((active: boolean) => {
+      setViewMode(active ? 'spymaster' : 'player');
+    }, []),
+  };
+  
+  // Derived view object
+  const view = {
+    showTeamColors: viewMode === 'spymaster',
+  };
 
   return (
     <CardVisibilityContext.Provider
       value={{
         getCardState,
         transitionCard,
-        triggerVisibilityChange,
+        triggers,
+        view,
       }}
     >
       {children}
