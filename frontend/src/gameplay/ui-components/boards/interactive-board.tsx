@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo, useState } from "react";
+import React, { memo, useCallback, useMemo } from "react";
 import styled from "styled-components";
 import { useGameDataRequired, useTurn } from "../../shared/providers";
 import { useGameActions } from "../../player-actions";
@@ -130,24 +130,21 @@ const EmptyCard = styled.div`
  */
 const InteractiveBoardContent = memo<{
   cards: any[];
-  arMode: boolean;
-  onARToggle: () => void;
   canMakeGuess: boolean;
   isLoading: boolean;
   activeTurn: any;
   onCardClick: (word: string) => void;
-}>(({ cards, arMode, onARToggle, canMakeGuess, isLoading, activeTurn, onCardClick }) => {
-  const { triggers } = useCardVisibilityContext();
+}>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick }) => {
+  const { triggers, viewMode } = useCardVisibilityContext();
 
   const handleARToggle = () => {
-    triggers.reveal(!arMode);
-    onARToggle();
+    triggers.toggleSpymasterView();
   };
 
   return (
-    <BoardAspectWrapper data-ar-mode={arMode}>
+    <BoardAspectWrapper data-ar-mode={viewMode === 'spymaster'}>
       {/* AR HUD Overlay - Full screen glasses effect */}
-      {arMode && (
+      {viewMode === 'spymaster' && (
         <ARGlassesHUD>
           <ARVisor />
           <ARGlare />
@@ -180,8 +177,8 @@ const InteractiveBoardContent = memo<{
         </ARGlassesHUD>
       )}
 
-      <BoardGrid aria-label="interactive game board" data-ar-mode={arMode}>
-        {cards.map((card, index) => (
+      <BoardGrid aria-label="interactive game board" data-ar-mode={viewMode === 'spymaster'}>
+        {cards.length > 0 ? cards.map((card, index) => (
           <GameCard
             key={card.word}
             card={card}
@@ -190,12 +187,14 @@ const InteractiveBoardContent = memo<{
             clickable={canMakeGuess && !isLoading && !card.selected}
             initialVisibility="visible"
           />
+        )) : Array.from({ length: 25 }).map((_, i) => (
+          <EmptyCard key={`empty-${i}`} />
         ))}
       </BoardGrid>
 
       {/* AR Toggle Button */}
-      <ARToggleButton $arMode={arMode} onClick={handleARToggle}>
-        {arMode ? "DISABLE AR" : "ACTIVATE AR"}
+      <ARToggleButton $arMode={viewMode === 'spymaster'} onClick={handleARToggle}>
+        {viewMode === 'spymaster' ? "DISABLE AR" : "ACTIVATE AR"}
       </ARToggleButton>
     </BoardAspectWrapper>
   );
@@ -211,9 +210,6 @@ export const InteractiveBoard = memo(() => {
   const { makeGuess, actionState } = useGameActions();
   const { activeTurn } = useTurn();
   const cards = gameData.currentRound?.cards || [];
-
-  // AR mode state - local to this board component
-  const [arMode, setArMode] = useState(false);
 
   const isLoading = actionState.status === "loading";
 
@@ -241,18 +237,15 @@ export const InteractiveBoard = memo(() => {
 
   if (cards.length === 0) {
     return (
-      <BoardAspectWrapper>
-        <BoardGrid aria-label="interactive game board" data-ar-mode={arMode}>
-          {Array.from({ length: 25 }).map((_, i) => (
-            <EmptyCard key={`empty-${i}`} />
-          ))}
-        </BoardGrid>
-
-        {/* AR Toggle Button */}
-        <ARToggleButton $arMode={arMode} onClick={() => setArMode(!arMode)}>
-          {arMode ? "DISABLE AR" : "ACTIVATE AR"}
-        </ARToggleButton>
-      </BoardAspectWrapper>
+      <CardVisibilityProvider cards={[]} initialState="visible">
+        <InteractiveBoardContent
+          cards={[]}
+          canMakeGuess={false}
+          isLoading={false}
+          activeTurn={null}
+          onCardClick={() => {}}
+        />
+      </CardVisibilityProvider>
     );
   }
 
@@ -260,8 +253,6 @@ export const InteractiveBoard = memo(() => {
     <CardVisibilityProvider cards={cards} initialState="visible">
       <InteractiveBoardContent
         cards={cards}
-        arMode={arMode}
-        onARToggle={() => setArMode(!arMode)}
         canMakeGuess={canMakeGuess}
         isLoading={isLoading}
         activeTurn={activeTurn}

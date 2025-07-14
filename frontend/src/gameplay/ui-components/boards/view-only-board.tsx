@@ -1,4 +1,4 @@
-import React, { memo, useState } from "react";
+import React, { memo } from "react";
 import styled from "styled-components";
 import { useGameDataRequired } from "../../shared/providers";
 import { GameCard } from "../cards/game-card";
@@ -130,20 +130,17 @@ const EmptyCard = styled.div`
 const BoardContent = memo<{
   cards: any[];
   isRoundSetup: boolean;
-  arMode: boolean;
-  onARToggle: () => void;
-}>(({ cards, isRoundSetup, arMode, onARToggle }) => {
-  const { triggers } = useCardVisibilityContext();
+}>(({ cards, isRoundSetup }) => {
+  const { triggers, viewMode } = useCardVisibilityContext();
 
   const handleARToggle = () => {
-    triggers.reveal(!arMode);
-    onARToggle();
+    triggers.toggleSpymasterView();
   };
 
   return (
-    <BoardAspectWrapper data-ar-mode={arMode}>
+    <BoardAspectWrapper data-ar-mode={viewMode === 'spymaster'}>
       {/* AR HUD Overlay - Full screen glasses effect */}
-      {arMode && (
+      {viewMode === 'spymaster' && (
         <ARGlassesHUD>
           <ARVisor />
           <ARGlare />
@@ -176,8 +173,8 @@ const BoardContent = memo<{
         </ARGlassesHUD>
       )}
 
-      <BoardGrid aria-label="view-only game board" data-ar-mode={arMode}>
-        {cards.map((card, index) => (
+      <BoardGrid aria-label="view-only game board" data-ar-mode={viewMode === 'spymaster'}>
+        {cards.length > 0 ? cards.map((card, index) => (
           <GameCard
             key={card.word}
             card={card}
@@ -186,13 +183,15 @@ const BoardContent = memo<{
             clickable={false}
             initialVisibility={isRoundSetup ? "hidden" : "visible"}
           />
+        )) : Array.from({ length: 25 }).map((_, i) => (
+          <EmptyCard key={`empty-${i}`} />
         ))}
       </BoardGrid>
 
       {/* AR Toggle Button - only show when cards are visible */}
       {!isRoundSetup && (
-        <ARToggleButton $arMode={arMode} onClick={handleARToggle}>
-          {arMode ? "DISABLE AR" : "ACTIVATE AR"}
+        <ARToggleButton $arMode={viewMode === 'spymaster'} onClick={handleARToggle}>
+          {viewMode === 'spymaster' ? "DISABLE AR" : "ACTIVATE AR"}
         </ARToggleButton>
       )}
     </BoardAspectWrapper>
@@ -209,23 +208,11 @@ export const ViewOnlyBoard = memo(() => {
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === "SETUP";
 
-  // AR mode state - local to this board component
-  const [arMode, setArMode] = useState(false);
-
   if (cards.length === 0) {
     return (
-      <BoardAspectWrapper>
-        <BoardGrid aria-label="view-only game board" data-ar-mode={arMode}>
-          {Array.from({ length: 25 }).map((_, i) => (
-            <EmptyCard key={`empty-${i}`} />
-          ))}
-        </BoardGrid>
-
-        {/* AR Toggle Button - only show for spymaster view when cards visible */}
-        <ARToggleButton $arMode={arMode} onClick={() => setArMode(!arMode)}>
-          {arMode ? "DISABLE AR" : "ACTIVATE AR"}
-        </ARToggleButton>
-      </BoardAspectWrapper>
+      <CardVisibilityProvider cards={[]} initialState="hidden">
+        <BoardContent cards={[]} isRoundSetup={isRoundSetup} />
+      </CardVisibilityProvider>
     );
   }
 
@@ -234,8 +221,6 @@ export const ViewOnlyBoard = memo(() => {
       <BoardContent
         cards={cards}
         isRoundSetup={isRoundSetup}
-        arMode={arMode}
-        onARToggle={() => setArMode(!arMode)}
       />
     </CardVisibilityProvider>
   );
