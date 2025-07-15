@@ -624,6 +624,64 @@ export const ARCrosshair = styled.div`
 `;
 
 /**
+ * Team Symbol Overlay for game cards
+ * Shows in spymaster view and when cards are covered
+ */
+export const TeamSymbolOverlay = styled.div<{ 
+  $teamColor: string; 
+  $symbol: string;
+  $isAssassin: boolean;
+}>`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 4rem;
+  font-weight: 900;
+  color: ${props => props.$isAssassin ? 'rgba(255, 255, 0, 0.5)' : 'rgba(0, 0, 0, 0.4)'};
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.3));
+
+  /* Content is the symbol passed as prop */
+  &::before {
+    content: '${props => props.$symbol}';
+  }
+
+  /* Assassin special styling */
+  ${props => props.$isAssassin && `
+    color: rgba(255, 255, 0, 0.5);
+    text-shadow: 
+      0 0 10px rgba(255, 255, 0, 0.4),
+      0 0 20px rgba(255, 255, 0, 0.2);
+    filter: drop-shadow(0 0 8px rgba(255, 255, 0, 0.5));
+  `}
+
+  /* Show symbols in spymaster view (visible-colored state) */
+  [data-state="visible-colored"] & {
+    opacity: 1;
+  }
+
+  /* Show symbols when card is covered */
+  [data-state="covered"] & {
+    opacity: 1;
+  }
+
+  /* PROGRESSIVE ENHANCEMENT: Larger icons on bigger screens */
+  @media (min-width: 481px) {
+    font-size: 5rem;
+    color: ${props => props.$isAssassin ? 'rgba(255, 255, 0, 0.55)' : 'rgba(0, 0, 0, 0.45)'};
+  }
+
+  @media (min-width: 769px) {
+    font-size: 7rem;
+    color: ${props => props.$isAssassin ? 'rgba(255, 255, 0, 0.6)' : 'rgba(0, 0, 0, 0.5)'};
+  }
+`;
+
+/**
  * AR Toggle Button
  */
 export const ARToggleButton = styled.button<{ $arMode: boolean }>`

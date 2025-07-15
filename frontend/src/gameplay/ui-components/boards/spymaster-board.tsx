@@ -1,7 +1,10 @@
 import React, { memo } from "react";
 import { useGameDataRequired } from "../../shared/providers";
 import { GameCard } from "../cards/game-card";
-import { CardVisibilityProvider, useCardVisibilityContext } from "../cards/card-visibility-provider";
+import {
+  CardVisibilityProvider,
+  useCardVisibilityContext,
+} from "../cards/card-visibility-provider";
 import { GameBoardLayout } from "./board-layout";
 import { EmptyCard } from "./board-styles";
 import {
@@ -56,27 +59,13 @@ const SpymasterBoardContent = memo<{
   return (
     <>
       {/* AR HUD Overlay - Full screen glasses effect */}
-      {viewMode === 'spymaster' && (
+      {viewMode === "spymaster" && (
         <ARGlassesHUD>
           <ARVisor />
           <ARGlare />
           <ARScanlines />
 
           <ARHUDContent>
-            <ARHUDTop>
-              <ARHUDStatus>
-                <ARHUDLine>SYSTEM: TACTICAL ANALYSIS MODE</ARHUDLine>
-                <ARHUDLine>VIEW: SPYMASTER INTEL</ARHUDLine>
-                <ARHUDLine $alert>WARNING: CLASSIFIED DATA</ARHUDLine>
-              </ARHUDStatus>
-
-              <ARHUDStatus style={{ textAlign: "right" }}>
-                <ARHUDLine>SIGNAL: STRONG</ARHUDLine>
-                <ARHUDLine>MODE: ACTIVE</ARHUDLine>
-                <ARHUDLine>STATUS: OPERATIONAL</ARHUDLine>
-              </ARHUDStatus>
-            </ARHUDTop>
-
             <ARCrosshair />
 
             <ARCornerBrackets>
@@ -89,8 +78,8 @@ const SpymasterBoardContent = memo<{
         </ARGlassesHUD>
       )}
 
-      <GameBoardLayout data-ar-mode={viewMode === 'spymaster'}>
-        {cards.length > 0 
+      <GameBoardLayout data-ar-mode={viewMode === "spymaster"}>
+        {cards.length > 0
           ? cards.map((card, index) => (
               <GameCard
                 key={card.word}
@@ -101,16 +90,13 @@ const SpymasterBoardContent = memo<{
                 initialVisibility={isRoundSetup ? "hidden" : "visible"}
               />
             ))
-          : Array.from({ length: 25 }).map((_, i) => (
-              <EmptyCard key={`empty-${i}`} />
-            ))
-        }
+          : Array.from({ length: 25 }).map((_, i) => <EmptyCard key={`empty-${i}`} />)}
       </GameBoardLayout>
 
       {/* AR Toggle Button - only show when cards are visible */}
       {!isRoundSetup && (
-        <ARToggleButton $arMode={viewMode === 'spymaster'} onClick={handleARToggle}>
-          {viewMode === 'spymaster' ? "DISABLE AR" : "ACTIVATE AR"}
+        <ARToggleButton $arMode={viewMode === "spymaster"} onClick={handleARToggle}>
+          {viewMode === "spymaster" ? "DISABLE AR" : "ACTIVATE AR"}
         </ARToggleButton>
       )}
     </>
