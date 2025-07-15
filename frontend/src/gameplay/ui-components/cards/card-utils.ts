@@ -1,13 +1,13 @@
 import { Card } from "@frontend/shared-types";
 
-// Card colors
+// Card colors - BRIGHTER for better visibility
 export const CARD_COLORS = {
-  neutral: "#494646",
-  assassin: "#0a0a0a",
-  bystander: "#697188",
-  red: "#B22222",
-  blue: "#4169E1",
-  green: "#228B22",
+  neutral: "#6b6b6b",      // Lighter neutral
+  assassin: "#0a0a0a",     // Keep black
+  bystander: "#8b8b8b",    // Lighter gray
+  red: "#ff3333",          // Bright red
+  blue: "#3399ff",         // Bright blue
+  green: "#33cc33",        // Bright green
 } as const;
 
 /**

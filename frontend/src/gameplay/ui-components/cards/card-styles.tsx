@@ -157,6 +157,10 @@ export const CardContainer = styled.div`
       cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   }
 
+  &[data-animation="color-fade"] {
+    animation: ${colorRevealAnimation} 0.8s ease-in-out forwards;
+  }
+
   &[data-animation="color-fade"] .base-card {
     animation: ${colorRevealAnimation} 0.8s ease-in-out forwards;
   }
@@ -243,30 +247,62 @@ export const BaseCard = styled.button<{ $teamColor: string; $clickable: boolean 
     animation: ${rippleEffect} 0.6s ease-out;
   }
 
-  /* State-based colors for spymaster view */
+  /* State-based colors for spymaster view - BRIGHT BACKGROUNDS */
   [data-state="visible-colored"] & {
     background-color: ${(props) =>
       props.$teamColor === CARD_COLORS.assassin
-        ? "rgba(10, 10, 10, 0.9)"
+        ? "rgba(10, 10, 10, 0.95)"
         : props.$teamColor === CARD_COLORS.red
-          ? "rgba(178, 34, 34, 0.85)"
+          ? "rgba(255, 51, 51, 0.9)"
           : props.$teamColor === CARD_COLORS.blue
-            ? "rgba(65, 105, 225, 0.85)"
+            ? "rgba(51, 153, 255, 0.9)"
             : props.$teamColor === CARD_COLORS.bystander
-              ? "rgba(105, 113, 136, 0.85)"
-              : "rgba(73, 70, 70, 0.85)"};
+              ? "rgba(139, 139, 139, 0.9)"
+              : "rgba(107, 107, 107, 0.9)"};
 
-    color: ${(props) => (props.$teamColor === CARD_COLORS.assassin ? "#ffffff" : "#2a2a3e")};
+    color: ${(props) => (props.$teamColor === CARD_COLORS.assassin ? "#ffffff" : "#ffffff")};
     border: ${(props) =>
       props.$teamColor === CARD_COLORS.assassin
-        ? "2px solid #ffff00"
+        ? "3px solid #ffff00"
         : props.$teamColor === CARD_COLORS.red
-          ? "2px solid #660000"
+          ? "3px solid #ff0000"
           : props.$teamColor === CARD_COLORS.blue
-            ? "2px solid #002244"
+            ? "3px solid #0066ff"
             : props.$teamColor === CARD_COLORS.bystander
-              ? "2px solid #333333"
-              : "1px solid #d4d1c8"};
+              ? "3px solid #666666"
+              : "2px solid #555555"};
+    
+    /* Enhanced glow effect for team colors */
+    box-shadow: ${(props) =>
+      props.$teamColor === CARD_COLORS.assassin
+        ? `0 0 30px rgba(255, 255, 0, 0.8),
+           0 0 60px rgba(255, 255, 0, 0.4),
+           0 1px 0 rgba(0, 0, 0, 0.2),
+           0 2px 0 rgba(0, 0, 0, 0.2),
+           0 3px 0 rgba(0, 0, 0, 0.2),
+           0 4px 0 rgba(0, 0, 0, 0.2),
+           0 5px 10px rgba(0, 0, 0, 0.3)`
+        : props.$teamColor === CARD_COLORS.red
+          ? `0 0 25px rgba(255, 51, 51, 0.8),
+             0 0 50px rgba(255, 51, 51, 0.4),
+             0 1px 0 rgba(0, 0, 0, 0.2),
+             0 2px 0 rgba(0, 0, 0, 0.2),
+             0 3px 0 rgba(0, 0, 0, 0.2),
+             0 4px 0 rgba(0, 0, 0, 0.2),
+             0 5px 10px rgba(0, 0, 0, 0.3)`
+          : props.$teamColor === CARD_COLORS.blue
+            ? `0 0 25px rgba(51, 153, 255, 0.8),
+               0 0 50px rgba(51, 153, 255, 0.4),
+               0 1px 0 rgba(0, 0, 0, 0.2),
+               0 2px 0 rgba(0, 0, 0, 0.2),
+               0 3px 0 rgba(0, 0, 0, 0.2),
+               0 4px 0 rgba(0, 0, 0, 0.2),
+               0 5px 10px rgba(0, 0, 0, 0.3)`
+            : `0 1px 0 rgba(0, 0, 0, 0.2),
+               0 2px 0 rgba(0, 0, 0, 0.2),
+               0 3px 0 rgba(0, 0, 0, 0.2),
+               0 4px 0 rgba(0, 0, 0, 0.2),
+               0 5px 10px rgba(0, 0, 0, 0.3)`};
   }
 
   /* PROGRESSIVE ENHANCEMENT: Tablet improvements */
@@ -401,6 +437,40 @@ export const CoverCard = styled.div<{
   &[data-state="covered"] {
     opacity: 1 !important;
     pointer-events: all;
+  }
+
+  /* Colored state gets enhanced styling */
+  &[data-state="covered"] {
+    border: ${(props) =>
+      props.$teamColor === CARD_COLORS.assassin
+        ? "3px solid #ffff00"
+        : props.$teamColor === CARD_COLORS.red
+          ? "2px solid #ff6666"
+          : props.$teamColor === CARD_COLORS.blue
+            ? "2px solid #66b3ff"
+            : "1px solid rgba(255, 255, 255, 0.5)"};
+    
+    /* Enhanced glow for cover cards */
+    box-shadow: ${(props) =>
+      props.$teamColor === CARD_COLORS.assassin
+        ? `0 0 25px rgba(255, 255, 0, 0.8),
+           0 0 50px rgba(255, 255, 0, 0.4),
+           0 1px 0 rgba(0, 0, 0, 0.25),
+           0 2px 0 rgba(0, 0, 0, 0.25),
+           0 3px 5px rgba(0, 0, 0, 0.3)`
+        : props.$teamColor === CARD_COLORS.red
+          ? `0 0 25px rgba(255, 51, 51, 0.7),
+             0 1px 0 rgba(0, 0, 0, 0.25),
+             0 2px 0 rgba(0, 0, 0, 0.25),
+             0 3px 5px rgba(0, 0, 0, 0.3)`
+          : props.$teamColor === CARD_COLORS.blue
+            ? `0 0 25px rgba(51, 153, 255, 0.7),
+               0 1px 0 rgba(0, 0, 0, 0.25),
+               0 2px 0 rgba(0, 0, 0, 0.25),
+               0 3px 5px rgba(0, 0, 0, 0.3)`
+            : `0 1px 0 rgba(0, 0, 0, 0.25),
+               0 2px 0 rgba(0, 0, 0, 0.25),
+               0 3px 5px rgba(0, 0, 0, 0.3)`};
   }
 
   /* PROGRESSIVE ENHANCEMENT: Tablet improvements */

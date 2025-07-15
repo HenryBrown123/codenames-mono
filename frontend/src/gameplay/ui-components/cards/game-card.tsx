@@ -54,17 +54,10 @@ export const GameCard = memo<GameCardProps>(
           onClick={handleClick}
           disabled={!clickable || card.selected}
         />
-        
-        <SpymasterReveal 
-          card={card} 
-          isVisible={showSpymasterInfo} 
-        />
-        
-        <CoverCard 
-          card={card} 
-          state={visibility.state} 
-          animation={visibility.animation} 
-        />
+
+        <SpymasterReveal card={card} isVisible={showSpymasterInfo} />
+
+        <CoverCard card={card} state={visibility.state} animation={visibility.animation} />
       </CardContainer>
     );
   },
