@@ -63,6 +63,7 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
   );
 
   const transitionCard = useCallback((word: string, newState: VisualState) => {
+    console.log('TRANSITIONING CARD:', word, 'to state:', newState);
     setCardStates((prev) => {
       const next = new Map(prev);
       next.set(word, newState);
@@ -73,10 +74,16 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
   // Simplified triggers object
   const triggers = {
     reveal: useCallback((active: boolean) => {
+      console.log('REVEAL CALLED with active:', active);
       setViewMode(active ? 'spymaster' : 'player');
     }, []),
     toggleSpymasterView: useCallback(() => {
-      setViewMode(prev => prev === 'spymaster' ? 'player' : 'spymaster');
+      console.log('TOGGLING SPYMASTER VIEW');
+      setViewMode(prev => {
+        const next = prev === 'spymaster' ? 'player' : 'spymaster';
+        console.log('ViewMode changing from', prev, 'to', next);
+        return next;
+      });
     }, []),
   };
 
