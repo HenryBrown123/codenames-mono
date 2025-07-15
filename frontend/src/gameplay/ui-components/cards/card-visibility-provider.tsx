@@ -12,7 +12,7 @@ export type VisualState =
   | "hidden"
   | "visible"
   | "visible-colored"
-  | "covered";
+  | "visible-covered";
 export type AnimationType = "dealing" | "color-fade" | "covering" | null;
 
 interface VisibilityTriggers {
@@ -48,7 +48,7 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
     // Initialize all cards at provider creation
     const initial = new Map<string, VisualState>();
     cards.forEach((card) => {
-      initial.set(card.word, card.selected ? "covered" : initialState);
+      initial.set(card.word, card.selected ? "visible-covered" : initialState);
     });
     return initial;
   });

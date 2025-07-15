@@ -45,14 +45,14 @@ const CARD_TRANSITIONS: CardTransition[] = [
   // Cards cover when selected (from neutral state)
   {
     from: "visible",
-    to: "covered",
+    to: "visible-covered",
     animation: "covering",
     condition: (card) => card.selected,
   },
   // Cards cover when selected (from colored state)
   {
     from: "visible-colored",
-    to: "covered",
+    to: "visible-covered",
     animation: "covering",
     condition: (card) => card.selected,
   },
