@@ -1,16 +1,11 @@
 import React, { memo, useCallback } from "react";
 import { Card } from "@frontend/shared-types";
 import { useCardVisibility } from "./use-card-visibility";
-import { CardContainer } from "./card-styles";
-import { BaseCard } from "./card-base";
-import { CoverCard } from "./card-cover";
-import { SpymasterReveal } from "./card-spymaster-reveal";
+import { CardContainer, BaseCard, CardOverlay, CardWord } from "./card-styles";
+import { getTeamType } from "./card-utils";
 import type { VisualState } from "./card-visibility-provider";
 
-/**
- * GameCard component props
- */
-export interface GameCardProps {
+interface GameCardProps {
   card: Card;
   index: number;
   onClick: () => void;
@@ -19,48 +14,48 @@ export interface GameCardProps {
 }
 
 /**
- * Individual game card component with mobile-first responsive design
+ * Game card component with clean state/animation separation
+ * States: hidden, visible, visible-colored, visible-covered
  */
-export const GameCard = memo<GameCardProps>(
-  ({ card, index, onClick, clickable, initialVisibility }) => {
-    const visibility = useCardVisibility(card, index, initialVisibility);
-    const showSpymasterInfo = visibility.state === "visible-colored";
-
-    const handleAnimationEnd = useCallback(
-      (e: React.AnimationEvent) => {
-        if (e.target === e.currentTarget && visibility.animation) {
-          visibility.handleAnimationEnd();
-        }
-      },
-      [visibility.animation, visibility.handleAnimationEnd],
-    );
-
-    const handleClick = useCallback(() => {
-      if (clickable && !card.selected) {
-        onClick();
-      }
-    }, [clickable, card.selected, onClick]);
-
-    return (
-      <CardContainer
-        data-state={visibility.state}
-        data-animation={visibility.animation}
-        style={{ "--card-index": index } as React.CSSProperties}
-        onAnimationEnd={handleAnimationEnd}
-      >
-        <BaseCard
-          card={card}
-          clickable={clickable && !card.selected}
-          onClick={handleClick}
-          disabled={!clickable || card.selected}
-        />
-
-        <SpymasterReveal card={card} isVisible={showSpymasterInfo} />
-
-        <CoverCard card={card} state={visibility.state} animation={visibility.animation} />
-      </CardContainer>
-    );
-  },
-);
+export const GameCard = memo<GameCardProps>(({ 
+  card, 
+  index, 
+  onClick, 
+  clickable,
+  initialVisibility
+}) => {
+  const visibility = useCardVisibility(card, index, initialVisibility);
+  const teamType = getTeamType(card);
+  
+  const handleAnimationEnd = useCallback(() => {
+    // Let visibility provider know animation completed
+    if (visibility.animation) {
+      visibility.handleAnimationEnd();
+    }
+  }, [visibility]);
+  
+  const handleClick = useCallback(() => {
+    if (clickable && !card.selected) {
+      onClick();
+    }
+  }, [clickable, card.selected, onClick]);
+  
+  return (
+    <CardContainer 
+      data-team={teamType}
+      data-state={visibility.state}
+      data-animation={visibility.animation}
+      data-clickable={clickable && !card.selected}
+      style={{ '--card-index': index } as React.CSSProperties}
+      onAnimationEnd={handleAnimationEnd}
+    >
+      <BaseCard onClick={handleClick}>
+        <CardWord>{card.word}</CardWord>
+      </BaseCard>
+      
+      <CardOverlay />
+    </CardContainer>
+  );
+});
 
 GameCard.displayName = "GameCard";
