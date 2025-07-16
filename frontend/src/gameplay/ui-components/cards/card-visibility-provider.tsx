@@ -96,9 +96,12 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
   const [cardData, setCardData] = useState(() => {
     // Initialize all cards at provider creation
     const initial = new Map<string, CardVisibilityData>();
+    console.log("[CardVisibilityProvider] Initializing with", cards.length, "cards, initialState:", initialState);
     cards.forEach((card) => {
+      const cardState = card.selected ? "visible-covered" : initialState;
+      console.log("[CardVisibilityProvider] Initializing card:", card.word, "→", cardState);
       initial.set(card.word, {
-        state: card.selected ? "visible-covered" : initialState,
+        state: cardState,
         animation: null,
       });
     });
@@ -111,12 +114,16 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
   let hasChanges = false;
   const updatedData = new Map(cardData);
   
+  console.log("[CardVisibilityProvider] Running state machine, viewMode:", viewMode, "cards:", cards.length);
+  
   cards.forEach((card) => {
     const currentData = updatedData.get(card.word);
     if (!currentData) {
       // New card, initialize it
+      const newState = card.selected ? "visible-covered" : initialState;
+      console.log("[CardVisibilityProvider] New card:", card.word, "→", newState);
       updatedData.set(card.word, {
-        state: card.selected ? "visible-covered" : initialState,
+        state: newState,
         animation: null,
       });
       hasChanges = true;
@@ -130,22 +137,38 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
 
     if (transition && currentData.state !== transition.to) {
       // Update with new state and animation
+      console.log(
+        "[CardVisibilityProvider] Transition:", 
+        card.word, 
+        currentData.state, 
+        "→", 
+        transition.to, 
+        "animation:", 
+        transition.animation
+      );
       updatedData.set(card.word, {
         state: transition.to,
         animation: transition.animation,
       });
       hasChanges = true;
+    } else if (transition) {
+      console.log("[CardVisibilityProvider] Skipping redundant transition for:", card.word, "already at", currentData.state);
     }
   });
 
   // Only update state if there were changes
   if (hasChanges) {
+    console.log("[CardVisibilityProvider] State changes detected, updating cardData");
     setCardData(updatedData);
+  } else {
+    console.log("[CardVisibilityProvider] No state changes, keeping current data");
   }
 
   const getCardVisibility = useCallback(
     (word: string) => {
-      return cardData.get(word);
+      const data = cardData.get(word);
+      console.log("[CardVisibilityProvider] getCardVisibility:", word, "→", data);
+      return data;
     },
     [cardData],
   );
@@ -153,14 +176,16 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
   // Simplified triggers object
   const triggers = {
     reveal: useCallback((active: boolean) => {
-      console.log("REVEAL CALLED with active:", active);
-      setViewMode(active ? "spymaster" : "player");
+      console.log("[CardVisibilityProvider] REVEAL CALLED with active:", active);
+      const newMode = active ? "spymaster" : "player";
+      console.log("[CardVisibilityProvider] Setting viewMode to:", newMode);
+      setViewMode(newMode);
     }, []),
     toggleSpymasterView: useCallback(() => {
-      console.log("TOGGLING SPYMASTER VIEW");
+      console.log("[CardVisibilityProvider] TOGGLING SPYMASTER VIEW");
       setViewMode((prev) => {
         const next = prev === "spymaster" ? "player" : "spymaster";
-        console.log("ViewMode changing from", prev, "to", next);
+        console.log("[CardVisibilityProvider] ViewMode changing from", prev, "to", next);
         return next;
       });
     }, []),
