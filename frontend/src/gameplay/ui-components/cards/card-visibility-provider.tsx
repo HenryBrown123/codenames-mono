@@ -128,7 +128,7 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
       (t) => t.from === currentData.state && t.condition(card, viewMode)
     );
 
-    if (transition) {
+    if (transition && currentData.state !== transition.to) {
       // Update with new state and animation
       updatedData.set(card.word, {
         state: transition.to,
