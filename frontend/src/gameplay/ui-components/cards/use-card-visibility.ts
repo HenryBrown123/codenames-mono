@@ -21,6 +21,7 @@ export const useCardVisibility = (card: Card, _index: number): CardVisibility =>
     state: "hidden" as VisualState,
     animation: null,
   };
+
   const activeElements = useRef<Set<EventTarget>>(new Set());
 
   // Animation status state - initialized once on first render
@@ -28,11 +29,19 @@ export const useCardVisibility = (card: Card, _index: number): CardVisibility =>
     "waiting" | "animating" | "complete" | null
   >(visibilityData.animation ? "waiting" : null);
 
+  if (visibilityData.animation && animationStatus === null) {
+    setAnimationStatus("waiting");
+  }
+
+  console.log(animationStatus);
+
   // Return animation based on status - persists across dev mode re-renders
   const animation =
     animationStatus === "waiting" || animationStatus === "animating"
       ? visibilityData.animation
       : null;
+
+  console.log("animation", animation);
 
   /**
    * Track animation start - update status and element tracking
