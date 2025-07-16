@@ -8,11 +8,8 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
 import { Card } from "@frontend/shared-types";
 
-export type VisualState =
-  | "hidden"
-  | "visible"
-  | "visible-colored"
-  | "visible-covered";
+export type VisualState = "hidden" | "visible" | "visible-colored" | "visible-covered";
+
 export type AnimationType = "dealing" | "color-fade" | "covering" | null;
 
 interface VisibilityTriggers {
@@ -24,7 +21,7 @@ interface CardVisibilityState {
   getCardState: (word: string) => VisualState | undefined;
   transitionCard: (word: string, newState: VisualState) => void;
   triggers: VisibilityTriggers;
-  viewMode: 'player' | 'spymaster';
+  viewMode: "player" | "spymaster";
 }
 
 const CardVisibilityContext = createContext<CardVisibilityState | null>(null);
@@ -52,8 +49,8 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
     });
     return initial;
   });
-  
-  const [viewMode, setViewMode] = useState<'player' | 'spymaster'>('player');
+
+  const [viewMode, setViewMode] = useState<"player" | "spymaster">("player");
 
   const getCardState = useCallback(
     (word: string) => {
@@ -63,7 +60,7 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
   );
 
   const transitionCard = useCallback((word: string, newState: VisualState) => {
-    console.log('TRANSITIONING CARD:', word, 'to state:', newState);
+    console.log("TRANSITIONING CARD:", word, "to state:", newState);
     setCardStates((prev) => {
       const next = new Map(prev);
       next.set(word, newState);
@@ -74,14 +71,14 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
   // Simplified triggers object
   const triggers = {
     reveal: useCallback((active: boolean) => {
-      console.log('REVEAL CALLED with active:', active);
-      setViewMode(active ? 'spymaster' : 'player');
+      console.log("REVEAL CALLED with active:", active);
+      setViewMode(active ? "spymaster" : "player");
     }, []),
     toggleSpymasterView: useCallback(() => {
-      console.log('TOGGLING SPYMASTER VIEW');
-      setViewMode(prev => {
-        const next = prev === 'spymaster' ? 'player' : 'spymaster';
-        console.log('ViewMode changing from', prev, 'to', next);
+      console.log("TOGGLING SPYMASTER VIEW");
+      setViewMode((prev) => {
+        const next = prev === "spymaster" ? "player" : "spymaster";
+        console.log("ViewMode changing from", prev, "to", next);
         return next;
       });
     }, []),

@@ -100,6 +100,7 @@ export const useCardVisibility = (
   const handleAnimationEnd = useCallback(() => {
     if (transition) {
       transitionCard(card.word, transition.to);
+      console.log("transitioning");
     }
   }, [transition, card.word, transitionCard]);
 
