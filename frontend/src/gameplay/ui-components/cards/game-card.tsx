@@ -3,14 +3,12 @@ import { Card } from "@frontend/shared-types";
 import { useCardVisibility } from "./use-card-visibility";
 import { CardContainer, BaseCard, CardOverlay, CardWord } from "./card-styles";
 import { getTeamType } from "./card-utils";
-import type { VisualState } from "./card-visibility-provider";
 
 interface GameCardProps {
   card: Card;
   index: number;
   onClick: () => void;
   clickable: boolean;
-  initialVisibility: VisualState;
 }
 
 /**
@@ -18,8 +16,8 @@ interface GameCardProps {
  * States: hidden, visible, visible-colored, visible-covered
  */
 export const GameCard = memo<GameCardProps>(
-  ({ card, index, onClick, clickable, initialVisibility }) => {
-    const visibility = useCardVisibility(card, index, initialVisibility);
+  ({ card, index, onClick, clickable }) => {
+    const visibility = useCardVisibility(card, index);
     const teamType = getTeamType(card);
 
     const handleAnimationEnd = useCallback(() => {

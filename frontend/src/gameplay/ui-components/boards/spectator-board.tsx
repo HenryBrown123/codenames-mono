@@ -25,7 +25,6 @@ export const SpectatorBoard = memo(() => {
                 index={index}
                 onClick={() => {}}
                 clickable={false}
-                initialVisibility={isRoundSetup ? "hidden" : "visible"}
               />
             ))
           : Array.from({ length: 25 }).map((_, i) => (

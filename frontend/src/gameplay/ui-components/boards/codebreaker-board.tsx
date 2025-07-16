@@ -84,7 +84,6 @@ const CodebreakerBoardContent = memo<{
             index={index}
             onClick={() => onCardClick(card.word)}
             clickable={canMakeGuess && !isLoading && !card.selected}
-            initialVisibility="visible"
           />
         )) : Array.from({ length: 25 }).map((_, i) => (
           <EmptyCard key={`empty-${i}`} />
