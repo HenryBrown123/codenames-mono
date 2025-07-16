@@ -15,41 +15,33 @@ interface GameCardProps {
  * Game card component with clean state/animation separation
  * States: hidden, visible, visible-colored, visible-covered
  */
-export const GameCard = memo<GameCardProps>(
-  ({ card, index, onClick, clickable }) => {
-    const visibility = useCardVisibility(card, index);
-    const teamType = getTeamType(card);
+export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable }) => {
+  const visibility = useCardVisibility(card, index);
+  const teamType = getTeamType(card);
 
-    const handleAnimationEnd = useCallback(() => {
-      // Let visibility provider know animation completed
-      if (visibility.animation) {
-        visibility.handleAnimationEnd();
-      }
-    }, [visibility]);
+  const handleClick = useCallback(() => {
+    if (clickable && !card.selected) {
+      onClick();
+    }
+  }, [clickable, card.selected, onClick]);
 
-    const handleClick = useCallback(() => {
-      if (clickable && !card.selected) {
-        onClick();
-      }
-    }, [clickable, card.selected, onClick]);
+  console.log("Rendering card with: ", visibility);
 
-    return (
-      <CardContainer
-        data-team={teamType}
-        data-state={visibility.state}
-        data-animation={visibility.animation}
-        data-clickable={clickable && !card.selected}
-        style={{ "--card-index": index } as React.CSSProperties}
-        onAnimationEnd={handleAnimationEnd}
-      >
-        <BaseCard onClick={handleClick}>
-          <CardWord>{card.word}</CardWord>
-        </BaseCard>
+  return (
+    <CardContainer
+      data-team={teamType}
+      data-state={visibility.state}
+      data-animation={visibility.animation}
+      data-clickable={clickable && !card.selected}
+      style={{ "--card-index": index } as React.CSSProperties}
+    >
+      <BaseCard onClick={handleClick}>
+        <CardWord>{card.word}</CardWord>
+      </BaseCard>
 
-        <CardOverlay />
-      </CardContainer>
-    );
-  },
-);
+      <CardOverlay />
+    </CardContainer>
+  );
+});
 
 GameCard.displayName = "GameCard";
