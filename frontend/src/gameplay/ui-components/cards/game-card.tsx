@@ -12,41 +12,43 @@ interface GameCardProps {
 }
 
 /**
- * Game card component with clean state/animation separation
- * States: hidden, visible, visible-colored, visible-covered
+ * Game card with animation lifecycle management
  */
-export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable }) => {
-  const { state, animation, handleAnimationStart, handleAnimationEnd } = useCardVisibility(
-    card,
-    index,
-  );
+export const GameCard = memo<GameCardProps>(({ 
+  card, 
+  index, 
+  onClick, 
+  clickable 
+}) => {
+  const { state, animation, handleAnimationStart, handleAnimationEnd } = useCardVisibility(card, index);
   const teamType = getTeamType(card);
-
+  
   const handleClick = useCallback(() => {
     if (clickable && !card.selected) {
       onClick();
     }
   }, [clickable, card.selected, onClick]);
-
-  console.log("Rendering card with: ", state, animation);
-
+  
   return (
-    <CardContainer
+    <CardContainer 
       data-team={teamType}
       data-state={state}
       data-animation={animation}
       data-clickable={clickable && !card.selected}
-      style={{ "--card-index": index } as React.CSSProperties}
+      style={{ '--card-index': index } as React.CSSProperties}
     >
-      <BaseCard
+      <BaseCard 
         onClick={handleClick}
         onAnimationStart={handleAnimationStart}
         onAnimationEnd={handleAnimationEnd}
       >
         <CardWord>{card.word}</CardWord>
       </BaseCard>
-
-      <CardOverlay onAnimationStart={handleAnimationStart} onAnimationEnd={handleAnimationEnd} />
+      
+      <CardOverlay 
+        onAnimationStart={handleAnimationStart}
+        onAnimationEnd={handleAnimationEnd}
+      />
     </CardContainer>
   );
 });
