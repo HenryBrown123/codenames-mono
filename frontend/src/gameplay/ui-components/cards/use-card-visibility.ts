@@ -1,4 +1,4 @@
-import { useRef, useMemo } from "react";
+import { useRef, useCallback } from "react";
 import { Card } from "@frontend/shared-types";
 import { useCardVisibilityContext } from "./card-visibility-provider";
 import type { VisualState, AnimationType } from "./card-visibility-provider";
@@ -6,28 +6,55 @@ import type { VisualState, AnimationType } from "./card-visibility-provider";
 export interface CardVisibility {
   state: VisualState;
   animation: AnimationType;
+  handleAnimationStart: (e: React.AnimationEvent) => void;
+  handleAnimationEnd: (e: React.AnimationEvent) => void;
 }
 
 /**
  * Hook for individual card visibility management
- * Reads state from provider and detects changes to return animations
+ * Tracks animation lifecycle and only returns animation when safe to do so
  */
 export const useCardVisibility = (card: Card, _index: number): CardVisibility => {
   const { getCardVisibility } = useCardVisibilityContext();
-  const prevStateRef = useRef<VisualState | null>(null);
 
   const visibilityData = getCardVisibility(card.word) || {
-    state: "hidden",
+    state: "hidden" as VisualState,
     animation: null,
   };
+  const prevStateRef = useRef<VisualState | null>(null);
+  const activeElements = useRef<Set<EventTarget>>(new Set());
 
-  /* onlny animate if visibility state changes */
-  const shouldAnimate = prevStateRef.current !== visibilityData.state;
+  // Derived state - pure calculation, no re-renders needed
+  const isAnimating = activeElements.current.size > 0;
+
+  // Animation event handlers - just update the Set
+  const handleAnimationStart = useCallback(
+    (e: React.AnimationEvent) => {
+      activeElements.current.add(e.currentTarget);
+      console.log("Adding element");
+    },
+    [activeElements],
+  );
+
+  const handleAnimationEnd = useCallback(
+    (e: React.AnimationEvent) => {
+      activeElements.current.delete(e.currentTarget);
+      console.log("Removing element");
+    },
+    [activeElements],
+  );
+
+  // Only return animation if state changed AND not currently animating
+  const shouldShowAnimation = visibilityData.state !== prevStateRef.current || isAnimating;
+
+  const animation = shouldShowAnimation ? visibilityData.animation : null;
 
   prevStateRef.current = visibilityData.state;
 
   return {
     state: visibilityData.state,
-    animation: shouldAnimate ? visibilityData.animation : null,
+    animation,
+    handleAnimationStart,
+    handleAnimationEnd,
   };
 };

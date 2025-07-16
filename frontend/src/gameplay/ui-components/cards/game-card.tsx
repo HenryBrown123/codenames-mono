@@ -16,7 +16,10 @@ interface GameCardProps {
  * States: hidden, visible, visible-colored, visible-covered
  */
 export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable }) => {
-  const visibility = useCardVisibility(card, index);
+  const { state, animation, handleAnimationStart, handleAnimationEnd } = useCardVisibility(
+    card,
+    index,
+  );
   const teamType = getTeamType(card);
 
   const handleClick = useCallback(() => {
@@ -25,21 +28,25 @@ export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable }
     }
   }, [clickable, card.selected, onClick]);
 
-  console.log("Rendering card with: ", visibility);
+  console.log("Rendering card with: ", state, animation);
 
   return (
     <CardContainer
       data-team={teamType}
-      data-state={visibility.state}
-      data-animation={visibility.animation}
+      data-state={state}
+      data-animation={animation}
       data-clickable={clickable && !card.selected}
       style={{ "--card-index": index } as React.CSSProperties}
     >
-      <BaseCard onClick={handleClick}>
+      <BaseCard
+        onClick={handleClick}
+        onAnimationStart={handleAnimationStart}
+        onAnimationEnd={handleAnimationEnd}
+      >
         <CardWord>{card.word}</CardWord>
       </BaseCard>
 
-      <CardOverlay />
+      <CardOverlay onAnimationStart={handleAnimationStart} onAnimationEnd={handleAnimationEnd} />
     </CardContainer>
   );
 });
