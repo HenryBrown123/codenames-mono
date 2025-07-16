@@ -1,62 +1,14 @@
 /**
  * Card Visibility Hook
  *
- * Card-level hook that manages individual card state transitions and animations.
- * Connects to the CardVisibilityProvider to maintain state across renders.
+ * Hook that reads card visibility state from the provider and detects state changes
+ * to determine when animations should play.
  */
 
-import { useCallback } from "react";
+import { useRef } from "react";
 import { Card } from "@frontend/shared-types";
 import { useCardVisibilityContext } from "./card-visibility-provider";
 import type { VisualState, AnimationType } from "./card-visibility-provider";
-
-interface CardTransition {
-  from: VisualState;
-  to: VisualState;
-  animation: AnimationType;
-  condition: (card: Card, viewMode: "player" | "spymaster") => boolean;
-}
-
-/**
- * Simplified state transitions
- */
-const CARD_TRANSITIONS: CardTransition[] = [
-  // Cards appear with dealing animation
-  {
-    from: "hidden",
-    to: "visible",
-    animation: "dealing",
-    condition: () => true,
-  },
-  // Cards reveal their team colors when in spymaster view
-  {
-    from: "visible",
-    to: "visible-colored",
-    animation: "color-fade",
-    condition: (card, viewMode) => viewMode === "spymaster" && !!(card.cardType || card.teamName),
-  },
-  // Cards hide their team colors when leaving spymaster view
-  {
-    from: "visible-colored",
-    to: "visible",
-    animation: "color-fade",
-    condition: (_, viewMode) => viewMode === "player",
-  },
-  // Cards cover when selected (from neutral state)
-  {
-    from: "visible",
-    to: "visible-covered",
-    animation: "covering",
-    condition: (card) => card.selected,
-  },
-  // Cards cover when selected (from colored state)
-  {
-    from: "visible-colored",
-    to: "visible-covered",
-    animation: "covering",
-    condition: (card) => card.selected,
-  },
-];
 
 export interface CardVisibility {
   state: VisualState;
@@ -66,47 +18,42 @@ export interface CardVisibility {
 
 /**
  * Hook for individual card visibility management
- * Cards are pre-registered in the provider, so this just reads/updates state
+ * Reads state from provider and detects changes to return animations
  */
 export const useCardVisibility = (
   card: Card,
   _index: number,
-  initialState: VisualState = "visible",
 ): CardVisibility => {
-  const { getCardState, transitionCard, viewMode } = useCardVisibilityContext();
-
-  // Get current state - cards are pre-registered in provider
-  const state = getCardState(card.word) || initialState;
-
-  // Find applicable transition based on current state and card properties
-  const transition = CARD_TRANSITIONS.find((t) => t.from === state && t.condition(card, viewMode));
-
-  console.log("useCardVisibility:", {
-    word: card.word,
-    currentState: state,
-    viewMode,
-    hasTransition: !!transition,
-    transitionDetails: transition,
-    cardType: card.cardType,
-    teamName: card.teamName,
-    selected: card.selected,
-  });
-
-  if (transition && !transition.animation) {
-    transitionCard(card.word, transition.to);
+  const { getCardVisibility } = useCardVisibilityContext();
+  
+  // Track previous state for this hook instance
+  const prevStateRef = useRef<VisualState | null>(null);
+  
+  // Get current visibility data from provider
+  const visibilityData = getCardVisibility(card.word) || {
+    state: "hidden" as VisualState,
+    animation: null,
+  };
+  
+  // Determine if we should return an animation
+  let animation: AnimationType = null;
+  if (prevStateRef.current !== null && prevStateRef.current !== visibilityData.state) {
+    // State changed for this hook instance, return the animation
+    animation = visibilityData.animation;
   }
-
-  // Animation completion handler that encapsulates completion logic
-  const handleAnimationEnd = useCallback(() => {
-    if (transition) {
-      transitionCard(card.word, transition.to);
-      console.log("transitioning");
-    }
-  }, [transition, card.word, transitionCard]);
-
+  
+  // Update previous state for next render
+  prevStateRef.current = visibilityData.state;
+  
+  // Fire-and-forget animation handler
+  const handleAnimationEnd = () => {
+    // Animation completed, no action needed
+    // The state has already been transitioned by the provider
+  };
+  
   return {
-    state,
-    animation: transition?.animation || null,
+    state: visibilityData.state,
+    animation,
     handleAnimationEnd,
   };
 };
