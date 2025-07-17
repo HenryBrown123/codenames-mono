@@ -99,14 +99,14 @@ export const BaseCard = styled.div`
   transform: rotateY(0deg);
   z-index: 2;
 
-  /* States - unchanged */
-  [data-state="hidden"] & {
+  /* States - fixed selectors */
+  [data-state="hidden"] > & {
     opacity: 0;
     visibility: hidden;
     transform: translateY(-50px);
   }
 
-  [data-state^="visible"] & {
+  [data-state^="visible"] > & {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
@@ -116,8 +116,8 @@ export const BaseCard = styled.div`
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   }
 
-  /* Clickable state - unchanged */
-  [data-clickable="true"] & {
+  /* Clickable state - fixed selector */
+  [data-clickable="true"] > & {
     cursor: pointer;
     &:hover {
       transform: translateY(-4px);
@@ -126,7 +126,7 @@ export const BaseCard = styled.div`
   }
 
   /* Deal animation */
-  [data-animation="dealing"] & {
+  [data-animation="dealing"] > & {
     animation: ${dealAnimation} 0.6s calc(var(--card-index) * 50ms) ease-out backwards;
   }
 `;
@@ -152,23 +152,23 @@ export const CardOverlay = styled.div`
   color: white;
 
   /* Color fade animation for spymaster view */
-  [data-state="visible-colored"] & {
+  [data-state="visible-colored"] > & {
     transform: rotateY(0deg);
     background: var(--team-color-transparent);
   }
 
-  [data-animation="color-fade"] [data-state="visible-colored"] & {
+  [data-animation="color-fade"][data-state="visible-colored"] > & {
     animation: ${colorFadeIn} 0.3s ease-out forwards;
   }
 
   /* Covered state - fully opaque */
-  [data-state="visible-covered"] & {
+  [data-state="visible-covered"] > & {
     opacity: 1;
     transform: rotateY(0deg);
   }
 
   /* When covering animation plays, card flips to show this */
-  [data-animation="covering"] & {
+  [data-animation="covering"] > & {
     z-index: 3;
   }
 
@@ -181,7 +181,7 @@ export const CardOverlay = styled.div`
     transition: opacity 0.3s ease;
   }
 
-  [data-state="visible-covered"] &::after {
+  [data-state="visible-covered"] > &::after {
     opacity: 0.3;
   }
 `;
