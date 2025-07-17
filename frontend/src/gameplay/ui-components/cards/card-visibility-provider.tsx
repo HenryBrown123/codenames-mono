@@ -10,7 +10,7 @@ import { Card } from "@frontend/shared-types";
 
 export type VisualState = "hidden" | "visible" | "visible-colored" | "visible-covered";
 
-export type AnimationType = "dealing" | "color-fade" | "covering" | null;
+export type AnimationType = "deal-in" | "spymaster-reveal-in" | "spymaster-reveal-out" | "cover-card" | null;
 
 export interface CardVisibilityData {
   state: VisualState;
@@ -32,35 +32,35 @@ const CARD_TRANSITIONS: CardTransition[] = [
   {
     from: "hidden",
     to: "visible",
-    animation: "dealing",
+    animation: "deal-in",
     condition: () => true,
   },
   // Cards reveal their team colors when in spymaster view
   {
     from: "visible",
     to: "visible-colored",
-    animation: "color-fade",
+    animation: "spymaster-reveal-in",
     condition: (card, viewMode) => viewMode === "spymaster" && !!(card.cardType || card.teamName),
   },
   // Cards hide their team colors when leaving spymaster view
   {
     from: "visible-colored",
     to: "visible",
-    animation: "color-fade",
+    animation: "spymaster-reveal-out",
     condition: (_, viewMode) => viewMode === "player",
   },
   // Cards cover when selected (from neutral state)
   {
     from: "visible",
     to: "visible-covered",
-    animation: "covering",
+    animation: "cover-card",
     condition: (card) => card.selected,
   },
   // Cards cover when selected (from colored state)
   {
     from: "visible-colored",
     to: "visible-covered",
-    animation: "covering",
+    animation: "cover-card",
     condition: (card) => card.selected,
   },
 ];
