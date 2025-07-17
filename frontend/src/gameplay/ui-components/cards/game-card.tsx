@@ -29,6 +29,28 @@ export const GameCard = memo<GameCardProps>(({
     }
   }, [clickable, card.selected, onClick]);
   
+  // Debug logging for rendered attributes (only for first card)
+  if (index === 0) {
+    console.log(`[GameCard:${card.word}] Rendering with:`, {
+      state,
+      animation,
+      teamType,
+      clickable,
+      selected: card.selected,
+      cardIndex: index
+    });
+    
+    // Log data attributes being applied
+    const dataAttributes = {
+      'data-team': teamType,
+      'data-state': state,
+      'data-animation': animation,
+      'data-clickable': clickable && !card.selected
+    };
+    
+    console.log(`[GameCard:${card.word}] Applied data attributes:`, dataAttributes);
+  }
+  
   return (
     <CardContainer 
       data-team={teamType}

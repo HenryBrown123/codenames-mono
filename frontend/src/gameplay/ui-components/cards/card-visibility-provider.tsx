@@ -116,12 +116,14 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
   
   console.log("[CardVisibilityProvider] Running state machine, viewMode:", viewMode, "cards:", cards.length);
   
-  cards.forEach((card) => {
+  cards.forEach((card, index) => {
     const currentData = updatedData.get(card.word);
     if (!currentData) {
       // New card, initialize it
       const newState = card.selected ? "visible-covered" : initialState;
-      console.log("[CardVisibilityProvider] New card:", card.word, "→", newState);
+      if (index === 0) {
+        console.log("[CardVisibilityProvider] New card:", card.word, "→", newState);
+      }
       updatedData.set(card.word, {
         state: newState,
         animation: null,
@@ -137,21 +139,23 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
 
     if (transition && currentData.state !== transition.to) {
       // Update with new state and animation
-      console.log(
-        "[CardVisibilityProvider] Transition:", 
-        card.word, 
-        currentData.state, 
-        "→", 
-        transition.to, 
-        "animation:", 
-        transition.animation
-      );
+      if (index === 0) {
+        console.log(
+          "[CardVisibilityProvider] Transition:", 
+          card.word, 
+          currentData.state, 
+          "→", 
+          transition.to, 
+          "animation:", 
+          transition.animation
+        );
+      }
       updatedData.set(card.word, {
         state: transition.to,
         animation: transition.animation,
       });
       hasChanges = true;
-    } else if (transition) {
+    } else if (transition && index === 0) {
       console.log("[CardVisibilityProvider] Skipping redundant transition for:", card.word, "already at", currentData.state);
     }
   });
@@ -167,10 +171,14 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
   const getCardVisibility = useCallback(
     (word: string) => {
       const data = cardData.get(word);
-      console.log("[CardVisibilityProvider] getCardVisibility:", word, "→", data);
+      // Only log for first card
+      const cardIndex = cards.findIndex(c => c.word === word);
+      if (cardIndex === 0) {
+        console.log("[CardVisibilityProvider] getCardVisibility:", word, "→", data);
+      }
       return data;
     },
-    [cardData],
+    [cardData, cards],
   );
 
   // Simplified triggers object

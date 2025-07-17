@@ -1,6 +1,6 @@
 import styled, { keyframes } from "styled-components";
 
-// ===== ANIMATIONS - Pure motion, no appearance =====
+// ===== ANIMATIONS =====
 const dealAnimation = keyframes`
   from {
     opacity: 0;
@@ -12,11 +12,31 @@ const dealAnimation = keyframes`
   }
 `;
 
-// ===== CONTAINER - Orchestrates everything =====
+const colorFadeIn = keyframes`
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+`;
+
+const coverFlip = keyframes`
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(180deg);
+  }
+`;
+
+// ===== CONTAINER - Add 3D support for flip =====
 export const CardContainer = styled.div`
   position: relative;
   width: 100%;
   height: 100%;
+  transform-style: preserve-3d;
+  perspective: 1000px;
 
   /* Team color variables */
   &[data-team="red"] {
@@ -53,11 +73,16 @@ export const CardContainer = styled.div`
     --team-border: #66ff66;
     --team-symbol: "🌿";
   }
+
+  /* Handle covering animation on container */
+  &[data-animation="covering"] {
+    animation: ${coverFlip} 0.6s ease-in-out forwards;
+  }
 `;
 
-// ===== BASE CARD - No defaults, explicit everything =====
+// ===== BASE CARD - Updated with animations =====
 export const BaseCard = styled.div`
-  /* Layout only - no visual defaults */
+  /* Layout - unchanged */
   width: 100%;
   height: 100%;
   aspect-ratio: 2.4 / 3;
@@ -70,15 +95,17 @@ export const BaseCard = styled.div`
   letter-spacing: 0.05em;
   position: relative;
   cursor: default;
+  backface-visibility: hidden;
+  transform: rotateY(0deg);
+  z-index: 2;
 
-  /* Hidden state */
+  /* States - unchanged */
   [data-state="hidden"] & {
     opacity: 0;
     visibility: hidden;
     transform: translateY(-50px);
   }
 
-  /* Any visible state - using prefix matching */
   [data-state^="visible"] & {
     opacity: 1;
     visibility: visible;
@@ -89,10 +116,9 @@ export const BaseCard = styled.div`
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   }
 
-  /* Clickable when data-clickable is true */
+  /* Clickable state - unchanged */
   [data-clickable="true"] & {
     cursor: pointer;
-
     &:hover {
       transform: translateY(-4px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -105,7 +131,7 @@ export const BaseCard = styled.div`
   }
 `;
 
-// ===== OVERLAY - Only for showing team colors =====
+// ===== OVERLAY - Updated with animations =====
 export const CardOverlay = styled.div`
   position: absolute;
   inset: 0;
@@ -116,29 +142,47 @@ export const CardOverlay = styled.div`
   justify-content: center;
   pointer-events: none;
   opacity: 0;
+  backface-visibility: hidden;
+  transform: rotateY(180deg);
+  z-index: 1;
 
   /* Base styling */
   background: var(--team-color);
   border: 2px solid var(--team-border);
   color: white;
 
-  /* Show overlay for colored states - instant, no animation */
-  [data-state="visible-colored"] &,
-  [data-state="visible-covered"] & {
-    opacity: 1;
-  }
-
-  /* Semi-transparent for spymaster view */
+  /* Color fade animation for spymaster view */
   [data-state="visible-colored"] & {
+    transform: rotateY(0deg);
     background: var(--team-color-transparent);
   }
 
-  /* Show team symbol when covered */
-  [data-state="visible-covered"] &::after {
+  [data-animation="color-fade"] [data-state="visible-colored"] & {
+    animation: ${colorFadeIn} 0.3s ease-out forwards;
+  }
+
+  /* Covered state - fully opaque */
+  [data-state="visible-covered"] & {
+    opacity: 1;
+    transform: rotateY(0deg);
+  }
+
+  /* When covering animation plays, card flips to show this */
+  [data-animation="covering"] & {
+    z-index: 3;
+  }
+
+  /* Team symbol when covered */
+  &::after {
     content: var(--team-symbol);
     font-size: 4rem;
-    opacity: 0.3;
+    opacity: 0;
     position: absolute;
+    transition: opacity 0.3s ease;
+  }
+
+  [data-state="visible-covered"] &::after {
+    opacity: 0.3;
   }
 `;
 
