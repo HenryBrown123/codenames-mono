@@ -24,43 +24,76 @@ export const useCardVisibility = (card: Card, _index: number): CardVisibility =>
 
   const activeElements = useRef<Set<EventTarget>>(new Set());
 
-  // Animation status state - initialized once on first render
-  const [animationStatus, setAnimationStatus] = useState<
-    "waiting" | "animating" | "complete" | null
-  >(visibilityData.animation ? "waiting" : null);
+  // Track both animation and status together
+  const [animationState, setAnimationState] = useState<{
+    animation: AnimationType;
+    status: "waiting" | "animating" | "complete" | null;
+  }>({
+    animation: null,
+    status: null,
+  });
 
-  if (visibilityData.animation && animationStatus === null) {
-    setAnimationStatus("waiting");
+  // Detect animation changes from provider
+  if (visibilityData.animation !== animationState.animation) {
+    if (_index === 0) {
+      console.log(`[useCardVisibility:${card.word}] Animation change detected:`, {
+        old: animationState.animation,
+        new: visibilityData.animation,
+        oldStatus: animationState.status
+      });
+    }
+    setAnimationState({
+      animation: visibilityData.animation,
+      status: visibilityData.animation ? "waiting" : null,
+    });
   }
 
-  console.log(animationStatus);
-
-  // Return animation based on status - persists across dev mode re-renders
+  // Return animation based on status
   const animation =
-    animationStatus === "waiting" || animationStatus === "animating"
-      ? visibilityData.animation
+    animationState.status === "waiting" || animationState.status === "animating"
+      ? animationState.animation
       : null;
 
-  console.log("animation", animation);
+  if (_index === 0) {
+    console.log(`[useCardVisibility:${card.word}] Hook return:`, {
+      state: visibilityData.state,
+      providerAnimation: visibilityData.animation,
+      animationState: animationState,
+      returnedAnimation: animation,
+      activeElementsCount: activeElements.current.size
+    });
+  }
 
-  /**
-   * Track animation start - update status and element tracking
-   */
   const handleAnimationStart = useCallback((e: React.AnimationEvent) => {
     activeElements.current.add(e.currentTarget);
-    console.log("adding element");
-    setAnimationStatus("animating");
-  }, []);
+    if (_index === 0) {
+      console.log(`[useCardVisibility:${card.word}] Animation START:`, {
+        animationName: e.animationName,
+        target: e.currentTarget,
+        activeCount: activeElements.current.size,
+        currentStatus: animationState.status
+      });
+    }
+    setAnimationState((prev) => ({ ...prev, status: "animating" }));
+  }, [card.word, animationState.status, _index]);
 
-  /**
-   * Track animation end - clear when all elements finish
-   */
   const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
     activeElements.current.delete(e.currentTarget);
-    if (activeElements.current.size === 0) {
-      setAnimationStatus("complete");
+    if (_index === 0) {
+      console.log(`[useCardVisibility:${card.word}] Animation END:`, {
+        animationName: e.animationName,
+        target: e.currentTarget,
+        remainingCount: activeElements.current.size,
+        currentStatus: animationState.status
+      });
     }
-  }, []);
+    if (activeElements.current.size === 0) {
+      if (_index === 0) {
+        console.log(`[useCardVisibility:${card.word}] All animations complete, setting status to 'complete'`);
+      }
+      setAnimationState((prev) => ({ ...prev, status: "complete" }));
+    }
+  }, [card.word, animationState.status, _index]);
 
   return {
     state: visibilityData.state,
