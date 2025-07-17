@@ -1,4 +1,5 @@
-import styled, { keyframes, css } from "styled-components";
+import styled, { keyframes } from "styled-components";
+import { Z_INDEX } from "@frontend/style/z-index";
 
 // ===== ANIMATIONS =====
 const rippleEffect = keyframes`
@@ -49,10 +50,7 @@ const colorRevealAnimation = keyframes`
 `;
 
 const colorFadeOutAnimation = keyframes`
-  from {
-    /* Animation will start from current computed styles */
-  }
-  to {
+  100% {
     background-color: #f4f1e8;
     color: #2a2a3e;
   }
@@ -104,6 +102,24 @@ const electricFlicker = keyframes`
   }
 `;
 
+const gridPulse = keyframes`
+  0%, 100% { 
+    opacity: 0.3; 
+  }
+  50% { 
+    opacity: 0.6; 
+  }
+`;
+
+const dangerFlash = keyframes`
+  0%, 100% { 
+    opacity: 0.95;
+  }
+  50% { 
+    opacity: 1;
+  }
+`;
+
 // ===== CONTAINER =====
 export const CardContainer = styled.div`
   position: relative;
@@ -112,7 +128,7 @@ export const CardContainer = styled.div`
   box-sizing: border-box;
   perspective: 1000px;
   margin: auto;
-  z-index: 1;
+  z-index: ${Z_INDEX.BASE};
   aspect-ratio: 2.4 / 3;
   padding: 10% 0;
 
@@ -155,7 +171,7 @@ export const CardContainer = styled.div`
   /* Raise z-index when animating or covered */
   &[data-state="visible-covered"],
   &[data-animation="cover-card"] {
-    z-index: 10;
+    z-index: ${Z_INDEX.CARD_ANIMATING};
   }
 
   /* Animation triggers */
@@ -196,6 +212,7 @@ export const BaseCard = styled.div`
   position: relative;
   transform: translateZ(0);
   will-change: transform;
+  z-index: ${Z_INDEX.CARD_BASE};
 
   /* Default beige background */
   background: #f4f1e8;
@@ -253,7 +270,7 @@ export const BaseCard = styled.div`
     opacity: 0.6;
     border-radius: 8px;
     pointer-events: none;
-    z-index: 1;
+    z-index: 1; /* Relative to parent */
   }
 
   /* Ripple effect */
@@ -271,7 +288,7 @@ export const BaseCard = styled.div`
     transition:
       transform 0.5s,
       opacity 0.5s;
-    z-index: 5;
+    z-index: 5; /* Relative to parent for ripple */
   }
 
   &:active::before {
@@ -411,10 +428,10 @@ export const BaseCard = styled.div`
 // ===== OVERLAY (Cover Card) =====
 export const CardOverlay = styled.div`
   position: absolute;
-  top: 10%;
+  top: 0;
   left: 0;
   width: 100%;
-  height: 80%;
+  height: 100%;
   border-radius: 6px;
   aspect-ratio: 2.4 / 3;
   display: flex;
@@ -422,7 +439,7 @@ export const CardOverlay = styled.div`
   justify-content: center;
   overflow: hidden;
   transform-style: preserve-3d;
-  z-index: 2;
+  z-index: ${Z_INDEX.CARD_COVERED};
   opacity: 0;
   pointer-events: none;
 
@@ -446,6 +463,25 @@ export const CardOverlay = styled.div`
   ${CardContainer}[data-team="assassin"] > & {
     background-color: #0a0a0a;
     border: 2px solid #ffff00;
+    position: relative;
+
+    /* Electric border effect for assassin cards */
+    &::before {
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        transparent 30%,
+        #ffff00 40%,
+        #00ffff 45%,
+        #ffff00 50%,
+        transparent 60%,
+        transparent 100%
+      );
+      background-size: 300% 100%;
+      background-position: -100% 50%;
+      inset: -2px;
+      z-index: -1;
+    }
   }
 
   ${CardContainer}[data-team="neutral"] > & {
@@ -458,37 +494,33 @@ export const CardOverlay = styled.div`
     border: 1px solid rgba(255, 255, 255, 0.3);
   }
 
-  /* Electric border effect for assassin cards */
+  /* Scan grid effect */
   &::before {
     content: "";
     position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      transparent 30%,
-      #ffff00 40%,
-      #00ffff 45%,
-      #ffff00 50%,
-      transparent 60%,
-      transparent 100%
-    );
-    background-size: 300% 100%;
-    background-position: -100% 50%;
+    inset: 4px;
+    background-image:
+      repeating-linear-gradient(0deg, transparent 0, transparent 9px, rgba(0, 255, 136, 0.1) 10px),
+      repeating-linear-gradient(90deg, transparent 0, transparent 9px, rgba(0, 255, 136, 0.1) 10px);
     border-radius: 6px;
+    pointer-events: none;
+    z-index: 1; /* Relative to overlay */
     opacity: 0;
-    z-index: -1;
+    transition: opacity 0.5s ease;
   }
 
   /* Team symbol */
   &::after {
-    content: var(--team-symbol);
-    font-size: 3rem;
+    content: var(--team-symbol, "");
+    font-size: 4rem;
     font-weight: 900;
-    color: rgba(0, 0, 0, 0.6);
+    color: rgba(0, 0, 0, 0.4);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2; /* Relative to overlay */
+    pointer-events: none;
     text-shadow:
       1px 1px 0px rgba(255, 255, 255, 0.3),
       -1px -1px 1px rgba(0, 0, 0, 0.8);
@@ -504,6 +536,47 @@ export const CardOverlay = styled.div`
     animation: ${electricFlicker} 2s ease-in-out infinite;
   }
 
+  /* Enhanced effects when in spymaster view */
+  ${CardContainer}[data-state="visible-colored"] > & {
+    /* Show scan grid */
+    &::before {
+      opacity: 0.8;
+      animation: ${gridPulse} 2s ease-in-out infinite;
+    }
+
+    /* Enhanced shadow glow */
+    box-shadow:
+      0 0 30px var(--team-color),
+      0 0 60px var(--team-color),
+      inset 0 0 20px rgba(0, 255, 136, 0.1);
+
+    /* Glowing symbol */
+    &::after {
+      text-shadow:
+        0 0 20px currentColor,
+        0 0 40px currentColor;
+      filter: drop-shadow(0 0 10px currentColor);
+    }
+  }
+
+  /* Team-specific colored state enhancements */
+  ${CardContainer}[data-state="visible-colored"][data-team="red"] > & {
+    &::after {
+      color: rgba(255, 51, 51, 0.9);
+    }
+  }
+
+  ${CardContainer}[data-state="visible-colored"][data-team="blue"] > & {
+    &::after {
+      color: rgba(51, 153, 255, 0.9);
+    }
+  }
+
+  ${CardContainer}[data-state="visible-colored"][data-team="assassin"] > & {
+    border-color: #ffff00;
+    animation: ${dangerFlash} 1s ease-in-out infinite;
+  }
+
   /* Covering animation */
   ${CardContainer}[data-animation="cover-card"] > & {
     animation: ${coverDealAnimation} 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
@@ -512,8 +585,22 @@ export const CardOverlay = styled.div`
 
   /* Trigger electric sweep for assassin when covering */
   ${CardContainer}[data-animation="cover-card"][data-team="assassin"] > &::before {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      transparent 30%,
+      #ffff00 40%,
+      #00ffff 45%,
+      #ffff00 50%,
+      transparent 60%,
+      transparent 100%
+    );
+    background-size: 300% 100%;
+    background-position: -100% 50%;
     animation: ${assassinSweep} 0.8s linear 0.7s forwards;
     opacity: 1;
+    inset: -2px;
+    z-index: -1;
   }
 
   /* Covered state */
@@ -615,7 +702,7 @@ export const CardWord = styled.span`
   overflow-wrap: break-word;
   margin: 0;
   padding: 0 0.5rem;
-  z-index: 3;
+  z-index: 3; /* Above texture but below overlay */
 
   /* Mobile text shadow */
   text-shadow:

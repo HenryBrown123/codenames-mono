@@ -2,7 +2,7 @@ import React, { memo, useCallback } from "react";
 import { Card } from "@frontend/shared-types";
 import { useCardVisibility } from "./use-card-visibility";
 import { CardContainer, BaseCard, CardOverlay, CardWord } from "./card-styles";
-import { getTeamType } from "./card-utils";
+import { getTeamType, getCardColor, getSymbol } from "./card-utils";
 
 interface GameCardProps {
   card: Card;
@@ -22,6 +22,8 @@ export const GameCard = memo<GameCardProps>(({
 }) => {
   const { state, animation, handleAnimationStart, handleAnimationEnd } = useCardVisibility(card, index);
   const teamType = getTeamType(card);
+  const cardColor = getCardColor(card);
+  const symbol = getSymbol(cardColor);
   
   const handleClick = useCallback(() => {
     if (clickable && !card.selected) {
@@ -57,7 +59,11 @@ export const GameCard = memo<GameCardProps>(({
       data-state={state}
       data-animation={animation}
       data-clickable={clickable && !card.selected}
-      style={{ '--card-index': index } as React.CSSProperties}
+      style={{ 
+        '--card-index': index,
+        '--team-color': cardColor,
+        '--team-symbol': `"${symbol}"`
+      } as React.CSSProperties}
     >
       <BaseCard 
         onClick={handleClick}
