@@ -48,6 +48,16 @@ const colorRevealAnimation = keyframes`
   }
 `;
 
+const colorFadeOutAnimation = keyframes`
+  from {
+    /* Animation will start from current computed styles */
+  }
+  to {
+    background-color: #f4f1e8;
+    color: #2a2a3e;
+  }
+`;
+
 const assassinSweep = keyframes`
   0% {
     background-position: -100% 50%;
@@ -144,12 +154,12 @@ export const CardContainer = styled.div`
 
   /* Raise z-index when animating or covered */
   &[data-state="visible-covered"],
-  &[data-animation="covering"] {
+  &[data-animation="cover-card"] {
     z-index: 10;
   }
 
   /* Animation triggers */
-  &[data-animation="dealing"] {
+  &[data-animation="deal-in"] {
     animation: ${dealAnimation} 0.7s calc(var(--card-index) * 75ms)
       cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   }
@@ -270,9 +280,13 @@ export const BaseCard = styled.div`
     animation: ${rippleEffect} 0.6s ease-out;
   }
 
-  /* Color fade animation */
-  ${CardContainer}[data-animation="color-fade"] > & {
+  /* Spymaster reveal animations */
+  ${CardContainer}[data-animation="spymaster-reveal-in"] > & {
     animation: ${colorRevealAnimation} 0.8s ease-in-out forwards;
+  }
+
+  ${CardContainer}[data-animation="spymaster-reveal-out"] > & {
+    animation: ${colorFadeOutAnimation} 0.8s ease-in-out forwards;
   }
 
   /* Spymaster view colors with bright backgrounds */
@@ -491,13 +505,13 @@ export const CardOverlay = styled.div`
   }
 
   /* Covering animation */
-  ${CardContainer}[data-animation="covering"] > & {
+  ${CardContainer}[data-animation="cover-card"] > & {
     animation: ${coverDealAnimation} 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
     opacity: 1;
   }
 
   /* Trigger electric sweep for assassin when covering */
-  ${CardContainer}[data-animation="covering"][data-team="assassin"] > &::before {
+  ${CardContainer}[data-animation="cover-card"][data-team="assassin"] > &::before {
     animation: ${assassinSweep} 0.8s linear 0.7s forwards;
     opacity: 1;
   }

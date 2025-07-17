@@ -24,76 +24,90 @@ export const useCardVisibility = (card: Card, _index: number): CardVisibility =>
 
   const activeElements = useRef<Set<EventTarget>>(new Set());
 
-  // Track both animation and status together
-  const [animationState, setAnimationState] = useState<{
+  // Transition state compomnent lvl cache
+  const [transitionState, setTransitionState] = useState<{
     animation: AnimationType;
+    state: VisualState | null;
     status: "waiting" | "animating" | "complete" | null;
   }>({
     animation: null,
+    state: null,
     status: null,
   });
 
-  // Detect animation changes from provider
-  if (visibilityData.animation !== animationState.animation) {
+  // Detect either animation changes or state change
+  if (
+    visibilityData.animation !== transitionState.animation ||
+    visibilityData.state !== transitionState.state
+  ) {
     if (_index === 0) {
       console.log(`[useCardVisibility:${card.word}] Animation change detected:`, {
-        old: animationState.animation,
+        old: transitionState.animation,
         new: visibilityData.animation,
-        oldStatus: animationState.status
+        oldStatus: transitionState.status,
       });
     }
-    setAnimationState({
+    setTransitionState({
       animation: visibilityData.animation,
+      state: visibilityData.state,
       status: visibilityData.animation ? "waiting" : null,
     });
   }
 
   // Return animation based on status
   const animation =
-    animationState.status === "waiting" || animationState.status === "animating"
-      ? animationState.animation
+    transitionState.status === "waiting" || transitionState.status === "animating"
+      ? transitionState.animation
       : null;
 
   if (_index === 0) {
     console.log(`[useCardVisibility:${card.word}] Hook return:`, {
       state: visibilityData.state,
       providerAnimation: visibilityData.animation,
-      animationState: animationState,
+      animationState: transitionState,
       returnedAnimation: animation,
-      activeElementsCount: activeElements.current.size
+      activeElementsCount: activeElements.current.size,
     });
   }
 
-  const handleAnimationStart = useCallback((e: React.AnimationEvent) => {
-    activeElements.current.add(e.currentTarget);
-    if (_index === 0) {
-      console.log(`[useCardVisibility:${card.word}] Animation START:`, {
-        animationName: e.animationName,
-        target: e.currentTarget,
-        activeCount: activeElements.current.size,
-        currentStatus: animationState.status
-      });
-    }
-    setAnimationState((prev) => ({ ...prev, status: "animating" }));
-  }, [card.word, animationState.status, _index]);
-
-  const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
-    activeElements.current.delete(e.currentTarget);
-    if (_index === 0) {
-      console.log(`[useCardVisibility:${card.word}] Animation END:`, {
-        animationName: e.animationName,
-        target: e.currentTarget,
-        remainingCount: activeElements.current.size,
-        currentStatus: animationState.status
-      });
-    }
-    if (activeElements.current.size === 0) {
+  const handleAnimationStart = useCallback(
+    (e: React.AnimationEvent) => {
+      activeElements.current.add(e.currentTarget);
       if (_index === 0) {
-        console.log(`[useCardVisibility:${card.word}] All animations complete, setting status to 'complete'`);
+        console.log(`[useCardVisibility:${card.word}] Animation START:`, {
+          animationName: e.animationName,
+          target: e.currentTarget,
+          activeCount: activeElements.current.size,
+          currentStatus: transitionState.status,
+        });
       }
-      setAnimationState((prev) => ({ ...prev, status: "complete" }));
-    }
-  }, [card.word, animationState.status, _index]);
+      setTransitionState((prev) => ({ ...prev, status: "animating" }));
+    },
+    [card.word, transitionState.status, _index],
+  );
+
+  const handleAnimationEnd = useCallback(
+    (e: React.AnimationEvent) => {
+      activeElements.current.delete(e.currentTarget);
+      if (_index === 0) {
+        console.log(`[useCardVisibility:${card.word}] Animation END:`, {
+          animationName: e.animationName,
+          target: e.currentTarget,
+          remainingCount: activeElements.current.size,
+          currentStatus: transitionState.status,
+        });
+      }
+      if (activeElements.current.size === 0) {
+        if (_index === 0) {
+          console.log(
+            `[useCardVisibility:${card.word}] All animations complete, setting status to 'complete'`,
+          );
+        }
+        setTransitionState((prev) => ({ ...prev, status: "complete" }));
+      }
+    },
+    [card.word, transitionState.status, _index],
+  );
 
   return {
     state: visibilityData.state,
