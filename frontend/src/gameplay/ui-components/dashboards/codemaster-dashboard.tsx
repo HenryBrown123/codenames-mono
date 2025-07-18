@@ -6,6 +6,16 @@ import { useTurn } from "../../shared/providers";
 import { ActionButton } from "../../shared/components";
 import { useCardVisibilityContext } from "../cards/card-visibility-provider";
 import { ARRevealButton } from "./ar-reveal-button";
+import { 
+  TerminalContent, 
+  TerminalSection, 
+  TerminalPrompt, 
+  TerminalCommand, 
+  TerminalStatus,
+  TerminalDivider,
+  TerminalActions,
+  TerminalOutput
+} from "./terminal-components";
 
 /**
  * MOBILE-FIRST: Button container with AR toggle logic
@@ -105,19 +115,35 @@ const MobileTransmitButton = styled(ActionButton)`
 
 interface CodemasterDashboardProps {
   onOpenCluePanel?: () => void;
+  messageText?: string;
 }
 
 /**
  * Codemaster Dashboard - AR toggle + clue transmission
  */
-export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({ onOpenCluePanel }) => {
+export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({ 
+  onOpenCluePanel,
+  messageText 
+}) => {
   const { giveClue, actionState } = useGameActions();
   const { activeTurn } = useTurn();
   const { triggers, viewMode } = useCardVisibilityContext();
 
   // Don't show anything if not the codemaster's turn
   if (!activeTurn || activeTurn.clue !== null) {
-    return <Container />;
+    return (
+      <>
+        <Container className="mobile-only" />
+        <TerminalContent className="desktop-only">
+          <TerminalSection>
+            <TerminalCommand>STANDBY MODE</TerminalCommand>
+            <TerminalPrompt>
+              <TerminalOutput>Waiting for operative turn...</TerminalOutput>
+            </TerminalPrompt>
+          </TerminalSection>
+        </TerminalContent>
+      </>
+    );
   }
 
   const handleDesktopSubmit = (word: string, count: number) => {
@@ -131,36 +157,81 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({ onOpen
   const isARMode = viewMode === "spymaster";
 
   return (
-    <Container>
-      {/* Mobile: Show either AR toggle OR transmit button based on AR state */}
-      {!isARMode && (
-        <MobileARToggle arMode={false} onClick={handleARToggle}>
-          REVEAL
-        </MobileARToggle>
-      )}
-      
-      {isARMode && (
-        <MobileTransmitButton 
-          onClick={onOpenCluePanel || (() => {})}
-          text="SUBMIT CLUE"
-          enabled={actionState.status !== "loading"}
-        />
-      )}
-
-      {/* Desktop: Show both buttons */}
-      <DesktopContainer>
-        <DesktopARToggle arMode={isARMode} onClick={handleARToggle}>
-          {isARMode ? "DISABLE AR" : "REVEAL"}
-        </DesktopARToggle>
+    <>
+      {/* Mobile view stays the same */}
+      <Container className="mobile-only">
+        {/* Mobile: Show either AR toggle OR transmit button based on AR state */}
+        {!isARMode && (
+          <MobileARToggle arMode={false} onClick={handleARToggle}>
+            REVEAL
+          </MobileARToggle>
+        )}
         
-        <CodeWordInput
-          codeWord=""
-          numberOfCards={null}
-          isEditable={true}
-          isLoading={actionState.status === "loading"}
-          onSubmit={handleDesktopSubmit}
-        />
-      </DesktopContainer>
-    </Container>
+        {isARMode && (
+          <MobileTransmitButton 
+            onClick={onOpenCluePanel || (() => {})}
+            text="SUBMIT CLUE"
+            enabled={actionState.status !== "loading"}
+          />
+        )}
+
+        {/* Desktop: Show both buttons */}
+        <DesktopContainer>
+          <DesktopARToggle arMode={isARMode} onClick={handleARToggle}>
+            {isARMode ? "DISABLE AR" : "REVEAL"}
+          </DesktopARToggle>
+          
+          <CodeWordInput
+            codeWord=""
+            numberOfCards={null}
+            isEditable={true}
+            isLoading={actionState.status === "loading"}
+            onSubmit={handleDesktopSubmit}
+          />
+        </DesktopContainer>
+      </Container>
+
+      {/* Desktop terminal view */}
+      <TerminalContent className="desktop-only">
+        <TerminalSection>
+          <TerminalCommand>MISSION STATUS</TerminalCommand>
+          <TerminalPrompt>
+            <TerminalOutput>{messageText || "Awaiting orders..."}</TerminalOutput>
+          </TerminalPrompt>
+        </TerminalSection>
+
+        <TerminalDivider />
+
+        <TerminalSection>
+          <TerminalCommand>INTEL TRANSMISSION</TerminalCommand>
+          {!isARMode && (
+            <TerminalStatus>
+              AR vision disabled. Activate to reveal operative positions.
+            </TerminalStatus>
+          )}
+          {isARMode && (
+            <TerminalStatus $type="success">
+              AR vision active. Operative positions revealed.
+            </TerminalStatus>
+          )}
+        </TerminalSection>
+
+        <TerminalActions>
+          <ARRevealButton arMode={isARMode} onClick={handleARToggle}>
+            {isARMode ? "DISABLE AR" : "ACTIVATE AR"}
+          </ARRevealButton>
+          
+          {isARMode && (
+            <CodeWordInput
+              codeWord=""
+              numberOfCards={null}
+              isEditable={true}
+              isLoading={actionState.status === "loading"}
+              onSubmit={handleDesktopSubmit}
+            />
+          )}
+        </TerminalActions>
+      </TerminalContent>
+    </>
   );
 };

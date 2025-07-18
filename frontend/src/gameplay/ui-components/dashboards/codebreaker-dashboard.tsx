@@ -3,6 +3,16 @@ import styled from "styled-components";
 import { useGameDataRequired, useTurn } from "../../shared/providers";
 import { useGameActions } from "../../player-actions";
 import { ActionButton } from "../../shared/components";
+import { 
+  TerminalContent, 
+  TerminalSection, 
+  TerminalPrompt, 
+  TerminalCommand, 
+  TerminalStatus,
+  TerminalDivider,
+  TerminalActions,
+  TerminalOutput
+} from "./terminal-components";
 
 /**
  * MOBILE-FIRST: Dashboard container that adapts to layout context
@@ -142,7 +152,7 @@ const CompactButton = styled(ActionButton)`
 /**
  * Codebreaker Dashboard - Compact mobile design, expanded on desktop
  */
-export const CodebreakerDashboard: React.FC = () => {
+export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messageText }) => {
   const { gameData } = useGameDataRequired();
   const { activeTurn } = useTurn();
   const { endTurn, actionState } = useGameActions();
@@ -162,23 +172,76 @@ export const CodebreakerDashboard: React.FC = () => {
   }, [activeTurn, gameData.playerContext]);
 
   if (!activeTurn || activeTurn.clue === null) {
-    return <Container />;
+    return (
+      <>
+        <Container className="mobile-only" />
+        <TerminalContent className="desktop-only">
+          <TerminalSection>
+            <TerminalCommand>FIELD REPORT</TerminalCommand>
+            <TerminalPrompt>
+              <TerminalOutput>{messageText || "Standing by..."}</TerminalOutput>
+            </TerminalPrompt>
+          </TerminalSection>
+        </TerminalContent>
+      </>
+    );
   }
 
   return (
-    <Container>
-      <ClueDisplay>
-        <ClueText>
-          <ClueWord>"{activeTurn.clue.word}"</ClueWord>
-          <ClueNumber>for {activeTurn.clue.number}</ClueNumber>
-        </ClueText>
-      </ClueDisplay>
+    <>
+      {/* Mobile view stays the same */}
+      <Container className="mobile-only">
+        <ClueDisplay>
+          <ClueText>
+            <ClueWord>"{activeTurn.clue.word}"</ClueWord>
+            <ClueNumber>for {activeTurn.clue.number}</ClueNumber>
+          </ClueText>
+        </ClueDisplay>
 
-      <CompactButton
-        onClick={endTurn}
-        text={actionState.status === "loading" ? "..." : "End Turn"}
-        enabled={(canEndTurn && actionState.status !== "loading") || false}
-      />
-    </Container>
+        <CompactButton
+          onClick={endTurn}
+          text={actionState.status === "loading" ? "..." : "End Turn"}
+          enabled={(canEndTurn && actionState.status !== "loading") || false}
+        />
+      </Container>
+
+      {/* Desktop terminal view */}
+      <TerminalContent className="desktop-only">
+        <TerminalSection>
+          <TerminalCommand>FIELD REPORT</TerminalCommand>
+          <TerminalPrompt>
+            <TerminalOutput>{messageText || "Standing by..."}</TerminalOutput>
+          </TerminalPrompt>
+        </TerminalSection>
+
+        {activeTurn && activeTurn.clue && (
+          <>
+            <TerminalDivider />
+            
+            <TerminalSection>
+              <TerminalCommand>ACTIVE INTEL</TerminalCommand>
+              <TerminalStatus $type="success">
+                CLUE: "{activeTurn.clue.word}" | TARGET COUNT: {activeTurn.clue.number}
+              </TerminalStatus>
+              <TerminalPrompt>
+                <TerminalOutput>
+                  Guesses remaining: {activeTurn.guessesRemaining}
+                </TerminalOutput>
+              </TerminalPrompt>
+            </TerminalSection>
+          </>
+        )}
+
+        {canEndTurn && (
+          <TerminalActions>
+            <ActionButton
+              onClick={endTurn}
+              text={actionState.status === "loading" ? "PROCESSING..." : "END TRANSMISSION"}
+              enabled={actionState.status !== "loading"}
+            />
+          </TerminalActions>
+        )}
+      </TerminalContent>
+    </>
   );
 };

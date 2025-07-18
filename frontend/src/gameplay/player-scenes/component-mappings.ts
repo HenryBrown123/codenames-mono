@@ -20,7 +20,7 @@ import {
 export const getDashboardComponent = (
   role: string,
   scene: string,
-): React.ComponentType<any> => {
+): React.ComponentType<{ messageText?: string; onOpenCluePanel?: () => void }> => {
   // Normalize to lowercase for consistent mapping
   const normalizedRole = role.toLowerCase();
   const sceneKey = `${normalizedRole}.${scene}`;
