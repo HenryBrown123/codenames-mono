@@ -1,5 +1,6 @@
 import styled, { css, keyframes } from "styled-components";
 import { Z_INDEX } from "@frontend/style/z-index";
+import { CARD_ANIMATION, CARD_DIMENSIONS, CARD_TYPOGRAPHY } from "./card-constants";
 
 // ===== ANIMATIONS =====
 const dealAnimation = keyframes`
@@ -62,34 +63,26 @@ const teamPulse = keyframes`
   }
 `;
 
-const electricFlicker = keyframes`
-  0%, 100% {
+const assassinReveal = keyframes`
+  /* Initial electric sweep */
+  0% {
     opacity: 0.6;
     filter: brightness(0.8);
+    box-shadow: 0 0 20px rgba(255, 255, 0, 0);
   }
+  
+  /* Dramatic flash */
   10% {
     opacity: 1;
-    filter: brightness(1.5);
+    filter: brightness(1.8);
+    box-shadow: 0 0 40px rgba(255, 255, 0, 0.8);
   }
-  20% {
-    opacity: 0.7;
-    filter: brightness(0.9);
-  }
-  30% {
-    opacity: 1;
-    filter: brightness(1.3);
-  }
-  50% {
-    opacity: 1;
-    filter: brightness(1.2);
-  }
-  70% {
-    opacity: 0.8;
-    filter: brightness(1);
-  }
-  90% {
-    opacity: 1;
-    filter: brightness(1.4);
+  
+  /* Settle to steady glow */
+  20%, 100% {
+    opacity: 0.9;
+    filter: brightness(1.1);
+    box-shadow: 0 0 25px rgba(255, 255, 0, 0.5);
   }
 `;
 
@@ -164,26 +157,60 @@ const cornerBlink = keyframes`
 
 // ===== ANIMATION MAP =====
 const animationMap = css`
-  &[data-animation="deal-in"] {
-    opacity: 0;
-    animation: ${dealAnimation} 0.7s calc(var(--card-index) * 75ms)
-      cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-  }
+  /* Wrap all animations with reduced motion support */
+  @media (prefers-reduced-motion: no-preference) {
+    &[data-animation="deal-in"] {
+      opacity: 0;
+      animation: ${dealAnimation} ${CARD_ANIMATION.DEAL_DURATION}ms calc(var(--card-index) * ${CARD_ANIMATION.DEAL_STAGGER}ms)
+        cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
 
-  &[data-animation="cover-card"] {
-    z-index: ${Z_INDEX.CARD_ANIMATING};
+    &[data-animation="cover-card"] {
+      z-index: ${Z_INDEX.CARD_ANIMATING};
 
-    .cover-card {
-      animation: ${coverAnimation} 0.5s ease-out forwards;
+      .cover-card {
+        animation: ${coverAnimation} ${CARD_ANIMATION.COVER_DURATION}ms ease-out forwards;
+      }
+    }
+
+    &[data-animation="spymaster-reveal-in"] .spymaster-overlay {
+      animation: ${spymasterRevealAnimation} ${CARD_ANIMATION.REVEAL_DURATION}ms ease-in forwards;
+    }
+
+    &[data-animation="spymaster-reveal-out"] .spymaster-overlay {
+      animation: ${spymasterRevealAnimation} ${CARD_ANIMATION.REVEAL_DURATION}ms ease-in reverse forwards;
     }
   }
+  
+  /* Static fallback for reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    &[data-animation="deal-in"] {
+      opacity: 1;
+      transform: none;
+      transition: opacity 0.3s ease;
+    }
+    
+    &[data-animation="cover-card"] {
+      z-index: ${Z_INDEX.CARD_ANIMATING};
+      
+      .cover-card {
+        opacity: 1;
+        transform: none;
+        transition: opacity 0.3s ease;
+      }
+    }
+    
+    &[data-animation="spymaster-reveal-in"] .spymaster-overlay {
+      opacity: 1;
+      transform: none;
+      transition: opacity 0.3s ease;
+    }
 
-  &[data-animation="spymaster-reveal-in"] .spymaster-overlay {
-    animation: ${spymasterRevealAnimation} 0.6s ease-in forwards;
-  }
-
-  &[data-animation="spymaster-reveal-out"] .spymaster-overlay {
-    animation: ${spymasterRevealAnimation} 0.6s ease-in reverse forwards;
+    &[data-animation="spymaster-reveal-out"] .spymaster-overlay {
+      opacity: 0;
+      transform: none;
+      transition: opacity 0.3s ease;
+    }
   }
 `;
 
@@ -195,31 +222,39 @@ export const CardContainer = styled.div`
   box-sizing: border-box;
   perspective: 1000px;
   z-index: ${Z_INDEX.BASE};
-  aspect-ratio: 2.4 / 3;
+  aspect-ratio: ${CARD_DIMENSIONS.ASPECT_RATIO};
   padding: 10% 0;
   margin: auto;
+  
+  /* Performance isolation */
+  contain: layout style paint;
+  
+  /* Only for cards that will animate */
+  &[data-will-animate="true"] {
+    will-change: transform;
+  }
+  
+  /* Remove will-change after animation */
+  &[data-animation=""] {
+    will-change: auto;
+  }
 
   ${animationMap}
 
   &[data-team="red"] {
     --team-color: #ff0040; /* Bright hacker red */
-    --team-symbol: "★";
   }
   &[data-team="blue"] {
     --team-color: #00d4ff; /* Bright hacker blue */
-    --team-symbol: "♦";
   }
   &[data-team="assassin"] {
     --team-color: #ffff00; /* Electric yellow */
-    --team-symbol: "☠";
   }
   &[data-team="neutral"] {
     --team-color: #888888;
-    --team-symbol: "●";
   }
   &[data-team="green"] {
     --team-color: #00ff88; /* Hacker green */
-    --team-symbol: "🌿";
   }
 
   /* Hide base card text when spymaster overlay is visible */
@@ -232,41 +267,63 @@ export const CardContainer = styled.div`
 export const NormalCard = styled.div<{ $isCurrentTeam?: boolean }>`
   position: absolute;
   inset: 0;
-  background: #f4f1e8;
+  background: linear-gradient(
+    to bottom,
+    #f4f1e8 0%,
+    #ebe7dc 100%
+  );
   border: 1px solid #d4d1c8;
-  border-radius: 6px;
+  border-radius: ${CARD_DIMENSIONS.BORDER_RADIUS.MOBILE}px;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: ${Z_INDEX.CARD_BASE};
   cursor: pointer;
   transition:
-    transform 0.2s,
+    transform ${CARD_ANIMATION.HOVER_DURATION}ms,
     box-shadow 0.3s;
   color: #2a2a3e;
   font-family: sans-serif;
-  font-size: clamp(1rem, 3vw, 1.4rem);
+  font-size: ${CARD_TYPOGRAPHY.FONT_SIZE.MOBILE};
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: ${CARD_TYPOGRAPHY.LETTER_SPACING.MOBILE};
   padding: 0.5rem;
   overflow: hidden;
   transform: translateZ(0);
-  will-change: transform;
+  min-height: ${CARD_DIMENSIONS.MOBILE_MIN_HEIGHT}px;
 
-  box-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.2),
-    0 2px 0 rgba(0, 0, 0, 0.2),
-    0 3px 0 rgba(0, 0, 0, 0.2),
-    0 4px 0 rgba(0, 0, 0, 0.2),
-    0 5px 10px rgba(0, 0, 0, 0.3);
+  /* Single performant shadow */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  
+  /* Pseudo-element for edge highlight */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.3) 0%,
+      transparent 50%
+    );
+    pointer-events: none;
+  }
 
-  [data-clickable="true"] & {
-    &:hover {
-      transform: translateY(-2px);
+  /* Smart hover states - only for devices with precise pointers */
+  @media (hover: hover) and (pointer: fine) {
+    [data-clickable="true"] & {
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      }
     }
+  }
+  
+  /* Touch feedback without sticky hover */
+  [data-clickable="true"] & {
     &:active {
-      transform: translateY(1px);
+      transform: scale(0.98);
     }
   }
 
@@ -295,9 +352,9 @@ export const NormalCard = styled.div<{ $isCurrentTeam?: boolean }>`
       150px 150px,
       4px 4px;
     opacity: 0.6;
-    border-radius: 6px;
+    border-radius: inherit;
     pointer-events: none;
-    z-index: 1;
+    z-index: ${Z_INDEX.CARD_TEXTURE - Z_INDEX.CARD_BASE};
   }
 
   /* Ripple effect container */
@@ -314,7 +371,7 @@ export const NormalCard = styled.div<{ $isCurrentTeam?: boolean }>`
     transition:
       transform 0.5s,
       opacity 0.5s;
-    z-index: 5;
+    z-index: ${Z_INDEX.CARD_RIPPLE};
   }
 
   &:active .ripple {
@@ -324,18 +381,19 @@ export const NormalCard = styled.div<{ $isCurrentTeam?: boolean }>`
   }
 
   @media (min-width: 481px) {
-    font-size: clamp(1.1rem, 3vw, 1.4rem);
+    min-height: ${CARD_DIMENSIONS.TABLET_MIN_HEIGHT}px;
+    border-radius: ${CARD_DIMENSIONS.BORDER_RADIUS.TABLET}px;
+    font-size: ${CARD_TYPOGRAPHY.FONT_SIZE.TABLET};
+    letter-spacing: ${CARD_TYPOGRAPHY.LETTER_SPACING.TABLET};
     padding: 0.75rem;
-    border-radius: 8px;
   }
 
   @media (min-width: 769px) {
-    font-size: 1.4rem;
+    min-height: ${CARD_DIMENSIONS.DESKTOP_MIN_HEIGHT}px;
+    border-radius: ${CARD_DIMENSIONS.BORDER_RADIUS.DESKTOP}px;
+    font-size: ${CARD_TYPOGRAPHY.FONT_SIZE.DESKTOP};
+    letter-spacing: ${CARD_TYPOGRAPHY.LETTER_SPACING.DESKTOP};
     padding: 1rem;
-
-    [data-clickable="true"] &:hover {
-      transform: translateY(-4px);
-    }
   }
 `;
 
@@ -510,10 +568,21 @@ export const TeamBadge = styled.div`
     background: #ffff00;
     color: #000;
     border-color: #ff0000;
-    animation: ${electricFlicker} 2s ease-in-out infinite;
     box-shadow:
       0 0 20px #ffff00,
       0 0 40px #ff0000;
+    
+    /* Animated assassin reveal for users who prefer motion */
+    @media (prefers-reduced-motion: no-preference) {
+      animation: ${assassinReveal} 2s ease-out forwards;
+    }
+    
+    /* Static assassin styling for users who prefer reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      opacity: 0.9;
+      filter: brightness(1.1);
+      box-shadow: 0 0 25px rgba(255, 255, 0, 0.5);
+    }
   }
 `;
 
@@ -592,7 +661,28 @@ export const TargetingCorners = styled.div`
     & > span::after {
       opacity: 1;
       filter: drop-shadow(0 0 10px #00ff88) drop-shadow(0 0 20px #00ff88);
-      animation: ${cornerBlink} 2s ease-in-out infinite;
+    }
+    
+    /* Animated corners for users who prefer motion */
+    @media (prefers-reduced-motion: no-preference) {
+      &::before,
+      &::after,
+      & > span::before,
+      & > span::after {
+        animation: ${cornerBlink} 2s ease-in-out infinite;
+      }
+    }
+    
+    /* Static corners for users who prefer reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      &::before,
+      &::after,
+      & > span::before,
+      & > span::after {
+        opacity: 1;
+        border-color: #00ff88;
+        filter: drop-shadow(0 0 15px #00ff88) drop-shadow(0 0 30px #00ff88);
+      }
     }
   }
 
@@ -634,9 +724,12 @@ export const SpymasterSymbol = styled.div`
   filter: drop-shadow(0 0 10px var(--team-color));
   pointer-events: none;
 
-  &::before {
-    content: var(--team-symbol);
-  }
+  /* Team symbols with data attributes */
+  ${CardContainer}[data-team="red"] &::before { content: "★"; }
+  ${CardContainer}[data-team="blue"] &::before { content: "♦"; }
+  ${CardContainer}[data-team="assassin"] &::before { content: "☠"; }
+  ${CardContainer}[data-team="neutral"] &::before { content: "●"; }
+  ${CardContainer}[data-team="green"] &::before { content: "🌿"; }
 
   /* Electric yellow assassin symbol in overlay */
   ${CardContainer}[data-team="assassin"] & {
@@ -646,7 +739,20 @@ export const SpymasterSymbol = styled.div`
       0 0 60px #ffff00,
       0 0 90px #ff0000;
     filter: drop-shadow(0 0 30px #ffff00);
-    animation: ${dangerPulse} 1s ease-in-out infinite;
+    
+    /* Animated danger pulse for users who prefer motion */
+    @media (prefers-reduced-motion: no-preference) {
+      animation: ${dangerPulse} 1s ease-in-out infinite;
+    }
+    
+    /* Static assassin symbol for users who prefer reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      opacity: 1;
+      text-shadow:
+        0 0 30px #ffff00,
+        0 0 60px #ffff00,
+        0 0 80px #ff0000;
+    }
   }
 
   @media (min-width: 481px) {
@@ -684,7 +790,18 @@ export const CardARCorner = styled.div<{
   height: 20px;
   border: 3px solid #00ff88;
   filter: drop-shadow(0 0 10px #00ff88) drop-shadow(0 0 20px #00ff88);
-  animation: ${cornerBlink} 2s ease-in-out infinite;
+  
+  /* Animated corners for users who prefer motion */
+  @media (prefers-reduced-motion: no-preference) {
+    animation: ${cornerBlink} 2s ease-in-out infinite;
+  }
+  
+  /* Static corners for users who prefer reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    opacity: 1;
+    border-color: #00ff88;
+    filter: drop-shadow(0 0 15px #00ff88) drop-shadow(0 0 30px #00ff88);
+  }
 
   ${(props) => {
     switch (props.$position) {
@@ -745,7 +862,7 @@ export const CardWord = styled.span`
   overflow-wrap: break-word;
   margin: 0;
   padding: 0 0.5rem;
-  z-index: 3;
+  z-index: ${Z_INDEX.CARD_WORD};
   font-weight: 900;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -777,7 +894,20 @@ export const CardWord = styled.span`
   /* Special assassin text styling */
   ${CardContainer}[data-team="assassin"] .spymaster-overlay & {
     color: #ffff00;
-    animation: ${dangerPulse} 1.5s ease-in-out infinite;
+    
+    /* Animated danger pulse for users who prefer motion */
+    @media (prefers-reduced-motion: no-preference) {
+      animation: ${dangerPulse} 1.5s ease-in-out infinite;
+    }
+    
+    /* Static assassin text for users who prefer reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      opacity: 1;
+      text-shadow:
+        0 0 30px #ffff00,
+        0 0 60px #ffff00,
+        0 0 80px #ff0000;
+    }
   }
 
   @media (min-width: 769px) {
@@ -796,9 +926,12 @@ export const TeamSymbol = styled.div`
     -1px -1px 1px rgba(0, 0, 0, 0.8);
   filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.5));
 
-  &::before {
-    content: var(--team-symbol);
-  }
+  /* Team symbols with data attributes */
+  ${CardContainer}[data-team="red"] &::before { content: "★"; }
+  ${CardContainer}[data-team="blue"] &::before { content: "♦"; }
+  ${CardContainer}[data-team="assassin"] &::before { content: "☠"; }
+  ${CardContainer}[data-team="neutral"] &::before { content: "●"; }
+  ${CardContainer}[data-team="green"] &::before { content: "🌿"; }
 
   /* Electric yellow assassin symbol */
   ${CardContainer}[data-team="assassin"] & {
@@ -808,8 +941,18 @@ export const TeamSymbol = styled.div`
       0 0 40px rgba(255, 255, 0, 0.6),
       0 0 60px rgba(255, 0, 0, 0.4);
     filter: drop-shadow(0 0 20px rgba(255, 255, 0, 0.8));
-    animation: ${electricFlicker} 2s ease-in-out infinite;
     z-index: 2;
+    
+    /* Animated assassin reveal for users who prefer motion */
+    @media (prefers-reduced-motion: no-preference) {
+      animation: ${assassinReveal} 2s ease-out forwards;
+    }
+    
+    /* Static assassin symbol for users who prefer reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      opacity: 0.9;
+      filter: brightness(1.1) drop-shadow(0 0 25px rgba(255, 255, 0, 0.5));
+    }
   }
 
   @media (min-width: 481px) {
