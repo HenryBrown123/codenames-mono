@@ -487,68 +487,6 @@ const CluePanelBackdrop = styled.div<{ $isVisible: boolean }>`
   }
 `;
 
-/**
- * DESKTOP: Fixed instructions for larger screens
- */
-const DesktopInstructionsContainer = styled.div`
-  /* Hidden on mobile - instructions are floating */
-  display: none;
-
-  /* PROGRESSIVE ENHANCEMENT: Show on tablet landscape+ */
-  @media (min-width: 769px) and (orientation: landscape) {
-    display: flex;
-    background: linear-gradient(135deg, rgba(10, 10, 15, 0.95) 0%, rgba(26, 26, 46, 0.95) 100%);
-    border: 2px solid var(--color-primary, #00ff88);
-    border-radius: 8px;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 0.75rem;
-    font-size: 0.85rem;
-    line-height: 1.3;
-    flex-shrink: 0;
-    min-height: 50px;
-    max-height: 80px;
-    overflow: hidden;
-    /* REMOVED: grid-column: 1 / -1; - Now stays within sidebar */
-    font-family: "JetBrains Mono", "Courier New", monospace;
-    position: relative;
-    box-shadow:
-      0 0 20px rgba(0, 255, 136, 0.3),
-      inset 0 0 20px rgba(0, 255, 136, 0.05);
-
-    /* Corner accents */
-    &::before {
-      content: "";
-      position: absolute;
-      top: -2px;
-      left: -2px;
-      right: -2px;
-      bottom: -2px;
-      background: linear-gradient(
-        45deg,
-        var(--color-primary, #00ff88) 0%,
-        transparent 50%,
-        var(--color-primary, #00ff88) 100%
-      );
-      border-radius: 8px;
-      z-index: -1;
-      animation: ${hackerPulse} 4s ease-in-out infinite;
-    }
-  }
-
-  @media (min-width: 481px) {
-    font-size: 0.95rem;
-    padding: 1rem;
-    border-radius: 12px;
-    max-height: 100px;
-  }
-
-  @media (min-width: 1025px) {
-    font-size: 1.2rem;
-    padding: 1.5rem;
-  }
-`;
 
 /**
  * MOBILE-FIRST: Sidebar container for larger screens
@@ -594,34 +532,30 @@ const GameBoardContainer = styled.div`
 `;
 
 /**
- * MOBILE-FIRST: Dashboard with fixed positioning approach
+ * MOBILE-FIRST: Dashboard with fixed positioning approach / Terminal styling for desktop
  */
 const DashboardContainer = styled.div`
+  /* Mobile styles - fixed dashboard at bottom */
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-
   height: 80px;
   background: linear-gradient(180deg, rgba(10, 10, 15, 0.95) 0%, rgba(26, 26, 46, 0.98) 100%);
   border-top: 2px solid var(--color-primary, #00ff88);
   border-radius: 16px 16px 0 0;
   z-index: ${Z_INDEX.DASHBOARD};
-
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: 0.5rem;
   padding-right: 0.5rem;
   padding-top: 0.75rem;
-
   display: flex;
   align-items: center;
   justify-content: center;
   backdrop-filter: blur(10px);
-
-  /* Hacker glow effect */
   animation: ${hackerPulse} 3s ease-in-out infinite;
 
-  /* Scanline effect */
+  /* Scanline effect for mobile */
   &::before {
     content: "";
     position: absolute;
@@ -639,20 +573,42 @@ const DashboardContainer = styled.div`
     pointer-events: none;
   }
 
+  /* Desktop terminal styling */
   @media (min-width: 769px) and (orientation: landscape) {
+    /* Terminal window styling */
     position: relative;
     bottom: auto;
     height: 100%;
-    max-height: none;
-    flex-direction: column;
-    border-radius: 16px;
-    z-index: auto;
+    background: #000000;
     border: 2px solid var(--color-primary, #00ff88);
-    border-top: 2px solid var(--color-primary, #00ff88);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    font-family: "JetBrains Mono", monospace;
+    overflow: hidden;
+    box-shadow: 
+      0 0 20px rgba(0, 255, 136, 0.3),
+      inset 0 0 20px rgba(0, 255, 136, 0.05);
+
+    /* Terminal header bar */
+    &::before {
+      content: "OPERATIVE TERMINAL v4.2.0";
+      display: block;
+      padding: 0.5rem 1rem;
+      background: var(--color-primary, #00ff88);
+      color: #000;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      animation: none;
+      position: static;
+      height: auto;
+    }
   }
 
   @media (min-width: 1025px) {
-    padding: 1.5rem;
+    padding: 0; /* Reset padding for terminal styling */
   }
 `;
 
@@ -769,13 +725,12 @@ export const GameScene: React.FC = () => {
       <CardVisibilityProvider cards={cards} initialState={isRoundSetup ? "hidden" : "visible"}>
         <GameSceneContainer>
           <SidebarContainer>
-            <DesktopInstructionsContainer>
-              {isFetching && <RefetchIndicator />}
-              <GameInstructions messageText={messageText} />
-            </DesktopInstructionsContainer>
-            
             <DashboardContainer>
-              <DashboardComponent onOpenCluePanel={() => setShowCluePanel(true)} />
+              {isFetching && <RefetchIndicator />}
+              <DashboardComponent 
+                onOpenCluePanel={() => setShowCluePanel(true)} 
+                messageText={messageText}
+              />
             </DashboardContainer>
           </SidebarContainer>
 

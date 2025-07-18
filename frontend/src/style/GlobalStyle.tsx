@@ -58,6 +58,23 @@ export const GlobalStyle = createGlobalStyle<{ theme: ThemeType }>`
       -webkit-overflow-scrolling: touch;
     }
   }
+
+  /* Responsive utility classes */
+  .mobile-only {
+    display: block;
+    
+    @media (min-width: 769px) and (orientation: landscape) {
+      display: none !important;
+    }
+  }
+
+  .desktop-only {
+    display: none;
+    
+    @media (min-width: 769px) and (orientation: landscape) {
+      display: block;
+    }
+  }
 `;
 
 export interface ThemeType {

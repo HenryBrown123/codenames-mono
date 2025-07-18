@@ -5,6 +5,16 @@ import { useGameDataRequired } from "../../shared/providers";
 import { useGameActions } from "../../player-actions";
 import { ActionButton } from "../../shared/components";
 import { usePlayerScene } from "../../player-scenes";
+import { 
+  TerminalContent, 
+  TerminalSection, 
+  TerminalPrompt, 
+  TerminalCommand, 
+  TerminalStatus,
+  TerminalDivider,
+  TerminalActions,
+  TerminalOutput
+} from "./terminal-components";
 
 /**
  * MOBILE-FIRST: Dashboard container that adapts to layout context
@@ -97,7 +107,7 @@ const CenteredContainer = styled(Container)`
 /**
  * Lobby Dashboard - Mobile-first with refresh functionality
  */
-export const LobbyDashboard: React.FC = () => {
+export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText }) => {
   const { gameData } = useGameDataRequired();
   const { createRound, startRound, dealCards, actionState } = useGameActions();
 
@@ -154,54 +164,126 @@ export const LobbyDashboard: React.FC = () => {
   };
 
   return (
-    <CenteredContainer>
-      {canRedeal && (
-        <RefreshButton
-          onClick={handleRedeal}
-          disabled={actionState.status === "loading"}
-          title="Re-deal cards"
-        >
-          <RefreshCw />
-        </RefreshButton>
-      )}
-      <ActionButton
-        onClick={handleClick}
-        text={getButtonText()}
-        enabled={actionState.status !== "loading"}
-      />
-    </CenteredContainer>
+    <>
+      {/* Mobile view */}
+      <CenteredContainer className="mobile-only">
+        {canRedeal && (
+          <RefreshButton
+            onClick={handleRedeal}
+            disabled={actionState.status === "loading"}
+            title="Re-deal cards"
+          >
+            <RefreshCw />
+          </RefreshButton>
+        )}
+        <ActionButton
+          onClick={handleClick}
+          text={getButtonText()}
+          enabled={actionState.status !== "loading"}
+        />
+      </CenteredContainer>
+
+      {/* Desktop terminal view */}
+      <TerminalContent className="desktop-only">
+        <TerminalSection>
+          <TerminalCommand>SYSTEM READY</TerminalCommand>
+          <TerminalPrompt>
+            <TerminalOutput>{messageText || "Initialize mission parameters..."}</TerminalOutput>
+          </TerminalPrompt>
+        </TerminalSection>
+
+        <TerminalDivider />
+
+        <TerminalActions>
+          {canRedeal && (
+            <TerminalStatus>
+              Cards dealt. Verify configuration or request new deal.
+            </TerminalStatus>
+          )}
+          
+          <ActionButton
+            onClick={handleClick}
+            text={getButtonText()}
+            enabled={actionState.status !== "loading"}
+          />
+          
+          {canRedeal && (
+            <ActionButton
+              onClick={handleRedeal}
+              text="REDEAL CARDS"
+              enabled={actionState.status !== "loading"}
+            />
+          )}
+        </TerminalActions>
+      </TerminalContent>
+    </>
   );
 };
 
 /**
  * Generic waiting dashboard
  */
-export const WaitingDashboard: React.FC = () => {
-  return <Container />;
+export const WaitingDashboard: React.FC<{ messageText?: string }> = ({ messageText }) => {
+  return (
+    <>
+      <Container className="mobile-only" />
+      <TerminalContent className="desktop-only">
+        <TerminalSection>
+          <TerminalCommand>STANDBY MODE</TerminalCommand>
+          <TerminalPrompt>
+            <TerminalOutput>{messageText || "Waiting for orders..."}</TerminalOutput>
+          </TerminalPrompt>
+        </TerminalSection>
+      </TerminalContent>
+    </>
+  );
 };
 
 /**
  * Spectator dashboard
  */
-export const SpectatorDashboard: React.FC = () => {
-  return <Container />;
+export const SpectatorDashboard: React.FC<{ messageText?: string }> = ({ messageText }) => {
+  return (
+    <>
+      <Container className="mobile-only" />
+      <TerminalContent className="desktop-only">
+        <TerminalSection>
+          <TerminalCommand>OBSERVER MODE</TerminalCommand>
+          <TerminalPrompt>
+            <TerminalOutput>{messageText || "Monitoring field operations..."}</TerminalOutput>
+          </TerminalPrompt>
+        </TerminalSection>
+      </TerminalContent>
+    </>
+  );
 };
 
 /**
  * Dealing dashboard with loading indicator
  */
-export const DealingDashboard: React.FC = () => {
+export const DealingDashboard: React.FC<{ messageText?: string }> = ({ messageText }) => {
   return (
-    <CenteredContainer>
-      <div>Dealing cards...</div>
-    </CenteredContainer>
+    <>
+      <CenteredContainer className="mobile-only">
+        <div>Dealing cards...</div>
+      </CenteredContainer>
+
+      <TerminalContent className="desktop-only">
+        <TerminalSection>
+          <TerminalCommand>SYSTEM PROCESSING</TerminalCommand>
+          <TerminalPrompt>
+            <TerminalOutput>{messageText || "Dealing cards..."}</TerminalOutput>
+          </TerminalPrompt>
+        </TerminalSection>
+      </TerminalContent>
+    </>
   );
 };
 
 /**
  * Game over dashboard
  */
-export const GameoverDashboard: React.FC = () => {
+export const GameoverDashboard: React.FC<{ messageText?: string }> = ({ messageText }) => {
   const { createRound, actionState } = useGameActions();
 
   const handleNewGame = () => {
@@ -209,20 +291,41 @@ export const GameoverDashboard: React.FC = () => {
   };
 
   return (
-    <CenteredContainer>
-      <ActionButton
-        onClick={handleNewGame}
-        text="New Game"
-        enabled={actionState.status !== "loading"}
-      />
-    </CenteredContainer>
+    <>
+      <CenteredContainer className="mobile-only">
+        <ActionButton
+          onClick={handleNewGame}
+          text="New Game"
+          enabled={actionState.status !== "loading"}
+        />
+      </CenteredContainer>
+
+      <TerminalContent className="desktop-only">
+        <TerminalSection>
+          <TerminalCommand>MISSION COMPLETE</TerminalCommand>
+          <TerminalPrompt>
+            <TerminalOutput>{messageText || "Mission concluded. Ready for new assignment."}</TerminalOutput>
+          </TerminalPrompt>
+        </TerminalSection>
+
+        <TerminalDivider />
+
+        <TerminalActions>
+          <ActionButton
+            onClick={handleNewGame}
+            text="NEW MISSION"
+            enabled={actionState.status !== "loading"}
+          />
+        </TerminalActions>
+      </TerminalContent>
+    </>
   );
 };
 
 /**
  * Outcome dashboard - Shows round outcome
  */
-export const OutcomeDashboard: React.FC = () => {
+export const OutcomeDashboard: React.FC<{ messageText?: string }> = ({ messageText }) => {
   const { triggerSceneTransition } = usePlayerScene();
   
   const handleContinue = () => {
@@ -230,12 +333,33 @@ export const OutcomeDashboard: React.FC = () => {
   };
 
   return (
-    <CenteredContainer>
-      <ActionButton
-        onClick={handleContinue}
-        text="Continue"
-        enabled={true}
-      />
-    </CenteredContainer>
+    <>
+      <CenteredContainer className="mobile-only">
+        <ActionButton
+          onClick={handleContinue}
+          text="Continue"
+          enabled={true}
+        />
+      </CenteredContainer>
+
+      <TerminalContent className="desktop-only">
+        <TerminalSection>
+          <TerminalCommand>MISSION OUTCOME</TerminalCommand>
+          <TerminalPrompt>
+            <TerminalOutput>{messageText || "Analyzing mission results..."}</TerminalOutput>
+          </TerminalPrompt>
+        </TerminalSection>
+
+        <TerminalDivider />
+
+        <TerminalActions>
+          <ActionButton
+            onClick={handleContinue}
+            text="ACKNOWLEDGE"
+            enabled={true}
+          />
+        </TerminalActions>
+      </TerminalContent>
+    </>
   );
 };
