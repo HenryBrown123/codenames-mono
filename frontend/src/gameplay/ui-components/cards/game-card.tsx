@@ -1,18 +1,22 @@
 import React, { memo, useCallback } from "react";
 import { Card } from "@frontend/shared-types";
 import { useCardVisibility } from "./use-card-visibility";
-import { 
-  CardContainer, 
-  NormalCard, 
-  CoverCard, 
+import {
+  CardContainer,
+  NormalCard,
+  CoverCard,
   SpymasterOverlay,
   TeamColorFilter,
   ScanGrid,
   TeamBadge,
+  CardARCorners,
+  CardARCorner,
+  SpymasterSymbol,
   CardWord,
-  TeamSymbol
+  TeamSymbol,
 } from "./card-styles";
 import { getTeamType, getCardColor } from "./card-utils";
+import { useGameDataRequired } from "../../shared/providers";
 
 interface GameCardProps {
   card: Card;
@@ -21,77 +25,77 @@ interface GameCardProps {
   clickable: boolean;
 }
 
-export const GameCard = memo<GameCardProps>(({ 
-  card, 
-  index, 
-  onClick, 
-  clickable 
-}) => {
-  const { state, animation, handleAnimationStart, handleAnimationEnd } = useCardVisibility(card, index);
+/**
+ * Game card component with visibility state management
+ */
+export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable }) => {
+  const { state, animation, handleAnimationStart, handleAnimationEnd } = useCardVisibility(
+    card,
+    index,
+  );
+  const { gameData } = useGameDataRequired();
   const teamType = getTeamType(card);
   const cardColor = getCardColor(card);
-  
+
+  const isCurrentTeam = gameData.playerContext?.teamName === card.teamName;
+
   const handleClick = useCallback(() => {
     if (clickable && !card.selected) {
       onClick();
     }
   }, [clickable, card.selected, onClick]);
 
-  // Determine what to render based on state
   const isNormal = state === "visible";
-  const isColored = state === "visible-colored"; 
+  const isColored = state === "visible-colored";
   const isCovered = state === "visible-covered";
   const showSpymasterOverlay = isColored;
 
-  // Debug logging for rendered attributes (only for first card)
-  if (index === 0) {
-    console.log(`[GameCard:${card.word}] Rendering with:`, {
-      state,
-      animation,
-      teamType,
-      clickable,
-      selected: card.selected,
-      cardIndex: index,
-      isNormal,
-      isColored,
-      isCovered,
-      showSpymasterOverlay
-    });
-  }
-
   return (
-    <CardContainer 
+    <CardContainer
       data-team={teamType}
       data-animation={animation}
       data-clickable={clickable && !card.selected}
-      style={{ 
-        '--card-index': index,
-        '--team-color': cardColor
-      } as React.CSSProperties}
+      data-current-team={isCurrentTeam ? "true" : "false"}
+      style={
+        {
+          "--card-index": index,
+          "--team-color": cardColor,
+        } as React.CSSProperties
+      }
       onAnimationStart={handleAnimationStart}
       onAnimationEnd={handleAnimationEnd}
     >
-      {/* Normal beige card - visible unless covered */}
+      {/* Normal beige card */}
       {!isCovered && (
-        <NormalCard onClick={handleClick}>
-          <CardWord>{card.word}</CardWord>
+        <NormalCard onClick={handleClick} className="normal-card" $isCurrentTeam={isCurrentTeam}>
+          <div className="ripple" />
+          <CardWord className="card-word">{card.word}</CardWord>
         </NormalCard>
       )}
-      
-      {/* Cover card - only when selected/guessed */}
+
+      {/* Cover card - no text, just symbol */}
       {isCovered && (
         <CoverCard className="cover-card">
           <TeamSymbol />
-          <CardWord style={{ color: 'white' }}>{card.word}</CardWord>
         </CoverCard>
       )}
-      
-      {/* Spymaster overlay - shows team affiliation */}
+
+      {/* Spymaster overlay - vibrant colors with glow */}
       {showSpymasterOverlay && (
         <SpymasterOverlay className="spymaster-overlay">
           <TeamColorFilter />
           <ScanGrid />
+          <SpymasterSymbol />
+          <CardWord>{card.word}</CardWord>
           <TeamBadge>{teamType.toUpperCase()}</TeamBadge>
+          {true && (
+            <CardARCorners>
+              <CardARCorner $position="tl" />
+              <CardARCorner $position="tr" />
+              <CardARCorner $position="bl" />
+              <CardARCorner $position="br" />
+            </CardARCorners>
+          )}
         </SpymasterOverlay>
       )}
     </CardContainer>
