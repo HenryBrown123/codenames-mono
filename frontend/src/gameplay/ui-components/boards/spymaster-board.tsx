@@ -1,14 +1,10 @@
 import React, { memo } from "react";
 import { useGameDataRequired } from "../../shared/providers";
 import { GameCard } from "../cards/game-card";
-import {
-  CardVisibilityProvider,
-  useCardVisibilityContext,
-} from "../cards/card-visibility-provider";
+import { useCardVisibilityContext } from "../cards/card-visibility-provider";
 import { GameBoardLayout } from "./board-layout";
 import { EmptyCard } from "./board-styles";
 import {
-  ARToggleButton,
   ARGlassesHUD,
   ARVisor,
   ARGlare,
@@ -31,30 +27,14 @@ export const SpymasterBoard = memo(() => {
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === "SETUP";
 
-  if (cards.length === 0) {
-    return (
-      <CardVisibilityProvider cards={[]} initialState="hidden">
-        <SpymasterBoardContent cards={[]} isRoundSetup={isRoundSetup} />
-      </CardVisibilityProvider>
-    );
-  }
-
-  return (
-    <CardVisibilityProvider cards={cards} initialState={isRoundSetup ? "hidden" : "visible"}>
-      <SpymasterBoardContent cards={cards} isRoundSetup={isRoundSetup} />
-    </CardVisibilityProvider>
-  );
+  return <SpymasterBoardContent cards={cards} isRoundSetup={isRoundSetup} />;
 });
 
 const SpymasterBoardContent = memo<{
   cards: any[];
   isRoundSetup: boolean;
 }>(({ cards, isRoundSetup }) => {
-  const { triggers, viewMode } = useCardVisibilityContext();
-
-  const handleARToggle = () => {
-    triggers.toggleSpymasterView();
-  };
+  const { viewMode } = useCardVisibilityContext();
 
   return (
     <>
@@ -92,12 +72,6 @@ const SpymasterBoardContent = memo<{
           : Array.from({ length: 25 }).map((_, i) => <EmptyCard key={`empty-${i}`} />)}
       </GameBoardLayout>
 
-      {/* AR Toggle Button - only show when cards are visible */}
-      {!isRoundSetup && (
-        <ARToggleButton $arMode={viewMode === "spymaster"} onClick={handleARToggle}>
-          {viewMode === "spymaster" ? "DISABLE AR" : "ACTIVATE AR"}
-        </ARToggleButton>
-      )}
     </>
   );
 });

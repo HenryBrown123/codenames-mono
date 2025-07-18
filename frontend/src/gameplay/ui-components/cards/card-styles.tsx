@@ -139,6 +139,29 @@ const dangerPulse = keyframes`
   }
 `;
 
+const cornerBlink = keyframes`
+  0%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 15px #00ff88) drop-shadow(0 0 30px #00ff88);
+    border-color: #00ff88;
+  }
+  25% {
+    opacity: 0.2;
+    filter: drop-shadow(0 0 5px #00ff88) drop-shadow(0 0 10px #00ff88);
+    border-color: rgba(0, 255, 136, 0.5);
+  }
+  50% {
+    opacity: 0.8;
+    filter: drop-shadow(0 0 12px #00ff88) drop-shadow(0 0 25px #00ff88);
+    border-color: #00ff88;
+  }
+  75% {
+    opacity: 0.1;
+    filter: drop-shadow(0 0 3px #00ff88) drop-shadow(0 0 8px #00ff88);
+    border-color: rgba(0, 255, 136, 0.3);
+  }
+`;
+
 // ===== ANIMATION MAP =====
 const animationMap = css`
   &[data-animation="deal-in"] {
@@ -569,6 +592,7 @@ export const TargetingCorners = styled.div`
     & > span::after {
       opacity: 1;
       filter: drop-shadow(0 0 10px #00ff88) drop-shadow(0 0 20px #00ff88);
+      animation: ${cornerBlink} 2s ease-in-out infinite;
     }
   }
 
@@ -660,6 +684,7 @@ export const CardARCorner = styled.div<{
   height: 20px;
   border: 3px solid #00ff88;
   filter: drop-shadow(0 0 10px #00ff88) drop-shadow(0 0 20px #00ff88);
+  animation: ${cornerBlink} 2s ease-in-out infinite;
 
   ${(props) => {
     switch (props.$position) {

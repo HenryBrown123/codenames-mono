@@ -4,9 +4,11 @@ import { CodeWordInput } from "./codemaster-input";
 import { useGameActions } from "../../player-actions";
 import { useTurn } from "../../shared/providers";
 import { ActionButton } from "../../shared/components";
+import { useCardVisibilityContext } from "../cards/card-visibility-provider";
+import { ARRevealButton } from "./ar-reveal-button";
 
 /**
- * MOBILE-FIRST: Simple button container for dashboard
+ * MOBILE-FIRST: Button container with AR toggle logic
  */
 const Container = styled.div`
   display: flex;
@@ -16,6 +18,7 @@ const Container = styled.div`
   width: 100%;
   height: 100%;
   padding: 0.5rem;
+  gap: 0.5rem;
 
   @media (min-width: 769px) and (orientation: landscape) {
     flex-direction: column;
@@ -31,7 +34,19 @@ const Container = styled.div`
 `;
 
 /**
- * DESKTOP: Container for desktop layout
+ * MOBILE: AR Toggle button for revealing spymaster view
+ */
+const MobileARToggle = styled(ARRevealButton)`
+  position: relative;
+  
+  /* Hide on desktop */
+  @media (min-width: 769px) and (orientation: landscape) {
+    display: none;
+  }
+`;
+
+/**
+ * DESKTOP: Container for desktop layout with both buttons
  */
 const DesktopContainer = styled.div`
   display: none;
@@ -44,6 +59,21 @@ const DesktopContainer = styled.div`
     width: 100%;
     height: 100%;
     gap: 1.5rem;
+  }
+`;
+
+/**
+ * DESKTOP: AR Toggle button for desktop
+ */
+const DesktopARToggle = styled(ARRevealButton)`
+  /* Only show on desktop */
+  display: none;
+  
+  @media (min-width: 769px) and (orientation: landscape) {
+    display: block;
+    position: relative;
+    bottom: auto;
+    right: auto;
   }
 `;
 
@@ -78,11 +108,12 @@ interface CodemasterDashboardProps {
 }
 
 /**
- * Codemaster Dashboard - Just the trigger, overlay handled by parent
+ * Codemaster Dashboard - AR toggle + clue transmission
  */
 export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({ onOpenCluePanel }) => {
   const { giveClue, actionState } = useGameActions();
   const { activeTurn } = useTurn();
+  const { triggers, viewMode } = useCardVisibilityContext();
 
   // Don't show anything if not the codemaster's turn
   if (!activeTurn || activeTurn.clue !== null) {
@@ -93,17 +124,35 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({ onOpen
     giveClue(word, count);
   };
 
+  const handleARToggle = () => {
+    triggers.toggleSpymasterView();
+  };
+
+  const isARMode = viewMode === "spymaster";
+
   return (
     <Container>
-      {/* Mobile: ActionButton with handle indicator */}
-      <MobileTransmitButton 
-        onClick={onOpenCluePanel || (() => {})}
-        text="TRANSMIT CLUE"
-        enabled={actionState.status !== "loading"}
-      />
+      {/* Mobile: Show either AR toggle OR transmit button based on AR state */}
+      {!isARMode && (
+        <MobileARToggle arMode={false} onClick={handleARToggle}>
+          REVEAL
+        </MobileARToggle>
+      )}
+      
+      {isARMode && (
+        <MobileTransmitButton 
+          onClick={onOpenCluePanel || (() => {})}
+          text="SUBMIT CLUE"
+          enabled={actionState.status !== "loading"}
+        />
+      )}
 
-      {/* Desktop: Inline input */}
+      {/* Desktop: Show both buttons */}
       <DesktopContainer>
+        <DesktopARToggle arMode={isARMode} onClick={handleARToggle}>
+          {isARMode ? "DISABLE AR" : "REVEAL"}
+        </DesktopARToggle>
+        
         <CodeWordInput
           codeWord=""
           numberOfCards={null}

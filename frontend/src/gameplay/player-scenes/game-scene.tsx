@@ -10,6 +10,7 @@ import { ActionButton } from "../shared/components";
 import { Z_INDEX } from "@frontend/style/z-index";
 import { CodeWordInput } from "../ui-components/dashboards/codemaster-input";
 import { useGameActions } from "../player-actions";
+import { CardVisibilityProvider } from "../ui-components/cards/card-visibility-provider";
 
 const hackerPulse = keyframes`
   0%, 100% {
@@ -741,6 +742,9 @@ export const GameScene: React.FC = () => {
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
   const BoardComponent = getBoardComponent(currentRole, currentScene);
 
+  const cards = gameData.currentRound?.cards || [];
+  const isRoundSetup = gameData.currentRound?.status === "SETUP";
+
   const handleSubmitClue = (word: string, count: number) => {
     giveClue(word, count);
     setShowCluePanel(false);
@@ -762,72 +766,76 @@ export const GameScene: React.FC = () => {
   if (isLandscapeTablet) {
     // Sidebar layout for tablet landscape and desktop
     return (
-      <GameSceneContainer>
-        <SidebarContainer>
-          <DesktopInstructionsContainer>
-            {isFetching && <RefetchIndicator />}
-            <GameInstructions messageText={messageText} />
-          </DesktopInstructionsContainer>
-          
-          <DashboardContainer>
-            <DashboardComponent onOpenCluePanel={() => setShowCluePanel(true)} />
-          </DashboardContainer>
-        </SidebarContainer>
+      <CardVisibilityProvider cards={cards} initialState={isRoundSetup ? "hidden" : "visible"}>
+        <GameSceneContainer>
+          <SidebarContainer>
+            <DesktopInstructionsContainer>
+              {isFetching && <RefetchIndicator />}
+              <GameInstructions messageText={messageText} />
+            </DesktopInstructionsContainer>
+            
+            <DashboardContainer>
+              <DashboardComponent onOpenCluePanel={() => setShowCluePanel(true)} />
+            </DashboardContainer>
+          </SidebarContainer>
 
-        <GameBoardContainer>
-          <BoardComponent />
-        </GameBoardContainer>
-      </GameSceneContainer>
+          <GameBoardContainer>
+            <BoardComponent />
+          </GameBoardContainer>
+        </GameSceneContainer>
+      </CardVisibilityProvider>
     );
   }
 
   // Mobile layout - board + dashboard with pure CSS animated instructions
   return (
-    <GameSceneContainer>
-      {/* Instructions panel with pure CSS animation */}
-      <InstructionsPanel key={`instruction-${messageText}-${toggleMessage}`}>
-        <PanelContent>
-          {isFetching && <RefetchIndicator />}
-          <GameInstructions messageText={messageText} />
-        </PanelContent>
-        <ProgressBar key={messageText} />
-      </InstructionsPanel>
+    <CardVisibilityProvider cards={cards} initialState={isRoundSetup ? "hidden" : "visible"}>
+      <GameSceneContainer>
+        {/* Instructions panel with pure CSS animation */}
+        <InstructionsPanel key={`instruction-${messageText}-${toggleMessage}`}>
+          <PanelContent>
+            {isFetching && <RefetchIndicator />}
+            <GameInstructions messageText={messageText} />
+          </PanelContent>
+          <ProgressBar key={messageText} />
+        </InstructionsPanel>
 
-      {/* MOBILE CLUE PANEL - FULL SCREEN TAKEOVER */}
-      <CluePanelBackdrop $isVisible={showCluePanel} onClick={() => setShowCluePanel(false)} />
+        {/* MOBILE CLUE PANEL - FULL SCREEN TAKEOVER */}
+        <CluePanelBackdrop $isVisible={showCluePanel} onClick={() => setShowCluePanel(false)} />
 
-      <CluePanel $isVisible={showCluePanel}>
-        <HackerDecoration />
+        <CluePanel $isVisible={showCluePanel}>
+          <HackerDecoration />
 
-        <CluePanelHeader>
-          <ClueCloseButton onClick={() => setShowCluePanel(false)}>×</ClueCloseButton>
-          <HackerTitle>TRANSMIT CLUE</HackerTitle>
-        </CluePanelHeader>
+          <CluePanelHeader>
+            <ClueCloseButton onClick={() => setShowCluePanel(false)}>×</ClueCloseButton>
+            <HackerTitle>TRANSMIT CLUE</HackerTitle>
+          </CluePanelHeader>
 
-        <CluePanelContent>
-          <CodeWordInput
-            codeWord=""
-            numberOfCards={null}
-            isEditable={true}
-            isLoading={actionState.status === "loading"}
-            onSubmit={handleSubmitClue}
-          />
-        </CluePanelContent>
-      </CluePanel>
+          <CluePanelContent>
+            <CodeWordInput
+              codeWord=""
+              numberOfCards={null}
+              isEditable={true}
+              isLoading={actionState.status === "loading"}
+              onSubmit={handleSubmitClue}
+            />
+          </CluePanelContent>
+        </CluePanel>
 
-      {/* Help button to manually show instructions */}
-      <HelpButton $isActive={false} onClick={() => setToggleMessage(!toggleMessage)}>
-        ?
-      </HelpButton>
+        {/* Help button to manually show instructions */}
+        <HelpButton $isActive={false} onClick={() => setToggleMessage(!toggleMessage)}>
+          ?
+        </HelpButton>
 
-      <GameBoardContainer>
-        <BoardComponent />
-      </GameBoardContainer>
+        <GameBoardContainer>
+          <BoardComponent />
+        </GameBoardContainer>
 
-      <DashboardContainer>
-        <DashboardComponent onOpenCluePanel={() => setShowCluePanel(true)} />
-      </DashboardContainer>
-    </GameSceneContainer>
+        <DashboardContainer>
+          <DashboardComponent onOpenCluePanel={() => setShowCluePanel(true)} />
+        </DashboardContainer>
+      </GameSceneContainer>
+    </CardVisibilityProvider>
   );
 };
 
