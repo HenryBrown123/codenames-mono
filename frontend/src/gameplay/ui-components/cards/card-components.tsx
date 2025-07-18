@@ -288,11 +288,11 @@ export const NormalCard = styled.div<{ $isCurrentTeam?: boolean }>`
     animation: ${rippleEffect} 0.6s ease-out;
   }
 
-  /* Responsive sizing for larger screens */
+  /* UPDATE: Larger font sizes to match spymaster */
   @media (min-width: 481px) {
     min-height: ${CARD_DIMENSIONS.TABLET_MIN_HEIGHT}px;
     border-radius: ${CARD_DIMENSIONS.BORDER_RADIUS.TABLET}px;
-    font-size: ${CARD_TYPOGRAPHY.FONT_SIZE.TABLET};
+    font-size: clamp(1rem, 3vw, 1.4rem);  /* CHANGED - bigger */
     letter-spacing: ${CARD_TYPOGRAPHY.LETTER_SPACING.TABLET};
     padding: 0.75rem;
   }
@@ -300,9 +300,13 @@ export const NormalCard = styled.div<{ $isCurrentTeam?: boolean }>`
   @media (min-width: 769px) {
     min-height: ${CARD_DIMENSIONS.DESKTOP_MIN_HEIGHT}px;
     border-radius: ${CARD_DIMENSIONS.BORDER_RADIUS.DESKTOP}px;
-    font-size: ${CARD_TYPOGRAPHY.FONT_SIZE.DESKTOP};
+    font-size: clamp(1.2rem, 3.5vw, 1.6rem);  /* CHANGED - bigger */
     letter-spacing: ${CARD_TYPOGRAPHY.LETTER_SPACING.DESKTOP};
     padding: 1rem;
+  }
+
+  @media (min-width: 1025px) {
+    font-size: 1.6rem;  /* CHANGED from 1.2rem */
   }
 `;
 
@@ -844,8 +848,8 @@ export const CardWord = styled.span`
     left: 50%;
     transform: translate(-50%, -50%);
 
-    /* Larger, glowing text */
-    font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+    /* UPDATED: Bigger text sizes */
+    font-size: clamp(1.4rem, 4vw, 1.8rem);  /* CHANGED from clamp(1.2rem, 3.5vw, 1.6rem) */
 
     /* Multi-layer glow effect */
     text-shadow:
@@ -872,6 +876,13 @@ export const CardWord = styled.span`
         0 0 30px #ffff00,
         0 0 60px #ffff00,
         0 0 80px #ff0000;
+    }
+  }
+
+  /* Desktop responsive sizing */
+  @media (min-width: 1025px) {
+    .spymaster-overlay & {
+      font-size: 1.8rem;  /* Ensure minimum size on large screens */
     }
   }
 

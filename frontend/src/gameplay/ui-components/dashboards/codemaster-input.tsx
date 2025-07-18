@@ -31,7 +31,7 @@ const InputContainer = styled.div`
   gap: 0.5rem;
   width: auto;
   text-align: left;
-  font-size: clamp(0.9rem, 2.5vw, 2.5rem);
+  font-size: clamp(1.2rem, 3vw, 2.5rem);  /* CHANGED - bigger on mobile */
   background-color: transparent;
   border-radius: 8px;
   padding: 1rem;
@@ -42,11 +42,11 @@ const InputContainer = styled.div`
     flex-direction: column;
     text-align: center;
     width: 100%;
-    font-size: clamp(1rem, 1.5vw, 1.8rem);
+    font-size: clamp(1.2rem, 2vw, 2rem);  /* CHANGED - bigger on desktop */
   }
 
   @media (max-width: 768px) {
-    font-size: clamp(0.8rem, 2vw, 1.2rem);
+    font-size: clamp(1rem, 2.5vw, 1.4rem);  /* CHANGED - bigger on small screens */
     padding: 0.5rem;
   }
 

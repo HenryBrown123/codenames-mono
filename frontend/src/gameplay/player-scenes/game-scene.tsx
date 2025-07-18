@@ -534,7 +534,7 @@ const GameBoardContainer = styled.div`
 /**
  * MOBILE-FIRST: Dashboard with fixed positioning approach / Terminal styling for desktop
  */
-const DashboardContainer = styled.div`
+const DashboardContainer = styled.div<{ $role?: string }>`
   /* Mobile styles - fixed dashboard at bottom */
   position: fixed;
   bottom: 0;
@@ -592,7 +592,10 @@ const DashboardContainer = styled.div`
 
     /* Terminal header bar */
     &::before {
-      content: "OPERATIVE TERMINAL v4.2.0";
+      content: "${props => {
+        const role = props.$role?.toUpperCase() || 'OPERATIVE';
+        return `${role} TERMINAL`;
+      }}";
       display: block;
       padding: 0.5rem 1rem;
       background: var(--color-primary, #00ff88);
@@ -725,7 +728,7 @@ export const GameScene: React.FC = () => {
       <CardVisibilityProvider cards={cards} initialState={isRoundSetup ? "hidden" : "visible"}>
         <GameSceneContainer>
           <SidebarContainer>
-            <DashboardContainer>
+            <DashboardContainer $role={currentRole}>  {/* ADDED $role prop */}
               {isFetching && <RefetchIndicator />}
               <DashboardComponent 
                 onOpenCluePanel={() => setShowCluePanel(true)} 
