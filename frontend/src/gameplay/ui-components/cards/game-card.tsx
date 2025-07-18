@@ -1,8 +1,18 @@
 import React, { memo, useCallback } from "react";
 import { Card } from "@frontend/shared-types";
 import { useCardVisibility } from "./use-card-visibility";
-import { CardContainer, BaseCard, CardOverlay, CardWord } from "./card-styles";
-import { getTeamType, getCardColor, getSymbol } from "./card-utils";
+import { 
+  CardContainer, 
+  NormalCard, 
+  CoverCard, 
+  SpymasterOverlay,
+  TeamColorFilter,
+  ScanGrid,
+  TeamBadge,
+  CardWord,
+  TeamSymbol
+} from "./card-styles";
+import { getTeamType, getCardColor } from "./card-utils";
 
 interface GameCardProps {
   card: Card;
@@ -11,9 +21,6 @@ interface GameCardProps {
   clickable: boolean;
 }
 
-/**
- * Game card with animation lifecycle management
- */
 export const GameCard = memo<GameCardProps>(({ 
   card, 
   index, 
@@ -23,14 +30,19 @@ export const GameCard = memo<GameCardProps>(({
   const { state, animation, handleAnimationStart, handleAnimationEnd } = useCardVisibility(card, index);
   const teamType = getTeamType(card);
   const cardColor = getCardColor(card);
-  const symbol = getSymbol(cardColor);
   
   const handleClick = useCallback(() => {
     if (clickable && !card.selected) {
       onClick();
     }
   }, [clickable, card.selected, onClick]);
-  
+
+  // Determine what to render based on state
+  const isNormal = state === "visible";
+  const isColored = state === "visible-colored"; 
+  const isCovered = state === "visible-covered";
+  const showSpymasterOverlay = isColored;
+
   // Debug logging for rendered attributes (only for first card)
   if (index === 0) {
     console.log(`[GameCard:${card.word}] Rendering with:`, {
@@ -39,44 +51,49 @@ export const GameCard = memo<GameCardProps>(({
       teamType,
       clickable,
       selected: card.selected,
-      cardIndex: index
+      cardIndex: index,
+      isNormal,
+      isColored,
+      isCovered,
+      showSpymasterOverlay
     });
-    
-    // Log data attributes being applied
-    const dataAttributes = {
-      'data-team': teamType,
-      'data-state': state,
-      'data-animation': animation,
-      'data-clickable': clickable && !card.selected
-    };
-    
-    console.log(`[GameCard:${card.word}] Applied data attributes:`, dataAttributes);
   }
-  
+
   return (
     <CardContainer 
       data-team={teamType}
-      data-state={state}
       data-animation={animation}
       data-clickable={clickable && !card.selected}
       style={{ 
         '--card-index': index,
-        '--team-color': cardColor,
-        '--team-symbol': `"${symbol}"`
+        '--team-color': cardColor
       } as React.CSSProperties}
+      onAnimationStart={handleAnimationStart}
+      onAnimationEnd={handleAnimationEnd}
     >
-      <BaseCard 
-        onClick={handleClick}
-        onAnimationStart={handleAnimationStart}
-        onAnimationEnd={handleAnimationEnd}
-      >
-        <CardWord>{card.word}</CardWord>
-      </BaseCard>
+      {/* Normal beige card - visible unless covered */}
+      {!isCovered && (
+        <NormalCard onClick={handleClick}>
+          <CardWord>{card.word}</CardWord>
+        </NormalCard>
+      )}
       
-      <CardOverlay 
-        onAnimationStart={handleAnimationStart}
-        onAnimationEnd={handleAnimationEnd}
-      />
+      {/* Cover card - only when selected/guessed */}
+      {isCovered && (
+        <CoverCard className="cover-card">
+          <TeamSymbol />
+          <CardWord style={{ color: 'white' }}>{card.word}</CardWord>
+        </CoverCard>
+      )}
+      
+      {/* Spymaster overlay - shows team affiliation */}
+      {showSpymasterOverlay && (
+        <SpymasterOverlay className="spymaster-overlay">
+          <TeamColorFilter />
+          <ScanGrid />
+          <TeamBadge>{teamType.toUpperCase()}</TeamBadge>
+        </SpymasterOverlay>
+      )}
     </CardContainer>
   );
 });

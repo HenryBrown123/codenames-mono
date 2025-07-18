@@ -85,3 +85,4 @@ package-lock.json
 frontend/package-lock.json
 .claude/settings.local.json
 codenames-card-animations-complete.css
+.claude/settings.local.json
