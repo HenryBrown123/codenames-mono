@@ -7,13 +7,13 @@ const cursorBlink = keyframes`
 
 export const TerminalContent = styled.div`
   flex: 1;
-  padding: 1.5rem;
+  padding: 1rem;  /* CHANGED from 1.5rem */
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   color: var(--color-primary, #00ff88);
   font-size: 0.9rem;
-  line-height: 1.4;
+  line-height: 1.3;  /* CHANGED from 1.4 - tighter */
   
   /* Subtle scanline effect */
   background-image: repeating-linear-gradient(
@@ -40,7 +40,7 @@ export const TerminalContent = styled.div`
 `;
 
 export const TerminalSection = styled.div`
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;  /* CHANGED from 1.5rem */
   
   &:last-child {
     margin-bottom: 0;
@@ -104,15 +104,15 @@ export const TerminalDivider = styled.div`
     transparent 100%
   );
   opacity: 0.3;
-  margin: 1.5rem 0;
+  margin: 1rem 0;  /* CHANGED from 1.5rem 0 */
 `;
 
 export const TerminalActions = styled.div`
   margin-top: auto;
-  padding-top: 1rem;
+  padding-top: 0.5rem;  /* CHANGED from 1rem */
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;  /* CHANGED from 1rem */
 `;
 
 export const TerminalCursor = styled.span`

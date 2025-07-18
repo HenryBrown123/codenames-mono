@@ -61,7 +61,7 @@ export const GlobalStyle = createGlobalStyle<{ theme: ThemeType }>`
 
   /* Responsive utility classes */
   .mobile-only {
-    display: block;
+    /* Don't set display property - let elements keep their own display type */
     
     @media (min-width: 769px) and (orientation: landscape) {
       display: none !important;
@@ -72,7 +72,8 @@ export const GlobalStyle = createGlobalStyle<{ theme: ThemeType }>`
     display: none;
     
     @media (min-width: 769px) and (orientation: landscape) {
-      display: block;
+      /* Don't set display property - let elements keep their own display type */
+      display: initial;
     }
   }
 `;
