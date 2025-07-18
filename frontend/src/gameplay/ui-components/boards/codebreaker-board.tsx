@@ -2,14 +2,10 @@ import React, { memo, useCallback, useMemo } from "react";
 import { useGameDataRequired, useTurn } from "../../shared/providers";
 import { useGameActions } from "../../player-actions";
 import { GameCard } from "../cards/game-card";
-import {
-  CardVisibilityProvider,
-  useCardVisibilityContext,
-} from "../cards/card-visibility-provider";
+import { useCardVisibilityContext } from "../cards/card-visibility-provider";
 import { GameBoardLayout } from "./board-layout";
 import { EmptyCard } from "./board-styles";
 import {
-  ARToggleButton,
   ARGlassesHUD,
   ARVisor,
   ARGlare,
@@ -34,11 +30,7 @@ const CodebreakerBoardContent = memo<{
   activeTurn: any;
   onCardClick: (word: string) => void;
 }>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick }) => {
-  const { triggers, viewMode } = useCardVisibilityContext();
-
-  const handleARToggle = () => {
-    triggers.toggleSpymasterView();
-  };
+  const { viewMode } = useCardVisibilityContext();
 
   return (
     <>
@@ -90,10 +82,6 @@ const CodebreakerBoardContent = memo<{
         ))}
       </GameBoardLayout>
 
-      {/* AR Toggle Button */}
-      <ARToggleButton $arMode={viewMode === 'spymaster'} onClick={handleARToggle}>
-        {viewMode === 'spymaster' ? "DISABLE AR" : "ACTIVATE AR"}
-      </ARToggleButton>
     </>
   );
 });
@@ -133,30 +121,14 @@ export const CodebreakerBoard = memo(() => {
     [makeGuess, isLoading, canMakeGuess],
   );
 
-  if (cards.length === 0) {
-    return (
-      <CardVisibilityProvider cards={[]} initialState="visible">
-        <CodebreakerBoardContent
-          cards={[]}
-          canMakeGuess={false}
-          isLoading={false}
-          activeTurn={null}
-          onCardClick={() => {}}
-        />
-      </CardVisibilityProvider>
-    );
-  }
-
   return (
-    <CardVisibilityProvider cards={cards} initialState="visible">
-      <CodebreakerBoardContent
-        cards={cards}
-        canMakeGuess={canMakeGuess}
-        isLoading={isLoading}
-        activeTurn={activeTurn}
-        onCardClick={handleCardClick}
-      />
-    </CardVisibilityProvider>
+    <CodebreakerBoardContent
+      cards={cards}
+      canMakeGuess={canMakeGuess}
+      isLoading={isLoading}
+      activeTurn={activeTurn}
+      onCardClick={handleCardClick}
+    />
   );
 });
 
