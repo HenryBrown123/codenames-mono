@@ -1,18 +1,7 @@
-import styled, { keyframes } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 import { Z_INDEX } from "@frontend/style/z-index";
 
 // ===== ANIMATIONS =====
-const rippleEffect = keyframes`
-  0% {
-    transform: scale(0);
-    opacity: 0.7;
-  }
-  100% {
-    transform: scale(2.5);
-    opacity: 0;
-  }
-`;
-
 const dealAnimation = keyframes`
   0% {
     transform: translateX(-100vw) translateY(-100vh) rotate(-6deg);
@@ -28,46 +17,25 @@ const dealAnimation = keyframes`
   }
 `;
 
-const coverDealAnimation = keyframes`
-  0% {
-    transform: translateX(-100vw) translateY(-100vh) rotate(-180deg);
+const coverAnimation = keyframes`
+  from { 
+    transform: translateY(-100%);
     opacity: 0;
   }
-  100% {
+  to { 
+    transform: translateY(0);
     opacity: 1;
-    transform: translateX(0) translateY(0) rotate(0);
   }
 `;
 
-const colorRevealAnimation = keyframes`
-  0% {
-    background-color: #f4f1e8;
-  }
-  100% {
-    background-color: var(--team-color);
-    color: white;
-  }
-`;
-
-const colorFadeOutAnimation = keyframes`
-  100% {
-    background-color: #f4f1e8;
-    color: #2a2a3e;
-  }
-`;
-
-const assassinSweep = keyframes`
-  0% {
-    background-position: -100% 50%;
-    opacity: 1;
-  }
-  90% {
-    background-position: 200% 50%;
-    opacity: 1;
-  }
-  100% {
-    background-position: 200% 50%;
+const spymasterRevealAnimation = keyframes`
+  from { 
     opacity: 0;
+    transform: scale(0.95);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1);
   }
 `;
 
@@ -111,113 +79,107 @@ const gridPulse = keyframes`
   }
 `;
 
-const dangerFlash = keyframes`
-  0%, 100% { 
-    opacity: 0.95;
+const rippleEffect = keyframes`
+  0% {
+    transform: scale(0);
+    opacity: 0.7;
   }
-  50% { 
-    opacity: 1;
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
   }
 `;
 
-// ===== CONTAINER =====
+// ===== ANIMATION MAP - ALL ANIMATION LOGIC HERE =====
+const animationMap = css`
+  /* Deal animation - affects whole container */
+  &[data-animation="deal-in"] {
+    opacity: 0;
+    animation: ${dealAnimation} 0.7s calc(var(--card-index) * 75ms) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  /* Cover animation - brings card to front and animates cover */
+  &[data-animation="cover-card"] {
+    z-index: ${Z_INDEX.CARD_ANIMATING};
+    
+    .cover-card {
+      animation: ${coverAnimation} 0.5s ease-out forwards;
+    }
+  }
+
+  /* Spymaster reveal animation */
+  &[data-animation="spymaster-reveal-in"] .spymaster-overlay {
+    animation: ${spymasterRevealAnimation} 0.6s ease-in forwards;
+  }
+
+  &[data-animation="spymaster-reveal-out"] .spymaster-overlay {
+    animation: ${spymasterRevealAnimation} 0.6s ease-in reverse forwards;
+  }
+`;
+
+// ===== CONTAINER - SIMPLE =====
 export const CardContainer = styled.div`
   position: relative;
   width: 100%;
   height: 100%;
   box-sizing: border-box;
   perspective: 1000px;
-  margin: auto;
   z-index: ${Z_INDEX.BASE};
   aspect-ratio: 2.4 / 3;
   padding: 10% 0;
+  margin: auto;
 
-  /* Base state - hidden until animated in */
-  opacity: 0;
+  /* All animations handled here */
+  ${animationMap}
 
-  /* Team color variables */
+  /* Team variables for children to use */
   &[data-team="red"] {
     --team-color: #ff3333;
     --team-symbol: "★";
   }
-
   &[data-team="blue"] {
     --team-color: #3399ff;
     --team-symbol: "♦";
   }
-
   &[data-team="assassin"] {
     --team-color: #0a0a0a;
     --team-symbol: "☠";
   }
-
   &[data-team="neutral"] {
     --team-color: #8b8b8b;
     --team-symbol: "●";
   }
-
   &[data-team="green"] {
     --team-color: #33cc33;
     --team-symbol: "🌿";
   }
-
-  /* State-based visibility */
-  &[data-state="visible"],
-  &[data-state="visible-colored"],
-  &[data-state="visible-covered"] {
-    opacity: 1;
-  }
-
-  /* Raise z-index when animating or covered */
-  &[data-state="visible-covered"],
-  &[data-animation="cover-card"] {
-    z-index: ${Z_INDEX.CARD_ANIMATING};
-  }
-
-  /* Animation triggers */
-  &[data-animation="deal-in"] {
-    animation: ${dealAnimation} 0.7s calc(var(--card-index) * 75ms)
-      cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-  }
 `;
 
-// ===== BASE CARD =====
-export const BaseCard = styled.div`
-  /* Mobile-first base styles */
+// ===== NORMAL CARD - The beige base card everyone sees =====
+export const NormalCard = styled.div`
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  min-height: 60px;
-  aspect-ratio: 2.4 / 3;
+  inset: 0;
+  background: #f4f1e8;
+  border: 1px solid #d4d1c8;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: ${Z_INDEX.CARD_BASE};
+  cursor: pointer;
+  transition: transform 0.2s;
   color: #2a2a3e;
   font-family: sans-serif;
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
   padding: 0.2rem;
-  cursor: pointer;
-  transition: transform 0.2s;
-  outline: none;
   overflow: hidden;
-  position: relative;
   transform: translateZ(0);
   will-change: transform;
-  z-index: ${Z_INDEX.CARD_BASE};
-
-  /* Default beige background */
-  background: #f4f1e8;
-
-  /* Simplified mobile shadow */
+  
+  /* Mobile shadow */
   box-shadow:
     0 1px 0 rgba(0, 0, 0, 0.2),
     0 2px 0 rgba(0, 0, 0, 0.2),
@@ -225,14 +187,11 @@ export const BaseCard = styled.div`
     0 4px 0 rgba(0, 0, 0, 0.2),
     0 5px 10px rgba(0, 0, 0, 0.3);
 
-  /* Clickable state */
+  /* Clickable states */
   [data-clickable="true"] & {
-    cursor: pointer;
-
     &:hover {
       transform: translateY(-2px);
     }
-
     &:active {
       transform: translateY(1px);
     }
@@ -240,13 +199,12 @@ export const BaseCard = styled.div`
 
   [data-clickable="false"] & {
     cursor: default;
-
     &:hover {
       transform: none;
     }
   }
 
-  /* Paper texture effect */
+  /* Paper texture */
   &::after {
     content: "";
     position: absolute;
@@ -268,9 +226,9 @@ export const BaseCard = styled.div`
       200px 200px,
       180px 180px;
     opacity: 0.6;
-    border-radius: 8px;
+    border-radius: 6px;
     pointer-events: none;
-    z-index: 1; /* Relative to parent */
+    z-index: 1;
   }
 
   /* Ripple effect */
@@ -288,7 +246,7 @@ export const BaseCard = styled.div`
     transition:
       transform 0.5s,
       opacity 0.5s;
-    z-index: 5; /* Relative to parent for ripple */
+    z-index: 5;
   }
 
   &:active::before {
@@ -297,93 +255,13 @@ export const BaseCard = styled.div`
     animation: ${rippleEffect} 0.6s ease-out;
   }
 
-  /* Spymaster reveal animations */
-  ${CardContainer}[data-animation="spymaster-reveal-in"] > & {
-    animation: ${colorRevealAnimation} 0.8s ease-in-out forwards;
-  }
-
-  ${CardContainer}[data-animation="spymaster-reveal-out"] > & {
-    animation: ${colorFadeOutAnimation} 0.8s ease-in-out forwards;
-  }
-
-  /* Spymaster view colors with bright backgrounds */
-  ${CardContainer}[data-state="visible-colored"][data-team="red"] > & {
-    background-color: rgba(255, 51, 51, 0.9);
-    color: #ffffff;
-    border: 3px solid #ff0000;
-    box-shadow:
-      0 0 25px rgba(255, 51, 51, 0.8),
-      0 0 50px rgba(255, 51, 51, 0.4),
-      0 1px 0 rgba(0, 0, 0, 0.2),
-      0 2px 0 rgba(0, 0, 0, 0.2),
-      0 3px 0 rgba(0, 0, 0, 0.2),
-      0 4px 0 rgba(0, 0, 0, 0.2),
-      0 5px 10px rgba(0, 0, 0, 0.3);
-  }
-
-  ${CardContainer}[data-state="visible-colored"][data-team="blue"] > & {
-    background-color: rgba(51, 153, 255, 0.9);
-    color: #ffffff;
-    border: 3px solid #0066ff;
-    box-shadow:
-      0 0 25px rgba(51, 153, 255, 0.8),
-      0 0 50px rgba(51, 153, 255, 0.4),
-      0 1px 0 rgba(0, 0, 0, 0.2),
-      0 2px 0 rgba(0, 0, 0, 0.2),
-      0 3px 0 rgba(0, 0, 0, 0.2),
-      0 4px 0 rgba(0, 0, 0, 0.2),
-      0 5px 10px rgba(0, 0, 0, 0.3);
-  }
-
-  ${CardContainer}[data-state="visible-colored"][data-team="assassin"] > & {
-    background-color: rgba(10, 10, 10, 0.95);
-    color: #ffffff;
-    border: 3px solid #ffff00;
-    box-shadow:
-      0 0 30px rgba(255, 255, 0, 0.8),
-      0 0 60px rgba(255, 255, 0, 0.4),
-      0 1px 0 rgba(0, 0, 0, 0.2),
-      0 2px 0 rgba(0, 0, 0, 0.2),
-      0 3px 0 rgba(0, 0, 0, 0.2),
-      0 4px 0 rgba(0, 0, 0, 0.2),
-      0 5px 10px rgba(0, 0, 0, 0.3);
-  }
-
-  ${CardContainer}[data-state="visible-colored"][data-team="neutral"] > & {
-    background-color: rgba(139, 139, 139, 0.9);
-    color: #ffffff;
-    border: 3px solid #666666;
-    box-shadow:
-      0 1px 0 rgba(0, 0, 0, 0.2),
-      0 2px 0 rgba(0, 0, 0, 0.2),
-      0 3px 0 rgba(0, 0, 0, 0.2),
-      0 4px 0 rgba(0, 0, 0, 0.2),
-      0 5px 10px rgba(0, 0, 0, 0.3);
-  }
-
-  ${CardContainer}[data-state="visible-colored"][data-team="green"] > & {
-    background-color: rgba(51, 204, 51, 0.9);
-    color: #ffffff;
-    border: 3px solid #00cc00;
-    box-shadow:
-      0 0 25px rgba(51, 204, 51, 0.8),
-      0 0 50px rgba(51, 204, 51, 0.4),
-      0 1px 0 rgba(0, 0, 0, 0.2),
-      0 2px 0 rgba(0, 0, 0, 0.2),
-      0 3px 0 rgba(0, 0, 0, 0.2),
-      0 4px 0 rgba(0, 0, 0, 0.2),
-      0 5px 10px rgba(0, 0, 0, 0.3);
-  }
-
   /* Progressive enhancement for larger screens */
   @media (min-width: 481px) {
-    min-height: 70px;
     font-size: 0.8rem;
     letter-spacing: 0.08em;
     padding: 0.25rem;
     border-radius: 8px;
 
-    /* Enhanced shadow for tablets */
     box-shadow:
       0 1px 0 rgba(0, 0, 0, 0.2),
       0 2px 0 rgba(0, 0, 0, 0.2),
@@ -395,12 +273,10 @@ export const BaseCard = styled.div`
   }
 
   @media (min-width: 769px) {
-    min-height: 80px;
     font-size: 1rem;
     letter-spacing: 0.1em;
     padding: 0.5rem;
 
-    /* Full desktop shadow stack */
     box-shadow:
       0 1px 0 rgba(0, 0, 0, 0.2),
       0 2px 0 rgba(0, 0, 0, 0.2),
@@ -421,253 +297,50 @@ export const BaseCard = styled.div`
 
   @media (min-width: 1025px) {
     font-size: 1.2rem;
-    min-height: 100px;
   }
 `;
 
-// ===== OVERLAY (Cover Card) =====
-export const CardOverlay = styled.div`
+// ===== COVER CARD - Shows when card is selected/guessed =====
+export const CoverCard = styled.div`
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
+  background-color: var(--team-color);
   border-radius: 6px;
-  aspect-ratio: 2.4 / 3;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  transform-style: preserve-3d;
   z-index: ${Z_INDEX.CARD_COVERED};
-  opacity: 0;
-  pointer-events: none;
-
-  /* Simplified mobile shadow */
+  
+  /* Style based on team */
+  border: 2px solid var(--team-color);
   box-shadow:
     0 1px 0 rgba(0, 0, 0, 0.25),
     0 2px 0 rgba(0, 0, 0, 0.25),
     0 3px 5px rgba(0, 0, 0, 0.3);
 
-  /* Team-specific styles */
-  ${CardContainer}[data-team="red"] > & {
-    background-color: #ff3333;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-  }
-
-  ${CardContainer}[data-team="blue"] > & {
-    background-color: #3399ff;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-  }
-
-  ${CardContainer}[data-team="assassin"] > & {
-    background-color: #0a0a0a;
-    border: 2px solid #ffff00;
-    position: relative;
-
-    /* Electric border effect for assassin cards */
-    &::before {
-      background: linear-gradient(
-        90deg,
-        transparent 0%,
-        transparent 30%,
-        #ffff00 40%,
-        #00ffff 45%,
-        #ffff00 50%,
-        transparent 60%,
-        transparent 100%
-      );
-      background-size: 300% 100%;
-      background-position: -100% 50%;
-      inset: -2px;
-      z-index: -1;
-    }
-  }
-
-  ${CardContainer}[data-team="neutral"] > & {
-    background-color: #8b8b8b;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-  }
-
-  ${CardContainer}[data-team="green"] > & {
-    background-color: #33cc33;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-  }
-
-  /* Scan grid effect */
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 4px;
-    background-image:
-      repeating-linear-gradient(0deg, transparent 0, transparent 9px, rgba(0, 255, 136, 0.1) 10px),
-      repeating-linear-gradient(90deg, transparent 0, transparent 9px, rgba(0, 255, 136, 0.1) 10px);
-    border-radius: 6px;
-    pointer-events: none;
-    z-index: 1; /* Relative to overlay */
-    opacity: 0;
-    transition: opacity 0.5s ease;
-  }
-
-  /* Team symbol */
-  &::after {
-    content: var(--team-symbol, "");
-    font-size: 4rem;
-    font-weight: 900;
-    color: rgba(0, 0, 0, 0.4);
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 2; /* Relative to overlay */
-    pointer-events: none;
-    text-shadow:
-      1px 1px 0px rgba(255, 255, 255, 0.3),
-      -1px -1px 1px rgba(0, 0, 0, 0.8);
-    filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.5));
-  }
-
-  ${CardContainer}[data-team="assassin"] > &::after {
-    color: #ffff00;
-    text-shadow:
-      0 0 20px rgba(255, 255, 0, 0.8),
-      0 0 40px rgba(0, 255, 255, 0.6);
-    filter: drop-shadow(0 0 12px rgba(255, 255, 0, 0.8));
-    animation: ${electricFlicker} 2s ease-in-out infinite;
-  }
-
-  /* Enhanced effects when in spymaster view */
-  ${CardContainer}[data-state="visible-colored"] > & {
-    /* Show scan grid */
-    &::before {
-      opacity: 0.8;
-      animation: ${gridPulse} 2s ease-in-out infinite;
-    }
-
-    /* Enhanced shadow glow */
-    box-shadow:
-      0 0 30px var(--team-color),
-      0 0 60px var(--team-color),
-      inset 0 0 20px rgba(0, 255, 136, 0.1);
-
-    /* Glowing symbol */
-    &::after {
-      text-shadow:
-        0 0 20px currentColor,
-        0 0 40px currentColor;
-      filter: drop-shadow(0 0 10px currentColor);
-    }
-  }
-
-  /* Team-specific colored state enhancements */
-  ${CardContainer}[data-state="visible-colored"][data-team="red"] > & {
-    &::after {
-      color: rgba(255, 51, 51, 0.9);
-    }
-  }
-
-  ${CardContainer}[data-state="visible-colored"][data-team="blue"] > & {
-    &::after {
-      color: rgba(51, 153, 255, 0.9);
-    }
-  }
-
-  ${CardContainer}[data-state="visible-colored"][data-team="assassin"] > & {
-    border-color: #ffff00;
-    animation: ${dangerFlash} 1s ease-in-out infinite;
-  }
-
-  /* Covering animation */
-  ${CardContainer}[data-animation="cover-card"] > & {
-    animation: ${coverDealAnimation} 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-    opacity: 1;
-  }
-
-  /* Trigger electric sweep for assassin when covering */
-  ${CardContainer}[data-animation="cover-card"][data-team="assassin"] > &::before {
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      transparent 30%,
-      #ffff00 40%,
-      #00ffff 45%,
-      #ffff00 50%,
-      transparent 60%,
-      transparent 100%
-    );
-    background-size: 300% 100%;
-    background-position: -100% 50%;
-    animation: ${assassinSweep} 0.8s linear 0.7s forwards;
-    opacity: 1;
-    inset: -2px;
-    z-index: -1;
-  }
-
-  /* Covered state */
-  ${CardContainer}[data-state="visible-covered"] > & {
-    opacity: 1 !important;
-    pointer-events: all;
-  }
-
-  /* Enhanced styling for covered state */
-  ${CardContainer}[data-state="visible-covered"][data-team="red"] > & {
-    border: 2px solid #ff6666;
-    box-shadow:
-      0 0 25px rgba(255, 51, 51, 0.7),
-      0 1px 0 rgba(0, 0, 0, 0.25),
-      0 2px 0 rgba(0, 0, 0, 0.25),
-      0 3px 5px rgba(0, 0, 0, 0.3);
-  }
-
-  ${CardContainer}[data-state="visible-covered"][data-team="blue"] > & {
-    border: 2px solid #66b3ff;
-    box-shadow:
-      0 0 25px rgba(51, 153, 255, 0.7),
-      0 1px 0 rgba(0, 0, 0, 0.25),
-      0 2px 0 rgba(0, 0, 0, 0.25),
-      0 3px 5px rgba(0, 0, 0, 0.3);
-  }
-
-  ${CardContainer}[data-state="visible-covered"][data-team="assassin"] > & {
+  /* Special assassin styling */
+  ${CardContainer}[data-team="assassin"] & {
     border: 3px solid #ffff00;
     box-shadow:
-      0 0 25px rgba(255, 255, 0, 0.8),
-      0 0 50px rgba(255, 255, 0, 0.4),
-      0 1px 0 rgba(0, 0, 0, 0.25),
-      0 2px 0 rgba(0, 0, 0, 0.25),
-      0 3px 5px rgba(0, 0, 0, 0.3);
+      0 0 30px rgba(255, 255, 0, 0.8),
+      0 0 60px rgba(255, 255, 0, 0.4);
   }
 
-  ${CardContainer}[data-state="visible-covered"][data-team="neutral"] > & {
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow:
-      0 1px 0 rgba(0, 0, 0, 0.25),
-      0 2px 0 rgba(0, 0, 0, 0.25),
-      0 3px 5px rgba(0, 0, 0, 0.3);
-  }
-
-  /* Progressive enhancement for larger screens */
+  /* Progressive enhancement */
   @media (min-width: 481px) {
     border-radius: 8px;
-
-    /* Enhanced shadow */
+    
     box-shadow:
       0 1px 0 rgba(0, 0, 0, 0.25),
       0 2px 0 rgba(0, 0, 0, 0.25),
       0 3px 0 rgba(0, 0, 0, 0.25),
       0 4px 0 rgba(0, 0, 0, 0.25),
       0 5px 10px rgba(0, 0, 0, 0.4);
-
-    &::after {
-      font-size: 4rem;
-      color: rgba(0, 0, 0, 0.7);
-    }
   }
 
   @media (min-width: 769px) {
     border-radius: 12px;
-
-    /* Full desktop shadow stack */
+    
     box-shadow:
       0 1px 0 rgba(0, 0, 0, 0.25),
       0 2px 0 rgba(0, 0, 0, 0.25),
@@ -678,16 +351,70 @@ export const CardOverlay = styled.div`
       0 7px 0 rgba(0, 0, 0, 0.25),
       0 8px 0 rgba(0, 0, 0, 0.25),
       0 10px 20px rgba(0, 0, 0, 0.4);
-
-    &::after {
-      font-size: 6rem;
-      color: rgba(0, 0, 0, 0.8);
-      filter: drop-shadow(1px 1px 1px rgba(255, 255, 255, 0.1))
-        drop-shadow(-1px -1px 1px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 8px rgba(0, 0, 0, 0.6));
-    }
   }
 `;
 
+// ===== SPYMASTER OVERLAY - All AR/spymaster visual elements =====
+export const SpymasterOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: ${Z_INDEX.SPYMASTER_AR_OVERLAY};
+`;
+
+// Spymaster child: Semi-transparent team color
+export const TeamColorFilter = styled.div`
+  position: absolute;
+  inset: 0;
+  background-color: var(--team-color);
+  opacity: 0.15;
+  border-radius: 6px;
+
+  @media (min-width: 481px) {
+    border-radius: 8px;
+  }
+
+  @media (min-width: 769px) {
+    border-radius: 12px;
+  }
+`;
+
+// Spymaster child: Scan grid
+export const ScanGrid = styled.div`
+  position: absolute;
+  inset: 4px;
+  background-image: 
+    repeating-linear-gradient(0deg, transparent 0, transparent 9px, rgba(0, 255, 136, 0.1) 10px),
+    repeating-linear-gradient(90deg, transparent 0, transparent 9px, rgba(0, 255, 136, 0.1) 10px);
+  border-radius: 4px;
+  opacity: 0.8;
+  animation: ${gridPulse} 2s ease-in-out infinite;
+
+  @media (min-width: 481px) {
+    border-radius: 6px;
+  }
+
+  @media (min-width: 769px) {
+    border-radius: 8px;
+  }
+`;
+
+// Spymaster child: Team classification badge  
+export const TeamBadge = styled.div`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid var(--team-color);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--team-color);
+`;
+
+// ===== SHARED: Card word (used by both NormalCard and CoverCard) =====
 export const CardWord = styled.span`
   position: absolute;
   top: 50%;
@@ -702,17 +429,57 @@ export const CardWord = styled.span`
   overflow-wrap: break-word;
   margin: 0;
   padding: 0 0.5rem;
-  z-index: 3; /* Above texture but below overlay */
+  z-index: 3;
 
   /* Mobile text shadow */
   text-shadow:
     0.5px 0.5px 0px rgba(255, 255, 255, 0.15),
     -0.5px -0.5px 0.5px rgba(0, 0, 0, 0.4);
 
-  /* Progressive enhancement for desktop text effects */
+  /* Progressive enhancement for desktop */
   @media (min-width: 769px) {
     padding: 0 1rem;
     filter: drop-shadow(0.5px 0.5px 0.5px rgba(255, 255, 255, 0.05))
       drop-shadow(-0.5px -0.5px 0.5px rgba(0, 0, 0, 0.2));
+  }
+`;
+
+// ===== SHARED: Team symbol (used by CoverCard) =====
+export const TeamSymbol = styled.div`
+  position: absolute;
+  font-size: 4rem;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.4);
+  z-index: 1;
+  text-shadow:
+    1px 1px 0px rgba(255, 255, 255, 0.3),
+    -1px -1px 1px rgba(0, 0, 0, 0.8);
+  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.5));
+  
+  &::before {
+    content: var(--team-symbol);
+  }
+
+  /* Special assassin styling */
+  ${CardContainer}[data-team="assassin"] & {
+    color: #ffff00;
+    text-shadow:
+      0 0 20px rgba(255, 255, 0, 0.8),
+      0 0 40px rgba(0, 255, 255, 0.6);
+    filter: drop-shadow(0 0 12px rgba(255, 255, 0, 0.8));
+    animation: ${electricFlicker} 2s ease-in-out infinite;
+  }
+
+  @media (min-width: 481px) {
+    font-size: 4rem;
+    color: rgba(0, 0, 0, 0.7);
+  }
+
+  @media (min-width: 769px) {
+    font-size: 6rem;
+    color: rgba(0, 0, 0, 0.8);
+    filter: drop-shadow(1px 1px 1px rgba(255, 255, 255, 0.1))
+      drop-shadow(-1px -1px 1px rgba(0, 0, 0, 0.4)) 
+      drop-shadow(0 0 8px rgba(0, 0, 0, 0.6));
   }
 `;
