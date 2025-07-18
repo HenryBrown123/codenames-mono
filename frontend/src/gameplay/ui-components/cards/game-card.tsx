@@ -88,7 +88,7 @@ export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable }
           <SpymasterSymbol />
           <CardWord>{card.word}</CardWord>
           <TeamBadge>{teamType.toUpperCase()}</TeamBadge>
-          {true && (
+          {isCurrentTeam && (
             <CardARCorners>
               <CardARCorner $position="tl" />
               <CardARCorner $position="tr" />

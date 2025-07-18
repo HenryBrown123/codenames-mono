@@ -385,7 +385,7 @@ export const SpymasterOverlay = styled.div`
   pointer-events: none;
   z-index: ${Z_INDEX.SPYMASTER_AR_OVERLAY};
   border-radius: 6px;
-  overflow: hidden;
+  overflow: visible; /* Changed from hidden to visible */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -636,29 +636,30 @@ export const SpymasterSymbol = styled.div`
 
 export const CardARCorners = styled.div`
   position: absolute;
-  inset: -8px;
+  inset: -3px;
   pointer-events: none;
-  z-index: ${Z_INDEX.SPYMASTER_AR_HUD};
+  z-index: 20;
   opacity: 1;
   transition: opacity 0.3s ease;
 
   @media (min-width: 481px) {
-    inset: -10px;
+    inset: -4px;
   }
 
   @media (min-width: 769px) {
-    inset: -12px;
+    inset: -5px;
   }
 `;
 
 export const CardARCorner = styled.div<{
   $position: "tl" | "tr" | "bl" | "br";
+  $isCurrentTeam?: boolean;
 }>`
   position: absolute;
   width: 20px;
   height: 20px;
   border: 3px solid #00ff88;
-  opacity: 1;
+  filter: drop-shadow(0 0 10px #00ff88) drop-shadow(0 0 20px #00ff88);
 
   ${(props) => {
     switch (props.$position) {
@@ -694,6 +695,7 @@ export const CardARCorner = styled.div<{
         return "";
     }
   }}
+
   @media (min-width: 481px) {
     width: 25px;
     height: 25px;
@@ -723,6 +725,7 @@ export const CardWord = styled.span`
   letter-spacing: 0.02em;
   text-transform: uppercase;
   transition: opacity 0.3s ease;
+  color: #0d0d13;
 
   /* Base card text */
   &.card-word {
@@ -738,7 +741,6 @@ export const CardWord = styled.span`
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color: #00ff88; /* Hacker green */
     font-size: clamp(1.2rem, 3.5vw, 1.6rem);
     text-shadow:
       0 0 10px rgba(0, 255, 136, 0.8),
