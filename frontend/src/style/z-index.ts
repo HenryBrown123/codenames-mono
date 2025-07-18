@@ -7,6 +7,9 @@ export const Z_INDEX = {
   
   // Game board elements
   CARD_BASE: 1,
+  CARD_TEXTURE: 2,      // NEW: Paper texture overlay
+  CARD_WORD: 3,         // NEW: Card text layer
+  CARD_RIPPLE: 5,       // NEW: Click ripple effect
   CARD_COVERED: 10,
   CARD_ANIMATING: 15,
   
