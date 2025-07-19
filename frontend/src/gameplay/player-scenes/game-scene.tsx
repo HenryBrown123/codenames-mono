@@ -10,7 +10,7 @@ import { ActionButton } from "../shared/components";
 import { Z_INDEX } from "@frontend/style/z-index";
 import { CodeWordInput } from "../ui-components/dashboards/codemaster-input";
 import { useGameActions } from "../player-actions";
-import { CardVisibilityProvider } from "../ui-components/cards/card-visibility-provider";
+import { CardVisibilityProvider, useCardVisibilityContext } from "../ui-components/cards/card-visibility-provider";
 
 const hackerPulse = keyframes`
   0%, 100% {
@@ -534,7 +534,7 @@ const GameBoardContainer = styled.div`
 /**
  * MOBILE-FIRST: Dashboard with fixed positioning approach / Terminal styling for desktop
  */
-const DashboardContainer = styled.div<{ $role?: string }>`
+const DashboardContainer = styled.div<{ $role?: string; $arActive?: boolean }>`
   /* Mobile styles - fixed dashboard at bottom */
   position: fixed;
   bottom: 0;
@@ -589,6 +589,13 @@ const DashboardContainer = styled.div<{ $role?: string }>`
     box-shadow: 
       0 0 20px rgba(0, 255, 136, 0.3),
       inset 0 0 20px rgba(0, 255, 136, 0.05);
+    
+    /* Add subtle glow when AR is active */
+    ${props => props.$arActive && `
+      box-shadow: 
+        0 0 30px rgba(0, 255, 136, 0.4),
+        inset 0 0 20px rgba(0, 255, 136, 0.05);
+    `}
 
     /* Terminal header bar */
     &::before {
@@ -597,12 +604,12 @@ const DashboardContainer = styled.div<{ $role?: string }>`
         return `${role} TERMINAL`;
       }}";
       display: block;
-      padding: 0.5rem 1rem;
+      padding: 1rem 1.5rem;  /* BIGGER padding */
       background: var(--color-primary, #00ff88);
       color: #000;
-      font-size: 0.8rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
+      font-size: 1.1rem;  /* BIGGER text */
+      font-weight: 900;
+      letter-spacing: 0.15em;
       text-transform: uppercase;
       animation: none;
       position: static;
@@ -646,6 +653,48 @@ const ErrorContainer = styled.div`
   text-align: center;
   color: white;
 `;
+
+/**
+ * Desktop Game Scene component that can access card visibility context
+ */
+const DesktopGameScene: React.FC<{
+  isFetching: boolean;
+  currentRole: string;
+  messageText: string;
+  showCluePanel: boolean;
+  setShowCluePanel: (show: boolean) => void;
+  DashboardComponent: React.ComponentType<any>;
+  BoardComponent: React.ComponentType<any>;
+}> = ({ 
+  isFetching, 
+  currentRole, 
+  messageText, 
+  showCluePanel, 
+  setShowCluePanel, 
+  DashboardComponent, 
+  BoardComponent 
+}) => {
+  const { viewMode } = useCardVisibilityContext();
+  const isARActive = viewMode === "spymaster";
+
+  return (
+    <GameSceneContainer>
+      <SidebarContainer>
+        <DashboardContainer $role={currentRole} $arActive={isARActive}>
+          {isFetching && <RefetchIndicator />}
+          <DashboardComponent 
+            onOpenCluePanel={() => setShowCluePanel(true)} 
+            messageText={messageText}
+          />
+        </DashboardContainer>
+      </SidebarContainer>
+
+      <GameBoardContainer>
+        <BoardComponent />
+      </GameBoardContainer>
+    </GameSceneContainer>
+  );
+};
 
 /**
  * Game Scene Component with mobile-first collapsible instructions
@@ -726,21 +775,15 @@ export const GameScene: React.FC = () => {
     // Sidebar layout for tablet landscape and desktop
     return (
       <CardVisibilityProvider cards={cards} initialState={isRoundSetup ? "hidden" : "visible"}>
-        <GameSceneContainer>
-          <SidebarContainer>
-            <DashboardContainer $role={currentRole}>  {/* ADDED $role prop */}
-              {isFetching && <RefetchIndicator />}
-              <DashboardComponent 
-                onOpenCluePanel={() => setShowCluePanel(true)} 
-                messageText={messageText}
-              />
-            </DashboardContainer>
-          </SidebarContainer>
-
-          <GameBoardContainer>
-            <BoardComponent />
-          </GameBoardContainer>
-        </GameSceneContainer>
+        <DesktopGameScene
+          isFetching={isFetching}
+          currentRole={currentRole}
+          messageText={messageText}
+          showCluePanel={showCluePanel}
+          setShowCluePanel={setShowCluePanel}
+          DashboardComponent={DashboardComponent}
+          BoardComponent={BoardComponent}
+        />
       </CardVisibilityProvider>
     );
   }
