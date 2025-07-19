@@ -44,6 +44,7 @@ const Container = styled.div`
   right: 0;
   top: 0;
   display: flex;
+  min-width: 0;
   flex-direction: column;
   height: 100vh;
   background-size: cover;
@@ -116,11 +117,7 @@ const TeamsGrid = styled.div`
 `;
 
 const TeamTile = styled.div<{ teamColor: string; isDragOver?: boolean }>`
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.1),
-    rgba(255, 255, 255, 0.05)
-  );
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
   border: 3px solid ${(props) => props.teamColor};
   border-radius: 20px;
   padding: 2rem;
@@ -377,7 +374,7 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
   const navigate = useNavigate();
   const [editingPlayer, setEditingPlayer] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
-  
+
   // React Query hooks
   const { data: lobbyData, isLoading: initialLoading, error: queryError } = useLobbyQuery(gameId);
   const addPlayerMutation = useAddPlayer(gameId);
@@ -385,20 +382,22 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
   const renamePlayerMutation = useRenamePlayer(gameId);
   const movePlayerMutation = useMovePlayerToTeam(gameId);
   const startGameMutation = useStartGame(gameId);
-  
+
   // Derived loading and error states
-  const isLoading = addPlayerMutation.isPending || 
-                   removePlayerMutation.isPending || 
-                   renamePlayerMutation.isPending || 
-                   movePlayerMutation.isPending || 
-                   startGameMutation.isPending;
-                   
-  const error = queryError?.message || 
-               addPlayerMutation.error?.message || 
-               removePlayerMutation.error?.message || 
-               renamePlayerMutation.error?.message || 
-               movePlayerMutation.error?.message || 
-               startGameMutation.error?.message;
+  const isLoading =
+    addPlayerMutation.isPending ||
+    removePlayerMutation.isPending ||
+    renamePlayerMutation.isPending ||
+    movePlayerMutation.isPending ||
+    startGameMutation.isPending;
+
+  const error =
+    queryError?.message ||
+    addPlayerMutation.error?.message ||
+    removePlayerMutation.error?.message ||
+    renamePlayerMutation.error?.message ||
+    movePlayerMutation.error?.message ||
+    startGameMutation.error?.message;
 
   // Separate input state for each team
   const [teamRedInput, setTeamRedInput] = useState("");
@@ -425,19 +424,14 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
 
   // Calculate stats - add safety checks
   const totalPlayers =
-    currentLobbyData?.teams?.reduce(
-      (sum, team) => sum + (team?.players?.length || 0),
-      0,
-    ) || 0;
+    currentLobbyData?.teams?.reduce((sum, team) => sum + (team?.players?.length || 0), 0) || 0;
   const canStartGame =
     totalPlayers >= 4 &&
-    (currentLobbyData?.teams?.every((team) => (team?.players?.length || 0) >= 2) ||
-      false);
+    (currentLobbyData?.teams?.every((team) => (team?.players?.length || 0) >= 2) || false);
 
   const handleQuickAdd = (teamName: string) => {
     // Get the correct input value based on team
-    const playerName =
-      teamName === "Team Red" ? teamRedInput.trim() : teamBlueInput.trim();
+    const playerName = teamName === "Team Red" ? teamRedInput.trim() : teamBlueInput.trim();
     if (!playerName) return;
 
     addPlayerMutation.mutate(
@@ -451,7 +445,7 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
             setTeamBlueInput("");
           }
         },
-      }
+      },
     );
   };
 
@@ -474,7 +468,7 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
           setEditingPlayer(null);
           setEditName("");
         },
-      }
+      },
     );
   };
 
@@ -489,11 +483,7 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
   };
 
   // Drag and drop handlers
-  const handleDragStart = (
-    e: React.DragEvent,
-    player: LobbyPlayer,
-    fromTeam: string,
-  ) => {
+  const handleDragStart = (e: React.DragEvent, player: LobbyPlayer, fromTeam: string) => {
     setDraggedPlayer({ player, fromTeam });
     e.dataTransfer.effectAllowed = "move";
   };
@@ -529,7 +519,7 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
         onError: () => {
           setDraggedPlayer(null);
         },
-      }
+      },
     );
   };
 
@@ -600,25 +590,14 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
           {currentLobbyData?.teams?.map((team) => (
             <TeamTile
               key={team.name}
-              teamColor={
-                teamColors[team.name as keyof typeof teamColors] || "#6b7280"
-              }
+              teamColor={teamColors[team.name as keyof typeof teamColors] || "#6b7280"}
               isDragOver={dragOverTeam === team.name}
               onDragOver={(e) => handleDragOver(e, team.name)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, team.name)}
             >
-              <TeamHeader
-                teamColor={
-                  teamColors[team.name as keyof typeof teamColors] || "#6b7280"
-                }
-              >
-                <TeamName
-                  teamColor={
-                    teamColors[team.name as keyof typeof teamColors] ||
-                    "#6b7280"
-                  }
-                >
+              <TeamHeader teamColor={teamColors[team.name as keyof typeof teamColors] || "#6b7280"}>
+                <TeamName teamColor={teamColors[team.name as keyof typeof teamColors] || "#6b7280"}>
                   {team.name}
                 </TeamName>
                 <PlayerCount>{team?.players?.length || 0} players</PlayerCount>
@@ -629,9 +608,7 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
                   <PlayerTile
                     key={player.publicId}
                     draggable
-                    isDragging={
-                      draggedPlayer?.player.publicId === player.publicId
-                    }
+                    isDragging={draggedPlayer?.player.publicId === player.publicId}
                     onDragStart={(e) => handleDragStart(e, player, team.name)}
                     onDragEnd={handleDragEnd}
                   >
@@ -644,31 +621,21 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
                         autoFocus
                       />
                     ) : (
-                      <PlayerName>
-                        {player?.name || "Unknown Player"}
-                      </PlayerName>
+                      <PlayerName>{player?.name || "Unknown Player"}</PlayerName>
                     )}
 
                     <PlayerActions>
                       {editingPlayer === player.publicId ? (
-                        <ActionIcon
-                          onClick={handleSaveEdit}
-                          disabled={isLoading}
-                        >
+                        <ActionIcon onClick={handleSaveEdit} disabled={isLoading}>
                           <Check size={16} />
                         </ActionIcon>
                       ) : (
-                        <ActionIcon
-                          onClick={() => handleEditPlayer(player)}
-                          disabled={isLoading}
-                        >
+                        <ActionIcon onClick={() => handleEditPlayer(player)} disabled={isLoading}>
                           <Edit2 size={16} />
                         </ActionIcon>
                       )}
                       <ActionIcon
-                        onClick={() =>
-                          handleRemovePlayer(player?.publicId || "")
-                        }
+                        onClick={() => handleRemovePlayer(player?.publicId || "")}
                         disabled={isLoading}
                       >
                         <X size={16} />
@@ -681,9 +648,7 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
               <AddPlayerArea>
                 <AddInput
                   placeholder="Enter player name..."
-                  value={
-                    team.name === "Team Red" ? teamRedInput : teamBlueInput
-                  }
+                  value={team.name === "Team Red" ? teamRedInput : teamBlueInput}
                   onChange={(e) => {
                     if (team.name === "Team Red") {
                       setTeamRedInput(e.target.value);
@@ -691,22 +656,15 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
                       setTeamBlueInput(e.target.value);
                     }
                   }}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && handleQuickAdd(team.name)
-                  }
+                  onKeyDown={(e) => e.key === "Enter" && handleQuickAdd(team.name)}
                   disabled={isLoading}
                 />
                 <AddButton
-                  teamColor={
-                    teamColors[team.name as keyof typeof teamColors] ||
-                    "#6b7280"
-                  }
+                  teamColor={teamColors[team.name as keyof typeof teamColors] || "#6b7280"}
                   onClick={() => handleQuickAdd(team.name)}
                   disabled={
                     isLoading ||
-                    (team.name === "Team Red"
-                      ? !teamRedInput.trim()
-                      : !teamBlueInput.trim())
+                    (team.name === "Team Red" ? !teamRedInput.trim() : !teamBlueInput.trim())
                   }
                 >
                   <Plus size={20} />

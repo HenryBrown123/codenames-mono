@@ -34,6 +34,7 @@ const MessageContainer = styled.div`
   width: 100%;
   text-align: center;
   display: flex;
+  min-width: 0;
   align-items: center;
   justify-content: center;
   position: relative;
@@ -92,7 +93,7 @@ export const GameInstructions: React.FC<GameInstructionsProps> = ({ messageText 
   useEffect(() => {
     setDisplayedText("");
     setIsTyping(true);
-    
+
     let index = 0;
     const typeInterval = setInterval(() => {
       if (index < messageText.length) {

@@ -14,7 +14,7 @@ import {
   SpymasterSymbol,
   CardWord,
   TeamSymbol,
-} from "./card-styles";
+} from "./styles";
 import { getTeamType, getCardColor } from "./card-utils";
 import { useGameDataRequired } from "../../shared/providers";
 

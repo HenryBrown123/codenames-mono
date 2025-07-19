@@ -10,7 +10,10 @@ import { ActionButton } from "../shared/components";
 import { Z_INDEX } from "@frontend/style/z-index";
 import { CodeWordInput } from "../ui-components/dashboards/codemaster-input";
 import { useGameActions } from "../player-actions";
-import { CardVisibilityProvider, useCardVisibilityContext } from "../ui-components/cards/card-visibility-provider";
+import {
+  CardVisibilityProvider,
+  useCardVisibilityContext,
+} from "../ui-components/cards/card-visibility-provider";
 
 const hackerPulse = keyframes`
   0%, 100% {
@@ -487,7 +490,6 @@ const CluePanelBackdrop = styled.div<{ $isVisible: boolean }>`
   }
 `;
 
-
 /**
  * MOBILE-FIRST: Sidebar container for larger screens
  */
@@ -586,12 +588,14 @@ const DashboardContainer = styled.div<{ $role?: string; $arActive?: boolean }>`
     flex-direction: column;
     font-family: "JetBrains Mono", monospace;
     overflow: hidden;
-    box-shadow: 
+    box-shadow:
       0 0 20px rgba(0, 255, 136, 0.3),
       inset 0 0 20px rgba(0, 255, 136, 0.05);
-    
+
     /* Add subtle glow when AR is active */
-    ${props => props.$arActive && `
+    ${(props) =>
+      props.$arActive &&
+      `
       box-shadow: 
         0 0 30px rgba(0, 255, 136, 0.4),
         inset 0 0 20px rgba(0, 255, 136, 0.05);
@@ -599,15 +603,19 @@ const DashboardContainer = styled.div<{ $role?: string; $arActive?: boolean }>`
 
     /* Terminal header bar */
     &::before {
-      content: "${props => {
-        const role = props.$role?.toUpperCase() || 'OPERATIVE';
+      content: "${(props) => {
+        const role = props.$role?.toUpperCase() || "OPERATIVE";
         return `${role} TERMINAL`;
       }}";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
       display: block;
-      padding: 1rem 1.5rem;  /* BIGGER padding */
+      padding: 1rem 1.5rem; /* BIGGER padding */
       background: var(--color-primary, #00ff88);
       color: #000;
-      font-size: 1.1rem;  /* BIGGER text */
+      font-size: 1.1rem; /* BIGGER text */
       font-weight: 900;
       letter-spacing: 0.15em;
       text-transform: uppercase;
@@ -665,14 +673,14 @@ const DesktopGameScene: React.FC<{
   setShowCluePanel: (show: boolean) => void;
   DashboardComponent: React.ComponentType<any>;
   BoardComponent: React.ComponentType<any>;
-}> = ({ 
-  isFetching, 
-  currentRole, 
-  messageText, 
-  showCluePanel, 
-  setShowCluePanel, 
-  DashboardComponent, 
-  BoardComponent 
+}> = ({
+  isFetching,
+  currentRole,
+  messageText,
+  showCluePanel,
+  setShowCluePanel,
+  DashboardComponent,
+  BoardComponent,
 }) => {
   const { viewMode } = useCardVisibilityContext();
   const isARActive = viewMode === "spymaster";
@@ -682,8 +690,8 @@ const DesktopGameScene: React.FC<{
       <SidebarContainer>
         <DashboardContainer $role={currentRole} $arActive={isARActive}>
           {isFetching && <RefetchIndicator />}
-          <DashboardComponent 
-            onOpenCluePanel={() => setShowCluePanel(true)} 
+          <DashboardComponent
+            onOpenCluePanel={() => setShowCluePanel(true)}
             messageText={messageText}
           />
         </DashboardContainer>

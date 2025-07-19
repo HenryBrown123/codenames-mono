@@ -7,17 +7,17 @@ import { ActionButton } from "../../shared/components";
 import { useCardVisibilityContext } from "../cards/card-visibility-provider";
 import { ARRevealButton } from "./ar-reveal-button";
 import { ARToggleSwitch } from "./ar-toggle-switch";
-import { 
-  TerminalContent, 
-  TerminalSection, 
-  TerminalPrompt, 
-  TerminalCommand, 
+import {
+  TerminalContent,
+  TerminalSection,
+  TerminalPrompt,
+  TerminalCommand,
   TerminalDivider,
   CompactTerminalActions,
   ARStatusBar,
   TerminalOutput,
   TerminalToggleRow,
-  ToggleHint
+  ToggleHint,
 } from "./terminal-components";
 
 /**
@@ -51,7 +51,7 @@ const Container = styled.div`
  */
 const MobileARToggle = styled(ARRevealButton)`
   position: relative;
-  
+
   /* Hide on desktop */
   @media (min-width: 769px) and (orientation: landscape) {
     display: none;
@@ -81,7 +81,7 @@ const DesktopContainer = styled.div`
 const DesktopARToggle = styled(ARRevealButton)`
   /* Only show on desktop */
   display: none;
-  
+
   @media (min-width: 769px) and (orientation: landscape) {
     display: block;
     position: relative;
@@ -95,10 +95,10 @@ const DesktopARToggle = styled(ARRevealButton)`
  */
 const MobileTransmitButton = styled(ActionButton)`
   position: relative;
-  
+
   /* Visual drag indicator like a handle */
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: -8px;
     left: 50%;
@@ -109,7 +109,7 @@ const MobileTransmitButton = styled(ActionButton)`
     border-radius: 2px;
     box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
   }
-  
+
   /* Hide on desktop */
   @media (min-width: 769px) and (orientation: landscape) {
     display: none;
@@ -124,9 +124,9 @@ interface CodemasterDashboardProps {
 /**
  * Codemaster Dashboard - AR toggle + clue transmission
  */
-export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({ 
+export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
   onOpenCluePanel,
-  messageText 
+  messageText,
 }) => {
   const { giveClue, actionState } = useGameActions();
   const { activeTurn } = useTurn();
@@ -163,28 +163,25 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
   React.useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       // Alt+A or Cmd+A toggles AR
-      if ((e.altKey || e.metaKey) && e.key === 'a') {
+      if ((e.altKey || e.metaKey) && e.key === "a") {
         e.preventDefault();
         handleARToggle();
       }
     };
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
   }, [handleARToggle]);
 
   return (
     <>
       {/* Mobile view stays the same */}
       <Container className="mobile-only">
-        <MobileARToggle 
-          arMode={isARMode} 
-          onClick={handleARToggle}
-        >
+        <MobileARToggle arMode={isARMode} onClick={handleARToggle}>
           {isARMode ? "AR ON" : "REVEAL"}
         </MobileARToggle>
-        
-        <MobileTransmitButton 
+
+        <MobileTransmitButton
           onClick={onOpenCluePanel || (() => {})}
           text="SUBMIT CLUE"
           enabled={actionState.status !== "loading"}
@@ -204,21 +201,18 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
 
         <TerminalSection>
           <TerminalCommand>INTEL TRANSMISSION</TerminalCommand>
-          
+
           {/* Toggle on its own line with better spacing */}
           <TerminalToggleRow>
             <ARToggleSwitch active={isARMode} onChange={handleARToggle} />
             <ToggleHint>(Alt+A)</ToggleHint>
           </TerminalToggleRow>
-          
+
           <ARStatusBar $active={isARMode}>
-            {isARMode 
-              ? "Operative positions revealed" 
-              : "Activate AR to reveal positions"
-            }
+            {isARMode ? "Operative positions revealed" : "Activate AR to reveal positions"}
           </ARStatusBar>
         </TerminalSection>
-
+        <TerminalDivider />
         {/* Spacer to center the input area */}
         <div style={{ flex: 1 }} />
 

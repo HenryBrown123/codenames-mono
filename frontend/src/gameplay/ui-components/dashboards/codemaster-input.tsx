@@ -4,46 +4,43 @@ import { ActionButton } from "../../shared/components";
 import { useGameDataRequired } from "../../shared/providers";
 import { Card } from "@frontend/shared-types";
 
+/* --- Responsive, Overflow-Safe Styled Components --- */
 const Container = styled.div`
   display: flex;
-  flex-direction: column;  /* CHANGED: Always stack on mobile */
+  flex-direction: column;
   align-items: center;
   gap: 1rem;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   position: relative;
-
-  /* Vertical in sidebar */
-  @media (min-width: 769px) and (orientation: landscape) {
-    flex-direction: column;
-    gap: 2rem;  /* BIGGER gap */
-  }
 `;
 
 const InputContainer = styled.div`
   display: flex;
+  min-width: 0;
+  min-height: 0;
   flex-wrap: nowrap;
   align-items: center;
-  justify-content: center;  /* CHANGED: Center on mobile */
+  justify-content: center;
   gap: 0.5rem;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   text-align: center;
-  font-size: clamp(1.4rem, 4vw, 2.5rem);  /* BIGGER on mobile */
+  font-size: clamp(1.2rem, 3.5vw, 2rem);
   background-color: transparent;
   border-radius: 8px;
-  padding: 1rem;
+  padding: 0.5rem 0.5rem;
 
-  /* Stack in sidebar */
   @media (min-width: 769px) and (orientation: landscape) {
     flex-direction: column;
-    text-align: center;
-    width: 100%;
-    font-size: clamp(1.8rem, 2.5vw, 2.5rem);  /* MUCH BIGGER */
-    gap: 1rem;  /* More space between elements */
+    font-size: clamp(1.4rem, 2.5vw, 2.2rem);
+    gap: 1rem;
   }
 
-  @media (max-width: 768px) {
-    font-size: clamp(1.2rem, 3.5vw, 1.8rem);  /* BIGGER on small screens */
-    padding: 0.75rem;
+  @media (max-width: 480px) {
+    padding: 0.25rem;
   }
 `;
 
@@ -51,12 +48,15 @@ const InlineGroup = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 100%;
 `;
 
 const InlineText = styled.span`
   font-size: inherit;
   color: ${({ theme }) => theme.text};
+  white-space: nowrap;
 `;
 
 const UnderlinedTextInput = styled.input<{ isError: boolean }>`
@@ -67,9 +67,13 @@ const UnderlinedTextInput = styled.input<{ isError: boolean }>`
   background: transparent;
   outline: none;
   text-align: center;
-  width: auto;
+  width: 100%;
+  max-width: 150px;
   min-width: 60px;
   color: ${({ theme }) => theme.text};
+  box-sizing: border-box;
+  overflow-x: auto;
+  white-space: nowrap;
 
   &:focus {
     border-bottom: 2px solid ${({ isError, theme }) => (isError ? theme.error : theme.primary)};
@@ -78,6 +82,7 @@ const UnderlinedTextInput = styled.input<{ isError: boolean }>`
 
 const UnderlinedNumberInput = styled(UnderlinedTextInput)`
   min-width: 30px;
+  max-width: 60px;
 `;
 
 const ErrorMessage = styled.div`
@@ -91,6 +96,7 @@ const ErrorMessage = styled.div`
   bottom: -2rem;
   left: 0;
   right: 0;
+  max-width: 100%;
 
   @media (max-width: 480px) {
     position: static;
@@ -98,8 +104,7 @@ const ErrorMessage = styled.div`
   }
 `;
 
-
-
+/* --- Main Component --- */
 type CodeWordInputProps = {
   codeWord?: string;
   numberOfCards: number | null;
@@ -180,12 +185,13 @@ export function CodeWordInput({
           <UnderlinedTextInput
             ref={textInputRef}
             type="text"
-            value={inputCodeWord ?? undefined}
+            value={inputCodeWord ?? ""}
             onChange={(e) => setInputCodeWord(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={!isEditable || isLoading}
             isError={hasError}
             placeholder="word"
+            autoComplete="off"
           />
         </InlineGroup>
         <InlineGroup>
