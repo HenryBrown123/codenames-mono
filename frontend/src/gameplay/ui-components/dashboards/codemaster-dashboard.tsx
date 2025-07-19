@@ -6,15 +6,18 @@ import { useTurn } from "../../shared/providers";
 import { ActionButton } from "../../shared/components";
 import { useCardVisibilityContext } from "../cards/card-visibility-provider";
 import { ARRevealButton } from "./ar-reveal-button";
+import { ARToggleSwitch } from "./ar-toggle-switch";
 import { 
   TerminalContent, 
   TerminalSection, 
   TerminalPrompt, 
   TerminalCommand, 
-  TerminalStatus,
   TerminalDivider,
-  TerminalActions,
-  TerminalOutput
+  CompactTerminalActions,
+  ARStatusBar,
+  TerminalOutput,
+  TerminalToggleRow,
+  ToggleHint
 } from "./terminal-components";
 
 /**
@@ -156,42 +159,39 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
 
   const isARMode = viewMode === "spymaster";
 
+  // Add keyboard shortcut for power users
+  React.useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Alt+A or Cmd+A toggles AR
+      if ((e.altKey || e.metaKey) && e.key === 'a') {
+        e.preventDefault();
+        handleARToggle();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [handleARToggle]);
+
   return (
     <>
       {/* Mobile view stays the same */}
       <Container className="mobile-only">
-        {/* Mobile: Show either AR toggle OR transmit button based on AR state */}
-        {!isARMode && (
-          <MobileARToggle arMode={false} onClick={handleARToggle}>
-            REVEAL
-          </MobileARToggle>
-        )}
+        <MobileARToggle 
+          arMode={isARMode} 
+          onClick={handleARToggle}
+        >
+          {isARMode ? "AR ON" : "REVEAL"}
+        </MobileARToggle>
         
-        {isARMode && (
-          <MobileTransmitButton 
-            onClick={onOpenCluePanel || (() => {})}
-            text="SUBMIT CLUE"
-            enabled={actionState.status !== "loading"}
-          />
-        )}
-
-        {/* Desktop: Show both buttons */}
-        <DesktopContainer>
-          <DesktopARToggle arMode={isARMode} onClick={handleARToggle}>
-            {isARMode ? "DISABLE AR" : "REVEAL"}
-          </DesktopARToggle>
-          
-          <CodeWordInput
-            codeWord=""
-            numberOfCards={null}
-            isEditable={true}
-            isLoading={actionState.status === "loading"}
-            onSubmit={handleDesktopSubmit}
-          />
-        </DesktopContainer>
+        <MobileTransmitButton 
+          onClick={onOpenCluePanel || (() => {})}
+          text="SUBMIT CLUE"
+          enabled={actionState.status !== "loading"}
+        />
       </Container>
 
-      {/* Desktop terminal view */}
+      {/* Desktop terminal view - REDESIGNED */}
       <TerminalContent className="desktop-only">
         <TerminalSection>
           <TerminalCommand>MISSION STATUS</TerminalCommand>
@@ -204,33 +204,34 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
 
         <TerminalSection>
           <TerminalCommand>INTEL TRANSMISSION</TerminalCommand>
-          {!isARMode && (
-            <TerminalStatus>
-              AR vision disabled. Activate to reveal operative positions.
-            </TerminalStatus>
-          )}
-          {isARMode && (
-            <TerminalStatus $type="success">
-              AR vision active. Operative positions revealed.
-            </TerminalStatus>
-          )}
+          
+          {/* Toggle on its own line with better spacing */}
+          <TerminalToggleRow>
+            <ARToggleSwitch active={isARMode} onChange={handleARToggle} />
+            <ToggleHint>(Alt+A)</ToggleHint>
+          </TerminalToggleRow>
+          
+          <ARStatusBar $active={isARMode}>
+            {isARMode 
+              ? "Operative positions revealed" 
+              : "Activate AR to reveal positions"
+            }
+          </ARStatusBar>
         </TerminalSection>
 
-        <TerminalActions>
-          <ARRevealButton arMode={isARMode} onClick={handleARToggle}>
-            {isARMode ? "DISABLE AR" : "ACTIVATE AR"}
-          </ARRevealButton>
-          
-          {isARMode && (
-            <CodeWordInput
-              codeWord=""
-              numberOfCards={null}
-              isEditable={true}
-              isLoading={actionState.status === "loading"}
-              onSubmit={handleDesktopSubmit}
-            />
-          )}
-        </TerminalActions>
+        {/* Spacer to center the input area */}
+        <div style={{ flex: 1 }} />
+
+        {/* ALWAYS show clue input - it's the primary action! */}
+        <CompactTerminalActions>
+          <CodeWordInput
+            codeWord=""
+            numberOfCards={null}
+            isEditable={true}
+            isLoading={actionState.status === "loading"}
+            onSubmit={handleDesktopSubmit}
+          />
+        </CompactTerminalActions>
       </TerminalContent>
     </>
   );

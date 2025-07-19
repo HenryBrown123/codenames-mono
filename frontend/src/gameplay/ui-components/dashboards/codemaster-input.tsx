@@ -6,7 +6,7 @@ import { Card } from "@frontend/shared-types";
 
 const Container = styled.div`
   display: flex;
-  flex-direction: row;
+  flex-direction: column;  /* CHANGED: Always stack on mobile */
   align-items: center;
   gap: 1rem;
   width: 100%;
@@ -15,11 +15,7 @@ const Container = styled.div`
   /* Vertical in sidebar */
   @media (min-width: 769px) and (orientation: landscape) {
     flex-direction: column;
-    gap: 1.5rem;
-  }
-
-  @media (max-width: 480px) {
-    flex-direction: column;
+    gap: 2rem;  /* BIGGER gap */
   }
 `;
 
@@ -27,32 +23,27 @@ const InputContainer = styled.div`
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;  /* CHANGED: Center on mobile */
   gap: 0.5rem;
-  width: auto;
-  text-align: left;
-  font-size: clamp(1.2rem, 3vw, 2.5rem);  /* CHANGED - bigger on mobile */
+  width: 100%;
+  text-align: center;
+  font-size: clamp(1.4rem, 4vw, 2.5rem);  /* BIGGER on mobile */
   background-color: transparent;
   border-radius: 8px;
   padding: 1rem;
-  flex: 1;
 
   /* Stack in sidebar */
   @media (min-width: 769px) and (orientation: landscape) {
     flex-direction: column;
     text-align: center;
     width: 100%;
-    font-size: clamp(1.2rem, 2vw, 2rem);  /* CHANGED - bigger on desktop */
+    font-size: clamp(1.8rem, 2.5vw, 2.5rem);  /* MUCH BIGGER */
+    gap: 1rem;  /* More space between elements */
   }
 
   @media (max-width: 768px) {
-    font-size: clamp(1rem, 2.5vw, 1.4rem);  /* CHANGED - bigger on small screens */
-    padding: 0.5rem;
-  }
-
-  @media (max-width: 480px) {
-    width: 100%;
-    justify-content: center;
+    font-size: clamp(1.2rem, 3.5vw, 1.8rem);  /* BIGGER on small screens */
+    padding: 0.75rem;
   }
 `;
 
