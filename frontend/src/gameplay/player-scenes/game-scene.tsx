@@ -512,7 +512,7 @@ const SidebarContainer = styled.div`
  * MOBILE-FIRST: Game board that takes maximum space
  */
 const GameBoardContainer = styled.div`
-  /* Mobile-first: Account for fixed dashboard at bottom */
+  /* Mobile-first: Account for BIGGER dashboard */
   flex: 1;
   display: flex;
   align-items: center;
@@ -520,9 +520,10 @@ const GameBoardContainer = styled.div`
   padding: 0.25rem;
   min-height: 300px;
   overflow: hidden;
+  max-width: 100%; /* CHANGED from 900px - wider board */
 
   /* Critical: Add bottom padding to prevent overlap with fixed dashboard */
-  padding-bottom: calc(80px + 0.5rem); /* Dashboard height + gap */
+  padding-bottom: calc(120px + 0.5rem); /* CHANGED from 80px - match new height */
 
   /* PROGRESSIVE ENHANCEMENT: Large tablet landscape - remove bottom padding */
   @media (min-width: 769px) and (orientation: landscape) {
@@ -530,6 +531,7 @@ const GameBoardContainer = styled.div`
     grid-row: 2;
     padding: 1rem;
     padding-bottom: 1rem; /* Reset to normal */
+    max-width: 100%; /* CHANGED from 900px - wider board */
   }
 `;
 
@@ -537,12 +539,12 @@ const GameBoardContainer = styled.div`
  * MOBILE-FIRST: Dashboard with fixed positioning approach / Terminal styling for desktop
  */
 const DashboardContainer = styled.div<{ $role?: string; $arActive?: boolean }>`
-  /* Mobile styles - fixed dashboard at bottom */
+  /* Mobile styles - BIGGER dashboard */
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 80px;
+  height: 120px; /* CHANGED from 80px - 50% taller! */
   background: linear-gradient(180deg, rgba(10, 10, 15, 0.95) 0%, rgba(26, 26, 46, 0.98) 100%);
   border-top: 2px solid var(--color-primary, #00ff88);
   border-radius: 16px 16px 0 0;
@@ -550,7 +552,7 @@ const DashboardContainer = styled.div<{ $role?: string; $arActive?: boolean }>`
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: 0.5rem;
   padding-right: 0.5rem;
-  padding-top: 0.75rem;
+  padding-top: 1rem; /* CHANGED from 0.75rem - more top padding */
   display: flex;
   align-items: center;
   justify-content: center;

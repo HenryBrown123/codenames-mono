@@ -15,14 +15,15 @@ import {
 } from "./terminal-components";
 
 const Container = styled.div`
+  /* Mobile-first: Vertical stack for bigger dashboard */
   display: flex;
-  flex-direction: row;
+  flex-direction: column; /* CHANGED from row */
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
-  padding: 0.5rem;
-  gap: 0.75rem;
+  padding: 1rem; /* CHANGED from 0.5rem */
+  gap: 1rem; /* CHANGED from 0.75rem */
   @media (min-width: 769px) and (orientation: landscape) {
     flex-direction: column;
     justify-content: center;
@@ -36,11 +37,17 @@ const Container = styled.div`
 `;
 
 const ClueDisplay = styled.div`
+  /* Mobile-first: Prominent clue display */
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.25rem;
   flex: 1;
-  min-width: 0;
+  text-align: center;
+  padding: 0.5rem;
+  background: rgba(0, 255, 136, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 136, 0.2);
   @media (min-width: 769px) and (orientation: landscape) {
     flex-direction: column;
     text-align: center;
@@ -56,15 +63,13 @@ const ClueDisplay = styled.div`
 `;
 
 const ClueText = styled.div`
+  /* Mobile-first: BIGGER, clearer text */
   display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
   font-weight: 700;
   color: var(--color-primary, #00ff88);
-  font-size: 1rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   @media (min-width: 769px) and (orientation: landscape) {
     flex-direction: column;
     align-items: center;
@@ -75,7 +80,21 @@ const ClueText = styled.div`
 `;
 
 const ClueWord = styled.span`
-  text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+  /* Mobile: BIG and prominent */
+  font-size: 1.5rem; /* CHANGED from 1rem */
+  text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+
+  /* Add quotes for clarity */
+  &::before {
+    content: '"';
+    opacity: 0.7;
+  }
+  &::after {
+    content: '"';
+    opacity: 0.7;
+  }
   @media (min-width: 769px) and (orientation: landscape) {
     font-size: 1.3rem;
     display: block;
@@ -86,9 +105,11 @@ const ClueWord = styled.span`
 `;
 
 const ClueNumber = styled.span`
-  color: var(--color-text-muted, rgba(255, 255, 255, 0.7));
-  font-size: 0.9rem;
+  /* Mobile: Clear but secondary */
+  color: var(--color-text, white);
+  font-size: 1.1rem; /* CHANGED from 0.9rem */
   font-weight: 500;
+  opacity: 0.9;
   @media (min-width: 769px) and (orientation: landscape) {
     font-size: 1rem;
     display: block;
@@ -144,7 +165,7 @@ export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messa
       <Container className="mobile-only">
         <ClueDisplay>
           <ClueText>
-            <ClueWord>"{activeTurn.clue.word}"</ClueWord>
+            <ClueWord>{activeTurn.clue.word}</ClueWord>
             <ClueNumber>for {activeTurn.clue.number}</ClueNumber>
           </ClueText>
         </ClueDisplay>

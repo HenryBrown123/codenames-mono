@@ -6,6 +6,7 @@ import styled from "styled-components";
 export const BoardAspectWrapper = styled.div`
   /* Mobile-first: Use available space efficiently */
   width: 100%;
+  max-width: 100%; /* CHANGED from 900px - wider board */
   height: 100%;
   display: flex;
   align-items: center;
@@ -15,11 +16,12 @@ export const BoardAspectWrapper = styled.div`
   /* PROGRESSIVE ENHANCEMENT: Tablet - more breathing room */
   @media (min-width: 481px) {
     padding: 0.5rem;
+    max-width: 100%; /* CHANGED from 900px - wider board */
   }
 
   /* PROGRESSIVE ENHANCEMENT: Desktop - maintain aspect ratio */
   @media (min-width: 1025px) {
-    max-width: 1000px;  /* CHANGED from 900px - wider board */
+    max-width: 100%; /* CHANGED from 900px - wider board */
     aspect-ratio: 5 / 4;
     padding: 1rem;
   }
@@ -29,18 +31,20 @@ export const BoardAspectWrapper = styled.div`
  * MOBILE-FIRST: Adaptive grid that works across all screen sizes
  */
 export const BoardGrid = styled.div`
-  /* Mobile-first: Adaptive grid with minimum card sizes - more vertical space */
+  /* Mobile-first: Shorter cards for more board visibility */
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-  gap: 0.75rem;
+  gap: 0.5rem; /* CHANGED from 0.75rem - tighter gap */
   width: 100%;
   height: 100%;
-  max-height: 100%; /* Use available height */
-  overflow-y: auto; /* Scroll if needed */
+  max-height: 100%;
+  overflow-y: auto;
 
-  /* Ensure minimum touch targets */
+  /* Ensure minimum touch targets but not too tall */
   & > * {
-    min-height: 60px;
+    min-height: 50px; /* CHANGED from 60px */
+    aspect-ratio: 3 / 2; /* ADD - consistent card proportions */
+    max-width: 100%;
   }
 
   /* PROGRESSIVE ENHANCEMENT: Small tablet */
@@ -67,7 +71,7 @@ export const BoardGrid = styled.div`
   @media (min-width: 1025px) {
     grid-template-columns: repeat(5, 1fr);
     grid-template-rows: repeat(5, 1fr);
-    gap: 1.5rem;  /* CHANGED from 2rem - tighter gap = bigger cards */
+    gap: 1.5rem; /* CHANGED from 2rem - tighter gap = bigger cards */
     overflow-y: visible;
 
     & > * {
@@ -83,8 +87,8 @@ export const EmptyCard = styled.div`
   background-color: rgba(27, 9, 9, 0.25);
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.123);
-  min-height: 60px;
-  aspect-ratio: 2.4 / 3;
+  min-height: 50px; /* CHANGED from 60px */
+  aspect-ratio: 3 / 2; /* CHANGED from 2.4 / 3 */
 
   /* PROGRESSIVE ENHANCEMENT: Tablet */
   @media (min-width: 481px) {

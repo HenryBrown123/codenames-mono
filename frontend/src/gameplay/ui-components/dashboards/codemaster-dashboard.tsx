@@ -175,17 +175,22 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
 
   return (
     <>
-      {/* Mobile view stays the same */}
+      {/* Mobile view - SIMPLE FLOW */}
       <Container className="mobile-only">
-        <MobileARToggle arMode={isARMode} onClick={handleARToggle}>
-          {isARMode ? "AR ON" : "REVEAL"}
-        </MobileARToggle>
-
-        <MobileTransmitButton
-          onClick={onOpenCluePanel || (() => {})}
-          text="SUBMIT CLUE"
-          enabled={actionState.status !== "loading"}
-        />
+        {!isARMode ? (
+          <MobileARToggle 
+            arMode={false} 
+            onClick={handleARToggle}
+          >
+            REVEAL
+          </MobileARToggle>
+        ) : (
+          <MobileTransmitButton 
+            onClick={onOpenCluePanel || (() => {})}
+            text="SUBMIT CLUE"
+            enabled={actionState.status !== "loading"}
+          />
+        )}
       </Container>
 
       {/* Desktop terminal view - REDESIGNED */}

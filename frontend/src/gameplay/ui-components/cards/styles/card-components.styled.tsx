@@ -168,6 +168,7 @@ export const NormalCard = styled.div<{ $isCurrentTeam?: boolean }>`
 
   /* Center the word */
   display: flex;
+  max-width: 100%;
   align-items: center;
   justify-content: center;
 
@@ -410,6 +411,7 @@ export const SpymasterOverlay = styled.div`
   /* Center content */
   display: flex;
   align-items: center;
+  max-width: 100%;
   justify-content: center;
   flex-direction: column;
 

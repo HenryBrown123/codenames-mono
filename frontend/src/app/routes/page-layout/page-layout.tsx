@@ -34,6 +34,9 @@ const Content = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
+  /* max-width: 100%;
+  max-height: 100%; */
+  max-width: 100%;
   height: 100%;
   min-height: 0; /* Allow shrinking */
   overflow: hidden; /* Let children handle overflow */
@@ -48,8 +51,8 @@ interface PageLayoutProps {
  * Page layout component with mobile-first viewport handling
  */
 const PageLayout: React.FC<PageLayoutProps> = ({ children }) => (
-  <Wrapper>
-    <Content>{children}</Content>
+  <Wrapper id="page-content-wrapper">
+    <Content id="page-content">{children}</Content>
   </Wrapper>
 );
 
