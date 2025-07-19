@@ -1,6 +1,6 @@
 import styled, { css } from "styled-components";
 import { Z_INDEX } from "@frontend/style/z-index";
-import { CARD_ANIMATION, CARD_DIMENSIONS, CARD_TYPOGRAPHY } from "./card-constants";
+import { CARD_ANIMATION, CARD_DIMENSIONS, CARD_TYPOGRAPHY } from "../card-constants";
 import {
   dealAnimation,
   coverAnimation,
@@ -12,7 +12,7 @@ import {
   assassinElectricSweep,
   dangerPulse,
   cornerBlink,
-} from "./card-animations";
+} from "./card-animations.css";
 
 // ===== ANIMATION MAP =====
 /**
@@ -292,7 +292,7 @@ export const NormalCard = styled.div<{ $isCurrentTeam?: boolean }>`
   @media (min-width: 481px) {
     min-height: ${CARD_DIMENSIONS.TABLET_MIN_HEIGHT}px;
     border-radius: ${CARD_DIMENSIONS.BORDER_RADIUS.TABLET}px;
-    font-size: clamp(1rem, 3vw, 1.4rem);  /* CHANGED - bigger */
+    font-size: clamp(1rem, 3vw, 1.4rem); /* CHANGED - bigger */
     letter-spacing: ${CARD_TYPOGRAPHY.LETTER_SPACING.TABLET};
     padding: 0.75rem;
   }
@@ -300,13 +300,13 @@ export const NormalCard = styled.div<{ $isCurrentTeam?: boolean }>`
   @media (min-width: 769px) {
     min-height: ${CARD_DIMENSIONS.DESKTOP_MIN_HEIGHT}px;
     border-radius: ${CARD_DIMENSIONS.BORDER_RADIUS.DESKTOP}px;
-    font-size: clamp(1.2rem, 3.5vw, 1.6rem);  /* CHANGED - bigger */
+    font-size: clamp(1.2rem, 3.5vw, 1.6rem); /* CHANGED - bigger */
     letter-spacing: ${CARD_TYPOGRAPHY.LETTER_SPACING.DESKTOP};
     padding: 1rem;
   }
 
   @media (min-width: 1025px) {
-    font-size: 1.6rem;  /* CHANGED from 1.2rem */
+    font-size: 1.6rem; /* CHANGED from 1.2rem */
   }
 `;
 
@@ -733,6 +733,7 @@ export const CardARCorner = styled.div<{
 
   /* L-shaped bracket using borders */
   border: 3px solid #00ff88;
+  border-radius: 3px;
 
   /* Hidden by default */
   opacity: 0;
@@ -849,7 +850,7 @@ export const CardWord = styled.span`
     transform: translate(-50%, -50%);
 
     /* UPDATED: Bigger text sizes */
-    font-size: clamp(1.4rem, 4vw, 1.8rem);  /* CHANGED from clamp(1.2rem, 3.5vw, 1.6rem) */
+    font-size: clamp(1.4rem, 4vw, 1.8rem); /* CHANGED from clamp(1.2rem, 3.5vw, 1.6rem) */
 
     /* Multi-layer glow effect */
     text-shadow:
@@ -882,7 +883,7 @@ export const CardWord = styled.span`
   /* Desktop responsive sizing */
   @media (min-width: 1025px) {
     .spymaster-overlay & {
-      font-size: 1.8rem;  /* Ensure minimum size on large screens */
+      font-size: 1.8rem; /* Ensure minimum size on large screens */
     }
   }
 
