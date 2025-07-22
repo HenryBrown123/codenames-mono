@@ -11,7 +11,10 @@ import {
   TerminalDivider,
   TerminalActions,
   TerminalOutput,
-  TerminalMessageBlock, // <-- import the new block
+  TerminalMessageBlock,
+  TerminalInstructionsSection,
+  TerminalIntelSection,
+  TerminalSpacer,
 } from "./terminal-components";
 
 const Container = styled.div`
@@ -127,12 +130,14 @@ export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messa
       <>
         <Container className="mobile-only" />
         <TerminalContent className="desktop-only">
-          <TerminalSection>
+          <TerminalInstructionsSection>
             <TerminalCommand>FIELD REPORT</TerminalCommand>
             <TerminalPrompt>
               <TerminalOutput>{messageText || "Standing by..."}</TerminalOutput>
             </TerminalPrompt>
-          </TerminalSection>
+          </TerminalInstructionsSection>
+          <div />
+          <div />
         </TerminalContent>
       </>
     );
@@ -157,36 +162,43 @@ export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messa
 
       {/* DESKTOP TERMINAL */}
       <TerminalContent className="desktop-only">
-        <TerminalSection>
+        {/* Instructions at top */}
+        <TerminalInstructionsSection>
           <TerminalCommand>FIELD REPORT</TerminalCommand>
           <TerminalPrompt>
             <TerminalOutput>{messageText || "Standing by..."}</TerminalOutput>
           </TerminalPrompt>
-        </TerminalSection>
+        </TerminalInstructionsSection>
 
-        <TerminalDivider />
-
-        <TerminalSection>
-          <TerminalCommand>ACTIVE INTEL</TerminalCommand>
-          <TerminalMessageBlock>
-            {`CLUE: "${activeTurn.clue.word}"
-              TARGET COUNT: ${activeTurn.clue.number}`}
-          </TerminalMessageBlock>
-          <TerminalPrompt>
-            <TerminalOutput>Guesses remaining: {activeTurn.guessesRemaining}</TerminalOutput>
-          </TerminalPrompt>
-        </TerminalSection>
-
-        {canEndTurn && (
-          <TerminalActions>
-            <ActionButton
-              onClick={endTurn}
-              text={actionState.status === "loading" ? "PROCESSING..." : "END TRANSMISSION"}
-              enabled={actionState.status !== "loading"}
-            />
-          </TerminalActions>
+        {/* Intel in middle - only show if we have turn data */}
+        {activeTurn?.clue && (
+          <TerminalIntelSection>
+            <div>
+              <TerminalCommand>ACTIVE INTEL</TerminalCommand>
+              <TerminalMessageBlock>
+                {`CLUE: "${activeTurn.clue.word}"
+                  TARGET COUNT: ${activeTurn.clue.number}`}
+              </TerminalMessageBlock>
+              <TerminalPrompt>
+                <TerminalOutput>Guesses remaining: {activeTurn.guessesRemaining}</TerminalOutput>
+              </TerminalPrompt>
+            </div>
+          </TerminalIntelSection>
         )}
+
+        {/* If no intel, this creates an empty space in the middle */}
+        {!activeTurn?.clue && <div />}
       </TerminalContent>
+
+      {canEndTurn && (
+        <TerminalActions className="desktop-only">
+          <ActionButton
+            onClick={endTurn}
+            text={actionState.status === "loading" ? "PROCESSING..." : "END TRANSMISSION"}
+            enabled={actionState.status !== "loading"}
+          />
+        </TerminalActions>
+      )}
     </>
   );
 };

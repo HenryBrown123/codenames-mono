@@ -9,7 +9,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem; /* REDUCED from 1rem */
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -28,15 +28,15 @@ const InputContainer = styled.div`
   max-width: 100%;
   box-sizing: border-box;
   text-align: center;
-  font-size: clamp(1.2rem, 3.5vw, 2rem);
+  font-size: clamp(1rem, 3vw, 1.6rem); /* REDUCED from clamp(1.2rem, 3.5vw, 2rem) */
   background-color: transparent;
   border-radius: 8px;
-  padding: 0.5rem 0.5rem;
+  padding: 0.25rem 0.25rem; /* REDUCED from 0.5rem */
 
   @media (min-width: 769px) and (orientation: landscape) {
     flex-direction: column;
-    font-size: clamp(1.4rem, 2.5vw, 2.2rem);
-    gap: 1rem;
+    font-size: clamp(1.1rem, 2vw, 1.8rem); /* REDUCED from clamp(1.4rem, 2.5vw, 2.2rem) */
+    gap: 0.75rem; /* REDUCED from 1rem */
   }
 
   @media (max-width: 480px) {

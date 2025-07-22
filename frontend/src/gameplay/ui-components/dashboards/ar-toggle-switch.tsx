@@ -4,16 +4,16 @@ import styled from "styled-components";
 const ToggleContainer = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  font-size: 1rem;  /* BIGGER labels */
+  gap: 0.5rem; /* REDUCED from 0.75rem */
+  font-size: 0.9rem; /* REDUCED from 1rem */
   text-transform: uppercase;
   letter-spacing: 0.08em;
 `;
 
 const ToggleTrack = styled.button<{ $active: boolean }>`
   position: relative;
-  width: 64px;  /* BIGGER switch */
-  height: 32px;
+  width: 56px; /* REDUCED from 64px */
+  height: 28px; /* REDUCED from 32px */
   background: ${props => props.$active 
     ? 'var(--color-primary, #00ff88)' 
     : 'rgba(255, 255, 255, 0.1)'};
@@ -34,9 +34,9 @@ const ToggleTrack = styled.button<{ $active: boolean }>`
 const ToggleThumb = styled.div<{ $active: boolean }>`
   position: absolute;
   top: 3px;
-  left: ${props => props.$active ? '32px' : '3px'};
-  width: 24px;
-  height: 24px;
+  left: ${props => props.$active ? '28px' : '3px'}; /* ADJUSTED for new size */
+  width: 20px; /* REDUCED from 24px */
+  height: 20px; /* REDUCED from 24px */
   background: ${props => props.$active ? '#000' : '#fff'};
   border-radius: 50%;
   transition: all 0.3s ease;
