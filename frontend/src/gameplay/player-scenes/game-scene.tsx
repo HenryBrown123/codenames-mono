@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { useGameDataRequired, useTurn } from "../shared/providers";
 import { usePlayerScene } from "./";
@@ -263,41 +263,6 @@ const PanelContent = styled.div`
   }
 `;
 
-const CloseButton = styled.button`
-  position: absolute;
-  top: max(env(safe-area-inset-top), 1rem);
-  right: 1rem;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(10, 10, 15, 0.9) 0%, rgba(26, 26, 46, 0.9) 100%);
-  border: 2px solid var(--color-primary, #00ff88);
-  color: var(--color-primary, #00ff88);
-  font-size: 1.2rem;
-  font-family: "JetBrains Mono", "Courier New", monospace;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(10px);
-  box-shadow:
-    0 0 10px rgba(0, 255, 136, 0.3),
-    inset 0 0 10px rgba(0, 255, 136, 0.05);
-
-  &:hover {
-    background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%);
-    transform: scale(1.1) rotate(90deg);
-    box-shadow:
-      0 0 20px rgba(0, 255, 136, 0.5),
-      inset 0 0 20px rgba(0, 255, 136, 0.1);
-    animation: ${glitchAnimation} 1s infinite;
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-`;
 
 const ProgressBar = styled.div`
   position: absolute;
@@ -314,29 +279,6 @@ const ProgressBar = styled.div`
   animation-fill-mode: both;
 `;
 
-/**
- * MOBILE: Panel backdrop for better UX
- */
-const PanelBackdrop = styled.div<{ $isVisible: boolean }>`
-  /* Mobile-first: Backdrop overlay */
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
-  z-index: ${Z_INDEX.INSTRUCTIONS_BACKDROP};
-
-  /* Fade animation */
-  opacity: ${({ $isVisible }) => ($isVisible ? 1 : 0)};
-  pointer-events: ${({ $isVisible }) => ($isVisible ? "all" : "none")};
-  transition: opacity 0.3s ease;
-
-  /* PROGRESSIVE ENHANCEMENT: Hide on desktop/tablet landscape */
-  @media (min-width: 769px) and (orientation: landscape) {
-    display: none;
-  }
-`;
 
 /**
  * MOBILE: Full-screen clue panel - EXACTLY like instructions but MORE
@@ -603,10 +545,7 @@ const DashboardContainer = styled.div<{ $role?: string; $arActive?: boolean }>`
 
     /* Terminal header bar */
     &::before {
-      content: "${(props) => {
-        const role = props.$role?.toUpperCase() || "OPERATIVE";
-        return `${role} TERMINAL`;
-      }}";
+      content: attr(data-terminal-title);
       position: absolute;
       top: 0;
       left: 0;
@@ -669,7 +608,6 @@ const DesktopGameScene: React.FC<{
   isFetching: boolean;
   currentRole: string;
   messageText: string;
-  showCluePanel: boolean;
   setShowCluePanel: (show: boolean) => void;
   DashboardComponent: React.ComponentType<any>;
   BoardComponent: React.ComponentType<any>;
@@ -677,7 +615,6 @@ const DesktopGameScene: React.FC<{
   isFetching,
   currentRole,
   messageText,
-  showCluePanel,
   setShowCluePanel,
   DashboardComponent,
   BoardComponent,
@@ -688,7 +625,11 @@ const DesktopGameScene: React.FC<{
   return (
     <GameSceneContainer>
       <SidebarContainer>
-        <DashboardContainer $role={currentRole} $arActive={isARActive}>
+        <DashboardContainer 
+          $role={currentRole} 
+          $arActive={isARActive}
+          data-terminal-title={`${currentRole?.toUpperCase() || "OPERATIVE"} TERMINAL`}
+        >
           {isFetching && <RefetchIndicator />}
           <DashboardComponent
             onOpenCluePanel={() => setShowCluePanel(true)}
@@ -787,7 +728,6 @@ export const GameScene: React.FC = () => {
           isFetching={isFetching}
           currentRole={currentRole}
           messageText={messageText}
-          showCluePanel={showCluePanel}
           setShowCluePanel={setShowCluePanel}
           DashboardComponent={DashboardComponent}
           BoardComponent={BoardComponent}
