@@ -19,8 +19,8 @@ export const BoardAspectWrapper = styled.div`
 
   /* PROGRESSIVE ENHANCEMENT: Desktop - maintain aspect ratio */
   @media (min-width: 1025px) {
-    max-width: 1000px;  /* CHANGED from 900px - wider board */
-    aspect-ratio: 5 / 4;
+    max-width: 1000px; /* CHANGED from 900px - wider board */
+    // aspect-ratio: 5 / 4;
     padding: 1rem;
   }
 `;
@@ -67,7 +67,7 @@ export const BoardGrid = styled.div`
   @media (min-width: 1025px) {
     grid-template-columns: repeat(5, 1fr);
     grid-template-rows: repeat(5, 1fr);
-    gap: 1.5rem;  /* CHANGED from 2rem - tighter gap = bigger cards */
+    gap: 1.5rem; /* CHANGED from 2rem - tighter gap = bigger cards */
     overflow-y: visible;
 
     & > * {

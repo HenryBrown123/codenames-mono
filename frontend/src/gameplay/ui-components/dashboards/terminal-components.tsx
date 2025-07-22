@@ -8,13 +8,16 @@ const cursorBlink = keyframes`
 export const TerminalContent = styled.div`
   flex: 1;
   min-width: 0;
-  padding: 2rem; /* BIG padding */
-  display: flex;
-  flex-direction: column;
+  min-height: 0;
+  padding: 1.5rem;
+  display: grid;
+  grid-template-rows: auto 1fr auto; /* Instructions, Spacer/Intel, Fixed bottom area */
+  gap: 1rem;
   overflow-y: auto;
+  overflow-x: hidden;
   color: var(--color-primary, #00ff88);
-  font-size: 1.1rem; /* BIGGER base font */
-  line-height: 1.6; /* COMFORTABLE line height */
+  font-size: 1rem;
+  line-height: 1.4;
 
   /* Subtle scanline effect */
   background-image: repeating-linear-gradient(
@@ -25,24 +28,29 @@ export const TerminalContent = styled.div`
     rgba(0, 255, 136, 0.03) 4px
   );
 
-  /* Custom scrollbar */
+  /* Hide scrollbar but keep scrollable */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary, #00ff88) transparent;
+  
   &::-webkit-scrollbar {
-    width: 8px;
+    width: 4px;
   }
-
+  
   &::-webkit-scrollbar-track {
-    background: rgba(0, 255, 136, 0.1);
+    background: transparent;
   }
-
+  
   &::-webkit-scrollbar-thumb {
     background: var(--color-primary, #00ff88);
-    border-radius: 4px;
+    border-radius: 2px;
+    opacity: 0.5;
   }
 `;
 
 export const TerminalSection = styled.div`
-  margin-bottom: 2.5rem; /* BIG sections */
-
+  margin-bottom: 0; /* REMOVE margin - grid gap handles spacing */
+  min-height: 0; /* Allow shrinking */
+  
   &:last-child {
     margin-bottom: 0;
   }
@@ -52,8 +60,8 @@ export const TerminalPrompt = styled.div`
   display: flex;
   min-width: 0;
   align-items: flex-start;
-  gap: 0.75rem;
-  font-size: 1.2rem; /* BIGGER prompts */
+  gap: 0.5rem; /* REDUCED from 0.75rem */
+  font-size: 1rem; /* REDUCED from 1.2rem */
 
   &::before {
     content: ">";
@@ -63,9 +71,9 @@ export const TerminalPrompt = styled.div`
 `;
 
 export const TerminalOutput = styled.div`
-  padding-left: 1.5rem;
+  padding-left: 1rem; /* REDUCED from 1.5rem */
   opacity: 0.9;
-  font-size: 1.2rem; /* Match prompt size */
+  font-size: 1rem; /* REDUCED from 1.2rem */
 `;
 
 export const cornerBlink = keyframes`
@@ -123,9 +131,9 @@ export const TerminalCommand = styled.div`
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem; /* REDUCED from 1rem */
   color: #ffffff;
-  font-size: 1.4rem; /* BIG headers */
+  font-size: 1.2rem; /* REDUCED from 1.4rem */
   text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
 `;
 
@@ -172,16 +180,18 @@ export const TerminalDivider = styled.div`
     transparent 100%
   );
   opacity: 0.3;
-  margin: 2rem 0; /* SPACIOUS dividers */
+  margin: 1.25rem 0; /* REDUCED from 2rem */
 `;
 
 export const TerminalActions = styled.div`
-  margin-top: auto;
-  padding-top: 2rem;
+  /* Remove margin-top: auto since grid handles placement */
+  padding: 1rem 1.5rem 1.5rem; /* Add padding for consistent spacing */
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 1.5rem; /* COMFORTABLE gap between actions */
+  gap: 1rem;
+  background: rgba(0, 0, 0, 0.5); /* Subtle background */
+  border-top: 1px solid rgba(0, 255, 136, 0.2); /* Visual separator */
 `;
 
 export const TerminalHeader = styled.div`
@@ -192,25 +202,20 @@ export const TerminalHeader = styled.div`
   margin-bottom: 1rem;
 `;
 
-export const CompactTerminalActions = styled.div`
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 2rem; /* BIG gap */
-  margin-top: auto;
-  padding-top: 2rem;
+export const CompactTerminalActions = styled(TerminalActions)`
+  gap: 1.25rem;
 `;
 
 export const ARStatusBar = styled.div<{ $active: boolean }>`
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1.25rem;
+  gap: 0.5rem; /* REDUCED from 0.75rem */
+  padding: 0.5rem 1rem; /* REDUCED from 0.75rem 1.25rem */
   background: ${(props) =>
     props.$active ? "rgba(0, 255, 136, 0.1)" : "rgba(255, 255, 255, 0.05)"};
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 0.9rem; /* REDUCED from 1rem */
   color: ${(props) =>
     props.$active ? "var(--color-primary, #00ff88)" : "rgba(255, 255, 255, 0.5)"};
   border: 1px solid
@@ -237,12 +242,33 @@ export const TerminalCursor = styled.span`
 export const TerminalToggleRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin: 1rem 0;
+  gap: 0.75rem; /* REDUCED from 1rem */
+  margin: 0.75rem 0; /* REDUCED from 1rem */
 `;
 
 export const ToggleHint = styled.span`
   font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.4);
   font-family: "JetBrains Mono", monospace;
+`;
+
+/* Rename/repurpose for instructions at top */
+export const TerminalInstructionsSection = styled(TerminalSection)`
+  border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+  padding-bottom: 1rem;
+`;
+
+/* Intel section in middle, can grow but won't push things around */
+export const TerminalIntelSection = styled(TerminalSection)`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  justify-content: center; /* Center when less content */
+  min-height: 0;
+`;
+
+/* Add spacer for pushing content */
+export const TerminalSpacer = styled.div`
+  flex: 1;
+  min-height: 0;
 `;

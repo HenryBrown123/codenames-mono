@@ -18,6 +18,9 @@ import {
   TerminalOutput,
   TerminalToggleRow,
   ToggleHint,
+  TerminalInstructionsSection,
+  TerminalIntelSection,
+  TerminalSpacer,
 } from "./terminal-components";
 
 /**
@@ -138,12 +141,14 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
       <>
         <Container className="mobile-only" />
         <TerminalContent className="desktop-only">
-          <TerminalSection>
+          <TerminalInstructionsSection>
             <TerminalCommand>STANDBY MODE</TerminalCommand>
             <TerminalPrompt>
               <TerminalOutput>Waiting for operative turn...</TerminalOutput>
             </TerminalPrompt>
-          </TerminalSection>
+          </TerminalInstructionsSection>
+          <div />
+          <div />
         </TerminalContent>
       </>
     );
@@ -190,43 +195,41 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
 
       {/* Desktop terminal view - REDESIGNED */}
       <TerminalContent className="desktop-only">
-        <TerminalSection>
+        {/* Instructions at top */}
+        <TerminalInstructionsSection>
           <TerminalCommand>MISSION STATUS</TerminalCommand>
           <TerminalPrompt>
             <TerminalOutput>{messageText || "Awaiting orders..."}</TerminalOutput>
           </TerminalPrompt>
-        </TerminalSection>
+        </TerminalInstructionsSection>
 
-        <TerminalDivider />
+        {/* Intel in middle - centered when less content */}
+        <TerminalIntelSection>
+          <div>
+            <TerminalCommand>INTEL TRANSMISSION</TerminalCommand>
+            <TerminalToggleRow>
+              <ARToggleSwitch active={isARMode} onChange={handleARToggle} />
+              <ToggleHint>(Alt+A)</ToggleHint>
+            </TerminalToggleRow>
+            <ARStatusBar $active={isARMode}>
+              {isARMode ? "Operative positions revealed" : "Activate AR to reveal positions"}
+            </ARStatusBar>
+          </div>
+        </TerminalIntelSection>
 
-        <TerminalSection>
-          <TerminalCommand>INTEL TRANSMISSION</TerminalCommand>
-
-          {/* Toggle on its own line with better spacing */}
-          <TerminalToggleRow>
-            <ARToggleSwitch active={isARMode} onChange={handleARToggle} />
-            <ToggleHint>(Alt+A)</ToggleHint>
-          </TerminalToggleRow>
-
-          <ARStatusBar $active={isARMode}>
-            {isARMode ? "Operative positions revealed" : "Activate AR to reveal positions"}
-          </ARStatusBar>
-        </TerminalSection>
-        <TerminalDivider />
-        {/* Spacer to center the input area */}
-        <div style={{ flex: 1 }} />
-
-        {/* ALWAYS show clue input - it's the primary action! */}
-        <CompactTerminalActions>
-          <CodeWordInput
-            codeWord=""
-            numberOfCards={null}
-            isEditable={true}
-            isLoading={actionState.status === "loading"}
-            onSubmit={handleDesktopSubmit}
-          />
-        </CompactTerminalActions>
+        {/* No spacer needed - grid handles it */}
       </TerminalContent>
+
+      {/* Actions are outside TerminalContent, in the grid's third row */}
+      <CompactTerminalActions className="desktop-only">
+        <CodeWordInput
+          codeWord=""
+          numberOfCards={null}
+          isEditable={true}
+          isLoading={actionState.status === "loading"}
+          onSubmit={handleDesktopSubmit}
+        />
+      </CompactTerminalActions>
     </>
   );
 };

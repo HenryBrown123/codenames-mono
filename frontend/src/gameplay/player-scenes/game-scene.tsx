@@ -127,7 +127,7 @@ const GameSceneContainer = styled.div`
   /* PROGRESSIVE ENHANCEMENT: Large tablet landscape - return to grid */
   @media (min-width: 769px) and (orientation: landscape) {
     grid-template-columns: minmax(250px, 1fr) 2.5fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: 1fr;
     display: grid;
     gap: 1rem;
     padding: 1rem;
@@ -135,7 +135,7 @@ const GameSceneContainer = styled.div`
 
   @media (min-width: 1025px) {
     grid-template-columns: minmax(300px, 1.2fr) 3fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: 1fr;
     gap: 1rem;
     padding: 1rem;
   }
@@ -263,7 +263,6 @@ const PanelContent = styled.div`
   }
 `;
 
-
 const ProgressBar = styled.div`
   position: absolute;
   bottom: 0;
@@ -278,7 +277,6 @@ const ProgressBar = styled.div`
   animation: ${progressShrink} 5.1s linear 0.3s; /* Delay to start when panel is visible */
   animation-fill-mode: both;
 `;
-
 
 /**
  * MOBILE: Full-screen clue panel - EXACTLY like instructions but MORE
@@ -446,7 +444,8 @@ const SidebarContainer = styled.div`
     gap: 1rem;
     height: 100%;
     grid-column: 1;
-    grid-row: 2;
+    grid-row: 1;
+    max-height: 100vh;
   }
 `;
 
@@ -469,9 +468,10 @@ const GameBoardContainer = styled.div`
   /* PROGRESSIVE ENHANCEMENT: Large tablet landscape - remove bottom padding */
   @media (min-width: 769px) and (orientation: landscape) {
     grid-column: 2;
-    grid-row: 2;
+    grid-row: 1;
     padding: 1rem;
     padding-bottom: 1rem; /* Reset to normal */
+    min-height: 0; /* This is all you need */
   }
 `;
 
@@ -526,8 +526,8 @@ const DashboardContainer = styled.div<{ $role?: string; $arActive?: boolean }>`
     background: #000000;
     border: 2px solid var(--color-primary, #00ff88);
     border-radius: 8px;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
     font-family: "JetBrains Mono", monospace;
     overflow: hidden;
     box-shadow:
@@ -551,10 +551,10 @@ const DashboardContainer = styled.div<{ $role?: string; $arActive?: boolean }>`
       left: 0;
       right: 0;
       display: block;
-      padding: 1rem 1.5rem; /* BIGGER padding */
+      padding: 0.75rem 1.25rem; /* REDUCED from 1rem 1.5rem */
       background: var(--color-primary, #00ff88);
       color: #000;
-      font-size: 1.1rem; /* BIGGER text */
+      font-size: 1rem; /* REDUCED from 1.1rem */
       font-weight: 900;
       letter-spacing: 0.15em;
       text-transform: uppercase;
@@ -625,8 +625,8 @@ const DesktopGameScene: React.FC<{
   return (
     <GameSceneContainer>
       <SidebarContainer>
-        <DashboardContainer 
-          $role={currentRole} 
+        <DashboardContainer
+          $role={currentRole}
           $arActive={isARActive}
           data-terminal-title={`${currentRole?.toUpperCase() || "OPERATIVE"} TERMINAL`}
         >
