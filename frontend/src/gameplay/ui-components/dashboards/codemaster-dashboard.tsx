@@ -12,15 +12,13 @@ import {
   TerminalSection,
   TerminalPrompt,
   TerminalCommand,
-  TerminalDivider,
-  CompactTerminalActions,
   ARStatusBar,
   TerminalOutput,
   TerminalToggleRow,
   ToggleHint,
-  TerminalInstructionsSection,
-  TerminalIntelSection,
-  TerminalSpacer,
+  TerminalTop,
+  TerminalMiddle,
+  TerminalBottom,
 } from "./terminal-components";
 
 /**
@@ -61,37 +59,6 @@ const MobileARToggle = styled(ARRevealButton)`
   }
 `;
 
-/**
- * DESKTOP: Container for desktop layout with both buttons
- */
-const DesktopContainer = styled.div`
-  display: none;
-
-  @media (min-width: 769px) and (orientation: landscape) {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    gap: 1.5rem;
-  }
-`;
-
-/**
- * DESKTOP: AR Toggle button for desktop
- */
-const DesktopARToggle = styled(ARRevealButton)`
-  /* Only show on desktop */
-  display: none;
-
-  @media (min-width: 769px) and (orientation: landscape) {
-    display: block;
-    position: relative;
-    bottom: auto;
-    right: auto;
-  }
-`;
 
 /**
  * MOBILE: Styled action button with visual indicator
@@ -141,14 +108,14 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
       <>
         <Container className="mobile-only" />
         <TerminalContent className="desktop-only">
-          <TerminalInstructionsSection>
+          <TerminalTop>
             <TerminalCommand>STANDBY MODE</TerminalCommand>
             <TerminalPrompt>
               <TerminalOutput>Waiting for operative turn...</TerminalOutput>
             </TerminalPrompt>
-          </TerminalInstructionsSection>
-          <div />
-          <div />
+          </TerminalTop>
+          <TerminalMiddle />
+          <TerminalBottom />
         </TerminalContent>
       </>
     );
@@ -193,19 +160,17 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
         />
       </Container>
 
-      {/* Desktop terminal view - REDESIGNED */}
+      {/* Desktop terminal view */}
       <TerminalContent className="desktop-only">
-        {/* Instructions at top */}
-        <TerminalInstructionsSection>
+        <TerminalTop>
           <TerminalCommand>MISSION STATUS</TerminalCommand>
           <TerminalPrompt>
             <TerminalOutput>{messageText || "Awaiting orders..."}</TerminalOutput>
           </TerminalPrompt>
-        </TerminalInstructionsSection>
+        </TerminalTop>
 
-        {/* Intel in middle - centered when less content */}
-        <TerminalIntelSection>
-          <div>
+        <TerminalMiddle>
+          <TerminalSection>
             <TerminalCommand>INTEL TRANSMISSION</TerminalCommand>
             <TerminalToggleRow>
               <ARToggleSwitch active={isARMode} onChange={handleARToggle} />
@@ -214,22 +179,19 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
             <ARStatusBar $active={isARMode}>
               {isARMode ? "Operative positions revealed" : "Activate AR to reveal positions"}
             </ARStatusBar>
-          </div>
-        </TerminalIntelSection>
+          </TerminalSection>
+        </TerminalMiddle>
 
-        {/* No spacer needed - grid handles it */}
+        <TerminalBottom>
+          <CodeWordInput
+            codeWord=""
+            numberOfCards={null}
+            isEditable={true}
+            isLoading={actionState.status === "loading"}
+            onSubmit={handleDesktopSubmit}
+          />
+        </TerminalBottom>
       </TerminalContent>
-
-      {/* Actions are outside TerminalContent, in the grid's third row */}
-      <CompactTerminalActions className="desktop-only">
-        <CodeWordInput
-          codeWord=""
-          numberOfCards={null}
-          isEditable={true}
-          isLoading={actionState.status === "loading"}
-          onSubmit={handleDesktopSubmit}
-        />
-      </CompactTerminalActions>
     </>
   );
 };

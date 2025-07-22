@@ -11,10 +11,11 @@ import {
   TerminalPrompt, 
   TerminalCommand, 
   TerminalStatus,
-  TerminalDivider,
   TerminalActions,
   TerminalOutput,
-  TerminalInstructionsSection
+  TerminalTop,
+  TerminalMiddle,
+  TerminalBottom
 } from "./terminal-components";
 
 /**
@@ -186,38 +187,37 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
 
       {/* Desktop terminal view */}
       <TerminalContent className="desktop-only">
-        <TerminalInstructionsSection>
+        <TerminalTop>
           <TerminalCommand>SYSTEM READY</TerminalCommand>
           <TerminalPrompt>
             <TerminalOutput>{messageText || "Initialize mission parameters..."}</TerminalOutput>
           </TerminalPrompt>
-        </TerminalInstructionsSection>
+        </TerminalTop>
 
-        {/* Empty middle section to keep button at bottom */}
-        <div />
-      </TerminalContent>
+        <TerminalMiddle>
+          {canRedeal && (
+            <TerminalStatus>
+              Cards dealt. Verify configuration or request new deal.
+            </TerminalStatus>
+          )}
+        </TerminalMiddle>
 
-      <TerminalActions className="desktop-only">
-        {canRedeal && (
-          <TerminalStatus>
-            Cards dealt. Verify configuration or request new deal.
-          </TerminalStatus>
-        )}
-        
-        <ActionButton
-          onClick={handleClick}
-          text={getButtonText()}
-          enabled={actionState.status !== "loading"}
-        />
-        
-        {canRedeal && (
+        <TerminalBottom>
           <ActionButton
-            onClick={handleRedeal}
-            text="REDEAL CARDS"
+            onClick={handleClick}
+            text={getButtonText()}
             enabled={actionState.status !== "loading"}
           />
-        )}
-      </TerminalActions>
+          
+          {canRedeal && (
+            <ActionButton
+              onClick={handleRedeal}
+              text="REDEAL CARDS"
+              enabled={actionState.status !== "loading"}
+            />
+          )}
+        </TerminalBottom>
+      </TerminalContent>
     </>
   );
 };
@@ -230,14 +230,14 @@ export const WaitingDashboard: React.FC<{ messageText?: string }> = ({ messageTe
     <>
       <Container className="mobile-only" />
       <TerminalContent className="desktop-only">
-        <TerminalInstructionsSection>
+        <TerminalTop>
           <TerminalCommand>STANDBY MODE</TerminalCommand>
           <TerminalPrompt>
             <TerminalOutput>{messageText || "Waiting for orders..."}</TerminalOutput>
           </TerminalPrompt>
-        </TerminalInstructionsSection>
-        <div />
-        <div />
+        </TerminalTop>
+        <TerminalMiddle />
+        <TerminalBottom />
       </TerminalContent>
     </>
   );
@@ -251,14 +251,14 @@ export const SpectatorDashboard: React.FC<{ messageText?: string }> = ({ message
     <>
       <Container className="mobile-only" />
       <TerminalContent className="desktop-only">
-        <TerminalInstructionsSection>
+        <TerminalTop>
           <TerminalCommand>OBSERVER MODE</TerminalCommand>
           <TerminalPrompt>
             <TerminalOutput>{messageText || "Monitoring field operations..."}</TerminalOutput>
           </TerminalPrompt>
-        </TerminalInstructionsSection>
-        <div />
-        <div />
+        </TerminalTop>
+        <TerminalMiddle />
+        <TerminalBottom />
       </TerminalContent>
     </>
   );
@@ -275,14 +275,14 @@ export const DealingDashboard: React.FC<{ messageText?: string }> = ({ messageTe
       </CenteredContainer>
 
       <TerminalContent className="desktop-only">
-        <TerminalInstructionsSection>
+        <TerminalTop>
           <TerminalCommand>SYSTEM PROCESSING</TerminalCommand>
           <TerminalPrompt>
             <TerminalOutput>{messageText || "Dealing cards..."}</TerminalOutput>
           </TerminalPrompt>
-        </TerminalInstructionsSection>
-        <div />
-        <div />
+        </TerminalTop>
+        <TerminalMiddle />
+        <TerminalBottom />
       </TerminalContent>
     </>
   );
@@ -309,24 +309,23 @@ export const GameoverDashboard: React.FC<{ messageText?: string }> = ({ messageT
       </CenteredContainer>
 
       <TerminalContent className="desktop-only">
-        <TerminalInstructionsSection>
+        <TerminalTop>
           <TerminalCommand>MISSION COMPLETE</TerminalCommand>
           <TerminalPrompt>
             <TerminalOutput>{messageText || "Mission concluded. Ready for new assignment."}</TerminalOutput>
           </TerminalPrompt>
-        </TerminalInstructionsSection>
+        </TerminalTop>
 
-        {/* Empty middle section to keep button at bottom */}
-        <div />
+        <TerminalMiddle />
+
+        <TerminalBottom>
+          <ActionButton
+            onClick={handleNewGame}
+            text="NEW MISSION"
+            enabled={actionState.status !== "loading"}
+          />
+        </TerminalBottom>
       </TerminalContent>
-
-      <TerminalActions className="desktop-only">
-        <ActionButton
-          onClick={handleNewGame}
-          text="NEW MISSION"
-          enabled={actionState.status !== "loading"}
-        />
-      </TerminalActions>
     </>
   );
 };
@@ -352,24 +351,23 @@ export const OutcomeDashboard: React.FC<{ messageText?: string }> = ({ messageTe
       </CenteredContainer>
 
       <TerminalContent className="desktop-only">
-        <TerminalInstructionsSection>
+        <TerminalTop>
           <TerminalCommand>MISSION OUTCOME</TerminalCommand>
           <TerminalPrompt>
             <TerminalOutput>{messageText || "Analyzing mission results..."}</TerminalOutput>
           </TerminalPrompt>
-        </TerminalInstructionsSection>
+        </TerminalTop>
 
-        {/* Empty middle section to keep button at bottom */}
-        <div />
+        <TerminalMiddle />
+
+        <TerminalBottom>
+          <ActionButton
+            onClick={handleContinue}
+            text="ACKNOWLEDGE"
+            enabled={true}
+          />
+        </TerminalBottom>
       </TerminalContent>
-
-      <TerminalActions className="desktop-only">
-        <ActionButton
-          onClick={handleContinue}
-          text="ACKNOWLEDGE"
-          enabled={true}
-        />
-      </TerminalActions>
     </>
   );
 };

@@ -8,13 +8,11 @@ import {
   TerminalSection,
   TerminalPrompt,
   TerminalCommand,
-  TerminalDivider,
-  TerminalActions,
   TerminalOutput,
   TerminalMessageBlock,
-  TerminalInstructionsSection,
-  TerminalIntelSection,
-  TerminalSpacer,
+  TerminalTop,
+  TerminalMiddle,
+  TerminalBottom,
 } from "./terminal-components";
 
 const Container = styled.div`
@@ -130,14 +128,14 @@ export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messa
       <>
         <Container className="mobile-only" />
         <TerminalContent className="desktop-only">
-          <TerminalInstructionsSection>
+          <TerminalTop>
             <TerminalCommand>FIELD REPORT</TerminalCommand>
             <TerminalPrompt>
               <TerminalOutput>{messageText || "Standing by..."}</TerminalOutput>
             </TerminalPrompt>
-          </TerminalInstructionsSection>
-          <div />
-          <div />
+          </TerminalTop>
+          <TerminalMiddle />
+          <TerminalBottom />
         </TerminalContent>
       </>
     );
@@ -162,18 +160,16 @@ export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messa
 
       {/* DESKTOP TERMINAL */}
       <TerminalContent className="desktop-only">
-        {/* Instructions at top */}
-        <TerminalInstructionsSection>
+        <TerminalTop>
           <TerminalCommand>FIELD REPORT</TerminalCommand>
           <TerminalPrompt>
             <TerminalOutput>{messageText || "Standing by..."}</TerminalOutput>
           </TerminalPrompt>
-        </TerminalInstructionsSection>
+        </TerminalTop>
 
-        {/* Intel in middle - only show if we have turn data */}
-        {activeTurn?.clue && (
-          <TerminalIntelSection>
-            <div>
+        <TerminalMiddle>
+          {activeTurn?.clue && (
+            <TerminalSection>
               <TerminalCommand>ACTIVE INTEL</TerminalCommand>
               <TerminalMessageBlock>
                 {`CLUE: "${activeTurn.clue.word}"
@@ -182,23 +178,20 @@ export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messa
               <TerminalPrompt>
                 <TerminalOutput>Guesses remaining: {activeTurn.guessesRemaining}</TerminalOutput>
               </TerminalPrompt>
-            </div>
-          </TerminalIntelSection>
-        )}
+            </TerminalSection>
+          )}
+        </TerminalMiddle>
 
-        {/* If no intel, this creates an empty space in the middle */}
-        {!activeTurn?.clue && <div />}
+        <TerminalBottom>
+          {canEndTurn && (
+            <ActionButton
+              onClick={endTurn}
+              text={actionState.status === "loading" ? "PROCESSING..." : "END TRANSMISSION"}
+              enabled={actionState.status !== "loading"}
+            />
+          )}
+        </TerminalBottom>
       </TerminalContent>
-
-      {canEndTurn && (
-        <TerminalActions className="desktop-only">
-          <ActionButton
-            onClick={endTurn}
-            text={actionState.status === "loading" ? "PROCESSING..." : "END TRANSMISSION"}
-            enabled={actionState.status !== "loading"}
-          />
-        </TerminalActions>
-      )}
     </>
   );
 };

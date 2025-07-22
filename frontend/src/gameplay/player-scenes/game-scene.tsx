@@ -441,6 +441,7 @@ const SidebarContainer = styled.div`
   @media (min-width: 769px) and (orientation: landscape) {
     display: flex;
     flex-direction: column;
+    border: 2px solid blue; /* DEBUG */
     gap: 1rem;
     height: 100%;
     grid-column: 1;
@@ -497,6 +498,7 @@ const DashboardContainer = styled.div<{ $role?: string; $arActive?: boolean }>`
   align-items: center;
   justify-content: center;
   backdrop-filter: blur(10px);
+
   animation: ${hackerPulse} 3s ease-in-out infinite;
 
   /* Scanline effect for mobile */
@@ -524,10 +526,13 @@ const DashboardContainer = styled.div<{ $role?: string; $arActive?: boolean }>`
     bottom: auto;
     height: 100%;
     background: #000000;
-    border: 2px solid var(--color-primary, #00ff88);
+    //border: 2px solid var(--color-primary, #00ff88);
+    border: 2px solid red; /* DEBUG */
     border-radius: 8px;
-    display: grid;
-    grid-template-rows: auto 1fr auto;
+    // display: grid;
+    display: flex;
+    flex-direction: column;
+    // grid-template-rows: auto 1fr auto;
     font-family: "JetBrains Mono", monospace;
     overflow: hidden;
     box-shadow:
