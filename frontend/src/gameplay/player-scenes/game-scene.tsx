@@ -4,16 +4,14 @@ import { useGameDataRequired, useTurn } from "../shared/providers";
 import { usePlayerScene } from "./";
 import { getSceneMessage } from "./scene-messages";
 import { getDashboardComponent, getBoardComponent } from "./component-mappings";
-import { SpectatorBoard } from "../ui-components/boards";
+import { SpectatorBoard } from "../ui-components";
+import { DesktopSidebar } from "../ui-components/desktop-sidebar";
 import { GameInstructions } from "../ui-components/game-instructions";
 import { ActionButton } from "../shared/components";
 import { Z_INDEX } from "@frontend/style/z-index";
 import { CodeWordInput } from "../ui-components/dashboards/codemaster-input";
 import { useGameActions } from "../player-actions";
-import {
-  CardVisibilityProvider,
-  useCardVisibilityContext,
-} from "../ui-components/cards/card-visibility-provider";
+import { CardVisibilityProvider } from "../ui-components/cards/card-visibility-provider";
 
 const hackerPulse = keyframes`
   0%, 100% {
@@ -107,11 +105,9 @@ const progressShrink = keyframes`
 `;
 
 /**
- * Replace the DashboardContainer styled component in game-scene.tsx with this updated version
+ * MOBILE-FIRST: Fixed dashboard at bottom
  */
-
-const DashboardContainer = styled.div<{ $role?: string; $arActive?: boolean }>`
-  /* Mobile styles - fixed dashboard at bottom */
+const DashboardContainer = styled.div`
   position: fixed;
   bottom: 0;
   left: 0;
@@ -129,7 +125,6 @@ const DashboardContainer = styled.div<{ $role?: string; $arActive?: boolean }>`
   align-items: center;
   justify-content: center;
   backdrop-filter: blur(10px);
-
   animation: ${hackerPulse} 3s ease-in-out infinite;
 
   /* Scanline effect for mobile */
@@ -149,70 +144,17 @@ const DashboardContainer = styled.div<{ $role?: string; $arActive?: boolean }>`
     animation: ${scanlineAnimation} 4s linear infinite;
     pointer-events: none;
   }
-
-  /* Desktop terminal styling - UPDATED to remove terminal window */
-  @media (min-width: 769px) and (orientation: landscape) {
-    /* Let the content handle its own styling */
-    position: relative;
-    bottom: auto;
-    height: 100%;
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    display: flex;
-    flex-direction: column;
-    font-family: "JetBrains Mono", monospace;
-    overflow: hidden;
-    box-shadow: none;
-    animation: none;
-    padding: 0;
-
-    /* Remove terminal header */
-    &::before {
-      display: none;
-    }
-  }
-
-  @media (min-width: 1025px) {
-    padding: 0;
-  }
 `;
 
 /**
- * Also update the SidebarContainer to handle the flexible width
+ * MOBILE-FIRST: Game scene grid container
  */
-
-const SidebarContainer = styled.div`
-  /* Hidden on mobile */
-  display: none;
-
-  /* PROGRESSIVE ENHANCEMENT: Show on tablet landscape+ */
-  @media (min-width: 769px) and (orientation: landscape) {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    height: 100%;
-    grid-column: 1;
-    grid-row: 1;
-    max-height: 100vh;
-    /* Flexible width with constraints */
-    width: calc(25vw + 50px);
-    min-width: 300px;
-    max-width: 400px;
-  }
-`;
-
-/**
- * And update GameSceneContainer to use the flexible grid
- */
-
 const GameSceneContainer = styled.div`
   /* Mobile-first: Simple full-height container */
   width: 100%;
   height: 100vh;
   height: 100dvh;
   height: -webkit-fill-available;
-
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -223,17 +165,9 @@ const GameSceneContainer = styled.div`
 
   /* PROGRESSIVE ENHANCEMENT: Large tablet landscape - return to grid */
   @media (min-width: 769px) and (orientation: landscape) {
-    /* Sidebar takes its natural width, board takes the rest */
     grid-template-columns: minmax(300px, min(400px, calc(25vw + 50px))) 1fr;
     grid-template-rows: 1fr;
     display: grid;
-    gap: 0;
-    padding: 0;
-  }
-
-  @media (min-width: 1025px) {
-    grid-template-columns: minmax(300px, min(400px, calc(25vw + 50px))) 1fr;
-    grid-template-rows: 1fr;
     gap: 0;
     padding: 0;
   }
@@ -550,28 +484,8 @@ const GameBoardContainer = styled.div`
     grid-row: 1;
     padding: 1rem;
     padding-bottom: 1rem; /* Reset to normal */
-    min-height: 0; /* This is all you need */
+    min-height: 0;
   }
-`;
-
-const pulse = keyframes`
-  0%, 100% {
-    opacity: 0.3;
-  }
-  50% {
-    opacity: 0.6;
-  }
-`;
-
-const RefetchIndicator = styled.div`
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #4dabf7;
-  animation: ${pulse} 1.5s ease-in-out infinite;
 `;
 
 const ErrorContainer = styled.div`
@@ -585,50 +499,6 @@ const ErrorContainer = styled.div`
   text-align: center;
   color: white;
 `;
-
-/**
- * Desktop Game Scene component that can access card visibility context
- */
-const DesktopGameScene: React.FC<{
-  isFetching: boolean;
-  currentRole: string;
-  messageText: string;
-  setShowCluePanel: (show: boolean) => void;
-  DashboardComponent: React.ComponentType<any>;
-  BoardComponent: React.ComponentType<any>;
-}> = ({
-  isFetching,
-  currentRole,
-  messageText,
-  setShowCluePanel,
-  DashboardComponent,
-  BoardComponent,
-}) => {
-  const { viewMode } = useCardVisibilityContext();
-  const isARActive = viewMode === "spymaster";
-
-  return (
-    <GameSceneContainer>
-      <SidebarContainer>
-        <DashboardContainer
-          $role={currentRole}
-          $arActive={isARActive}
-          data-terminal-title={`${currentRole?.toUpperCase() || "OPERATIVE"} TERMINAL`}
-        >
-          {isFetching && <RefetchIndicator />}
-          <DashboardComponent
-            onOpenCluePanel={() => setShowCluePanel(true)}
-            messageText={messageText}
-          />
-        </DashboardContainer>
-      </SidebarContainer>
-
-      <GameBoardContainer>
-        <BoardComponent />
-      </GameBoardContainer>
-    </GameSceneContainer>
-  );
-};
 
 /**
  * Game Scene Component with mobile-first collapsible instructions
@@ -709,14 +579,18 @@ export const GameScene: React.FC = () => {
     // Sidebar layout for tablet landscape and desktop
     return (
       <CardVisibilityProvider cards={cards} initialState={isRoundSetup ? "hidden" : "visible"}>
-        <DesktopGameScene
-          isFetching={isFetching}
-          currentRole={currentRole}
-          messageText={messageText}
-          setShowCluePanel={setShowCluePanel}
-          DashboardComponent={DashboardComponent}
-          BoardComponent={BoardComponent}
-        />
+        <GameSceneContainer>
+          <DesktopSidebar isFetching={isFetching}>
+            <DashboardComponent
+              messageText={messageText}
+              onOpenCluePanel={() => setShowCluePanel(true)}
+            />
+          </DesktopSidebar>
+
+          <GameBoardContainer>
+            <BoardComponent />
+          </GameBoardContainer>
+        </GameSceneContainer>
       </CardVisibilityProvider>
     );
   }
@@ -728,7 +602,6 @@ export const GameScene: React.FC = () => {
         {/* Instructions panel with pure CSS animation */}
         <InstructionsPanel key={`instruction-${messageText}-${toggleMessage}`}>
           <PanelContent>
-            {isFetching && <RefetchIndicator />}
             <GameInstructions messageText={messageText} />
           </PanelContent>
           <ProgressBar key={messageText} />

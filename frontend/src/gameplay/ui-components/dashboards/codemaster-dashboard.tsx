@@ -6,20 +6,11 @@ import { useTurn } from "../../shared/providers";
 import { ActionButton } from "../../shared/components";
 import { useCardVisibilityContext } from "../cards/card-visibility-provider";
 import { ARRevealButton } from "./ar-reveal-button";
-import { ARToggleSwitch } from "./ar-toggle-switch";
 import {
-  TerminalContent,
   TerminalSection,
   TerminalPrompt,
   TerminalCommand,
-  ARStatusBar,
   TerminalOutput,
-  TerminalToggleRow,
-  ToggleHint,
-  TerminalTop,
-  TerminalMiddle,
-  TerminalBottom,
-  TerminalActions,
   SpyGogglesContainer,
   SpyGogglesText,
   SpyGogglesSwitchRow,
@@ -30,7 +21,7 @@ import {
 } from "./terminal-components";
 
 /**
- * MOBILE-FIRST: Button container with AR toggle logic
+ * MOBILE-FIRST: Button container
  */
 const Container = styled.div`
   display: flex;
@@ -41,18 +32,6 @@ const Container = styled.div`
   height: 100%;
   padding: 0.5rem;
   gap: 0.5rem;
-
-  @media (min-width: 769px) and (orientation: landscape) {
-    flex-direction: column;
-    justify-content: center;
-    gap: 1.5rem;
-    padding: 1rem;
-  }
-
-  @media (min-width: 1025px) {
-    gap: 2rem;
-    padding: 1.5rem;
-  }
 `;
 
 /**
@@ -60,11 +39,6 @@ const Container = styled.div`
  */
 const MobileARToggle = styled(ARRevealButton)`
   position: relative;
-
-  /* Hide on desktop */
-  @media (min-width: 769px) and (orientation: landscape) {
-    display: none;
-  }
 `;
 
 /**
@@ -86,48 +60,6 @@ const MobileTransmitButton = styled(ActionButton)`
     border-radius: 2px;
     box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
   }
-
-  /* Hide on desktop */
-  @media (min-width: 769px) and (orientation: landscape) {
-    display: none;
-  }
-`;
-
-/**
- * Strict flexbox wrapper for desktop layout
- */
-const DesktopWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-`;
-
-/**
- * Top section - fixed height for instructions
- */
-const TopSection = styled.div`
-  flex: 0 0 auto;
-`;
-
-/**
- * Middle section - takes remaining space
- */
-const MiddleSection = styled.div`
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 0;
-`;
-
-/**
- * Bottom section - fixed at bottom for action
- */
-const BottomSection = styled.div`
-  flex: 0 0 auto;
-  margin-top: auto;
 `;
 
 interface CodemasterDashboardProps {
@@ -151,18 +83,14 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
     return (
       <>
         <Container className="mobile-only" />
-        <TerminalContent className="desktop-only">
-          <DesktopWrapper>
-            <TopSection>
-              <TerminalSection>
-                <TerminalCommand>MISSION LOG</TerminalCommand>
-                <TerminalPrompt>
-                  <TerminalOutput>Waiting for operative turn...</TerminalOutput>
-                </TerminalPrompt>
-              </TerminalSection>
-            </TopSection>
-          </DesktopWrapper>
-        </TerminalContent>
+        <div className="desktop-only">
+          <TerminalSection>
+            <TerminalCommand>MISSION LOG</TerminalCommand>
+            <TerminalPrompt>
+              <TerminalOutput>Waiting for operative turn...</TerminalOutput>
+            </TerminalPrompt>
+          </TerminalSection>
+        </div>
       </>
     );
   }
@@ -193,7 +121,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
 
   return (
     <>
-      {/* Mobile view stays the same */}
+      {/* Mobile view */}
       <Container className="mobile-only">
         <MobileARToggle arMode={isARMode} onClick={handleARToggle}>
           {isARMode ? "AR ON" : "REVEAL"}
@@ -206,52 +134,44 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
         />
       </Container>
 
-      {/* Desktop terminal view with STRICT LAYOUT */}
-      <TerminalContent className="desktop-only">
-        <DesktopWrapper>
-          {/* TOP - Instructions */}
-          <TopSection>
-            <TerminalSection>
-              <TerminalCommand>MISSION LOG</TerminalCommand>
-              <TerminalPrompt>
-                <TerminalOutput>{messageText || "Awaiting orders..."}</TerminalOutput>
-              </TerminalPrompt>
-            </TerminalSection>
-          </TopSection>
+      {/* Desktop terminal view - clean sections only */}
+      <div className="desktop-only">
+        {/* TOP - Instructions */}
+        <TerminalSection>
+          <TerminalCommand>MISSION LOG</TerminalCommand>
+          <TerminalPrompt>
+            <TerminalOutput>{messageText || "Awaiting orders..."}</TerminalOutput>
+          </TerminalPrompt>
+        </TerminalSection>
 
-          {/* MIDDLE - Intel (Spy Goggles) */}
-          <MiddleSection>
-            <TerminalSection>
-              <TerminalCommand>SPY GOGGLES</TerminalCommand>
-              <SpyGogglesContainer>
-                <SpyGogglesText>Toggle enhanced vision</SpyGogglesText>
-                <SpyGogglesSwitchRow>
-                  <SpyGogglesDot $active={isARMode} />
-                  <SpySwitch>
-                    <input type="checkbox" checked={isARMode} onChange={handleARToggle} />
-                    <SpySlider />
-                  </SpySwitch>
-                  <SpyStatus $active={isARMode}>{isARMode ? "ON" : "OFF"}</SpyStatus>
-                </SpyGogglesSwitchRow>
-              </SpyGogglesContainer>
-            </TerminalSection>
-          </MiddleSection>
+        {/* MIDDLE - Intel (Spy Goggles) */}
+        <TerminalSection>
+          <TerminalCommand>SPY GOGGLES</TerminalCommand>
+          <SpyGogglesContainer>
+            <SpyGogglesText>Toggle enhanced vision</SpyGogglesText>
+            <SpyGogglesSwitchRow>
+              <SpyGogglesDot $active={isARMode} />
+              <SpySwitch>
+                <input type="checkbox" checked={isARMode} onChange={handleARToggle} />
+                <SpySlider />
+              </SpySwitch>
+              <SpyStatus $active={isARMode}>{isARMode ? "ON" : "OFF"}</SpyStatus>
+            </SpyGogglesSwitchRow>
+          </SpyGogglesContainer>
+        </TerminalSection>
 
-          {/* BOTTOM - Action (with box!) */}
-          <BottomSection>
-            <TerminalSection>
-              <TerminalCommand>ACTION</TerminalCommand>
-              <CodeWordInput
-                codeWord=""
-                numberOfCards={null}
-                isEditable={true}
-                isLoading={actionState.status === "loading"}
-                onSubmit={handleDesktopSubmit}
-              />
-            </TerminalSection>
-          </BottomSection>
-        </DesktopWrapper>
-      </TerminalContent>
+        {/* BOTTOM - Action */}
+        <TerminalSection>
+          <TerminalCommand>ACTION</TerminalCommand>
+          <CodeWordInput
+            codeWord=""
+            numberOfCards={null}
+            isEditable={true}
+            isLoading={actionState.status === "loading"}
+            onSubmit={handleDesktopSubmit}
+          />
+        </TerminalSection>
+      </div>
     </>
   );
 };

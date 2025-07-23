@@ -10,55 +10,22 @@ const spyDotBlink = keyframes`
   50% { filter: brightness(1.45); }
 `;
 
+/**
+ * Simple wrapper for mobile view compatibility
+ */
 export const TerminalContent = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0; /* Remove gap - sections handle spacing */
-  padding: 20px;
   color: var(--color-primary, #00ff88);
   font-size: 1rem;
   line-height: 1.4;
-  overflow-y: auto;
-  overflow-x: hidden;
-
-  /* Enhanced gradient background from prototype */
-  background: linear-gradient(120deg, rgba(10, 16, 14, 0.76) 65%, rgba(20, 20, 30, 0.7) 100%);
-  border-right: 1px solid var(--color-primary, #00ff88);
-  box-shadow: 0 0 24px 0 rgba(64, 255, 166, 0.14);
-
-  /* Subtle scanline effect */
-  background-image: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 255, 136, 0.03) 2px,
-    rgba(0, 255, 136, 0.03) 4px
-  );
-
-  /* Hide scrollbar but keep scrollable */
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-primary, #00ff88) transparent;
-
-  &::-webkit-scrollbar {
-    width: 4px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: var(--color-primary, #00ff88);
-    border-radius: 2px;
-    opacity: 0.5;
-  }
 `;
 
+/**
+ * Terminal section card - provides visual container for content
+ * No margin needed - parent grid handles spacing
+ */
 export const TerminalSection = styled.div`
   border: 1px solid rgba(0, 255, 136, 0.5);
   border-radius: 6px;
-  margin-bottom: 20px;
   padding: 15px;
   background: rgba(64, 255, 166, 0.03);
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.04);
@@ -66,10 +33,6 @@ export const TerminalSection = styled.div`
   transition:
     border-color 0.7s,
     background 0.7s;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
 `;
 
 export const TerminalPrompt = styled.div`
@@ -270,29 +233,15 @@ export const ToggleHint = styled.span`
   font-family: "JetBrains Mono", monospace;
 `;
 
-export const TerminalTop = styled.div`
-  flex-shrink: 0;
-`;
-
-export const TerminalMiddle = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-`;
-
-export const TerminalBottom = styled.div`
-  flex-shrink: 0;
-  margin-top: auto;
-`;
-
-/* Spy Goggles Components */
+/**
+ * Spy goggles container with minimum height for better spacing
+ */
 export const SpyGogglesContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: stretch;
   justify-content: center;
-  min-height: 88px;
+  min-height: 120px;
 `;
 
 export const SpyGogglesText = styled.p`
