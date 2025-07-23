@@ -54,20 +54,6 @@ export const SidebarGrid = styled.div`
   /* Force the grid to fill its container */
   min-height: 0;
 
-  /* Debug borders - remove after fixing */
-  border: 2px solid red;
-
-  /* Debug: visualize grid rows */
-  > *:nth-child(1) {
-    border: 2px solid yellow;
-  }
-  > *:nth-child(2) {
-    border: 2px solid green;
-  }
-  > *:nth-child(3) {
-    border: 2px solid blue;
-  }
-
   /* Ensure grid items respect the grid */
   > * {
     min-height: 0;

@@ -96,6 +96,18 @@ const ButtonGroup = styled.div`
 `;
 
 /**
+ * Desktop container with display: contents to preserve grid layout
+ */
+const DesktopContainer = styled.div`
+  display: contents;
+
+  /* Hide on mobile */
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+/**
  * Lobby Dashboard - Mobile-first with refresh functionality
  */
 export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText }) => {
@@ -175,7 +187,7 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
       </CenteredContainer>
 
       {/* Desktop terminal view */}
-      <div className="desktop-only">
+      <DesktopContainer>
         <TerminalSection>
           <TerminalCommand>SYSTEM READY</TerminalCommand>
           <TerminalPrompt>
@@ -206,7 +218,7 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
             )}
           </ButtonGroup>
         </TerminalSection>
-      </div>
+      </DesktopContainer>
     </>
   );
 };
@@ -218,14 +230,14 @@ export const WaitingDashboard: React.FC<{ messageText?: string }> = ({ messageTe
   return (
     <>
       <Container className="mobile-only" />
-      <div className="desktop-only">
+      <DesktopContainer>
         <TerminalSection>
           <TerminalCommand>STANDBY MODE</TerminalCommand>
           <TerminalPrompt>
             <TerminalOutput>{messageText || "Waiting for orders..."}</TerminalOutput>
           </TerminalPrompt>
         </TerminalSection>
-      </div>
+      </DesktopContainer>
     </>
   );
 };
@@ -237,14 +249,14 @@ export const SpectatorDashboard: React.FC<{ messageText?: string }> = ({ message
   return (
     <>
       <Container className="mobile-only" />
-      <div className="desktop-only">
+      <DesktopContainer>
         <TerminalSection>
           <TerminalCommand>OBSERVER MODE</TerminalCommand>
           <TerminalPrompt>
             <TerminalOutput>{messageText || "Monitoring field operations..."}</TerminalOutput>
           </TerminalPrompt>
         </TerminalSection>
-      </div>
+      </DesktopContainer>
     </>
   );
 };
@@ -259,14 +271,14 @@ export const DealingDashboard: React.FC<{ messageText?: string }> = ({ messageTe
         <div>Dealing cards...</div>
       </CenteredContainer>
 
-      <div className="desktop-only">
+      <DesktopContainer>
         <TerminalSection>
           <TerminalCommand>SYSTEM PROCESSING</TerminalCommand>
           <TerminalPrompt>
             <TerminalOutput>{messageText || "Dealing cards..."}</TerminalOutput>
           </TerminalPrompt>
         </TerminalSection>
-      </div>
+      </DesktopContainer>
     </>
   );
 };
@@ -291,7 +303,7 @@ export const GameoverDashboard: React.FC<{ messageText?: string }> = ({ messageT
         />
       </CenteredContainer>
 
-      <div className="desktop-only">
+      <DesktopContainer>
         <TerminalSection>
           <TerminalCommand>MISSION COMPLETE</TerminalCommand>
           <TerminalPrompt>
@@ -310,7 +322,7 @@ export const GameoverDashboard: React.FC<{ messageText?: string }> = ({ messageT
             enabled={actionState.status !== "loading"}
           />
         </TerminalSection>
-      </div>
+      </DesktopContainer>
     </>
   );
 };
@@ -331,7 +343,7 @@ export const OutcomeDashboard: React.FC<{ messageText?: string }> = ({ messageTe
         <ActionButton onClick={handleContinue} text="Continue" enabled={true} />
       </CenteredContainer>
 
-      <div className="desktop-only">
+      <DesktopContainer>
         <TerminalSection>
           <TerminalCommand>MISSION OUTCOME</TerminalCommand>
           <TerminalPrompt>
@@ -344,7 +356,7 @@ export const OutcomeDashboard: React.FC<{ messageText?: string }> = ({ messageTe
         <TerminalSection>
           <ActionButton onClick={handleContinue} text="ACKNOWLEDGE" enabled={true} />
         </TerminalSection>
-      </div>
+      </DesktopContainer>
     </>
   );
 };

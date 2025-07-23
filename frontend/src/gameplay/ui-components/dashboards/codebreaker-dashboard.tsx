@@ -1,5 +1,5 @@
 import React from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { useGameDataRequired, useTurn } from "../../shared/providers";
 import { useGameActions } from "../../player-actions";
 import { ActionButton } from "../../shared/components";
@@ -27,6 +27,11 @@ const Container = styled.div`
 
 const DesktopContainer = styled.div`
   display: contents;
+
+  /* Hide on mobile */
+  @media (max-width: 768px) {
+    display: none;
+  }
 `;
 
 /**
@@ -78,7 +83,7 @@ const CompactButton = styled(ActionButton)`
 const IntelDisplay = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
 `;
 
 const IntelRow = styled.div`
@@ -102,6 +107,83 @@ const IntelValue = styled.span`
   font-weight: 600;
 `;
 
+const IntelPrimary = styled.div`
+  background: linear-gradient(120deg, rgba(255, 177, 0, 0.14) 0%, rgba(60, 60, 50, 0.16) 80%);
+  border: 2px solid #ffb100;
+  border-radius: 8px;
+  padding: 20px 15px 12px 15px;
+  box-shadow:
+    0 0 15px 0 rgba(255, 177, 0, 0.3),
+    0 0 0 1px rgba(0, 255, 136, 0.5) inset;
+  position: relative;
+  margin-bottom: 1rem;
+`;
+
+const IntelHeader = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+`;
+
+const IntelBadge = styled.span`
+  font-size: 0.96em;
+  color: #ffb100;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-shadow: 0 0 8px rgba(255, 177, 0, 0.5);
+`;
+
+const pingGlow = keyframes`
+  0%, 49% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0.13;
+  }
+`;
+
+const IntelPing = styled.span`
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-left: 9px;
+  border-radius: 50%;
+  background: #ffb100;
+  box-shadow: 0 0 8px 2px rgba(255, 177, 0, 0.5);
+  animation: ${pingGlow} 1.3s infinite;
+`;
+
+const IntelMain = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+`;
+
+const IntelTag = styled.span`
+  color: #ffb100;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-shadow: 0 0 4px rgba(255, 177, 0, 0.5);
+`;
+
+const IntelHighlight = styled.span`
+  color: #fff;
+  background: rgba(255, 177, 0, 0.3);
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 1.3rem;
+  letter-spacing: 1.2px;
+  box-shadow: 0 0 6px rgba(255, 177, 0, 0.5);
+`;
+
+const IntelSecondary = styled.div`
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  padding: 0.5rem 0;
+`;
+
 /**
  * Codebreaker Dashboard - Shows clue and allows ending turn
  */
@@ -120,14 +202,14 @@ export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messa
     return (
       <>
         <Container className="mobile-only" />
-        <div className="desktop-only">
+        <DesktopContainer>
           <TerminalSection>
             <TerminalCommand>FIELD REPORT</TerminalCommand>
             <TerminalPrompt>
               <TerminalOutput>{messageText || "Standing by..."}</TerminalOutput>
             </TerminalPrompt>
           </TerminalSection>
-        </div>
+        </DesktopContainer>
       </>
     );
   }
@@ -150,7 +232,7 @@ export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messa
       </Container>
 
       {/* DESKTOP TERMINAL */}
-      <div className="desktop-only">
+      <DesktopContainer>
         <TerminalSection>
           <TerminalCommand>FIELD REPORT</TerminalCommand>
           <TerminalPrompt>
@@ -162,18 +244,26 @@ export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messa
           <TerminalSection>
             <TerminalCommand>ACTIVE INTEL</TerminalCommand>
             <IntelDisplay>
-              <IntelRow>
-                <IntelLabel>CODEWORD:</IntelLabel>
-                <IntelValue>"{activeTurn.clue.word}"</IntelValue>
-              </IntelRow>
-              <IntelRow>
-                <IntelLabel>TARGET:</IntelLabel>
-                <IntelValue>{activeTurn.clue.number} assets</IntelValue>
-              </IntelRow>
-              <IntelRow>
-                <IntelLabel>REMAINING:</IntelLabel>
-                <IntelValue>{activeTurn.guessesRemaining} attempts</IntelValue>
-              </IntelRow>
+              <IntelPrimary>
+                <IntelHeader>
+                  <IntelBadge>[ INCOMING INTEL ]</IntelBadge>
+                  <IntelPing />
+                </IntelHeader>
+                <IntelMain>
+                  <IntelTag>CODEWORD:</IntelTag>
+                  <IntelHighlight>"{activeTurn.clue.word}"</IntelHighlight>
+                  <span style={{ color: "#ffb100" }}>//</span>
+                  <IntelTag>TARGET:</IntelTag>
+                  <IntelHighlight>{activeTurn.clue.number}</IntelHighlight>
+                </IntelMain>
+              </IntelPrimary>
+
+              <IntelSecondary>
+                <IntelRow>
+                  <IntelLabel>REMAINING:</IntelLabel>
+                  <span style={{ color: "#fff" }}>{activeTurn.guessesRemaining} attempts</span>
+                </IntelRow>
+              </IntelSecondary>
             </IntelDisplay>
           </TerminalSection>
         )}
@@ -187,7 +277,7 @@ export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messa
             />
           </TerminalSection>
         )}
-      </div>
+      </DesktopContainer>
     </>
   );
 };

@@ -18,6 +18,7 @@ import {
   SpySwitch,
   SpySlider,
   SpyStatus,
+  MiddleSection,
 } from "./terminal-components";
 
 /**
@@ -59,6 +60,15 @@ const MobileTransmitButton = styled(ActionButton)`
     background: var(--color-primary, #00ff88);
     border-radius: 2px;
     box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+  }
+`;
+
+const DesktopContainer = styled.div`
+  display: contents;
+
+  /* Hide on mobile */
+  @media (max-width: 768px) {
+    display: none;
   }
 `;
 
@@ -135,7 +145,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
       </Container>
 
       {/* Desktop terminal view - clean sections only */}
-      <div className="desktop-only">
+      <DesktopContainer>
         {/* TOP - Instructions */}
         <TerminalSection>
           <TerminalCommand>MISSION LOG</TerminalCommand>
@@ -144,21 +154,23 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
           </TerminalPrompt>
         </TerminalSection>
 
-        {/* MIDDLE - Intel (Spy Goggles) */}
-        <TerminalSection>
-          <TerminalCommand>SPY GOGGLES</TerminalCommand>
-          <SpyGogglesContainer>
-            <SpyGogglesText>Toggle enhanced vision</SpyGogglesText>
-            <SpyGogglesSwitchRow>
-              <SpyGogglesDot $active={isARMode} />
-              <SpySwitch>
-                <input type="checkbox" checked={isARMode} onChange={handleARToggle} />
-                <SpySlider />
-              </SpySwitch>
-              <SpyStatus $active={isARMode}>{isARMode ? "ON" : "OFF"}</SpyStatus>
-            </SpyGogglesSwitchRow>
-          </SpyGogglesContainer>
-        </TerminalSection>
+        {/* MIDDLE - Intel (Spy Goggles) - wrapped to expand */}
+        <MiddleSection>
+          <TerminalSection>
+            <TerminalCommand>SPY GOGGLES</TerminalCommand>
+            <SpyGogglesContainer>
+              <SpyGogglesText>Toggle enhanced vision</SpyGogglesText>
+              <SpyGogglesSwitchRow>
+                <SpyGogglesDot $active={isARMode} />
+                <SpySwitch>
+                  <input type="checkbox" checked={isARMode} onChange={handleARToggle} />
+                  <SpySlider />
+                </SpySwitch>
+                <SpyStatus $active={isARMode}>{isARMode ? "ON" : "OFF"}</SpyStatus>
+              </SpyGogglesSwitchRow>
+            </SpyGogglesContainer>
+          </TerminalSection>
+        </MiddleSection>
 
         {/* BOTTOM - Action */}
         <TerminalSection>
@@ -171,7 +183,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
             onSubmit={handleDesktopSubmit}
           />
         </TerminalSection>
-      </div>
+      </DesktopContainer>
     </>
   );
 };
