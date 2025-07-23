@@ -20,6 +20,10 @@ export const SidebarContainer = styled.aside`
   min-width: 300px;
   max-width: 400px;
 
+  /* Force it to fill the grid cell */
+  display: flex;
+  flex-direction: column;
+
   /* Enhanced gradient background from prototype */
   background: linear-gradient(120deg, rgba(10, 16, 14, 0.76) 65%, rgba(20, 20, 30, 0.7) 100%);
   border-right: 1px solid var(--color-primary, #00ff88);
@@ -43,9 +47,31 @@ export const SidebarGrid = styled.div`
   grid-template-rows: auto 1fr auto;
   height: 100%;
   padding: 20px;
-  gap: 20px;
+  gap: 30px;
   overflow-y: auto;
   overflow-x: hidden;
+
+  /* Force the grid to fill its container */
+  min-height: 0;
+
+  /* Debug borders - remove after fixing */
+  border: 2px solid red;
+
+  /* Debug: visualize grid rows */
+  > *:nth-child(1) {
+    border: 2px solid yellow;
+  }
+  > *:nth-child(2) {
+    border: 2px solid green;
+  }
+  > *:nth-child(3) {
+    border: 2px solid blue;
+  }
+
+  /* Ensure grid items respect the grid */
+  > * {
+    min-height: 0;
+  }
 
   /* Custom scrollbar styling */
   scrollbar-width: thin;

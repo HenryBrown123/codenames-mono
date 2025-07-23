@@ -25,6 +25,10 @@ const Container = styled.div`
   gap: 0.75rem;
 `;
 
+const DesktopContainer = styled.div`
+  display: contents;
+`;
+
 /**
  * Mobile clue display
  */
