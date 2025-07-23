@@ -245,15 +245,17 @@ export const ToggleHint = styled.span`
 `;
 
 export const TerminalTop = styled.div`
-  flex-shrink: 0; /* Don't shrink - natural height only */
+  flex-shrink: 0;
 `;
+
 export const TerminalMiddle = styled.div`
-  flex: 1; /* Take remaining space */
+  flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  /* That's it - no centering! */
+  justify-content: center; // or flex-start if you don't want centering
 `;
+
 export const TerminalBottom = styled.div`
-  flex-shrink: 0; /* Don't shrink - natural height only */
+  flex-shrink: 0;
+  margin-top: auto; // This ensures it sticks to bottom
 `;

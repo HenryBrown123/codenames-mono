@@ -441,7 +441,6 @@ const SidebarContainer = styled.div`
   @media (min-width: 769px) and (orientation: landscape) {
     display: flex;
     flex-direction: column;
-    border: 2px solid blue; /* DEBUG */
     gap: 1rem;
     height: 100%;
     grid-column: 1;
@@ -526,8 +525,7 @@ const DashboardContainer = styled.div<{ $role?: string; $arActive?: boolean }>`
     bottom: auto;
     height: 100%;
     background: #000000;
-    //border: 2px solid var(--color-primary, #00ff88);
-    border: 2px solid red; /* DEBUG */
+    border: 2px solid var(--color-primary, #00ff88);
     border-radius: 8px;
     // display: grid;
     display: flex;
