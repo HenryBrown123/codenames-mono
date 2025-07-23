@@ -15,7 +15,6 @@ export const TerminalContent = styled.div`
   font-size: 1rem;
   line-height: 1.4;
   overflow: hidden; /* No scrolling needed */
-  border: 2px solid blue; /* DEBUG */
 
   /* Subtle scanline effect */
   background-image: repeating-linear-gradient(
