@@ -227,10 +227,21 @@ export const TerminalToggleRow = styled.div`
   margin: 0.75rem 0;
 `;
 
-export const ToggleHint = styled.span`
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.4);
-  font-family: "JetBrains Mono", monospace;
+/**
+ * Wrapper for middle grid section - ensures it fills available space
+ */
+export const MiddleSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+
+  /* Ensure the terminal section inside stretches if needed */
+  > ${TerminalSection} {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
 `;
 
 /**
