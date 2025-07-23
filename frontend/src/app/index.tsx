@@ -262,11 +262,13 @@ const App: React.FC = () => {
             </PageSection>
           </SectionsContainer>
 
-          <DraggableDebugTool
-            viewportHeight={innerHeight}
-            visualViewportHeight={visualHeight}
-            screenHeight={screenHeight}
-          />
+          {false && (
+            <DraggableDebugTool
+              viewportHeight={innerHeight}
+              visualViewportHeight={visualHeight}
+              screenHeight={screenHeight}
+            />
+          )}
         </AppContainer>
       </ThemeProvider>
       <ReactQueryDevtools initialIsOpen={false} />
