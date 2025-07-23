@@ -107,8 +107,105 @@ const progressShrink = keyframes`
 `;
 
 /**
- * MOBILE-FIRST: Game scene with collapsible instructions
+ * Replace the DashboardContainer styled component in game-scene.tsx with this updated version
  */
+
+const DashboardContainer = styled.div<{ $role?: string; $arActive?: boolean }>`
+  /* Mobile styles - fixed dashboard at bottom */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(180deg, rgba(10, 10, 15, 0.95) 0%, rgba(26, 26, 46, 0.98) 100%);
+  border-top: 2px solid var(--color-primary, #00ff88);
+  border-radius: 16px 16px 0 0;
+  z-index: ${Z_INDEX.DASHBOARD};
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+
+  animation: ${hackerPulse} 3s ease-in-out infinite;
+
+  /* Scanline effect for mobile */
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(0, 255, 136, 0.8) 50%,
+      transparent 100%
+    );
+    animation: ${scanlineAnimation} 4s linear infinite;
+    pointer-events: none;
+  }
+
+  /* Desktop terminal styling - UPDATED to remove terminal window */
+  @media (min-width: 769px) and (orientation: landscape) {
+    /* Let the content handle its own styling */
+    position: relative;
+    bottom: auto;
+    height: 100%;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    font-family: "JetBrains Mono", monospace;
+    overflow: hidden;
+    box-shadow: none;
+    animation: none;
+    padding: 0;
+
+    /* Remove terminal header */
+    &::before {
+      display: none;
+    }
+  }
+
+  @media (min-width: 1025px) {
+    padding: 0;
+  }
+`;
+
+/**
+ * Also update the SidebarContainer to handle the flexible width
+ */
+
+const SidebarContainer = styled.div`
+  /* Hidden on mobile */
+  display: none;
+
+  /* PROGRESSIVE ENHANCEMENT: Show on tablet landscape+ */
+  @media (min-width: 769px) and (orientation: landscape) {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    height: 100%;
+    grid-column: 1;
+    grid-row: 1;
+    max-height: 100vh;
+    /* Flexible width with constraints */
+    width: calc(25vw + 50px);
+    min-width: 300px;
+    max-width: 400px;
+  }
+`;
+
+/**
+ * And update GameSceneContainer to use the flexible grid
+ */
+
 const GameSceneContainer = styled.div`
   /* Mobile-first: Simple full-height container */
   width: 100%;
@@ -120,24 +217,25 @@ const GameSceneContainer = styled.div`
   flex-direction: column;
   gap: 0.5rem;
   padding: 0.5rem;
-  padding-bottom: 0; /* Let fixed dashboard handle bottom spacing */
+  padding-bottom: 0;
   box-sizing: border-box;
   position: relative;
 
   /* PROGRESSIVE ENHANCEMENT: Large tablet landscape - return to grid */
   @media (min-width: 769px) and (orientation: landscape) {
-    grid-template-columns: minmax(250px, 1fr) 2.5fr;
+    /* Sidebar takes its natural width, board takes the rest */
+    grid-template-columns: minmax(300px, min(400px, calc(25vw + 50px))) 1fr;
     grid-template-rows: 1fr;
     display: grid;
-    gap: 1rem;
-    padding: 1rem;
+    gap: 0;
+    padding: 0;
   }
 
   @media (min-width: 1025px) {
-    grid-template-columns: minmax(300px, 1.2fr) 3fr;
+    grid-template-columns: minmax(300px, min(400px, calc(25vw + 50px))) 1fr;
     grid-template-rows: 1fr;
-    gap: 1rem;
-    padding: 1rem;
+    gap: 0;
+    padding: 0;
   }
 `;
 
@@ -431,25 +529,6 @@ const CluePanelBackdrop = styled.div<{ $isVisible: boolean }>`
 `;
 
 /**
- * MOBILE-FIRST: Sidebar container for larger screens
- */
-const SidebarContainer = styled.div`
-  /* Hidden on mobile */
-  display: none;
-
-  /* PROGRESSIVE ENHANCEMENT: Show on tablet landscape+ */
-  @media (min-width: 769px) and (orientation: landscape) {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    height: 100%;
-    grid-column: 1;
-    grid-row: 1;
-    max-height: 100vh;
-  }
-`;
-
-/**
  * MOBILE-FIRST: Game board that takes maximum space
  */
 const GameBoardContainer = styled.div`
@@ -472,103 +551,6 @@ const GameBoardContainer = styled.div`
     padding: 1rem;
     padding-bottom: 1rem; /* Reset to normal */
     min-height: 0; /* This is all you need */
-  }
-`;
-
-/**
- * MOBILE-FIRST: Dashboard with fixed positioning approach / Terminal styling for desktop
- */
-const DashboardContainer = styled.div<{ $role?: string; $arActive?: boolean }>`
-  /* Mobile styles - fixed dashboard at bottom */
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 80px;
-  background: linear-gradient(180deg, rgba(10, 10, 15, 0.95) 0%, rgba(26, 26, 46, 0.98) 100%);
-  border-top: 2px solid var(--color-primary, #00ff88);
-  border-radius: 16px 16px 0 0;
-  z-index: ${Z_INDEX.DASHBOARD};
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-  padding-top: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(10px);
-
-  animation: ${hackerPulse} 3s ease-in-out infinite;
-
-  /* Scanline effect for mobile */
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(0, 255, 136, 0.8) 50%,
-      transparent 100%
-    );
-    animation: ${scanlineAnimation} 4s linear infinite;
-    pointer-events: none;
-  }
-
-  /* Desktop terminal styling */
-  @media (min-width: 769px) and (orientation: landscape) {
-    /* Terminal window styling */
-    position: relative;
-    bottom: auto;
-    height: 100%;
-    background: #000000;
-    border: 2px solid var(--color-primary, #00ff88);
-    border-radius: 8px;
-    // display: grid;
-    display: flex;
-    flex-direction: column;
-    // grid-template-rows: auto 1fr auto;
-    font-family: "JetBrains Mono", monospace;
-    overflow: hidden;
-    box-shadow:
-      0 0 20px rgba(0, 255, 136, 0.3),
-      inset 0 0 20px rgba(0, 255, 136, 0.05);
-
-    /* Add subtle glow when AR is active */
-    ${(props) =>
-      props.$arActive &&
-      `
-      box-shadow: 
-        0 0 30px rgba(0, 255, 136, 0.4),
-        inset 0 0 20px rgba(0, 255, 136, 0.05);
-    `}
-
-    /* Terminal header bar */
-    &::before {
-      content: attr(data-terminal-title);
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      display: block;
-      padding: 0.75rem 1.25rem; /* REDUCED from 1rem 1.5rem */
-      background: var(--color-primary, #00ff88);
-      color: #000;
-      font-size: 1rem; /* REDUCED from 1.1rem */
-      font-weight: 900;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      animation: none;
-      position: static;
-      height: auto;
-    }
-  }
-
-  @media (min-width: 1025px) {
-    padding: 0; /* Reset padding for terminal styling */
   }
 `;
 

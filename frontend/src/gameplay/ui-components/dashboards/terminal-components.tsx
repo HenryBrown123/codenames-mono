@@ -1,20 +1,31 @@
-import styled, { keyframes } from "styled-components";
+import styled, { keyframes, css } from "styled-components";
 
 const cursorBlink = keyframes`
   0%, 50% { opacity: 1; }
   51%, 100% { opacity: 0; }
 `;
 
+const spyDotBlink = keyframes`
+  0%, 100% { filter: brightness(1.03); }
+  50% { filter: brightness(1.45); }
+`;
+
 export const TerminalContent = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1rem; /* Consistent spacing between sections */
-  padding: 1.5rem;
+  gap: 0; /* Remove gap - sections handle spacing */
+  padding: 20px;
   color: var(--color-primary, #00ff88);
   font-size: 1rem;
   line-height: 1.4;
-  overflow: hidden; /* No scrolling needed */
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  /* Enhanced gradient background from prototype */
+  background: linear-gradient(120deg, rgba(10, 16, 14, 0.76) 65%, rgba(20, 20, 30, 0.7) 100%);
+  border-right: 1px solid var(--color-primary, #00ff88);
+  box-shadow: 0 0 24px 0 rgba(64, 255, 166, 0.14);
 
   /* Subtle scanline effect */
   background-image: repeating-linear-gradient(
@@ -45,15 +56,28 @@ export const TerminalContent = styled.div`
 `;
 
 export const TerminalSection = styled.div`
-  /* Simple section with no special spacing */
+  border: 1px solid rgba(0, 255, 136, 0.5);
+  border-radius: 6px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: rgba(64, 255, 166, 0.03);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(1px);
+  transition:
+    border-color 0.7s,
+    background 0.7s;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 `;
 
 export const TerminalPrompt = styled.div`
   display: flex;
   min-width: 0;
   align-items: flex-start;
-  gap: 0.5rem; /* REDUCED from 0.75rem */
-  font-size: 1rem; /* REDUCED from 1.2rem */
+  gap: 0.5rem;
+  font-size: 1rem;
 
   &::before {
     content: ">";
@@ -63,9 +87,9 @@ export const TerminalPrompt = styled.div`
 `;
 
 export const TerminalOutput = styled.div`
-  padding-left: 1rem; /* REDUCED from 1.5rem */
+  padding-left: 1rem;
   opacity: 0.9;
-  font-size: 1rem; /* REDUCED from 1.2rem */
+  font-size: 1rem;
 `;
 
 export const cornerBlink = keyframes`
@@ -123,17 +147,20 @@ export const TerminalCommand = styled.div`
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  margin-bottom: 0.75rem; /* REDUCED from 1rem */
-  color: #ffffff;
-  font-size: 1.2rem; /* REDUCED from 1.4rem */
-  text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+  margin-bottom: 10px;
+  color: var(--color-primary, #00ff88);
+  font-size: 1.1rem;
+  text-shadow: 0 0 7px rgba(0, 255, 136, 0.5);
+  border-bottom: 1px solid rgba(0, 255, 136, 0.5);
+  padding-bottom: 10px;
+  letter-spacing: 2px;
 `;
 
 export const TerminalStatus = styled.div<{ $type?: "success" | "warning" | "error" }>`
-  padding: 1rem 1.5rem; /* COMFORTABLE padding */
+  padding: 1rem 1.5rem;
   margin: 1rem 0;
   border-radius: 8px;
-  font-size: 1.1rem; /* READABLE text */
+  font-size: 1.1rem;
   line-height: 1.5;
   background: ${(props) => {
     switch (props.$type) {
@@ -172,7 +199,7 @@ export const TerminalDivider = styled.div`
     transparent 100%
   );
   opacity: 0.3;
-  margin: 1.25rem 0; /* REDUCED from 2rem */
+  margin: 1.25rem 0;
 `;
 
 export const TerminalActions = styled.div`
@@ -201,12 +228,12 @@ export const ARStatusBar = styled.div<{ $active: boolean }>`
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 0.5rem; /* REDUCED from 0.75rem */
-  padding: 0.5rem 1rem; /* REDUCED from 0.75rem 1.25rem */
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
   background: ${(props) =>
     props.$active ? "rgba(0, 255, 136, 0.1)" : "rgba(255, 255, 255, 0.05)"};
   border-radius: 8px;
-  font-size: 0.9rem; /* REDUCED from 1rem */
+  font-size: 0.9rem;
   color: ${(props) =>
     props.$active ? "var(--color-primary, #00ff88)" : "rgba(255, 255, 255, 0.5)"};
   border: 1px solid
@@ -233,8 +260,8 @@ export const TerminalCursor = styled.span`
 export const TerminalToggleRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.75rem; /* REDUCED from 1rem */
-  margin: 0.75rem 0; /* REDUCED from 1rem */
+  gap: 0.75rem;
+  margin: 0.75rem 0;
 `;
 
 export const ToggleHint = styled.span`
@@ -251,10 +278,130 @@ export const TerminalMiddle = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center; // or flex-start if you don't want centering
+  justify-content: center;
 `;
 
 export const TerminalBottom = styled.div`
   flex-shrink: 0;
-  margin-top: auto; // This ensures it sticks to bottom
+  margin-top: auto;
+`;
+
+/* Spy Goggles Components */
+export const SpyGogglesContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  min-height: 88px;
+`;
+
+export const SpyGogglesText = styled.p`
+  margin: 7px 0 15px 0;
+  color: #b5dbcc;
+  font-size: 0.97em;
+  text-align: left;
+  line-height: 1.4;
+`;
+
+export const SpyGogglesSwitchRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: flex-start;
+`;
+
+export const SpyGogglesDot = styled.span<{ $active: boolean }>`
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: ${(props) => (props.$active ? "#00ff88" : "#355e4b")};
+  box-shadow: ${(props) => (props.$active ? "0 0 18px 2px rgba(0, 255, 136, 0.5)" : "none")};
+  margin-right: 8px;
+  transition:
+    background 0.28s,
+    box-shadow 0.28s;
+  vertical-align: middle;
+
+  ${(props) =>
+    props.$active &&
+    css`
+      animation: ${spyDotBlink} 1.25s infinite alternate;
+    `}
+`;
+
+export const SpySwitch = styled.label`
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 28px;
+  border-radius: 16px;
+  background: #1a2521;
+  border: 1.5px solid rgba(0, 255, 136, 0.5);
+  box-shadow: 0 1.5px 8px rgba(0, 255, 136, 0.5);
+  vertical-align: middle;
+  transition:
+    background 0.18s,
+    border-color 0.18s;
+  cursor: pointer;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+`;
+
+export const SpySlider = styled.span`
+  position: absolute;
+  cursor: pointer;
+  border-radius: 16px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  transition: background 0.13s;
+
+  &:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 2.5px;
+    bottom: 1.7px;
+    border-radius: 50%;
+    background: rgba(0, 255, 136, 0.5);
+    box-shadow: 0 0 7px 0px rgba(0, 255, 136, 0.5);
+    transition:
+      transform 0.23s,
+      box-shadow 0.23s,
+      background 0.23s;
+  }
+
+  input:checked + & {
+    background: linear-gradient(90deg, rgba(0, 255, 136, 0.5) 0%, transparent 80%);
+  }
+
+  input:checked + &:before {
+    transform: translateX(20px);
+    background: #00ff88;
+    box-shadow:
+      0 0 16px 1px rgba(0, 255, 136, 0.5),
+      0 0 0 1px #fff9 inset;
+  }
+`;
+
+export const SpyStatus = styled.span<{ $active: boolean }>`
+  font-size: 1em;
+  font-weight: ${(props) => (props.$active ? "bold" : "normal")};
+  letter-spacing: 1.1px;
+  color: ${(props) => (props.$active ? "#00ff88" : "#555")};
+  opacity: ${(props) => (props.$active ? 0.97 : 0.7)};
+  margin-left: 14px;
+  min-width: 52px;
+  text-align: left;
+  transition:
+    color 0.2s,
+    opacity 0.2s;
 `;
