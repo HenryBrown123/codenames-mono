@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spy Sidebar (Spy Goggles Toggle + Mission Log)</title>
+    <style>
+      :root {
+        --accent: #40ffa6;
+        --accent-soft: #8fffcc;
+        --background: #171e22;
+        --panel-bg: rgba(10, 16, 14, 0.76);
+        --panel-border: #40ffa6;
+        --soft-bg: rgba(64, 255, 166, 0.03);
+        --shadow: 0 0 24px 0 rgba(64, 255, 166, 0.14);
+        --off-dot: #355e4b;
+        --meta: #82e9ff;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Courier New", Courier, monospace;
+        background: radial-gradient(ellipse at top, var(--background) 0%, #0a0a0f 100%);
+        color: #e0e0e0;
+        min-height: 100vh;
+      }
+      .hacker-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 350px;
+        height: 100%;
+        background: linear-gradient(120deg, var(--panel-bg) 65%, rgba(20, 20, 30, 0.7) 100%);
+        border-right: 1px solid var(--panel-border);
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        box-shadow: var(--shadow);
+        overflow-y: auto;
+      }
+      #theme-btn {
+        position: absolute;
+        top: 22px;
+        right: 32px;
+        z-index: 2;
+        margin: 0;
+        padding: 8px 16px;
+        background: var(--accent-soft);
+        color: #0a0a0f;
+        font-family: inherit;
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        box-shadow: 0 2px 18px var(--accent-soft);
+        cursor: pointer;
+        opacity: 0.92;
+        transition:
+          background 0.2s,
+          color 0.2s,
+          opacity 0.2s;
+      }
+      #theme-btn:hover {
+        background: #fff;
+        color: var(--accent);
+        border: 1.5px solid var(--accent);
+        opacity: 1;
+      }
+      .sidebar-section {
+        border: 1px solid var(--accent-soft);
+        border-radius: 6px;
+        margin-bottom: 20px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        background: var(--soft-bg);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.04);
+        backdrop-filter: blur(1px);
+        transition:
+          border-color 0.7s,
+          background 0.7s;
+      }
+      .sidebar-section:last-child {
+        margin-bottom: 0;
+      }
+      .sidebar-section h2 {
+        margin-top: 0;
+        font-size: 1.1em;
+        font-weight: bold;
+        color: var(--accent);
+        text-shadow: 0 0 7px var(--accent-soft);
+        border-bottom: 1px solid var(--accent-soft);
+        padding-bottom: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+
+      /* Mission Log styling */
+      .mission-log {
+        font-size: 1em;
+      }
+      .mission-instructions p {
+        color: #b5dbcc;
+        font-size: 0.96em;
+        margin: 0 0 4px 0;
+      }
+      .mission-history {
+        list-style: none;
+        margin: 16px 0 0 0;
+        padding: 0;
+        font-size: 0.95em;
+        max-height: 100px;
+        overflow-y: auto;
+      }
+      .mission-history li {
+        margin-bottom: 8px;
+        line-height: 1.4;
+        display: flex;
+        gap: 9px;
+        align-items: baseline;
+        word-break: break-word;
+      }
+      .mission-time {
+        color: var(--meta);
+        font-size: 0.84em;
+        opacity: 0.68;
+        min-width: 60px;
+        display: inline-block;
+      }
+      .mission-entry {
+        color: var(--accent-soft);
+      }
+      .mission-entry strong {
+        color: var(--accent);
+        margin-right: 2px;
+      }
+
+      /* Spy Goggles Panel */
+      .spy-goggles-panel {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: center;
+        min-height: 88px;
+      }
+      .spy-goggles-panel p {
+        margin: 7px 0 15px 0;
+        color: #b5dbcc;
+        font-size: 0.97em;
+        text-align: left;
+        line-height: 1.4;
+      }
+      .spy-goggles-switch-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        justify-content: flex-start;
+      }
+      .spy-goggles-dot {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--off-dot);
+        box-shadow: 0 0 0px 0px var(--accent-soft);
+        margin-right: 8px;
+        transition:
+          background 0.28s,
+          box-shadow 0.28s;
+        vertical-align: middle;
+      }
+      .spy-goggles-dot.active {
+        background: var(--accent);
+        box-shadow: 0 0 18px 2px var(--accent-soft);
+        animation: spyDotBlink 1.25s infinite alternate;
+      }
+      @keyframes spyDotBlink {
+        0%,
+        100% {
+          filter: brightness(1.03);
+        }
+        50% {
+          filter: brightness(1.45);
+        }
+      }
+      .spy-switch {
+        --width: 48px;
+        --height: 28px;
+        --switch-on: var(--accent);
+        --switch-off: #1a2521;
+        --border-on: var(--accent);
+        --border-off: var(--accent-soft);
+        position: relative;
+        display: inline-block;
+        width: var(--width);
+        height: var(--height);
+        border-radius: 16px;
+        background: var(--switch-off);
+        border: 1.5px solid var(--border-off);
+        box-shadow: 0 1.5px 8px var(--accent-soft);
+        vertical-align: middle;
+        transition:
+          background 0.18s,
+          border-color 0.18s;
+        cursor: pointer;
+      }
+      .spy-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .spy-slider {
+        position: absolute;
+        cursor: pointer;
+        border-radius: 16px;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: transparent;
+        transition: background 0.13s;
+      }
+      .spy-slider:before {
+        position: absolute;
+        content: "";
+        height: 22px;
+        width: 22px;
+        left: 2.5px;
+        bottom: 1.7px;
+        border-radius: 50%;
+        background: var(--accent-soft);
+        box-shadow: 0 0 7px 0px var(--accent-soft);
+        transition:
+          transform 0.23s,
+          box-shadow 0.23s;
+      }
+      .spy-switch input:checked + .spy-slider {
+        background: linear-gradient(90deg, var(--accent-soft) 0%, transparent 80%);
+      }
+      .spy-switch input:checked + .spy-slider:before {
+        transform: translateX(20px);
+        background: var(--accent);
+        box-shadow:
+          0 0 16px 1px var(--accent-soft),
+          0 0 0 1px #fff9 inset;
+      }
+      .spy-status {
+        font-size: 1em;
+        font-weight: bold;
+        letter-spacing: 1.1px;
+        color: var(--accent);
+        opacity: 0.97;
+        margin-left: 14px;
+        min-width: 52px;
+        text-align: left;
+        transition:
+          color 0.2s,
+          opacity 0.2s;
+      }
+      .spy-status.off {
+        color: #555;
+        opacity: 0.7;
+        font-weight: normal;
+      }
+
+      .input-zone {
+        position: sticky;
+        bottom: 0;
+        background: linear-gradient(0deg, rgba(10, 20, 10, 0.76) 80%, transparent 100%);
+        box-shadow: 0 -3px 20px 0 rgba(0, 0, 0, 0.08);
+        z-index: 1;
+        margin: 0;
+        padding: 20px 15px 14px 15px;
+        border-radius: 0 0 8px 8px;
+        border-top: 1px solid var(--accent-soft);
+        max-width: unset;
+      }
+      .input-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-bottom: 12px;
+      }
+      .input-field {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+      }
+      .input-field label {
+        font-size: 0.8em;
+        color: var(--accent);
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      .input-field input {
+        width: 100%;
+        background-color: rgba(0, 0, 0, 0.18);
+        border: 1px solid var(--accent-soft);
+        border-radius: 3px;
+        color: #e0e0e0;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 1.1em;
+        padding: 7px 10px;
+        box-sizing: border-box;
+        transition: all 0.3s ease;
+        height: 36px;
+        line-height: 1.1;
+      }
+      .input-field input[type="number"] {
+        min-width: 60px;
+        max-width: 120px;
+        width: 100%;
+        height: 36px;
+      }
+      .input-field input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 7px var(--accent-soft);
+      }
+      .input-zone button {
+        background-color: var(--accent-soft);
+        color: #0a0a0f;
+        border: none;
+        padding: 12px 15px;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 1em;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 5px;
+        width: 100%;
+        border-radius: 3px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 6px var(--accent-soft);
+        opacity: 0.92;
+      }
+      .input-zone button:hover {
+        background-color: #fff;
+        color: var(--accent);
+        border: 1.5px solid var(--accent);
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hacker-sidebar">
+      <button id="theme-btn">Cycle Theme</button>
+      <div class="sidebar-section mission-log">
+        <h2>Mission Log</h2>
+        <div class="mission-instructions">
+          <p>&gt; Operatives, decode the incoming intel.</p>
+          <p>&gt; Use the codeword to link assets on the board.</p>
+          <p>&gt; <strong>Player123</strong>, transmit your codeword.</p>
+        </div>
+        <ul class="mission-history" id="mission-history">
+          <li>
+            <span class="mission-time">21:09:16</span>
+            <span class="mission-entry"><strong>Clue:</strong> <span>NEBULA (3)</span></span>
+          </li>
+          <li>
+            <span class="mission-time">21:10:22</span>
+            <span class="mission-entry"><strong>Guess:</strong> <span>STAR</span></span>
+          </li>
+          <li>
+            <span class="mission-time">21:11:07</span>
+            <span class="mission-entry"><strong>Guess:</strong> <span>GALAXY</span></span>
+          </li>
+        </ul>
+      </div>
+      <div class="sidebar-section spy-goggles-panel">
+        <h2>Spy Goggles</h2>
+        <p>Toggle enhanced vision</p>
+        <div class="spy-goggles-switch-row">
+          <span id="spy-dot" class="spy-goggles-dot"></span>
+          <label class="spy-switch">
+            <input type="checkbox" id="spy-toggle" />
+            <span class="spy-slider"></span>
+          </label>
+          <span id="spy-status" class="spy-status off">OFF</span>
+        </div>
+      </div>
+      <div class="sidebar-section input-zone">
+        <h2>Action</h2>
+        <div class="input-grid">
+          <div class="input-field">
+            <label for="codeword">Codeword</label>
+            <input type="text" id="codeword" name="codeword" />
+          </div>
+          <div class="input-field">
+            <label for="links">Links</label>
+            <input type="number" id="links" name="links" min="1" />
+          </div>
+        </div>
+        <button id="transmit-btn">Transmit</button>
+      </div>
+    </div>
+    <script>
+      // Theme cycling (same as before)
+      const themes = [
+        {
+          "--accent": "#40ffa6",
+          "--accent-soft": "#8fffcc",
+          "--background": "#171e22",
+          "--panel-bg": "rgba(10, 16, 14, 0.76)",
+          "--panel-border": "#40ffa6",
+          "--soft-bg": "rgba(64, 255, 166, 0.03)",
+          "--shadow": "0 0 24px 0 rgba(64,255,166,0.14)",
+          "--off-dot": "#355e4b",
+          "--meta": "#82e9ff",
+        },
+      ];
+      let themeIndex = 0;
+      function setTheme(idx) {
+        const root = document.documentElement;
+        const t = themes[idx];
+        Object.keys(t).forEach((key) => {
+          root.style.setProperty(key, t[key]);
+        });
+        document.getElementById("theme-btn").innerText = "Theme (Cycle)";
+      }
+      document.getElementById("theme-btn").addEventListener("click", () => {
+        themeIndex = (themeIndex + 1) % themes.length;
+        setTheme(themeIndex);
+      });
+      setTheme(themeIndex);
+
+      // Spy Goggles Toggle Logic
+      const spyToggle = document.getElementById("spy-toggle");
+      const spyStatus = document.getElementById("spy-status");
+      const spyDot = document.getElementById("spy-dot");
+      spyToggle.addEventListener("change", () => {
+        if (spyToggle.checked) {
+          spyStatus.textContent = "ON";
+          spyStatus.classList.remove("off");
+          spyDot.classList.add("active");
+        } else {
+          spyStatus.textContent = "OFF";
+          spyStatus.classList.add("off");
+          spyDot.classList.remove("active");
+        }
+      });
+
+      // Transmit does nothing but looks good
+      document.getElementById("transmit-btn").addEventListener("click", () => {
+        document.getElementById("codeword").value = "";
+        document.getElementById("links").value = "";
+      });
+    </script>
+  </body>
+</html>

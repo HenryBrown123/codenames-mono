@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hacker Terminal Sidebar (Word Game)</title>
+    <style>
+      :root {
+        --accent: #40ffa6;
+        --accent-soft: #8fffcc;
+        --orange-accent: #ffb100;
+        --orange-glow: #ffb10055;
+        --blue-meta: #82e9ff;
+        --background: #171e22;
+        --panel-bg: rgba(10, 16, 14, 0.76);
+        --panel-border: #40ffa6;
+        --soft-bg: rgba(64, 255, 166, 0.03);
+        --shadow: 0 0 24px 0 rgba(64, 255, 166, 0.14);
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Courier New", Courier, monospace;
+        background: radial-gradient(ellipse at top, var(--background) 0%, #0a0a0f 100%);
+        color: #e0e0e0;
+        min-height: 100vh;
+      }
+      .hacker-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 350px;
+        height: 100%;
+        background: linear-gradient(120deg, var(--panel-bg) 65%, rgba(20, 20, 30, 0.7) 100%);
+        border-right: 1px solid var(--panel-border);
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        box-shadow: var(--shadow);
+        overflow-y: auto;
+      }
+      #theme-btn {
+        position: absolute;
+        top: 22px;
+        right: 32px;
+        z-index: 2;
+        margin: 0;
+        padding: 8px 16px;
+        background: var(--accent-soft);
+        color: #0a0a0f;
+        font-family: inherit;
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        box-shadow: 0 2px 18px var(--accent-soft);
+        cursor: pointer;
+        opacity: 0.92;
+        transition:
+          background 0.2s,
+          color 0.2s,
+          opacity 0.2s;
+      }
+      #theme-btn:hover {
+        background: #fff;
+        color: var(--accent);
+        border: 1.5px solid var(--accent);
+        opacity: 1;
+      }
+      .sidebar-section {
+        border: 1px solid var(--accent-soft);
+        border-radius: 6px;
+        margin-bottom: 20px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        background: var(--soft-bg);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.04);
+        backdrop-filter: blur(1px);
+        transition:
+          border-color 0.7s,
+          background 0.7s;
+      }
+      .sidebar-section:last-child {
+        margin-bottom: 0;
+      }
+      .sidebar-section h2 {
+        margin-top: 0;
+        font-size: 1.1em;
+        font-weight: bold;
+        color: var(--accent);
+        text-shadow: 0 0 7px var(--accent-soft);
+        border-bottom: 1px solid var(--accent-soft);
+        padding-bottom: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+      .mission-log {
+        font-size: 1em;
+      }
+      .mission-instructions p {
+        color: #b5dbcc;
+        font-size: 0.96em;
+        margin: 0 0 4px 0;
+      }
+      .mission-history {
+        list-style: none;
+        margin: 16px 0 0 0;
+        padding: 0;
+        font-size: 0.95em;
+        max-height: 130px;
+        overflow-y: auto;
+      }
+      .mission-history li {
+        margin-bottom: 8px;
+        line-height: 1.4;
+        display: flex;
+        gap: 9px;
+        align-items: baseline;
+        word-break: break-word;
+      }
+      .mission-time {
+        color: var(--blue-meta);
+        font-size: 0.84em;
+        opacity: 0.68;
+        min-width: 60px;
+        display: inline-block;
+      }
+      .mission-entry {
+        color: var(--accent-soft);
+      }
+      .mission-entry strong {
+        color: var(--accent);
+        margin-right: 2px;
+      }
+
+      /* --- INTEL FEED: SOFTENED, ORANGE HIGHLIGHT --- */
+      .intel-log {
+        background: linear-gradient(120deg, rgba(255, 177, 0, 0.14) 0%, rgba(60, 60, 50, 0.16) 80%);
+        border: 2px solid var(--orange-accent);
+        border-radius: 8px;
+        padding: 20px 15px 12px 15px;
+        box-shadow:
+          0 0 15px 0 var(--orange-glow),
+          0 0 0 1px var(--accent-soft) inset;
+        position: relative;
+        margin-top: 6px;
+        margin-bottom: 0;
+        max-width: 100%;
+        min-width: 0;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        transition:
+          border-color 0.7s,
+          box-shadow 0.7s,
+          background 0.7s;
+      }
+      .intel-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .intel-label {
+        font-size: 0.96em;
+        color: var(--orange-accent);
+        font-weight: bold;
+        letter-spacing: 2px;
+        text-shadow: 0 0 8px var(--orange-glow);
+        transition:
+          color 0.7s,
+          text-shadow 0.7s;
+      }
+      .intel-ping {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        margin-left: 9px;
+        border-radius: 50%;
+        background: var(--orange-accent);
+        box-shadow: 0 0 8px 2px var(--orange-glow);
+        animation: pingGlow 1.3s infinite;
+        transition:
+          background 0.7s,
+          box-shadow 0.7s;
+      }
+      @keyframes pingGlow {
+        0%,
+        49% {
+          opacity: 1;
+        }
+        50%,
+        100% {
+          opacity: 0.13;
+        }
+      }
+      .intel-main {
+        font-family: "Courier New", Courier, monospace;
+        color: #ffeeda;
+        font-size: 1.17em;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px 12px;
+        margin-bottom: 8px;
+        min-width: 0;
+        word-break: break-word;
+        overflow-wrap: break-word;
+      }
+      .intel-tag {
+        color: var(--orange-accent);
+        font-weight: bold;
+        letter-spacing: 1px;
+        text-shadow: 0 0 4px var(--orange-glow);
+        transition:
+          color 0.7s,
+          text-shadow 0.7s;
+      }
+      .intel-value {
+        color: #fff;
+        background: var(--orange-glow);
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-weight: bold;
+        font-size: 1.05em;
+        letter-spacing: 1.2px;
+        box-shadow: 0 0 6px var(--orange-glow);
+        transition:
+          background 0.7s,
+          box-shadow 0.7s;
+        word-break: break-word;
+      }
+      .intel-divider {
+        color: var(--orange-glow);
+        font-size: 1.03em;
+        transition: color 0.7s;
+      }
+      .intel-meta {
+        font-size: 0.8em;
+        color: var(--blue-meta);
+        opacity: 0.85;
+        margin-top: 2px;
+        letter-spacing: 1.2px;
+        display: flex;
+        gap: 5px;
+        transition: color 0.7s;
+      }
+
+      /* --- END TURN BUTTON --- */
+      .endturn-panel {
+        border: 1px solid var(--accent-soft);
+        border-radius: 6px;
+        margin-bottom: 0;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        background: var(--soft-bg);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.04);
+        backdrop-filter: blur(1px);
+      }
+      #endturn-btn {
+        background-color: var(--accent-soft);
+        color: #0a0a0f;
+        border: none;
+        padding: 15px 0;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 1.1em;
+        font-weight: bold;
+        cursor: pointer;
+        width: 100%;
+        border-radius: 3px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 10px var(--accent-soft);
+        opacity: 0.92;
+      }
+      #endturn-btn:hover {
+        background-color: #fff;
+        color: var(--accent);
+        border: 1.5px solid var(--accent);
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hacker-sidebar">
+      <button id="theme-btn">Cycle Theme</button>
+      <div class="sidebar-section mission-log">
+        <h2>Mission Log</h2>
+        <div class="mission-instructions">
+          <p>&gt; Operatives, decode the incoming intel.</p>
+          <p>&gt; Use the codeword to link assets on the board.</p>
+          <p>&gt; <strong>Player123</strong>, transmit your codeword.</p>
+        </div>
+        <ul class="mission-history" id="mission-history">
+          <li>
+            <span class="mission-time">21:09:16</span>
+            <span class="mission-entry"><strong>Clue:</strong> <span>NEBULA (3)</span></span>
+          </li>
+          <li>
+            <span class="mission-time">21:10:22</span>
+            <span class="mission-entry"><strong>Guess:</strong> <span>STAR</span></span>
+          </li>
+          <li>
+            <span class="mission-time">21:11:07</span>
+            <span class="mission-entry"><strong>Guess:</strong> <span>GALAXY</span></span>
+          </li>
+          <!-- More history lines can go here -->
+        </ul>
+      </div>
+      <div class="sidebar-section intel-feed">
+        <h2>Intel Feed</h2>
+        <div class="intel-log">
+          <div class="intel-header">
+            <span class="intel-label">[ INCOMING INTEL ]</span>
+            <span class="intel-ping"></span>
+          </div>
+          <div class="intel-main">
+            <span class="intel-tag">CODEWORD:</span>
+            <span class="intel-value" id="intel-codeword">NEBULA</span>
+            <span class="intel-divider">//</span>
+            <span class="intel-tag">LINKS:</span>
+            <span class="intel-value" id="intel-links">3</span>
+          </div>
+          <div class="intel-meta">
+            <span>Timestamp:</span>
+            <span id="intel-timestamp"></span>
+          </div>
+        </div>
+      </div>
+      <div class="endturn-panel">
+        <button id="endturn-btn">END TURN</button>
+      </div>
+    </div>
+    <script>
+      // Optionally sets the timestamp dynamically
+      function updateIntelTimestamp() {
+        const el = document.getElementById("intel-timestamp");
+        if (el) {
+          el.textContent = new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+        }
+      }
+      updateIntelTimestamp();
+      setInterval(updateIntelTimestamp, 1000);
+
+      // Demo: Theme cycling
+      const themes = [
+        {
+          "--accent": "#40ffa6",
+          "--accent-soft": "#8fffcc",
+          "--orange-accent": "#ffb100",
+          "--orange-glow": "#ffb10055",
+          "--blue-meta": "#82e9ff",
+          "--background": "#171e22",
+          "--panel-bg": "rgba(10, 16, 14, 0.76)",
+          "--panel-border": "#40ffa6",
+          "--soft-bg": "rgba(64, 255, 166, 0.03)",
+          "--shadow": "0 0 24px 0 rgba(64,255,166,0.14)",
+        },
+      ];
+      let themeIndex = 0;
+      function setTheme(idx) {
+        const root = document.documentElement;
+        const t = themes[idx];
+        Object.keys(t).forEach((key) => {
+          root.style.setProperty(key, t[key]);
+        });
+        document.getElementById("theme-btn").innerText = "Theme (Cycle)";
+      }
+      document.getElementById("theme-btn").addEventListener("click", () => {
+        themeIndex = (themeIndex + 1) % themes.length;
+        setTheme(themeIndex);
+      });
+      setTheme(themeIndex);
+    </script>
+  </body>
+</html>
