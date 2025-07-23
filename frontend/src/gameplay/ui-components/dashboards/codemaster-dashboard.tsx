@@ -19,6 +19,14 @@ import {
   TerminalTop,
   TerminalMiddle,
   TerminalBottom,
+  TerminalActions,
+  SpyGogglesContainer,
+  SpyGogglesText,
+  SpyGogglesSwitchRow,
+  SpyGogglesDot,
+  SpySwitch,
+  SpySlider,
+  SpyStatus,
 } from "./terminal-components";
 
 /**
@@ -59,7 +67,6 @@ const MobileARToggle = styled(ARRevealButton)`
   }
 `;
 
-
 /**
  * MOBILE: Styled action button with visual indicator
  */
@@ -86,6 +93,43 @@ const MobileTransmitButton = styled(ActionButton)`
   }
 `;
 
+/**
+ * Strict flexbox wrapper for desktop layout
+ */
+const DesktopWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+`;
+
+/**
+ * Top section - fixed height for instructions
+ */
+const TopSection = styled.div`
+  flex: 0 0 auto;
+`;
+
+/**
+ * Middle section - takes remaining space
+ */
+const MiddleSection = styled.div`
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+`;
+
+/**
+ * Bottom section - fixed at bottom for action
+ */
+const BottomSection = styled.div`
+  flex: 0 0 auto;
+  margin-top: auto;
+`;
+
 interface CodemasterDashboardProps {
   onOpenCluePanel?: () => void;
   messageText?: string;
@@ -108,14 +152,16 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
       <>
         <Container className="mobile-only" />
         <TerminalContent className="desktop-only">
-          <TerminalTop>
-            <TerminalCommand>STANDBY MODE</TerminalCommand>
-            <TerminalPrompt>
-              <TerminalOutput>Waiting for operative turn...</TerminalOutput>
-            </TerminalPrompt>
-          </TerminalTop>
-          <TerminalMiddle />
-          <TerminalBottom />
+          <DesktopWrapper>
+            <TopSection>
+              <TerminalSection>
+                <TerminalCommand>MISSION LOG</TerminalCommand>
+                <TerminalPrompt>
+                  <TerminalOutput>Waiting for operative turn...</TerminalOutput>
+                </TerminalPrompt>
+              </TerminalSection>
+            </TopSection>
+          </DesktopWrapper>
         </TerminalContent>
       </>
     );
@@ -160,37 +206,51 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
         />
       </Container>
 
-      {/* Desktop terminal view */}
+      {/* Desktop terminal view with STRICT LAYOUT */}
       <TerminalContent className="desktop-only">
-        <TerminalTop>
-          <TerminalCommand>MISSION STATUS</TerminalCommand>
-          <TerminalPrompt>
-            <TerminalOutput>{messageText || "Awaiting orders..."}</TerminalOutput>
-          </TerminalPrompt>
-        </TerminalTop>
+        <DesktopWrapper>
+          {/* TOP - Instructions */}
+          <TopSection>
+            <TerminalSection>
+              <TerminalCommand>MISSION LOG</TerminalCommand>
+              <TerminalPrompt>
+                <TerminalOutput>{messageText || "Awaiting orders..."}</TerminalOutput>
+              </TerminalPrompt>
+            </TerminalSection>
+          </TopSection>
 
-        <TerminalMiddle>
-          <TerminalSection>
-            <TerminalCommand>INTEL TRANSMISSION</TerminalCommand>
-            <TerminalToggleRow>
-              <ARToggleSwitch active={isARMode} onChange={handleARToggle} />
-              <ToggleHint>(Alt+A)</ToggleHint>
-            </TerminalToggleRow>
-            <ARStatusBar $active={isARMode}>
-              {isARMode ? "Operative positions revealed" : "Activate AR to reveal positions"}
-            </ARStatusBar>
-          </TerminalSection>
-        </TerminalMiddle>
+          {/* MIDDLE - Intel (Spy Goggles) */}
+          <MiddleSection>
+            <TerminalSection>
+              <TerminalCommand>SPY GOGGLES</TerminalCommand>
+              <SpyGogglesContainer>
+                <SpyGogglesText>Toggle enhanced vision</SpyGogglesText>
+                <SpyGogglesSwitchRow>
+                  <SpyGogglesDot $active={isARMode} />
+                  <SpySwitch>
+                    <input type="checkbox" checked={isARMode} onChange={handleARToggle} />
+                    <SpySlider />
+                  </SpySwitch>
+                  <SpyStatus $active={isARMode}>{isARMode ? "ON" : "OFF"}</SpyStatus>
+                </SpyGogglesSwitchRow>
+              </SpyGogglesContainer>
+            </TerminalSection>
+          </MiddleSection>
 
-        <TerminalBottom>
-          <CodeWordInput
-            codeWord=""
-            numberOfCards={null}
-            isEditable={true}
-            isLoading={actionState.status === "loading"}
-            onSubmit={handleDesktopSubmit}
-          />
-        </TerminalBottom>
+          {/* BOTTOM - Action (with box!) */}
+          <BottomSection>
+            <TerminalSection>
+              <TerminalCommand>ACTION</TerminalCommand>
+              <CodeWordInput
+                codeWord=""
+                numberOfCards={null}
+                isEditable={true}
+                isLoading={actionState.status === "loading"}
+                onSubmit={handleDesktopSubmit}
+              />
+            </TerminalSection>
+          </BottomSection>
+        </DesktopWrapper>
       </TerminalContent>
     </>
   );
