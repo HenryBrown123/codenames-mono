@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Game Lobby</title>
+    <style>
+      :root {
+        --accent: #40ffa6;
+        --accent-soft: #8fffcc;
+        --background: #171e22;
+        --panel-bg: rgba(10, 16, 14, 0.76);
+        --panel-border: #40ffa6;
+        --soft-bg: rgba(64, 255, 166, 0.03);
+        --shadow: 0 0 24px 0 rgba(64, 255, 166, 0.14);
+        --team-red: #ff0040;
+        --team-blue: #00d4ff;
+        --meta: #82e9ff;
+        /* window.onload = function() {
+          updateCounts(); */
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Courier New", Courier, monospace;
+        background: radial-gradient(ellipse at top, var(--background) 0%, #0a0a0f 100%);
+        color: #e0e0e0;
+        min-height: 100vh;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .main-content {
+        width: calc(100vw - 40px);
+        height: calc(100vh - 40px);
+        max-width: 1200px;
+        margin: 20px;
+        padding: 30px;
+        background: linear-gradient(120deg, var(--panel-bg) 65%, rgba(20, 20, 30, 0.7) 100%);
+        border: 1px solid var(--panel-border);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        justify-content: center;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .title {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 6px;
+        margin-bottom: 8px;
+        opacity: 0.9;
+      }
+
+      .game-info {
+        color: var(--meta);
+        font-size: 1rem;
+        opacity: 0.7;
+        letter-spacing: 2px;
+        font-family: monospace;
+      }
+
+      .teams-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin: 20px 0 50px 0;
+      }
+
+      .team-tile {
+        border: 1px solid var(--accent-soft);
+        border-radius: 4px;
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.5);
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(1px);
+        transition: border-color 0.3s;
+        display: flex;
+        flex-direction: column;
+        font-size: 0.85rem;
+      }
+
+      .team-tile.red {
+        border-color: var(--team-red);
+      }
+
+      .team-tile.blue {
+        border-color: var(--team-blue);
+      }
+
+      .team-header {
+        margin-bottom: 15px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .team-name {
+        font-size: 1.1em;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        opacity: 0.9;
+      }
+
+      .player-count {
+        color: var(--meta);
+        font-size: 0.85em;
+        opacity: 0.7;
+        font-family: monospace;
+      }
+
+      .team-tile.red .team-name {
+        color: var(--team-red);
+      }
+
+      .team-tile.blue .team-name {
+        color: var(--team-blue);
+      }
+
+      .players-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        margin-top: 12px;
+        font-family: monospace;
+        font-size: 0.9rem;
+        min-height: 150px; /* 6 slots * 25px to account for borders */
+        overflow: hidden;
+        padding-right: 0;
+      }
+
+      /* Custom scrollbar */
+      .players-container::-webkit-scrollbar {
+        width: 3px;
+      }
+
+      .players-container::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .players-container::-webkit-scrollbar-thumb {
+        background: var(--accent);
+        opacity: 0.5;
+      }
+
+      .player-tile,
+      .player-slot {
+        background: transparent;
+        border: none;
+        padding: 4px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        white-space: nowrap;
+        transition: all 0.1s ease;
+        position: relative;
+        line-height: 1.4;
+        height: 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .player-slot {
+        color: rgba(255, 255, 255, 0.2);
+      }
+
+      .player-slot::before {
+        content: ">";
+        color: rgba(255, 255, 255, 0.1);
+        opacity: 0.5;
+        margin-right: 4px;
+      }
+
+      .player-tile::before {
+        content: ">";
+        color: var(--accent);
+        opacity: 0.5;
+        margin-right: 4px;
+      }
+
+      .player-tile:hover {
+        background: rgba(0, 255, 136, 0.05);
+        padding-left: 4px;
+      }
+
+      .player-tile:hover::before {
+        opacity: 1;
+      }
+
+      .player-name {
+        color: var(--accent-soft);
+        font-weight: 500;
+        flex: 1;
+      }
+
+      .player-meta {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 0.75rem;
+        color: var(--meta);
+        opacity: 0.7;
+      }
+
+      .player-id {
+        font-family: monospace;
+        letter-spacing: 1px;
+      }
+
+      .player-status {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 4px var(--accent);
+      }
+
+      .player-name {
+        color: white;
+        font-weight: 500;
+        font-size: 0.9rem;
+      }
+
+      .add-player-area {
+        display: flex;
+        gap: 8px;
+        align-items: stretch;
+        margin-top: auto;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      input {
+        flex: 1;
+        padding: 12px 15px;
+        background-color: rgba(0, 255, 136, 0.05);
+        border: 1px solid var(--accent);
+        border-radius: 3px;
+        color: var(--accent);
+        font-family: monospace;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+      }
+
+      input::placeholder {
+        color: var(--accent);
+        opacity: 0.6;
+        font-size: 0.85rem;
+      }
+
+      input:focus {
+        outline: none;
+        background-color: rgba(0, 255, 136, 0.1);
+        box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+      }
+
+      button {
+        background-color: var(--accent-soft);
+        color: #0a0a0f;
+        border: none;
+        padding: 10px 15px;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 0.9em;
+        font-weight: bold;
+        cursor: pointer;
+        border-radius: 3px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 6px var(--accent-soft);
+        opacity: 0.92;
+      }
+
+      button:hover {
+        background-color: #fff;
+        color: var(--accent);
+        border: 1.5px solid var(--accent);
+        opacity: 1;
+      }
+
+      button.add-btn {
+        padding: 12px 20px;
+        font-size: 0.9rem;
+        background: var(--accent);
+        color: #000;
+        border: none;
+        font-weight: bold;
+      }
+
+      button.add-btn:hover {
+        background: #fff;
+      }
+
+      .start-button {
+        background: var(--accent);
+        color: #000;
+        padding: 20px 60px;
+        font-size: 1.5rem;
+        margin: 20px auto 0;
+        display: block;
+        width: auto;
+        border: 2px solid var(--accent);
+        box-shadow:
+          0 0 30px rgba(0, 255, 136, 0.5),
+          inset 0 0 20px rgba(0, 255, 136, 0.2);
+        text-shadow: 0 0 5px rgba(0, 255, 136, 0.5);
+        font-weight: 900;
+        letter-spacing: 4px;
+      }
+
+      .start-button:hover {
+        background: #fff;
+        color: #000;
+        transform: scale(1.05);
+        box-shadow:
+          0 0 40px rgba(0, 255, 136, 0.7),
+          inset 0 0 30px rgba(0, 255, 136, 0.3);
+      }
+
+      .remove-btn {
+        background: transparent;
+        border: none;
+        color: rgba(255, 0, 0, 0.5);
+        padding: 0 4px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        opacity: 0;
+        transition: all 0.2s;
+      }
+
+      .player-tile:hover .remove-btn {
+        opacity: 1;
+      }
+
+      .remove-btn:hover {
+        color: #ff0040;
+        background: rgba(255, 0, 0, 0.1);
+      }
+
+      .remove-btn:hover {
+        background: rgba(255, 0, 0, 0.3);
+        border-color: red;
+      }
+
+      @media (max-width: 768px) {
+        .teams-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main-content">
+      <div class="header">
+        <h1 class="title">OPERATIVE CONTROL</h1>
+        <div class="game-info">Game ID: XRAY-7429 | <span id="total-count">4 Players</span></div>
+      </div>
+
+      <div class="teams-grid">
+        <div class="team-tile red">
+          <div class="team-header">
+            <h2 class="team-name">TEAM RED OPERATIVES</h2>
+            <span class="player-count" id="red-count">2 players</span>
+          </div>
+
+          <div class="players-container" id="red-players">
+            <div class="player-tile">
+              <span class="player-name">Alice</span>
+              <div class="player-meta">
+                <span class="player-status"></span>
+                <span class="player-id">ID:001</span>
+              </div>
+              <button class="remove-btn" onclick="removePlayer(this)">[X]</button>
+            </div>
+            <div class="player-tile">
+              <span class="player-name">Bob</span>
+              <div class="player-meta">
+                <span class="player-status"></span>
+                <span class="player-id">ID:002</span>
+              </div>
+              <button class="remove-btn" onclick="removePlayer(this)">[X]</button>
+            </div>
+            <div class="player-slot">[empty]</div>
+            <div class="player-slot">[empty]</div>
+            <div class="player-slot">[empty]</div>
+            <div class="player-slot">[empty]</div>
+          </div>
+
+          <div class="add-player-area">
+            <input
+              id="red-input"
+              placeholder="Enter operative codename..."
+              onkeypress="if(event.key==='Enter') addPlayer('red')"
+            />
+            <button class="add-btn" onclick="addPlayer('red')">ADD</button>
+          </div>
+        </div>
+
+        <div class="team-tile blue">
+          <div class="team-header">
+            <h2 class="team-name">TEAM BLUE OPERATIVES</h2>
+            <span class="player-count" id="blue-count">2 players</span>
+          </div>
+
+          <div class="players-container" id="blue-players">
+            <div class="player-tile">
+              <span class="player-name">Charlie</span>
+              <div class="player-meta">
+                <span class="player-status"></span>
+                <span class="player-id">ID:003</span>
+              </div>
+              <button class="remove-btn" onclick="removePlayer(this)">[X]</button>
+            </div>
+            <div class="player-tile">
+              <span class="player-name">Diana</span>
+              <div class="player-meta">
+                <span class="player-status"></span>
+                <span class="player-id">ID:004</span>
+              </div>
+              <button class="remove-btn" onclick="removePlayer(this)">[X]</button>
+            </div>
+            <div class="player-slot">[empty]</div>
+            <div class="player-slot">[empty]</div>
+            <div class="player-slot">[empty]</div>
+            <div class="player-slot">[empty]</div>
+          </div>
+
+          <div class="add-player-area">
+            <input
+              id="blue-input"
+              placeholder="Enter operative codename..."
+              onkeypress="if(event.key==='Enter') addPlayer('blue')"
+            />
+            <button class="add-btn" onclick="addPlayer('blue')">ADD</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="start-button">START MISSION</button>
+    </div>
+
+    <script>
+      function addPlayer(team) {
+        const input = document.getElementById(`${team}-input`);
+        const playerName = input.value.trim();
+        if (!playerName) return;
+
+        const playersContainer = document.getElementById(`${team}-players`);
+        const emptySlot = playersContainer.querySelector(".player-slot");
+
+        if (!emptySlot) {
+          // No empty slots
+          return;
+        }
+
+        const playerTile = document.createElement("div");
+        playerTile.className = "player-tile";
+        playerTile.innerHTML = `
+                <span class="player-name">${playerName}</span>
+                <div class="player-meta">
+                    <span class="player-status"></span>
+                    <span class="player-id">ID:${String(Math.floor(Math.random() * 999)).padStart(3, "0")}</span>
+                </div>
+                <button class="remove-btn" onclick="removePlayer(this)">[X]</button>
+            `;
+
+        emptySlot.replaceWith(playerTile);
+
+        input.value = "";
+        updateCounts();
+      }
+
+      function removePlayer(btn) {
+        const playerTile = btn.parentElement;
+        const container = playerTile.parentElement;
+
+        const emptySlot = document.createElement("div");
+        emptySlot.className = "player-slot";
+        emptySlot.textContent = "[empty]";
+
+        playerTile.replaceWith(emptySlot);
+        updateCounts();
+      }
+
+      function updateCounts() {
+        const redCount = document.querySelectorAll("#red-players .player-tile").length;
+        const blueCount = document.querySelectorAll("#blue-players .player-tile").length;
+        document.getElementById("red-count").textContent = `${redCount}/6 operatives`;
+        document.getElementById("blue-count").textContent = `${blueCount}/6 operatives`;
+        document.getElementById("total-count").textContent = `${redCount + blueCount} Players`;
+      }
+    </script>
+  </body>
+</html>
