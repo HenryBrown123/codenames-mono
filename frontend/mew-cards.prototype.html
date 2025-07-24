@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Card Reveal Prototype</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700;900&family=Roboto+Slab:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* === PROTOTYPE-ONLY: PAGE LAYOUT & CONTROLS === */
+
+      /* App background and vertical centering for the prototype page */
+      body {
+        background-color: #121212;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        padding: 20px;
+      }
+
+      /* Top toggle bar containing prototype controls (e.g. reveal switch) */
+      .PrototypeToggleBar {
+        width: 100%;
+        max-width: 1200px;
+        display: flex;
+        align-items: center;
+        margin-bottom: 32px;
+        justify-content: flex-end;
+      }
+      .PrototypeToggleBar label {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 1rem;
+        color: #f4f1e8;
+        margin-left: 8px;
+      }
+      .PrototypeToggleBar input[type="checkbox"] {
+        accent-color: #3399ff;
+        width: 24px;
+        height: 24px;
+      }
+
+      /* Grid that arranges all demo cards in the prototype */
+      .PrototypeCardGrid {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 28px;
+        width: 100%;
+        max-width: 1200px;
+        flex-wrap: wrap;
+        margin: auto;
+        /* Adds 3D table tilt, adjustable via --grid-tilt variable */
+        --grid-tilt: 24deg;
+        --grid-tilt-factor: 0.4; /* 0 to 1 based on tilt */
+        --card-scale: 1; /* Card size multiplier */
+        transform: perspective(900px) rotateX(var(--grid-tilt));
+        transform-style: preserve-3d;
+        transition: transform 0.3s ease;
+      }
+
+      /* === CARD COMPONENT STYLES: COPY/PORT TO REACT/STYLED-COMPONENTS === */
+
+      /* Cards are now rectangular, wider than tall, to match the main React app */
+      /* CardSlot: Outermost container for each card, sets size and stacking context */
+      .CardSlot {
+        width: calc(225px * var(--card-scale));
+        height: calc(150px * var(--card-scale));
+        flex: 0 0 auto;
+        position: relative;
+        display: flex;
+        align-items: stretch;
+        justify-content: stretch;
+        transition:
+          width 0.3s ease,
+          height 0.3s ease;
+      }
+
+      /* Make cards square when small */
+      .PrototypeCardGrid[data-small-cards="true"] .CardSlot {
+        width: calc(150px * var(--card-scale)); /* Use the smaller dimension for square */
+        height: calc(150px * var(--card-scale));
+      }
+
+      /* CardInner: Centers card content, manages border radius and layout stacking */
+      .CardInner {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        border-radius: 12px;
+        overflow: visible;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 2;
+      }
+
+      /* CardInner::after creates a visible bottom edge for 3D "thickness" */
+      .CardInner::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        /* Depth based on tilt factor */
+        bottom: calc(-7px * var(--grid-tilt-factor));
+        height: calc(11px * var(--grid-tilt-factor));
+        opacity: calc(0.91 * var(--grid-tilt-factor));
+        border-radius: 0 0 12px 12px;
+        background: linear-gradient(to bottom, #b5a67b, #5c482e 90%);
+        z-index: 3;
+        pointer-events: none;
+        filter: blur(0.2px);
+        transition: all 0.3s ease;
+      }
+
+      /* CardUnrevealed: Main face of an unrevealed card
+         CardRevealedOverlay: Overlay shown when card is revealed (hidden by default)
+         Both use absolute positioning and flex centering */
+      .CardUnrevealed,
+      .CardRevealedOverlay {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        inset: 0;
+        padding: 12px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: visible;
+        box-sizing: border-box;
+      }
+
+      /* CardUnrevealed: Visual background for unrevealed card, with subtle noise overlay */
+      .CardUnrevealed {
+        background: linear-gradient(to bottom, #f4f1e8 0%, #ebe7dc 100%);
+        border: 1px solid #d4d1c8;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        z-index: 1;
+      }
+      .CardUnrevealed::after {
+        /* Adds a noise texture overlay to unrevealed cards for tactile feel */
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: url('data:image/svg+xml,%3Csvg width="100" height="100" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="6" /%3E%3CfeColorMatrix values="0 0 0 0 0.9 0 0 0 0 0.9 0 0 0 0 0.85 0 0 0 0.15 0"/%3E%3C/filter%3E%3Crect width="100" height="100" filter="url(%23noise)"/%3E%3C/svg%3E');
+        opacity: 0.6;
+        pointer-events: none;
+        z-index: 1;
+        border-radius: 12px;
+      }
+
+      /* CardWordMain: The main word/label on the card, styled for prominence and legibility */
+      .CardWordMain {
+        background: rgba(255, 255, 255, 0.88);
+        color: #222;
+        border-radius: 7px;
+        padding: 0.2em 0.6em;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+        font-family: "Roboto Slab", serif;
+        font-size: calc(1.6rem * var(--card-scale));
+        font-weight: 900;
+        text-transform: uppercase;
+        text-align: center;
+        width: auto;
+        letter-spacing: 0.03em;
+        transition:
+          color 0.2s,
+          text-shadow 0.2s,
+          font-size 0.3s ease;
+      }
+
+      /* CardRevealedOverlay: Overlay shown when card is revealed; colored border and shadow by team */
+      .CardRevealedOverlay {
+        border: 3px solid var(--team-color, #888);
+        box-shadow:
+          0 8px 32px 0 rgba(0, 0, 0, 0.3),
+          0 0 32px 2px var(--team-color, #888);
+        z-index: 20;
+        display: none; /* Hidden unless revealed */
+        flex-direction: column;
+        background: transparent;
+        overflow: visible;
+        /* Only translate when tilted */
+        transform: translateY(calc(-8px * var(--grid-tilt-factor)));
+        padding: 12px;
+        border-radius: 12px;
+        transition:
+          box-shadow 0.24s cubic-bezier(0.25, 1.3, 0.44, 1),
+          border 0.18s,
+          background 0.18s,
+          transform 0.3s ease;
+      }
+      .CardRevealedOverlay.visible {
+        display: flex;
+      }
+
+      /* Thinner border and less glow for small cards */
+      .PrototypeCardGrid[data-small-cards="true"] .CardRevealedOverlay {
+        border-width: 2px;
+        box-shadow:
+          0 4px 16px 0 rgba(0, 0, 0, 0.3),
+          0 0 16px 1px var(--team-color, #888);
+      }
+
+      /* CardColorTint: Semi-transparent color overlay for team/assassin color on revealed cards */
+      .CardColorTint {
+        position: absolute;
+        inset: 0;
+        background-color: var(--team-color);
+        opacity: 0.6;
+        z-index: 3;
+        border-radius: 12px;
+      }
+
+      /* Special case: AssassinCard .CardColorTint uses black and higher opacity for dramatic effect */
+      .AssassinCard .CardColorTint {
+        background-color: #000;
+        border: #c5ff08;
+        opacity: 0.9;
+      }
+
+      /* CardContent: Container for word and info block inside revealed overlay, fills overlay */
+      .CardRevealedOverlay .CardContent {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* CardWordMain within revealed overlay: centered absolutely, above tint, with no text-shadow */
+      .CardRevealedOverlay .CardWordMain {
+        color: #222;
+        background: rgba(255, 255, 255, 0.88);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+        text-shadow: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: auto;
+        height: auto;
+        margin: 0;
+        z-index: 100 !important;
+      }
+
+      /* InfoBlock now overlaps card bottom for better spacing. */
+      /* InfoBlock: Small label at the bottom of a revealed card (e.g. agent type, assassin) */
+      .InfoBlock {
+        background: rgba(0, 0, 0, 0.8);
+        border: 1px solid var(--team-color, #888);
+        color: var(--team-color, #888);
+        border-radius: 6px;
+        padding: 5px 12px;
+        font-size: calc(0.75rem * var(--card-scale));
+        font-weight: 700;
+        text-transform: uppercase;
+        box-shadow:
+          0 0 8px -2px var(--team-color, #888),
+          0 6px 16px 0 rgba(0, 0, 0, 0.32);
+        position: absolute;
+        left: 50%;
+        /* Depth based on tilt factor */
+        bottom: calc(-8px - (5px * var(--grid-tilt-factor)));
+        transform: translateX(-50%);
+        margin-top: 0;
+        z-index: 3;
+        white-space: nowrap;
+        pointer-events: none;
+        transition:
+          bottom 0.3s ease,
+          font-size 0.3s ease,
+          padding 0.3s ease;
+      }
+
+      /* Make info block MUCH bigger for symbol-only display */
+      .PrototypeCardGrid[data-small-cards="true"] .InfoBlock {
+        font-size: calc(2.5rem * var(--card-scale)); /* Much bigger! */
+        padding: 0.25em 0.35em; /* Square aspect ratio */
+        font-weight: 900;
+        bottom: calc(
+          -35px - (5px * var(--grid-tilt-factor))
+        ); /* Move even further down for spacing */
+        background: rgba(0, 0, 0, 0.85); /* Slightly less opaque */
+        border-width: 1.5px; /* Thinner border */
+        border-radius: 8px; /* Slightly larger radius */
+        width: calc(3rem * var(--card-scale)); /* Fixed width for square */
+        height: calc(3rem * var(--card-scale)); /* Fixed height for square */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        box-shadow:
+          0 0 8px -2px var(--team-color, #888),
+          0 4px 12px 0 rgba(0, 0, 0, 0.3),
+          0 0 16px var(--team-color, #888); /* Reduced glow */
+      }
+
+      /* Hide text content on small cards */
+      .PrototypeCardGrid[data-small-cards="true"] .InfoBlock .info-text {
+        display: none;
+      }
+
+      /* CardTargetBracket: Glowing bracket used to highlight/target a card (e.g. for clues) */
+      .CardTargetBracket {
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        border: 3px solid #00ff88;
+        filter: drop-shadow(0 0 8px #00ff88);
+        z-index: 20;
+        background: none;
+        pointer-events: none;
+        transition: all 0.3s ease;
+      }
+
+      /* Smaller, tighter brackets for small cards */
+      .PrototypeCardGrid[data-small-cards="true"] .CardTargetBracket {
+        width: 16px;
+        height: 16px;
+        border-width: 2px;
+        filter: drop-shadow(0 0 4px #00ff88); /* Less glow */
+      }
+
+      /* Positioning for each bracket corner */
+      .CardBracketTL {
+        inset: -13px auto auto -13px;
+        border-right: none;
+        border-bottom: none;
+      }
+      .CardBracketTR {
+        inset: -13px -13px auto auto;
+        border-left: none;
+        border-bottom: none;
+      }
+      .CardBracketBL {
+        inset: auto auto -13px -13px;
+        border-right: none;
+        border-top: none;
+      }
+      .CardBracketBR {
+        inset: auto -13px -13px auto;
+        border-left: none;
+        border-top: none;
+      }
+
+      /* Tighter positioning for small cards */
+      .PrototypeCardGrid[data-small-cards="true"] .CardBracketTL {
+        inset: -8px auto auto -8px;
+      }
+      .PrototypeCardGrid[data-small-cards="true"] .CardBracketTR {
+        inset: -8px -8px auto auto;
+      }
+      .PrototypeCardGrid[data-small-cards="true"] .CardBracketBL {
+        inset: auto auto -8px -8px;
+      }
+      .PrototypeCardGrid[data-small-cards="true"] .CardBracketBR {
+        inset: auto -8px -8px auto;
+      }
+
+      /* AssassinCard: Modifier for revealed assassin cards (yellow highlight) */
+      .AssassinCard {
+        --team-color: #ffff00;
+      }
+      /* AssassinCard .InfoBlock: Special styling for assassin revealed label */
+      .AssassinCard .InfoBlock {
+        background-color: var(--team-color);
+        color: #000;
+        box-shadow:
+          0 0 10px #ffff00,
+          0 0 20px #ff0000;
+      }
+
+      /* Keep assassin symbol visible on small cards */
+      .PrototypeCardGrid[data-small-cards="true"] .AssassinCard .InfoBlock {
+        background-color: #ffff00; /* Bright yellow background */
+        color: #000; /* Black symbol for contrast */
+      }
+
+      .CardCovered {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: 12px;
+        border: 1.5px solid #d6d1bc;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
+        z-index: 1;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        overflow: visible;
+        background: var(--team-color, #ece6db);
+      }
+
+      .CardCovered.visible {
+        display: flex;
+      }
+
+      .CardCovered::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 12px;
+        box-shadow: 0 3px 18px 0 rgba(0, 0, 0, 0.12) inset;
+        pointer-events: none;
+        z-index: 3;
+      }
+
+      .CardCovered::after {
+        content: "";
+        position: absolute;
+        left: 7px;
+        right: 7px;
+        /* Depth based on tilt factor */
+        bottom: calc(-13px * var(--grid-tilt-factor));
+        height: calc(18px * var(--grid-tilt-factor));
+        opacity: calc(0.95 * var(--grid-tilt-factor));
+        border-radius: 0 0 10px 10px;
+        background: linear-gradient(to bottom, #b39b79 10%, #967c5a 70%, #725e45 95%, #3c2c19 100%);
+        box-shadow:
+          0 4px 8px 0 rgba(40, 30, 10, 0.16),
+          0 1.5px 0 0 #ccbda533 inset;
+        z-index: 2;
+        pointer-events: none;
+        transition: all 0.3s ease;
+      }
+
+      /* CardCoveredSymbol: Large icon/symbol shown on covered cards (e.g. star, skull) */
+      .CardCoveredSymbol {
+        font-size: calc(3.3rem * var(--card-scale));
+        font-weight: 900;
+        color: #fff;
+        opacity: 0.9;
+        letter-spacing: 0.07em;
+        text-shadow:
+          0 1.5px 0 #000,
+          0 1.5px 4px rgba(0, 0, 0, 0.6);
+        z-index: 2;
+        transition: font-size 0.3s ease;
+      }
+
+      /* CardCoveredAssassin: Modifier for covered assassin card, gives gold/yellow background and border */
+      .CardCoveredAssassin::after {
+        background: linear-gradient(to bottom, #fff769 10%, #e6c644 60%, #bba52e 95%, #8d7c1b 100%);
+      }
+      .CardCoveredAssassin {
+        background: linear-gradient(135deg, #e9d470 80%, #a79723 100%);
+        border: 1.5px solid #e7c80d;
+        box-shadow:
+          0 2.5px 8px rgba(0, 0, 0, 0.14),
+          0 0.5px 0.5px rgba(0, 0, 0, 0.11);
+      }
+      /* CardCoveredAssassin .CardCoveredSymbol: Gold color and subtle highlight for skull symbol */
+      .CardCoveredAssassin .CardCoveredSymbol {
+        color: #bbaa22;
+        opacity: 0.94;
+        text-shadow:
+          0 1.5px 0 #fffccc,
+          0 1.5px 6px rgba(180, 180, 40, 0.11);
+      }
+
+      /* HideWhenRevealed: Utility class to hide elements (e.g. word) when the card is revealed */
+      .HideWhenRevealed.hide {
+        visibility: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="PrototypeToggleBar">
+      <input type="checkbox" id="reveal-toggle" />
+      <label for="reveal-toggle">Show Revealed</label>
+      <div style="display: inline-flex; align-items: center; gap: 8px; margin-left: 36px">
+        <label for="tilt-slider" style="color: #eee; cursor: pointer">Grid tilt</label>
+        <input
+          id="tilt-slider"
+          type="range"
+          min="0"
+          max="60"
+          value="24"
+          style="vertical-align: middle"
+        />
+        <span
+          id="tilt-value"
+          style="
+            color: #ccc;
+            font-family:
+              JetBrains Mono,
+              monospace;
+          "
+          >24°</span
+        >
+      </div>
+      <div style="display: inline-flex; align-items: center; gap: 8px; margin-left: 36px">
+        <label for="size-slider" style="color: #eee; cursor: pointer">Card size</label>
+        <input
+          id="size-slider"
+          type="range"
+          min="50"
+          max="150"
+          value="100"
+          style="vertical-align: middle"
+        />
+        <span
+          id="size-value"
+          style="
+            color: #ccc;
+            font-family:
+              JetBrains Mono,
+              monospace;
+          "
+          >100%</span
+        >
+      </div>
+    </div>
+    <div class="PrototypeCardGrid">
+      <!-- Bystander Card (Gray/Neutral) -->
+      <div class="CardSlot">
+        <div class="CardInner">
+          <div class="CardUnrevealed visible">
+            <span class="CardWordMain HideWhenRevealed">AGENT</span>
+          </div>
+          <div class="CardRevealedOverlay" style="--team-color: #8b8b8b">
+            <div class="CardColorTint"></div>
+            <div class="CardContent">
+              <div class="CardWordMain">AGENT</div>
+              <div class="InfoBlock">● <span class="info-text">BYSTANDER</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Your Team's Card (Red) -->
+      <div class="CardSlot">
+        <div class="CardInner">
+          <div class="CardUnrevealed visible" style="position: relative">
+            <span class="CardWordMain HideWhenRevealed">CASTLE</span>
+          </div>
+          <div class="CardRevealedOverlay" style="--team-color: #ff3333">
+            <div class="CardColorTint"></div>
+            <div class="CardTargetBracket CardBracketTL"></div>
+            <div class="CardTargetBracket CardBracketTR"></div>
+            <div class="CardTargetBracket CardBracketBL"></div>
+            <div class="CardTargetBracket CardBracketBR"></div>
+            <div class="CardContent">
+              <div class="CardWordMain">CASTLE</div>
+              <div class="InfoBlock">★ <span class="info-text">RED AGENT</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Opponent Card (Blue) -->
+      <div class="CardSlot">
+        <div class="CardInner">
+          <div class="CardUnrevealed visible">
+            <span class="CardWordMain HideWhenRevealed">NINJA</span>
+          </div>
+          <div class="CardRevealedOverlay" style="--team-color: #3399ff">
+            <div class="CardColorTint"></div>
+            <div class="CardContent">
+              <div class="CardWordMain">NINJA</div>
+              <div class="InfoBlock">♦ <span class="info-text">BLUE AGENT</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Assassin Card -->
+      <div class="CardSlot">
+        <div class="CardInner">
+          <div class="CardUnrevealed visible">
+            <span class="CardWordMain HideWhenRevealed">DEATH</span>
+          </div>
+          <div class="CardRevealedOverlay AssassinCard">
+            <div class="CardColorTint"></div>
+            <div class="CardContent">
+              <div class="CardWordMain">DEATH</div>
+              <div class="InfoBlock">☠ <span class="info-text">!! ASSASSIN !!</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Covered Red Card -->
+      <div class="CardSlot">
+        <div class="CardInner">
+          <div class="CardCovered visible" style="--team-color: #ff3333">
+            <div class="CardCoveredSymbol">★</div>
+          </div>
+        </div>
+      </div>
+      <!-- Covered Bystander Card -->
+      <div class="CardSlot">
+        <div class="CardInner">
+          <div class="CardCovered visible" style="--team-color: #8b8b8b">
+            <div class="CardCoveredSymbol">●</div>
+          </div>
+        </div>
+      </div>
+      <!-- Covered Blue Card -->
+      <div class="CardSlot">
+        <div class="CardInner">
+          <div class="CardCovered visible" style="--team-color: #3399ff">
+            <div class="CardCoveredSymbol">♦</div>
+          </div>
+        </div>
+      </div>
+      <!-- Covered Assassin Card -->
+      <div class="CardSlot">
+        <div class="CardInner">
+          <div class="CardCovered CardCoveredAssassin visible">
+            <div class="CardCoveredSymbol">☠</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const revealToggle = document.getElementById("reveal-toggle");
+      const grid = document.querySelector(".PrototypeCardGrid");
+      const tiltSlider = document.getElementById("tilt-slider");
+      const tiltValue = document.getElementById("tilt-value");
+      const sizeSlider = document.getElementById("size-slider");
+      const sizeValue = document.getElementById("size-value");
+      const cardGrid = document.querySelector(".PrototypeCardGrid");
+
+      function updateRevealState(showRevealed) {
+        const slots = grid.querySelectorAll(".CardSlot");
+        slots.forEach((slot) => {
+          const unrevealed = slot.querySelector(".CardUnrevealed");
+          const revealed = slot.querySelector(".CardRevealedOverlay");
+          const covered = slot.querySelector(".CardCovered");
+          const unrevealedWord = unrevealed ? unrevealed.querySelector(".HideWhenRevealed") : null;
+          if (covered) {
+            covered.classList.add("visible");
+            if (unrevealed) unrevealed.classList.remove("visible");
+            if (revealed) revealed.classList.remove("visible");
+            if (unrevealedWord) unrevealedWord.classList.remove("hide");
+          } else if (unrevealed && revealed) {
+            if (showRevealed) {
+              unrevealed.classList.remove("visible");
+              revealed.classList.add("visible");
+              if (unrevealedWord) unrevealedWord.classList.add("hide");
+            } else {
+              unrevealed.classList.add("visible");
+              revealed.classList.remove("visible");
+              if (unrevealedWord) unrevealedWord.classList.remove("hide");
+            }
+          }
+        });
+      }
+
+      function updateGridTilt(deg) {
+        const tiltFactor = deg / 60; // 0 to 1 range
+
+        cardGrid.style.setProperty("--grid-tilt-factor", tiltFactor);
+        cardGrid.style.setProperty("--grid-tilt", deg + "deg");
+
+        if (deg > 0) {
+          cardGrid.style.transform = `perspective(900px) rotateX(${deg}deg)`;
+        } else {
+          // Completely flat at 0
+          cardGrid.style.transform = "none";
+        }
+      }
+
+      function updateCardSize(percent) {
+        const scale = percent / 100;
+        cardGrid.style.setProperty("--card-scale", scale);
+
+        // Add data attribute for small cards (less than 75%)
+        if (percent < 75) {
+          cardGrid.setAttribute("data-small-cards", "true");
+        } else {
+          cardGrid.setAttribute("data-small-cards", "false");
+        }
+      }
+
+      revealToggle.addEventListener("change", function () {
+        updateRevealState(this.checked);
+      });
+
+      tiltSlider.addEventListener("input", function () {
+        tiltValue.textContent = this.value + "°";
+        updateGridTilt(parseFloat(this.value));
+      });
+
+      sizeSlider.addEventListener("input", function () {
+        sizeValue.textContent = this.value + "%";
+        updateCardSize(parseFloat(this.value));
+      });
+
+      // Initialize states
+      updateRevealState(false);
+      updateGridTilt(parseFloat(tiltSlider.value));
+      updateCardSize(parseFloat(sizeSlider.value));
+    </script>
+  </body>
+</html>

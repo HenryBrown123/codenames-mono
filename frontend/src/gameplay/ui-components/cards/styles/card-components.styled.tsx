@@ -804,95 +804,76 @@ export const CardARCorner = styled.div<{
 
 // ===== SHARED COMPONENTS =====
 /**
- * Card word display - handles text in both normal and AR views
- * Adapts styling based on parent context
+ * Card word display - white background, black text, consistent sizing
+ * Maintains same appearance in both normal and AR views
  */
 export const CardWord = styled.span`
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  text-align: center;
+  /* Container styling from prototype */
+  background: rgba(255, 255, 255, 0.88);
+  color: #222;
+  border-radius: 7px;
+  padding: 0.2em 0.5em; /* Reduced padding */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
 
-  /* Handle long words */
+  /* Typography - more reasonable sizing */
+  font-family: sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-align: center;
+  letter-spacing: 0.02em;
+
+  /* Layout */
+  position: relative;
+  display: inline-block;
+  width: auto;
+  max-width: 90%; /* Prevent overflow */
   word-wrap: break-word;
   overflow-wrap: break-word;
-
   margin: 0;
-  padding: 0 0.5rem;
+  z-index: 100; /* Above all card elements */
 
-  /* Above texture but below overlays */
-  z-index: ${Z_INDEX.CARD_WORD};
+  /* Remove any text shadows */
+  text-shadow: none;
 
-  /* Typography */
-  font-weight: 900;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  transition: opacity 0.3s ease;
-  color: #0d0d13;
+  /* Transitions */
+  transition: transform 0.2s ease;
 
-  /* Normal card text - dark for contrast on beige */
-  &.card-word {
-    color: #2a2a3e;
-    /* Subtle embossed effect */
-    text-shadow:
-      1px 1px 0px rgba(255, 255, 255, 0.3),
-      /* Light from top-left */ -1px -1px 1px rgba(0, 0, 0, 0.2); /* Shadow to bottom-right */
+  /* Normal card context */
+  .normal-card & {
+    /* No changes needed - same styling */
   }
 
-  /* AR overlay text - glowing hacker style */
+  /* AR overlay context - absolute positioning */
   .spymaster-overlay & {
-    /* Re-center in overlay context */
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
 
-    /* UPDATED: Bigger text sizes */
-    font-size: clamp(1.4rem, 4vw, 1.8rem); /* CHANGED from clamp(1.2rem, 3.5vw, 1.6rem) */
-
-    /* Multi-layer glow effect */
-    text-shadow:
-      0 0 10px rgba(0, 255, 136, 0.8),
-      /* Inner glow */ 0 0 20px rgba(0, 255, 136, 0.6),
-      /* Middle glow */ 0 0 30px rgba(0, 255, 136, 0.4); /* Outer glow */
-
-    z-index: 5;
+    /* Same visual styling - no glow or color changes */
+    color: #222;
+    text-shadow: none;
   }
 
-  /* Assassin card text - electric yellow danger */
-  ${CardContainer}[data-team="assassin"] .spymaster-overlay & {
-    color: #ffff00;
-
-    /* Animated danger pulse */
-    @media (prefers-reduced-motion: no-preference) {
-      animation: ${dangerPulse} 1.5s ease-in-out infinite;
-    }
-
-    /* Static danger glow */
-    @media (prefers-reduced-motion: reduce) {
-      opacity: 1;
-      text-shadow:
-        0 0 30px #ffff00,
-        0 0 60px #ffff00,
-        0 0 80px #ff0000;
-    }
+  /* Responsive scaling - much more modest */
+  @media (max-width: 480px) {
+    font-size: 0.85rem;
+    padding: 0.15em 0.4em;
   }
 
-  /* Desktop responsive sizing */
-  @media (min-width: 1025px) {
-    .spymaster-overlay & {
-      font-size: 1.8rem; /* Ensure minimum size on large screens */
-    }
+  @media (min-width: 481px) {
+    font-size: 0.9rem;
   }
 
-  /* More padding on desktop */
   @media (min-width: 769px) {
-    padding: 0 1rem;
+    font-size: 1rem;
+  }
+
+  @media (min-width: 1025px) {
+    font-size: 1.1rem;
   }
 `;
-
 /**
  * Team symbol for covered cards - shows after card is guessed
  * Large icon indicating which team the card belonged to
