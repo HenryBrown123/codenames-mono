@@ -824,13 +824,10 @@ export const CardWord = styled.span`
   letter-spacing: 0.02em;
 
   /* Layout */
-  position: relative;
-  display: inline-block;
-  width: auto;
-  max-width: 90%; /* Prevent overflow */
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   z-index: 100; /* Above all card elements */
 
   /* Remove any text shadows */
