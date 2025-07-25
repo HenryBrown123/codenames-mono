@@ -10,32 +10,25 @@ import {
   ARGlare,
   ARScanlines,
   ARHUDContent,
-  ARHUDTop,
-  ARHUDStatus,
-  ARHUDLine,
-  ARCornerBrackets,
-  ARCorner,
-  ARCrosshair,
 } from "../cards/ar-overlay-components";
 
 /**
  * SpymasterBoard - Board view with spymaster AR overlay and toggle
  * Includes team color reveal functionality
  */
-export const SpymasterBoard = memo<{ tilt?: number; isInitialRender?: boolean }>(({ tilt = 0, isInitialRender = false }) => {
+export const SpymasterBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   const { gameData } = useGameDataRequired();
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === "SETUP";
 
-  return <SpymasterBoardContent cards={cards} isRoundSetup={isRoundSetup} tilt={tilt} isInitialRender={isInitialRender} />;
+  return <SpymasterBoardContent cards={cards} isRoundSetup={isRoundSetup} tilt={tilt} />;
 });
 
 const SpymasterBoardContent = memo<{
   cards: any[];
   isRoundSetup: boolean;
   tilt: number;
-  isInitialRender: boolean;
-}>(({ cards, isRoundSetup, tilt, isInitialRender }) => {
+}>(({ cards, isRoundSetup, tilt }) => {
   const { viewMode } = useCardVisibilityContext();
 
   return (
@@ -48,19 +41,12 @@ const SpymasterBoardContent = memo<{
           <ARScanlines />
 
           <ARHUDContent>
-            <ARCrosshair />
-
-            <ARCornerBrackets>
-              <ARCorner $position="tl" />
-              <ARCorner $position="tr" />
-              <ARCorner $position="bl" />
-              <ARCorner $position="br" />
-            </ARCornerBrackets>
+            {/* Removed screen-level crosshair and corners - keeping card-level ones */}
           </ARHUDContent>
         </ARGlassesHUD>
       )}
 
-      <GameBoardLayout data-ar-mode={viewMode === "spymaster"} tilt={tilt} isInitialRender={isInitialRender}>
+      <GameBoardLayout data-ar-mode={viewMode === "spymaster"} tilt={tilt}>
         {cards.length > 0
           ? cards.map((card, index) => (
               <GameCard

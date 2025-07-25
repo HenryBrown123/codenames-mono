@@ -14,9 +14,6 @@ import {
   ARHUDTop,
   ARHUDStatus,
   ARHUDLine,
-  ARCornerBrackets,
-  ARCorner,
-  ARCrosshair,
 } from "../cards/ar-overlay-components";
 
 
@@ -30,8 +27,7 @@ const CodebreakerBoardContent = memo<{
   activeTurn: any;
   onCardClick: (word: string) => void;
   tilt: number;
-  isInitialRender: boolean;
-}>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick, tilt, isInitialRender }) => {
+}>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick, tilt }) => {
   const { viewMode } = useCardVisibilityContext();
 
   return (
@@ -58,19 +54,12 @@ const CodebreakerBoardContent = memo<{
               </ARHUDStatus>
             </ARHUDTop>
 
-            <ARCrosshair />
-
-            <ARCornerBrackets>
-              <ARCorner $position="tl" />
-              <ARCorner $position="tr" />
-              <ARCorner $position="bl" />
-              <ARCorner $position="br" />
-            </ARCornerBrackets>
+            {/* Removed screen-level crosshair and corners - keeping card-level ones */}
           </ARHUDContent>
         </ARGlassesHUD>
       )}
 
-      <GameBoardLayout data-ar-mode={viewMode === 'spymaster'} tilt={tilt} isInitialRender={isInitialRender}>
+      <GameBoardLayout data-ar-mode={viewMode === 'spymaster'} tilt={tilt}>
         {cards.length > 0 ? cards.map((card, index) => (
           <GameCard
             key={card.word}
@@ -93,7 +82,7 @@ const CodebreakerBoardContent = memo<{
  * Mobile-first responsive design with adaptive grid
  * Includes AR mode toggle for enhanced gameplay
  */
-export const CodebreakerBoard = memo<{ tilt?: number; isInitialRender?: boolean }>(({ tilt = 0, isInitialRender = false }) => {
+export const CodebreakerBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   const { gameData } = useGameDataRequired();
   const { makeGuess, actionState } = useGameActions();
   const { activeTurn } = useTurn();
@@ -131,7 +120,6 @@ export const CodebreakerBoard = memo<{ tilt?: number; isInitialRender?: boolean 
       activeTurn={activeTurn}
       onCardClick={handleCardClick}
       tilt={tilt}
-      isInitialRender={isInitialRender}
     />
   );
 });

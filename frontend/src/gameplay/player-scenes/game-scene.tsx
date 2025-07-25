@@ -509,28 +509,18 @@ export const GameScene: React.FC = () => {
   const { activeTurn } = useTurn();
   const { currentRole, currentScene } = usePlayerScene();
   const [showCluePanel, setShowCluePanel] = useState(false);
-  const [boardTilt, setBoardTilt] = useState(0); // CSS will handle initial animation
-  const [isInitialRender, setIsInitialRender] = useState(true);
+  const [boardTilt, setBoardTilt] = useState(0);
   const { giveClue, actionState } = useGameActions();
   // Get current message
   const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
   const [toggleMessage, setToggleMessage] = useState(false);
-
-  // Track when initial animation completes
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsInitialRender(false);
-    }, 2000); // Match animation duration + delay
-    
-    return () => clearTimeout(timer);
-  }, []);
 
   // Show skeleton during initial load
   if (isPending && !gameData) {
     return (
       <GameSceneContainer>
         <GameBoardContainer>
-          <SpectatorBoard tilt={boardTilt} isInitialRender={false} />
+          <SpectatorBoard tilt={boardTilt} />
         </GameBoardContainer>
         <DashboardContainer />
       </GameSceneContainer>
@@ -554,7 +544,7 @@ export const GameScene: React.FC = () => {
     return (
       <GameSceneContainer>
         <GameBoardContainer>
-          <SpectatorBoard tilt={boardTilt} isInitialRender={false} />
+          <SpectatorBoard tilt={boardTilt} />
         </GameBoardContainer>
         <DashboardContainer>
           <div>Game Completed!</div>
@@ -565,13 +555,11 @@ export const GameScene: React.FC = () => {
 
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
   
-  // Update getBoardComponent to pass tilt and isInitialRender
-  // Only animate for active game roles (CODEBREAKER and SPYMASTER)
-  const shouldAnimate = currentRole === "CODEBREAKER" || currentRole === "SPYMASTER";
+  // Update getBoardComponent to pass tilt
   const BoardComponent = React.useMemo(() => {
     const Component = getBoardComponent(currentRole, currentScene);
-    return () => <Component tilt={boardTilt} isInitialRender={shouldAnimate && isInitialRender} />;
-  }, [currentRole, currentScene, boardTilt, isInitialRender, shouldAnimate]);
+    return () => <Component tilt={boardTilt} />;
+  }, [currentRole, currentScene, boardTilt]);
 
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === "SETUP";
