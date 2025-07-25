@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { useNavigate } from "react-router-dom";
-import { Plus, X, Users, Play, Edit2, Check } from "lucide-react";
 import {
   useLobbyQuery,
   useAddPlayer,
@@ -13,184 +12,290 @@ import {
   type LobbyPlayer,
 } from "@frontend/lobby/api";
 
-// Interface for props
 interface LobbyInterfaceProps {
   gameId: string;
 }
 
-// Mock data structure as fallback with proper typing
-const mockLobbyData: LobbyData = {
-  publicId: "unknown",
-  status: "LOBBY",
-  gameType: "SINGLE_DEVICE",
-  canModifyGame: true,
-  teams: [
-    {
-      name: "Team Red",
-      players: [] as LobbyPlayer[],
-    },
-    {
-      name: "Team Blue",
-      players: [] as LobbyPlayer[],
-    },
-  ],
-};
-
-// Styled Components - Simple tile-based design
-const Container = styled.div`
-  position: relative;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  top: 0;
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  height: 100vh;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  overflow: auto;
-  margin-top: 30px;
-
-  @media (max-width: 768px) {
-    margin-top: 30px;
+// Animations
+const glitchAnimation = keyframes`
+  0%, 100% {
+    text-shadow: 
+      0 0 2px var(--color-primary, #00ff88),
+      0 0 4px var(--color-primary, #00ff88);
+  }
+  25% {
+    text-shadow: 
+      -2px 0 var(--color-accent, #ff0080),
+      2px 0 var(--color-team-blue, #00d4ff);
+  }
+  50% {
+    text-shadow: 
+      2px 0 var(--color-accent, #ff0080),
+      -2px 0 var(--color-primary, #00ff88);
+  }
+  75% {
+    text-shadow: 
+      0 0 2px var(--color-team-blue, #00d4ff),
+      0 0 4px var(--color-team-blue, #00d4ff);
   }
 `;
 
+const scanlineAnimation = keyframes`
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+`;
+
+const statusBlink = keyframes`
+  0%, 49% { 
+    opacity: 1; 
+  }
+  50%, 100% { 
+    opacity: 0.3; 
+  }
+`;
+
+// Create a global style for synchronized animation
+const GlobalStatusAnimation = styled.div`
+  @keyframes global-status-blink {
+    0%,
+    49% {
+      opacity: 1;
+    }
+    50%,
+    100% {
+      opacity: 0.3;
+    }
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-primary, #00ff88);
+    box-shadow: 0 0 4px var(--color-primary, #00ff88);
+    animation: global-status-blink 1.5s step-end infinite;
+  }
+`;
+
+// Styled Components
+const Container = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow: auto;
+`;
+
 const MainContent = styled.div`
-  width: 90%;
-  margin: 1rem auto;
-  padding: 2rem;
-  background-color: rgba(65, 63, 63, 0.8);
-  border-radius: 16px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 1200px;
+  padding: 30px;
+  background: linear-gradient(120deg, rgba(10, 16, 14, 0.76) 65%, rgba(20, 20, 30, 0.7) 100%);
+  border: 1px solid var(--color-primary, #00ff88);
+  border-radius: 8px;
+  box-shadow: 0 0 24px 0 rgba(64, 255, 166, 0.14);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+
+  /* Scanline effect */
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(0, 255, 136, 0.8) 50%,
+      transparent 100%
+    );
+    animation: ${scanlineAnimation} 4s linear infinite;
+    pointer-events: none;
+  }
 `;
 
 const Header = styled.div`
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 const Title = styled.h1`
-  font-size: clamp(2rem, 5vw, 3rem);
+  font-size: 2.2rem;
   font-weight: bold;
-  color: white;
-  margin-bottom: 1rem;
+  color: var(--color-primary, #00ff88);
+  text-transform: uppercase;
+  letter-spacing: 6px;
+  margin-bottom: 8px;
+  opacity: 0.9;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  animation: ${glitchAnimation} 4s ease-in-out infinite;
 `;
 
 const GameInfo = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: clamp(1rem, 2vw, 1.2rem);
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-`;
-
-const InfoItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-`;
-
-const StatusBadge = styled.div<{ ready: boolean }>`
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  background-color: ${(props) => (props.ready ? "#10b981" : "#f59e0b")};
-  color: white;
-  font-weight: 600;
-  font-size: 0.9rem;
+  color: var(--color-team-blue, #00d4ff);
+  font-size: 1.2rem;
+  opacity: 0.7;
+  letter-spacing: 2px;
+  font-family: "JetBrains Mono", monospace;
 `;
 
 const TeamsGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 3rem;
-  margin: 3rem 0;
+  gap: 30px;
+  margin: 20px 0 50px 0;
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
-    gap: 2rem;
+    gap: 20px;
   }
 `;
 
-const TeamTile = styled.div<{ teamColor: string; isDragOver?: boolean }>`
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-  border: 3px solid ${(props) => props.teamColor};
-  border-radius: 20px;
-  padding: 2rem;
-  min-height: 300px;
-  position: relative;
-  backdrop-filter: blur(10px);
-  transition: all 0.2s;
+const TeamTile = styled.div<{ $teamColor: string; $isDragOver?: boolean }>`
+  border: 1px solid ${(props) => props.$teamColor};
+  border-radius: 4px;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(1px);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
 
   ${(props) =>
-    props.isDragOver &&
+    props.$isDragOver &&
     `
-    border-color: ${props.teamColor}CC;
-    background: linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.2),
-      rgba(255, 255, 255, 0.1)
-    );
+    border-color: ${props.$teamColor};
+    background: rgba(0, 0, 0, 0.7);
+    box-shadow: 0 0 20px ${props.$teamColor};
     transform: scale(1.02);
   `}
 `;
 
-const TeamHeader = styled.div<{ teamColor: string }>`
-  text-align: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid ${(props) => props.teamColor}40;
+const TeamHeader = styled.div`
+  margin-bottom: 15px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
-const TeamName = styled.h2<{ teamColor: string }>`
-  font-size: clamp(1.5rem, 3vw, 2rem);
+const TeamName = styled.h2<{ $teamColor: string }>`
+  font-size: 1.3rem;
   font-weight: bold;
-  color: ${(props) => props.teamColor};
-  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  opacity: 0.9;
+  color: ${(props) => props.$teamColor};
+  font-family: "JetBrains Mono", monospace;
 `;
 
 const PlayerCount = styled.div`
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  padding: 0.3rem 0.8rem;
-  border-radius: 15px;
-  font-size: 0.9rem;
-  display: inline-block;
+  color: var(--color-team-blue, #00d4ff);
+  font-size: 1rem;
+  opacity: 0.7;
+  font-family: "JetBrains Mono", monospace;
 `;
 
-const PlayersArea = styled.div`
-  min-height: 150px;
-  margin-bottom: 1.5rem;
+const PlayersContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 12px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.1rem;
+  min-height: 180px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0;
+  flex: 1;
+
+  /* Custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary, #00ff88) transparent;
+
+  &::-webkit-scrollbar {
+    width: 3px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-primary, #00ff88);
+    opacity: 0.5;
+  }
 `;
 
-const PlayerTile = styled.div<{ isDragging?: boolean }>`
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
-  padding: 1rem;
-  margin-bottom: 0.8rem;
+const PlayerTile = styled.div<{ $isDragging?: boolean }>`
+  background: transparent;
+  border: none;
+  padding: 6px 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  transition: all 0.2s;
-  cursor: ${(props) => (props.isDragging ? "grabbing" : "grab")};
-  opacity: ${(props) => (props.isDragging ? 0.5 : 1)};
+  gap: 10px;
+  white-space: nowrap;
+  transition: all 0.1s ease;
+  position: relative;
+  line-height: 1.4;
+  height: 30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: ${(props) => (props.$isDragging ? "grabbing" : "grab")};
+  opacity: ${(props) => (props.$isDragging ? 0.5 : 1)};
   user-select: none;
 
+  &::before {
+    content: ">";
+    color: var(--color-primary, #00ff88);
+    opacity: 0.5;
+    margin-right: 4px;
+  }
+
   &:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: ${(props) => (props.isDragging ? "none" : "translateY(-2px)")};
-  }
+    background: rgba(0, 255, 136, 0.05);
+    padding-left: 4px;
 
-  &:active {
-    cursor: grabbing;
+    &::before {
+      opacity: 1;
+    }
   }
+`;
 
-  &:last-child {
-    margin-bottom: 0;
+const PlayerSlot = styled.div`
+  background: transparent;
+  border: none;
+  padding: 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  transition: all 0.1s ease;
+  position: relative;
+  line-height: 1.4;
+  height: 30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.2);
+
+  &::before {
+    content: ">";
+    color: rgba(255, 255, 255, 0.1);
+    opacity: 0.5;
+    margin-right: 4px;
   }
 `;
 
@@ -201,74 +306,98 @@ const PlayerName = styled.span`
   flex: 1;
 `;
 
-const PlayerActions = styled.div`
-  display: flex;
-  gap: 0.5rem;
+const EditableInput = styled.input`
+  background: transparent;
+  border: 1px solid var(--color-primary, #00ff88);
+  color: white;
+  font-weight: 500;
+  font-size: 1.1rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 2px;
+  flex: 1;
+  font-family: "JetBrains Mono", monospace;
+
+  &:focus {
+    outline: none;
+    border-color: white;
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+  }
 `;
 
-const ActionIcon = styled.button`
-  background: rgba(255, 255, 255, 0.2);
+const RemoveButton = styled.button`
+  background: transparent;
   border: none;
-  border-radius: 6px;
-  padding: 0.4rem;
-  color: white;
+  color: rgba(255, 0, 0, 0.5);
+  padding: 0 4px;
+  font-size: 1rem;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
+  opacity: 0;
+  transition: all 0.2s;
+  font-family: "JetBrains Mono", monospace;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.3);
+  ${PlayerTile}:hover & {
+    opacity: 1;
   }
 
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  &:hover {
+    color: #ff0040;
+    background: rgba(255, 0, 0, 0.1);
   }
 `;
 
 const AddPlayerArea = styled.div`
   display: flex;
-  gap: 0.8rem;
-  align-items: center;
+  gap: 8px;
+  align-items: stretch;
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 const AddInput = styled.input`
   flex: 1;
-  padding: 0.8rem;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-  color: white;
-  font-size: 1rem;
-  transition: border-color 0.2s;
+  padding: 12px 15px;
+  background-color: rgba(0, 255, 136, 0.05);
+  border: 1px solid var(--color-primary, #00ff88);
+  border-radius: 3px;
+  color: var(--color-primary, #00ff88);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.1rem;
+  transition: all 0.2s ease;
 
   &::placeholder {
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--color-primary, #00ff88);
+    opacity: 0.6;
+    font-size: 1rem;
   }
 
   &:focus {
     outline: none;
-    border-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(0, 255, 136, 0.1);
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
   }
 `;
 
-const AddButton = styled.button<{ teamColor: string }>`
-  background: ${(props) => props.teamColor};
+const AddButton = styled.button<{ $teamColor: string }>`
+  background-color: ${(props) => props.$teamColor};
+  color: #0a0a0f;
   border: none;
-  border-radius: 10px;
-  padding: 0.8rem;
-  color: white;
+  padding: 12px 20px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1rem;
+  font-weight: bold;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 45px;
-  transition: all 0.2s;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 6px ${(props) => props.$teamColor};
+  opacity: 0.92;
 
   &:hover:not(:disabled) {
-    transform: scale(1.05);
+    background-color: #fff;
+    color: ${(props) => props.$teamColor};
+    opacity: 1;
   }
 
   &:disabled {
@@ -277,68 +406,60 @@ const AddButton = styled.button<{ teamColor: string }>`
   }
 `;
 
-const StartSection = styled.div`
-  text-align: center;
-  margin-top: 3rem;
-  padding-top: 2rem;
-  border-top: 2px solid rgba(255, 255, 255, 0.2);
-`;
+const StartButton = styled.button<{ $canStart: boolean }>`
+  background: ${(props) => (props.$canStart ? "var(--color-primary, #00ff88)" : "#6b7280")};
+  color: #000;
+  padding: 20px 60px;
+  font-size: 1.8rem;
+  margin: 20px auto 0;
+  display: block;
+  border: 2px solid ${(props) => (props.$canStart ? "var(--color-primary, #00ff88)" : "#6b7280")};
+  border-radius: 3px;
+  font-family: "JetBrains Mono", monospace;
+  box-shadow: ${(props) =>
+    props.$canStart
+      ? "0 0 30px rgba(0, 255, 136, 0.5), inset 0 0 20px rgba(0, 255, 136, 0.2)"
+      : "none"};
+  text-shadow: ${(props) => (props.$canStart ? "0 0 5px rgba(0, 255, 136, 0.5)" : "none")};
+  font-weight: 900;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  cursor: ${(props) => (props.$canStart ? "pointer" : "not-allowed")};
+  transition: all 0.3s ease;
+  opacity: ${(props) => (props.$canStart ? 1 : 0.7)};
 
-const Requirements = styled.p`
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 2rem;
-  font-size: clamp(1rem, 2vw, 1.2rem);
-`;
-
-const StartButton = styled.button<{ canStart: boolean }>`
-  background: ${(props) =>
-    props.canStart
-      ? "linear-gradient(135deg, #10b981, #059669)"
-      : "linear-gradient(135deg, #6b7280, #4b5563)"};
-  border: none;
-  border-radius: 15px;
-  padding: 1rem 3rem;
-  color: white;
-  font-size: clamp(1.1rem, 2.5vw, 1.4rem);
-  font-weight: bold;
-  cursor: ${(props) => (props.canStart ? "pointer" : "not-allowed")};
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  margin: 0 auto;
-  transition: all 0.2s;
-  opacity: ${(props) => (props.canStart ? 1 : 0.7)};
-
-  &:hover {
-    transform: ${(props) => (props.canStart ? "scale(1.05)" : "none")};
+  &:hover:not(:disabled) {
+    ${(props) =>
+      props.$canStart &&
+      `
+      background: #fff;
+      color: #000;
+      transform: scale(1.05);
+      box-shadow: 0 0 40px rgba(0, 255, 136, 0.7), inset 0 0 30px rgba(0, 255, 136, 0.3);
+    `}
   }
-`;
 
-const ErrorMessage = styled.div`
-  color: #ef4444;
-  margin-top: 1rem;
-  font-size: 1rem;
-  text-align: center;
-  padding: 1rem;
-  background: rgba(239, 68, 68, 0.1);
-  border-radius: 10px;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  &:disabled {
+    cursor: not-allowed;
+  }
 `;
 
 const LoadingSpinner = styled.div`
   text-align: center;
+  padding: 2rem;
 
   p {
-    color: white;
+    color: var(--color-primary, #00ff88);
     margin-bottom: 1rem;
-    font-size: 1.1rem;
+    font-size: 1.3rem;
+    font-family: "JetBrains Mono", monospace;
   }
 
   .spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    border-top: 4px solid white;
+    border: 4px solid rgba(0, 255, 136, 0.3);
+    border-top: 4px solid var(--color-primary, #00ff88);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin: 0 auto;
@@ -354,26 +475,50 @@ const LoadingSpinner = styled.div`
   }
 `;
 
-const EditableInput = styled.input`
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  color: white;
-  font-weight: 500;
+const ErrorMessage = styled.div`
+  color: #ef4444;
+  margin-top: 1rem;
   font-size: 1.1rem;
-  padding: 0.2rem 0.5rem;
+  text-align: center;
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.1);
   border-radius: 4px;
-  width: 100%;
-
-  &:focus {
-    outline: none;
-    border-color: white;
-  }
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  font-family: "JetBrains Mono", monospace;
 `;
 
+// Mock data structure as fallback
+const mockLobbyData: LobbyData = {
+  publicId: "unknown",
+  status: "LOBBY",
+  gameType: "SINGLE_DEVICE",
+  canModifyGame: true,
+  teams: [
+    {
+      name: "Team Red",
+      players: [],
+    },
+    {
+      name: "Team Blue",
+      players: [],
+    },
+  ],
+};
+
+/**
+ * Lobby interface component with hacker-themed design
+ */
 export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
   const navigate = useNavigate();
   const [editingPlayer, setEditingPlayer] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [teamRedInput, setTeamRedInput] = useState("");
+  const [teamBlueInput, setTeamBlueInput] = useState("");
+  const [draggedPlayer, setDraggedPlayer] = useState<{
+    player: LobbyPlayer;
+    fromTeam: string;
+  } | null>(null);
+  const [dragOverTeam, setDragOverTeam] = useState<string | null>(null);
 
   // React Query hooks
   const { data: lobbyData, isLoading: initialLoading, error: queryError } = useLobbyQuery(gameId);
@@ -399,30 +544,14 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
     movePlayerMutation.error?.message ||
     startGameMutation.error?.message;
 
-  // Separate input state for each team
-  const [teamRedInput, setTeamRedInput] = useState("");
-  const [teamBlueInput, setTeamBlueInput] = useState("");
-
-  // Drag and drop state
-  const [draggedPlayer, setDraggedPlayer] = useState<{
-    player: LobbyPlayer;
-    fromTeam: string;
-  } | null>(null);
-  const [dragOverTeam, setDragOverTeam] = useState<string | null>(null);
-
-  // Use fallback data when lobbyData is not available
   const currentLobbyData = lobbyData || mockLobbyData;
 
-  // Add debugging info to see what data we have
-  console.log("Current lobbyData:", currentLobbyData);
-  console.log("Teams:", currentLobbyData?.teams);
-
   const teamColors = {
-    "Team Red": "#ef4444",
-    "Team Blue": "#3b82f6",
+    "Team Red": "var(--color-team-red, #ff0040)",
+    "Team Blue": "var(--color-team-blue, #00d4ff)",
   };
 
-  // Calculate stats - add safety checks
+  // Calculate stats
   const totalPlayers =
     currentLobbyData?.teams?.reduce((sum, team) => sum + (team?.players?.length || 0), 0) || 0;
   const canStartGame =
@@ -430,7 +559,6 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
     (currentLobbyData?.teams?.every((team) => (team?.players?.length || 0) >= 2) || false);
 
   const handleQuickAdd = (teamName: string) => {
-    // Get the correct input value based on team
     const playerName = teamName === "Team Red" ? teamRedInput.trim() : teamBlueInput.trim();
     if (!playerName) return;
 
@@ -438,7 +566,6 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
       { playerName, teamName },
       {
         onSuccess: () => {
-          // Clear the correct input
           if (teamName === "Team Red") {
             setTeamRedInput("");
           } else {
@@ -495,7 +622,6 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    // Only clear if we're leaving the team tile entirely
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
       setDragOverTeam(null);
     }
@@ -528,38 +654,20 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
     setDragOverTeam(null);
   };
 
-  // Show current state for debugging
-  if (error) {
-    return (
-      <Container>
-        <MainContent>
-          <div style={{ color: "white", textAlign: "center", padding: "2rem" }}>
-            <h2>Error Loading Lobby</h2>
-            <p>{error}</p>
-            <pre
-              style={{
-                textAlign: "left",
-                background: "rgba(0,0,0,0.5)",
-                padding: "1rem",
-                borderRadius: "8px",
-                marginTop: "1rem",
-              }}
-            >
-              {JSON.stringify(currentLobbyData, null, 2)}
-            </pre>
-          </div>
-        </MainContent>
-      </Container>
-    );
-  }
+  // Render empty slots
+  const renderEmptySlots = (currentCount: number, maxSlots: number = 6) => {
+    const emptyCount = Math.max(0, maxSlots - currentCount);
+    return Array.from({ length: emptyCount }).map((_, i) => (
+      <PlayerSlot key={`empty-${i}`}>[empty]</PlayerSlot>
+    ));
+  };
 
-  // Show loading spinner during initial load
   if (initialLoading) {
     return (
       <Container>
         <MainContent>
           <LoadingSpinner>
-            <p>Loading lobby...</p>
+            <p>LOADING OPERATIVE CONTROL...</p>
             <div className="spinner"></div>
           </LoadingSpinner>
         </MainContent>
@@ -568,139 +676,118 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
   }
 
   return (
-    <Container>
-      <MainContent>
-        <Header>
-          <Title>Game Lobby</Title>
-          <GameInfo>
-            <InfoItem>
-              <strong>Game ID:</strong> {currentLobbyData?.publicId || "Loading..."}
-            </InfoItem>
-            <InfoItem>
-              <Users size={20} />
-              <span>{totalPlayers} Players</span>
-            </InfoItem>
-            <StatusBadge ready={canStartGame}>
-              {canStartGame ? "Ready to Start" : "Need More Players"}
-            </StatusBadge>
-          </GameInfo>
-        </Header>
+    <GlobalStatusAnimation>
+      <Container>
+        <MainContent>
+          <Header>
+            <Title>OPERATIVE CONTROL</Title>
+            <GameInfo>
+              Game ID: {currentLobbyData?.publicId || "LOADING..."} | {totalPlayers} Players
+            </GameInfo>
+          </Header>
 
-        <TeamsGrid>
-          {currentLobbyData?.teams?.map((team) => (
-            <TeamTile
-              key={team.name}
-              teamColor={teamColors[team.name as keyof typeof teamColors] || "#6b7280"}
-              isDragOver={dragOverTeam === team.name}
-              onDragOver={(e) => handleDragOver(e, team.name)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, team.name)}
-            >
-              <TeamHeader teamColor={teamColors[team.name as keyof typeof teamColors] || "#6b7280"}>
-                <TeamName teamColor={teamColors[team.name as keyof typeof teamColors] || "#6b7280"}>
-                  {team.name}
-                </TeamName>
-                <PlayerCount>{team?.players?.length || 0} players</PlayerCount>
-              </TeamHeader>
-
-              <PlayersArea>
-                {team?.players?.map((player) => (
-                  <PlayerTile
-                    key={player.publicId}
-                    draggable
-                    isDragging={draggedPlayer?.player.publicId === player.publicId}
-                    onDragStart={(e) => handleDragStart(e, player, team.name)}
-                    onDragEnd={handleDragEnd}
+          <TeamsGrid>
+            {currentLobbyData?.teams?.map((team) => (
+              <TeamTile
+                key={team.name}
+                $teamColor={teamColors[team.name as keyof typeof teamColors] || "#6b7280"}
+                $isDragOver={dragOverTeam === team.name}
+                onDragOver={(e) => handleDragOver(e, team.name)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, team.name)}
+              >
+                <TeamHeader>
+                  <TeamName
+                    $teamColor={teamColors[team.name as keyof typeof teamColors] || "#6b7280"}
                   >
-                    {editingPlayer === player.publicId ? (
-                      <EditableInput
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        onBlur={handleSaveEdit}
-                        onKeyDown={(e) => e.key === "Enter" && handleSaveEdit()}
-                        autoFocus
-                      />
-                    ) : (
-                      <PlayerName>{player?.name || "Unknown Player"}</PlayerName>
-                    )}
+                    {team.name === "Team Red" ? "TEAM RED OPERATIVES" : "TEAM BLUE OPERATIVES"}
+                  </TeamName>
+                  <PlayerCount>{team?.players?.length || 0}/6 operatives</PlayerCount>
+                </TeamHeader>
 
-                    <PlayerActions>
+                <PlayersContainer>
+                  {team?.players?.map((player, index) => (
+                    <PlayerTile
+                      key={player.publicId}
+                      draggable
+                      $isDragging={draggedPlayer?.player.publicId === player.publicId}
+                      onDragStart={(e) => handleDragStart(e, player, team.name)}
+                      onDragEnd={handleDragEnd}
+                    >
                       {editingPlayer === player.publicId ? (
-                        <ActionIcon onClick={handleSaveEdit} disabled={isLoading}>
-                          <Check size={16} />
-                        </ActionIcon>
+                        <EditableInput
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          onBlur={handleSaveEdit}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleSaveEdit();
+                            if (e.key === "Escape") {
+                              setEditingPlayer(null);
+                              setEditName("");
+                            }
+                          }}
+                          autoFocus
+                        />
                       ) : (
-                        <ActionIcon onClick={() => handleEditPlayer(player)} disabled={isLoading}>
-                          <Edit2 size={16} />
-                        </ActionIcon>
+                        <PlayerName onDoubleClick={() => handleEditPlayer(player)}>
+                          {player?.name || "Unknown Player"}
+                        </PlayerName>
                       )}
-                      <ActionIcon
+
+                      <div className="status-dot" />
+
+                      <RemoveButton
                         onClick={() => handleRemovePlayer(player?.publicId || "")}
                         disabled={isLoading}
                       >
-                        <X size={16} />
-                      </ActionIcon>
-                    </PlayerActions>
-                  </PlayerTile>
-                )) || []}
-              </PlayersArea>
+                        [X]
+                      </RemoveButton>
+                    </PlayerTile>
+                  ))}
+                  {renderEmptySlots(team?.players?.length || 0)}
+                </PlayersContainer>
 
-              <AddPlayerArea>
-                <AddInput
-                  placeholder="Enter player name..."
-                  value={team.name === "Team Red" ? teamRedInput : teamBlueInput}
-                  onChange={(e) => {
-                    if (team.name === "Team Red") {
-                      setTeamRedInput(e.target.value);
-                    } else {
-                      setTeamBlueInput(e.target.value);
+                <AddPlayerArea>
+                  <AddInput
+                    placeholder="Enter operative name..."
+                    value={team.name === "Team Red" ? teamRedInput : teamBlueInput}
+                    onChange={(e) => {
+                      if (team.name === "Team Red") {
+                        setTeamRedInput(e.target.value);
+                      } else {
+                        setTeamBlueInput(e.target.value);
+                      }
+                    }}
+                    onKeyDown={(e) => e.key === "Enter" && handleQuickAdd(team.name)}
+                    disabled={isLoading}
+                  />
+                  <AddButton
+                    $teamColor={teamColors[team.name as keyof typeof teamColors] || "#6b7280"}
+                    onClick={() => handleQuickAdd(team.name)}
+                    disabled={
+                      isLoading ||
+                      (team.name === "Team Red" ? !teamRedInput.trim() : !teamBlueInput.trim())
                     }
-                  }}
-                  onKeyDown={(e) => e.key === "Enter" && handleQuickAdd(team.name)}
-                  disabled={isLoading}
-                />
-                <AddButton
-                  teamColor={teamColors[team.name as keyof typeof teamColors] || "#6b7280"}
-                  onClick={() => handleQuickAdd(team.name)}
-                  disabled={
-                    isLoading ||
-                    (team.name === "Team Red" ? !teamRedInput.trim() : !teamBlueInput.trim())
-                  }
-                >
-                  <Plus size={20} />
-                </AddButton>
-              </AddPlayerArea>
-            </TeamTile>
-          )) || []}
-        </TeamsGrid>
+                  >
+                    ADD
+                  </AddButton>
+                </AddPlayerArea>
+              </TeamTile>
+            ))}
+          </TeamsGrid>
 
-        <StartSection>
-          <Requirements>
-            {canStartGame
-              ? "All teams ready! You can start the game now."
-              : "Need at least 2 players per team and 4 players total to start."}
-          </Requirements>
-
-          {isLoading ? (
-            <LoadingSpinner>
-              <p>Processing...</p>
-              <div className="spinner"></div>
-            </LoadingSpinner>
-          ) : (
-            <StartButton
-              canStart={canStartGame}
-              onClick={handleStartGame}
-              disabled={!canStartGame || isLoading}
-            >
-              <Play size={24} />
-              Start Game
-            </StartButton>
-          )}
+          <StartButton
+            $canStart={canStartGame}
+            onClick={handleStartGame}
+            disabled={!canStartGame || isLoading}
+          >
+            START MISSION
+          </StartButton>
 
           {error && <ErrorMessage>{error}</ErrorMessage>}
-        </StartSection>
-      </MainContent>
-    </Container>
+        </MainContent>
+      </Container>
+    </GlobalStatusAnimation>
   );
 };
 
