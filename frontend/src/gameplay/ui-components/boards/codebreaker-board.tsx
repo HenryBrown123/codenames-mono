@@ -29,7 +29,9 @@ const CodebreakerBoardContent = memo<{
   isLoading: boolean;
   activeTurn: any;
   onCardClick: (word: string) => void;
-}>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick }) => {
+  tilt: number;
+  isInitialRender: boolean;
+}>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick, tilt, isInitialRender }) => {
   const { viewMode } = useCardVisibilityContext();
 
   return (
@@ -68,7 +70,7 @@ const CodebreakerBoardContent = memo<{
         </ARGlassesHUD>
       )}
 
-      <GameBoardLayout data-ar-mode={viewMode === 'spymaster'}>
+      <GameBoardLayout data-ar-mode={viewMode === 'spymaster'} tilt={tilt} isInitialRender={isInitialRender}>
         {cards.length > 0 ? cards.map((card, index) => (
           <GameCard
             key={card.word}
@@ -91,7 +93,7 @@ const CodebreakerBoardContent = memo<{
  * Mobile-first responsive design with adaptive grid
  * Includes AR mode toggle for enhanced gameplay
  */
-export const CodebreakerBoard = memo(() => {
+export const CodebreakerBoard = memo<{ tilt?: number; isInitialRender?: boolean }>(({ tilt = 0, isInitialRender = false }) => {
   const { gameData } = useGameDataRequired();
   const { makeGuess, actionState } = useGameActions();
   const { activeTurn } = useTurn();
@@ -128,6 +130,8 @@ export const CodebreakerBoard = memo(() => {
       isLoading={isLoading}
       activeTurn={activeTurn}
       onCardClick={handleCardClick}
+      tilt={tilt}
+      isInitialRender={isInitialRender}
     />
   );
 });

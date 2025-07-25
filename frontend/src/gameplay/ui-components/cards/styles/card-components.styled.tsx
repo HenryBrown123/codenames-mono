@@ -196,8 +196,19 @@ export const NormalCard = styled.div<{ $isCurrentTeam?: boolean }>`
 
   min-height: ${CARD_DIMENSIONS.MOBILE_MIN_HEIGHT}px;
 
-  /* Single performant shadow instead of stacked shadows */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  /* 3D thickness effect using multiple shadows */
+  box-shadow: 
+    0 1px 0 #d4d1c8,
+    0 2px 0 #c8c5bc,
+    0 3px 0 #bab7ae,
+    0 4px 0 #ada9a0,
+    0 5px 0 #9f9c93,
+    0 6px 1px rgba(0,0,0,.1),
+    0 0 5px rgba(0,0,0,.1),
+    0 1px 3px rgba(0,0,0,.3),
+    0 3px 5px rgba(0,0,0,.2),
+    0 5px 10px rgba(0,0,0,.25),
+    0 10px 20px rgba(0,0,0,.15);
 
   /* Edge highlight gradient - creates subtle 3D effect */
   &::before {
@@ -218,7 +229,18 @@ export const NormalCard = styled.div<{ $isCurrentTeam?: boolean }>`
     [data-clickable="true"] & {
       &:hover {
         transform: translateY(-4px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+        box-shadow: 
+          0 2px 0 #d4d1c8,
+          0 4px 0 #c8c5bc,
+          0 6px 0 #bab7ae,
+          0 8px 0 #ada9a0,
+          0 10px 0 #9f9c93,
+          0 12px 1px rgba(0,0,0,.1),
+          0 0 5px rgba(0,0,0,.1),
+          0 2px 3px rgba(0,0,0,.3),
+          0 6px 10px rgba(0,0,0,.2),
+          0 10px 20px rgba(0,0,0,.25),
+          0 20px 40px rgba(0,0,0,.15);
       }
     }
   }
@@ -334,11 +356,19 @@ export const CoverCard = styled.div`
   /* Colored border matches background */
   border: 2px solid var(--team-color);
 
-  /* Simple shadow for selected cards */
+  /* 3D thickness effect for cover cards */
   box-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.25),
-    0 2px 0 rgba(0, 0, 0, 0.25),
-    0 3px 5px rgba(0, 0, 0, 0.3);
+    0 1px 0 color-mix(in srgb, var(--team-color) 85%, black),
+    0 2px 0 color-mix(in srgb, var(--team-color) 80%, black),
+    0 3px 0 color-mix(in srgb, var(--team-color) 75%, black),
+    0 4px 0 color-mix(in srgb, var(--team-color) 70%, black),
+    0 5px 0 color-mix(in srgb, var(--team-color) 65%, black),
+    0 6px 1px rgba(0,0,0,.3),
+    0 0 5px rgba(0,0,0,.2),
+    0 1px 3px rgba(0,0,0,.4),
+    0 3px 5px rgba(0,0,0,.3),
+    0 5px 10px rgba(0,0,0,.3),
+    0 10px 20px rgba(0,0,0,.2);
 
   /* Special assassin card styling - maximum danger vibes */
   ${CardContainer}[data-team="assassin"] & {

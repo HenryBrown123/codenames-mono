@@ -22,18 +22,20 @@ import {
  * SpymasterBoard - Board view with spymaster AR overlay and toggle
  * Includes team color reveal functionality
  */
-export const SpymasterBoard = memo(() => {
+export const SpymasterBoard = memo<{ tilt?: number; isInitialRender?: boolean }>(({ tilt = 0, isInitialRender = false }) => {
   const { gameData } = useGameDataRequired();
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === "SETUP";
 
-  return <SpymasterBoardContent cards={cards} isRoundSetup={isRoundSetup} />;
+  return <SpymasterBoardContent cards={cards} isRoundSetup={isRoundSetup} tilt={tilt} isInitialRender={isInitialRender} />;
 });
 
 const SpymasterBoardContent = memo<{
   cards: any[];
   isRoundSetup: boolean;
-}>(({ cards, isRoundSetup }) => {
+  tilt: number;
+  isInitialRender: boolean;
+}>(({ cards, isRoundSetup, tilt, isInitialRender }) => {
   const { viewMode } = useCardVisibilityContext();
 
   return (
@@ -58,7 +60,7 @@ const SpymasterBoardContent = memo<{
         </ARGlassesHUD>
       )}
 
-      <GameBoardLayout data-ar-mode={viewMode === "spymaster"}>
+      <GameBoardLayout data-ar-mode={viewMode === "spymaster"} tilt={tilt} isInitialRender={isInitialRender}>
         {cards.length > 0
           ? cards.map((card, index) => (
               <GameCard

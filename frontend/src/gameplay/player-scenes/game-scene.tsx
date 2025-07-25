@@ -4,7 +4,7 @@ import { useGameDataRequired, useTurn } from "../shared/providers";
 import { usePlayerScene } from "./";
 import { getSceneMessage } from "./scene-messages";
 import { getDashboardComponent, getBoardComponent } from "./component-mappings";
-import { SpectatorBoard } from "../ui-components";
+import { SpectatorBoard } from "../ui-components/boards/spectator-board";
 import { DesktopSidebar } from "../ui-components/desktop-sidebar";
 import { GameInstructions } from "../ui-components/game-instructions";
 import { ActionButton } from "../shared/components";
@@ -12,6 +12,7 @@ import { Z_INDEX } from "@frontend/style/z-index";
 import { CodeWordInput } from "../ui-components/dashboards/codemaster-input";
 import { useGameActions } from "../player-actions";
 import { CardVisibilityProvider } from "../ui-components/cards/card-visibility-provider";
+import { TiltControl } from "../ui-components/board-controls/tilt-control";
 
 const hackerPulse = keyframes`
   0%, 100% {
@@ -508,17 +509,28 @@ export const GameScene: React.FC = () => {
   const { activeTurn } = useTurn();
   const { currentRole, currentScene } = usePlayerScene();
   const [showCluePanel, setShowCluePanel] = useState(false);
+  const [boardTilt, setBoardTilt] = useState(0); // CSS will handle initial animation
+  const [isInitialRender, setIsInitialRender] = useState(true);
   const { giveClue, actionState } = useGameActions();
   // Get current message
   const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
   const [toggleMessage, setToggleMessage] = useState(false);
+
+  // Track when initial animation completes
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitialRender(false);
+    }, 2000); // Match animation duration + delay
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // Show skeleton during initial load
   if (isPending && !gameData) {
     return (
       <GameSceneContainer>
         <GameBoardContainer>
-          <SpectatorBoard />
+          <SpectatorBoard tilt={boardTilt} isInitialRender={false} />
         </GameBoardContainer>
         <DashboardContainer />
       </GameSceneContainer>
@@ -542,7 +554,7 @@ export const GameScene: React.FC = () => {
     return (
       <GameSceneContainer>
         <GameBoardContainer>
-          <SpectatorBoard />
+          <SpectatorBoard tilt={boardTilt} isInitialRender={false} />
         </GameBoardContainer>
         <DashboardContainer>
           <div>Game Completed!</div>
@@ -552,7 +564,14 @@ export const GameScene: React.FC = () => {
   }
 
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
-  const BoardComponent = getBoardComponent(currentRole, currentScene);
+  
+  // Update getBoardComponent to pass tilt and isInitialRender
+  // Only animate for active game roles (CODEBREAKER and SPYMASTER)
+  const shouldAnimate = currentRole === "CODEBREAKER" || currentRole === "SPYMASTER";
+  const BoardComponent = React.useMemo(() => {
+    const Component = getBoardComponent(currentRole, currentScene);
+    return () => <Component tilt={boardTilt} isInitialRender={shouldAnimate && isInitialRender} />;
+  }, [currentRole, currentScene, boardTilt, isInitialRender, shouldAnimate]);
 
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === "SETUP";
@@ -579,6 +598,9 @@ export const GameScene: React.FC = () => {
     // Sidebar layout for tablet landscape and desktop
     return (
       <CardVisibilityProvider cards={cards} initialState={isRoundSetup ? "hidden" : "visible"}>
+        {/* Desktop only tilt control */}
+        <TiltControl value={boardTilt} onChange={setBoardTilt} />
+        
         <GameSceneContainer>
           <DesktopSidebar isFetching={isFetching}>
             <DashboardComponent

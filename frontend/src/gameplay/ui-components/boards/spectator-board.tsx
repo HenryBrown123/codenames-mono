@@ -9,14 +9,15 @@ import { EmptyCard } from "./board-styles";
  * SpectatorBoard - Clean board view without interactions or overlay
  * Used for spectators and lobby/setup states
  */
-export const SpectatorBoard = memo(() => {
+export const SpectatorBoard = memo<{ tilt?: number; isInitialRender?: boolean }>(({ tilt = 0, isInitialRender = false }) => {
   const { gameData } = useGameDataRequired();
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === "SETUP";
 
   return (
     <CardVisibilityProvider cards={cards} initialState={isRoundSetup ? "hidden" : "visible"}>
-      <GameBoardLayout>
+      {/* SpectatorBoard never animates */}
+      <GameBoardLayout tilt={tilt} isInitialRender={false}>
         {cards.length > 0 
           ? cards.map((card, index) => (
               <GameCard
