@@ -625,6 +625,7 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   │   └── providers
 │       │   ├── state
 │       │   └── ui-components
+│       │       ├── board-controls
 │       │       ├── boards
 │       │       ├── cards
 │       │       │   └── styles
@@ -644,7 +645,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-83 directories
+84 directories
 ```
 
 ## Getting Started

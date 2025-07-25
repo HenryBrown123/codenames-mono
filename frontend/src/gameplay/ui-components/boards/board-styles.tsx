@@ -1,9 +1,18 @@
-import styled from "styled-components";
+import styled, { keyframes, css } from "styled-components";
+
+const boardRevealAnimation = keyframes`
+  from {
+    transform: perspective(900px) rotateX(90deg);
+  }
+  to {
+    transform: perspective(900px) rotateX(var(--final-tilt, 0deg));
+  }
+`;
 
 /**
  * MOBILE-FIRST: Board wrapper that handles different viewport constraints
  */
-export const BoardAspectWrapper = styled.div`
+export const BoardAspectWrapper = styled.div<{ $tilt?: number; $isInitialRender?: boolean }>`
   /* Mobile-first: Use available space efficiently */
   width: 100%;
   height: 100%;
@@ -11,6 +20,25 @@ export const BoardAspectWrapper = styled.div`
   align-items: center;
   justify-content: center;
   padding: 0.25rem;
+
+  /* 3D tilt effect - start at 90° to prevent flash */
+  transform: ${props => props.$isInitialRender 
+    ? `perspective(900px) rotateX(90deg)` 
+    : `perspective(900px) rotateX(${props.$tilt || 0}deg)`};
+  transform-style: preserve-3d;
+  
+  /* CSS variables for children and animation */
+  --board-tilt: ${props => props.$tilt || 0}deg;
+  --board-tilt-factor: ${props => (props.$tilt || 0) / 90};
+  --final-tilt: ${props => props.$tilt || 0}deg;
+  
+  /* Initial reveal animation */
+  ${props => props.$isInitialRender ? css`
+    animation: ${boardRevealAnimation} 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    animation-delay: 0.3s;
+  ` : css`
+    transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  `}
 
   /* PROGRESSIVE ENHANCEMENT: Tablet - more breathing room */
   @media (min-width: 481px) {
