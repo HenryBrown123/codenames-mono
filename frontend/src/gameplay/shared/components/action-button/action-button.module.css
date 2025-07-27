@@ -1,0 +1,80 @@
+@import '../../../../style/variables.css';
+@import '../../../../style/animations.css';
+
+@keyframes dataStream {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 -100%;
+  }
+}
+
+.button {
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  font-size: clamp(0.9rem, 2.5vh, 1.2rem);
+  padding: 0.8rem 2rem;
+  font-weight: 700;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  outline: none;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transition: all 0.2s ease;
+  
+  /* Glitch effect on enabled buttons */
+  animation: glitch 4s infinite;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  animation: none;
+}
+
+/* Data stream background effect */
+.button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 2px,
+    rgba(0, 255, 136, 0.03) 2px,
+    rgba(0, 255, 136, 0.03) 4px
+  );
+  animation: dataStream 10s linear infinite;
+  pointer-events: none;
+}
+
+.button:hover:not(:disabled) {
+  background-color: var(--color-primary);
+  color: #000;
+  box-shadow: 
+    0 0 20px rgba(0, 255, 136, 0.5),
+    inset 0 0 20px rgba(0, 255, 136, 0.1);
+  transform: translateY(-2px);
+  animation: none;
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .button {
+    font-size: clamp(0.85rem, 2vh, 1rem);
+    padding: 0.6rem 1.5rem;
+    min-height: 44px;
+  }
+}

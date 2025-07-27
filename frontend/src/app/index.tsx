@@ -1,48 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { ThemeProvider } from "styled-components";
-import styled from "styled-components";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import AppRoutes from "./routes/app-routes";
-import { GlobalStyle, lightTheme, darkTheme } from "../style";
+import "../style/global.css";
+import styles from "./app.module.css";
 
-/**
- * CLEAN APPROACH: Let CSS do what it's designed to do
- * WITH MOBILE BROWSER FIXES
- */
-const AppContainer = styled.div`
-  /* Use the standard approach that works everywhere */
-  width: 100%;
-  min-height: 100vh;
-  min-height: 100dvh; /* Progressive enhancement for modern browsers */
-  min-height: -webkit-fill-available; /* WebKit/Chrome mobile fix */
-
-  /* Standard flexbox layout */
-  display: flex;
-  flex-direction: column;
-
-  /* Handle safe areas cleanly */
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
-    env(safe-area-inset-left);
-
-  /* Add extra bottom padding to fight stubborn browsers */
-  padding-bottom: max(env(safe-area-inset-bottom), 20px);
-`;
-
-const SectionsContainer = styled.div`
-  width: 100%;
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  min-height: 0; /* Allow children to shrink */
-`;
-
-const PageSection = styled.div`
-  flex: 1;
-  min-height: 0; /* Allow children to shrink */
-`;
 
 /**
  * Draggable debug widget for mobile development
@@ -244,33 +207,25 @@ const useMobileViewportHeight = () => {
 const queryClient = new QueryClient();
 
 const App: React.FC = () => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const { innerHeight, visualHeight, screenHeight } = useMobileViewportHeight();
-
-  const toggleTheme = () => {
-    setIsDarkMode((prevMode) => !prevMode);
-  };
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
-        <GlobalStyle />
-        <AppContainer id="app-container">
-          <SectionsContainer id="sections-container">
-            <PageSection id="page-container">
-              <AppRoutes />
-            </PageSection>
-          </SectionsContainer>
+      <div className={styles.appContainer} id="app-container">
+        <div className={styles.sectionsContainer} id="sections-container">
+          <div className={styles.pageSection} id="page-container">
+            <AppRoutes />
+          </div>
+        </div>
 
-          {false && (
-            <DraggableDebugTool
-              viewportHeight={innerHeight}
-              visualViewportHeight={visualHeight}
-              screenHeight={screenHeight}
-            />
-          )}
-        </AppContainer>
-      </ThemeProvider>
+        {false && (
+          <DraggableDebugTool
+            viewportHeight={innerHeight}
+            visualViewportHeight={visualHeight}
+            screenHeight={screenHeight}
+          />
+        )}
+      </div>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

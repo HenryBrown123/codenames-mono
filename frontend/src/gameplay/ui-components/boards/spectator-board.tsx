@@ -3,7 +3,7 @@ import { useGameDataRequired } from "../../shared/providers";
 import { GameCard } from "../cards/game-card";
 import { CardVisibilityProvider } from "../cards/card-visibility-provider";
 import { GameBoardLayout } from "./board-layout";
-import { EmptyCard } from "./board-styles";
+import { EmptyCard } from "./board-layout";
 
 /**
  * SpectatorBoard - Clean board view without interactions or overlay

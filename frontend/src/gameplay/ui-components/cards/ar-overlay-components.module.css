@@ -1,0 +1,89 @@
+@import '../../../style/variables.css';
+@import '../../../style/animations.css';
+
+@keyframes gridPulse {
+  0%, 100% { 
+    opacity: 0.3; 
+  }
+  50% { 
+    opacity: 0.6; 
+  }
+}
+
+@keyframes glareAnimation {
+  0%, 100% { 
+    transform: translateX(-100%) translateY(-100%); 
+  }
+  50% { 
+    transform: translateX(100%) translateY(100%); 
+  }
+}
+
+.arScanGrid {
+  position: absolute;
+  inset: 4px;
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0, transparent 9px, rgba(0, 255, 136, 0.1) 10px),
+    repeating-linear-gradient(90deg, transparent 0, transparent 9px, rgba(0, 255, 136, 0.1) 10px);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: var(--z-spymaster-ar-grid);
+}
+
+.arScanGrid[data-active="true"] {
+  opacity: 0.8;
+  background-color: rgba(0, 255, 136, 0.1);
+  animation: gridPulse 2s ease-in-out infinite;
+}
+
+.arGlassesHUD {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 1;
+  z-index: var(--z-spymaster-ar-hud);
+  display: flex;
+  flex-direction: column;
+}
+
+.arVisor {
+  position: absolute;
+  inset: 0;
+}
+
+.arGlare {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    rgba(0, 255, 136, 0.03) 45%,
+    rgba(0, 255, 136, 0.05) 50%,
+    transparent 55%
+  );
+  animation: glareAnimation 8s ease-in-out infinite;
+}
+
+.arScanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 255, 136, 0.03) 2px,
+    rgba(0, 255, 136, 0.03) 4px
+  );
+  animation: scanlineAnimation 8s linear infinite;
+}
+
+.arHUDContent {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  font-family: "JetBrains Mono", monospace;
+  color: #00ff88;
+}

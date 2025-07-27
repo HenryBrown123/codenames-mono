@@ -1,0 +1,15 @@
+@import '../../../../style/variables.css';
+
+.errorMessageContainer {
+  margin: none;
+  height: 100%;
+}
+
+.errorMessageText {
+  color: var(--color-text);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  margin: 20px;
+}

@@ -15,7 +15,10 @@
       "mcp__ide__executeCode",
       "Bash(touch:*)",
       "Bash(cp:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(npx vite build:*)",
+      "Bash(timeout 10 npm run dev)",
+      "Bash(gtimeout:*)"
     ]
   },
   "enableAllProjectMcpServers": false

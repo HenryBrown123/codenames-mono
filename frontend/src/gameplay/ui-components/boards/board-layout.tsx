@@ -1,5 +1,5 @@
 import React from "react";
-import { BoardAspectWrapper, BoardGrid } from "./board-styles";
+import styles from "./board-layout.module.css";
 
 interface GameBoardLayoutProps {
   children: React.ReactNode;
@@ -18,9 +18,20 @@ export const GameBoardLayout: React.FC<GameBoardLayoutProps> = ({
   "data-ar-mode": dataArMode,
   tilt = 0
 }) => (
-  <BoardAspectWrapper className={className} data-ar-mode={dataArMode} $tilt={tilt}>
-    <BoardGrid aria-label="game board" data-ar-mode={dataArMode}>
+  <div 
+    className={`${styles.boardAspectWrapper} ${className || ''}`}
+    data-ar-mode={dataArMode}
+    style={{ '--board-tilt': `${tilt}deg` } as React.CSSProperties}
+  >
+    <div className={styles.boardGrid} aria-label="game board" data-ar-mode={dataArMode}>
       {children}
-    </BoardGrid>
-  </BoardAspectWrapper>
+    </div>
+  </div>
+);
+
+/**
+ * Empty card component for loading/skeleton states
+ */
+export const EmptyCard: React.FC = () => (
+  <div className={styles.emptyCard} />
 );
