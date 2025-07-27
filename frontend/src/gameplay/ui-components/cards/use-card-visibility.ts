@@ -40,13 +40,12 @@ export const useCardVisibility = (card: Card, _index: number): CardVisibility =>
     visibilityData.animation !== transitionState.animation ||
     visibilityData.state !== transitionState.state
   ) {
-    if (_index === 0) {
-      console.log(`[useCardVisibility:${card.word}] Animation change detected:`, {
-        old: transitionState.animation,
-        new: visibilityData.animation,
-        oldStatus: transitionState.status,
-      });
-    }
+    console.log(`[useCardVisibility:${card.word}] Animation change detected:`, {
+      old: transitionState.animation,
+      new: visibilityData.animation,
+      willAnimate: visibilityData.animation !== null,
+      cardSelected: card.selected
+    });
     setTransitionState({
       animation: visibilityData.animation,
       state: visibilityData.state,

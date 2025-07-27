@@ -5,7 +5,7 @@
  * Each card subscribes to its own state changes via the useCardVisibility hook.
  */
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
 import { Card } from "@frontend/shared-types";
 
 export type VisualState = "hidden" | "visible" | "visible-colored" | "visible-covered";
@@ -93,13 +93,18 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
   cards,
   initialState,
 }) => {
+  // Add mount tracking
+  useEffect(() => {
+    console.log('[CardVisibilityProvider] MOUNTED with cards:', cards.filter(c => c.selected).map(c => c.word));
+    return () => console.log('[CardVisibilityProvider] UNMOUNTED');
+  }, []);
+
   const [cardData, setCardData] = useState(() => {
-    // Initialize all cards at provider creation
     const initial = new Map<string, CardVisibilityData>();
-    console.log("[CardVisibilityProvider] Initializing with", cards.length, "cards, initialState:", initialState);
+    console.log('[CardVisibilityProvider] Initializing state...');
     cards.forEach((card) => {
       const cardState = card.selected ? "visible-covered" : initialState;
-      console.log("[CardVisibilityProvider] Initializing card:", card.word, "→", cardState);
+      console.log(`[CardVisibilityProvider] Card ${card.word}: selected=${card.selected}, state=${cardState}`);
       initial.set(card.word, {
         state: cardState,
         animation: null,
@@ -138,18 +143,9 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
     );
 
     if (transition && currentData.state !== transition.to) {
-      // Update with new state and animation
-      if (index === 0) {
-        console.log(
-          "[CardVisibilityProvider] Transition:", 
-          card.word, 
-          currentData.state, 
-          "→", 
-          transition.to, 
-          "animation:", 
-          transition.animation
-        );
-      }
+      console.log(
+        `[CardVisibilityProvider] Transition for ${card.word}: ${currentData.state} → ${transition.to}, animation: ${transition.animation}`
+      );
       updatedData.set(card.word, {
         state: transition.to,
         animation: transition.animation,
