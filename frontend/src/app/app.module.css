@@ -1,0 +1,30 @@
+.appContainer {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh; /* Progressive enhancement for modern browsers */
+  min-height: -webkit-fill-available; /* WebKit/Chrome mobile fix */
+
+  /* Standard flexbox layout */
+  display: flex;
+  flex-direction: column;
+
+  /* Handle safe areas cleanly */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+
+  /* Add extra bottom padding to fight stubborn browsers */
+  padding-bottom: max(env(safe-area-inset-bottom), 20px);
+}
+
+.sectionsContainer {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  min-height: 0; /* Allow children to shrink */
+}
+
+.pageSection {
+  flex: 1;
+  min-height: 0; /* Allow children to shrink */
+}

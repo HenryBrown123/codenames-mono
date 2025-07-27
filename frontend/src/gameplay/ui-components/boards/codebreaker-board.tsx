@@ -1,10 +1,10 @@
-import React, { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { useGameDataRequired, useTurn } from "../../shared/providers";
 import { useGameActions } from "../../player-actions";
 import { GameCard } from "../cards/game-card";
 import { useCardVisibilityContext } from "../cards/card-visibility-provider";
 import { GameBoardLayout } from "./board-layout";
-import { EmptyCard } from "./board-styles";
+import { EmptyCard } from "./board-layout";
 import {
   ARGlassesHUD,
   ARVisor,
@@ -47,7 +47,7 @@ const CodebreakerBoardContent = memo<{
                 <ARHUDLine>STATUS: MISSION ACTIVE</ARHUDLine>
               </ARHUDStatus>
 
-              <ARHUDStatus style={{ textAlign: "right" }}>
+              <ARHUDStatus>
                 <ARHUDLine>GUESSES: {activeTurn?.guessesRemaining || 0}</ARHUDLine>
                 <ARHUDLine>CLUE: {activeTurn?.clue?.word || "WAITING"}</ARHUDLine>
                 <ARHUDLine>TARGET: {activeTurn?.clue?.count || 0}</ARHUDLine>

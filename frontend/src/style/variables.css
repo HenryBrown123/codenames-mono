@@ -1,0 +1,36 @@
+:root {
+  /* Core colors from theme */
+  --color-primary: #00ff88;
+  --color-accent: #ff0080;
+  --color-background: #0a0a0f;
+  --color-text: white;
+  --color-text-muted: rgba(255, 255, 255, 0.7);
+  
+  /* Team colors */
+  --color-team-red: #ff0040;
+  --color-team-blue: #00d4ff;
+  --color-team-green: #00ff88;
+  --color-neutral: #888888;
+  --color-assassin: #ffff00;
+  
+  /* Z-index scale from Z_INDEX constant */
+  --z-base: 0;
+  --z-card-base: 1;
+  --z-card-texture: 2;
+  --z-card-word: 3;
+  --z-card-ripple: 5;
+  --z-card-covered: 10;
+  --z-card-animating: 15;
+  --z-spymaster-ar-grid: 20;
+  --z-spymaster-ar-border: 25;
+  --z-spymaster-ar-overlay: 30;
+  --z-spymaster-ar-hud: 50;
+  --z-fixed-buttons: 100;
+  --z-dashboard: 100;
+  --z-instructions-panel: 200;
+  --z-instructions-backdrop: 199;
+  --z-modal-backdrop: 900;
+  --z-modal-content: 1000;
+  --z-toast: 1100;
+  --z-critical: 9999;
+}

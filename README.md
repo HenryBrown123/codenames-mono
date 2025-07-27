@@ -628,7 +628,6 @@ Frontend and backend extend these base types with their specific requirements.
 │       │       ├── board-controls
 │       │       ├── boards
 │       │       ├── cards
-│       │       │   └── styles
 │       │       ├── dashboards
 │       │       ├── desktop-sidebar
 │       │       └── game-instructions
@@ -638,7 +637,8 @@ Frontend and backend extend these base types with their specific requirements.
 │       │       ├── mutations
 │       │       └── queries
 │       ├── shared-types
-│       └── style
+│       ├── style
+│       └── types
 └── shared
     └── src
         ├── api

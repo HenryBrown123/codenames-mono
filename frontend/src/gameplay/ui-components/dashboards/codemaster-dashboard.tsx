@@ -161,12 +161,12 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
             <SpyGogglesContainer>
               <SpyGogglesText>Toggle enhanced vision</SpyGogglesText>
               <SpyGogglesSwitchRow>
-                <SpyGogglesDot $active={isARMode} />
+                <SpyGogglesDot active={isARMode} />
                 <SpySwitch>
                   <input type="checkbox" checked={isARMode} onChange={handleARToggle} />
                   <SpySlider />
                 </SpySwitch>
-                <SpyStatus $active={isARMode}>{isARMode ? "ON" : "OFF"}</SpyStatus>
+                <SpyStatus active={isARMode}>{isARMode ? "ON" : "OFF"}</SpyStatus>
               </SpyGogglesSwitchRow>
             </SpyGogglesContainer>
           </TerminalSection>
