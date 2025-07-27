@@ -1,15 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { ActionButton } from "../../shared/components";
 import { useGameDataRequired } from "../../shared/providers";
 import { Card } from "@frontend/shared-types";
 
-/* --- Responsive, Overflow-Safe Styled Components --- */
+const scanlineAnimation = keyframes`
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+`;
+
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem; /* REDUCED from 1rem */
+  gap: 0.75rem;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -18,30 +22,109 @@ const Container = styled.div`
 
 const InputContainer = styled.div`
   display: flex;
-  min-width: 0;
-  min-height: 0;
-  flex-wrap: nowrap;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+  gap: 1rem; /* slightly reduced gap */
   width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
+  padding: 1.5rem; /* reduced padding */
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid var(--color-primary, #ffbf00);
+  border-radius: 6px; /* slightly smaller radius */
+  box-shadow:
+    0 0 20px rgba(0, 255, 136, 0.3),
+    inset 0 0 15px rgba(0, 255, 136, 0.05);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1.5px; /* thinner scanline */
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(0, 255, 136, 0.8) 50%,
+      transparent 100%
+    );
+    animation: ${scanlineAnimation} 3s linear infinite;
+  }
+`;
+
+const CodeWordInputField = styled.input<{ isError?: boolean }>`
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid
+    ${({ isError }) => (isError ? "#ff4f4f" : "var(--color-primary, #ffc800)")};
+  color: var(--color-primary, #00ff88);
+  font-size: 2rem; /* reduced font size */
+  font-weight: 900;
   text-align: center;
-  font-size: clamp(1rem, 3vw, 1.6rem); /* REDUCED from clamp(1.2rem, 3.5vw, 2rem) */
-  background-color: transparent;
-  border-radius: 8px;
-  padding: 0.25rem 0.25rem; /* REDUCED from 0.5rem */
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 0.3rem 0.5rem;
+  width: 100%;
+  max-width: 500px;
+  font-family: "JetBrains Mono", monospace;
+  text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
 
-  @media (min-width: 769px) and (orientation: landscape) {
-    flex-direction: column;
-    font-size: clamp(1.1rem, 2vw, 1.8rem); /* REDUCED from clamp(1.4rem, 2.5vw, 2.2rem) */
-    gap: 0.75rem; /* REDUCED from 1rem */
+  &::placeholder {
+    color: rgba(0, 255, 136, 0.3);
+    text-transform: none;
+    letter-spacing: 0.05em;
   }
 
-  @media (max-width: 480px) {
-    padding: 0.25rem;
+  &:focus {
+    outline: none;
+    border-bottom-color: #fff;
+    text-shadow:
+      0 0 25px rgba(0, 255, 136, 0.8),
+      0 0 50px rgba(0, 255, 136, 0.4);
   }
+`;
+
+const NumberInput = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* reduced gap */
+  font-size: 1.5rem; /* smaller font */
+  font-weight: 700;
+  color: var(--color-primary, #00ff88);
+  font-family: "JetBrains Mono", monospace;
+`;
+
+const NumberButton = styled.button`
+  width: 40px; /* reduced size */
+  height: 40px;
+  border: 2px solid var(--color-primary, #00ff88);
+  background: transparent;
+  color: var(--color-primary, #00ff88);
+  font-size: 1.25rem;
+  font-weight: 900;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: transform 0.2s;
+
+  &:hover:not(:disabled) {
+    background: var(--color-primary, #00ff88);
+    color: #000;
+    transform: scale(1.1);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+`;
+
+const NumberDisplay = styled.div`
+  font-size: 2rem; /* smaller display */
+  font-weight: 900;
+  min-width: 40px;
+  text-align: center;
+  text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
 `;
 
 const InlineGroup = styled.div`
@@ -59,52 +142,25 @@ const InlineText = styled.span`
   white-space: nowrap;
 `;
 
-const UnderlinedTextInput = styled.input<{ isError: boolean }>`
-  padding: 0.2rem;
-  font-size: inherit;
-  border: none;
-  border-bottom: 2px solid ${({ isError, theme }) => (isError ? theme.error : theme.text)};
-  background: transparent;
-  outline: none;
-  text-align: center;
-  width: 100%;
-  max-width: 150px;
-  min-width: 60px;
-  color: ${({ theme }) => theme.text};
-  box-sizing: border-box;
-  overflow-x: auto;
-  white-space: nowrap;
-
-  &:focus {
-    border-bottom: 2px solid ${({ isError, theme }) => (isError ? theme.error : theme.primary)};
-  }
-`;
-
-const UnderlinedNumberInput = styled(UnderlinedTextInput)`
-  min-width: 30px;
-  max-width: 60px;
-`;
-
 const ErrorMessage = styled.div`
   color: white;
-  font-size: clamp(0.8rem, 1.5vw, 1rem);
+  font-size: clamp(0.75rem, 1.2vw, 0.9rem);
   text-align: center;
-  padding: 0.5rem;
+  padding: 0.4rem;
   background-color: ${({ theme }) => theme.error};
-  border-radius: 8px;
+  border-radius: 6px;
   position: absolute;
-  bottom: -2rem;
+  bottom: -1.5rem;
   left: 0;
   right: 0;
   max-width: 100%;
 
   @media (max-width: 480px) {
     position: static;
-    margin-top: 0.5rem;
+    margin-top: 0.4rem;
   }
 `;
 
-/* --- Main Component --- */
 type CodeWordInputProps = {
   codeWord?: string;
   numberOfCards: number | null;
@@ -122,90 +178,81 @@ export function CodeWordInput({
 }: CodeWordInputProps) {
   const { gameData } = useGameDataRequired();
   const [inputCodeWord, setInputCodeWord] = useState(codeWord);
-  const [inputNumberOfCards, setInputNumberOfCards] = useState(numberOfCards);
+  const [inputNumberOfCards, setInputNumberOfCards] = useState<number>(numberOfCards || 1);
   const [errorMessage, setErrorMessage] = useState("");
   const textInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (isEditable && textInputRef.current) {
-      // Only auto-focus on desktop, not mobile
-      const isMobile = window.matchMedia("(max-width: 768px)").matches;
-      if (!isMobile) {
-        textInputRef.current.focus();
-      }
+    const isMobile = window.matchMedia("(max-width:768px)").matches;
+    if (isEditable && textInputRef.current && !isMobile) {
+      textInputRef.current.focus();
     }
   }, [isEditable]);
 
   useEffect(() => {
     setInputCodeWord(codeWord);
-    setInputNumberOfCards(numberOfCards);
+    setInputNumberOfCards(numberOfCards || 1);
   }, [codeWord, numberOfCards]);
 
   const handleSubmit = () => {
     if (!onSubmit) return;
-
-    // Validation
     if (!inputCodeWord.trim()) {
       setErrorMessage("Please enter a clue word");
       return;
     }
-
-    if (!inputNumberOfCards || inputNumberOfCards < 1 || inputNumberOfCards > 9) {
+    if (inputNumberOfCards < 1 || inputNumberOfCards > 9) {
       setErrorMessage("Number of cards must be between 1 and 9");
       return;
     }
-
-    // Check if word exists on board
     const cards: Card[] = gameData.currentRound?.cards || [];
-    const wordExists = cards.some(
-      (card) => card.word.toLowerCase() === inputCodeWord.toLowerCase(),
-    );
-
-    if (wordExists) {
+    if (cards.some((c) => c.word.toLowerCase() === inputCodeWord.toLowerCase())) {
       setErrorMessage("Clue word cannot be a word on the board");
       return;
     }
-
     setErrorMessage("");
     onSubmit(inputCodeWord, inputNumberOfCards);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && isEditable && !isLoading) {
-      handleSubmit();
-    }
+    if (e.key === "Enter" && isEditable && !isLoading) handleSubmit();
   };
-
+  const decrement = () => setInputNumberOfCards((n) => Math.max(1, n - 1));
+  const increment = () => setInputNumberOfCards((n) => Math.min(9, n + 1));
   const hasError = errorMessage.length > 0;
 
   return (
     <Container>
       <InputContainer>
         <InlineGroup>
-          <UnderlinedTextInput
+          <CodeWordInputField
             ref={textInputRef}
             type="text"
-            value={inputCodeWord ?? ""}
+            value={inputCodeWord}
             onChange={(e) => setInputCodeWord(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={!isEditable || isLoading}
             isError={hasError}
-            placeholder="word"
+            placeholder="COOEWORD"
             autoComplete="off"
           />
         </InlineGroup>
         <InlineGroup>
           <InlineText>for</InlineText>
-          <UnderlinedNumberInput
-            type="number"
-            min="1"
-            max="9"
-            value={inputNumberOfCards ?? ""}
-            onChange={(e) => setInputNumberOfCards(Number(e.target.value))}
-            onKeyDown={handleKeyDown}
-            disabled={!isEditable || isLoading}
-            isError={hasError}
-          />
+          <NumberInput>
+            <NumberButton
+              onClick={decrement}
+              disabled={!isEditable || isLoading || inputNumberOfCards <= 1}
+            >
+              -
+            </NumberButton>
+            <NumberDisplay>{inputNumberOfCards}</NumberDisplay>
+            <NumberButton
+              onClick={increment}
+              disabled={!isEditable || isLoading || inputNumberOfCards >= 9}
+            >
+              +
+            </NumberButton>
+          </NumberInput>
           <InlineText>cards</InlineText>
         </InlineGroup>
       </InputContainer>
