@@ -19,7 +19,7 @@ export const GameBoardLayout: React.FC<GameBoardLayoutProps> = ({
   tilt = 0
 }) => (
   <div 
-    className={`${styles.boardAspectWrapper} ${className || ''}`}
+    className={`${styles.boardWrapper} ${className || ''}`}
     data-ar-mode={dataArMode}
     style={{ '--board-tilt': `${tilt}deg` } as React.CSSProperties}
   >
