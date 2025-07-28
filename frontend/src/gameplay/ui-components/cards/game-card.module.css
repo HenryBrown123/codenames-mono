@@ -235,11 +235,10 @@
 .cardWord {
   background: rgba(255, 255, 255, 0.88);
   color: #222;
-  border-radius: 7px;
-  padding: 0.2em 0.5em;
+  border-radius: 4px;
+  padding: 0.1em 0.3em;  /* Minimal padding on mobile */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
   font-family: sans-serif;
-  font-size: 1rem;
   font-weight: 700;
   text-transform: uppercase;
   text-align: center;
@@ -248,6 +247,15 @@
   z-index: var(--z-card-word);
   transition: opacity 0.2s ease;
   text-shadow: none;
+  
+  /* Responsive font size */
+  font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+  
+  /* Prevent overflow on small cards */
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ===== COVER CARD ===== */
@@ -654,6 +662,12 @@
     width: 25px;
     height: 25px;
   }
+  
+  .cardWord {
+    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+    padding: 0.2em 0.4em;
+    border-radius: 6px;
+  }
 }
 
 @media (min-width: 769px) {
@@ -690,14 +704,20 @@
     height: 30px;
     border-width: 4px;
   }
+  
+  .cardWord {
+    font-size: clamp(1.1rem, 2vw, 1.4rem);
+    padding: 0.25em 0.5em;
+    border-radius: 7px;
+    /* Allow text wrapping on larger screens */
+    white-space: normal;
+    word-break: break-word;
+    max-width: 95%;
+  }
 }
 
 @media (min-width: 1025px) {
   .normalCard {
     font-size: 1.6rem;
-  }
-  
-  .cardWord {
-    font-size: 1.1rem;
   }
 }
