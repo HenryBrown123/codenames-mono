@@ -14,6 +14,18 @@ interface GameCardProps {
 }
 
 /**
+ * Determines text size class based on word length
+ * Using semantic naming that describes content
+ */
+const getTextSizeClass = (word: string): string => {
+  const length = word.length;
+  
+  if (length <= 6) return styles.textNormal;    // CAT, DOG, NINJA
+  if (length <= 9) return styles.textLong;      // CASTLE, TEAPOT
+  return styles.textExtraLong;                  // ARCHAEOLOGICAL
+};
+
+/**
  * Game card component with visibility state management
  */
 export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable }) => {
@@ -61,7 +73,12 @@ export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable }
           )}
         >
           <div className={styles.ripple} />
-          <span className={styles.cardWord}>{card.word}</span>
+          <span className={cx(
+            styles.cardWord,
+            getTextSizeClass(card.word)
+          )}>
+            {card.word}
+          </span>
         </div>
       )}
 
@@ -76,7 +93,12 @@ export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable }
           <TeamColorFilter />
           <ScanGrid />
           <SpymasterSymbol />
-          <span className={styles.cardWord}>{card.word}</span>
+          <span className={cx(
+            styles.cardWord,
+            getTextSizeClass(card.word)
+          )}>
+            {card.word}
+          </span>
           <div className={styles.teamBadge}>{teamType.toUpperCase()}</div>
           {isCurrentTeam && (
             <div className={styles.cardARCorners}>
