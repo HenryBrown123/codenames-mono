@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { SidebarContainer, SidebarGrid, RefetchIndicator } from "./sidebar-layout.styled";
+import styles from "./sidebar-layout.module.css";
 
 export interface DesktopSidebarProps {
   children: ReactNode;
@@ -14,9 +14,9 @@ export interface DesktopSidebarProps {
  */
 export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ children, isFetching = false }) => {
   return (
-    <SidebarContainer>
-      {isFetching && <RefetchIndicator />}
-      <SidebarGrid>{children}</SidebarGrid>
-    </SidebarContainer>
+    <aside className={styles.sidebarContainer}>
+      {isFetching && <div className={styles.refetchIndicator} />}
+      <div className={styles.sidebarGrid}>{children}</div>
+    </aside>
   );
 };

@@ -1,0 +1,128 @@
+.createGameLayout {
+  position: relative;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+@media (max-width: 768px) {
+  .createGameLayout {
+    flex-direction: column;
+  }
+}
+
+.gameContainer {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  overflow: auto;
+  margin-top: 30px;
+}
+
+@media (max-width: 768px) {
+  .gameContainer {
+    flex: 1;
+    margin-top: 30px;
+  }
+}
+
+.welcomeContainer {
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: clamp(1rem, 2vw, 2rem);
+  text-align: center;
+  padding: 1rem;
+  margin: 1rem auto;
+  background-color: rgba(65, 63, 63, 0.8);
+  border-radius: 16px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.settingsContainer {
+  display: flex;
+  flex-direction: column;
+  margin: 1rem 0;
+  gap: 1rem;
+  width: 100%;
+  align-items: center;
+}
+
+.settingsContainer .divider {
+  border: none;
+  border-bottom: 1px solid #ffffff20;
+  margin: 1rem 0;
+  width: 80%;
+}
+
+.settingItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 1rem;
+  color: #fff;
+  width: 100%;
+}
+
+.settingItem label {
+  margin-bottom: 0.5rem;
+}
+
+.settingItem .buttonGroup {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.button {
+  background-color: #ffffff10;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1.5rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  width: 100%;
+  max-width: 150px;
+}
+
+.button.selected {
+  background-color: var(--button-theme-color);
+}
+
+.button:hover {
+  background-color: var(--button-theme-color);
+}
+
+/* Theme color variants for buttons */
+.button.primary {
+  --button-theme-color: var(--color-primary, #007bff);
+}
+
+.button.secondary {
+  --button-theme-color: var(--color-secondary, #6c757d);
+}
+
+.button.team1 {
+  --button-theme-color: var(--color-team1, #dc3545);
+}
+
+.button.team2 {
+  --button-theme-color: var(--color-team2, #28a745);
+}
+
+.errorText {
+  color: red;
+  margin-top: 1rem;
+}

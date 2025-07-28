@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useCreateNewGame } from "@frontend/game-access/api/query-hooks/use-create-new-game";
 import { useNavigate } from "react-router-dom";
-import styled from "styled-components";
 import { LoadingSpinner, ActionButton } from "@frontend/gameplay/shared/components";
 import {
   GAME_TYPE,
@@ -9,6 +8,7 @@ import {
   GameType,
   GameFormat,
 } from "@codenames/shared/types";
+import styles from "./create-game-page-content.module.css";
 
 const CreateGamePageContent: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
@@ -37,10 +37,18 @@ const CreateGamePageContent: React.FC = () => {
     });
   };
 
+  const getButtonThemeClass = (gameType: GameType, gameFormat: GameFormat, currentType: GameType | GameFormat) => {
+    if (currentType === GAME_TYPE.SINGLE_DEVICE) return 'primary';
+    if (currentType === GAME_TYPE.MULTI_DEVICE) return 'secondary';
+    if (currentType === GAME_FORMAT.QUICK) return 'team1';
+    if (currentType === GAME_FORMAT.BEST_OF_THREE) return 'team2';
+    return 'primary';
+  };
+
   return (
-    <CreateGameLayout>
-      <GameContainer>
-        <WelcomeContainer>
+    <div className={styles.createGameLayout}>
+      <div className={styles.gameContainer}>
+        <div className={styles.welcomeContainer}>
           <h2>Welcome to Codenames!</h2>
           <p>
             Codenames is a word association game where players split into two
@@ -49,51 +57,55 @@ const CreateGamePageContent: React.FC = () => {
             deduction!
           </p>
 
-          <SettingsContainer>
-            <SettingItem>
+          <div className={styles.settingsContainer}>
+            <div className={styles.settingItem}>
               <label>Game Type</label>
-              <div className="button-group">
-                <Button
-                  isSelected={gameType === GAME_TYPE.SINGLE_DEVICE}
+              <div className={styles.buttonGroup}>
+                <button
+                  className={`${styles.button} ${styles.primary} ${
+                    gameType === GAME_TYPE.SINGLE_DEVICE ? styles.selected : ''
+                  }`}
                   onClick={() => setGameType(GAME_TYPE.SINGLE_DEVICE)}
-                  themeColor={(props) => props.theme.primary}
                 >
                   Single Device
-                </Button>
-                <Button
-                  isSelected={gameType === GAME_TYPE.MULTI_DEVICE}
+                </button>
+                <button
+                  className={`${styles.button} ${styles.secondary} ${
+                    gameType === GAME_TYPE.MULTI_DEVICE ? styles.selected : ''
+                  }`}
                   onClick={() => setGameType(GAME_TYPE.MULTI_DEVICE)}
-                  themeColor={(props) => props.theme.secondary}
                 >
                   Multi Device
-                </Button>
+                </button>
               </div>
-            </SettingItem>
+            </div>
 
             <hr className="divider" />
 
-            <SettingItem>
+            <div className={styles.settingItem}>
               <label>Game Format</label>
-              <div className="button-group">
-                <Button
-                  isSelected={gameFormat === GAME_FORMAT.QUICK}
+              <div className={styles.buttonGroup}>
+                <button
+                  className={`${styles.button} ${styles.team1} ${
+                    gameFormat === GAME_FORMAT.QUICK ? styles.selected : ''
+                  }`}
                   onClick={() => setGameFormat(GAME_FORMAT.QUICK)}
-                  themeColor={(props) => props.theme.team1}
                 >
                   Quick
-                </Button>
-                <Button
-                  isSelected={gameFormat === GAME_FORMAT.BEST_OF_THREE}
+                </button>
+                <button
+                  className={`${styles.button} ${styles.team2} ${
+                    gameFormat === GAME_FORMAT.BEST_OF_THREE ? styles.selected : ''
+                  }`}
                   onClick={() => setGameFormat(GAME_FORMAT.BEST_OF_THREE)}
-                  themeColor={(props) => props.theme.team2}
                 >
                   Best of 3
-                </Button>
+                </button>
               </div>
-            </SettingItem>
+            </div>
 
             <hr className="divider" />
-          </SettingsContainer>
+          </div>
 
           {isCreatingGame ? (
             <LoadingSpinner displayText={"Creating Game..."} />
@@ -104,120 +116,12 @@ const CreateGamePageContent: React.FC = () => {
               text={"Start New Game"}
             />
           )}
-          {error && <ErrorText>{error}</ErrorText>}
-        </WelcomeContainer>
-      </GameContainer>
-    </CreateGameLayout>
+          {error && <p className={styles.errorText}>{error}</p>}
+        </div>
+      </div>
+    </div>
   );
 };
 
 export default CreateGamePageContent;
 
-// Styled Components
-const CreateGameLayout = styled.div`
-  position: relative;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  top: 0;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-
-  @media (max-width: 768px) {
-    flex-direction: column;
-  }
-`;
-
-const GameContainer = styled.div`
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  overflow: auto;
-  margin-top: 30px;
-
-  @media (max-width: 768px) {
-    flex: 1;
-    margin-top: 30px;
-  }
-`;
-
-const WelcomeContainer = styled.div`
-  width: 90%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  font-size: clamp(1rem, 2vw, 2rem);
-  text-align: center;
-  padding: 1rem;
-  margin: 1rem auto;
-  background-color: rgba(65, 63, 63, 0.8);
-  border-radius: 16px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-`;
-
-const SettingsContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  margin: 1rem 0;
-  gap: 1rem;
-  width: 100%;
-  align-items: center;
-
-  .divider {
-    border: none;
-    border-bottom: 1px solid #ffffff20;
-    margin: 1rem 0;
-    width: 80%;
-  }
-`;
-
-const SettingItem = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-size: 1rem;
-  color: #fff;
-  width: 100%;
-
-  label {
-    margin-bottom: 0.5rem;
-  }
-
-  .button-group {
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    width: 100%;
-  }
-`;
-
-const Button = styled.button<{
-  isSelected: boolean;
-  themeColor: (props: any) => string;
-}>`
-  background-color: ${(props) =>
-    props.isSelected ? props.themeColor(props) : "#ffffff10"};
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 0.5rem 1.5rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  width: 100%;
-  max-width: 150px;
-
-  &:hover {
-    background-color: ${(props) => props.themeColor(props)};
-  }
-`;
-
-const ErrorText = styled.p`
-  color: red;
-  margin-top: 1rem;
-`;

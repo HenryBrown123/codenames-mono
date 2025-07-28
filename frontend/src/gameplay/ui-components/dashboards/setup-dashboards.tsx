@@ -1,5 +1,4 @@
 import React from "react";
-import styled from "styled-components";
 import { RefreshCw } from "lucide-react";
 import { useGameDataRequired } from "../../shared/providers";
 import { useGameActions } from "../../player-actions";
@@ -12,100 +11,8 @@ import {
   TerminalStatus,
   TerminalOutput,
 } from "./terminal-components";
+import styles from "./setup-dashboards.module.css";
 
-/**
- * MOBILE-FIRST: Dashboard container that adapts to layout context
- */
-const Container = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  padding: 0.5rem;
-  gap: 1rem;
-  position: relative;
-`;
-
-/**
- * MOBILE-FIRST: Refresh button positioned appropriately
- */
-const RefreshButton = styled.button`
-  position: absolute;
-  top: 0.25rem;
-  right: 0.25rem;
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 4px;
-  transition: all 0.2s;
-  min-width: 44px;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &:hover {
-    color: rgba(255, 255, 255, 0.8);
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.3;
-  }
-
-  svg {
-    width: 1.2rem;
-    height: 1.2rem;
-  }
-
-  /* PROGRESSIVE ENHANCEMENT: Desktop - smaller, refined */
-  @media (min-width: 1025px) {
-    top: 0.5rem;
-    right: 0.5rem;
-    padding: 0.25rem;
-    min-width: 32px;
-    min-height: 32px;
-
-    svg {
-      width: 1rem;
-      height: 1rem;
-    }
-  }
-`;
-
-/**
- * MOBILE-FIRST: Centered button layout
- */
-const CenteredContainer = styled(Container)`
-  justify-content: center;
-`;
-
-/**
- * Desktop button group for multiple actions
- */
-const ButtonGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  width: 100%;
-`;
-
-/**
- * Desktop container with display: contents to preserve grid layout
- */
-const DesktopContainer = styled.div`
-  display: contents;
-
-  /* Hide on mobile */
-  @media (max-width: 768px) {
-    display: none;
-  }
-`;
 
 /**
  * Lobby Dashboard - Mobile-first with refresh functionality
@@ -169,25 +76,26 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
   return (
     <>
       {/* Mobile view */}
-      <CenteredContainer className="mobile-only">
+      <div className={`${styles.centeredContainer} mobile-only`}>
         {canRedeal && (
-          <RefreshButton
+          <button
+            className={styles.refreshButton}
             onClick={handleRedeal}
             disabled={actionState.status === "loading"}
             title="Re-deal cards"
           >
             <RefreshCw />
-          </RefreshButton>
+          </button>
         )}
         <ActionButton
           onClick={handleClick}
           text={getButtonText()}
           enabled={actionState.status !== "loading"}
         />
-      </CenteredContainer>
+      </div>
 
       {/* Desktop terminal view */}
-      <DesktopContainer>
+      <div className={styles.desktopContainer}>
         <TerminalSection>
           <TerminalCommand>SYSTEM READY</TerminalCommand>
           <TerminalPrompt>
@@ -202,7 +110,7 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
         )}
 
         <TerminalSection>
-          <ButtonGroup>
+          <div className={styles.buttonGroup}>
             <ActionButton
               onClick={handleClick}
               text={getButtonText()}
@@ -216,9 +124,9 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
                 enabled={actionState.status !== "loading"}
               />
             )}
-          </ButtonGroup>
+          </div>
         </TerminalSection>
-      </DesktopContainer>
+      </div>
     </>
   );
 };
@@ -229,15 +137,15 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
 export const WaitingDashboard: React.FC<{ messageText?: string }> = ({ messageText }) => {
   return (
     <>
-      <Container className="mobile-only" />
-      <DesktopContainer>
+      <div className={`${styles.container} mobile-only`} />
+      <div className={styles.desktopContainer}>
         <TerminalSection>
           <TerminalCommand>STANDBY MODE</TerminalCommand>
           <TerminalPrompt>
             <TerminalOutput>{messageText || "Waiting for orders..."}</TerminalOutput>
           </TerminalPrompt>
         </TerminalSection>
-      </DesktopContainer>
+      </div>
     </>
   );
 };
@@ -248,15 +156,15 @@ export const WaitingDashboard: React.FC<{ messageText?: string }> = ({ messageTe
 export const SpectatorDashboard: React.FC<{ messageText?: string }> = ({ messageText }) => {
   return (
     <>
-      <Container className="mobile-only" />
-      <DesktopContainer>
+      <div className={`${styles.container} mobile-only`} />
+      <div className={styles.desktopContainer}>
         <TerminalSection>
           <TerminalCommand>OBSERVER MODE</TerminalCommand>
           <TerminalPrompt>
             <TerminalOutput>{messageText || "Monitoring field operations..."}</TerminalOutput>
           </TerminalPrompt>
         </TerminalSection>
-      </DesktopContainer>
+      </div>
     </>
   );
 };
@@ -267,18 +175,18 @@ export const SpectatorDashboard: React.FC<{ messageText?: string }> = ({ message
 export const DealingDashboard: React.FC<{ messageText?: string }> = ({ messageText }) => {
   return (
     <>
-      <CenteredContainer className="mobile-only">
+      <div className={`${styles.centeredContainer} mobile-only`}>
         <div>Dealing cards...</div>
-      </CenteredContainer>
+      </div>
 
-      <DesktopContainer>
+      <div className={styles.desktopContainer}>
         <TerminalSection>
           <TerminalCommand>SYSTEM PROCESSING</TerminalCommand>
           <TerminalPrompt>
             <TerminalOutput>{messageText || "Dealing cards..."}</TerminalOutput>
           </TerminalPrompt>
         </TerminalSection>
-      </DesktopContainer>
+      </div>
     </>
   );
 };
@@ -295,15 +203,15 @@ export const GameoverDashboard: React.FC<{ messageText?: string }> = ({ messageT
 
   return (
     <>
-      <CenteredContainer className="mobile-only">
+      <div className={`${styles.centeredContainer} mobile-only`}>
         <ActionButton
           onClick={handleNewGame}
           text="New Game"
           enabled={actionState.status !== "loading"}
         />
-      </CenteredContainer>
+      </div>
 
-      <DesktopContainer>
+      <div className={styles.desktopContainer}>
         <TerminalSection>
           <TerminalCommand>MISSION COMPLETE</TerminalCommand>
           <TerminalPrompt>
@@ -322,7 +230,7 @@ export const GameoverDashboard: React.FC<{ messageText?: string }> = ({ messageT
             enabled={actionState.status !== "loading"}
           />
         </TerminalSection>
-      </DesktopContainer>
+      </div>
     </>
   );
 };
@@ -339,11 +247,11 @@ export const OutcomeDashboard: React.FC<{ messageText?: string }> = ({ messageTe
 
   return (
     <>
-      <CenteredContainer className="mobile-only">
+      <div className={`${styles.centeredContainer} mobile-only`}>
         <ActionButton onClick={handleContinue} text="Continue" enabled={true} />
-      </CenteredContainer>
+      </div>
 
-      <DesktopContainer>
+      <div className={styles.desktopContainer}>
         <TerminalSection>
           <TerminalCommand>MISSION OUTCOME</TerminalCommand>
           <TerminalPrompt>
@@ -356,7 +264,7 @@ export const OutcomeDashboard: React.FC<{ messageText?: string }> = ({ messageTe
         <TerminalSection>
           <ActionButton onClick={handleContinue} text="ACKNOWLEDGE" enabled={true} />
         </TerminalSection>
-      </DesktopContainer>
+      </div>
     </>
   );
 };

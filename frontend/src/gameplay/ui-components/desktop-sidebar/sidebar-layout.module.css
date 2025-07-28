@@ -1,19 +1,16 @@
-import styled, { keyframes } from "styled-components";
-import { Z_INDEX } from "@frontend/style/z-index";
-
-const pulse = keyframes`
+@keyframes pulse {
   0%, 100% {
     opacity: 0.3;
   }
   50% {
     opacity: 0.6;
   }
-`;
+}
 
 /**
  * Main sidebar container - handles responsive width and visual styling
  */
-export const SidebarContainer = styled.aside`
+.sidebarContainer {
   position: relative;
   height: 100%;
   width: calc(25vw + 50px);
@@ -37,12 +34,12 @@ export const SidebarContainer = styled.aside`
     rgba(0, 255, 136, 0.03) 2px,
     rgba(0, 255, 136, 0.03) 4px
   );
-`;
+}
 
 /**
  * Three-row grid layout for consistent section positioning
  */
-export const SidebarGrid = styled.div`
+.sidebarGrid {
   display: grid;
   grid-template-rows: auto 1fr auto;
   height: 100%;
@@ -55,33 +52,36 @@ export const SidebarGrid = styled.div`
   min-height: 0;
 
   /* Ensure grid items respect the grid */
-  > * {
-    min-height: 0;
-  }
+}
 
-  /* Custom scrollbar styling */
+.sidebarGrid > * {
+  min-height: 0;
+}
+
+/* Custom scrollbar styling */
+.sidebarGrid {
   scrollbar-width: thin;
   scrollbar-color: var(--color-primary, #00ff88) transparent;
+}
 
-  &::-webkit-scrollbar {
-    width: 4px;
-  }
+.sidebarGrid::-webkit-scrollbar {
+  width: 4px;
+}
 
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
+.sidebarGrid::-webkit-scrollbar-track {
+  background: transparent;
+}
 
-  &::-webkit-scrollbar-thumb {
-    background: var(--color-primary, #00ff88);
-    border-radius: 2px;
-    opacity: 0.5;
-  }
-`;
+.sidebarGrid::-webkit-scrollbar-thumb {
+  background: var(--color-primary, #00ff88);
+  border-radius: 2px;
+  opacity: 0.5;
+}
 
 /**
  * Loading indicator for refetch operations
  */
-export const RefetchIndicator = styled.div`
+.refetchIndicator {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
@@ -89,6 +89,6 @@ export const RefetchIndicator = styled.div`
   height: 8px;
   border-radius: 50%;
   background-color: #4dabf7;
-  animation: ${pulse} 1.5s ease-in-out infinite;
-  z-index: ${Z_INDEX.FIXED_BUTTONS};
-`;
+  animation: pulse 1.5s ease-in-out infinite;
+  z-index: var(--z-index-fixed-buttons);
+}

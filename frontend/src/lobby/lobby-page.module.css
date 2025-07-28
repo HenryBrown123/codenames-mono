@@ -1,0 +1,470 @@
+@import '../style/variables.css';
+
+/* Animations */
+@keyframes glitchAnimation {
+  0%, 100% {
+    text-shadow: 
+      0 0 2px var(--color-primary, #00ff88),
+      0 0 4px var(--color-primary, #00ff88);
+  }
+  25% {
+    text-shadow: 
+      -2px 0 var(--color-accent, #ff0080),
+      2px 0 var(--color-team-blue, #00d4ff);
+  }
+  50% {
+    text-shadow: 
+      2px 0 var(--color-accent, #ff0080),
+      -2px 0 var(--color-primary, #00ff88);
+  }
+  75% {
+    text-shadow: 
+      0 0 2px var(--color-team-blue, #00d4ff),
+      0 0 4px var(--color-team-blue, #00d4ff);
+  }
+}
+
+@keyframes scanlineAnimation {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes statusBlink {
+  0%, 49% { 
+    opacity: 1; 
+  }
+  50%, 100% { 
+    opacity: 0.3; 
+  }
+}
+
+@keyframes globalStatusBlink {
+  0%, 49% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow: auto;
+}
+
+.mainContent {
+  width: 100%;
+  max-width: 1200px;
+  padding: 30px;
+  background: linear-gradient(120deg, rgba(10, 16, 14, 0.76) 65%, rgba(20, 20, 30, 0.7) 100%);
+  border: 1px solid var(--color-primary);
+  border-radius: 8px;
+  box-shadow: 0 0 24px 0 rgba(64, 255, 166, 0.14);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Scanline effect */
+.mainContent::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 255, 136, 0.8) 50%,
+    transparent 100%
+  );
+  animation: scanlineAnimation 4s linear infinite;
+  pointer-events: none;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.title {
+  font-size: 2.2rem;
+  font-weight: bold;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 6px;
+  margin-bottom: 8px;
+  opacity: 0.9;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  animation: glitchAnimation 4s ease-in-out infinite;
+}
+
+.gameInfo {
+  color: var(--color-team-blue);
+  font-size: 1.2rem;
+  opacity: 0.7;
+  letter-spacing: 2px;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.teamsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin: 20px 0 50px 0;
+}
+
+@media (max-width: 768px) {
+  .teamsGrid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+.teamTile {
+  border: 1px solid var(--team-color);
+  border-radius: 4px;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(1px);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+}
+
+.teamTile[data-drag-over="true"] {
+  border-color: var(--team-color);
+  background: rgba(0, 0, 0, 0.7);
+  box-shadow: 0 0 20px var(--team-color);
+  transform: scale(1.02);
+}
+
+.teamHeader {
+  margin-bottom: 15px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.teamName {
+  font-size: 1.3rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  opacity: 0.9;
+  color: var(--team-color);
+  font-family: "JetBrains Mono", monospace;
+}
+
+.playerCount {
+  color: var(--color-team-blue);
+  font-size: 1rem;
+  opacity: 0.7;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.playersContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 12px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.1rem;
+  min-height: 180px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) transparent;
+}
+
+.playersContainer::-webkit-scrollbar {
+  width: 3px;
+}
+
+.playersContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.playersContainer::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  opacity: 0.5;
+}
+
+.playerTile {
+  background: transparent;
+  border: none;
+  padding: 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  transition: all 0.1s ease;
+  position: relative;
+  line-height: 1.4;
+  height: 30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: grab;
+  user-select: none;
+}
+
+.playerTile[data-dragging="true"] {
+  cursor: grabbing;
+  opacity: 0.5;
+}
+
+.playerTile::before {
+  content: ">";
+  color: var(--color-primary);
+  opacity: 0.5;
+  margin-right: 4px;
+}
+
+.playerTile:hover {
+  background: rgba(0, 255, 136, 0.05);
+  padding-left: 4px;
+}
+
+.playerTile:hover::before {
+  opacity: 1;
+}
+
+.playerSlot {
+  background: transparent;
+  border: none;
+  padding: 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  transition: all 0.1s ease;
+  position: relative;
+  line-height: 1.4;
+  height: 30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.playerSlot::before {
+  content: ">";
+  color: rgba(255, 255, 255, 0.1);
+  opacity: 0.5;
+  margin-right: 4px;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary, #00ff88);
+  box-shadow: 0 0 4px var(--color-primary, #00ff88);
+  animation: globalStatusBlink 1.5s step-end infinite;
+}
+
+.playerName {
+  color: white;
+  font-weight: 500;
+  font-size: 1.1rem;
+  flex: 1;
+}
+
+.editableInput {
+  background: transparent;
+  border: 1px solid var(--color-primary, #00ff88);
+  color: white;
+  font-weight: 500;
+  font-size: 1.1rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 2px;
+  flex: 1;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.editableInput:focus {
+  outline: none;
+  border-color: white;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+.removeButton {
+  background: transparent;
+  border: none;
+  color: rgba(255, 0, 0, 0.5);
+  padding: 0 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.playerTile:hover .removeButton {
+  opacity: 1;
+}
+
+.removeButton:hover {
+  color: #ff0040;
+  background: rgba(255, 0, 0, 0.1);
+}
+
+.addPlayerArea {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.addInput {
+  flex: 1;
+  padding: 12px 15px;
+  background-color: rgba(0, 255, 136, 0.05);
+  border: 1px solid var(--color-primary, #00ff88);
+  border-radius: 3px;
+  color: var(--color-primary, #00ff88);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.1rem;
+  transition: all 0.2s ease;
+}
+
+.addInput::placeholder {
+  color: var(--color-primary, #00ff88);
+  opacity: 0.6;
+  font-size: 1rem;
+}
+
+.addInput:focus {
+  outline: none;
+  background-color: rgba(0, 255, 136, 0.1);
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+.addButton {
+  background-color: var(--team-color);
+  color: #0a0a0f;
+  border: none;
+  padding: 12px 20px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 6px var(--team-color);
+  opacity: 0.92;
+}
+
+.addButton:hover:not(:disabled) {
+  background-color: #fff;
+  color: var(--team-color);
+  opacity: 1;
+}
+
+.addButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.startButton {
+  background: var(--start-bg, #6b7280);
+  color: #000;
+  padding: 20px 60px;
+  font-size: 1.8rem;
+  margin: 20px auto 0;
+  display: block;
+  border: 2px solid var(--start-border, #6b7280);
+  border-radius: 3px;
+  font-family: "JetBrains Mono", monospace;
+  box-shadow: var(--start-shadow, none);
+  text-shadow: var(--start-text-shadow, none);
+  font-weight: 900;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  cursor: var(--start-cursor, not-allowed);
+  transition: all 0.3s ease;
+  opacity: var(--start-opacity, 0.7);
+}
+
+.startButton[data-can-start="true"] {
+  --start-bg: var(--color-primary, #00ff88);
+  --start-border: var(--color-primary, #00ff88);
+  --start-shadow: 0 0 30px rgba(0, 255, 136, 0.5), inset 0 0 20px rgba(0, 255, 136, 0.2);
+  --start-text-shadow: 0 0 5px rgba(0, 255, 136, 0.5);
+  --start-cursor: pointer;
+  --start-opacity: 1;
+}
+
+.startButton[data-can-start="true"]:hover:not(:disabled) {
+  background: #fff;
+  color: #000;
+  transform: scale(1.05);
+  box-shadow: 0 0 40px rgba(0, 255, 136, 0.7), inset 0 0 30px rgba(0, 255, 136, 0.3);
+}
+
+.startButton:disabled {
+  cursor: not-allowed;
+}
+
+.loadingSpinner {
+  text-align: center;
+  padding: 2rem;
+}
+
+.loadingSpinner p {
+  color: var(--color-primary, #00ff88);
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(0, 255, 136, 0.3);
+  border-top: 4px solid var(--color-primary, #00ff88);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+.errorMessage {
+  color: #ef4444;
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  text-align: center;
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 4px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  font-family: "JetBrains Mono", monospace;
+}

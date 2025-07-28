@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import styled, { keyframes } from "styled-components";
 import { useGameDataRequired, useTurn } from "../shared/providers";
+import styles from "./game-scene.module.css";
 import { usePlayerScene } from "./";
 import { getSceneMessage } from "./scene-messages";
 import { getDashboardComponent, getBoardComponent } from "./component-mappings";
@@ -8,498 +8,18 @@ import { SpectatorBoard } from "../ui-components/boards/spectator-board";
 import { DesktopSidebar } from "../ui-components/desktop-sidebar";
 import { GameInstructions } from "../ui-components/game-instructions";
 import { ActionButton } from "../shared/components";
-import { Z_INDEX } from "@frontend/style/z-index";
 import { CodeWordInput } from "../ui-components/dashboards/codemaster-input";
 import { useGameActions } from "../player-actions";
 import { CardVisibilityProvider } from "../ui-components/cards/card-visibility-provider";
 import { TiltControl } from "../ui-components/board-controls/tilt-control";
 
-const hackerPulse = keyframes`
-  0%, 100% {
-    border-color: rgba(0, 255, 136, 0.3);
-    box-shadow: 
-      0 0 10px rgba(0, 255, 136, 0.2),
-      inset 0 0 10px rgba(0, 255, 136, 0.05);
-  }
-  50% {
-    border-color: rgba(0, 255, 136, 0.6);
-    box-shadow: 
-      0 0 20px rgba(0, 255, 136, 0.4),
-      inset 0 0 20px rgba(0, 255, 136, 0.1);
-  }
-`;
 
-const scanlineAnimation = keyframes`
-  0% {
-    transform: translateY(-100%);
-  }
-  100% {
-    transform: translateY(100%);
-  }
-`;
 
-const glitchAnimation = keyframes`
-  0%, 100% {
-    text-shadow: 
-      0 0 2px var(--color-primary, #00ff88),
-      0 0 4px var(--color-primary, #00ff88);
-  }
-  25% {
-    text-shadow: 
-      -2px 0 var(--color-accent, #ff0080),
-      2px 0 var(--color-team-blue, #00d4ff);
-  }
-  50% {
-    text-shadow: 
-      2px 0 var(--color-accent, #ff0080),
-      -2px 0 var(--color-primary, #00ff88);
-  }
-  75% {
-    text-shadow: 
-      0 0 2px var(--color-team-blue, #00d4ff),
-      0 0 4px var(--color-team-blue, #00d4ff);
-  }
-`;
 
-const instructionsReveal = keyframes`
-  /* Hidden phase */
-  0% {
-    transform: translateY(-120%);
-    opacity: 0;
-  }
-  
-  /* Slide in */
-  5% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  
-  /* Stay visible - wait 3 seconds after typewriter finishes */
-  85% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  
-  /* Slide out */
-  95% {
-    transform: translateY(-120%);
-    opacity: 0;
-  }
-  
-  /* Stay hidden */
-  100% {
-    transform: translateY(-120%);
-    opacity: 0;
-  }
-`;
 
-const progressShrink = keyframes`
-  0% {
-    transform: scaleX(1);
-  }
-  85% {
-    transform: scaleX(0);
-  }
-  100% {
-    transform: scaleX(0);
-  }
-`;
 
-/**
- * MOBILE-FIRST: Fixed dashboard at bottom
- */
-const DashboardContainer = styled.div`
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 80px;
-  background: linear-gradient(180deg, rgba(10, 10, 15, 0.95) 0%, rgba(26, 26, 46, 0.98) 100%);
-  border-top: 2px solid var(--color-primary, #00ff88);
-  border-radius: 16px 16px 0 0;
-  z-index: ${Z_INDEX.DASHBOARD};
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-  padding-top: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(10px);
-  animation: ${hackerPulse} 3s ease-in-out infinite;
 
-  /* Scanline effect for mobile */
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(0, 255, 136, 0.8) 50%,
-      transparent 100%
-    );
-    animation: ${scanlineAnimation} 4s linear infinite;
-    pointer-events: none;
-  }
-`;
 
-/**
- * MOBILE-FIRST: Game scene grid container
- */
-const GameSceneContainer = styled.div`
-  /* Mobile-first: Simple full-height container */
-  width: 100%;
-  height: 100vh;
-  height: 100dvh;
-  height: -webkit-fill-available;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  padding-bottom: 0;
-  box-sizing: border-box;
-  position: relative;
-
-  /* PROGRESSIVE ENHANCEMENT: Large tablet landscape - return to grid */
-  @media (min-width: 769px) and (orientation: landscape) {
-    grid-template-columns: minmax(300px, min(400px, calc(25vw + 50px))) 1fr;
-    grid-template-rows: 1fr;
-    display: grid;
-    gap: 0;
-    padding: 0;
-  }
-`;
-
-/**
- * MOBILE: Floating help button
- */
-const HelpButton = styled.button<{ $isActive: boolean }>`
-  /* Mobile-first: Floating help button with hacker aesthetic */
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: ${({ $isActive }) =>
-    $isActive
-      ? "linear-gradient(135deg, rgba(0, 255, 136, 0.2) 0%, rgba(0, 255, 136, 0.1) 100%)"
-      : "linear-gradient(135deg, rgba(10, 10, 15, 0.95) 0%, rgba(26, 26, 46, 0.95) 100%)"};
-  border: 2px solid
-    ${({ $isActive }) => ($isActive ? "var(--color-primary, #00ff88)" : "rgba(0, 255, 136, 0.3)")};
-  color: ${({ $isActive }) => ($isActive ? "var(--color-primary, #00ff88)" : "#fff")};
-  font-size: 1.2rem;
-  font-weight: bold;
-  font-family: "JetBrains Mono", "Courier New", monospace;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  z-index: ${Z_INDEX.FIXED_BUTTONS};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(10px);
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.3),
-    0 0 20px rgba(0, 255, 136, 0.2);
-  animation: ${({ $isActive }) => ($isActive ? glitchAnimation : "none")} 2s infinite;
-
-  &:hover {
-    transform: scale(1.1) rotate(360deg);
-    box-shadow:
-      0 6px 16px rgba(0, 0, 0, 0.4),
-      0 0 30px rgba(0, 255, 136, 0.4);
-    animation: ${glitchAnimation} 1s infinite;
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-
-  /* PROGRESSIVE ENHANCEMENT: Hide on desktop/tablet landscape */
-  @media (min-width: 769px) and (orientation: landscape) {
-    display: none;
-  }
-`;
-
-/**
- * MOBILE: Slide-down instructions panel
- */
-const InstructionsPanel = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(180deg, rgba(10, 10, 15, 0.98) 0%, rgba(26, 26, 46, 0.95) 100%);
-  backdrop-filter: blur(20px);
-  border-bottom: 2px solid var(--color-primary, #00ff88);
-  z-index: ${Z_INDEX.INSTRUCTIONS_PANEL};
-  box-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.5),
-    0 0 30px rgba(0, 255, 136, 0.2);
-
-  /* Initial hidden state */
-  transform: translateY(-120%);
-  opacity: 0;
-
-  /* Animation triggered by key change */
-  animation: ${instructionsReveal} 6s ease-out;
-  animation-fill-mode: both;
-
-  padding-top: env(safe-area-inset-top);
-
-  /* Terminal effect */
-  &::after {
-    content: "MISSION UPDATE";
-    position: absolute;
-    top: max(env(safe-area-inset-top), 1rem);
-    left: 1rem;
-    font-size: 0.7rem;
-    color: var(--color-primary, #00ff88);
-    opacity: 0.5;
-    letter-spacing: 0.2em;
-    font-family: "JetBrains Mono", monospace;
-  }
-
-  @media (min-width: 769px) and (orientation: landscape) {
-    display: none;
-  }
-`;
-
-const PanelContent = styled.div`
-  padding: 2rem 1.5rem;
-  text-align: center;
-  font-size: 0.9rem;
-  line-height: 1.4;
-  color: white;
-
-  /* Add max-width for readability */
-  max-width: 400px;
-  margin-left: auto;
-  margin-right: auto;
-
-  /* Fade in animation */
-  animation: fadeIn 0.3s ease-out;
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-`;
-
-const ProgressBar = styled.div`
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 2px;
-  background: var(--color-primary, #00ff88);
-  box-shadow: 0 0 10px rgba(0, 255, 136, 0.8);
-  width: 100%;
-  transform-origin: left;
-
-  /* Shrink animation synced with panel */
-  animation: ${progressShrink} 5.1s linear 0.3s; /* Delay to start when panel is visible */
-  animation-fill-mode: both;
-`;
-
-/**
- * MOBILE: Full-screen clue panel - EXACTLY like instructions but MORE
- */
-const CluePanel = styled.div<{ $isVisible: boolean }>`
-  /* Mobile-first: Full screen takeover from bottom */
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(10, 10, 15, 0.98) 0%, rgba(26, 26, 46, 0.98) 100%);
-  backdrop-filter: blur(20px);
-  z-index: ${Z_INDEX.MODAL_CONTENT};
-
-  /* Slide animation from bottom */
-  transform: translateY(${({ $isVisible }) => ($isVisible ? "0" : "100%")});
-  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
-
-  /* Safe areas */
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-
-  /* Layout */
-  display: flex;
-  flex-direction: column;
-
-  /* PROGRESSIVE ENHANCEMENT: Hide on desktop/tablet landscape */
-  @media (min-width: 769px) and (orientation: landscape) {
-    display: none;
-  }
-`;
-
-const CluePanelHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  padding: 2rem 1rem 1rem;
-`;
-
-const HackerTitle = styled.h1`
-  color: var(--color-primary, #00ff88);
-  font-size: 2rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  margin: 0;
-  text-shadow:
-    0 0 20px rgba(0, 255, 136, 0.5),
-    0 0 40px rgba(0, 255, 136, 0.3);
-
-  @media (max-width: 480px) {
-    font-size: 1.5rem;
-  }
-`;
-
-const CluePanelContent = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem 1.5rem;
-
-  /* Max width for readability */
-  width: 100%;
-  max-width: 500px;
-  margin: 0 auto;
-`;
-
-const ClueCloseButton = styled.button`
-  position: absolute;
-  top: max(env(safe-area-inset-top), 2rem);
-  right: 1rem;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: transparent;
-  border: 1px solid var(--color-primary, #00ff88);
-  color: var(--color-primary, #00ff88);
-  font-size: 1.5rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(10px);
-  font-family: "JetBrains Mono", monospace;
-  font-weight: bold;
-
-  /* Match button glow effects */
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
-
-  &:hover {
-    background: var(--color-primary, #00ff88);
-    color: #000;
-    transform: scale(1.1) rotate(90deg);
-    box-shadow:
-      0 0 30px rgba(0, 255, 136, 0.5),
-      inset 0 0 20px rgba(0, 255, 136, 0.2);
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-`;
-
-const HackerDecoration = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 300%;
-  height: 300%;
-  opacity: 0.03;
-  pointer-events: none;
-  font-size: 20vw;
-  font-weight: 900;
-  color: var(--color-primary, #00ff88);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-
-  &::before {
-    content: "CLASSIFIED";
-    transform: rotate(-45deg);
-  }
-`;
-
-/**
- * MOBILE: Clue panel backdrop
- */
-const CluePanelBackdrop = styled.div<{ $isVisible: boolean }>`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
-  z-index: ${Z_INDEX.MODAL_BACKDROP};
-
-  opacity: ${({ $isVisible }) => ($isVisible ? 1 : 0)};
-  pointer-events: ${({ $isVisible }) => ($isVisible ? "all" : "none")};
-  transition: opacity 0.3s ease;
-
-  /* PROGRESSIVE ENHANCEMENT: Hide on desktop/tablet landscape */
-  @media (min-width: 769px) and (orientation: landscape) {
-    display: none;
-  }
-`;
-
-/**
- * MOBILE-FIRST: Game board that takes maximum space
- */
-const GameBoardContainer = styled.div`
-  /* Mobile-first: Account for fixed dashboard at bottom */
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem;
-  min-height: 300px;
-  overflow: hidden;
-
-  /* Critical: Add bottom padding to prevent overlap with fixed dashboard */
-  padding-bottom: calc(80px + 0.5rem); /* Dashboard height + gap */
-
-  /* PROGRESSIVE ENHANCEMENT: Large tablet landscape - remove bottom padding */
-  @media (min-width: 769px) and (orientation: landscape) {
-    grid-column: 2;
-    grid-row: 1;
-    padding: 1rem;
-    padding-bottom: 1rem; /* Reset to normal */
-    min-height: 0;
-  }
-`;
-
-const ErrorContainer = styled.div`
-  grid-column: 1 / -1;
-  grid-row: 2;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 2rem;
-  text-align: center;
-  color: white;
-`;
 
 /**
  * Game Scene Component with mobile-first collapsible instructions
@@ -518,38 +38,38 @@ export const GameScene: React.FC = () => {
   // Show skeleton during initial load
   if (isPending && !gameData) {
     return (
-      <GameSceneContainer>
-        <GameBoardContainer>
+      <div className={styles.gameSceneContainer}>
+        <div className={styles.gameBoardContainer}>
           <SpectatorBoard tilt={boardTilt} />
-        </GameBoardContainer>
-        <DashboardContainer />
-      </GameSceneContainer>
+        </div>
+        <div className={styles.dashboardContainer} />
+      </div>
     );
   }
 
   if (isError) {
     return (
-      <GameSceneContainer>
-        <ErrorContainer>
+      <div className={styles.gameSceneContainer}>
+        <div className={styles.errorContainer}>
           <h2>Failed to load game</h2>
           <p>{error?.message || "Unknown error"}</p>
           <ActionButton onClick={refetch} text="Retry" enabled={true} />
-        </ErrorContainer>
-      </GameSceneContainer>
+        </div>
+      </div>
     );
   }
 
   // Handle game over state
   if (gameData?.currentRound?.status === "COMPLETED") {
     return (
-      <GameSceneContainer>
-        <GameBoardContainer>
+      <div className={styles.gameSceneContainer}>
+        <div className={styles.gameBoardContainer}>
           <SpectatorBoard tilt={boardTilt} />
-        </GameBoardContainer>
-        <DashboardContainer>
+        </div>
+        <div className={styles.dashboardContainer}>
           <div>Game Completed!</div>
-        </DashboardContainer>
-      </GameSceneContainer>
+        </div>
+      </div>
     );
   }
 
@@ -589,7 +109,7 @@ export const GameScene: React.FC = () => {
         {/* Desktop only tilt control */}
         <TiltControl value={boardTilt} onChange={setBoardTilt} />
         
-        <GameSceneContainer>
+        <div className={styles.gameSceneContainer}>
           <DesktopSidebar isFetching={isFetching}>
             <DashboardComponent
               messageText={messageText}
@@ -597,10 +117,10 @@ export const GameScene: React.FC = () => {
             />
           </DesktopSidebar>
 
-          <GameBoardContainer>
+          <div className={styles.gameBoardContainer}>
             <BoardComponent />
-          </GameBoardContainer>
-        </GameSceneContainer>
+          </div>
+        </div>
       </CardVisibilityProvider>
     );
   }
@@ -608,27 +128,27 @@ export const GameScene: React.FC = () => {
   // Mobile layout - board + dashboard with pure CSS animated instructions
   return (
     <CardVisibilityProvider cards={cards} initialState={isRoundSetup ? "hidden" : "visible"}>
-      <GameSceneContainer>
+      <div className={styles.gameSceneContainer}>
         {/* Instructions panel with pure CSS animation */}
-        <InstructionsPanel key={`instruction-${messageText}-${toggleMessage}`}>
-          <PanelContent>
+        <div className={styles.instructionsPanel} key={`instruction-${messageText}-${toggleMessage}`}>
+          <div className={styles.panelContent}>
             <GameInstructions messageText={messageText} />
-          </PanelContent>
-          <ProgressBar key={messageText} />
-        </InstructionsPanel>
+          </div>
+          <div className={styles.progressBar} key={messageText} />
+        </div>
 
         {/* MOBILE CLUE PANEL - FULL SCREEN TAKEOVER */}
-        <CluePanelBackdrop $isVisible={showCluePanel} onClick={() => setShowCluePanel(false)} />
+        <div className={`${styles.cluePanelBackdrop} ${showCluePanel ? styles.visible : styles.hidden}`} onClick={() => setShowCluePanel(false)} />
 
-        <CluePanel $isVisible={showCluePanel}>
-          <HackerDecoration />
+        <div className={`${styles.cluePanel} ${showCluePanel ? styles.visible : styles.hidden}`}>
+          <div className={styles.hackerDecoration} />
 
-          <CluePanelHeader>
-            <ClueCloseButton onClick={() => setShowCluePanel(false)}>×</ClueCloseButton>
-            <HackerTitle>TRANSMIT CLUE</HackerTitle>
-          </CluePanelHeader>
+          <div className={styles.cluePanelHeader}>
+            <button className={styles.clueCloseButton} onClick={() => setShowCluePanel(false)}>×</button>
+            <h1 className={styles.hackerTitle}>TRANSMIT CLUE</h1>
+          </div>
 
-          <CluePanelContent>
+          <div className={styles.cluePanelContent}>
             <CodeWordInput
               codeWord=""
               numberOfCards={null}
@@ -636,22 +156,22 @@ export const GameScene: React.FC = () => {
               isLoading={actionState.status === "loading"}
               onSubmit={handleSubmitClue}
             />
-          </CluePanelContent>
-        </CluePanel>
+          </div>
+        </div>
 
         {/* Help button to manually show instructions */}
-        <HelpButton $isActive={false} onClick={() => setToggleMessage(!toggleMessage)}>
+        <button className={`${styles.helpButton} ${styles.inactive}`} onClick={() => setToggleMessage(!toggleMessage)}>
           ?
-        </HelpButton>
+        </button>
 
-        <GameBoardContainer>
+        <div className={styles.gameBoardContainer}>
           <BoardComponent />
-        </GameBoardContainer>
+        </div>
 
-        <DashboardContainer>
+        <div className={styles.dashboardContainer}>
           <DashboardComponent onOpenCluePanel={() => setShowCluePanel(true)} />
-        </DashboardContainer>
-      </GameSceneContainer>
+        </div>
+      </div>
     </CardVisibilityProvider>
   );
 };
