@@ -1,0 +1,39 @@
+.controlContainer {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-index-toast);
+  background: rgba(10, 10, 15, 0.95);
+  border: 1px solid var(--color-primary, #00ff88);
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.label {
+  color: var(--color-primary, #00ff88);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.slider {
+  width: 120px;
+  accent-color: var(--color-primary, #00ff88);
+  cursor: pointer;
+}
+
+.value {
+  color: rgba(255, 255, 255, 0.7);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.9rem;
+  min-width: 35px;
+  text-align: right;
+}

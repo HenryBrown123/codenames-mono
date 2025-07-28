@@ -1,0 +1,97 @@
+/* Setup Dashboards Styles */
+
+/* MOBILE-FIRST: Dashboard container that adapts to layout context */
+.container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0.5rem;
+  gap: 1rem;
+  position: relative;
+}
+
+/* MOBILE-FIRST: Refresh button positioned appropriately */
+.refreshButton {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.refreshButton:hover {
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.refreshButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+
+.refreshButton svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+/* PROGRESSIVE ENHANCEMENT: Desktop - smaller, refined */
+@media (min-width: 1025px) {
+  .refreshButton {
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.25rem;
+    min-width: 32px;
+    min-height: 32px;
+  }
+
+  .refreshButton svg {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+/* MOBILE-FIRST: Centered button layout */
+.centeredContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0.5rem;
+  gap: 1rem;
+  position: relative;
+}
+
+/* Desktop button group for multiple actions */
+.buttonGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+/* Desktop container with display: contents to preserve grid layout */
+.desktopContainer {
+  display: contents;
+}
+
+/* Hide on mobile */
+@media (max-width: 768px) {
+  .desktopContainer {
+    display: none;
+  }
+}

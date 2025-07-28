@@ -1,0 +1,461 @@
+@import '@/style/variables.css';
+@import '@/style/animations.css';
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes fadeOutBlur {
+  from {
+    opacity: 1;
+    filter: blur(0px);
+  }
+  to {
+    opacity: 0;
+    filter: blur(10px);
+  }
+}
+
+@keyframes electricFlicker {
+  0%, 100% {
+    opacity: 0.6;
+    filter: brightness(0.8);
+  }
+  10% {
+    opacity: 1;
+    filter: brightness(1.5);
+  }
+  20% {
+    opacity: 0.7;
+    filter: brightness(0.9);
+  }
+  30% {
+    opacity: 1;
+    filter: brightness(1.3);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.2);
+  }
+  70% {
+    opacity: 0.8;
+    filter: brightness(1);
+  }
+  90% {
+    opacity: 1;
+    filter: brightness(1.4);
+  }
+}
+
+@keyframes glitchAnimation {
+  0%, 100% {
+    text-shadow: 
+      0 0 2px var(--color-primary),
+      0 0 4px var(--color-primary);
+  }
+  25% {
+    text-shadow: 
+      -2px 0 var(--color-team-red),
+      2px 0 var(--color-team-blue);
+  }
+  50% {
+    text-shadow: 
+      2px 0 var(--color-accent),
+      -2px 0 var(--color-primary);
+  }
+  75% {
+    text-shadow: 
+      0 0 2px var(--color-team-blue),
+      0 0 4px var(--color-team-blue);
+  }
+}
+
+@keyframes scanlineAnimation {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes hackerPulse {
+  0%, 100% {
+    border-color: rgba(0, 255, 136, 0.3);
+    box-shadow: 
+      0 0 10px rgba(0, 255, 136, 0.2),
+      inset 0 0 10px rgba(0, 255, 136, 0.05);
+  }
+  50% {
+    border-color: rgba(0, 255, 136, 0.6);
+    box-shadow: 
+      0 0 20px rgba(0, 255, 136, 0.4),
+      inset 0 0 20px rgba(0, 255, 136, 0.1);
+  }
+}
+
+.overlayContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.overlayContainer[data-exiting="true"] {
+  animation: fadeOutBlur 0.6s ease-out forwards;
+}
+
+.backgroundBlur {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(8px);
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 0, 128, 0.1) 0%, transparent 50%),
+    var(--color-background);
+}
+
+.handoffCard {
+  position: relative;
+  background: linear-gradient(
+    135deg,
+    rgba(10, 10, 15, 0.98) 0%,
+    rgba(26, 26, 46, 0.98) 100%
+  );
+  border: 2px solid var(--color-primary);
+  border-radius: 16px;
+  padding: 3rem;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  backdrop-filter: blur(20px);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(0, 255, 136, 0.3);
+  animation: fadeIn 0.6s ease-out, hackerPulse 3s ease-in-out infinite;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  overflow: hidden;
+}
+
+/* Scanline effect */
+.handoffCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 255, 136, 0.8) 50%,
+    transparent 100%
+  );
+  animation: scanlineAnimation 3s linear infinite;
+  pointer-events: none;
+}
+
+/* Terminal header */
+.handoffCard::after {
+  content: "CLASSIFIED HANDOFF";
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  font-size: 0.7rem;
+  color: var(--color-primary);
+  opacity: 0.5;
+  letter-spacing: 0.2em;
+  animation: glitchAnimation 2s infinite;
+}
+
+@media (max-width: 768px) {
+  .handoffCard {
+    padding: 2rem;
+    width: 95%;
+    max-width: 400px;
+  }
+}
+
+@media (max-width: 480px) {
+  .handoffCard {
+    padding: 1.5rem;
+    width: 90%;
+    border-radius: 12px;
+  }
+}
+
+.handoffIcon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--team-color-start), var(--team-color-end));
+  border: 2px solid var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 2rem;
+  font-size: 2rem;
+  color: white;
+  font-weight: 900;
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(0, 255, 136, 0.3);
+  animation: electricFlicker 2s ease-in-out infinite;
+}
+
+@media (max-width: 480px) {
+  .handoffIcon {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.title {
+  color: var(--color-primary);
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  animation: glitchAnimation 4s ease-in-out infinite;
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
+.subtitle {
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  margin: 0 0 2rem;
+  line-height: 1.5;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+}
+
+@media (max-width: 480px) {
+  .subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.playerInfo {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Inner glow */
+.playerInfo::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    45deg,
+    transparent 0%,
+    rgba(0, 255, 136, 0.05) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+@media (max-width: 480px) {
+  .playerInfo {
+    padding: 1rem;
+    margin: 1.5rem 0;
+    border-radius: 8px;
+  }
+}
+
+.playerName {
+  color: var(--color-text);
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.playerName[data-team] {
+  background: linear-gradient(135deg, var(--team-color-start), var(--team-color-end));
+  padding: 0.5rem 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--team-color);
+  display: inline-block;
+  animation: hackerPulse 2s ease-in-out infinite;
+}
+
+@media (max-width: 768px) {
+  .playerName {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .playerName {
+    font-size: 1.2rem;
+  }
+  
+  .playerName[data-team] {
+    padding: 0.4rem 1rem;
+  }
+}
+
+.teamInfo {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--team-color-start), var(--team-color-end));
+  border: 1px solid var(--team-color);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+}
+
+.actionText {
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  margin: 1.5rem 0 0;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+}
+
+@media (max-width: 480px) {
+  .actionText {
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    line-height: 1.4;
+  }
+}
+
+.continueButton {
+  background: transparent;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  border-radius: 8px;
+  padding: 1rem 2.5rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+  animation: hackerPulse 2s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 2rem auto 0;
+  min-height: 44px;
+  min-width: 44px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Data stream effect */
+.continueButton::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 2px,
+    rgba(0, 255, 136, 0.03) 2px,
+    rgba(0, 255, 136, 0.03) 4px
+  );
+  animation: scanlineAnimation 10s linear infinite;
+  pointer-events: none;
+}
+
+.continueButton:hover:not(:disabled) {
+  background-color: var(--color-primary);
+  color: #000;
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 25px rgba(0, 255, 136, 0.4),
+    inset 0 0 20px rgba(0, 255, 136, 0.1);
+  animation: none;
+}
+
+.continueButton:active {
+  transform: translateY(0);
+}
+
+.continueButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  animation: none;
+}
+
+@media (max-width: 768px) {
+  .continueButton {
+    padding: 0.9rem 2rem;
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .continueButton {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    margin-top: 1.5rem;
+    border-radius: 6px;
+  }
+}
+
+.errorText {
+  color: var(--color-accent);
+  font-size: 1.1rem;
+  margin: 1rem 0;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  animation: glitchAnimation 1s infinite;
+}

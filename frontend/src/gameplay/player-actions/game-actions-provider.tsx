@@ -1,6 +1,6 @@
 import { createContext, useState, useCallback, useContext, ReactNode } from "react";
-import styled from "styled-components";
 import { useGiveClueMutation, useMakeGuessMutation, useEndTurnMutation } from "./api";
+import styles from "./game-actions-provider.module.css";
 import {
   useCreateRoundMutation,
   useStartRoundMutation,
@@ -43,71 +43,6 @@ const initialState: ActionState = {
   error: null,
 };
 
-// Error UI Components
-const ErrorContainer = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  color: white;
-  padding: 2rem;
-  z-index: 9999;
-`;
-
-const ErrorBackdrop = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  backdrop-filter: blur(8px);
-  background: rgba(0, 0, 0, 0.5);
-`;
-
-const ErrorCard = styled.div`
-  position: relative;
-  background: rgba(31, 7, 7, 0.621);
-  border: 2px solid rgba(239, 68, 68, 0.5);
-  border-radius: 12px;
-  padding: 2rem;
-  max-width: 500px;
-  text-align: center;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-`;
-
-const ErrorTitle = styled.h2`
-  color: #ef4444;
-  margin-bottom: 1rem;
-  font-size: 1.5rem;
-`;
-
-const ErrorMessage = styled.p`
-  color: rgba(255, 255, 255, 0.9);
-  margin-bottom: 1.5rem;
-  line-height: 1.5;
-`;
-
-const ReloadButton = styled.button`
-  background: #ef4444;
-  color: white;
-  border: none;
-  padding: 0.75rem 2rem;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-
-  &:hover {
-    background: #dc2626;
-  }
-`;
 
 interface GameActionsProviderProps {
   children: ReactNode;
@@ -315,16 +250,18 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   // Show error UI when any action fails
   if (actionState.status === "error") {
     return (
-      <ErrorContainer>
-        <ErrorBackdrop />
-        <ErrorCard>
-          <ErrorTitle>Action Failed</ErrorTitle>
-          <ErrorMessage>
+      <div className={styles.errorContainer}>
+        <div className={styles.errorBackdrop} />
+        <div className={styles.errorCard}>
+          <h2 className={styles.errorTitle}>Action Failed</h2>
+          <p className={styles.errorMessage}>
             {actionState.error?.message || "Something went wrong. This might be a temporary issue."}
-          </ErrorMessage>
-          <ReloadButton onClick={() => window.location.reload()}>Reload Game</ReloadButton>
-        </ErrorCard>
-      </ErrorContainer>
+          </p>
+          <button className={styles.reloadButton} onClick={() => window.location.reload()}>
+            Reload Game
+          </button>
+        </div>
+      </div>
     );
   }
 

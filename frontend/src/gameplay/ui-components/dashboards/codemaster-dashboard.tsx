@@ -1,5 +1,4 @@
 import React from "react";
-import styled from "styled-components";
 import { CodeWordInput } from "./codemaster-input";
 import { useGameActions } from "../../player-actions";
 import { useTurn } from "../../shared/providers";
@@ -20,57 +19,8 @@ import {
   SpyStatus,
   MiddleSection,
 } from "./terminal-components";
+import styles from "./codemaster-dashboard.module.css";
 
-/**
- * MOBILE-FIRST: Button container
- */
-const Container = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  padding: 0.5rem;
-  gap: 0.5rem;
-`;
-
-/**
- * MOBILE: AR Toggle button for revealing spymaster view
- */
-const MobileARToggle = styled(ARRevealButton)`
-  position: relative;
-`;
-
-/**
- * MOBILE: Styled action button with visual indicator
- */
-const MobileTransmitButton = styled(ActionButton)`
-  position: relative;
-
-  /* Visual drag indicator like a handle */
-  &::before {
-    content: "";
-    position: absolute;
-    top: -8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 4px;
-    background: var(--color-primary, #00ff88);
-    border-radius: 2px;
-    box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-  }
-`;
-
-const DesktopContainer = styled.div`
-  display: contents;
-
-  /* Hide on mobile */
-  @media (max-width: 768px) {
-    display: none;
-  }
-`;
 
 interface CodemasterDashboardProps {
   onOpenCluePanel?: () => void;
@@ -92,7 +42,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
   if (!activeTurn || activeTurn.clue !== null) {
     return (
       <>
-        <Container className="mobile-only" />
+        <div className={`${styles.container} mobile-only`} />
         <div className="desktop-only">
           <TerminalSection>
             <TerminalCommand>MISSION LOG</TerminalCommand>
@@ -132,20 +82,25 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
   return (
     <>
       {/* Mobile view */}
-      <Container className="mobile-only">
-        <MobileARToggle arMode={isARMode} onClick={handleARToggle}>
+      <div className={`${styles.container} mobile-only`}>
+        <ARRevealButton 
+          className={styles.mobileARToggle}
+          arMode={isARMode} 
+          onClick={handleARToggle}
+        >
           {isARMode ? "AR ON" : "REVEAL"}
-        </MobileARToggle>
+        </ARRevealButton>
 
-        <MobileTransmitButton
+        <ActionButton
+          className={styles.mobileTransmitButton}
           onClick={onOpenCluePanel || (() => {})}
           text="SUBMIT CLUE"
           enabled={actionState.status !== "loading"}
         />
-      </Container>
+      </div>
 
       {/* Desktop terminal view - clean sections only */}
-      <DesktopContainer>
+      <div className={styles.desktopContainer}>
         {/* TOP - Instructions */}
         <TerminalSection>
           <TerminalCommand>MISSION LOG</TerminalCommand>
@@ -183,7 +138,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
             onSubmit={handleDesktopSubmit}
           />
         </TerminalSection>
-      </DesktopContainer>
+      </div>
     </>
   );
 };
