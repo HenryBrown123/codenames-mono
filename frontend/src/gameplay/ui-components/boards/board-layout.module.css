@@ -1,4 +1,4 @@
-@import '../../../style/variables.css';
+@import "../../../style/variables.css";
 
 /* Board wrapper - fills parent space */
 .boardWrapper {
@@ -7,7 +7,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   /* 3D tilt effect */
   transform: perspective(900px) rotateX(var(--board-tilt, 0deg));
   transform-style: preserve-3d;
@@ -17,15 +17,26 @@
 /* Grid that controls card shape */
 .boardGrid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(5, 1fr);
   gap: 0.5rem;
   width: 100%;
   height: 100%;
-  max-width: min(100%, 80vh); /* Constrain by viewport height */
-  max-height: min(100%, 80vh);
-  aspect-ratio: 1; /* Square board = square cards */
   margin: auto;
+
+  /* Default: 5x5 grid that fills available space */
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  max-width: 100%;
+  max-height: 100%;
+  /* NO aspect-ratio - let cards be as wide as possible */
+}
+
+/* Small screens - reduce to 4 columns for wider, more readable cards */
+@media (max-width: 400px) {
+  .boardGrid {
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 1fr;
+    /* This creates 7 rows (25 cards ÷ 4 ≈ 7) */
+  }
 }
 
 /* Empty card for loading/skeleton states */
@@ -41,21 +52,23 @@
 @media (min-width: 481px) {
   .boardGrid {
     gap: 0.75rem;
+    /* Still no aspect ratio - use all available space */
   }
-  
+
   .emptyCard {
     border-radius: 8px;
   }
 }
 
-/* Desktop */
-@media (min-width: 769px) {
+/* Desktop - use full width */
+@media (min-width: 769px) and (orientation: landscape) {
   .boardGrid {
     gap: 1rem;
-    max-width: min(100%, 70vh);
-    max-height: min(100%, 70vh);
+    /* Optional: max dimensions for extremely large screens */
+    max-width: 1200px;
+    max-height: 900px;
   }
-  
+
   .emptyCard {
     border-radius: 12px;
   }
