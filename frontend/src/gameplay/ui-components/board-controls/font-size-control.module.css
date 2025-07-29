@@ -1,0 +1,132 @@
+.fontControlContainer {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10, 10, 15, 0.95);
+  border: 2px solid var(--color-primary);
+  border-radius: 12px;
+  padding: 1rem;
+  backdrop-filter: blur(10px);
+  z-index: var(--z-fixed-buttons);
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(0, 255, 136, 0.2);
+  font-family: "JetBrains Mono", monospace;
+}
+
+.controlGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 100px;
+}
+
+.label {
+  font-size: 0.75rem;
+  color: var(--color-primary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.slider {
+  width: 80px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.slider:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  cursor: pointer;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+  transition: all 0.2s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.8);
+}
+
+.slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  cursor: pointer;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+  transition: all 0.2s ease;
+}
+
+.slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.8);
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .fontControlContainer {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    top: 0.5rem;
+    left: 0.5rem;
+    right: 0.5rem;
+    transform: none;
+  }
+  
+  .controlGroup {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .label {
+    font-size: 0.7rem;
+  }
+  
+  .slider {
+    width: 120px;
+  }
+}
+
+/* Large screens - horizontal layout */
+@media (min-width: 1200px) {
+  .fontControlContainer {
+    flex-direction: row;
+    gap: 1.5rem;
+    padding: 1.25rem;
+  }
+  
+  .controlGroup {
+    min-width: 120px;
+  }
+  
+  .slider {
+    width: 100px;
+  }
+}

@@ -248,71 +248,30 @@
   z-index: var(--z-card-word);
   transition: opacity 0.2s ease;
   text-shadow: none;
-  white-space: nowrap;
+  white-space: normal;
+  word-wrap: break-word;
+  hyphens: auto;
   max-width: 95%;
-  overflow: hidden;
-  line-height: 1;
+  line-height: 1.2;
+  text-align: center;
   
   /* Remove all existing font-size declarations */
 }
 
-/* Semantic size classes - Mobile first */
+/* Semantic size classes - Dynamic sizing */
 .textNormal {
-  font-size: 1.25rem;   /* 20px - Short words (≤6 chars) */
+  font-size: var(--font-normal-size, 16px);
 }
 
 .textLong {
-  font-size: 1rem;      /* 16px - Medium words (7-9 chars) */
+  font-size: var(--font-long-size, 14px);
 }
 
 .textExtraLong {
-  font-size: 0.875rem;  /* 14px - Long words (10+ chars) */
+  font-size: var(--font-long-size, 14px);
 }
 
-/* Tablet enhancement */
-@media (min-width: 481px) {
-  .textNormal {
-    font-size: 1.375rem;  /* 22px */
-  }
-  
-  .textLong {
-    font-size: 1.125rem;  /* 18px */
-  }
-  
-  .textExtraLong {
-    font-size: 0.9375rem; /* 15px */
-  }
-}
-
-/* Desktop enhancement */
-@media (min-width: 1024px) {
-  .textNormal {
-    font-size: 1.5rem;    /* 24px */
-  }
-  
-  .textLong {
-    font-size: 1.25rem;   /* 20px */
-  }
-  
-  .textExtraLong {
-    font-size: 1rem;      /* 16px */
-  }
-}
-
-/* Large desktop enhancement */
-@media (min-width: 1440px) {
-  .textNormal {
-    font-size: 1.75rem;   /* 28px */
-  }
-  
-  .textLong {
-    font-size: 1.375rem;  /* 22px */
-  }
-  
-  .textExtraLong {
-    font-size: 1.125rem;  /* 18px */
-  }
-}
+/* Dynamic font sizes - no responsive overrides needed */
 
 /* ===== ACCESSIBILITY ENHANCEMENTS ===== */
 

@@ -71,7 +71,6 @@
   position: relative;
   overflow: hidden;
   padding: 0.5rem;
-  padding-bottom: 0;
 }
 
 /* Bottom dashboard on mobile */
@@ -252,6 +251,32 @@
     0 0 20px rgba(0, 255, 136, 0.2);
 }
 
+/* Debug button */
+.debugButton {
+  position: fixed;
+  top: 4rem;
+  right: 1rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(10, 10, 15, 0.9);
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
+  font-weight: bold;
+  font-size: 1rem;
+  z-index: var(--z-fixed-buttons);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(0, 255, 136, 0.2);
+}
+
 .helpButton:hover {
   transform: scale(1.1) rotate(360deg);
   box-shadow:
@@ -261,6 +286,17 @@
 }
 
 .helpButton:active {
+  transform: scale(0.95);
+}
+
+.debugButton:hover {
+  transform: scale(1.1);
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(0, 255, 136, 0.4);
+}
+
+.debugButton:active {
   transform: scale(0.95);
 }
 
@@ -354,7 +390,8 @@
   /* Hide mobile overlays */
   .instructionsOverlay,
   .clueOverlay,
-  .helpButton {
+  .helpButton,
+  .debugButton {
     display: none;
   }
 

@@ -17,12 +17,11 @@ interface GameCardProps {
  * Determines text size class based on word length
  * Using semantic naming that describes content
  */
-const getTextSizeClass = (word: string): string => {
+const getTextSizeClass = (word: string, threshold: number = 9): string => {
   const length = word.length;
   
-  if (length <= 6) return styles.textNormal;    // CAT, DOG, NINJA
-  if (length <= 9) return styles.textLong;      // CASTLE, TEAPOT
-  return styles.textExtraLong;                  // ARCHAEOLOGICAL
+  if (length <= threshold) return styles.textNormal;
+  return styles.textLong;
 };
 
 /**
@@ -35,6 +34,24 @@ export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable }
   const cardColor = getCardColor(card);
 
   const isCurrentTeam = gameData.playerContext?.teamName === card.teamName;
+
+  // Get dynamic threshold from CSS variable
+  const [threshold, setThreshold] = React.useState(9);
+  
+  React.useEffect(() => {
+    const updateThreshold = () => {
+      const value = getComputedStyle(document.documentElement).getPropertyValue('--font-threshold');
+      const numValue = parseInt(value) || 9;
+      setThreshold(numValue);
+    };
+    
+    updateThreshold();
+    // Set up observer for changes
+    const observer = new MutationObserver(updateThreshold);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
+    
+    return () => observer.disconnect();
+  }, []);
 
   const handleClick = useCallback(() => {
     if (clickable && !card.selected) {
@@ -75,7 +92,7 @@ export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable }
           <div className={styles.ripple} />
           <span className={cx(
             styles.cardWord,
-            getTextSizeClass(card.word)
+            getTextSizeClass(card.word, threshold)
           )}>
             {card.word}
           </span>
@@ -95,7 +112,7 @@ export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable }
           <SpymasterSymbol />
           <span className={cx(
             styles.cardWord,
-            getTextSizeClass(card.word)
+            getTextSizeClass(card.word, threshold)
           )}>
             {card.word}
           </span>

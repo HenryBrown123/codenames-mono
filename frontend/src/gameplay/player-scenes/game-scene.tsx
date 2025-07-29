@@ -10,7 +10,7 @@ import { ActionButton } from "../shared/components";
 import { CodeWordInput } from "../ui-components/dashboards/codemaster-input";
 import { useGameActions } from "../player-actions";
 import { CardVisibilityProvider } from "../ui-components/cards/card-visibility-provider";
-import { TiltControl } from "../ui-components/board-controls/tilt-control";
+import { UISettingsDashboard } from "../ui-components/board-controls/ui-settings-dashboard";
 
 /**
  * Game Scene Component with unified mobile-first layout
@@ -22,10 +22,20 @@ export const GameScene: React.FC = () => {
   const [showCluePanel, setShowCluePanel] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   const [boardTilt, setBoardTilt] = useState(0);
+  const [fontNormalSize, setFontNormalSize] = useState(16);
+  const [fontLongSize, setFontLongSize] = useState(14);
+  const [fontThreshold, setFontThreshold] = useState(9);
   const { giveClue, actionState } = useGameActions();
 
   // Get current message
   const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
+
+  // CSS custom properties for dynamic font sizing
+  const fontVariables = {
+    '--font-normal-size': `${fontNormalSize}px`,
+    '--font-long-size': `${fontLongSize}px`,
+    '--font-threshold': fontThreshold,
+  } as React.CSSProperties;
 
   // Show skeleton during initial load
   if (isPending && !gameData) {
@@ -81,7 +91,19 @@ export const GameScene: React.FC = () => {
 
   return (
     <CardVisibilityProvider cards={cards} initialState={isRoundSetup ? "hidden" : "visible"}>
-      <div className={styles.gameSceneContainer}>
+      {/* UI Settings Dashboard */}
+      <UISettingsDashboard
+        fontNormalSize={fontNormalSize}
+        fontLongSize={fontLongSize}
+        fontThreshold={fontThreshold}
+        onFontNormalSizeChange={setFontNormalSize}
+        onFontLongSizeChange={setFontLongSize}
+        onFontThresholdChange={setFontThreshold}
+        tiltValue={boardTilt}
+        onTiltChange={setBoardTilt}
+      />
+
+      <div className={styles.gameSceneContainer} style={fontVariables}>
         {/* Main game board */}
         <div className={styles.boardArea}>
           <BoardComponent />
@@ -145,9 +167,8 @@ export const GameScene: React.FC = () => {
           ?
         </button>
 
-        <div className={styles.desktopControls}>
-          <TiltControl value={boardTilt} onChange={setBoardTilt} />
-        </div>
+
+
       </div>
     </CardVisibilityProvider>
   );

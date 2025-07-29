@@ -1,0 +1,224 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.panel {
+  background: #1a1a2e;
+  border: 2px solid var(--color-primary);
+  border-radius: 12px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  margin: auto;
+  box-sizing: border-box;
+}
+
+.closeButton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+  background: var(--color-primary);
+  color: #000;
+  transform: scale(1.1);
+}
+
+.title {
+  color: var(--color-primary);
+  margin: 0 0 1.5rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.5rem;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.controlGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.controlGroup label {
+  color: white;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.controlGroup input {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: #333;
+  outline: none;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.controlGroup input:hover {
+  opacity: 1;
+}
+
+.controlGroup input::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  cursor: pointer;
+}
+
+.controlGroup input::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  cursor: pointer;
+  border: none;
+}
+
+.preview h3,
+.cssOutput h3 {
+  color: var(--color-primary);
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.testCard {
+  background: linear-gradient(to bottom, #f4f1e8 0%, #ebe7dc 100%);
+  border: 1px solid #d4d1c8;
+  border-radius: 8px;
+  padding: 0.25rem;
+  text-align: center;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.25rem;
+  box-shadow: 
+    0 1px 0 #d4d1c8,
+    0 2px 0 #c8c5bc,
+    0 3px 0 #bab7ae,
+    0 4px 8px rgba(0,0,0,.15);
+  box-sizing: border-box;
+  position: relative;
+}
+
+.testWord {
+  color: #222;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  display: inline-block;
+  font-family: sans-serif;
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 4px;
+  padding: 0.2em 0.4em;
+  margin: 0;
+  width: auto;
+  max-width: 100%;
+  text-align: center;
+  word-break: break-word;
+  hyphens: auto;
+  overflow-wrap: break-word;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+}
+
+.testWord[data-long="true"] {
+  background: rgba(0, 102, 204, 0.15);
+  border: 1px solid #0066cc;
+}
+
+.info {
+  font-size: 0.75rem;
+  color: #666;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 600;
+}
+
+.cssOutput {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.cssOutput pre {
+  background: rgba(0, 0, 0, 0.5);
+  padding: 1rem;
+  border-radius: 8px;
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  overflow-x: auto;
+  font-family: "JetBrains Mono", monospace;
+  line-height: 1.4;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  .panel {
+    padding: 1rem;
+    margin: 0.5rem;
+  }
+  
+  .cardGrid {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 0.75rem;
+  }
+  
+  .testCard {
+    min-height: 70px;
+    padding: 0.75rem;
+  }
+  
+  .title {
+    font-size: 1.25rem;
+  }
+  
+  .cssOutput pre {
+    font-size: 0.75rem;
+  }
+}
