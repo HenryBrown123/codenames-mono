@@ -79,11 +79,14 @@ export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messa
                   <span className={styles.intelPing} />
                 </div>
                 <div className={styles.intelMain}>
-                  <span className={styles.intelTag}>CODEWORD:</span>
-                  <span className={styles.intelHighlight}>"{activeTurn.clue.word}"</span>
-                  <span className={styles.separator}>//</span>
-                  <span className={styles.intelTag}>TARGET:</span>
-                  <span className={styles.intelHighlight}>{activeTurn.clue.number}</span>
+                  <div className={styles.intelRow}>
+                    <span className={styles.intelTag}>CODEWORD:</span>
+                    <span className={styles.intelHighlight}>"{activeTurn.clue.word}"</span>
+                  </div>
+                  <div className={styles.intelRow}>
+                    <span className={styles.intelTag}>TARGET:</span>
+                    <span className={styles.intelHighlight}>{activeTurn.clue.number}</span>
+                  </div>
                 </div>
               </div>
 
