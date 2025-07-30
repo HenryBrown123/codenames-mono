@@ -9,21 +9,29 @@
   }
 }
 
-/* Mobile container - simple horizontal layout */
+@keyframes scanlineAnimation {
+  0% { 
+    transform: translateY(-100%); 
+  }
+  100% { 
+    transform: translateY(100%); 
+  }
+}
+
+/* Mobile container - fills parent space */
 .container {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
-  padding: 0.5rem;
+  padding: 0.75rem;
   gap: 0.75rem;
-  box-sizing: border-box; /* Add this */
-  overflow: hidden; /* Add this */
+  box-sizing: border-box;
 }
 
-/* Desktop container - hidden by default (mobile-first) */
+/* Desktop container - fills parent space */
 .desktopContainer {
   display: none;
 }
@@ -31,172 +39,232 @@
 /* Show desktop layout only when sidebar layout is active */
 @media (min-width: 769px) and (orientation: landscape) {
   .desktopContainer {
-    display: contents; /* Preserve grid layout */
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    gap: 1rem;
   }
 }
 
-/* Mobile clue display */
+/* Mobile clue display - responsive to parent */
 .clueDisplay {
   display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  width: 100%;
   flex: 1;
-  min-width: 0;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid var(--color-primary, #00ff88);
+  border-radius: 6px;
+  box-shadow:
+    0 0 20px rgba(0, 255, 136, 0.3),
+    inset 0 0 15px rgba(0, 255, 136, 0.05);
+  position: relative;
+  overflow: hidden;
+  padding: 0.75rem;
+}
+
+/* Scanline effect matching codemaster */
+.clueDisplay::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 255, 136, 0.8) 50%,
+    transparent 100%
+  );
+  animation: scanlineAnimation 3s linear infinite;
+  pointer-events: none;
 }
 
 .clueText {
   display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  font-weight: 700;
-  color: var(--color-primary, #00ff88);
-  font-size: 1rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  text-align: center;
 }
 
+/* Mobile sizes - responsive */
 .clueWord {
-  text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+  color: var(--color-primary, #00ff88);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+  font-family: "JetBrains Mono", monospace;
+  line-height: 1;
 }
 
 .clueNumber {
-  color: var(--color-text-muted, rgba(255, 255, 255, 0.7));
-  font-size: 0.9rem;
-  font-weight: 500;
+  color: var(--color-primary, #00ff88);
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  font-weight: 700;
+  text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+  font-family: "JetBrains Mono", monospace;
+  line-height: 1;
 }
 
 /* Compact button for mobile */
 .compactButton {
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 1.25rem;
   font-size: 0.85rem;
-  min-height: 36px;
   flex-shrink: 0;
 }
 
-/* Intel display for desktop - styled like terminal output */
+/* Intel display for desktop - fills available space */
 .intelDisplay {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
+  width: 100%;
+  flex: 1;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid var(--color-primary, #00ff88);
+  border-radius: 6px;
+  box-shadow:
+    0 0 20px rgba(0, 255, 136, 0.3),
+    inset 0 0 15px rgba(0, 255, 136, 0.05);
+  position: relative;
+  overflow: hidden;
+  justify-content: center;
 }
 
-.intelRow {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  font-family: "JetBrains Mono", monospace;
-}
-
-.intelLabel {
-  color: var(--color-primary, #00ff88);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  min-width: 100px;
-}
-
-.intelValue {
-  color: #fff;
-  font-size: 1.2rem;
-  font-weight: 600;
+/* Desktop scanline effect */
+.intelDisplay::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 255, 136, 0.8) 50%,
+    transparent 100%
+  );
+  animation: scanlineAnimation 3s linear infinite;
+  pointer-events: none;
 }
 
 .intelPrimary {
-  background: linear-gradient(120deg, rgba(255, 177, 0, 0.14) 0%, rgba(60, 60, 50, 0.16) 80%);
-  border: 2px solid #ffb100;
-  border-radius: 8px;
-  padding: 20px 15px 12px 15px;
-  box-shadow:
-    0 0 15px 0 rgba(255, 177, 0, 0.3),
-    0 0 0 1px rgba(0, 255, 136, 0.5) inset;
-  position: relative;
-  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
 }
 
 .intelHeader {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
+  gap: 0.5rem;
 }
 
 .intelBadge {
-  font-size: 0.96em;
-  color: #ffb100;
+  font-size: 0.7rem;
+  color: var(--color-primary, #00ff88);
   font-weight: bold;
-  letter-spacing: 2px;
-  text-shadow: 0 0 8px rgba(255, 177, 0, 0.5);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  opacity: 0.7;
 }
 
 .intelPing {
   display: inline-block;
-  width: 10px;
-  height: 10px;
-  margin-left: 9px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: #ffb100;
-  box-shadow: 0 0 8px 2px rgba(255, 177, 0, 0.5);
+  background: var(--color-primary, #00ff88);
+  box-shadow: 0 0 6px 1px rgba(0, 255, 136, 0.5);
   animation: pingGlow 1.3s infinite;
 }
 
 .intelMain {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  gap: 10px 12px;
+  gap: 0.5rem;
+}
+
+.intelRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-family: "JetBrains Mono", monospace;
 }
 
 .intelTag {
-  color: #ffb100;
-  font-weight: bold;
-  letter-spacing: 1px;
-  text-shadow: 0 0 4px rgba(255, 177, 0, 0.5);
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.7));
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
 }
 
+/* Desktop sizes - compact */
 .intelHighlight {
-  color: #fff;
-  background: rgba(255, 177, 0, 0.3);
-  padding: 2px 8px;
-  border-radius: 3px;
-  font-weight: bold;
-  font-size: 1.3rem;
-  letter-spacing: 1.2px;
-  box-shadow: 0 0 6px rgba(255, 177, 0, 0.5);
+  color: var(--color-primary, #00ff88);
+  font-weight: 900;
+  font-size: 1.5rem;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+  text-transform: uppercase;
+  line-height: 1;
 }
 
 .intelSecondary {
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(0, 255, 136, 0.2);
+  width: 100%;
+}
+
+.intelLabel {
   color: rgba(255, 255, 255, 0.7);
-  font-size: 0.9rem;
-  padding: 0.5rem 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
 }
 
 .separator {
-  color: #ffb100;
+  color: var(--color-primary, #00ff88);
+  opacity: 0.5;
+  font-size: 1.25rem;
 }
 
-/* Add mobile landscape adjustments */
+/* Mobile landscape adjustments */
 @media (max-width: 768px) and (orientation: landscape) {
   .container {
-    flex-direction: column;
+    padding: 0.5rem;
     gap: 0.5rem;
-    padding: 0.25rem;
   }
 
   .clueDisplay {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+    padding: 0.5rem;
   }
 
-  .clueText {
-    flex-direction: column;
-    gap: 0.25rem;
-    font-size: 0.9rem;
+  .clueWord {
+    font-size: 1.25rem;
+  }
+
+  .clueNumber {
+    font-size: 1rem;
   }
 
   .compactButton {
-    padding: 0.4rem 0.8rem;
+    padding: 0.4rem 1rem;
     font-size: 0.75rem;
-    min-height: 32px;
   }
 }
