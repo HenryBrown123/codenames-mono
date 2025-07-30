@@ -354,6 +354,19 @@
   color: white;
 }
 
+/* ===== MOBILE LANDSCAPE ===== */
+@media (max-width: 768px) and (orientation: landscape) {
+  .controlArea {
+    background: linear-gradient(to left, rgba(10, 10, 15, 0.95), rgba(26, 26, 46, 0.98));
+    border-top: none;
+    border-left: 2px solid var(--color-primary);
+    width: 120px;
+    padding: 0.5rem;
+    overflow: hidden; /* Add this to prevent content overflow */
+    box-sizing: border-box; /* Ensure padding is included in width */
+  }
+}
+
 /* ===== TABLET LANDSCAPE ===== */
 @media (min-width: 769px) and (orientation: landscape) {
   .gameSceneContainer {

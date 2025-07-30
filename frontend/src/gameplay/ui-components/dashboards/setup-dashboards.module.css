@@ -11,6 +11,8 @@
   padding: 0.5rem;
   gap: 1rem;
   position: relative;
+  box-sizing: border-box; /* Add this */
+  overflow: hidden; /* Add this */
 }
 
 /* MOBILE-FIRST: Refresh button positioned appropriately */
@@ -84,14 +86,23 @@
   width: 100%;
 }
 
-/* Desktop container with display: contents to preserve grid layout */
+/* Desktop container - hidden by default (mobile-first) */
 .desktopContainer {
-  display: contents;
+  display: none;
 }
 
-/* Hide on mobile */
-@media (max-width: 768px) {
+/* Show desktop layout only when sidebar layout is active */
+@media (min-width: 769px) and (orientation: landscape) {
   .desktopContainer {
-    display: none;
+    display: contents; /* Preserve grid layout */
+  }
+}
+
+/* Add mobile landscape specific adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+  .container {
+    flex-direction: column; /* Stack vertically in narrow space */
+    gap: 0.5rem;
+    padding: 0.25rem;
   }
 }
