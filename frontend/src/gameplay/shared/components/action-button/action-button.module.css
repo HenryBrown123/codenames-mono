@@ -78,3 +78,12 @@
     min-height: 44px;
   }
 }
+
+/* Mobile landscape optimizations */
+@media (max-width: 768px) and (orientation: landscape) {
+  .button {
+    font-size: clamp(0.75rem, 1.8vh, 0.9rem);
+    padding: 0.4rem 1rem;
+    min-height: 36px;
+  }
+}
