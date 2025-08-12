@@ -37,6 +37,11 @@
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.04);
   backdrop-filter: blur(1px);
   transition: border-color 0.7s, background 0.7s;
+  
+  /* Make it a flex container */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .terminalPrompt {

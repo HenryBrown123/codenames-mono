@@ -69,32 +69,26 @@ export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messa
           </TerminalPrompt>
         </TerminalSection>
 
-        {activeTurn?.clue && (
+{activeTurn?.clue && (
           <TerminalSection>
-            <TerminalCommand>ACTIVE INTEL</TerminalCommand>
+            <TerminalCommand>
+              ACTIVE INTEL <span className={styles.intelPing} />
+            </TerminalCommand>
             <div className={styles.intelDisplay}>
               <div className={styles.intelPrimary}>
-                <div className={styles.intelHeader}>
-                  <span className={styles.intelBadge}>[ INCOMING INTEL ]</span>
-                  <span className={styles.intelPing} />
-                </div>
                 <div className={styles.intelMain}>
-                  <div className={styles.intelRow}>
-                    <span className={styles.intelTag}>CODEWORD:</span>
-                    <span className={styles.intelHighlight}>"{activeTurn.clue.word}"</span>
-                  </div>
-                  <div className={styles.intelRow}>
-                    <span className={styles.intelTag}>TARGET:</span>
+                  <span className={styles.intelHighlight}>"{activeTurn.clue.word}"</span>
+                  <span className={styles.intelGroup}>
+                    <span className={styles.intelConnector}>for</span>
                     <span className={styles.intelHighlight}>{activeTurn.clue.number}</span>
-                  </div>
+                  </span>
                 </div>
               </div>
 
               <div className={styles.intelSecondary}>
-                <div className={styles.intelRow}>
-                  <span className={styles.intelLabel}>REMAINING:</span>
-                  <span style={{ color: "#fff" }}>{activeTurn.guessesRemaining} attempts</span>
-                </div>
+                <TerminalPrompt>
+                  <TerminalOutput>{activeTurn.guessesRemaining} {activeTurn.guessesRemaining === 1 ? 'attempt' : 'attempts'} left</TerminalOutput>
+                </TerminalPrompt>
               </div>
             </div>
           </TerminalSection>

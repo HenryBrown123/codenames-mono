@@ -39,11 +39,7 @@
 /* Show desktop layout only when sidebar layout is active */
 @media (min-width: 769px) and (orientation: landscape) {
   .desktopContainer {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
-    gap: 1rem;
+    display: contents; /* This is the key - dissolves the wrapper */
   }
 }
 
@@ -125,10 +121,10 @@
 .intelDisplay {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
   width: 100%;
-  flex: 1;
-  padding: 0.75rem;
+  flex: 1; /* Takes remaining space after TerminalCommand */
+  padding: 1rem;
   background: rgba(0, 0, 0, 0.8);
   border: 2px solid var(--color-primary, #00ff88);
   border-radius: 6px;
@@ -138,6 +134,7 @@
   position: relative;
   overflow: hidden;
   justify-content: center;
+  box-sizing: border-box;
 }
 
 /* Desktop scanline effect */
@@ -161,9 +158,10 @@
 .intelPrimary {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  text-align: center;
+  align-items: flex-start; /* Left align */
+  gap: 1rem; /* More space */
+  text-align: left; /* Left align text */
+  width: 100%;
 }
 
 .intelHeader {
@@ -193,15 +191,18 @@
 
 .intelMain {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.75rem;
+  width: 100%;
+  justify-content: center;
+  flex-wrap: wrap; /* Allow wrapping for long words */
 }
 
 .intelRow {
   display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
+  align-items: center;
+  gap: 0.5rem;
   font-family: "JetBrains Mono", monospace;
 }
 
@@ -210,38 +211,82 @@
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
+  opacity: 0.7;
 }
 
-/* Desktop sizes - compact */
 .intelHighlight {
   color: var(--color-primary, #00ff88);
   font-weight: 900;
-  font-size: 1.5rem;
-  letter-spacing: 0.1em;
+  font-size: 1.25rem;
+  letter-spacing: 0.05em;
   text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
   text-transform: uppercase;
   line-height: 1;
+  word-break: break-word;
 }
 
 .intelSecondary {
-  padding-top: 0.5rem;
+  padding-top: 0.75rem;
+  margin-top: 0.5rem;
   border-top: 1px solid rgba(0, 255, 136, 0.2);
   width: 100%;
+  /* Remove text-align: center */
 }
 
 .intelLabel {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.7));
   font-weight: 600;
-  text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-size: 0.75rem; /* Slightly smaller */
+  white-space: nowrap;
 }
 
 .separator {
   color: var(--color-primary, #00ff88);
   opacity: 0.5;
   font-size: 1.25rem;
+}
+
+.intelPing {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary, #00ff88);
+  box-shadow: 0 0 6px 1px rgba(0, 255, 136, 0.5);
+  animation: pingGlow 1.3s infinite;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+.intelSubtext {
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.8));
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.intelRemaining {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.intelConnector {
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.5));
+  font-size: 0.9rem;
+  font-weight: 400;
+  font-family: "JetBrains Mono", monospace;
+  align-self: center;
+}
+
+.intelGroup {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  white-space: nowrap; /* Prevents breaking between "for" and number */
 }
 
 /* Mobile landscape adjustments */
