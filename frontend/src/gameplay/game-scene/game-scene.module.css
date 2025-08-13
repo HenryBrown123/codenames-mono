@@ -71,6 +71,9 @@
   position: relative;
   overflow: hidden;
   padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Bottom dashboard on mobile */

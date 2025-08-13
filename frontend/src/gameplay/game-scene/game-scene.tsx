@@ -22,7 +22,7 @@ export const GameScene: React.FC = () => {
   const [showCluePanel, setShowCluePanel] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   const [boardTilt, setBoardTilt] = useState(0);
-  const [fontNormalSize, setFontNormalSize] = useState(16);
+  const [fontNormalSize, setFontNormalSize] = useState(14);
   const [fontLongSize, setFontLongSize] = useState(14);
   const [fontThreshold, setFontThreshold] = useState(9);
   const { giveClue, actionState } = useGameActions();
@@ -32,9 +32,9 @@ export const GameScene: React.FC = () => {
 
   // CSS custom properties for dynamic font sizing
   const fontVariables = {
-    '--font-normal-size': `${fontNormalSize}px`,
-    '--font-long-size': `${fontLongSize}px`,
-    '--font-threshold': fontThreshold,
+    "--font-normal-size": `${fontNormalSize}px`,
+    "--font-long-size": `${fontLongSize}px`,
+    "--font-threshold": fontThreshold,
   } as React.CSSProperties;
 
   // Show skeleton during initial load
@@ -112,7 +112,7 @@ export const GameScene: React.FC = () => {
         {/* Control area - SINGLE dashboard, CSS handles layout */}
         <div className={styles.controlArea}>
           {isFetching && <div className={styles.refetchIndicator} />}
-          
+
           <DashboardComponent
             messageText={messageText}
             onOpenCluePanel={() => setShowCluePanel(true)}
@@ -120,36 +120,33 @@ export const GameScene: React.FC = () => {
         </div>
 
         {/* Mobile-only overlays */}
-        <div 
-          className={styles.instructionsOverlay}
-          data-visible={showInstructions}
-        >
+        <div className={styles.instructionsOverlay} data-visible={showInstructions}>
           <GameInstructions messageText={messageText} />
-          <button 
-            className={styles.closeButton}
-            onClick={() => setShowInstructions(false)}
-          >
+          <button className={styles.closeButton} onClick={() => setShowInstructions(false)}>
             ×
           </button>
         </div>
 
-        <div 
-          className={styles.clueOverlay}
-          data-visible={showCluePanel}
-        >
+        <div className={styles.clueOverlay} data-visible={showCluePanel}>
           <div className={styles.hackerDecoration} />
 
           <div className={styles.panelHeader}>
-            <button 
-              className={styles.closeButton}
-              onClick={() => setShowCluePanel(false)}
-            >
+            <button className={styles.closeButton} onClick={() => setShowCluePanel(false)}>
               ×
             </button>
             <h1 className={styles.hackerTitle}>TRANSMIT CLUE</h1>
           </div>
 
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem 1.5rem' }}>
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "2rem 1.5rem",
+            }}
+          >
             <CodeWordInput
               codeWord=""
               numberOfCards={null}
@@ -160,15 +157,9 @@ export const GameScene: React.FC = () => {
           </div>
         </div>
 
-        <button 
-          className={styles.helpButton}
-          onClick={() => setShowInstructions(true)}
-        >
+        <button className={styles.helpButton} onClick={() => setShowInstructions(true)}>
           ?
         </button>
-
-
-
       </div>
     </CardVisibilityProvider>
   );

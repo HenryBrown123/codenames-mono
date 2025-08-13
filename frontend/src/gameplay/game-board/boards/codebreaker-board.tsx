@@ -79,7 +79,7 @@ const CodebreakerBoardContent = memo<{
 
 /**
  * CodebreakerBoard - Interactive board for making guesses during active play
- * Mobile-first responsive design with adaptive grid
+ * Consistent 5x5 grid layout across all screen sizes
  * Includes AR mode toggle for enhanced gameplay
  */
 export const CodebreakerBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {

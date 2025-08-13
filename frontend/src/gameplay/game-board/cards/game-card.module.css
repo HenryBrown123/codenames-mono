@@ -1,9 +1,9 @@
 /* Import shared variables and animations */
-@import '../../../style/variables.css';
-@import '../../../style/animations.css';
+@import "../../../style/variables.css";
+@import "../../../style/animations.css";
 
 /* Option 1: Barlow Condensed - Best overall */
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&display=swap");
 
 /* ===== CONTAINER ===== */
 .cardContainer {
@@ -58,7 +58,8 @@
 @media (prefers-reduced-motion: no-preference) {
   .cardContainer[data-animation="deal-in"] {
     opacity: 0;
-    animation: dealIn 700ms calc(var(--card-index) * 75ms) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    animation: dealIn 700ms calc(var(--card-index) * 75ms) cubic-bezier(0.25, 0.46, 0.45, 0.94)
+      forwards;
   }
 
   .cardContainer[data-animation="cover-card"] {
@@ -121,29 +122,31 @@
   justify-content: center;
   z-index: var(--z-card-base);
   cursor: pointer;
-  transition: transform 200ms, box-shadow 0.3s;
+  transition:
+    transform 200ms,
+    box-shadow 0.3s;
   overflow: hidden;
   transform: translateZ(0);
-  
+
   /* 3D paper stack shadow */
-  box-shadow: 
+  box-shadow:
     0 1px 0 #d4d1c8,
     0 2px 0 #c8c5bc,
     0 3px 0 #bab7ae,
     0 4px 0 #ada9a0,
     0 5px 0 #9f9c93,
-    0 6px 1px rgba(0,0,0,.1),
-    0 0 5px rgba(0,0,0,.1),
-    0 1px 3px rgba(0,0,0,.3),
-    0 3px 5px rgba(0,0,0,.2),
-    0 5px 10px rgba(0,0,0,.25),
-    0 10px 20px rgba(0,0,0,.15);
+    0 6px 1px rgba(0, 0, 0, 0.1),
+    0 0 5px rgba(0, 0, 0, 0.1),
+    0 1px 3px rgba(0, 0, 0, 0.3),
+    0 3px 5px rgba(0, 0, 0, 0.2),
+    0 5px 10px rgba(0, 0, 0, 0.25),
+    0 10px 20px rgba(0, 0, 0, 0.15);
 
   /* Typography */
   color: #2a2a3e;
   font-family: sans-serif;
   font-size: clamp(0.8rem, 2.5vw, 1.1rem);
-  font-weight: 700;
+  font-weight: 300;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -154,11 +157,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.3) 0%,
-    transparent 50%
-  );
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -176,7 +175,9 @@
       rgba(0, 0, 0, 0.04) 2px,
       rgba(0, 0, 0, 0.04) 3px
     );
-  background-size: 150px 150px, 4px 4px;
+  background-size:
+    150px 150px,
+    4px 4px;
   opacity: 0.6;
   border-radius: inherit;
   pointer-events: none;
@@ -192,18 +193,18 @@
 @media (hover: hover) and (pointer: fine) {
   .cardContainer[data-clickable="true"] .normalCard:hover {
     transform: translateY(-4px);
-    box-shadow: 
+    box-shadow:
       0 2px 0 #d4d1c8,
       0 4px 0 #c8c5bc,
       0 6px 0 #bab7ae,
       0 8px 0 #ada9a0,
       0 10px 0 #9f9c93,
-      0 12px 1px rgba(0,0,0,.1),
-      0 0 5px rgba(0,0,0,.1),
-      0 2px 3px rgba(0,0,0,.3),
-      0 6px 10px rgba(0,0,0,.2),
-      0 10px 20px rgba(0,0,0,.25),
-      0 20px 40px rgba(0,0,0,.15);
+      0 12px 1px rgba(0, 0, 0, 0.1),
+      0 0 5px rgba(0, 0, 0, 0.1),
+      0 2px 3px rgba(0, 0, 0, 0.3),
+      0 6px 10px rgba(0, 0, 0, 0.2),
+      0 10px 20px rgba(0, 0, 0, 0.25),
+      0 20px 40px rgba(0, 0, 0, 0.15);
   }
 }
 
@@ -223,7 +224,9 @@
   transform: translate(-50%, -50%) scale(0);
   border-radius: 50%;
   opacity: 0;
-  transition: transform 0.5s, opacity 0.5s;
+  transition:
+    transform 0.5s,
+    opacity 0.5s;
   z-index: var(--z-card-ripple);
 }
 
@@ -242,13 +245,14 @@
   border-radius: 4px;
   padding: 0; /* No padding on mobile */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 300;
   text-transform: uppercase;
   text-align: center;
   letter-spacing: 0.02em;
   position: relative;
   z-index: var(--z-card-word);
+  word-break: break-all;
   transition: opacity 0.2s ease;
   text-shadow: none;
   white-space: normal;
@@ -257,7 +261,7 @@
   max-width: 95%;
   line-height: 1.2;
   text-align: center;
-  
+
   /* Remove all existing font-size declarations */
 }
 
@@ -265,12 +269,13 @@
 @media (min-width: 481px) {
   .cardWord {
     padding: 0.2em 0.4em;
+    font-weight: 700;
   }
 }
 
 /* Semantic size classes - Dynamic sizing */
 .textNormal {
-  font-size: var(--font-normal-size, 16px);
+  font-size: var(--font-normal-size, 14px);
 }
 
 .textLong {
@@ -292,7 +297,7 @@
     letter-spacing: 0.05em;
     /* Ensure minimum sizes are larger */
   }
-  
+
   .textExtraLong {
     font-size: 1rem; /* Never below 16px in high contrast */
   }
@@ -326,7 +331,7 @@
   justify-content: center;
   z-index: var(--z-card-covered);
   border: 2px solid var(--team-color);
-  
+
   /* 3D thickness effect for cover cards */
   box-shadow:
     0 1px 0 color-mix(in srgb, var(--team-color) 85%, black),
@@ -334,12 +339,12 @@
     0 3px 0 color-mix(in srgb, var(--team-color) 75%, black),
     0 4px 0 color-mix(in srgb, var(--team-color) 70%, black),
     0 5px 0 color-mix(in srgb, var(--team-color) 65%, black),
-    0 6px 1px rgba(0,0,0,.3),
-    0 0 5px rgba(0,0,0,.2),
-    0 1px 3px rgba(0,0,0,.4),
-    0 3px 5px rgba(0,0,0,.3),
-    0 5px 10px rgba(0,0,0,.3),
-    0 10px 20px rgba(0,0,0,.2);
+    0 6px 1px rgba(0, 0, 0, 0.3),
+    0 0 5px rgba(0, 0, 0, 0.2),
+    0 1px 3px rgba(0, 0, 0, 0.4),
+    0 3px 5px rgba(0, 0, 0, 0.3),
+    0 5px 10px rgba(0, 0, 0, 0.3),
+    0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
 /* Show when covered */
@@ -487,7 +492,9 @@
   background: #ffff00;
   color: #000;
   border-color: #ff0000;
-  box-shadow: 0 0 20px #ffff00, 0 0 40px #ff0000;
+  box-shadow:
+    0 0 20px #ffff00,
+    0 0 40px #ff0000;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -692,28 +699,28 @@
     font-size: clamp(1rem, 3vw, 1.4rem);
     letter-spacing: 0.05em;
   }
-  
+
   .coverCard,
   .teamColorFilter {
     border-radius: 8px;
   }
-  
+
   .spymasterOverlay {
     border-radius: 8px;
   }
-  
+
   .spymasterSymbol {
     font-size: 7rem;
   }
-  
+
   .teamSymbol {
     font-size: 3.5rem;
   }
-  
+
   .cardARCorners {
     inset: -4px;
   }
-  
+
   .cardARCorner {
     width: 25px;
     height: 25px;
@@ -726,28 +733,28 @@
     font-size: clamp(1.2rem, 3.5vw, 1.6rem);
     letter-spacing: 0.05em;
   }
-  
+
   .coverCard,
   .teamColorFilter {
     border-radius: 12px;
   }
-  
+
   .spymasterOverlay {
     border-radius: 12px;
   }
-  
+
   .spymasterSymbol {
     font-size: 8rem;
   }
-  
+
   .teamSymbol {
     font-size: 4rem;
   }
-  
+
   .cardARCorners {
     inset: -5px;
   }
-  
+
   .cardARCorner {
     width: 30px;
     height: 30px;

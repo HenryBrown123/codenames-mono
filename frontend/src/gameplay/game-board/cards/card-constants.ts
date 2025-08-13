@@ -10,7 +10,7 @@ export const CARD_DIMENSIONS = {
   MOBILE_MIN_HEIGHT: 60,
   TABLET_MIN_HEIGHT: 70,
   DESKTOP_MIN_HEIGHT: 80,
-  ASPECT_RATIO: '2.4 / 3',
+  // ASPECT_RATIO: '2.4 / 3', // Commented out to allow flexible card proportions
   BORDER_RADIUS: {
     MOBILE: 6,
     TABLET: 8,

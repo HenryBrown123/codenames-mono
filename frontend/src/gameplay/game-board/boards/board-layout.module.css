@@ -30,14 +30,6 @@
   /* NO aspect-ratio - let cards be as wide as possible */
 }
 
-/* Small screens - reduce to 4 columns for wider, more readable cards */
-@media (max-width: 400px) {
-  .boardGrid {
-    grid-template-columns: repeat(3, 1fr);
-    grid-auto-rows: 1fr;
-    /* This creates 7 rows (25 cards ÷ 4 ≈ 7) */
-  }
-}
 
 /* Empty card for loading/skeleton states */
 .emptyCard {
@@ -78,5 +70,27 @@
 @media (min-width: 1025px) {
   .boardGrid {
     gap: 1.5rem;
+  }
+}
+
+/* Portrait orientation - cap board height */
+@media (orientation: portrait) {
+  .boardWrapper {
+    padding: 2rem 0; /* Add vertical padding to center board */
+  }
+
+  .boardGrid {
+    /* Cap the grid height to maintain rectangular card proportions */
+    max-height: min(80vh, 600px);
+    /* Remove any height: 100% if present */
+    height: auto;
+  }
+}
+
+/* Landscape - use full height */
+@media (orientation: landscape) {
+  .boardGrid {
+    max-height: 100%;
+    max-width: 100%;
   }
 }
