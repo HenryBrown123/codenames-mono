@@ -1,3 +1,3 @@
 export * from './components';
-export * from './api';
-export * from './providers';
+export * from './game-instructions';
+// Note: API and providers have been moved to game-data/

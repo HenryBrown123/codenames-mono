@@ -1,6 +1,6 @@
 import React from "react";
-import { GameplayProvider } from "./state";
-import { GameScene } from "./player-scenes";
+import { GameplayProvider } from "./game-data/providers";
+import { GameScene } from "./game-scene";
 
 export interface GameplayProps {
   gameId: string;

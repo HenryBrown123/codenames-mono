@@ -7,34 +7,44 @@ import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
 import { usePlayerContext } from "../../game-data/providers/player-context-provider";
 
-interface CreateRoundApiResponse {
+interface EndTurnApiResponse {
   success: boolean;
   data: {
-    round: {
-      roundNumber: number;
+    turn: {
+      id: string;
+      teamName: string;
       status: string;
+      completedAt: string;
     };
   };
 }
 
+interface EndTurnInput {
+  roundNumber: number;
+}
+
 /**
- * Creates a new round for the game.
+ * Ends the current turn.
  */
-export const useCreateRoundMutation = (
+export const useEndTurnMutation = (
   gameId: string,
-): UseMutationResult<void, Error, void> => {
+): UseMutationResult<void, Error, EndTurnInput> => {
   const queryClient = useQueryClient();
   const { currentPlayerId } = usePlayerContext();
 
   return useMutation({
-    mutationFn: async () => {
-      const response: AxiosResponse<CreateRoundApiResponse> = await api.post(
-        `/games/${gameId}/rounds`,
-        { playerId: currentPlayerId}
+    mutationFn: async ({ roundNumber }) => {
+      if (!currentPlayerId) {
+        throw new Error("Player ID is required to end turn");
+      }
+
+      const response: AxiosResponse<EndTurnApiResponse> = await api.post(
+        `/games/${gameId}/rounds/${roundNumber}/end-turn`,
+        { playerId: currentPlayerId }
       );
 
       if (!response.data.success) {
-        throw new Error("Failed to create round");
+        throw new Error("Failed to end turn");
       }
     },
     onSuccess: async () => {

@@ -5,7 +5,7 @@ import {
 } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
-import { usePlayerContext } from "../../shared/providers/player-context-provider";
+import { usePlayerContext } from "../../game-data/providers/player-context-provider";
 
 interface StartRoundApiResponse {
   success: boolean;

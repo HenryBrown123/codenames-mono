@@ -611,25 +611,25 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   └── pages
 │       ├── gameplay
 │       │   ├── device-mode
-│       │   ├── player-actions
+│       │   ├── game-actions
 │       │   │   └── api
-│       │   ├── player-scenes
+│       │   ├── game-board
+│       │   │   ├── boards
+│       │   │   └── cards
+│       │   ├── game-controls
+│       │   │   ├── dashboards
+│       │   │   └── settings
+│       │   ├── game-data
+│       │   │   ├── providers
+│       │   │   └── queries
+│       │   ├── game-scene
 │       │   ├── round-management
 │       │   │   └── api
-│       │   ├── shared
-│       │   │   ├── api
-│       │   │   ├── components
-│       │   │   │   ├── action-button
-│       │   │   │   ├── error-message
-│       │   │   │   └── loading-spinner
-│       │   │   └── providers
-│       │   ├── state
-│       │   └── ui-components
-│       │       ├── board-controls
-│       │       ├── boards
-│       │       ├── cards
-│       │       ├── dashboards
-│       │       ├── desktop-sidebar
+│       │   └── shared
+│       │       ├── components
+│       │       │   ├── action-button
+│       │       │   ├── error-message
+│       │       │   └── loading-spinner
 │       │       └── game-instructions
 │       ├── lib
 │       ├── lobby

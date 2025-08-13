@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { PlayerRole, PLAYER_ROLE } from "@codenames/shared/types";
 import { GameData } from "@frontend/shared-types";
-import { usePlayersQuery } from "../shared/api";
+import { usePlayersQuery } from "../game-data/queries";
 import { FaLeaf } from "react-icons/fa";
 import styles from "./device-handoff-overlay.module.css";
 

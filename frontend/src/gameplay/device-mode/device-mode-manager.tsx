@@ -1,8 +1,8 @@
 import React, { useCallback, ReactNode } from "react";
-import { usePlayerContext, useTurn } from "../shared/providers";
+import { usePlayerContext, useTurn } from "../game-data/providers";
 import { GameData } from "@frontend/shared-types";
 import { PLAYER_ROLE } from "@codenames/shared/types";
-import { PlayerSceneProvider } from "../player-scenes";
+import { PlayerSceneProvider } from "../game-scene";
 import { DeviceHandoffOverlay } from "./device-handoff-overlay";
 
 interface DeviceModeManagerProps {
