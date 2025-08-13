@@ -21,9 +21,7 @@ export const FontSizeControl: React.FC<FontSizeControlProps> = ({
   return (
     <div className={styles.fontControlContainer}>
       <div className={styles.controlGroup}>
-        <label className={styles.label}>
-          Normal: {normalSize}px
-        </label>
+        <label className={styles.label}>Normal: {normalSize}px</label>
         <input
           type="range"
           min="10"
@@ -36,9 +34,7 @@ export const FontSizeControl: React.FC<FontSizeControlProps> = ({
       </div>
 
       <div className={styles.controlGroup}>
-        <label className={styles.label}>
-          Long: {longSize}px
-        </label>
+        <label className={styles.label}>Long: {longSize}px</label>
         <input
           type="range"
           min="8"
@@ -51,9 +47,7 @@ export const FontSizeControl: React.FC<FontSizeControlProps> = ({
       </div>
 
       <div className={styles.controlGroup}>
-        <label className={styles.label}>
-          Threshold: {threshold}
-        </label>
+        <label className={styles.label}>Threshold: {threshold}</label>
         <input
           type="range"
           min="6"
