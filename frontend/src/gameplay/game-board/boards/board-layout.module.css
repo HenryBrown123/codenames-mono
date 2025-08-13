@@ -72,25 +72,3 @@
     gap: 1.5rem;
   }
 }
-
-/* Portrait orientation - cap board height */
-@media (orientation: portrait) {
-  .boardWrapper {
-    padding: 2rem 0; /* Add vertical padding to center board */
-  }
-
-  .boardGrid {
-    /* Cap the grid height to maintain rectangular card proportions */
-    max-height: min(80vh, 600px);
-    /* Remove any height: 100% if present */
-    height: auto;
-  }
-}
-
-/* Landscape - use full height */
-@media (orientation: landscape) {
-  .boardGrid {
-    max-height: 100%;
-    max-width: 100%;
-  }
-}

@@ -249,7 +249,7 @@
   font-weight: 300;
   text-transform: uppercase;
   text-align: center;
-  letter-spacing: 0.02em;
+  letter-spacing: 0; /* No letter spacing on small screens */
   position: relative;
   z-index: var(--z-card-word);
   word-break: break-all;
@@ -263,6 +263,13 @@
   text-align: center;
 
   /* Remove all existing font-size declarations */
+}
+
+/* Add letter spacing for wider screens */
+@media (min-width: 400px) {
+  .cardWord {
+    letter-spacing: 0.02em;
+  }
 }
 
 /* Add padding back for larger screens */
@@ -279,11 +286,19 @@
 }
 
 .textLong {
-  font-size: var(--font-long-size, 14px);
+  font-size: 12px; /* Smaller on mobile for better fit */
 }
 
 .textExtraLong {
-  font-size: var(--font-long-size, 14px);
+  font-size: 12px; /* Smaller on mobile for better fit */
+}
+
+/* Match normal text size on wider screens */
+@media (min-width: 400px) {
+  .textLong,
+  .textExtraLong {
+    font-size: var(--font-normal-size, 14px);
+  }
 }
 
 /* Dynamic font sizes - no responsive overrides needed */
