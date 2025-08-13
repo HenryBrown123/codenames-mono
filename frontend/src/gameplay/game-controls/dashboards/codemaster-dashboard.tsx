@@ -2,9 +2,7 @@ import React from "react";
 import { CodeWordInput } from "./codemaster-input";
 import { useGameActions } from "../../game-actions";
 import { useTurn } from "../../game-data/providers";
-import { ActionButton } from "../../shared/components";
 import { useCardVisibilityContext } from "../../game-board/cards/card-visibility-provider";
-import { ARRevealButton } from "./ar-reveal-button";
 import {
   TerminalSection,
   TerminalPrompt,
@@ -20,7 +18,6 @@ import {
   MiddleSection,
 } from "./terminal-components";
 import styles from "./codemaster-dashboard.module.css";
-
 
 interface CodemasterDashboardProps {
   onOpenCluePanel?: () => void;
@@ -77,29 +74,38 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
 
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [handleARToggle]);
+  }, []);
 
   return (
     <>
-      {/* Mobile view */}
+      {/* Mobile view - NEW GRID LAYOUT */}
       <div className={`${styles.container} mobile-only`}>
-        <ARRevealButton 
-          className={styles.mobileARToggle}
-          arMode={isARMode} 
-          onClick={handleARToggle}
-        >
-          {isARMode ? "AR ON" : "REVEAL"}
-        </ARRevealButton>
+        <div className={styles.mobileToggleContainer}>
+          <span className={styles.toggleLabel}>Spymaster Vision</span>
+          <label className={styles.toggleSwitch}>
+            <input 
+              type="checkbox" 
+              checked={isARMode} 
+              onChange={handleARToggle}
+            />
+            <span className={styles.toggleTrack}>
+              <span className={styles.toggleThumb} />
+            </span>
+          </label>
+        </div>
 
-        <ActionButton
-          className={styles.mobileTransmitButton}
-          onClick={onOpenCluePanel || (() => {})}
-          text="SUBMIT CLUE"
-          enabled={actionState.status !== "loading"}
-        />
+        <div className={styles.transmitSection}>
+          <button
+            className={styles.transmitButton}
+            onClick={onOpenCluePanel || (() => {})}
+            disabled={actionState.status === "loading"}
+          >
+            {actionState.status === "loading" ? "TRANSMITTING..." : "TRANSMIT CLUE"}
+          </button>
+        </div>
       </div>
 
-      {/* Desktop terminal view - clean sections only */}
+      {/* Desktop terminal view - unchanged */}
       <div className={styles.desktopContainer}>
         {/* TOP - Instructions */}
         <TerminalSection>

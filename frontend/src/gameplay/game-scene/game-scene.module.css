@@ -71,7 +71,7 @@
   grid-template-areas:
     "board"
     "controls";
-  grid-template-rows: 1fr 80px;
+  grid-template-rows: 1fr 200px;
   grid-template-columns: 1fr;
 }
 
@@ -90,16 +90,22 @@
 /* Bottom dashboard on mobile */
 .controlArea {
   grid-area: controls;
-  background: linear-gradient(to bottom, rgba(10, 10, 15, 0.95), rgba(26, 26, 46, 0.98));
-  border-top: 2px solid var(--color-primary);
   position: relative;
+  height: 200px; /* Mobile-first default */
+  background: linear-gradient(120deg, rgba(10, 16, 14, 0.76) 65%, rgba(20, 20, 30, 0.7) 100%);
+  border: 1px solid var(--color-primary);
+  box-shadow: 0 0 20px 0 rgba(64, 255, 166, 0.1);
+  padding: 0;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 0.5rem;
   backdrop-filter: blur(10px);
   animation: hackerPulse 3s ease-in-out infinite;
+}
+
+/* Desktop sidebar - override mobile height */
+@media (min-width: 769px) {
+  .controlArea {
+    height: 100%;
+  }
 }
 
 /* Scanline effect for mobile dashboard */

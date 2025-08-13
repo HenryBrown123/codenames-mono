@@ -9,4 +9,3 @@ export {
 export { CodemasterDashboard } from "./codemaster-dashboard";
 export { CodebreakerDashboard } from "./codebreaker-dashboard";
 export { CodeWordInput } from "./codemaster-input";
-export { ARRevealButton } from "./ar-reveal-button";
