@@ -42,6 +42,13 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  
+  /* CONSTRAINT FIX - Prevent content from pushing out */
+  width: 100%;
+  max-width: 100%;
+  min-width: 0; /* Allow shrinking */
+  overflow: visible; /* Change from hidden to visible */
+  box-sizing: border-box;
 }
 
 .terminalPrompt {
@@ -235,6 +242,12 @@
   flex-direction: column;
   justify-content: center;
   height: 100%;
+  
+  /* CONSTRAINT FIX - Key for flex items to shrink */
+  width: 100%;
+  max-width: 100%;
+  min-width: 0; /* This is KEY - allows flex items to shrink below content size */
+  overflow: hidden;
 }
 
 .middleSection .terminalSection {
@@ -361,4 +374,21 @@
   font-weight: normal;
   color: #555;
   opacity: 0.7;
+}
+
+/* Ensure all content respects container width */
+.terminalCommand,
+.terminalOutput,
+.terminalPrompt,
+.spyGogglesContainer {
+  width: 100%;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  box-sizing: border-box;
+}
+
+/* Ensure the bottom section (ACTION) doesn't cut off */
+.terminalSection:last-child {
+  overflow: visible; /* Allow content to be fully visible */
 }

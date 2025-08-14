@@ -15,7 +15,7 @@
   align-items: center;
   gap: 0.75rem;
   width: 100%;
-  max-width: 100%;
+  max-width: 100%; /* Ensure it doesn't exceed parent */
   box-sizing: border-box;
   position: relative;
 }
@@ -26,6 +26,7 @@
   align-items: center;
   gap: 1rem; /* slightly reduced gap */
   width: 100%;
+  max-width: 100%; /* Remove any fixed max-width */
   padding: 1.5rem; /* reduced padding */
   background: rgba(0, 0, 0, 0.8);
   border: 2px solid var(--color-primary, #ffbf00);
@@ -35,6 +36,7 @@
     inset 0 0 15px rgba(0, 255, 136, 0.05);
   position: relative;
   overflow: hidden;
+  box-sizing: border-box; /* Include padding in width calculation */
 }
 
 .inputContainer::before {
@@ -65,9 +67,10 @@
   letter-spacing: 0.15em;
   padding: 0.3rem 0.5rem;
   width: 100%;
-  max-width: 500px;
+  max-width: 100%; /* CHANGE from 500px to 100% */
   font-family: "JetBrains Mono", monospace;
   text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+  box-sizing: border-box;
 }
 
 .codeWordInputField[data-error="true"] {
@@ -163,5 +166,25 @@
   .errorMessage {
     position: static;
     margin-top: 0.4rem;
+  }
+}
+
+/* For desktop, reduce font size to fit better */
+@media (min-width: 769px) and (orientation: landscape) {
+  .codeWordInputField {
+    font-size: 1.5rem; /* Smaller on desktop sidebar */
+    letter-spacing: 0.1em; /* Less spacing */
+  }
+  
+  .inputContainer {
+    padding: 1rem; /* Less padding in sidebar */
+  }
+  
+  .numberInput {
+    font-size: 1.25rem; /* Smaller numbers */
+  }
+  
+  .numberDisplay {
+    font-size: 1.5rem; /* Smaller display */
   }
 }

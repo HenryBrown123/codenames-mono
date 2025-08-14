@@ -301,6 +301,15 @@
   }
 }
 
+/* Desktop: Override all text sizes to 18px */
+@media (min-width: 769px) {
+  .textNormal,
+  .textLong,
+  .textExtraLong {
+    font-size: 18px; /* Fixed 18px for desktop */
+  }
+}
+
 /* Dynamic font sizes - no responsive overrides needed */
 
 /* ===== ACCESSIBILITY ENHANCEMENTS ===== */
@@ -745,7 +754,7 @@
 @media (min-width: 769px) {
   .normalCard {
     border-radius: 12px;
-    font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+    font-size: 18px; /* Fixed 18px for desktop */
     letter-spacing: 0.05em;
   }
 

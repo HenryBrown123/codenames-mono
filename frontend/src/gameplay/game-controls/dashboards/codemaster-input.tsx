@@ -4,7 +4,6 @@ import { useGameDataRequired } from "../../game-data/providers";
 import { Card } from "@frontend/shared-types";
 import styles from "./codemaster-input.module.css";
 
-
 type CodeWordInputProps = {
   codeWord?: string;
   numberOfCards: number | null;
@@ -76,7 +75,7 @@ export function CodeWordInput({
             onKeyDown={handleKeyDown}
             disabled={!isEditable || isLoading}
             data-error={hasError}
-            placeholder="COOEWORD"
+            placeholder="CODEWORD"
             autoComplete="off"
             className={styles.codeWordInputField}
           />
