@@ -1,0 +1,250 @@
+/**
+ * Shared Dashboard Styles
+ * Consistent patterns for all mobile dashboards
+ * Based on the proven Codemaster dashboard approach
+ */
+
+/**
+ * Standard dashboard container pattern
+ * Grid-based, fills parent, consistent spacing
+ */
+.dashboardContainer {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  box-sizing: border-box;
+}
+
+/* Mobile-only: Use absolute positioning to fill control area */
+@media (max-width: 768px) {
+  .dashboardContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+}
+
+/**
+ * Standard section wrapper
+ * Used for all dashboard sections
+ */
+.dashboardSection {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(0, 255, 136, 0.5);
+  border-radius: 6px;
+  padding: 0.625rem 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/**
+ * Info display pattern (clues, status, lobby codes, etc)
+ */
+.infoDisplay {
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid var(--color-primary);
+  border-radius: 6px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 20px rgba(0, 255, 136, 0.3),
+    inset 0 0 15px rgba(0, 255, 136, 0.05);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/**
+ * Primary action button (filled)
+ */
+.primaryAction {
+  background: var(--color-primary, #00ff88);
+  color: var(--color-background, #0a0a0f);
+  border: none;
+  border-radius: 4px;
+  padding: 0.625rem 1.5rem;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  letter-spacing: 0.05em;
+  box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+  min-height: 44px; /* Touch target */
+}
+
+.primaryAction:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-primary, #00ff88) 90%, white);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
+}
+
+.primaryAction:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.primaryAction:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/**
+ * Secondary action button (outline)
+ */
+.secondaryAction {
+  background: transparent;
+  color: var(--color-primary, #00ff88);
+  border: 1px solid var(--color-primary, #00ff88);
+  border-radius: 4px;
+  padding: 0.625rem 1.5rem;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  letter-spacing: 0.05em;
+  min-height: 44px; /* Touch target */
+}
+
+.secondaryAction:hover:not(:disabled) {
+  background: var(--color-primary, #00ff88);
+  color: var(--color-background, #0a0a0f);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+}
+
+.secondaryAction:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.secondaryAction:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/**
+ * Common text styles for dashboard content
+ */
+.dashboardText {
+  color: rgba(255, 255, 255, 0.9);
+  font-family: "JetBrains Mono", monospace;
+  text-align: center;
+}
+
+.dashboardTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-primary, #00ff88);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.dashboardSubtitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.dashboardValue {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--color-primary, #00ff88);
+  letter-spacing: 0.1em;
+}
+
+/**
+ * Action layouts
+ */
+.actionStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.actionGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.actionSingle {
+  display: flex;
+  width: 100%;
+}
+
+/* Desktop container - hidden by default (mobile-first) */
+.desktopContainer {
+  display: none;
+}
+
+/* Mobile landscape adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+  .dashboardContainer {
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  .dashboardSection,
+  .infoDisplay {
+    padding: 0.5rem;
+  }
+
+  .primaryAction,
+  .secondaryAction {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    min-height: 40px; /* Slightly smaller for landscape */
+  }
+
+  .dashboardTitle {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .dashboardValue {
+    font-size: 1.2rem;
+  }
+}
+
+/* Tablet - button shouldn't be full width */
+@media (min-width: 481px) and (max-width: 768px) {
+  .primaryAction,
+  .secondaryAction {
+    width: auto;
+    min-width: 160px;
+  }
+  
+  .actionSingle {
+    justify-content: center;
+  }
+}
+
+/* Desktop: Show desktop layout */
+@media (min-width: 769px) and (orientation: landscape) {
+  /* Hide mobile container */
+  .dashboardContainer {
+    display: none;
+  }
+  
+  /* Show desktop container with display: contents */
+  .desktopContainer {
+    display: contents;
+  }
+}

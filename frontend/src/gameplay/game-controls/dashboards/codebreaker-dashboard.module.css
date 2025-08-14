@@ -18,104 +18,19 @@
   }
 }
 
-/* Mobile container - fills parent space */
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  padding: 0.75rem;
-  gap: 0.75rem;
-  box-sizing: border-box;
+/* Codebreaker specific grid layout */
+.codebreakerGrid {
+  grid-template-rows: 1fr auto; /* Info display takes available space, actions are compact */
 }
 
-/* Desktop container - fills parent space */
-.desktopContainer {
-  display: none;
+/* Remaining guesses styling */
+.remainingGuesses {
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  opacity: 0.8;
 }
 
-/* Show desktop layout only when sidebar layout is active */
-@media (min-width: 769px) and (orientation: landscape) {
-  .desktopContainer {
-    display: contents; /* This is the key - dissolves the wrapper */
-  }
-}
-
-/* Mobile clue display - responsive to parent */
-.clueDisplay {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  width: 100%;
-  flex: 1;
-  background: rgba(0, 0, 0, 0.8);
-  border: 2px solid var(--color-primary, #00ff88);
-  border-radius: 6px;
-  box-shadow:
-    0 0 20px rgba(0, 255, 136, 0.3),
-    inset 0 0 15px rgba(0, 255, 136, 0.05);
-  position: relative;
-  overflow: hidden;
-  padding: 0.75rem;
-}
-
-/* Scanline effect matching codemaster */
-.clueDisplay::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1.5px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(0, 255, 136, 0.8) 50%,
-    transparent 100%
-  );
-  animation: scanlineAnimation 3s linear infinite;
-  pointer-events: none;
-}
-
-.clueText {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  text-align: center;
-}
-
-/* Mobile sizes - responsive */
-.clueWord {
-  color: var(--color-primary, #00ff88);
-  font-size: clamp(1.5rem, 4vw, 2rem);
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
-  font-family: "JetBrains Mono", monospace;
-  line-height: 1;
-}
-
-.clueNumber {
-  color: var(--color-primary, #00ff88);
-  font-size: clamp(1.25rem, 3vw, 1.5rem);
-  font-weight: 700;
-  text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
-  font-family: "JetBrains Mono", monospace;
-  line-height: 1;
-}
-
-/* Compact button for mobile */
-.compactButton {
-  padding: 0.5rem 1.25rem;
-  font-size: 0.85rem;
-  flex-shrink: 0;
-}
+/* Old mobile styles removed - now using shared dashboard styles */
 
 /* Intel display for desktop - fills available space */
 .intelDisplay {
@@ -289,27 +204,4 @@
   white-space: nowrap; /* Prevents breaking between "for" and number */
 }
 
-/* Mobile landscape adjustments */
-@media (max-width: 768px) and (orientation: landscape) {
-  .container {
-    padding: 0.5rem;
-    gap: 0.5rem;
-  }
-
-  .clueDisplay {
-    padding: 0.5rem;
-  }
-
-  .clueWord {
-    font-size: 1.25rem;
-  }
-
-  .clueNumber {
-    font-size: 1rem;
-  }
-
-  .compactButton {
-    padding: 0.4rem 1rem;
-    font-size: 0.75rem;
-  }
-}
+/* Mobile landscape adjustments now handled by shared styles */

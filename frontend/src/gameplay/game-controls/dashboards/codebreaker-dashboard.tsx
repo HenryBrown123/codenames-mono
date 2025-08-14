@@ -9,6 +9,7 @@ import {
   TerminalOutput,
   TerminalMessageBlock,
 } from "./terminal-components";
+import sharedStyles from "./shared-dashboard.module.css";
 import styles from "./codebreaker-dashboard.module.css";
 
 
@@ -29,8 +30,8 @@ export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messa
   if (!activeTurn || activeTurn.clue === null) {
     return (
       <>
-        <div className={`${styles.container} mobile-only`} />
-        <div className={styles.desktopContainer}>
+        <div className={`${sharedStyles.dashboardContainer} mobile-only`} />
+        <div className={sharedStyles.desktopContainer}>
           <TerminalSection>
             <TerminalCommand>FIELD REPORT</TerminalCommand>
             <TerminalPrompt>
@@ -44,24 +45,35 @@ export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messa
 
   return (
     <>
-      {/* MOBILE */}
-      <div className={`${styles.container} mobile-only`}>
-        <div className={styles.clueDisplay}>
-          <div className={styles.clueText}>
-            <span className={styles.clueWord}>"{activeTurn.clue.word}"</span>
-            <span className={styles.clueNumber}>for {activeTurn.clue.number}</span>
+      {/* Mobile view - Grid layout matching Codemaster */}
+      <div className={`${sharedStyles.dashboardContainer} ${styles.codebreakerGrid} mobile-only`}>
+        {/* Top: Clue display */}
+        <div className={sharedStyles.infoDisplay}>
+          <div className={sharedStyles.dashboardTitle}>"{activeTurn.clue.word}"</div>
+          <div className={sharedStyles.dashboardSubtitle}>for {activeTurn.clue.number}</div>
+          {activeTurn.guessesRemaining > 0 && (
+            <div className={`${sharedStyles.dashboardText} ${styles.remainingGuesses}`}>
+              {activeTurn.guessesRemaining} {activeTurn.guessesRemaining === 1 ? 'guess' : 'guesses'} left
+            </div>
+          )}
+        </div>
+        
+        {/* Bottom: Actions */}
+        <div className={sharedStyles.dashboardSection}>
+          <div className={sharedStyles.actionSingle}>
+            <button
+              className={canEndTurn ? sharedStyles.primaryAction : sharedStyles.secondaryAction}
+              onClick={endTurn}
+              disabled={!canEndTurn || actionState.status === "loading"}
+            >
+              {actionState.status === "loading" ? "ENDING..." : "END TURN"}
+            </button>
           </div>
         </div>
-        <ActionButton
-          className={styles.compactButton}
-          onClick={endTurn}
-          text={actionState.status === "loading" ? "..." : "End Turn"}
-          enabled={(canEndTurn && actionState.status !== "loading") || false}
-        />
       </div>
 
-      {/* DESKTOP TERMINAL */}
-      <div className={styles.desktopContainer}>
+      {/* Desktop view */}
+      <div className={sharedStyles.desktopContainer}>
         <TerminalSection>
           <TerminalCommand>FIELD REPORT</TerminalCommand>
           <TerminalPrompt>

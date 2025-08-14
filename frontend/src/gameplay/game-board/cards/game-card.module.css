@@ -67,7 +67,7 @@
   }
 
   .cardContainer[data-animation="cover-card"] .coverCard {
-    animation: coverCard 600ms ease-out forwards;
+    animation: coverCard 800ms ease-out forwards;
   }
 
   .cardContainer[data-animation="spymaster-reveal-in"] .spymasterOverlay {
@@ -738,7 +738,7 @@
 @media (min-width: 769px) {
   .normalCard {
     border-radius: 12px;
-    font-size: 18px; /* Fixed 18px for desktop */
+    font-size: 18px;
     letter-spacing: 0.05em;
   }
 

@@ -4,7 +4,7 @@ import { useCardVisibility } from "./use-card-visibility";
 import { getTeamType, getCardColor } from "./card-utils";
 import { useGameDataRequired } from "../../game-data/providers";
 import { cx } from "../../../lib/classnames";
-import styles from './game-card.module.css';
+import styles from "./game-card.module.css";
 
 interface GameCardProps {
   card: Card;
@@ -19,7 +19,7 @@ interface GameCardProps {
  */
 const getTextSizeClass = (word: string, threshold: number = 9): string => {
   const length = word.length;
-  
+
   if (length <= threshold) return styles.textNormal;
   return styles.textLong;
 };
@@ -37,19 +37,19 @@ export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable }
 
   // Get dynamic threshold from CSS variable
   const [threshold, setThreshold] = React.useState(9);
-  
+
   React.useEffect(() => {
     const updateThreshold = () => {
-      const value = getComputedStyle(document.documentElement).getPropertyValue('--font-threshold');
+      const value = getComputedStyle(document.documentElement).getPropertyValue("--font-threshold");
       const numValue = parseInt(value) || 9;
       setThreshold(numValue);
     };
-    
+
     updateThreshold();
     // Set up observer for changes
     const observer = new MutationObserver(updateThreshold);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
-    
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["style"] });
+
     return () => observer.disconnect();
   }, []);
 
@@ -81,23 +81,15 @@ export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable }
       onAnimationEnd={handleAnimationEnd}
     >
       {/* Normal beige card */}
-      {!isCovered && (
-        <div 
-          onClick={handleClick} 
-          className={cx(
-            styles.normalCard,
-            isCurrentTeam && styles.currentTeam
-          )}
-        >
-          <div className={styles.ripple} />
-          <span className={cx(
-            styles.cardWord,
-            getTextSizeClass(card.word, threshold)
-          )}>
-            {card.word}
-          </span>
-        </div>
-      )}
+      <div
+        onClick={handleClick}
+        className={cx(styles.normalCard, isCurrentTeam && styles.currentTeam)}
+      >
+        <div className={styles.ripple} />
+        <span className={cx(styles.cardWord, getTextSizeClass(card.word, threshold))}>
+          {card.word}
+        </span>
+      </div>
 
       {/* Cover card - shows when selected */}
       <div className={styles.coverCard}>
@@ -110,10 +102,7 @@ export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable }
           <TeamColorFilter />
           <ScanGrid />
           <SpymasterSymbol />
-          <span className={cx(
-            styles.cardWord,
-            getTextSizeClass(card.word, threshold)
-          )}>
+          <span className={cx(styles.cardWord, getTextSizeClass(card.word, threshold))}>
             {card.word}
           </span>
           <div className={styles.teamBadge}>{teamType.toUpperCase()}</div>

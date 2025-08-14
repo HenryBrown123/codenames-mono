@@ -14,14 +14,18 @@
   }
 }
 
-/* Card covering animation */
+/* Card covering animation - matches dealIn animation style */
 @keyframes coverCard {
-  from { 
-    transform: translateY(-100%);
+  0% {
+    transform: translateX(-100vw) translateY(-100vh) rotate(-6deg);
     opacity: 0;
   }
-  to { 
-    transform: translateY(0);
+  60% {
+    transform: translateX(0) translateY(0) rotate(2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0) translateY(0) rotate(0);
     opacity: 1;
   }
 }
