@@ -469,7 +469,7 @@
     align-items: center;
     justify-content: center;
     /* Tiny horizontal padding to avoid screen edges */
-    padding: clamp(2.5rem, 18vh, 20rem) 0.5rem;
+    padding: clamp(2.5rem, 12vh, 20rem) 0.5rem;
   }
 
   /* Update child constraints to use full width */

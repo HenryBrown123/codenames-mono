@@ -128,20 +128,6 @@
   overflow: hidden;
   transform: translateZ(0);
 
-  /* 3D paper stack shadow */
-  box-shadow:
-    0 1px 0 #d4d1c8,
-    0 2px 0 #c8c5bc,
-    0 3px 0 #bab7ae,
-    0 4px 0 #ada9a0,
-    0 5px 0 #9f9c93,
-    0 6px 1px rgba(0, 0, 0, 0.1),
-    0 0 5px rgba(0, 0, 0, 0.1),
-    0 1px 3px rgba(0, 0, 0, 0.3),
-    0 3px 5px rgba(0, 0, 0, 0.2),
-    0 5px 10px rgba(0, 0, 0, 0.25),
-    0 10px 20px rgba(0, 0, 0, 0.15);
-
   /* Typography */
   color: #2a2a3e;
   font-family: sans-serif;
@@ -259,7 +245,7 @@
   hyphens: auto;
   -webkit-hyphens: auto; /* Safari support */
   -ms-hyphens: auto; /* IE/Edge support */
-  
+
   transition: opacity 0.2s ease;
   text-shadow: none;
   white-space: normal;
@@ -485,7 +471,7 @@
   display: none; /* Mobile-first: hidden */
 }
 
-@media (min-width: 481px) {
+@media (min-width: 769px) {
   .teamBadge {
     display: block;
     position: absolute;
@@ -496,7 +482,8 @@
     border: 1px solid var(--team-color);
     padding: 4px 10px;
     border-radius: 12px;
-    font-size: 10px;
+    font-size: 11px;
+    padding: 5px 12px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -506,13 +493,6 @@
       inset 0 0 10px rgba(0, 0, 0, 0.5);
     font-family: "JetBrains Mono", monospace;
     z-index: 10;
-  }
-}
-
-@media (min-width: 769px) {
-  .teamBadge {
-    font-size: 11px;
-    padding: 5px 12px;
   }
 }
 
@@ -615,17 +595,16 @@
   position: absolute;
   width: 20px;
   height: 20px;
-  border: 3px solid #00ff88;
+  border: 1px solid #00ff88;
   border-radius: 3px;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
-/* Show when parent card has data-current-team="true" */
 .cardContainer[data-current-team="true"] .cardARCorner {
   opacity: 1;
   border-color: #00ff88;
-  filter: drop-shadow(0 0 15px #00ff88) drop-shadow(0 0 30px #00ff88);
+  filter: drop-shadow(0 0 10px #00ff88);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -787,7 +766,6 @@
   .cardARCorner {
     width: 30px;
     height: 30px;
-    border-width: 4px;
   }
 }
 
