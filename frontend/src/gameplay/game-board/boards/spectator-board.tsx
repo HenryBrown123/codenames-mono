@@ -13,6 +13,7 @@ export const SpectatorBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   const { gameData } = useGameDataRequired();
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === "SETUP";
+  const currentTeamName = gameData.playerContext?.teamName;
 
   return (
     <CardVisibilityProvider cards={cards} initialState={isRoundSetup ? "hidden" : "visible"}>
@@ -25,6 +26,7 @@ export const SpectatorBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
                 index={index}
                 onClick={() => {}}
                 clickable={false}
+                isCurrentTeam={currentTeamName === card.teamName}
               />
             ))
           : Array.from({ length: 25 }).map((_, i) => (

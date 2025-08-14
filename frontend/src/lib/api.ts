@@ -10,7 +10,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.log("Authentication failed. Cookie may be missing or expired.");
+      // Authentication failed - redirect to guest auth
       window.location.href = "/auth/guest";
     }
     return Promise.reject(error);

@@ -34,7 +34,6 @@ export const Menu: React.FC = () => {
   };
 
   const changeGameStage = (newStage: PlayerRole) => {
-    console.log("Changing to stage: " + newStage);
     // This is a dev tool - in real app you wouldn't manually change stages
     // You could implement actual stage changing logic here if needed
   };

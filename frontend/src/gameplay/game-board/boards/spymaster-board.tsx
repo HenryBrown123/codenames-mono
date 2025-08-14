@@ -20,15 +20,17 @@ export const SpymasterBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   const { gameData } = useGameDataRequired();
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === "SETUP";
+  const currentTeamName = gameData.playerContext?.teamName;
 
-  return <SpymasterBoardContent cards={cards} isRoundSetup={isRoundSetup} tilt={tilt} />;
+  return <SpymasterBoardContent cards={cards} isRoundSetup={isRoundSetup} tilt={tilt} currentTeamName={currentTeamName} />;
 });
 
 const SpymasterBoardContent = memo<{
   cards: any[];
   isRoundSetup: boolean;
   tilt: number;
-}>(({ cards, isRoundSetup, tilt }) => {
+  currentTeamName?: string;
+}>(({ cards, isRoundSetup, tilt, currentTeamName }) => {
   const { viewMode } = useCardVisibilityContext();
 
   return (
@@ -55,6 +57,7 @@ const SpymasterBoardContent = memo<{
                 index={index}
                 onClick={() => {}}
                 clickable={false}
+                isCurrentTeam={currentTeamName === card.teamName}
               />
             ))
           : Array.from({ length: 25 }).map((_, i) => <EmptyCard key={`empty-${i}`} />)}

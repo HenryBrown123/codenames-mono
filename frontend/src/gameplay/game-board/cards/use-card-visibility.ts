@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef } from "react";
+import React, { useCallback, useState, useRef, useEffect } from "react";
 import { Card } from "@frontend/shared-types";
 import { useCardVisibilityContext } from "./card-visibility-provider";
 import type { VisualState, AnimationType } from "./card-visibility-provider";
@@ -52,17 +52,30 @@ export const useCardVisibility = (card: Card): CardVisibility => {
       ? transitionState.animation
       : null;
 
-  const handleAnimationStart = useCallback((e: React.AnimationEvent) => {
-    activeElements.current.add(e.currentTarget);
-    setTransitionState((prev) => ({ ...prev, status: "animating" }));
-  }, []);
+  const handleAnimationStart = useCallback(
+    (e: React.AnimationEvent) => {
+      activeElements.current.add(e.currentTarget);
+      setTransitionState((prev) => ({ ...prev, status: "animating" }));
+    },
+    [card.word, transitionState.animation],
+  );
 
-  const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
-    activeElements.current.delete(e.currentTarget);
-    if (activeElements.current.size === 0) {
-      setTransitionState((prev) => ({ ...prev, status: "complete" }));
-    }
-  }, []);
+  const handleAnimationEnd = useCallback(
+    (e: React.AnimationEvent) => {
+      activeElements.current.delete(e.currentTarget);
+      if (activeElements.current.size === 0) {
+        setTransitionState((prev) => ({ ...prev, status: "complete" }));
+      }
+    },
+    [card.word],
+  );
+
+  // Clean up on unmount
+  React.useLayoutEffect(() => {
+    return () => {
+      // Component unmounting - clean up any pending animations
+    };
+  }, [card.word, transitionState.status]);
 
   return {
     state: visibilityData.state,

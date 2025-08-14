@@ -5,12 +5,24 @@
  * Each card subscribes to its own state changes via the useCardVisibility hook.
  */
 
-import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  ReactNode,
+} from "react";
 import { Card } from "@frontend/shared-types";
 
 export type VisualState = "hidden" | "visible" | "visible-colored" | "visible-covered";
 
-export type AnimationType = "deal-in" | "spymaster-reveal-in" | "spymaster-reveal-out" | "cover-card" | null;
+export type AnimationType =
+  | "deal-in"
+  | "spymaster-reveal-in"
+  | "spymaster-reveal-out"
+  | "cover-card"
+  | null;
 
 export interface CardVisibilityData {
   state: VisualState;
@@ -93,18 +105,18 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
   cards,
   initialState,
 }) => {
-  // Add mount tracking
+  // Track mount/unmount
   useEffect(() => {
-    console.log('[CardVisibilityProvider] MOUNTED with cards:', cards.filter(c => c.selected).map(c => c.word));
-    return () => console.log('[CardVisibilityProvider] UNMOUNTED');
+    // Component mounted
+    return () => {
+      // Component unmounted
+    };
   }, []);
 
   const [cardData, setCardData] = useState(() => {
     const initial = new Map<string, CardVisibilityData>();
-    console.log('[CardVisibilityProvider] Initializing state...');
     cards.forEach((card) => {
       const cardState = card.selected ? "visible-covered" : initialState;
-      console.log(`[CardVisibilityProvider] Card ${card.word}: selected=${card.selected}, state=${cardState}`);
       initial.set(card.word, {
         state: cardState,
         animation: null,
@@ -118,17 +130,15 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
   // Run state machine transitions during render
   let hasChanges = false;
   const updatedData = new Map(cardData);
-  
-  console.log("[CardVisibilityProvider] Running state machine, viewMode:", viewMode, "cards:", cards.length);
-  
+
+  // Run state machine for all cards
+
   cards.forEach((card, index) => {
     const currentData = updatedData.get(card.word);
     if (!currentData) {
       // New card, initialize it
       const newState = card.selected ? "visible-covered" : initialState;
-      if (index === 0) {
-        console.log("[CardVisibilityProvider] New card:", card.word, "→", newState);
-      }
+      // New card initialized
       updatedData.set(card.word, {
         state: newState,
         animation: null,
@@ -139,57 +149,41 @@ export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
 
     // Find applicable transition
     const transition = CARD_TRANSITIONS.find(
-      (t) => t.from === currentData.state && t.condition(card, viewMode)
+      (t) => t.from === currentData.state && t.condition(card, viewMode),
     );
 
     if (transition && currentData.state !== transition.to) {
-      console.log(
-        `[CardVisibilityProvider] Transition for ${card.word}: ${currentData.state} → ${transition.to}, animation: ${transition.animation}`
-      );
       updatedData.set(card.word, {
         state: transition.to,
         animation: transition.animation,
       });
       hasChanges = true;
-    } else if (transition && index === 0) {
-      console.log("[CardVisibilityProvider] Skipping redundant transition for:", card.word, "already at", currentData.state);
     }
   });
 
   // Only update state if there were changes
   if (hasChanges) {
-    console.log("[CardVisibilityProvider] State changes detected, updating cardData");
     setCardData(updatedData);
-  } else {
-    console.log("[CardVisibilityProvider] No state changes, keeping current data");
   }
 
   const getCardVisibility = useCallback(
     (word: string) => {
       const data = cardData.get(word);
-      // Only log for first card
-      const cardIndex = cards.findIndex(c => c.word === word);
-      if (cardIndex === 0) {
-        console.log("[CardVisibilityProvider] getCardVisibility:", word, "→", data);
-      }
+      // Return card visibility data
       return data;
     },
-    [cardData, cards],
+    [cardData],
   );
 
   // Simplified triggers object
   const triggers = {
     reveal: useCallback((active: boolean) => {
-      console.log("[CardVisibilityProvider] REVEAL CALLED with active:", active);
       const newMode = active ? "spymaster" : "player";
-      console.log("[CardVisibilityProvider] Setting viewMode to:", newMode);
       setViewMode(newMode);
     }, []),
     toggleSpymasterView: useCallback(() => {
-      console.log("[CardVisibilityProvider] TOGGLING SPYMASTER VIEW");
       setViewMode((prev) => {
         const next = prev === "spymaster" ? "player" : "spymaster";
-        console.log("[CardVisibilityProvider] ViewMode changing from", prev, "to", next);
         return next;
       });
     }, []),

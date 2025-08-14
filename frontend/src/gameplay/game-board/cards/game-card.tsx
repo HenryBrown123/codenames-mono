@@ -2,7 +2,6 @@ import React, { memo, useCallback } from "react";
 import { Card } from "@frontend/shared-types";
 import { useCardVisibility } from "./use-card-visibility";
 import { getTeamType, getCardColor } from "./card-utils";
-import { useGameDataRequired } from "../../game-data/providers";
 import { cx } from "../../../lib/classnames";
 import styles from "./game-card.module.css";
 
@@ -11,6 +10,7 @@ interface GameCardProps {
   index: number;
   onClick: () => void;
   clickable: boolean;
+  isCurrentTeam: boolean; // Pass this from parent to avoid re-renders
 }
 
 /**
@@ -27,13 +27,10 @@ const getTextSizeClass = (word: string, threshold: number = 9): string => {
 /**
  * Game card component with visibility state management
  */
-export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable }) => {
+export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable, isCurrentTeam }) => {
   const { state, animation, handleAnimationStart, handleAnimationEnd } = useCardVisibility(card);
-  const { gameData } = useGameDataRequired();
   const teamType = getTeamType(card);
   const cardColor = getCardColor(card);
-
-  const isCurrentTeam = gameData.playerContext?.teamName === card.teamName;
 
   // Get dynamic threshold from CSS variable
   const [threshold, setThreshold] = React.useState(9);
@@ -60,7 +57,6 @@ export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable }
   }, [clickable, card.selected, onClick]);
 
   const isColored = state === "visible-colored";
-  const isCovered = state === "visible-covered";
   const showSpymasterOverlay = isColored;
 
   return (

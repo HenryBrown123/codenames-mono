@@ -67,7 +67,7 @@
   }
 
   .cardContainer[data-animation="cover-card"] .coverCard {
-    animation: coverCard 800ms ease-out forwards;
+    animation: coverCard 3s ease-out forwards;
   }
 
   .cardContainer[data-animation="spymaster-reveal-in"] .spymasterOverlay {

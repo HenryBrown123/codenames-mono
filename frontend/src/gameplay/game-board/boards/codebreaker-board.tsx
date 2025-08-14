@@ -27,7 +27,8 @@ const CodebreakerBoardContent = memo<{
   activeTurn: any;
   onCardClick: (word: string) => void;
   tilt: number;
-}>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick, tilt }) => {
+  currentTeamName?: string;
+}>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick, tilt, currentTeamName }) => {
   const { viewMode } = useCardVisibilityContext();
 
   return (
@@ -67,6 +68,7 @@ const CodebreakerBoardContent = memo<{
             index={index}
             onClick={() => onCardClick(card.word)}
             clickable={canMakeGuess && !isLoading && !card.selected}
+            isCurrentTeam={currentTeamName === card.teamName}
           />
         )) : Array.from({ length: 25 }).map((_, i) => (
           <EmptyCard key={`empty-${i}`} />
@@ -87,6 +89,7 @@ export const CodebreakerBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   const { makeGuess, actionState } = useGameActions();
   const { activeTurn } = useTurn();
   const cards = gameData.currentRound?.cards || [];
+  const currentTeamName = gameData.playerContext?.teamName;
 
   const isLoading = actionState.status === "loading";
 
@@ -120,6 +123,7 @@ export const CodebreakerBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
       activeTurn={activeTurn}
       onCardClick={handleCardClick}
       tilt={tilt}
+      currentTeamName={currentTeamName}
     />
   );
 });
