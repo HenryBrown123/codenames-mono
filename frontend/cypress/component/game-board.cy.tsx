@@ -1,3 +1,4 @@
+//@ts-nocheck
 /// <reference types="cypress" />
 import GameBoard from "@game/components/game-board/game-board"; // Replace with your actual component path
 import styled from "styled-components";
@@ -24,7 +25,7 @@ describe("GameBoard Component", () => {
     cy.mount(
       <Wrapper>
         <GameBoard gameData={exampleIntroGameState} />
-      </Wrapper>
+      </Wrapper>,
     );
     exampleIntroGameState.state.cards.forEach((card) => {
       cy.contains(card.word).should("be.visible");
@@ -35,14 +36,11 @@ describe("GameBoard Component", () => {
     cy.mount(
       <Wrapper>
         <GameBoard gameData={exampleIntroGameState} />
-      </Wrapper>
+      </Wrapper>,
     );
 
     exampleIntroGameState.state.cards
-      .filter(
-        (card) =>
-          !card.selected && exampleIntroGameState.state.stage === "intro"
-      )
+      .filter((card) => !card.selected && exampleIntroGameState.state.stage === "intro")
       .forEach((card) => {
         cy.contains(card.word).click();
         cy.get('[aria-label="Selected card"]').should("not.exist");
@@ -52,11 +50,8 @@ describe("GameBoard Component", () => {
   it("renders cards with correct background color for TEAM.ASSASSIN only in codemaster view", () => {
     cy.mount(
       <Wrapper>
-        <GameBoard
-          gameData={exampleCodemasterStage}
-          flipUnselectedCards={true}
-        />
-      </Wrapper>
+        <GameBoard gameData={exampleCodemasterStage} flipUnselectedCards={true} />
+      </Wrapper>,
     );
 
     cy.contains("strawberry")
@@ -69,11 +64,8 @@ describe("GameBoard Component", () => {
   it("renders cards with correct background color for TEAM.BYSTANDER only in codemaster view", () => {
     cy.mount(
       <Wrapper>
-        <GameBoard
-          gameData={exampleCodemasterStage}
-          flipUnselectedCards={true}
-        />
-      </Wrapper>
+        <GameBoard gameData={exampleCodemasterStage} flipUnselectedCards={true} />
+      </Wrapper>,
     );
 
     cy.contains("umbrella")
@@ -85,11 +77,8 @@ describe("GameBoard Component", () => {
   it("renders cards with correct background color for TEAM.RED only in codemaster view", () => {
     cy.mount(
       <Wrapper>
-        <GameBoard
-          gameData={exampleCodemasterStage}
-          flipUnselectedCards={true}
-        />
-      </Wrapper>
+        <GameBoard gameData={exampleCodemasterStage} flipUnselectedCards={true} />
+      </Wrapper>,
     );
 
     cy.contains("banana")
@@ -101,11 +90,8 @@ describe("GameBoard Component", () => {
   it("renders cards with correct background color for TEAM.GREEN only in codemaster view", () => {
     cy.mount(
       <Wrapper>
-        <GameBoard
-          gameData={exampleCodemasterStage}
-          flipUnselectedCards={true}
-        />
-      </Wrapper>
+        <GameBoard gameData={exampleCodemasterStage} flipUnselectedCards={true} />
+      </Wrapper>,
     );
 
     cy.contains("hazelnut")
@@ -118,7 +104,7 @@ describe("GameBoard Component", () => {
     cy.mount(
       <Wrapper>
         <GameBoard gameData={exampleCodebreakerStage} />
-      </Wrapper>
+      </Wrapper>,
     );
 
     exampleCodebreakerStage.state.cards
@@ -136,15 +122,11 @@ describe("GameBoard Component", () => {
     cy.mount(
       <Wrapper>
         <GameBoard gameData={exampleCodebreakerStage} />
-      </Wrapper>
+      </Wrapper>,
     );
 
     exampleCodebreakerStage.state.cards
-      .filter(
-        (card) =>
-          !card.selected &&
-          exampleCodebreakerStage.state.stage === "codebreaker"
-      )
+      .filter((card) => !card.selected && exampleCodebreakerStage.state.stage === "codebreaker")
       .forEach((card) => {
         cy.contains(card.word).click();
         cy.get('[aria-label="Selected card"]').should("exist");

@@ -1,3 +1,4 @@
+//@ts-nocheck
 /// <reference types="cypress" />
 import React from "react";
 import GameCard from "@game/components/game-board/game-card"; // Replace with your actual component path
@@ -29,7 +30,7 @@ describe("GameCard Component", () => {
     cy.mount(
       <Wrapper>
         <GameCard {...gameCardProps} />
-      </Wrapper>
+      </Wrapper>,
     );
     cy.get("div")
       .contains(/Test Card/i)
@@ -41,7 +42,7 @@ describe("GameCard Component", () => {
     cy.mount(
       <Wrapper>
         <GameCard {...gameCardProps} />
-      </Wrapper>
+      </Wrapper>,
     );
     cy.get('[aria-label="Selected card"]').should("not.exist");
   });
@@ -50,7 +51,7 @@ describe("GameCard Component", () => {
     cy.mount(
       <Wrapper>
         <GameCard {...gameCardProps} selected={true} />
-      </Wrapper>
+      </Wrapper>,
     );
     cy.get('[aria-label="Selected card"]').should("exist");
   });
@@ -59,7 +60,7 @@ describe("GameCard Component", () => {
     cy.mount(
       <Wrapper>
         <GameCard {...gameCardProps} />
-      </Wrapper>
+      </Wrapper>,
     );
     cy.contains(/Test Card/i).click();
     cy.get('[aria-label="Selected card"]').should("exist");
@@ -69,14 +70,12 @@ describe("GameCard Component", () => {
     cy.mount(
       <Wrapper>
         <GameCard {...gameCardProps} selected={true} />
-      </Wrapper>
+      </Wrapper>,
     );
     cy.contains("Test Card")
       .parent()
       .within(() => {
-        cy.get("div")
-          .invoke("css", "text-decoration")
-          .should("include", "line-through");
+        cy.get("div").invoke("css", "text-decoration").should("include", "line-through");
       });
   });
 
@@ -84,14 +83,12 @@ describe("GameCard Component", () => {
     cy.mount(
       <Wrapper>
         <GameCard {...gameCardProps} selected={false} />
-      </Wrapper>
+      </Wrapper>,
     );
     cy.contains("Test Card")
       .parent()
       .within(() => {
-        cy.get("div")
-          .invoke("css", "text-decoration")
-          .should("not.include", "line-through");
+        cy.get("div").invoke("css", "text-decoration").should("not.include", "line-through");
       });
   });
 
@@ -99,7 +96,7 @@ describe("GameCard Component", () => {
     cy.mount(
       <Wrapper>
         <GameCard {...gameCardProps} selected={true} />
-      </Wrapper>
+      </Wrapper>,
     );
 
     cy.contains(/Test Card/i).click();
@@ -112,7 +109,7 @@ describe("GameCard Component", () => {
     cy.mount(
       <Wrapper>
         <GameCard {...gameCardProps} selected={true} />
-      </Wrapper>
+      </Wrapper>,
     );
     cy.get('[aria-label="Selected card"]').click();
 
@@ -124,7 +121,7 @@ describe("GameCard Component", () => {
     cy.mount(
       <Wrapper>
         <GameCard {...gameCardProps} selected={true} />
-      </Wrapper>
+      </Wrapper>,
     );
 
     // Wait for the cover card animation to complete
@@ -133,16 +130,12 @@ describe("GameCard Component", () => {
     cy.get('[aria-label="Selected card"]')
       .should("be.visible")
       .then(($coverCard) => {
-        const coverCardRect = (
-          $coverCard[0] as HTMLElement
-        ).getBoundingClientRect();
+        const coverCardRect = ($coverCard[0] as HTMLElement).getBoundingClientRect();
         cy.contains(/Test Card/i)
           .should("be.visible")
           .then(($textCard) => {
             if ($textCard && $textCard[0]) {
-              const textCardRect = (
-                $textCard[0] as HTMLElement
-              ).getBoundingClientRect();
+              const textCardRect = ($textCard[0] as HTMLElement).getBoundingClientRect();
 
               // Check that the cover card fully overlaps the text card
               expect(coverCardRect.top).to.be.lte(textCardRect.top);
@@ -164,7 +157,7 @@ describe("GameCard Component", () => {
     cy.mount(
       <Wrapper>
         <GameCard {...gameCardProps} codemasterView={true} />
-      </Wrapper>
+      </Wrapper>,
     );
     cy.contains("Test Card")
       .closest("button")
@@ -176,7 +169,7 @@ describe("GameCard Component", () => {
     cy.mount(
       <Wrapper>
         <GameCard {...gameCardProps} codemasterView={false} />
-      </Wrapper>
+      </Wrapper>,
     );
     cy.contains("Test Card")
       .closest("button")
