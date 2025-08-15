@@ -67,4 +67,3 @@ export const CARD_TRANSITIONS: CardTransition[] = [
     condition: (card) => card.selected,
   },
 ];
-

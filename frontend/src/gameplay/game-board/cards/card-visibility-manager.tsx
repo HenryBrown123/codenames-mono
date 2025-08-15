@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
-import { Card } from '@frontend/shared-types';
-import { useCardVisibilityStore } from './card-visibility-store';
-import { CARD_TRANSITIONS } from './card-visibility-provider';
-import type { VisualState, CardVisibilityData } from './card-visibility-provider';
+import { useEffect } from "react";
+import { Card } from "@frontend/shared-types";
+import { useCardVisibilityStore } from "./card-visibility-store";
+import { CARD_TRANSITIONS } from "./card-visibility-provider";
+import type { VisualState, CardVisibilityData } from "./card-visibility-provider";
 
 interface CardVisibilityManagerProps {
   cards: Card[];
@@ -13,13 +13,13 @@ interface CardVisibilityManagerProps {
  * Contains all state machine logic - just moved from provider
  * This runs every render just like before
  */
-export const CardVisibilityManager: React.FC<CardVisibilityManagerProps> = ({ 
-  cards, 
-  initialState 
+export const CardVisibilityManager: React.FC<CardVisibilityManagerProps> = ({
+  cards,
+  initialState,
 }) => {
-  const cardData = useCardVisibilityStore(state => state.cardData);
-  const setCardData = useCardVisibilityStore(state => state.setCardData);
-  const viewMode = useCardVisibilityStore(state => state.viewMode);
+  const cardData = useCardVisibilityStore((state) => state.cardData);
+  const setCardData = useCardVisibilityStore((state) => state.setCardData);
+  const viewMode = useCardVisibilityStore((state) => state.viewMode);
 
   // Initialize cards if needed (same logic as provider)
   useEffect(() => {
@@ -37,7 +37,7 @@ export const CardVisibilityManager: React.FC<CardVisibilityManagerProps> = ({
   // Run state machine transitions during render (EXACT same logic as provider)
   let hasChanges = false;
   const updatedData = new Map(cardData);
-  
+
   cards.forEach((card, index) => {
     const currentData = updatedData.get(card.word);
     if (!currentData) {
@@ -53,7 +53,7 @@ export const CardVisibilityManager: React.FC<CardVisibilityManagerProps> = ({
 
     // Find applicable transition (existing logic)
     const transition = CARD_TRANSITIONS.find(
-      (t) => t.from === currentData.state && t.condition(card, viewMode)
+      (t) => t.from === currentData.state && t.condition(card, viewMode),
     );
 
     if (transition && currentData.state !== transition.to) {
