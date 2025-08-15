@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "dotenv": "^16.4.7",
-    "typecheck": "^0.1.2"
+    "typecheck": "^0.1.2",
+    "zustand": "^5.0.7"
   }
 }

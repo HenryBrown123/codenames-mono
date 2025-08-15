@@ -9,7 +9,7 @@ import { GameInstructions } from "../shared/game-instructions";
 import { ActionButton } from "../shared/components";
 import { CodeWordInput } from "../game-controls/dashboards/codemaster-input";
 import { useGameActions } from "../game-actions";
-import { CardVisibilityProvider } from "../game-board/cards/card-visibility-provider";
+import { CardVisibilityManager } from "../game-board/cards/card-visibility-manager";
 import { UISettingsDashboard } from "../game-controls/settings/ui-settings-dashboard";
 
 /**
@@ -90,7 +90,9 @@ export const GameScene: React.FC = () => {
   };
 
   return (
-    <CardVisibilityProvider cards={cards} initialState={isRoundSetup ? "hidden" : "visible"}>
+    <>
+      <CardVisibilityManager cards={cards} initialState={isRoundSetup ? "hidden" : "visible"} />
+      
       {/* UI Settings Dashboard */}
       <UISettingsDashboard
         fontNormalSize={fontNormalSize}
@@ -161,7 +163,7 @@ export const GameScene: React.FC = () => {
           ?
         </button>
       </div>
-    </CardVisibilityProvider>
+    </>
   );
 };
 

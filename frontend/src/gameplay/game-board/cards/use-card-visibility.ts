@@ -1,6 +1,6 @@
 import React, { useCallback, useState, useRef, useEffect } from "react";
 import { Card } from "@frontend/shared-types";
-import { useCardVisibilityContext } from "./card-visibility-provider";
+import { useCardVisibilityStore } from "./card-visibility-store";
 import type { VisualState, AnimationType } from "./card-visibility-provider";
 
 export interface CardVisibility {
@@ -15,12 +15,13 @@ export interface CardVisibility {
  * Status persists animation attributes across renders until CSS animations complete
  */
 export const useCardVisibility = (card: Card): CardVisibility => {
-  const { getCardVisibility } = useCardVisibilityContext();
-
-  const visibilityData = getCardVisibility(card.word) || {
-    state: "hidden" as VisualState,
-    animation: null,
-  };
+  // Subscribe to ONLY this card's data - key for performance!
+  const visibilityData = useCardVisibilityStore(
+    state => state.cardData.get(card.word) || { state: "hidden" as VisualState, animation: null }
+  );
+  
+  const setCardData = useCardVisibilityStore(state => state.setCardData);
+  const cardData = useCardVisibilityStore(state => state.cardData);
 
   const activeElements = useRef<Set<EventTarget>>(new Set());
 
@@ -65,9 +66,17 @@ export const useCardVisibility = (card: Card): CardVisibility => {
       activeElements.current.delete(e.currentTarget);
       if (activeElements.current.size === 0) {
         setTransitionState((prev) => ({ ...prev, status: "complete" }));
+        
+        // Clear animation from store
+        const updatedData = new Map(cardData);
+        const current = updatedData.get(card.word);
+        if (current) {
+          updatedData.set(card.word, { ...current, animation: null });
+          setCardData(updatedData);
+        }
       }
     },
-    [card.word],
+    [card.word, cardData, setCardData],
   );
 
   // Clean up on unmount

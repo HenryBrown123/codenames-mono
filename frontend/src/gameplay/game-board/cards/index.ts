@@ -1,3 +1,4 @@
 export { GameCard } from "./game-card";
-export { CardVisibilityProvider } from "./card-visibility-provider";
+export { CardVisibilityManager } from "./card-visibility-manager";
+export { useCardVisibilityStore } from "./card-visibility-store";
 export * from "./card-utils";

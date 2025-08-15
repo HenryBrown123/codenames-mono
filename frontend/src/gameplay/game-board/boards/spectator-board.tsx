@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { useGameDataRequired } from "../../game-data/providers";
 import { GameCard } from "../cards/game-card";
-import { CardVisibilityProvider } from "../cards/card-visibility-provider";
+import { CardVisibilityManager } from "../cards/card-visibility-manager";
 import { GameBoardLayout } from "./board-layout";
 import { EmptyCard } from "./board-layout";
 
@@ -16,7 +16,8 @@ export const SpectatorBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   const currentTeamName = gameData.playerContext?.teamName;
 
   return (
-    <CardVisibilityProvider cards={cards} initialState={isRoundSetup ? "hidden" : "visible"}>
+    <>
+      <CardVisibilityManager cards={cards} initialState={isRoundSetup ? "hidden" : "visible"} />
       <GameBoardLayout tilt={tilt}>
         {cards.length > 0 
           ? cards.map((card, index) => (
@@ -34,7 +35,7 @@ export const SpectatorBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
             ))
         }
       </GameBoardLayout>
-    </CardVisibilityProvider>
+    </>
   );
 });
 

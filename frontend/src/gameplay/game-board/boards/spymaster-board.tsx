@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { useGameDataRequired } from "../../game-data/providers";
 import { GameCard } from "../cards/game-card";
-import { useCardVisibilityContext } from "../cards/card-visibility-provider";
+import { useCardVisibilityStore } from "../cards/card-visibility-store";
 import { GameBoardLayout } from "./board-layout";
 import { EmptyCard } from "./board-layout";
 import {
@@ -31,7 +31,7 @@ const SpymasterBoardContent = memo<{
   tilt: number;
   currentTeamName?: string;
 }>(({ cards, isRoundSetup, tilt, currentTeamName }) => {
-  const { viewMode } = useCardVisibilityContext();
+  const viewMode = useCardVisibilityStore(state => state.viewMode);
 
   return (
     <>

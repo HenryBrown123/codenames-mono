@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo } from "react";
 import { useGameDataRequired, useTurn } from "../../game-data/providers";
 import { useGameActions } from "../../game-actions";
 import { GameCard } from "../cards/game-card";
-import { useCardVisibilityContext } from "../cards/card-visibility-provider";
+import { useCardVisibilityStore } from "../cards/card-visibility-store";
 import { GameBoardLayout } from "./board-layout";
 import { EmptyCard } from "./board-layout";
 import {
@@ -29,7 +29,7 @@ const CodebreakerBoardContent = memo<{
   tilt: number;
   currentTeamName?: string;
 }>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick, tilt, currentTeamName }) => {
-  const { viewMode } = useCardVisibilityContext();
+  const viewMode = useCardVisibilityStore(state => state.viewMode);
 
   return (
     <>

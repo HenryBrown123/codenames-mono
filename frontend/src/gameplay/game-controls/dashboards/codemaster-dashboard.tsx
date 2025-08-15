@@ -2,7 +2,7 @@ import React from "react";
 import { CodeWordInput } from "./codemaster-input";
 import { useGameActions } from "../../game-actions";
 import { useTurn } from "../../game-data/providers";
-import { useCardVisibilityContext } from "../../game-board/cards/card-visibility-provider";
+import { useCardVisibilityStore } from "../../game-board/cards/card-visibility-store";
 import {
   TerminalSection,
   TerminalPrompt,
@@ -33,7 +33,8 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
 }) => {
   const { giveClue, actionState } = useGameActions();
   const { activeTurn } = useTurn();
-  const { triggers, viewMode } = useCardVisibilityContext();
+  const viewMode = useCardVisibilityStore(state => state.viewMode);
+  const toggleSpymasterView = useCardVisibilityStore(state => state.toggleSpymasterView);
 
   // Don't show anything if not the codemaster's turn
   if (!activeTurn || activeTurn.clue !== null) {
@@ -57,7 +58,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
   };
 
   const handleARToggle = () => {
-    triggers.toggleSpymasterView();
+    toggleSpymasterView();
   };
 
   const isARMode = viewMode === "spymaster";

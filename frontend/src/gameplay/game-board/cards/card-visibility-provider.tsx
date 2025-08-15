@@ -1,18 +1,9 @@
 /**
- * Card Visibility Provider
+ * Card Visibility Types and Transitions
  *
- * Manages visibility state for all cards in a centralized store.
- * Each card subscribes to its own state changes via the useCardVisibility hook.
+ * Shared types and state machine definitions for card visibility system.
  */
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useEffect,
-  ReactNode,
-} from "react";
 import { Card } from "@frontend/shared-types";
 
 export type VisualState = "hidden" | "visible" | "visible-colored" | "visible-covered";
@@ -39,7 +30,7 @@ interface CardTransition {
 /**
  * State machine transitions for card visibility
  */
-const CARD_TRANSITIONS: CardTransition[] = [
+export const CARD_TRANSITIONS: CardTransition[] = [
   // Cards appear with dealing animation
   {
     from: "hidden",
@@ -77,135 +68,3 @@ const CARD_TRANSITIONS: CardTransition[] = [
   },
 ];
 
-interface VisibilityTriggers {
-  reveal: (active: boolean) => void;
-  toggleSpymasterView: () => void;
-}
-
-interface CardVisibilityState {
-  getCardVisibility: (word: string) => CardVisibilityData | undefined;
-  triggers: VisibilityTriggers;
-  viewMode: "player" | "spymaster";
-}
-
-const CardVisibilityContext = createContext<CardVisibilityState | null>(null);
-
-interface CardVisibilityProviderProps {
-  children: ReactNode;
-  cards: Card[];
-  initialState: VisualState;
-}
-
-/**
- * Provider that manages visibility state for all cards
- * Runs state machine transitions during render for all cards
- */
-export const CardVisibilityProvider: React.FC<CardVisibilityProviderProps> = ({
-  children,
-  cards,
-  initialState,
-}) => {
-  // Track mount/unmount
-  useEffect(() => {
-    // Component mounted
-    return () => {
-      // Component unmounted
-    };
-  }, []);
-
-  const [cardData, setCardData] = useState(() => {
-    const initial = new Map<string, CardVisibilityData>();
-    cards.forEach((card) => {
-      const cardState = card.selected ? "visible-covered" : initialState;
-      initial.set(card.word, {
-        state: cardState,
-        animation: null,
-      });
-    });
-    return initial;
-  });
-
-  const [viewMode, setViewMode] = useState<"player" | "spymaster">("player");
-
-  // Run state machine transitions during render
-  let hasChanges = false;
-  const updatedData = new Map(cardData);
-
-  // Run state machine for all cards
-
-  cards.forEach((card, index) => {
-    const currentData = updatedData.get(card.word);
-    if (!currentData) {
-      // New card, initialize it
-      const newState = card.selected ? "visible-covered" : initialState;
-      // New card initialized
-      updatedData.set(card.word, {
-        state: newState,
-        animation: null,
-      });
-      hasChanges = true;
-      return;
-    }
-
-    // Find applicable transition
-    const transition = CARD_TRANSITIONS.find(
-      (t) => t.from === currentData.state && t.condition(card, viewMode),
-    );
-
-    if (transition && currentData.state !== transition.to) {
-      updatedData.set(card.word, {
-        state: transition.to,
-        animation: transition.animation,
-      });
-      hasChanges = true;
-    }
-  });
-
-  // Only update state if there were changes
-  if (hasChanges) {
-    setCardData(updatedData);
-  }
-
-  const getCardVisibility = useCallback(
-    (word: string) => {
-      const data = cardData.get(word);
-      // Return card visibility data
-      return data;
-    },
-    [cardData],
-  );
-
-  // Simplified triggers object
-  const triggers = {
-    reveal: useCallback((active: boolean) => {
-      const newMode = active ? "spymaster" : "player";
-      setViewMode(newMode);
-    }, []),
-    toggleSpymasterView: useCallback(() => {
-      setViewMode((prev) => {
-        const next = prev === "spymaster" ? "player" : "spymaster";
-        return next;
-      });
-    }, []),
-  };
-
-  return (
-    <CardVisibilityContext.Provider
-      value={{
-        getCardVisibility,
-        triggers,
-        viewMode,
-      }}
-    >
-      {children}
-    </CardVisibilityContext.Provider>
-  );
-};
-
-export const useCardVisibilityContext = () => {
-  const context = useContext(CardVisibilityContext);
-  if (!context) {
-    throw new Error("useCardVisibilityContext must be used within CardVisibilityProvider");
-  }
-  return context;
-};
