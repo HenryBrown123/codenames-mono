@@ -1,7 +1,6 @@
 import React, { memo } from "react";
 import { useGameDataRequired } from "../../game-data/providers";
 import { GameCard } from "../cards/game-card";
-import { CardVisibilityManager } from "../cards/card-visibility-manager";
 import { GameBoardLayout } from "./board-layout";
 import { EmptyCard } from "./board-layout";
 
@@ -16,26 +15,23 @@ export const SpectatorBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   const currentTeamName = gameData.playerContext?.teamName;
 
   return (
-    <>
-      <CardVisibilityManager cards={cards} initialState={isRoundSetup ? "hidden" : "visible"} />
-      <GameBoardLayout tilt={tilt}>
-        {cards.length > 0 
-          ? cards.map((card, index) => (
-              <GameCard
-                key={card.word}
-                card={card}
-                index={index}
-                onClick={() => {}}
-                clickable={false}
-                isCurrentTeam={currentTeamName === card.teamName}
-              />
-            ))
-          : Array.from({ length: 25 }).map((_, i) => (
-              <EmptyCard key={`empty-${i}`} />
-            ))
-        }
-      </GameBoardLayout>
-    </>
+    <GameBoardLayout tilt={tilt}>
+      {cards.length > 0 
+        ? cards.map((card, index) => (
+            <GameCard
+              key={card.word}
+              card={card}
+              index={index}
+              onClick={() => {}}
+              clickable={false}
+              isCurrentTeam={currentTeamName === card.teamName}
+            />
+          ))
+        : Array.from({ length: 25 }).map((_, i) => (
+            <EmptyCard key={`empty-${i}`} />
+          ))
+      }
+    </GameBoardLayout>
   );
 });
 
