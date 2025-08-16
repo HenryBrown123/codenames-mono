@@ -4,6 +4,7 @@ import { GameplayRoute } from "./gameplay-route";
 import { CreateGameRoute } from "./create-game-route";
 import { GuestAuthRoute } from "./guest-auth-route";
 import { LobbyRoute } from "./lobby-route"; // Add this import
+import { GameFlowSandbox } from "../../sandbox/card-visibility-sandbox";
 
 const AppRoutes = () => (
   <Router>
@@ -13,6 +14,7 @@ const AppRoutes = () => (
       <Route path="/game/:gameId" element={<GameplayRoute />} />
       <Route path="/create-game" element={<CreateGameRoute />} />
       <Route path="/auth/guest" element={<GuestAuthRoute />} />
+      <Route path="/sandbox" element={<GameFlowSandbox />} />
       {/* Optional: a catch-all route for 404 */}
       <Route path="*" element={<div>404 - Page Not Found</div>} />
     </Routes>
