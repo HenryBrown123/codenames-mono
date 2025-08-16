@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { GameCard } from "../gameplay/game-board/cards/game-card";
-import { CardVisibilityManager } from "../gameplay/game-board/cards/card-visibility-manager";
 import { useCardVisibilityStore } from "../gameplay/game-board/cards/card-visibility-store";
 import { GameBoardLayout } from "../gameplay/game-board/boards/board-layout";
 import { Card, GameData } from "@frontend/shared-types";
@@ -12,7 +11,51 @@ interface PlayerContext {
   teamName: string;
   role: "CODEMASTER" | "CODEBREAKER";
 }
-import styles from "./sandbox.module.css";
+// Add at the top after other imports
+const ENABLE_RENDER_TRACKING = true; // Toggle this to see render counts
+
+/**
+ * Wrapper to track renders and demonstrate Zustand's fine-grained subscriptions
+ */
+const SandboxGameCardWrapper: React.FC<{
+  card: Card;
+  index: number;
+  onClick: () => void;
+  clickable: boolean;
+  isCurrentTeam: boolean;
+}> = (props) => {
+  const renderCount = React.useRef(0);
+  renderCount.current += 1;
+
+  // Only log first few renders to avoid spam
+  if (renderCount.current <= 5) {
+    console.log(`[GameCard ${props.card.word}] Rendered ${renderCount.current} times`);
+  }
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <GameCard {...props} />
+      {/* Render count overlay for debugging */}
+      <div
+        style={{
+          position: "absolute",
+          top: 2,
+          left: 2,
+          background: "rgba(255, 0, 0, 0.7)",
+          color: "white",
+          padding: "2px 6px",
+          borderRadius: "3px",
+          fontSize: "10px",
+          fontWeight: "bold",
+          pointerEvents: "none",
+          zIndex: 100,
+        }}
+      >
+        R: {renderCount.current}
+      </div>
+    </div>
+  );
+};
 
 // Mock cards
 const MOCK_CARDS: Card[] = [
@@ -38,6 +81,7 @@ const PLAYERS = {
 // Mock mutation hooks that trigger the same way as real ones
 const useMockGiveClue = () => {
   const queryClient = useQueryClient();
+  const processCards = useCardVisibilityStore((state) => state.processCards);
 
   return useCallback(
     (word: string, count: number) => {
@@ -58,16 +102,22 @@ const useMockGiveClue = () => {
 
       queryClient.setQueryData(["game", "sandbox"], updatedData);
 
+      // Process cards after mutation (Pattern 2)
+      if (updatedData.currentRound.cards) {
+        processCards(updatedData.currentRound.cards);
+      }
+
       // Trigger the same actions your real mutation would
       console.log("✅ Clue given, triggering handoff...");
       return updatedData;
     },
-    [queryClient],
+    [queryClient, processCards],
   );
 };
 
 const useMockMakeGuess = () => {
   const queryClient = useQueryClient();
+  const processCards = useCardVisibilityStore((state) => state.processCards);
 
   return useCallback(
     (word: string) => {
@@ -101,12 +151,13 @@ const useMockMakeGuess = () => {
 
       queryClient.setQueryData(["game", "sandbox"], updatedData);
 
-      // Trigger the same card processing your real mutation would
-      console.log("✅ Cards updated after guess");
+      // Process cards after mutation (Pattern 2)
+      processCards(updatedCards);
+      console.log("✅ Cards processed after guess");
 
       return updatedData;
     },
-    [queryClient],
+    [queryClient, processCards],
   );
 };
 
@@ -179,7 +230,17 @@ export const GameFlowSandbox: React.FC = () => {
 
   const viewMode = useCardVisibilityStore((state) => state.viewMode);
   const toggleSpymasterView = useCardVisibilityStore((state) => state.toggleSpymasterView);
+  const processCards = useCardVisibilityStore((state) => state.processCards);
 
+  // Process cards on initial mount and when view mode changes
+  React.useEffect(() => {
+    if (cards.length > 0) {
+      console.log("🔄 Processing cards - initial/viewMode change");
+      processCards(cards, requiresHandoff ? "hidden" : "visible");
+    }
+  }, [viewMode]); // Only re-run when viewMode changes
+
+  // Initialize game data
   React.useEffect(() => {
     const gameData: Partial<GameData> = {
       publicId: "sandbox",
@@ -324,23 +385,44 @@ export const GameFlowSandbox: React.FC = () => {
 
           {/* Game board */}
           <div className={styles.boardContainer}>
-            <CardVisibilityManager cards={cards} initialState="visible" />
-            <GameBoardLayout tilt={0}>
-              {cards.map((card, index) => (
-                <GameCard
-                  key={card.word}
-                  card={card}
-                  index={index}
-                  onClick={() => handleCardClick(card.word)}
-                  clickable={
-                    playerContext?.role === "CODEBREAKER" &&
-                    !card.selected &&
-                    activeTurn?.guessesRemaining > 0
-                  }
-                  isCurrentTeam={card.teamName === playerContext?.teamName}
-                />
-              ))}
-            </GameBoardLayout>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 1fr)",
+                gridTemplateRows: "repeat(3, minmax(140px, 1fr))",
+                gap: "1rem",
+                width: "100%",
+                maxWidth: "700px",
+                margin: "0 auto",
+              }}
+            >
+              {cards.map((card, index) => {
+                const CardComponent = ENABLE_RENDER_TRACKING ? SandboxGameCardWrapper : GameCard;
+                return (
+                  <div
+                    key={card.word}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      minHeight: "140px",
+                      position: "relative",
+                    }}
+                  >
+                    <CardComponent
+                      card={card}
+                      index={index}
+                      onClick={() => handleCardClick(card.word)}
+                      clickable={
+                        playerContext?.role === "CODEBREAKER" &&
+                        !card.selected &&
+                        activeTurn?.guessesRemaining > 0
+                      }
+                      isCurrentTeam={card.teamName === playerContext?.teamName}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {/* Turn info for codebreakers */}
