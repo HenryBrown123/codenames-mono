@@ -18,6 +18,7 @@ export type AnimationType =
 export interface CardVisibilityData {
   state: VisualState;
   animation: AnimationType;
+  animationStatus?: "pending" | "playing" | "complete";
 }
 
 interface CardTransition {

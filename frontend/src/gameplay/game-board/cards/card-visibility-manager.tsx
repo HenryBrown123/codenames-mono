@@ -18,12 +18,19 @@ const processCardTransitions = (
   viewMode: "player" | "spymaster",
   initialState: VisualState = "visible"
 ): Map<string, CardVisibilityData> => {
-  // Step 1: Track what's happening with the store
-  console.log("🔍 PROCESS", {
+  // Enhanced debug log with animation status
+  console.log("DEBUG_CARD_STATE:PROCESS:ALL", {
     scene: window.location.pathname,
     cardsWithSelection: cards.filter(c => c.selected).map(c => c.word),
     storeSize: currentCardData.size,
-    initialState
+    initialState,
+    animationsInProgress: Array.from(currentCardData.entries())
+      .filter(([_, data]) => data.animation && data.animationStatus !== "complete")
+      .map(([word, data]) => ({ 
+        word, 
+        animation: data.animation, 
+        status: data.animationStatus 
+      }))
   });
   
   let updatedData: Map<string, CardVisibilityData> | null = null;
@@ -35,9 +42,11 @@ const processCardTransitions = (
     if (!currentData) {
       if (!updatedData) updatedData = new Map(currentCardData);
       const newState = card.selected ? "visible-covered" : initialState;
+      const newAnimation = initialState === "hidden" && !card.selected ? "deal-in" : null;
       updatedData.set(card.word, {
         state: newState,
-        animation: initialState === "hidden" && !card.selected ? "deal-in" : null,
+        animation: newAnimation,
+        animationStatus: newAnimation ? "pending" : undefined
       });
       hasChanges = true;
       return; // Skip transition logic for newly initialized cards
@@ -48,23 +57,32 @@ const processCardTransitions = (
     );
 
     if (transition && currentData.state !== transition.to) {
-      if (!updatedData) updatedData = new Map(currentCardData);
+      // Check if animation already played
+      const hasAlreadyAnimated = 
+        currentData.animation === transition.animation && 
+        currentData.animationStatus === "complete";
       
-      // Step 3: Track specific card animations
-      if (card.selected && transition.animation === "cover-card") {
-        console.log("⚠️ RE-ANIMATION", {
-          card: card.word,
-          from: currentData.state,
-          to: transition.to,
-          currentAnimation: currentData.animation
+      if (!hasAlreadyAnimated) {
+        if (!updatedData) updatedData = new Map(currentCardData);
+        
+        // Enhanced debug log
+        if (card.selected && transition.animation === "cover-card") {
+          console.log(`DEBUG_CARD_STATE:COVER_RECHECK:${card.word}`, {
+            from: currentData.state,
+            to: transition.to,
+            currentAnimation: currentData.animation,
+            currentStatus: currentData.animationStatus,
+            willAnimate: !hasAlreadyAnimated
+          });
+        }
+        
+        updatedData.set(card.word, {
+          state: transition.to,
+          animation: transition.animation,
+          animationStatus: "pending"
         });
+        hasChanges = true;
       }
-      
-      updatedData.set(card.word, {
-        state: transition.to,
-        animation: transition.animation,
-      });
-      hasChanges = true;
     }
   });
 
@@ -75,19 +93,55 @@ export const CardVisibilityManager: React.FC<CardVisibilityManagerProps> = ({
   cards,
   initialState,
 }) => {
-  console.log("CardVisibilityManager render", { initialState });
+  console.log("DEBUG_CARD_STATE:RENDER:MANAGER", { initialState });
   
   const cardData = useCardVisibilityStore((state) => state.cardData);
   const setCardData = useCardVisibilityStore((state) => state.setCardData);
   const viewMode = useCardVisibilityStore((state) => state.viewMode);
 
-  // Step 2: Mount/unmount tracking
+  // Mount/unmount tracking
   React.useEffect(() => {
-    console.log("🟢 CardVisibilityManager MOUNTED", { initialState });
+    console.log("DEBUG_CARD_STATE:MOUNT:MANAGER", { initialState });
     return () => {
-      console.log("🔴 CardVisibilityManager UNMOUNTED");
+      console.log("DEBUG_CARD_STATE:UNMOUNT:MANAGER");
     };
   }, []);
+
+  // ViewMode tracking
+  React.useEffect(() => {
+    console.log(`DEBUG_CARD_STATE:VIEW_MODE:${viewMode}`, {
+      scene: window.location.pathname,
+      selectedCards: cards.filter(c => c.selected).map(c => c.word)
+    });
+  }, [viewMode]);
+
+  // Cleanup incomplete animations on unmount
+  React.useEffect(() => {
+    return () => {
+      const currentData = useCardVisibilityStore.getState().cardData;
+      const updatedData = new Map(currentData);
+      let hasIncompleteAnimations = false;
+      
+      updatedData.forEach((data, word) => {
+        if (data.animation && data.animationStatus !== "complete") {
+          console.log(`DEBUG_CARD_STATE:CLEANUP:${word}`, {
+            animation: data.animation,
+            status: data.animationStatus
+          });
+          updatedData.set(word, {
+            ...data,
+            animation: null,
+            animationStatus: "complete"
+          });
+          hasIncompleteAnimations = true;
+        }
+      });
+      
+      if (hasIncompleteAnimations) {
+        useCardVisibilityStore.getState().setCardData(updatedData);
+      }
+    };
+  }, []); // Empty deps - only run on unmount
 
   // Process transitions in useEffect - CRITICAL!
   React.useEffect(() => {
