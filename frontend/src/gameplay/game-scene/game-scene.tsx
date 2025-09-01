@@ -78,8 +78,10 @@ export const GameScene: React.FC = () => {
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
   const BoardComponent = React.useMemo(() => {
     const Component = getBoardComponent(currentRole, currentScene);
-    return () => <Component tilt={boardTilt} />;
-  }, [currentRole, currentScene, boardTilt]);
+    return (props: { tilt?: number }) => (
+      <Component {...props} key={`${currentRole}-${currentScene}`} />
+    );
+  }, [currentRole, currentScene]);
 
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === "SETUP";
@@ -108,7 +110,7 @@ export const GameScene: React.FC = () => {
       <div className={styles.gameSceneContainer} style={fontVariables}>
         {/* Main game board */}
         <div className={styles.boardArea}>
-          <BoardComponent />
+          <BoardComponent tilt={boardTilt} />
         </div>
 
         {/* Control area - SINGLE dashboard, CSS handles layout */}
