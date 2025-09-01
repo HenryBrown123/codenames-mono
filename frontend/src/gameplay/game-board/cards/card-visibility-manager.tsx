@@ -18,6 +18,14 @@ const processCardTransitions = (
   viewMode: "player" | "spymaster",
   initialState: VisualState = "visible"
 ): Map<string, CardVisibilityData> => {
+  // Step 1: Track what's happening with the store
+  console.log("🔍 PROCESS", {
+    scene: window.location.pathname,
+    cardsWithSelection: cards.filter(c => c.selected).map(c => c.word),
+    storeSize: currentCardData.size,
+    initialState
+  });
+  
   let updatedData: Map<string, CardVisibilityData> | null = null;
   let hasChanges = false;
 
@@ -41,6 +49,17 @@ const processCardTransitions = (
 
     if (transition && currentData.state !== transition.to) {
       if (!updatedData) updatedData = new Map(currentCardData);
+      
+      // Step 3: Track specific card animations
+      if (card.selected && transition.animation === "cover-card") {
+        console.log("⚠️ RE-ANIMATION", {
+          card: card.word,
+          from: currentData.state,
+          to: transition.to,
+          currentAnimation: currentData.animation
+        });
+      }
+      
       updatedData.set(card.word, {
         state: transition.to,
         animation: transition.animation,
@@ -61,6 +80,14 @@ export const CardVisibilityManager: React.FC<CardVisibilityManagerProps> = ({
   const cardData = useCardVisibilityStore((state) => state.cardData);
   const setCardData = useCardVisibilityStore((state) => state.setCardData);
   const viewMode = useCardVisibilityStore((state) => state.viewMode);
+
+  // Step 2: Mount/unmount tracking
+  React.useEffect(() => {
+    console.log("🟢 CardVisibilityManager MOUNTED", { initialState });
+    return () => {
+      console.log("🔴 CardVisibilityManager UNMOUNTED");
+    };
+  }, []);
 
   // Process transitions in useEffect - CRITICAL!
   React.useEffect(() => {
