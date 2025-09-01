@@ -1,69 +1,119 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { GameCard } from "../gameplay/game-board/cards/game-card";
-import { useCardVisibilityStore } from "../gameplay/game-board/cards/card-visibility-store";
-import { useCardVisibility } from "../gameplay/game-board/cards/use-card-visibility";
-import { GameBoardLayout } from "../gameplay/game-board/boards/board-layout";
-import { Card, GameData } from "@frontend/shared-types";
-import { CARD_TRANSITIONS } from "../gameplay/game-board/cards/card-visibility-provider";
-import type {
-  VisualState,
-  CardVisibilityData,
-} from "../gameplay/game-board/cards/card-visibility-provider";
-import styles from "./sandbox.module.css";
+import React, { useState, useCallback, useMemo } from "react";
+import { create } from "zustand";
+import { subscribeWithSelector } from "zustand/middleware";
+import styles from "./card-visibility-sandbox.module.css";
 
-// Define PlayerContext locally since it might not be exported
-interface PlayerContext {
-  playerName: string;
-  teamName: string;
-  role: "CODEMASTER" | "CODEBREAKER";
+// Types
+interface Card {
+  word: string;
+  teamName: "red" | "blue" | "neutral" | "black";
+  selected: boolean;
+  cardType: "word" | "assassin";
 }
 
-// Pure function for processing card visibility
-const processCardTransitions = (
-  cards: Card[],
-  currentCardData: Map<string, CardVisibilityData>,
-  viewMode: "player" | "spymaster",
-  initialState: VisualState = "visible",
-): Map<string, CardVisibilityData> => {
-  let updatedData: Map<string, CardVisibilityData> | null = null;
-  let hasChanges = false;
+type VisualState = "hidden" | "visible" | "visible-colored" | "visible-covered";
+type AnimationType =
+  | "deal-in"
+  | "spymaster-reveal-in"
+  | "spymaster-reveal-out"
+  | "cover-card"
+  | null;
 
-  cards.forEach((card) => {
-    const currentData = currentCardData.get(card.word);
+interface CardVisibilityData {
+  state: VisualState;
+  animation: AnimationType;
+}
 
-    if (!currentData) {
-      // New card, initialize it
-      if (!updatedData) updatedData = new Map(currentCardData);
-      const newState = card.selected ? "visible-covered" : initialState;
-      updatedData.set(card.word, {
-        state: newState,
-        animation: initialState === "hidden" ? "deal-in" : null,
-      });
-      hasChanges = true;
-      return;
-    }
+interface CardTransition {
+  from: VisualState;
+  to: VisualState;
+  animation: AnimationType;
+  condition: (card: Card, viewMode: "player" | "spymaster") => boolean;
+}
 
-    // Find applicable transition
-    const transition = CARD_TRANSITIONS.find(
-      (t) => t.from === currentData.state && t.condition(card, viewMode),
-    );
+// Mock game data types
+interface GameData {
+  playerContext?: {
+    role: "CODEMASTER" | "CODEBREAKER" | "SPECTATOR" | "NONE";
+    playerName: string;
+    teamName: string;
+  };
+  currentRound?: {
+    cards: Card[];
+    status: "IN_PROGRESS" | "COMPLETED";
+  };
+  status: "IN_PROGRESS" | "COMPLETED";
+}
 
-    if (transition && currentData.state !== transition.to) {
-      if (!updatedData) updatedData = new Map(currentCardData);
-      updatedData.set(card.word, {
-        state: transition.to,
-        animation: transition.animation,
-      });
-      hasChanges = true;
-    }
-  });
+// State machine types (simplified from your actual implementation)
+interface StateTransition {
+  type: "scene" | "END";
+  target?: string;
+}
 
-  // Return the same map instance if nothing changed
-  return hasChanges && updatedData ? updatedData : currentCardData;
-};
+interface SceneConfig {
+  on?: Record<string, StateTransition>;
+}
 
-// Extend cards to have 25 cards (5x5 grid)
+interface StateMachine {
+  initial: string;
+  scenes: Record<string, SceneConfig>;
+}
+
+// State machine transitions
+const CARD_TRANSITIONS: CardTransition[] = [
+  {
+    from: "hidden",
+    to: "visible",
+    animation: "deal-in",
+    condition: () => true,
+  },
+  {
+    from: "visible",
+    to: "visible-colored",
+    animation: "spymaster-reveal-in",
+    condition: (card, viewMode) => viewMode === "spymaster" && !card.selected,
+  },
+  {
+    from: "visible-colored",
+    to: "visible",
+    animation: "spymaster-reveal-out",
+    condition: (_, viewMode) => viewMode === "player",
+  },
+  {
+    from: "visible",
+    to: "visible-covered",
+    animation: "cover-card",
+    condition: (card) => card.selected,
+  },
+  {
+    from: "visible-colored",
+    to: "visible-covered",
+    animation: "cover-card",
+    condition: (card) => card.selected,
+  },
+];
+
+// Zustand store
+interface CardVisibilityStore {
+  cardData: Map<string, CardVisibilityData>;
+  viewMode: "player" | "spymaster";
+  setCardData: (data: Map<string, CardVisibilityData>) => void;
+  setViewMode: (mode: "player" | "spymaster") => void;
+  resetStore: () => void;
+}
+
+const useCardVisibilityStore = create<CardVisibilityStore>()(
+  subscribeWithSelector((set) => ({
+    cardData: new Map(),
+    viewMode: "player",
+    setCardData: (data) => set({ cardData: data }),
+    setViewMode: (mode) => set({ viewMode: mode }),
+    resetStore: () => set({ cardData: new Map(), viewMode: "player" }),
+  })),
+);
+
+// Mock cards
 const MOCK_CARDS: Card[] = [
   { word: "AGENT", teamName: "red", selected: false, cardType: "word" },
   { word: "SPY", teamName: "blue", selected: false, cardType: "word" },
@@ -92,447 +142,402 @@ const MOCK_CARDS: Card[] = [
   { word: "ASSASSIN", teamName: "black", selected: false, cardType: "assassin" },
 ];
 
-// Mock players
-const PLAYERS = {
-  redCodemaster: { playerName: "Red Master", teamName: "red", role: "CODEMASTER" as const },
-  redCodebreaker: { playerName: "Red Breaker", teamName: "red", role: "CODEBREAKER" as const },
-  blueCodemaster: { playerName: "Blue Master", teamName: "blue", role: "CODEMASTER" as const },
-  blueCodebreaker: { playerName: "Blue Breaker", teamName: "blue", role: "CODEBREAKER" as const },
-};
-
-// Mock mutation hooks that trigger processCards
-const useMockGiveClue = () => {
-  const queryClient = useQueryClient();
-  const { cardData, viewMode, setCardData } = useCardVisibilityStore();
-
-  return useCallback(
-    (word: string, count: number) => {
-      console.log("🎯 Mutation: giveClue", { word, count });
-
-      const currentData = queryClient.getQueryData<any>(["game", "sandbox"]);
-      const updatedData = {
-        ...currentData,
-        currentRound: {
-          ...currentData.currentRound,
-          activeTurn: {
-            clue: { word, count },
-            guessesRemaining: count + 1,
-          },
-        },
-      };
-
-      queryClient.setQueryData(["game", "sandbox"], updatedData);
-
-      // Process cards after mutation - Pattern 2!
-      const newCardData = processCardTransitions(
-        currentData.currentRound.cards,
-        cardData,
-        viewMode,
-      );
-      setCardData(newCardData);
-
-      console.log("✅ Clue given, triggering handoff...");
-      return updatedData;
+// State machines (simplified versions of your actual ones)
+const createNoneStateMachine = (): StateMachine => ({
+  initial: "lobby",
+  scenes: {
+    lobby: {
+      on: {
+        ROUND_CREATED: { type: "scene", target: "dealing" },
+      },
     },
-    [queryClient, cardData, viewMode, setCardData],
-  );
-};
-
-const useMockMakeGuess = () => {
-  const queryClient = useQueryClient();
-  const { cardData, viewMode, setCardData } = useCardVisibilityStore();
-
-  return useCallback(
-    (word: string) => {
-      console.log("🎯 Mutation: makeGuess", { word });
-
-      const currentData = queryClient.getQueryData<any>(["game", "sandbox"]);
-      const cards = currentData.currentRound.cards;
-      const guessedCard = cards.find((c: Card) => c.word === word);
-
-      // Update cards with selection
-      const updatedCards = cards.map((c: Card) => (c.word === word ? { ...c, selected: true } : c));
-
-      const isCorrectTeam = guessedCard?.teamName === currentData.playerContext?.teamName;
-      const remaining = (currentData.currentRound.activeTurn?.guessesRemaining || 1) - 1;
-
-      const updatedData = {
-        ...currentData,
-        currentRound: {
-          ...currentData.currentRound,
-          cards: updatedCards,
-          activeTurn: {
-            ...currentData.currentRound.activeTurn,
-            guessesRemaining: remaining,
-            lastGuess: {
-              word,
-              outcome: isCorrectTeam ? "CORRECT_TEAM_CARD" : "OTHER_TEAM_CARD",
-            },
-          },
-        },
-      };
-
-      queryClient.setQueryData(["game", "sandbox"], updatedData);
-
-      // Process cards after mutation - Pattern 2!
-      const newCardData = processCardTransitions(updatedCards, cardData, viewMode);
-      setCardData(newCardData);
-
-      console.log("✅ Cards updated after guess");
-      return updatedData;
+    dealing: {
+      on: {
+        CARDS_DEALT: { type: "END" },
+      },
     },
-    [queryClient, cardData, viewMode, setCardData],
-  );
-};
-
-// Simple test card to verify fine-grained subscriptions
-const SimpleTestCard = React.memo<{ card: Card }>(({ card }) => {
-  const renderCountRef = React.useRef(0);
-  renderCountRef.current += 1;
-
-  // Subscribe ONLY to this card's data
-  const cardVisibility = useCardVisibilityStore(
-    (state) => state.cardData.get(card.word) || { state: "hidden", animation: null },
-  );
-
-  return (
-    <div
-      style={{
-        padding: "1rem",
-        border: "2px solid #333",
-        borderRadius: "8px",
-        background: card.selected ? "#444" : "#222",
-        color: "white",
-        textAlign: "center",
-        cursor: "pointer",
-        position: "relative",
-      }}
-    >
-      <div>{card.word}</div>
-      <div style={{ fontSize: "0.8rem", color: "#aaa" }}>State: {cardVisibility.state}</div>
-      <div
-        style={{
-          position: "absolute",
-          top: "4px",
-          right: "4px",
-          background: "red",
-          color: "white",
-          borderRadius: "50%",
-          width: "24px",
-          height: "24px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "12px",
-          fontWeight: "bold",
-        }}
-      >
-        R:{renderCountRef.current}
-      </div>
-    </div>
-  );
+  },
 });
-const TrackedGameCard = React.memo<{
-  card: Card;
-  index: number;
-  onCardClick: (word: string) => void;
-  clickable: boolean;
-  isCurrentTeam: boolean;
-}>(
-  ({ card, index, onCardClick, clickable, isCurrentTeam }) => {
+
+const createCodemasterStateMachine = (): StateMachine => ({
+  initial: "main",
+  scenes: {
+    main: {
+      on: {
+        CLUE_GIVEN: { type: "END" },
+      },
+    },
+  },
+});
+
+const createCodebreakerStateMachine = (): StateMachine => ({
+  initial: "main",
+  scenes: {
+    main: {
+      on: {
+        CORRECT_GUESS_CONTINUE: { type: "scene", target: "main" },
+        WRONG_GUESS: { type: "scene", target: "outcome" },
+      },
+    },
+    outcome: {
+      on: {
+        OUTCOME_ACKNOWLEDGED: { type: "END" },
+      },
+    },
+  },
+});
+
+const getStateMachine = (role: string): StateMachine => {
+  switch (role) {
+    case "CODEMASTER":
+      return createCodemasterStateMachine();
+    case "CODEBREAKER":
+      return createCodebreakerStateMachine();
+    case "NONE":
+    default:
+      return createNoneStateMachine();
+  }
+};
+
+/**
+ * Card component
+ */
+const GameCard = React.memo<{ card: Card; onCardClick: (word: string) => void }>(
+  ({ card, onCardClick }) => {
     const renderCountRef = React.useRef(0);
     renderCountRef.current += 1;
+
+    const cardVisibility = useCardVisibilityStore(
+      (state) => state.cardData.get(card.word) || { state: "hidden", animation: null },
+    );
 
     const handleClick = useCallback(() => {
       onCardClick(card.word);
     }, [onCardClick, card.word]);
 
+    const handleAnimationEnd = useCallback(() => {
+      const store = useCardVisibilityStore.getState();
+      const updatedData = new Map(store.cardData);
+      const current = updatedData.get(card.word);
+      if (current) {
+        updatedData.set(card.word, { ...current, animation: null });
+        store.setCardData(updatedData);
+      }
+    }, [card.word]);
+
+    const showColor = cardVisibility.state === "visible-colored";
+
+    const cardClasses = [
+      styles.cardWrapper,
+      card.selected && styles.selected,
+      showColor && styles[`color${card.teamName.charAt(0).toUpperCase() + card.teamName.slice(1)}`],
+      cardVisibility.animation &&
+        styles[
+          `animate${cardVisibility.animation
+            .split("-")
+            .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+            .join("")}`
+        ],
+    ]
+      .filter(Boolean)
+      .join(" ");
+
     return (
-      <div style={{ position: "relative" }}>
-        <GameCard
-          card={card}
-          index={index}
-          onClick={handleClick}
-          clickable={clickable}
-          isCurrentTeam={isCurrentTeam}
-        />
-        <div
-          style={{
-            position: "absolute",
-            top: "4px",
-            right: "4px",
-            background: "red",
-            color: "white",
-            borderRadius: "50%",
-            width: "24px",
-            height: "24px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "12px",
-            fontWeight: "bold",
-            zIndex: 10,
-          }}
-        >
-          R:{renderCountRef.current}
-        </div>
+      <div className={cardClasses} onClick={handleClick} onAnimationEnd={handleAnimationEnd}>
+        <div className={styles.cardWord}>{card.word}</div>
+        <div className={styles.cardState}>State: {cardVisibility.state}</div>
+        <div className={styles.renderCount}>R:{renderCountRef.current}</div>
       </div>
-    );
-  },
-  (prevProps, nextProps) => {
-    // Custom comparison to prevent unnecessary renders
-    return (
-      prevProps.card === nextProps.card &&
-      prevProps.index === nextProps.index &&
-      prevProps.clickable === nextProps.clickable &&
-      prevProps.isCurrentTeam === nextProps.isCurrentTeam &&
-      prevProps.onCardClick === nextProps.onCardClick
     );
   },
 );
 
-// Handoff overlay component
-const HandoffOverlay: React.FC<{
-  onSelectPlayer: (player: PlayerContext) => void;
-}> = ({ onSelectPlayer }) => {
-  return (
-    <div className={styles.handoffOverlay}>
-      <h2>Pass the device</h2>
-      <div className={styles.playerList}>
-        {Object.entries(PLAYERS).map(([key, player]) => (
-          <button key={key} className={styles.playerButton} onClick={() => onSelectPlayer(player)}>
-            <div className={styles.playerRole}>{player.role}</div>
-            <div className={styles.playerName}>{player.playerName}</div>
-            <div className={styles.playerTeam}>{player.teamName}</div>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
+/**
+ * Process card transitions
+ */
+const processCardTransitions = (
+  cards: Card[],
+  currentCardData: Map<string, CardVisibilityData>,
+  viewMode: "player" | "spymaster",
+  initialState: VisualState = "visible",
+): Map<string, CardVisibilityData> => {
+  let updatedData: Map<string, CardVisibilityData> | null = null;
+  let hasChanges = false;
 
-// Clue input component
-const ClueInput: React.FC<{
-  onSubmit: (word: string, count: number) => void;
-}> = ({ onSubmit }) => {
-  const [word, setWord] = useState("");
-  const [count, setCount] = useState(1);
+  cards.forEach((card) => {
+    const currentData = currentCardData.get(card.word);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (word.trim()) {
-      onSubmit(word, count);
-      setWord("");
-      setCount(1);
+    if (!currentData) {
+      if (!updatedData) updatedData = new Map(currentCardData);
+      const newState = card.selected ? "visible-covered" : initialState;
+      updatedData.set(card.word, {
+        state: newState,
+        animation: initialState === "hidden" ? "deal-in" : null,
+      });
+      hasChanges = true;
+      return;
     }
-  };
 
-  return (
-    <form onSubmit={handleSubmit} className={styles.clueForm}>
-      <input
-        type="text"
-        value={word}
-        onChange={(e) => setWord(e.target.value)}
-        placeholder="Enter clue word"
-      />
-      <input
-        type="number"
-        value={count}
-        onChange={(e) => setCount(parseInt(e.target.value) || 1)}
-        min={1}
-        max={9}
-      />
-      <button type="submit">Give Clue</button>
-    </form>
-  );
+    const transition = CARD_TRANSITIONS.find(
+      (t) => t.from === currentData.state && t.condition(card, viewMode),
+    );
+
+    if (transition && currentData.state !== transition.to) {
+      if (!updatedData) updatedData = new Map(currentCardData);
+      updatedData.set(card.word, {
+        state: transition.to,
+        animation: transition.animation,
+      });
+      hasChanges = true;
+    }
+  });
+
+  return hasChanges && updatedData ? updatedData : currentCardData;
 };
 
-// Main sandbox component
-export const GameFlowSandbox: React.FC = () => {
-  const queryClient = useQueryClient();
-  const [playerContext, setPlayerContext] = useState<PlayerContext | null>(null);
-  const [requiresHandoff, setRequiresHandoff] = useState(true);
-  const [cards, setCards] = useState(MOCK_CARDS);
-  const [activeTurn, setActiveTurn] = useState<any>(null);
-  const [useSimpleCards, setUseSimpleCards] = useState(false);
+/**
+ * Board component that manages visibility
+ */
+const GameBoard: React.FC<{
+  cards: Card[];
+  onCardClick: (word: string) => void;
+  initialState: VisualState;
+  role: string;
+}> = ({ cards, onCardClick, initialState, role }) => {
+  const { cardData, viewMode, setCardData } = useCardVisibilityStore();
 
-  const giveClue = useMockGiveClue();
-  const makeGuess = useMockMakeGuess();
-
-  // Use selectors to avoid unnecessary re-renders!
-  const viewMode = useCardVisibilityStore((state) => state.viewMode);
-  const toggleSpymasterView = useCardVisibilityStore((state) => state.toggleSpymasterView);
-  const cardData = useCardVisibilityStore((state) => state.cardData);
-  const setCardData = useCardVisibilityStore((state) => state.setCardData);
-
-  // Set up game data in query cache
+  // Set view mode based on role
   React.useEffect(() => {
-    const gameData: Partial<GameData> = {
-      publicId: "sandbox",
-      status: "IN_PROGRESS",
-      gameType: "SINGLE_DEVICE",
-      gameFormat: "QUICK",
-      createdAt: new Date("2024-01-01"), // Use stable date
-      teams: [
-        {
-          name: "red",
-          score: 0,
-          players: [{ publicId: "red-1", name: "Red Player", isActive: true }],
-        },
-        {
-          name: "blue",
-          score: 0,
-          players: [{ publicId: "blue-1", name: "Blue Player", isActive: true }],
-        },
-      ],
-      currentRound: {
-        _id: "round-1",
-        cards: cards,
-        status: "ACTIVE",
-        activeTurn: activeTurn,
-      } as any,
-      playerContext: playerContext as any,
-    };
+    const newViewMode = role === "CODEMASTER" ? "spymaster" : "player";
+    useCardVisibilityStore.setState({ viewMode: newViewMode });
+  }, [role]);
 
-    queryClient.setQueryData(["game", "sandbox"], gameData);
-  }, [cards, playerContext, activeTurn, queryClient]);
-
-  // Minimal useEffect - only for viewMode changes
+  // Process transitions when cards or viewMode change
   React.useEffect(() => {
-    const newCardData = processCardTransitions(cards, cardData, viewMode);
+    const newCardData = processCardTransitions(cards, cardData, viewMode, initialState);
     if (newCardData !== cardData) {
       setCardData(newCardData);
     }
-  }, [viewMode, cards, cardData, setCardData]);
-
-  // Initialize cards on mount
-  React.useEffect(() => {
-    const initialCardData = processCardTransitions(cards, new Map(), viewMode, "hidden");
-    setCardData(initialCardData);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Handle player selection
-  const handleSelectPlayer = (player: PlayerContext) => {
-    setPlayerContext(player);
-    setRequiresHandoff(false);
-
-    // Set initial turn if codemaster
-    if (player.role === "CODEMASTER") {
-      setActiveTurn({
-        teamName: player.teamName,
-        phase: "GIVE_CLUE",
-      });
-    }
-  };
-
-  // Handle card click
-  const handleCardClick = useCallback(
-    (word: string) => {
-      if (playerContext?.role === "CODEBREAKER" && activeTurn?.guessesRemaining > 0) {
-        makeGuess(word);
-      }
-    },
-    [playerContext?.role, activeTurn?.guessesRemaining, makeGuess],
-  );
-
-  // Handle clue submission
-  const handleGiveClue = (word: string, count: number) => {
-    giveClue(word, count);
-    // Move to guessing phase
-    setActiveTurn({
-      ...activeTurn,
-      phase: "MAKE_GUESSES",
-      clue: { word, count },
-      guessesRemaining: count + 1,
-    });
-    setRequiresHandoff(true);
-  };
-
-  // Handle end turn
-  const handleEndTurn = () => {
-    setActiveTurn({
-      teamName: activeTurn.teamName === "red" ? "blue" : "red",
-      phase: "GIVE_CLUE",
-    });
-    setRequiresHandoff(true);
-  };
+  }, [cards, viewMode, initialState]);
 
   return (
-    <div className={styles.sandbox}>
-      <h1>Card Visibility Sandbox - Pattern 2 (Mutation-Driven)</h1>
-
-      {requiresHandoff && <HandoffOverlay onSelectPlayer={handleSelectPlayer} />}
-
-      <div className={styles.controls}>
-        <button
-          onClick={toggleSpymasterView}
-          className={viewMode === "spymaster" ? styles.active : ""}
-        >
-          {viewMode === "spymaster" ? "🕵️ Spymaster View" : "👤 Player View"}
-        </button>
-        <button onClick={() => setUseSimpleCards(!useSimpleCards)}>
-          {useSimpleCards ? "Use GameCard" : "Use Simple Card"}
-        </button>
-        {playerContext && (
-          <div className={styles.currentPlayer}>
-            Playing as: {playerContext.playerName} ({playerContext.role})
-          </div>
-        )}
-      </div>
-
-      <div className={styles.boardContainer}>
-        <GameBoardLayout>
-          {useSimpleCards
-            ? // Simple cards for testing fine-grained subscriptions
-              cards.map((card) => (
-                <div key={card.word} onClick={() => handleCardClick(card.word)}>
-                  <SimpleTestCard card={card} />
-                </div>
-              ))
-            : // Full GameCard components
-              cards.map((card, index) => {
-                const isClickable =
-                  playerContext?.role === "CODEBREAKER" &&
-                  (activeTurn?.guessesRemaining || 0) > 0 &&
-                  !card.selected;
-                const isTeamCard = card.teamName === playerContext?.teamName;
-
-                return (
-                  <TrackedGameCard
-                    key={card.word}
-                    card={card}
-                    index={index}
-                    onCardClick={handleCardClick}
-                    clickable={isClickable}
-                    isCurrentTeam={isTeamCard}
-                  />
-                );
-              })}
-        </GameBoardLayout>
-      </div>
-
-      {playerContext?.role === "CODEMASTER" && activeTurn?.phase === "GIVE_CLUE" && (
-        <div className={styles.actionArea}>
-          <h3>Give a clue:</h3>
-          <ClueInput onSubmit={handleGiveClue} />
-        </div>
-      )}
-
-      {playerContext?.role === "CODEBREAKER" && activeTurn?.phase === "MAKE_GUESSES" && (
-        <div className={styles.actionArea}>
-          <h3>Make guesses:</h3>
-          <p>
-            Clue: {activeTurn.clue?.word} for {activeTurn.clue?.count}
-          </p>
-          <p>Guesses remaining: {activeTurn.guessesRemaining || 0}</p>
-          {activeTurn.guessesRemaining === 0 && <button onClick={handleEndTurn}>End Turn</button>}
-        </div>
-      )}
-
-      <div className={styles.stateDebug}>
-        <h3>Debug State</h3>
-        <pre>{JSON.stringify({ viewMode, playerContext, activeTurn }, null, 2)}</pre>
-      </div>
+    <div className={styles.grid}>
+      {cards.map((card) => (
+        <GameCard key={card.word} card={card} onCardClick={onCardClick} />
+      ))}
     </div>
   );
 };
+
+/**
+ * Scene component that handles different game states
+ */
+const GameScene: React.FC<{
+  gameData: GameData;
+  currentScene: string;
+  onCardClick: (word: string) => void;
+}> = ({ gameData, currentScene, onCardClick }) => {
+  const role = gameData.playerContext?.role || "NONE";
+  const cards = gameData.currentRound?.cards || [];
+
+  // Determine initial state based on scene
+  const getInitialState = (): VisualState => {
+    if (role === "NONE" && currentScene === "dealing") return "hidden";
+    return "visible";
+  };
+
+  const getMessage = () => {
+    switch (`${role}.${currentScene}`) {
+      case "NONE.lobby":
+        return "Waiting for game to start...";
+      case "NONE.dealing":
+        return "Dealing cards...";
+      case "CODEMASTER.main":
+        return "Give a clue to your team";
+      case "CODEBREAKER.main":
+        return "Make a guess based on the clue";
+      case "CODEBREAKER.outcome":
+        return "Review the outcome";
+      default:
+        return `${role} - ${currentScene}`;
+    }
+  };
+
+  return (
+    <div className={styles.sceneContainer}>
+      <h3 className={styles.sceneTitle}>{getMessage()}</h3>
+      <GameBoard
+        key={`${role}-${currentScene}`} // Force remount on scene change
+        cards={cards}
+        onCardClick={onCardClick}
+        initialState={getInitialState()}
+        role={role}
+      />
+    </div>
+  );
+};
+
+/**
+ * Main sandbox component with game flow simulation
+ */
+export default function CardVisibilitySandbox() {
+  const [gameData, setGameData] = useState<GameData>({
+    playerContext: { role: "NONE", playerName: "Player 1", teamName: "red" },
+    currentRound: { cards: MOCK_CARDS, status: "IN_PROGRESS" },
+    status: "IN_PROGRESS",
+  });
+
+  const [currentScene, setCurrentScene] = useState("lobby");
+  const resetStore = useCardVisibilityStore((state) => state.resetStore);
+
+  const currentRole = gameData.playerContext?.role || "NONE";
+  const stateMachine = useMemo(() => getStateMachine(currentRole), [currentRole]);
+
+  // Handle scene transitions
+  const triggerSceneTransition = useCallback(
+    (event: string) => {
+      const transition = stateMachine.scenes[currentScene]?.on?.[event];
+      if (!transition) {
+        console.warn(`No transition found for event: ${event} in scene: ${currentScene}`);
+        return;
+      }
+
+      if (transition.type === "END") {
+        // Simulate moving to next player
+        handleTurnComplete();
+      } else if (transition.type === "scene" && transition.target) {
+        setCurrentScene(transition.target);
+      }
+    },
+    [currentScene, stateMachine],
+  );
+
+  // Simulate turn completion and handoff
+  const handleTurnComplete = useCallback(() => {
+    // Clear player context (handoff state)
+    setGameData((prev) => ({
+      ...prev,
+      playerContext: undefined,
+    }));
+    setCurrentScene("handoff");
+  }, []);
+
+  // Handle player selection after handoff
+  const handlePlayerSelect = useCallback(
+    (role: "CODEMASTER" | "CODEBREAKER") => {
+      setGameData((prev) => ({
+        ...prev,
+        playerContext: {
+          role,
+          playerName: role === "CODEMASTER" ? "Master" : "Breaker",
+          teamName: "red",
+        },
+      }));
+      const machine = getStateMachine(role);
+      setCurrentScene(machine.initial);
+      resetStore(); // Reset visibility store for new player
+    },
+    [resetStore],
+  );
+
+  // Handle card clicks based on current role
+  const handleCardClick = useCallback(
+    (word: string) => {
+      if (currentRole === "CODEBREAKER" && currentScene === "main") {
+        // Update card selection
+        setGameData((prev) => ({
+          ...prev,
+          currentRound: {
+            ...prev.currentRound!,
+            cards: prev.currentRound!.cards.map((card) =>
+              card.word === word ? { ...card, selected: true } : card,
+            ),
+          },
+        }));
+
+        // Simulate guess outcome
+        const card = gameData.currentRound?.cards.find((c) => c.word === word);
+        if (card?.teamName === "red") {
+          triggerSceneTransition("CORRECT_GUESS_CONTINUE");
+        } else {
+          triggerSceneTransition("WRONG_GUESS");
+        }
+      }
+    },
+    [currentRole, currentScene, gameData.currentRound?.cards, triggerSceneTransition],
+  );
+
+  // Game flow simulation functions
+  const startGame = () => {
+    triggerSceneTransition("ROUND_CREATED");
+  };
+
+  const dealCards = () => {
+    triggerSceneTransition("CARDS_DEALT");
+  };
+
+  const giveClue = () => {
+    triggerSceneTransition("CLUE_GIVEN");
+  };
+
+  const acknowledgeOutcome = () => {
+    triggerSceneTransition("OUTCOME_ACKNOWLEDGED");
+  };
+
+  return (
+    <div className={styles.container}>
+      <h1 className={styles.title}>Card Visibility Game Flow Sandbox</h1>
+
+      <div className={styles.controls}>
+        <div className={styles.stateInfo}>
+          <div>
+            Role: <strong>{currentRole}</strong>
+          </div>
+          <div>
+            Scene: <strong>{currentScene}</strong>
+          </div>
+        </div>
+
+        {currentScene === "handoff" && (
+          <div className={styles.handoffControls}>
+            <h3>Device Handoff - Select Player:</h3>
+            <button className={styles.button} onClick={() => handlePlayerSelect("CODEMASTER")}>
+              Red Codemaster
+            </button>
+            <button className={styles.button} onClick={() => handlePlayerSelect("CODEBREAKER")}>
+              Red Codebreaker
+            </button>
+          </div>
+        )}
+
+        {currentRole === "NONE" && currentScene === "lobby" && (
+          <button className={styles.button} onClick={startGame}>
+            Start Game
+          </button>
+        )}
+
+        {currentRole === "NONE" && currentScene === "dealing" && (
+          <button className={styles.button} onClick={dealCards}>
+            Complete Dealing
+          </button>
+        )}
+
+        {currentRole === "CODEMASTER" && currentScene === "main" && (
+          <button className={styles.button} onClick={giveClue}>
+            Give Clue
+          </button>
+        )}
+
+        {currentRole === "CODEBREAKER" && currentScene === "outcome" && (
+          <button className={styles.button} onClick={acknowledgeOutcome}>
+            Continue
+          </button>
+        )}
+      </div>
+
+      {currentScene !== "handoff" && (
+        <GameScene gameData={gameData} currentScene={currentScene} onCardClick={handleCardClick} />
+      )}
+    </div>
+  );
+}

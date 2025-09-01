@@ -1,6 +1,12 @@
 import { GameState, GameFormat, GameType, PlayerRole, RoundState } from "@codenames/shared/types";
 
-export type { GameState, GameFormat, GameType, PlayerRole, RoundState } from "@codenames/shared/types";
+export type {
+  GameState,
+  GameFormat,
+  GameType,
+  PlayerRole,
+  RoundState,
+} from "@codenames/shared/types";
 
 /**
  * Core game aggregate containing all game state and metadata.

@@ -1,0 +1,218 @@
+.container {
+  padding: 2rem;
+  background: #1a1a1a;
+  min-height: 100vh;
+  color: white;
+}
+
+.title {
+  margin-bottom: 2rem;
+}
+
+.sceneContainer {
+  margin-top: 2rem;
+}
+
+.sceneTitle {
+  text-align: center;
+  color: #00ff88;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.stateInfo {
+  display: flex;
+  gap: 2rem;
+  padding: 1rem;
+  background: #333;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.stateInfo strong {
+  color: #00ff88;
+}
+
+.handoffControls {
+  background: #2a2a2a;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 2px solid #00ff88;
+  text-align: center;
+}
+
+.handoffControls h3 {
+  color: #00ff88;
+  margin-bottom: 1rem;
+}
+
+.controls {
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.button {
+  padding: 0.5rem 1rem;
+  background: #333;
+  color: white;
+  border: 1px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.button:hover {
+  background: #444;
+}
+
+.viewIndicator {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.viewIndicator.spymaster {
+  background: #8b0000;
+}
+
+.viewIndicator.player {
+  background: #2c5aa0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.cardWrapper {
+  position: relative;
+  aspect-ratio: 3/2;
+  padding: 1rem;
+  border: 2px solid #333;
+  border-radius: 8px;
+  background: #222;
+  color: white;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    background-color 0.3s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardWrapper:hover {
+  transform: scale(1.05);
+}
+
+.cardWrapper.selected {
+  background: #444;
+}
+
+.cardWrapper.colorRed {
+  background: #8b0000;
+}
+
+.cardWrapper.colorBlue {
+  background: #2c5aa0;
+}
+
+.cardWrapper.colorNeutral {
+  background: #8b6914;
+}
+
+.cardWrapper.colorBlack {
+  background: #000;
+}
+
+.cardWord {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.cardState {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-top: 0.5rem;
+}
+
+.renderCount {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: red;
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Animations */
+.animateDealIn {
+  animation: dealIn 0.5s ease-out;
+}
+
+.animateSpymasterRevealIn {
+  animation: colorFadeIn 0.3s ease-out;
+}
+
+.animateSpymasterRevealOut {
+  animation: colorFadeOut 0.3s ease-out;
+}
+
+.animateCoverCard {
+  animation: coverCard 0.4s ease-out;
+}
+
+@keyframes dealIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes colorFadeIn {
+  from {
+    opacity: 0.7;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes colorFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.7;
+  }
+}
+
+@keyframes coverCard {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
