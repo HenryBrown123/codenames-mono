@@ -21,7 +21,6 @@ export const useCardVisibility = (card: Card): CardVisibility => {
   );
   
   const setCardData = useCardVisibilityStore(state => state.setCardData);
-  const cardData = useCardVisibilityStore(state => state.cardData);
 
   const activeElements = useRef<Set<EventTarget>>(new Set());
 
@@ -61,23 +60,21 @@ export const useCardVisibility = (card: Card): CardVisibility => {
     [card.word, transitionState.animation],
   );
 
-  const handleAnimationEnd = useCallback(
-    (e: React.AnimationEvent) => {
-      activeElements.current.delete(e.currentTarget);
-      if (activeElements.current.size === 0) {
-        setTransitionState((prev) => ({ ...prev, status: "complete" }));
-        
-        // Clear animation from store
-        const updatedData = new Map(cardData);
-        const current = updatedData.get(card.word);
-        if (current) {
-          updatedData.set(card.word, { ...current, animation: null });
-          setCardData(updatedData);
-        }
+  const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
+    if (activeElements.current.has(e.target)) {
+      activeElements.current.delete(e.target);
+      setTransitionState((prev) => ({ ...prev, status: "complete" }));
+      
+      // Get fresh cardData inside the callback
+      const currentCardData = useCardVisibilityStore.getState().cardData;
+      const updatedData = new Map(currentCardData);
+      const current = updatedData.get(card.word);
+      if (current && current.animation) {
+        updatedData.set(card.word, { ...current, animation: null });
+        setCardData(updatedData);
       }
-    },
-    [card.word, cardData, setCardData],
-  );
+    }
+  }, [card.word, setCardData]);
 
   // Clean up on unmount
   React.useLayoutEffect(() => {

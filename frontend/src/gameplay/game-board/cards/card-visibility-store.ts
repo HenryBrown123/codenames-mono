@@ -10,6 +10,7 @@ interface CardVisibilityStore {
   setCardData: (data: Map<string, CardVisibilityData>) => void;
   setViewMode: (mode: "player" | "spymaster") => void;
   toggleSpymasterView: () => void;
+  resetStore: () => void;
 }
 
 /**
@@ -26,4 +27,5 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set) => ({
     set((state) => ({
       viewMode: state.viewMode === "player" ? "spymaster" : "player",
     })),
+  resetStore: () => set({ cardData: new Map(), viewMode: "player" }),
 }));

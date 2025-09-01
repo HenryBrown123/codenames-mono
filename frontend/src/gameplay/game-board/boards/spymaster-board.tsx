@@ -22,6 +22,11 @@ export const SpymasterBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   const isRoundSetup = gameData.currentRound?.status === "SETUP";
   const currentTeamName = gameData.playerContext?.teamName;
 
+  // Set viewMode for spymaster - no useEffect needed
+  if (useCardVisibilityStore.getState().viewMode !== 'spymaster') {
+    useCardVisibilityStore.setState({ viewMode: 'spymaster' });
+  }
+
   return <SpymasterBoardContent cards={cards} isRoundSetup={isRoundSetup} tilt={tilt} currentTeamName={currentTeamName} />;
 });
 

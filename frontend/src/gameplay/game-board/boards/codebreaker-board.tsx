@@ -91,6 +91,11 @@ export const CodebreakerBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   const cards = gameData.currentRound?.cards || [];
   const currentTeamName = gameData.playerContext?.teamName;
 
+  // Set viewMode for codebreaker - no useEffect needed
+  if (useCardVisibilityStore.getState().viewMode !== 'player') {
+    useCardVisibilityStore.setState({ viewMode: 'player' });
+  }
+
   const isLoading = actionState.status === "loading";
 
   /**

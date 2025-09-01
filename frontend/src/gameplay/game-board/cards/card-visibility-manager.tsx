@@ -1,8 +1,7 @@
-import { useEffect } from "react";
 import { Card } from "@frontend/shared-types";
 import { useCardVisibilityStore } from "./card-visibility-store";
 import { CARD_TRANSITIONS } from "./card-visibility-provider";
-import type { VisualState, CardVisibilityData } from "./card-visibility-provider";
+import type { VisualState } from "./card-visibility-provider";
 
 interface CardVisibilityManagerProps {
   cards: Card[];
@@ -21,37 +20,25 @@ export const CardVisibilityManager: React.FC<CardVisibilityManagerProps> = ({
   const setCardData = useCardVisibilityStore((state) => state.setCardData);
   const viewMode = useCardVisibilityStore((state) => state.viewMode);
 
-  // Initialize cards if needed (same logic as provider)
-  useEffect(() => {
-    const initial = new Map<string, CardVisibilityData>();
-    cards.forEach((card) => {
-      const cardState = card.selected ? "visible-covered" : initialState;
-      initial.set(card.word, {
-        state: cardState,
-        animation: null,
-      });
-    });
-    setCardData(initial);
-  }, []); // Only on mount
-
-  // Run state machine transitions during render (EXACT same logic as provider)
+  // Process everything in render - no useEffect needed
   let hasChanges = false;
   const updatedData = new Map(cardData);
 
-  cards.forEach((card, index) => {
+  cards.forEach((card) => {
     const currentData = updatedData.get(card.word);
+    
     if (!currentData) {
-      // New card, initialize it
+      // New card initialization - handle it here instead of useEffect
       const newState = card.selected ? "visible-covered" : initialState;
       updatedData.set(card.word, {
         state: newState,
-        animation: null,
+        animation: initialState === "hidden" && !card.selected ? "deal-in" : null,
       });
       hasChanges = true;
-      return;
+      return; // Skip transition logic for newly initialized cards
     }
 
-    // Find applicable transition (existing logic)
+    // Find applicable transition for existing cards
     const transition = CARD_TRANSITIONS.find(
       (t) => t.from === currentData.state && t.condition(card, viewMode),
     );
@@ -70,5 +57,5 @@ export const CardVisibilityManager: React.FC<CardVisibilityManagerProps> = ({
     setCardData(updatedData);
   }
 
-  return null; // This component just manages state
+  return null;
 };
