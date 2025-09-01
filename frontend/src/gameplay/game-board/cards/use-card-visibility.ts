@@ -61,12 +61,6 @@ export const useCardVisibility = (card: Card): CardVisibility => {
 
   const handleAnimationStart = useCallback(
     (e: React.AnimationEvent) => {
-      // Entry
-      console.log(`DEBUG_CARD_STATE:ANIM_START_CALLED:${card.word}`, {
-        eventTarget: e.target === e.currentTarget ? "current" : "child",
-        animation: e.animationName,
-      });
-
       activeElements.current.add(e.currentTarget);
       setTransitionState((prev) => ({ ...prev, status: "animating" }));
 
@@ -80,18 +74,6 @@ export const useCardVisibility = (card: Card): CardVisibility => {
           animationStatus: "playing",
         });
         setCardData(updatedData);
-
-        // Playing
-        console.log(`DEBUG_CARD_STATE:ANIM_START_PLAYING:${card.word}`, {
-          animation: current.animation,
-          status: "playing",
-        });
-      } else {
-        // Skip
-        console.log(`DEBUG_CARD_STATE:ANIM_START_SKIP:${card.word}`, {
-          currentStatus: current?.animationStatus,
-          currentAnimation: current?.animation,
-        });
       }
     },
     [card.word, setCardData],
@@ -99,13 +81,6 @@ export const useCardVisibility = (card: Card): CardVisibility => {
 
   const handleAnimationEnd = useCallback(
     (e: React.AnimationEvent) => {
-      // Entry point
-      console.log(`DEBUG_CARD_STATE:ANIM_END_CALLED:${card.word}`, {
-        eventTarget: e.target === e.currentTarget ? "current" : "child",
-        animation: e.animationName,
-        isTracked: activeElements.current.has(e.currentTarget),
-      });
-
       if (activeElements.current.has(e.currentTarget)) {
         activeElements.current.delete(e.currentTarget);
         setTransitionState((prev) => ({ ...prev, status: "complete" }));
@@ -114,12 +89,6 @@ export const useCardVisibility = (card: Card): CardVisibility => {
         const updatedData = new Map(currentCardData);
         const current = updatedData.get(card.word);
 
-        // Pre-update state
-        console.log(`DEBUG_CARD_STATE:ANIM_END_PRE_UPDATE:${card.word}`, {
-          currentAnimation: current?.animation,
-          currentStatus: current?.animationStatus,
-        });
-
         if (current && current.animation) {
           updatedData.set(card.word, {
             ...current,
@@ -127,23 +96,7 @@ export const useCardVisibility = (card: Card): CardVisibility => {
             animationStatus: "complete",
           });
           setCardData(updatedData);
-
-          // Success
-          console.log(`DEBUG_CARD_STATE:ANIM_END_COMPLETE:${card.word}`, {
-            clearedAnimation: current.animation,
-            newStatus: "complete",
-          });
-        } else {
-          // Skipped
-          console.log(`DEBUG_CARD_STATE:ANIM_END_SKIP:${card.word}`, {
-            reason: !current ? "no-data" : "no-animation",
-          });
         }
-      } else {
-        // Untracked event
-        console.log(`DEBUG_CARD_STATE:ANIM_END_UNTRACKED:${card.word}`, {
-          eventTarget: e.target === e.currentTarget ? "current" : "child",
-        });
       }
     },
     [card.word, setCardData],
