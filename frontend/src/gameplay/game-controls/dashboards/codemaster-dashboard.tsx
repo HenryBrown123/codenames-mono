@@ -33,8 +33,22 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
 }) => {
   const { giveClue, actionState } = useGameActions();
   const { activeTurn } = useTurn();
-  const viewMode = useCardVisibilityStore(state => state.viewMode);
-  const toggleSpymasterView = useCardVisibilityStore(state => state.toggleSpymasterView);
+  const viewMode = useCardVisibilityStore((state) => state.viewMode);
+  const toggleSpymasterView = useCardVisibilityStore((state) => state.toggleSpymasterView);
+
+  // Add keyboard shortcut for power users
+  React.useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Alt+A or Cmd+A toggles AR
+      if ((e.altKey || e.metaKey) && e.key === "a") {
+        e.preventDefault();
+        handleARToggle();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, []);
 
   // Don't show anything if not the codemaster's turn
   if (!activeTurn || activeTurn.clue !== null) {
@@ -63,20 +77,6 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
 
   const isARMode = viewMode === "spymaster";
 
-  // Add keyboard shortcut for power users
-  React.useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      // Alt+A or Cmd+A toggles AR
-      if ((e.altKey || e.metaKey) && e.key === "a") {
-        e.preventDefault();
-        handleARToggle();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyPress);
-    return () => window.removeEventListener("keydown", handleKeyPress);
-  }, []);
-
   return (
     <>
       {/* Mobile view - NEW GRID LAYOUT */}
@@ -84,11 +84,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
         <div className={styles.mobileToggleContainer}>
           <span className={styles.toggleLabel}>Spymaster Vision</span>
           <label className={styles.toggleSwitch}>
-            <input 
-              type="checkbox" 
-              checked={isARMode} 
-              onChange={handleARToggle}
-            />
+            <input type="checkbox" checked={isARMode} onChange={handleARToggle} />
             <span className={styles.toggleTrack}>
               <span className={styles.toggleThumb} />
             </span>

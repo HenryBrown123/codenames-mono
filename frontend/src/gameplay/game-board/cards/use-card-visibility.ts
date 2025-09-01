@@ -13,7 +13,7 @@ export interface CardVisibility {
 // Default visibility data to avoid creating new objects
 const DEFAULT_VISIBILITY_DATA: CardVisibilityData = {
   state: "hidden" as VisualState,
-  animation: null
+  animation: null,
 };
 
 /**
@@ -23,25 +23,8 @@ const DEFAULT_VISIBILITY_DATA: CardVisibilityData = {
 export const useCardVisibility = (card: Card): CardVisibility => {
   // Use a stable selector
   const visibilityData = useCardVisibilityStore(
-    useCallback(
-      (state) => state.cardData.get(card.word) || DEFAULT_VISIBILITY_DATA,
-      [card.word]
-    )
+    useCallback((state) => state.cardData.get(card.word) || DEFAULT_VISIBILITY_DATA, [card.word]),
   );
-  
-  const setCardData = useCardVisibilityStore(state => state.setCardData);
-
-  const activeElements = useRef<Set<EventTarget>>(new Set());
-
-  const [transitionState, setTransitionState] = useState<{
-    animation: AnimationType;
-    state: VisualState | null;
-    status: "waiting" | "animating" | "complete" | null;
-  }>({
-    animation: null,
-    state: null,
-    status: null,
-  });
 
   // Use useEffect to update state
   React.useEffect(() => {
@@ -57,33 +40,48 @@ export const useCardVisibility = (card: Card): CardVisibility => {
     }
   }, [visibilityData.animation, visibilityData.state]);
 
-  const animation = transitionState.status === "waiting" || transitionState.status === "animating"
-    ? transitionState.animation
-    : null;
+  const setCardData = useCardVisibilityStore((state) => state.setCardData);
 
-  const handleAnimationStart = useCallback(
+  const activeElements = useRef<Set<EventTarget>>(new Set());
+
+  const [transitionState, setTransitionState] = useState<{
+    animation: AnimationType;
+    state: VisualState | null;
+    status: "waiting" | "animating" | "complete" | null;
+  }>({
+    animation: null,
+    state: null,
+    status: null,
+  });
+
+  const animation =
+    transitionState.status === "waiting" || transitionState.status === "animating"
+      ? transitionState.animation
+      : null;
+
+  const handleAnimationStart = useCallback((e: React.AnimationEvent) => {
+    activeElements.current.add(e.currentTarget);
+    setTransitionState((prev) => ({ ...prev, status: "animating" }));
+  }, []);
+
+  const handleAnimationEnd = useCallback(
     (e: React.AnimationEvent) => {
-      activeElements.current.add(e.currentTarget);
-      setTransitionState((prev) => ({ ...prev, status: "animating" }));
-    },
-    []
-  );
+      if (activeElements.current.has(e.target)) {
+        activeElements.current.delete(e.target);
+        setTransitionState((prev) => ({ ...prev, status: "complete" }));
 
-  const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
-    if (activeElements.current.has(e.target)) {
-      activeElements.current.delete(e.target);
-      setTransitionState((prev) => ({ ...prev, status: "complete" }));
-      
-      // Get fresh cardData inside the callback
-      const currentCardData = useCardVisibilityStore.getState().cardData;
-      const updatedData = new Map(currentCardData);
-      const current = updatedData.get(card.word);
-      if (current && current.animation) {
-        updatedData.set(card.word, { ...current, animation: null });
-        setCardData(updatedData);
+        // Get fresh cardData inside the callback
+        const currentCardData = useCardVisibilityStore.getState().cardData;
+        const updatedData = new Map(currentCardData);
+        const current = updatedData.get(card.word);
+        if (current && current.animation) {
+          updatedData.set(card.word, { ...current, animation: null });
+          setCardData(updatedData);
+        }
       }
-    }
-  }, [card.word, setCardData]);
+    },
+    [card.word, setCardData],
+  );
 
   // Clean up on unmount
   React.useLayoutEffect(() => {

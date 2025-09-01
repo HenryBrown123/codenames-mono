@@ -16,6 +16,7 @@ import { UISettingsDashboard } from "../game-controls/settings/ui-settings-dashb
  * Game Scene Component with unified mobile-first layout
  */
 export const GameScene: React.FC = () => {
+  // 1. ALL HOOKS AT THE TOP - BEFORE ANY CONDITIONAL RETURNS
   const { gameData, isPending, isError, error, refetch, isFetching } = useGameDataRequired();
   const { activeTurn } = useTurn();
   const { currentRole, currentScene } = usePlayerScene();
@@ -27,16 +28,24 @@ export const GameScene: React.FC = () => {
   const [fontThreshold, setFontThreshold] = useState(9);
   const { giveClue, actionState } = useGameActions();
 
-  // Get current message
-  const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
+  // 2. MEMOIZED HOOKS MUST ALSO BE BEFORE CONDITIONAL RETURNS
+  const DashboardComponent = getDashboardComponent(currentRole, currentScene);
+  const BoardComponent = React.useMemo(() => {
+    const Component = getBoardComponent(currentRole, currentScene);
+    return (props: { tilt?: number }) => (
+      <Component {...props} key={`${currentRole}-${currentScene}`} />
+    );
+  }, [currentRole, currentScene]);
 
-  // CSS custom properties for dynamic font sizing
+  // 3. DERIVED VALUES (non-hooks)
+  const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
   const fontVariables = {
     "--font-normal-size": `${fontNormalSize}px`,
     "--font-long-size": `${fontLongSize}px`,
     "--font-threshold": fontThreshold,
   } as React.CSSProperties;
 
+  // 4. NOW CONDITIONAL RETURNS ARE ALLOWED
   // Show skeleton during initial load
   if (isPending && !gameData) {
     return (
@@ -74,14 +83,6 @@ export const GameScene: React.FC = () => {
       </div>
     );
   }
-
-  const DashboardComponent = getDashboardComponent(currentRole, currentScene);
-  const BoardComponent = React.useMemo(() => {
-    const Component = getBoardComponent(currentRole, currentScene);
-    return (props: { tilt?: number }) => (
-      <Component {...props} key={`${currentRole}-${currentScene}`} />
-    );
-  }, [currentRole, currentScene]);
 
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === "SETUP";

@@ -56,6 +56,8 @@ export const CardVisibilityManager: React.FC<CardVisibilityManagerProps> = ({
   cards,
   initialState,
 }) => {
+  console.log("CardVisibilityManager render", { initialState });
+  
   const cardData = useCardVisibilityStore((state) => state.cardData);
   const setCardData = useCardVisibilityStore((state) => state.setCardData);
   const viewMode = useCardVisibilityStore((state) => state.viewMode);
