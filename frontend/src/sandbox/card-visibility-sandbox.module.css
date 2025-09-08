@@ -97,15 +97,20 @@
   cursor: not-allowed;
 }
 
-/* Messages */
+/* Messages - MOVED TO ABSOLUTE POSITIONING */
 .pendingMessage,
 .successMessage {
-  padding: 1rem;
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1rem 2rem;
   border-radius: 4px;
-  margin-bottom: 2rem;
   display: flex;
   align-items: center;
   gap: 1rem;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .pendingMessage {
@@ -131,10 +136,10 @@
   position: relative;
   aspect-ratio: 3/2;
   padding: 1rem;
-  border: 2px solid #333;
+  border: 2px solid #d4d1c8;
   border-radius: 8px;
-  background: #222;
-  color: white;
+  background: #f4f1e8;
+  color: #333;
   text-align: center;
   cursor: pointer;
   transition:
@@ -150,31 +155,60 @@
   transform: scale(1.05);
 }
 
+/* For selected cards - show the team color when selected */
 .cardWrapper.selected {
-  background: #444;
   cursor: default;
 }
 
-/* Team color backgrounds */
-.cardWrapper.colorRed {
+.cardWrapper.selected.colorRed {
   background: #ff4444;
   border-color: #ff6666;
+  color: white;
 }
 
-.cardWrapper.colorBlue {
+.cardWrapper.selected.colorBlue {
   background: #4444ff;
   border-color: #6666ff;
+  color: white;
 }
 
-.cardWrapper.colorNeutral {
+.cardWrapper.selected.colorNeutral {
   background: #888;
   border-color: #aaa;
+  color: white;
 }
 
-.cardWrapper.colorAssassin {
+.cardWrapper.selected.colorAssassin {
   background: #000;
   border-color: #ffff00;
   box-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
+  color: white;
+}
+
+/* Team color backgrounds for spymaster view */
+.cardWrapper.colorRed:not(.selected) {
+  background: #ff4444;
+  border-color: #ff6666;
+  color: white;
+}
+
+.cardWrapper.colorBlue:not(.selected) {
+  background: #4444ff;
+  border-color: #6666ff;
+  color: white;
+}
+
+.cardWrapper.colorNeutral:not(.selected) {
+  background: #888;
+  border-color: #aaa;
+  color: white;
+}
+
+.cardWrapper.colorAssassin:not(.selected) {
+  background: #000;
+  border-color: #ffff00;
+  box-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
+  color: white;
 }
 
 /* Card content */

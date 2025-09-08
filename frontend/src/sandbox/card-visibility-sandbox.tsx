@@ -5,7 +5,6 @@ import React, {
   useRef,
   useEffect,
   useState,
-  useMemo,
   useLayoutEffect,
 } from "react";
 import { create } from "zustand";
@@ -126,6 +125,14 @@ const CARD_ANIMATIONS: AnimationConfig = {
       ],
       duration: 600,
       delay: 300,
+      easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+    },
+    ".cover-card": {
+      keyframes: [
+        { opacity: "0", transform: "translateY(-100%) rotate(-10deg) scale(0.8)" },
+        { opacity: "1", transform: "translateY(0) rotate(0) scale(1)" },
+      ],
+      duration: 600,
       easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
     },
   },
@@ -497,6 +504,20 @@ const GameCard = memo<{
             <span>[{card.teamName}]</span>
           ) : null}
         </div>
+
+        {/* Cover card overlay */}
+        {state === "visible-covered" && (
+          <div className={`${styles.coverCard} cover-card ${
+            card.teamName === 'red' ? styles.coverRed :
+            card.teamName === 'blue' ? styles.coverBlue :
+            card.teamName === 'neutral' ? styles.coverNeutral :
+            card.teamName === 'assassin' ? styles.coverAssassin :
+            ''
+          }`}>
+            <span className="cover-word">{card.word}</span>
+            <span className="cover-team">{card.teamName.toUpperCase()}</span>
+          </div>
+        )}
 
         {isThisCardPending && (
           <div className={styles.pendingOverlay}>
