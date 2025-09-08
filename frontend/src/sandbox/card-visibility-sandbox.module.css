@@ -1,270 +1,383 @@
-/* card-visibility-demo.module.css */
+/* card-visibility-sandbox.module.css */
 
+/* Container and Layout */
 .container {
   padding: 2rem;
   background: #1a1a1a;
   min-height: 100vh;
   color: white;
-  font-family: "JetBrains Mono", monospace;
+}
+
+.wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .title {
   margin-bottom: 2rem;
-  color: #00ff88;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  font-size: 2rem;
+  color: #fff;
 }
 
+/* Controls Section */
 .controls {
-  margin-bottom: 2rem;
-  padding: 1rem;
-  background: #2a2a2a;
-  border-radius: 8px;
   display: flex;
-  gap: 1rem;
+  gap: 2rem;
+  margin-bottom: 2rem;
   flex-wrap: wrap;
   align-items: center;
-  border: 1px solid #333;
 }
 
 .controlGroup {
   display: flex;
-  align-items: center;
   gap: 0.5rem;
+  align-items: center;
 }
 
 .controlGroup strong {
-  color: #00ff88;
-  margin-right: 0.5rem;
+  color: #fff;
 }
 
+/* Buttons */
 .button {
   padding: 0.5rem 1rem;
   background: #333;
-  color: white;
+  color: #fff;
   border: 1px solid #555;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-  text-transform: uppercase;
-  font-size: 0.8rem;
-  letter-spacing: 0.05em;
-}
-
-.button:hover {
-  background: #444;
-  border-color: #00ff88;
-  transform: translateY(-1px);
-}
-
-.button:active {
-  transform: translateY(0);
-}
-
-.buttonToggle[data-active="true"] {
-  background: #00ff88;
-  color: #000;
-  border-color: #00ff88;
-}
-
-.buttonReset {
-  background: #ff4444;
-  border-color: #ff4444;
-}
-
-.buttonReset:hover {
-  background: #ff6666;
-  border-color: #ff6666;
-}
-
-.sceneIndicator {
-  margin-left: 1rem;
-  color: #00ff88;
   font-weight: bold;
+  transition: all 0.2s;
 }
 
-.scene {
+.button:hover:not(:disabled) {
+  background: #444;
+  border-color: #666;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.buttonActive {
+  padding: 0.5rem 1rem;
+  background: #00aaff;
+  color: #fff;
+  border: 1px solid #00aaff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.buttonActive:hover:not(:disabled) {
+  background: #0099ee;
+  border-color: #0099ee;
+}
+
+.buttonDanger {
+  padding: 0.5rem 1rem;
+  background: #ff4444;
+  color: #fff;
+  border: 1px solid #ff4444;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.buttonDanger:hover:not(:disabled) {
+  background: #dd3333;
+  border-color: #dd3333;
+}
+
+.buttonDanger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Messages */
+.pendingMessage,
+.successMessage {
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pendingMessage {
+  background: #ffaa00;
+  color: #000;
+}
+
+.successMessage {
+  background: #00ff00;
+  color: #000;
+}
+
+/* Grid Layout */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
   margin-bottom: 2rem;
 }
 
-.sceneTitle {
-  color: #00ff88;
-  margin-bottom: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.sceneDescription {
-  color: #888;
-  margin-bottom: 1rem;
-  font-style: italic;
-}
-
-.cardGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  max-width: 600px;
-}
-
 /* Card Styles */
-.card {
-  padding: 1rem;
-  border-radius: 8px;
-  cursor: pointer;
+.cardWrapper {
   position: relative;
-  user-select: none;
-  min-height: 100px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 0.5rem;
+  aspect-ratio: 3/2;
+  padding: 1rem;
+  border: 2px solid #333;
+  border-radius: 8px;
+  background: #222;
+  color: white;
+  text-align: center;
+  cursor: pointer;
   transition:
     transform 0.2s,
-    box-shadow 0.2s;
+    background-color 0.3s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-.card:hover:not(.card--selected) {
+.cardWrapper:hover:not([data-state="visible-covered"]) {
   transform: scale(1.05);
 }
 
-.card--selected {
+.cardWrapper.selected {
+  background: #444;
   cursor: default;
 }
 
-/* State-based card styles */
-.card--hidden {
-  opacity: 0;
-}
-
-.card--visible {
-  background: #f0f0f0;
-  border: 2px solid #ccc;
-  color: #333;
-}
-
-.card--visible-colored {
-  color: white;
-}
-
-.card--visible-colored.card--team-red {
-  background: linear-gradient(135deg, #ff444422, #ff444444);
-  border: 3px solid #ff4444;
-  box-shadow: 0 0 20px #ff444466;
-}
-
-.card--visible-colored.card--team-blue {
-  background: linear-gradient(135deg, #4444ff22, #4444ff44);
-  border: 3px solid #4444ff;
-  box-shadow: 0 0 20px #4444ff66;
-}
-
-.card--visible-colored.card--team-neutral {
-  background: linear-gradient(135deg, #88888822, #88888844);
-  border: 3px solid #888888;
-  box-shadow: 0 0 20px #88888866;
-}
-
-.card--visible-colored.card--team-assassin {
-  background: linear-gradient(135deg, #00000022, #00000044);
-  border: 3px solid #ffff00;
-  box-shadow: 0 0 20px #ffff0066;
-}
-
-.card--visible-covered {
-  color: white;
-  transform: rotateY(180deg);
-}
-
-.card--visible-covered.card--team-red {
+/* Team color backgrounds */
+.cardWrapper.colorRed {
   background: #ff4444;
-  border: 2px solid #ff4444;
+  border-color: #ff6666;
 }
 
-.card--visible-covered.card--team-blue {
+.cardWrapper.colorBlue {
   background: #4444ff;
-  border: 2px solid #4444ff;
+  border-color: #6666ff;
 }
 
-.card--visible-covered.card--team-neutral {
-  background: #888888;
-  border: 2px solid #888888;
+.cardWrapper.colorNeutral {
+  background: #888;
+  border-color: #aaa;
 }
 
-.card--visible-covered.card--team-assassin {
-  background: #000000;
-  border: 2px solid #ffff00;
-  box-shadow: 0 0 30px #ffff00;
+.cardWrapper.colorAssassin {
+  background: #000;
+  border-color: #ffff00;
+  box-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
 }
 
+/* Card content */
 .cardWord {
   font-weight: bold;
   font-size: 1.2rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
 }
 
-.cardTeamLabel {
-  font-size: 0.8rem;
-  opacity: 0.9;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+.cardState {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  min-height: 1.5rem;
 }
 
-.cardTeamHint {
-  font-size: 0.8rem;
-  opacity: 0.7;
-  font-style: italic;
+/* Pending overlay */
+.pendingOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 8px;
+  color: white;
 }
 
-.cardTransitionIndicator {
+/* Spinner animation */
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid transparent;
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Render count badge (for debugging) */
+.renderCount {
   position: absolute;
   top: 4px;
   right: 4px;
-  font-size: 0.7rem;
-  color: #00ff88;
-  background: rgba(0, 0, 0, 0.8);
-  padding: 2px 6px;
-  border-radius: 4px;
+  background: red;
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
 }
 
-.cardPendingIndicator {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  font-size: 0.7rem;
-  color: #ff8800;
-  background: rgba(0, 0, 0, 0.8);
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-/* Debug Info */
-.debugInfo {
-  margin-top: 2rem;
-  padding: 1rem;
-  background: #2a2a2a;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  border: 1px solid #333;
-}
-
-.debugTitle {
-  color: #00ff88;
-  margin-bottom: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-size: 1rem;
-}
-
-.debugContent {
+/* Swimlane Visualizer */
+.swimlanes {
   background: #1a1a1a;
   padding: 1rem;
+  border-radius: 8px;
+  margin-top: 2rem;
+}
+
+.swimlanesTitle {
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.swimlanesContainer {
+  display: flex;
+  gap: 1rem;
+}
+
+.swimlane {
+  flex: 1;
+}
+
+.swimlaneHeader {
+  padding: 0.5rem;
+  border-radius: 4px 4px 0 0;
+  text-align: center;
+  font-weight: bold;
+  color: #fff;
+}
+
+.swimlaneHeader.pending {
+  background: #ffaa00;
+}
+
+.swimlaneHeader.running {
+  background: #00aaff;
+}
+
+.swimlaneHeader.finished {
+  background: #00ff00;
+}
+
+.swimlaneContent {
+  min-height: 200px;
+  background: #2a2a2a;
+  padding: 0.5rem;
+  border-radius: 0 0 4px 4px;
+}
+
+.swimlaneItem {
+  background: #333;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
   border-radius: 4px;
-  overflow-x: auto;
-  color: #888;
   font-size: 0.8rem;
-  line-height: 1.4;
+  color: #fff;
+  transition:
+    transform 0.2s,
+    opacity 0.2s;
+}
+
+.swimlaneItem.finished {
+  opacity: 0.6;
+}
+
+.swimlaneItemTitle {
+  font-weight: bold;
+}
+
+.swimlaneItemElement {
+  opacity: 0.8;
+  font-size: 0.9em;
+}
+
+.swimlaneItemEvent {
+  opacity: 0.6;
+  font-size: 0.7rem;
+}
+
+.swimlaneProgress {
+  height: 4px;
+  background: #555;
+  border-radius: 2px;
+  margin-top: 0.25rem;
+  overflow: hidden;
+}
+
+.swimlaneProgressBar {
+  height: 100%;
+  background: #00aaff;
+  transition: width 0.1s;
+}
+
+/* Scene specific styles */
+.sceneTitle {
+  text-align: center;
+  color: #00ff88;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.stateInfo {
+  display: flex;
+  gap: 2rem;
+  padding: 1rem;
+  background: #333;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.stateInfo strong {
+  color: #00ff88;
+}
+
+/* Handoff controls */
+.handoffControls {
+  background: #2a2a2a;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 2px solid #00ff88;
+  text-align: center;
+}
+
+.handoffControls h3 {
+  color: #00ff88;
+  margin-bottom: 1rem;
+}
+
+/* View indicator */
+.viewIndicator {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.viewIndicator.spymaster {
+  background: #8b0000;
+}
+
+.viewIndicator.player {
+  background: #2c5aa0;
 }
