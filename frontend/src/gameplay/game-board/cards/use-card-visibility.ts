@@ -61,7 +61,7 @@ export const useCardVisibility = (card: Card): CardVisibility => {
 
   const handleAnimationStart = useCallback(
     (e: React.AnimationEvent) => {
-      activeElements.current.add(e.currentTarget);
+      activeElements.current.add(e.target);
       setTransitionState((prev) => ({ ...prev, status: "animating" }));
 
       const currentCardData = useCardVisibilityStore.getState().cardData;
@@ -81,8 +81,8 @@ export const useCardVisibility = (card: Card): CardVisibility => {
 
   const handleAnimationEnd = useCallback(
     (e: React.AnimationEvent) => {
-      if (activeElements.current.has(e.currentTarget)) {
-        activeElements.current.delete(e.currentTarget);
+      if (activeElements.current.has(e.target)) {
+        activeElements.current.delete(e.target);
         setTransitionState((prev) => ({ ...prev, status: "complete" }));
 
         const currentCardData = useCardVisibilityStore.getState().cardData;

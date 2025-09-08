@@ -1,56 +1,41 @@
+/* card-visibility-demo.module.css */
+
 .container {
   padding: 2rem;
   background: #1a1a1a;
   min-height: 100vh;
   color: white;
+  font-family: "JetBrains Mono", monospace;
 }
 
 .title {
   margin-bottom: 2rem;
-}
-
-.sceneContainer {
-  margin-top: 2rem;
-}
-
-.sceneTitle {
-  text-align: center;
   color: #00ff88;
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-}
-
-.stateInfo {
-  display: flex;
-  gap: 2rem;
-  padding: 1rem;
-  background: #333;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-}
-
-.stateInfo strong {
-  color: #00ff88;
-}
-
-.handoffControls {
-  background: #2a2a2a;
-  padding: 1.5rem;
-  border-radius: 8px;
-  border: 2px solid #00ff88;
-  text-align: center;
-}
-
-.handoffControls h3 {
-  color: #00ff88;
-  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .controls {
   margin-bottom: 2rem;
+  padding: 1rem;
+  background: #2a2a2a;
+  border-radius: 8px;
   display: flex;
   gap: 1rem;
+  flex-wrap: wrap;
   align-items: center;
+  border: 1px solid #333;
+}
+
+.controlGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.controlGroup strong {
+  color: #00ff88;
+  margin-right: 0.5rem;
 }
 
 .button {
@@ -60,159 +45,226 @@
   border: 1px solid #555;
   border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
+  font-family: inherit;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
 }
 
 .button:hover {
   background: #444;
+  border-color: #00ff88;
+  transform: translateY(-1px);
 }
 
-.viewIndicator {
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  transition: background-color 0.3s;
+.button:active {
+  transform: translateY(0);
 }
 
-.viewIndicator.spymaster {
-  background: #8b0000;
+.buttonToggle[data-active="true"] {
+  background: #00ff88;
+  color: #000;
+  border-color: #00ff88;
 }
 
-.viewIndicator.player {
-  background: #2c5aa0;
+.buttonReset {
+  background: #ff4444;
+  border-color: #ff4444;
 }
 
-.grid {
+.buttonReset:hover {
+  background: #ff6666;
+  border-color: #ff6666;
+}
+
+.sceneIndicator {
+  margin-left: 1rem;
+  color: #00ff88;
+  font-weight: bold;
+}
+
+.scene {
+  margin-bottom: 2rem;
+}
+
+.sceneTitle {
+  color: #00ff88;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sceneDescription {
+  color: #888;
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+.cardGrid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
-  max-width: 800px;
-  margin: 0 auto;
+  max-width: 600px;
 }
 
-.cardWrapper {
-  position: relative;
-  aspect-ratio: 3/2;
+/* Card Styles */
+.card {
   padding: 1rem;
-  border: 2px solid #333;
   border-radius: 8px;
-  background: #222;
-  color: white;
-  text-align: center;
   cursor: pointer;
-  transition:
-    transform 0.2s,
-    background-color 0.3s;
+  position: relative;
+  user-select: none;
+  min-height: 100px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
-.cardWrapper:hover {
+.card:hover:not(.card--selected) {
   transform: scale(1.05);
 }
 
-.cardWrapper.selected {
-  background: #444;
+.card--selected {
+  cursor: default;
 }
 
-.cardWrapper.colorRed {
-  background: #8b0000;
+/* State-based card styles */
+.card--hidden {
+  opacity: 0;
 }
 
-.cardWrapper.colorBlue {
-  background: #2c5aa0;
+.card--visible {
+  background: #f0f0f0;
+  border: 2px solid #ccc;
+  color: #333;
 }
 
-.cardWrapper.colorNeutral {
-  background: #8b6914;
+.card--visible-colored {
+  color: white;
 }
 
-.cardWrapper.colorBlack {
-  background: #000;
+.card--visible-colored.card--team-red {
+  background: linear-gradient(135deg, #ff444422, #ff444444);
+  border: 3px solid #ff4444;
+  box-shadow: 0 0 20px #ff444466;
+}
+
+.card--visible-colored.card--team-blue {
+  background: linear-gradient(135deg, #4444ff22, #4444ff44);
+  border: 3px solid #4444ff;
+  box-shadow: 0 0 20px #4444ff66;
+}
+
+.card--visible-colored.card--team-neutral {
+  background: linear-gradient(135deg, #88888822, #88888844);
+  border: 3px solid #888888;
+  box-shadow: 0 0 20px #88888866;
+}
+
+.card--visible-colored.card--team-assassin {
+  background: linear-gradient(135deg, #00000022, #00000044);
+  border: 3px solid #ffff00;
+  box-shadow: 0 0 20px #ffff0066;
+}
+
+.card--visible-covered {
+  color: white;
+  transform: rotateY(180deg);
+}
+
+.card--visible-covered.card--team-red {
+  background: #ff4444;
+  border: 2px solid #ff4444;
+}
+
+.card--visible-covered.card--team-blue {
+  background: #4444ff;
+  border: 2px solid #4444ff;
+}
+
+.card--visible-covered.card--team-neutral {
+  background: #888888;
+  border: 2px solid #888888;
+}
+
+.card--visible-covered.card--team-assassin {
+  background: #000000;
+  border: 2px solid #ffff00;
+  box-shadow: 0 0 30px #ffff00;
 }
 
 .cardWord {
   font-weight: bold;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.cardState {
+.cardTeamLabel {
   font-size: 0.8rem;
-  color: #aaa;
-  margin-top: 0.5rem;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
-.renderCount {
+.cardTeamHint {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.cardTransitionIndicator {
   position: absolute;
   top: 4px;
   right: 4px;
-  background: red;
-  color: white;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: bold;
+  font-size: 0.7rem;
+  color: #00ff88;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
-/* Animations */
-.animateDealIn {
-  animation: dealIn 0.5s ease-out;
+.cardPendingIndicator {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  font-size: 0.7rem;
+  color: #ff8800;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
-.animateSpymasterRevealIn {
-  animation: colorFadeIn 0.3s ease-out;
+/* Debug Info */
+.debugInfo {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: #2a2a2a;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  border: 1px solid #333;
 }
 
-.animateSpymasterRevealOut {
-  animation: colorFadeOut 0.3s ease-out;
+.debugTitle {
+  color: #00ff88;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 1rem;
 }
 
-.animateCoverCard {
-  animation: coverCard 0.4s ease-out;
-}
-
-@keyframes dealIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes colorFadeIn {
-  from {
-    opacity: 0.7;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes colorFadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0.7;
-  }
-}
-
-@keyframes coverCard {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
+.debugContent {
+  background: #1a1a1a;
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  color: #888;
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
