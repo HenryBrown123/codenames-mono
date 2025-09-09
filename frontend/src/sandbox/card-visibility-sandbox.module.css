@@ -415,3 +415,55 @@
 .viewIndicator.player {
   background: #2c5aa0;
 }
+
+/* Add to card-visibility-sandbox.module.css */
+
+/* Cover card overlay - matches your game */
+.coverCard {
+  position: absolute;
+  inset: 0;
+  background: #555;
+  border: 2px solid #333;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: white;
+  z-index: 5;
+  transform-origin: center;
+}
+
+/* Team color variants for cover cards */
+.coverCard.coverRed {
+  background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+  border-color: #ff6666;
+}
+
+.coverCard.coverBlue {
+  background: linear-gradient(135deg, #4444ff 0%, #0000cc 100%);
+  border-color: #6666ff;
+}
+
+.coverCard.coverNeutral {
+  background: linear-gradient(135deg, #999 0%, #666 100%);
+  border-color: #aaa;
+}
+
+.coverCard.coverAssassin {
+  background: linear-gradient(135deg, #333 0%, #000 100%);
+  border-color: #ffff00;
+  box-shadow: inset 0 0 30px rgba(255, 255, 0, 0.3);
+}
+
+.coverWord {
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.coverTeam {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  text-transform: uppercase;
+}

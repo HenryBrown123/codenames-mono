@@ -1,18 +1,23 @@
 // card-visibility-sandbox.tsx
-import React, {
-  memo,
-  useCallback,
-  useRef,
-  useEffect,
-  useState,
-  useLayoutEffect,
-} from "react";
+import React, { memo, useCallback, useRef, useEffect, useState } from "react";
 import { create } from "zustand";
 import styles from "./card-visibility-sandbox.module.css";
 
 // ============= TYPES =============
-type VisualState = "hidden" | "visible" | "visible-colored" | "visible-covered";
-type GameEvent = "deal-in" | "spymaster-reveal" | "spymaster-hide" | "cover-card";
+type VisualState = 
+  | "hidden" 
+  | "visible" 
+  | "visible-colored" 
+  | "visible-processing"  // When selected but no teamName yet
+  | "visible-covered";    // When selected and has teamName
+
+type GameEvent = 
+  | "deal-in" 
+  | "spymaster-reveal" 
+  | "spymaster-hide" 
+  | "start-processing"    // Triggered by selected: true
+  | "cover-card";         // Triggered by teamName being set
+
 type ViewMode = "normal" | "spymaster";
 
 interface Card {
@@ -24,6 +29,15 @@ interface Card {
 interface TransitionContext {
   viewMode: ViewMode;
   card: Card;
+}
+
+interface AnimationTracker {
+  cardId: string;
+  elementName: string;
+  status: "pending" | "running" | "finished";
+  progress: number;
+  event?: GameEvent;
+  startTime?: number;
 }
 
 // ============= ANIMATION TYPES =============
@@ -99,7 +113,39 @@ const CARD_ANIMATIONS: AnimationConfig = {
       easing: "ease-in",
     },
   },
+  
+  "start-processing": {
+    // Immediate strikethrough effect
+    ".card-word": {
+      keyframes: [
+        { opacity: "1", textDecoration: "none", transform: "scale(1)" },
+        { opacity: "0.5", textDecoration: "line-through", transform: "scale(0.95)" },
+      ],
+      duration: 300,
+      easing: "ease-out",
+    },
+    // Subtle pulse on the container
+    ".card-container": {
+      keyframes: [
+        { transform: "scale(1)", filter: "brightness(1)" },
+        { transform: "scale(0.98)", filter: "brightness(0.9)" },
+      ],
+      duration: 400,
+      easing: "ease-in-out",
+    },
+    // Show processing spinner
+    ".processing-spinner": {
+      keyframes: [
+        { opacity: "0", transform: "scale(0.5) rotate(0deg)" },
+        { opacity: "1", transform: "scale(1) rotate(180deg)" },
+      ],
+      duration: 500,
+      easing: "ease-out",
+    },
+  },
+
   "cover-card": {
+    // Keep existing animations for base card elements
     ".card-container": {
       keyframes: [
         { transform: "rotateY(0deg) scale(1)" },
@@ -111,29 +157,38 @@ const CARD_ANIMATIONS: AnimationConfig = {
     },
     ".card-word": {
       keyframes: [
-        { opacity: "1", transform: "scale(1)" },
+        { opacity: "0.5", transform: "scale(0.95)" },  // Already faded from processing
         { opacity: "0", transform: "scale(0.8)" },
       ],
       duration: 300,
       easing: "ease-in",
     },
-    ".card-badge": {
+    ".processing-spinner": {
       keyframes: [
-        { opacity: "0", transform: "scale(0)" },
-        { opacity: "1", transform: "scale(1.2)" },
-        { opacity: "1", transform: "scale(1)" },
+        { opacity: "1", transform: "scale(1) rotate(180deg)" },
+        { opacity: "0", transform: "scale(0.5) rotate(360deg)" },
       ],
-      duration: 600,
-      delay: 300,
-      easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      duration: 300,
+      easing: "ease-in",
     },
+    // UPDATE THIS to match your actual coverCard animation:
     ".cover-card": {
       keyframes: [
-        { opacity: "0", transform: "translateY(-100%) rotate(-10deg) scale(0.8)" },
-        { opacity: "1", transform: "translateY(0) rotate(0) scale(1)" },
+        {
+          transform: "translateX(-100vw) translateY(-100vh) rotate(-6deg)",
+          opacity: "0",
+        },
+        {
+          transform: "translateX(0) translateY(0) rotate(2deg)",
+          opacity: "1",
+        },
+        {
+          transform: "translateX(0) translateY(0) rotate(0)",
+          opacity: "1",
+        },
       ],
       duration: 600,
-      easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      easing: "ease-out",
     },
   },
 };
@@ -147,6 +202,7 @@ interface StateTransition {
 }
 
 const CARD_STATE_MACHINE: StateTransition[] = [
+  // Existing transitions
   {
     from: "hidden",
     to: "visible",
@@ -165,17 +221,41 @@ const CARD_STATE_MACHINE: StateTransition[] = [
     event: "spymaster-hide",
     condition: (ctx) => ctx.viewMode === "normal" && !ctx.card.selected,
   },
+  
+  // NEW: Processing transitions
+  {
+    from: "visible",
+    to: "visible-processing",
+    event: "start-processing",
+    condition: (ctx) => ctx.card.selected && !ctx.card.teamName,
+  },
+  {
+    from: "visible-colored",
+    to: "visible-processing",
+    event: "start-processing",
+    condition: (ctx) => ctx.card.selected && !ctx.card.teamName,
+  },
+  
+  // NEW: From processing to covered when teamName arrives
+  {
+    from: "visible-processing",
+    to: "visible-covered",
+    event: "cover-card",
+    condition: (ctx) => ctx.card.selected && !!ctx.card.teamName,
+  },
+  
+  // Direct to covered if somehow we have both immediately
   {
     from: "visible",
     to: "visible-covered",
     event: "cover-card",
-    condition: (ctx) => ctx.card.selected,
+    condition: (ctx) => ctx.card.selected && !!ctx.card.teamName,
   },
   {
     from: "visible-colored",
     to: "visible-covered",
     event: "cover-card",
-    condition: (ctx) => ctx.card.selected,
+    condition: (ctx) => ctx.card.selected && !!ctx.card.teamName,
   },
 ];
 
@@ -208,6 +288,7 @@ async function simulateCardGuess(word: string): Promise<{
   success: boolean;
   outcome: string;
   message: string;
+  teamName: "red" | "blue" | "neutral" | "assassin";
 }> {
   console.log(`🎯 Processing guess for: ${word}`);
 
@@ -215,23 +296,33 @@ async function simulateCardGuess(word: string): Promise<{
   await new Promise((resolve) => setTimeout(resolve, delay));
 
   const rand = Math.random();
-  if (rand < 0.6) {
+  if (rand < 0.4) {
     return {
       success: true,
       outcome: "CORRECT_TEAM_CARD",
       message: `✅ ${word} was your team's agent!`,
+      teamName: "red",
     };
-  } else if (rand < 0.8) {
+  } else if (rand < 0.6) {
     return {
       success: true,
       outcome: "OTHER_TEAM_CARD",
       message: `❌ ${word} was the enemy agent!`,
+      teamName: "blue",
     };
-  } else {
+  } else if (rand < 0.9) {
     return {
       success: true,
       outcome: "BYSTANDER_CARD",
       message: `🟨 ${word} was a bystander`,
+      teamName: "neutral",
+    };
+  } else {
+    return {
+      success: true,
+      outcome: "ASSASSIN_CARD",
+      message: `☠️ ${word} was the assassin!`,
+      teamName: "assassin",
     };
   }
 }
@@ -251,6 +342,8 @@ interface CardVisibilityStore {
   // Core state
   cards: Map<string, CardState>;
   viewMode: ViewMode;
+  animationTrackers: AnimationTracker[];
+  timeScale: number;
 
   // Card operations
   initCard: (cardId: string, initialState: VisualState) => void;
@@ -265,6 +358,11 @@ interface CardVisibilityStore {
   // Getters
   getCard: (cardId: string) => CardState | undefined;
 
+  // Animation tracking
+  updateAnimationTracker: (tracker: AnimationTracker) => void;
+  clearAnimationTrackers: (cardId: string) => void;
+  setTimeScale: (scale: number) => void;
+
   // Utility
   reset: () => void;
 }
@@ -272,6 +370,8 @@ interface CardVisibilityStore {
 const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => ({
   cards: new Map(),
   viewMode: "normal",
+  animationTrackers: [],
+  timeScale: 1,
 
   initCard: (cardId, initialState) => {
     set((state) => {
@@ -329,7 +429,24 @@ const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => ({
 
   getCard: (cardId) => get().cards.get(cardId),
 
-  reset: () => set({ cards: new Map(), viewMode: "normal" }),
+  updateAnimationTracker: (tracker) =>
+    set((state) => ({
+      animationTrackers: [
+        ...state.animationTrackers.filter(
+          (t) => !(t.cardId === tracker.cardId && t.elementName === tracker.elementName)
+        ),
+        tracker,
+      ],
+    })),
+
+  clearAnimationTrackers: (cardId) =>
+    set((state) => ({
+      animationTrackers: state.animationTrackers.filter((t) => t.cardId !== cardId),
+    })),
+
+  setTimeScale: (scale) => set({ timeScale: scale }),
+
+  reset: () => set({ cards: new Map(), viewMode: "normal", animationTrackers: [] }),
 }));
 
 // ============= ANIMATION CONTAINER =============
@@ -339,6 +456,7 @@ interface AnimationContainerProps {
   onComplete?: () => void;
   animations: AnimationConfig;
   children: React.ReactNode;
+  cardId: string;
 }
 
 const AnimationContainer: React.FC<AnimationContainerProps> = ({
@@ -347,11 +465,14 @@ const AnimationContainer: React.FC<AnimationContainerProps> = ({
   onComplete,
   animations,
   children,
+  cardId,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const animationsRef = useRef<Animation[]>([]);
+  const timeScale = useCardVisibilityStore((s) => s.timeScale);
+  const updateTracker = useCardVisibilityStore((s) => s.updateAnimationTracker);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!ref.current || !event) return;
 
     const eventConfig = animations[event];
@@ -362,6 +483,9 @@ const AnimationContainer: React.FC<AnimationContainerProps> = ({
     animationsRef.current = [];
 
     const runningAnimations: Animation[] = [];
+    
+    // ADD A DEMO DELAY FOR PENDING STATE (200ms so it's visible)
+    const PENDING_DELAY = 200;
 
     Object.entries(eventConfig).forEach(([selector, definition]) => {
       const targets = ref.current!.querySelectorAll<HTMLElement>(selector);
@@ -370,33 +494,98 @@ const AnimationContainer: React.FC<AnimationContainerProps> = ({
         const delay =
           typeof definition.delay === "function" ? definition.delay(index) : definition.delay || 0;
 
-        const animation = target.animate(definition.keyframes, {
-          duration: definition.duration || 1000,
-          delay,
-          easing: definition.easing || "ease",
-          fill: "forwards",
-        });
+        // Apply time scaling
+        const scaledDuration = (definition.duration || 1000) * timeScale;
+        const scaledDelay = delay * timeScale;
 
-        runningAnimations.push(animation);
+        // Track animation as PENDING immediately
+        if (cardId) {
+          updateTracker({
+            cardId,
+            elementName: selector,
+            status: "pending",
+            progress: 0,
+            event: event as GameEvent,
+            startTime: Date.now(),
+          });
+        }
+
+        // ADD THE DEMO DELAY before starting animation
+        setTimeout(() => {
+          const animation = target.animate(definition.keyframes, {
+            duration: scaledDuration,
+            delay: scaledDelay,
+            easing: definition.easing || "ease",
+            fill: "forwards",
+          });
+
+          runningAnimations.push(animation);
+
+          if (cardId) {
+            // Mark as RUNNING when animation actually starts
+            setTimeout(() => {
+              updateTracker({
+                cardId,
+                elementName: selector,
+                status: "running",
+                progress: 0,
+                event: event as GameEvent,
+                startTime: Date.now(),
+              });
+            }, scaledDelay);
+
+            const updateProgress = () => {
+              if (animation.playState === "running" && animation.currentTime !== null) {
+                const currentTimeMs = Number(animation.currentTime);
+                const progress = Math.min(1, Math.max(0, currentTimeMs / scaledDuration));
+                updateTracker({
+                  cardId,
+                  elementName: selector,
+                  status: "running",
+                  progress,
+                  event: event as GameEvent,
+                });
+              }
+            };
+
+            const progressInterval = setInterval(updateProgress, 50);
+
+            animation.finished.then(() => {
+              clearInterval(progressInterval);
+              updateTracker({
+                cardId,
+                elementName: selector,
+                status: "finished",
+                progress: 1,
+                event: event as GameEvent,
+              });
+            }).catch(() => {
+              clearInterval(progressInterval);
+            });
+          }
+        }, PENDING_DELAY); // Use the demo delay here
       });
     });
 
-    animationsRef.current = runningAnimations;
+    // Delay the completion tracking to account for pending delay
+    setTimeout(() => {
+      animationsRef.current = runningAnimations;
 
-    if (onComplete && runningAnimations.length > 0) {
-      const allFinished = runningAnimations.map((anim) =>
-        anim.finished.catch(() => {
-          /* cancelled is ok */
-        }),
-      );
+      if (onComplete && runningAnimations.length > 0) {
+        const allFinished = runningAnimations.map((anim) =>
+          anim.finished.catch(() => {
+            /* cancelled is ok */
+          }),
+        );
 
-      Promise.all(allFinished).then(onComplete);
-    }
+        Promise.all(allFinished).then(onComplete);
+      }
+    }, PENDING_DELAY);
 
     return () => {
       animationsRef.current.forEach((anim) => anim.cancel());
     };
-  }, [event, index, onComplete, animations]);
+  }, [event, index, onComplete, animations, timeScale, updateTracker, cardId]);
 
   return <div ref={ref}>{children}</div>;
 };
@@ -456,15 +645,12 @@ const GameCard = memo<{
   card: Card;
   index: number;
   onClick: (word: string) => void;
-  isPending: boolean;
-  pendingWord?: string;
   initialState?: VisualState;
-}>(({ card, index, onClick, isPending, pendingWord, initialState = "hidden" }) => {
+}>(({ card, index, onClick, initialState = "hidden" }) => {
   const { state, animationEvent, completeTransition } = useCardVisibility(card, initialState);
-  const isThisCardPending = isPending && pendingWord === card.word;
 
   const handleClick = () => {
-    if (!card.selected && !isPending) {
+    if (!card.selected) {
       onClick(card.word);
     }
   };
@@ -474,6 +660,7 @@ const GameCard = memo<{
     card.selected && styles.selected,
     state === "visible-colored" &&
       styles[`color${card.teamName.charAt(0).toUpperCase() + card.teamName.slice(1)}`],
+    state === "visible-processing" && styles.processing,
   ]
     .filter(Boolean)
     .join(" ");
@@ -484,45 +671,49 @@ const GameCard = memo<{
       index={index}
       onComplete={completeTransition}
       animations={CARD_ANIMATIONS}
+      cardId={card.word}
     >
       <div
         className={cardClasses}
         onClick={handleClick}
         data-state={state}
         data-team={card.teamName}
+        data-card-id={card.word}
       >
         <div className={`${styles.cardWord} card-container`}>
           <span className="card-word">{card.word}</span>
         </div>
 
-        <div className={`${styles.cardState} card-badge`}>
-          {state === "visible-covered" ? (
-            <span>
-              {card.teamName === "assassin" ? "☠️ ASSASSIN" : card.teamName.toUpperCase()}
-            </span>
-          ) : state === "visible-colored" ? (
-            <span>[{card.teamName}]</span>
-          ) : null}
-        </div>
-
-        {/* Cover card overlay */}
-        {state === "visible-covered" && (
-          <div className={`${styles.coverCard} cover-card ${
-            card.teamName === 'red' ? styles.coverRed :
-            card.teamName === 'blue' ? styles.coverBlue :
-            card.teamName === 'neutral' ? styles.coverNeutral :
-            card.teamName === 'assassin' ? styles.coverAssassin :
-            ''
-          }`}>
-            <span className="cover-word">{card.word}</span>
-            <span className="cover-team">{card.teamName.toUpperCase()}</span>
+        {/* Show spinner during processing state */}
+        {state === "visible-processing" && (
+          <div className={`${styles.processingSpinner} processing-spinner`}>
+            <div className={styles.spinner} />
           </div>
         )}
 
-        {isThisCardPending && (
-          <div className={styles.pendingOverlay}>
-            <div className={styles.spinner} />
-            <span>Processing...</span>
+        <div className={`${styles.cardState} card-badge`}>
+          {state === "visible-colored" && (
+            <span>[{card.teamName}]</span>
+          )}
+        </div>
+
+        {/* Cover card renders when we have teamName */}
+        {card.selected && card.teamName && (
+          <div
+            className={`${styles.coverCard} cover-card ${
+              card.teamName === "red"
+                ? styles.coverRed
+                : card.teamName === "blue"
+                  ? styles.coverBlue
+                  : card.teamName === "neutral"
+                    ? styles.coverNeutral
+                    : card.teamName === "assassin"
+                      ? styles.coverAssassin
+                      : ""
+            }`}
+          >
+            <span className="cover-word">{card.word}</span>
+            <span className="cover-team">{card.teamName.toUpperCase()}</span>
           </div>
         )}
       </div>
@@ -531,6 +722,77 @@ const GameCard = memo<{
 });
 
 GameCard.displayName = "GameCard";
+
+// ============= SWIMLANE VISUALIZER =============
+const SwimLaneVisualizer = () => {
+  const trackers = useCardVisibilityStore((s) => s.animationTrackers);
+
+  const lanes = ["pending", "running", "finished"];
+  const laneColors = {
+    pending: "#ffaa00",
+    running: "#00aaff",
+    finished: "#00ff00",
+  };
+
+  const groupedByStatus = lanes.reduce(
+    (acc, lane) => {
+      acc[lane] = trackers.filter((t) => t.status === lane);
+      return acc;
+    },
+    {} as Record<string, AnimationTracker[]>,
+  );
+
+  return (
+    <div className={styles.swimlanes}>
+      <h3 className={styles.swimlanesTitle}>Animation Swimlanes</h3>
+      <div className={styles.swimlanesContainer}>
+        {lanes.map((lane) => (
+          <div key={lane} className={styles.swimlane}>
+            <div 
+              className={`${styles.swimlaneHeader} ${styles[lane]}`}
+              style={{ backgroundColor: laneColors[lane as keyof typeof laneColors] }}
+            >
+              {lane.toUpperCase()} ({groupedByStatus[lane].length})
+            </div>
+            <div className={styles.swimlaneContent}>
+              {groupedByStatus[lane].map((tracker) => (
+                <div
+                  key={`${tracker.cardId}-${tracker.elementName}`}
+                  className={`${styles.swimlaneItem} ${tracker.status === "finished" ? styles.finished : ""}`}
+                  style={{
+                    transform: `translateX(${tracker.progress * 20}px)`,
+                    transition: "transform 0.2s",
+                    opacity: tracker.status === "finished" ? 0.6 : 1,
+                  }}
+                >
+                  <div className={styles.swimlaneItemTitle}>{tracker.cardId}</div>
+                  <div className={styles.swimlaneItemElement}>{tracker.elementName}</div>
+                  {tracker.event && (
+                    <div className={styles.swimlaneItemEvent}>{tracker.event}</div>
+                  )}
+                  {tracker.status === "running" && (
+                    <div className={styles.swimlaneProgress}>
+                      <div
+                        className={styles.swimlaneProgressBar}
+                        style={{ 
+                          width: `${tracker.progress * 100}%`,
+                          backgroundColor: "#00aaff",
+                          height: "4px",
+                          borderRadius: "2px",
+                          transition: "width 0.1s"
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 // ============= MAIN DEMO =============
 export default function CardAnimationSystem() {
@@ -547,37 +809,38 @@ export default function CardAnimationSystem() {
   ]);
 
   const [scene, setScene] = useState<"lobby" | "game" | "outcome">("lobby");
-  const [pendingGuess, setPendingGuess] = useState<{
-    word: string;
-    status: "pending" | "success";
-    message?: string;
-  } | null>(null);
 
   const viewMode = useCardVisibilityStore((s) => s.viewMode);
   const toggleViewMode = useCardVisibilityStore((s) => s.toggleViewMode);
+  const timeScale = useCardVisibilityStore((s) => s.timeScale);
+  const setTimeScale = useCardVisibilityStore((s) => s.setTimeScale);
   const reset = useCardVisibilityStore((s) => s.reset);
 
   const handleCardClick = async (word: string) => {
     console.log(`\n========== CARD CLICK FLOW ==========`);
     console.log(`1️⃣ User clicked: ${word}`);
-
-    setPendingGuess({ word, status: "pending" });
-
-    const result = await simulateCardGuess(word);
-
-    console.log(`2️⃣ ${result.message}`);
-
+    
+    // First update: mark as selected (triggers "start-processing")
     setCards((prev) =>
-      prev.map((card) => (card.word === word ? { ...card, selected: true } : card)),
+      prev.map((card) => 
+        card.word === word 
+          ? { ...card, selected: true }  // No teamName yet
+          : card
+      ),
     );
 
-    setPendingGuess({
-      word,
-      status: "success",
-      message: result.message,
-    });
-
-    setTimeout(() => setPendingGuess(null), 2000);
+    // Simulate async work
+    const result = await simulateCardGuess(word);
+    console.log(`2️⃣ ${result.message}`);
+    
+    // Second update: add teamName (triggers "cover-card")
+    setCards((prev) =>
+      prev.map((card) => 
+        card.word === word 
+          ? { ...card, selected: true, teamName: result.teamName }
+          : card
+      ),
+    );
   };
 
   const handleSceneChange = (newScene: typeof scene) => {
@@ -587,7 +850,6 @@ export default function CardAnimationSystem() {
 
   const handleReset = () => {
     setCards((prev) => prev.map((card) => ({ ...card, selected: false })));
-    setPendingGuess(null);
     reset();
     setScene("lobby");
   };
@@ -603,21 +865,18 @@ export default function CardAnimationSystem() {
             <button
               className={scene === "lobby" ? styles.buttonActive : styles.button}
               onClick={() => handleSceneChange("lobby")}
-              disabled={pendingGuess?.status === "pending"}
             >
               Lobby
             </button>
             <button
               className={scene === "game" ? styles.buttonActive : styles.button}
               onClick={() => handleSceneChange("game")}
-              disabled={pendingGuess?.status === "pending"}
             >
               Game
             </button>
             <button
               className={scene === "outcome" ? styles.buttonActive : styles.button}
               onClick={() => handleSceneChange("outcome")}
-              disabled={pendingGuess?.status === "pending"}
             >
               Outcome
             </button>
@@ -628,36 +887,32 @@ export default function CardAnimationSystem() {
             <button
               className={viewMode === "spymaster" ? styles.buttonActive : styles.button}
               onClick={toggleViewMode}
-              disabled={pendingGuess?.status === "pending"}
             >
               Toggle AR ({viewMode === "spymaster" ? "ON" : "OFF"})
             </button>
           </div>
 
+          <div className={styles.controlGroup}>
+            <strong>Speed:</strong>
+            <input
+              type="range"
+              min="0.1"
+              max="5"
+              step="0.1"
+              value={timeScale}
+              onChange={(e) => setTimeScale(parseFloat(e.target.value))}
+              style={{ width: "100px" }}
+            />
+            <span>{timeScale.toFixed(1)}x</span>
+          </div>
+
           <button
             className={styles.buttonDanger}
             onClick={handleReset}
-            disabled={pendingGuess?.status === "pending"}
           >
             Reset
           </button>
         </div>
-
-        {pendingGuess && (
-          <div
-            className={
-              pendingGuess.status === "pending" ? styles.pendingMessage : styles.successMessage
-            }
-          >
-            {pendingGuess.status === "pending" && (
-              <>
-                <div className={styles.spinner} />
-                <span>Processing: {pendingGuess.word}...</span>
-              </>
-            )}
-            {pendingGuess.status === "success" && <span>{pendingGuess.message}</span>}
-          </div>
-        )}
 
         <div className={styles.grid}>
           {scene === "lobby" &&
@@ -667,8 +922,6 @@ export default function CardAnimationSystem() {
                 card={card}
                 index={index}
                 onClick={handleCardClick}
-                isPending={pendingGuess?.status === "pending" || false}
-                pendingWord={pendingGuess?.word}
                 initialState="hidden"
               />
             ))}
@@ -680,8 +933,6 @@ export default function CardAnimationSystem() {
                 card={card}
                 index={index}
                 onClick={handleCardClick}
-                isPending={pendingGuess?.status === "pending" || false}
-                pendingWord={pendingGuess?.word}
                 initialState="visible"
               />
             ))}
@@ -693,11 +944,13 @@ export default function CardAnimationSystem() {
                 card={card}
                 index={index}
                 onClick={() => {}}
-                isPending={false}
                 initialState="visible"
               />
             ))}
         </div>
+
+        {/* Add swimlanes at the bottom */}
+        <SwimLaneVisualizer />
       </div>
     </div>
   );
