@@ -323,8 +323,8 @@ export const AnimationContainer: React.FC<AnimationContainerProps> = ({
   index = 0,
   onComplete,
   animations,
-  children,
   cardId,
+  children,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const animationsRef = useRef<Animation[]>([]);
@@ -341,7 +341,13 @@ export const AnimationContainer: React.FC<AnimationContainerProps> = ({
     animationsRef.current = [];
 
     const runningAnimations: Animation[] = [];
-    const PENDING_DELAY = 200 * timeScale;
+
+    // loop through the event/animation config objects using the key as the class for the query selector..
+    //
+    // e.g. if eventConfig = {".card-container" : {keyframes : []....}, {"".card-word" : {keyframes: [...]}}}
+    // then child elements of the animation container that include .card-container and .card-word as classes
+    // are animated based on the keyframe/animation config in the AnimationConfig object...
+    //
 
     Object.entries(eventConfig).forEach(([selector, definition]) => {
       const targets = ref.current!.querySelectorAll<HTMLElement>(selector);
@@ -350,77 +356,80 @@ export const AnimationContainer: React.FC<AnimationContainerProps> = ({
         const delay =
           typeof definition.delay === "function" ? definition.delay(index) : definition.delay || 0;
 
-        setTimeout(() => {
-          if (!ref.current?.contains(target)) return;
+        const animation = target.animate(definition.keyframes, {
+          duration: (definition.duration || 300) * timeScale,
+          delay: delay * timeScale,
+          easing: definition.easing || "ease",
+          fill: "both",
+        });
 
-          const animation = target.animate(definition.keyframes, {
-            duration: (definition.duration || 300) * timeScale,
-            delay: 0,
-            easing: definition.easing || "ease",
-            fill: "both",
-          });
+        // push promise up into the runningAnimations array...
+        // at this point the animation will start to animate based on the params passed into the .animate()
+        // func..
+        runningAnimations.push(animation);
 
-          runningAnimations.push(animation);
+        // this is updating the global store so other components can use the animation status, as well as helping
+        // with debug..
+        updateTracker({
+          cardId,
+          elementName: selector,
+          status: "pending",
+          progress: 0,
+          event: event as GameEvent,
+        });
 
+        // another promise, this time the animation.ready() promise will resolve when the animation
+        // has started, and no longer in a "ready" state...
+        animation.ready.then(() => {
           updateTracker({
             cardId,
             elementName: selector,
-            status: "pending",
+            status: "running",
             progress: 0,
             event: event as GameEvent,
           });
 
-          if (animation.playState === "running") {
-            const updateProgress = () => {
-              if (!animation.currentTime || !animation.effect?.getComputedTiming) return;
-              const timing = animation.effect.getComputedTiming();
-              const progress = timing.progress ?? 0;
+          const updateProgress = () => {
+            if (!animation.currentTime || !animation.effect?.getComputedTiming) return;
+            const timing = animation.effect.getComputedTiming();
+            const progress = timing.progress ?? 0;
 
-              if (animation.playState === "running") {
-                updateTracker({
-                  cardId,
-                  elementName: selector,
-                  status: "running",
-                  progress,
-                  event: event as GameEvent,
-                });
-              }
-            };
-
-            const progressInterval = setInterval(updateProgress, 50);
-
-            animation.finished
-              .then(() => {
-                clearInterval(progressInterval);
-                updateTracker({
-                  cardId,
-                  elementName: selector,
-                  status: "finished",
-                  progress: 1,
-                  event: event as GameEvent,
-                });
-              })
-              .catch(() => {
-                clearInterval(progressInterval);
+            if (animation.playState === "running") {
+              updateTracker({
+                cardId,
+                elementName: selector,
+                status: "running",
+                progress,
+                event: event as GameEvent,
               });
-          }
-        }, PENDING_DELAY);
+            }
+          };
+
+          const progressInterval = setInterval(updateProgress, 50);
+
+          animation.finished
+            .then(() => {
+              clearInterval(progressInterval);
+              updateTracker({
+                cardId,
+                elementName: selector,
+                status: "finished",
+                progress: 1,
+                event: event as GameEvent,
+              });
+            })
+            .catch(() => {
+              clearInterval(progressInterval);
+            });
+        });
       });
     });
 
-    setTimeout(() => {
-      animationsRef.current = runningAnimations;
+    animationsRef.current = runningAnimations;
 
-      if (onComplete && runningAnimations.length > 0) {
-        const allFinished = runningAnimations.map((anim) =>
-          anim.finished.catch(() => {
-            /* cancelled is ok */
-          }),
-        );
-
-        Promise.all(allFinished).then(onComplete);
-      }
-    }, PENDING_DELAY);
+    if (onComplete && runningAnimations.length > 0) {
+      Promise.all(runningAnimations.map((anim) => anim.finished.catch(() => {}))).then(onComplete);
+    }
 
     return () => {
       animationsRef.current.forEach((anim) => anim.cancel());
