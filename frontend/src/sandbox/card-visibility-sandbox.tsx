@@ -4,25 +4,30 @@ import { create } from "zustand";
 import styles from "./card-visibility-sandbox.module.css";
 
 // ============= TYPES =============
-type VisualState = 
-  | "hidden" 
-  | "visible" 
-  | "visible-colored" 
-  | "visible-processing"  // When selected but no teamName yet
-  | "visible-covered";    // When selected and has teamName
+type VisualState =
+  | "hidden"
+  | "visible"
+  | "visible-colored"
+  | "visible-covered"; // When selected and has teamName
 
-type GameEvent = 
-  | "deal-in" 
-  | "spymaster-reveal" 
-  | "spymaster-hide" 
-  | "start-processing"    // Triggered by selected: true
-  | "cover-card";         // Triggered by teamName being set
+type GameEvent =
+  | "deal-in"
+  | "spymaster-reveal"
+  | "spymaster-hide"
+  | "cover-card"; // Triggered by teamName being set
 
 type ViewMode = "normal" | "spymaster";
 
-interface Card {
+// The "true" game state (like from database)
+interface GameData {
   word: string;
   teamName: "red" | "blue" | "neutral" | "assassin";
+}
+
+// The client-side card state (what the player sees)
+interface Card {
+  word: string;
+  teamName?: "red" | "blue" | "neutral" | "assassin"; // Optional - only when revealed!
   selected: boolean;
 }
 
@@ -113,36 +118,7 @@ const CARD_ANIMATIONS: AnimationConfig = {
       easing: "ease-in",
     },
   },
-  
-  "start-processing": {
-    // Immediate strikethrough effect
-    ".card-word": {
-      keyframes: [
-        { opacity: "1", textDecoration: "none", transform: "scale(1)" },
-        { opacity: "0.5", textDecoration: "line-through", transform: "scale(0.95)" },
-      ],
-      duration: 300,
-      easing: "ease-out",
-    },
-    // Subtle pulse on the container
-    ".card-container": {
-      keyframes: [
-        { transform: "scale(1)", filter: "brightness(1)" },
-        { transform: "scale(0.98)", filter: "brightness(0.9)" },
-      ],
-      duration: 400,
-      easing: "ease-in-out",
-    },
-    // Show processing spinner
-    ".processing-spinner": {
-      keyframes: [
-        { opacity: "0", transform: "scale(0.5) rotate(0deg)" },
-        { opacity: "1", transform: "scale(1) rotate(180deg)" },
-      ],
-      duration: 500,
-      easing: "ease-out",
-    },
-  },
+
 
   "cover-card": {
     // Keep existing animations for base card elements
@@ -157,7 +133,7 @@ const CARD_ANIMATIONS: AnimationConfig = {
     },
     ".card-word": {
       keyframes: [
-        { opacity: "0.5", transform: "scale(0.95)" },  // Already faded from processing
+        { opacity: "0.5", transform: "scale(0.95)" }, // Already faded from processing
         { opacity: "0", transform: "scale(0.8)" },
       ],
       duration: 300,
@@ -221,30 +197,8 @@ const CARD_STATE_MACHINE: StateTransition[] = [
     event: "spymaster-hide",
     condition: (ctx) => ctx.viewMode === "normal" && !ctx.card.selected,
   },
-  
-  // NEW: Processing transitions
-  {
-    from: "visible",
-    to: "visible-processing",
-    event: "start-processing",
-    condition: (ctx) => ctx.card.selected && !ctx.card.teamName,
-  },
-  {
-    from: "visible-colored",
-    to: "visible-processing",
-    event: "start-processing",
-    condition: (ctx) => ctx.card.selected && !ctx.card.teamName,
-  },
-  
-  // NEW: From processing to covered when teamName arrives
-  {
-    from: "visible-processing",
-    to: "visible-covered",
-    event: "cover-card",
-    condition: (ctx) => ctx.card.selected && !!ctx.card.teamName,
-  },
-  
-  // Direct to covered if somehow we have both immediately
+
+  // Direct to covered when teamName is revealed
   {
     from: "visible",
     to: "visible-covered",
@@ -292,8 +246,8 @@ async function simulateCardGuess(word: string): Promise<{
 }> {
   console.log(`🎯 Processing guess for: ${word}`);
 
-  const delay = 500 + Math.random() * 1500;
-  await new Promise((resolve) => setTimeout(resolve, delay));
+  // Keep it async but no artificial delay
+  await Promise.resolve();
 
   const rand = Math.random();
   if (rand < 0.4) {
@@ -326,6 +280,19 @@ async function simulateCardGuess(word: string): Promise<{
     };
   }
 }
+
+// Initial game data (your "database")
+const GAME_DATA: GameData[] = [
+  { word: "AGENT", teamName: "red" },
+  { word: "SPY", teamName: "blue" },
+  { word: "CODE", teamName: "neutral" },
+  { word: "SECRET", teamName: "red" },
+  { word: "MISSION", teamName: "blue" },
+  { word: "TARGET", teamName: "neutral" },
+  { word: "CIPHER", teamName: "red" },
+  { word: "INTEL", teamName: "assassin" },
+  { word: "SHADOW", teamName: "blue" },
+];
 
 // ============= CLEANER STORE =============
 interface CardState {
@@ -433,7 +400,7 @@ const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => ({
     set((state) => ({
       animationTrackers: [
         ...state.animationTrackers.filter(
-          (t) => !(t.cardId === tracker.cardId && t.elementName === tracker.elementName)
+          (t) => !(t.cardId === tracker.cardId && t.elementName === tracker.elementName),
         ),
         tracker,
       ],
@@ -483,9 +450,9 @@ const AnimationContainer: React.FC<AnimationContainerProps> = ({
     animationsRef.current = [];
 
     const runningAnimations: Animation[] = [];
-    
-    // ADD A DEMO DELAY FOR PENDING STATE (200ms so it's visible)
-    const PENDING_DELAY = 200;
+
+    // ADD A DEMO DELAY FOR PENDING STATE (200ms so it's visible) - scaled with animation speed
+    const PENDING_DELAY = 200 * timeScale;
 
     Object.entries(eventConfig).forEach(([selector, definition]) => {
       const targets = ref.current!.querySelectorAll<HTMLElement>(selector);
@@ -550,18 +517,20 @@ const AnimationContainer: React.FC<AnimationContainerProps> = ({
 
             const progressInterval = setInterval(updateProgress, 50);
 
-            animation.finished.then(() => {
-              clearInterval(progressInterval);
-              updateTracker({
-                cardId,
-                elementName: selector,
-                status: "finished",
-                progress: 1,
-                event: event as GameEvent,
+            animation.finished
+              .then(() => {
+                clearInterval(progressInterval);
+                updateTracker({
+                  cardId,
+                  elementName: selector,
+                  status: "finished",
+                  progress: 1,
+                  event: event as GameEvent,
+                });
+              })
+              .catch(() => {
+                clearInterval(progressInterval);
               });
-            }).catch(() => {
-              clearInterval(progressInterval);
-            });
           }
         }, PENDING_DELAY); // Use the demo delay here
       });
@@ -658,9 +627,8 @@ const GameCard = memo<{
   const cardClasses = [
     styles.cardWrapper,
     card.selected && styles.selected,
-    state === "visible-colored" &&
+    state === "visible-colored" && card.teamName &&
       styles[`color${card.teamName.charAt(0).toUpperCase() + card.teamName.slice(1)}`],
-    state === "visible-processing" && styles.processing,
   ]
     .filter(Boolean)
     .join(" ");
@@ -684,17 +652,8 @@ const GameCard = memo<{
           <span className="card-word">{card.word}</span>
         </div>
 
-        {/* Show spinner during processing state */}
-        {state === "visible-processing" && (
-          <div className={`${styles.processingSpinner} processing-spinner`}>
-            <div className={styles.spinner} />
-          </div>
-        )}
-
         <div className={`${styles.cardState} card-badge`}>
-          {state === "visible-colored" && (
-            <span>[{card.teamName}]</span>
-          )}
+          {state === "visible-colored" && card.teamName && <span>[{card.teamName}]</span>}
         </div>
 
         {/* Cover card renders when we have teamName */}
@@ -748,7 +707,7 @@ const SwimLaneVisualizer = () => {
       <div className={styles.swimlanesContainer}>
         {lanes.map((lane) => (
           <div key={lane} className={styles.swimlane}>
-            <div 
+            <div
               className={`${styles.swimlaneHeader} ${styles[lane]}`}
               style={{ backgroundColor: laneColors[lane as keyof typeof laneColors] }}
             >
@@ -767,19 +726,17 @@ const SwimLaneVisualizer = () => {
                 >
                   <div className={styles.swimlaneItemTitle}>{tracker.cardId}</div>
                   <div className={styles.swimlaneItemElement}>{tracker.elementName}</div>
-                  {tracker.event && (
-                    <div className={styles.swimlaneItemEvent}>{tracker.event}</div>
-                  )}
+                  {tracker.event && <div className={styles.swimlaneItemEvent}>{tracker.event}</div>}
                   {tracker.status === "running" && (
                     <div className={styles.swimlaneProgress}>
                       <div
                         className={styles.swimlaneProgressBar}
-                        style={{ 
+                        style={{
                           width: `${tracker.progress * 100}%`,
                           backgroundColor: "#00aaff",
                           height: "4px",
                           borderRadius: "2px",
-                          transition: "width 0.1s"
+                          transition: "width 0.1s",
                         }}
                       />
                     </div>
@@ -796,17 +753,14 @@ const SwimLaneVisualizer = () => {
 
 // ============= MAIN DEMO =============
 export default function CardAnimationSystem() {
-  const [cards, setCards] = useState<Card[]>([
-    { word: "AGENT", teamName: "red", selected: false },
-    { word: "SPY", teamName: "blue", selected: false },
-    { word: "CODE", teamName: "neutral", selected: false },
-    { word: "SECRET", teamName: "red", selected: false },
-    { word: "MISSION", teamName: "blue", selected: false },
-    { word: "TARGET", teamName: "neutral", selected: false },
-    { word: "CIPHER", teamName: "red", selected: false },
-    { word: "INTEL", teamName: "assassin", selected: false },
-    { word: "SHADOW", teamName: "blue", selected: false },
-  ]);
+  // Client state - no teamNames initially!
+  const [cards, setCards] = useState<Card[]>(
+    GAME_DATA.map(data => ({
+      word: data.word,
+      selected: false,
+      // teamName intentionally not set - client doesn't know yet
+    }))
+  );
 
   const [scene, setScene] = useState<"lobby" | "game" | "outcome">("lobby");
 
@@ -819,25 +773,28 @@ export default function CardAnimationSystem() {
   const handleCardClick = async (word: string) => {
     console.log(`\n========== CARD CLICK FLOW ==========`);
     console.log(`1️⃣ User clicked: ${word}`);
-    
+
     // First update: mark as selected (triggers "start-processing")
     setCards((prev) =>
-      prev.map((card) => 
-        card.word === word 
-          ? { ...card, selected: true }  // No teamName yet
-          : card
+      prev.map((card) =>
+        card.word === word
+          ? { ...card, selected: true } // No teamName yet
+          : card,
       ),
     );
 
     // Simulate async work
-    const result = await simulateCardGuess(word);
-    console.log(`2️⃣ ${result.message}`);
+    await simulateCardGuess(word);
     
-    // Second update: add teamName (triggers "cover-card")
+    // Get the actual team from game data (simulating server response)
+    const actualTeam = GAME_DATA.find(d => d.word === word)?.teamName;
+    console.log(`2️⃣ Revealed team: ${actualTeam} for ${word}`);
+
+    // Second update: now reveal the team (triggers "cover-card")
     setCards((prev) =>
       prev.map((card) => 
         card.word === word 
-          ? { ...card, selected: true, teamName: result.teamName }
+          ? { ...card, selected: true, teamName: actualTeam }
           : card
       ),
     );
@@ -848,8 +805,23 @@ export default function CardAnimationSystem() {
     setScene(newScene);
   };
 
+  // For spymaster view, you'd temporarily show teams without setting them
+  const getCardForDisplay = (card: Card): Card => {
+    if (viewMode === "spymaster" && !card.selected) {
+      // Show the team from game data, but don't modify the card state
+      const gameData = GAME_DATA.find(d => d.word === card.word);
+      return { ...card, teamName: gameData?.teamName };
+    }
+    return card;
+  };
+
+  // Reset would clear revealed teams
   const handleReset = () => {
-    setCards((prev) => prev.map((card) => ({ ...card, selected: false })));
+    setCards(GAME_DATA.map(data => ({
+      word: data.word,
+      selected: false,
+      // teamName cleared again
+    })));
     reset();
     setScene("lobby");
   };
@@ -906,10 +878,7 @@ export default function CardAnimationSystem() {
             <span>{timeScale.toFixed(1)}x</span>
           </div>
 
-          <button
-            className={styles.buttonDanger}
-            onClick={handleReset}
-          >
+          <button className={styles.buttonDanger} onClick={handleReset}>
             Reset
           </button>
         </div>
@@ -919,7 +888,7 @@ export default function CardAnimationSystem() {
             cards.map((card, index) => (
               <GameCard
                 key={`${scene}-${card.word}`}
-                card={card}
+                card={getCardForDisplay(card)}
                 index={index}
                 onClick={handleCardClick}
                 initialState="hidden"
@@ -930,7 +899,7 @@ export default function CardAnimationSystem() {
             cards.map((card, index) => (
               <GameCard
                 key={`${scene}-${card.word}`}
-                card={card}
+                card={getCardForDisplay(card)}
                 index={index}
                 onClick={handleCardClick}
                 initialState="visible"
@@ -941,7 +910,7 @@ export default function CardAnimationSystem() {
             cards.map((card, index) => (
               <GameCard
                 key={`${scene}-${card.word}`}
-                card={card}
+                card={getCardForDisplay(card)}
                 index={index}
                 onClick={() => {}}
                 initialState="visible"

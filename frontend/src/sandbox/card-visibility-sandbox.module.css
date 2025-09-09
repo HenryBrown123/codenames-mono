@@ -418,7 +418,7 @@
 
 /* Add to card-visibility-sandbox.module.css */
 
-/* Cover card overlay - matches your game */
+/* Make cover cards start hidden/offscreen by default */
 .coverCard {
   position: absolute;
   inset: 0;
@@ -432,6 +432,16 @@
   color: white;
   z-index: 5;
   transform-origin: center;
+  
+  /* START OFFSCREEN - this is the key fix */
+  transform: translateX(-100vw) translateY(-100vh) rotate(-6deg);
+  opacity: 0;
+}
+
+/* Only show when animation completes and state is visible-covered */
+.cardWrapper[data-state="visible-covered"] .coverCard {
+  transform: translateX(0) translateY(0) rotate(0);
+  opacity: 1;
 }
 
 /* Team color variants for cover cards */
