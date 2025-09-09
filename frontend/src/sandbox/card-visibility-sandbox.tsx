@@ -1,637 +1,37 @@
 // card-visibility-sandbox.tsx
-import React, { memo, useCallback, useRef, useEffect, useState } from "react";
-import { create } from "zustand";
+import React, { memo, useCallback, useState } from "react";
 import styles from "./card-visibility-sandbox.module.css";
-
-// ============= TYPES =============
-type VisualState =
-  | "hidden"
-  | "visible"
-  | "visible-colored"
-  | "visible-covered"; // When selected and has teamName
-
-type GameEvent =
-  | "deal-in"
-  | "spymaster-reveal"
-  | "spymaster-hide"
-  | "cover-card"; // Triggered by teamName being set
-
-type ViewMode = "normal" | "spymaster";
-
-// The "true" game state (like from database)
-interface GameData {
-  word: string;
-  teamName: "red" | "blue" | "neutral" | "assassin";
-}
-
-// The client-side card state (what the player sees)
-interface Card {
-  word: string;
-  teamName?: "red" | "blue" | "neutral" | "assassin"; // Optional - only when revealed!
-  selected: boolean;
-}
-
-interface TransitionContext {
-  viewMode: ViewMode;
-  card: Card;
-}
-
-interface AnimationTracker {
-  cardId: string;
-  elementName: string;
-  status: "pending" | "running" | "finished";
-  progress: number;
-  event?: GameEvent;
-  startTime?: number;
-}
-
-// ============= ANIMATION TYPES =============
-interface AnimationDefinition {
-  keyframes: Keyframe[];
-  duration?: number;
-  delay?: number | ((index: number) => number);
-  easing?: string;
-}
-
-interface AnimationConfig {
-  [event: string]: {
-    [selector: string]: AnimationDefinition;
-  };
-}
-
-// ============= ANIMATION CONFIG =============
-const CARD_ANIMATIONS: AnimationConfig = {
-  "deal-in": {
-    ".card-container": {
-      keyframes: [
-        { opacity: "0", transform: "translateY(-50px) rotate(5deg) scale(0.9)" },
-        { opacity: "1", transform: "translateY(0) rotate(0) scale(1)" },
-      ],
-      duration: 500,
-      delay: (index) => index * 50,
-      easing: "ease-out",
-    },
-    ".card-word": {
-      keyframes: [
-        { opacity: "0", transform: "scale(0.5)" },
-        { opacity: "1", transform: "scale(1)" },
-      ],
-      duration: 300,
-      delay: (index) => index * 50 + 200,
-      easing: "ease-out",
-    },
-  },
-  "spymaster-reveal": {
-    ".card-word": {
-      keyframes: [
-        { transform: "scale(1)", filter: "brightness(1)" },
-        { transform: "scale(1.1)", filter: "brightness(1.2)" },
-      ],
-      duration: 300,
-      delay: (index) => index * 20,
-    },
-    ".card-badge": {
-      keyframes: [
-        { opacity: "0", transform: "translateY(10px) scale(0.8)" },
-        { opacity: "1", transform: "translateY(0) scale(1)" },
-      ],
-      duration: 400,
-      delay: (index) => index * 20 + 100,
-      easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-    },
-  },
-  "spymaster-hide": {
-    ".card-word": {
-      keyframes: [
-        { transform: "scale(1.1)", filter: "brightness(1.2)" },
-        { transform: "scale(1)", filter: "brightness(1)" },
-      ],
-      duration: 200,
-      easing: "ease-in",
-    },
-    ".card-badge": {
-      keyframes: [
-        { opacity: "1", transform: "translateY(0)" },
-        { opacity: "0", transform: "translateY(10px)" },
-      ],
-      duration: 200,
-      easing: "ease-in",
-    },
-  },
-
-
-  "cover-card": {
-    // Keep existing animations for base card elements
-    ".card-container": {
-      keyframes: [
-        { transform: "rotateY(0deg) scale(1)" },
-        { transform: "rotateY(90deg) scale(0.95)" },
-        { transform: "rotateY(180deg) scale(1)" },
-      ],
-      duration: 600,
-      easing: "ease-in-out",
-    },
-    ".card-word": {
-      keyframes: [
-        { opacity: "0.5", transform: "scale(0.95)" }, // Already faded from processing
-        { opacity: "0", transform: "scale(0.8)" },
-      ],
-      duration: 300,
-      easing: "ease-in",
-    },
-    ".processing-spinner": {
-      keyframes: [
-        { opacity: "1", transform: "scale(1) rotate(180deg)" },
-        { opacity: "0", transform: "scale(0.5) rotate(360deg)" },
-      ],
-      duration: 300,
-      easing: "ease-in",
-    },
-    // UPDATE THIS to match your actual coverCard animation:
-    ".cover-card": {
-      keyframes: [
-        {
-          transform: "translateX(-100vw) translateY(-100vh) rotate(-6deg)",
-          opacity: "0",
-        },
-        {
-          transform: "translateX(0) translateY(0) rotate(2deg)",
-          opacity: "1",
-        },
-        {
-          transform: "translateX(0) translateY(0) rotate(0)",
-          opacity: "1",
-        },
-      ],
-      duration: 600,
-      easing: "ease-out",
-    },
-  },
-};
-
-// ============= STATE MACHINE =============
-interface StateTransition {
-  from: VisualState;
-  to: VisualState;
-  event: GameEvent;
-  condition: (context: TransitionContext) => boolean;
-}
-
-const CARD_STATE_MACHINE: StateTransition[] = [
-  // Existing transitions
-  {
-    from: "hidden",
-    to: "visible",
-    event: "deal-in",
-    condition: () => true,
-  },
-  {
-    from: "visible",
-    to: "visible-colored",
-    event: "spymaster-reveal",
-    condition: (ctx) => ctx.viewMode === "spymaster" && !ctx.card.selected && !!ctx.card.teamName,
-  },
-  {
-    from: "visible-colored",
-    to: "visible",
-    event: "spymaster-hide",
-    condition: (ctx) => ctx.viewMode === "normal" && !ctx.card.selected,
-  },
-
-  // Direct to covered when teamName is revealed
-  {
-    from: "visible",
-    to: "visible-covered",
-    event: "cover-card",
-    condition: (ctx) => ctx.card.selected && !!ctx.card.teamName,
-  },
-  {
-    from: "visible-colored",
-    to: "visible-covered",
-    event: "cover-card",
-    condition: (ctx) => ctx.card.selected && !!ctx.card.teamName,
-  },
-];
-
-/**
- * Derives the target state and event based on current state and context
- */
-function deriveTargetState(
-  currentState: VisualState,
-  context: TransitionContext,
-): { targetState: VisualState; event: GameEvent | null } {
-  const transition = CARD_STATE_MACHINE.find(
-    (t) => t.from === currentState && t.condition(context),
-  );
-
-  if (transition) {
-    return {
-      targetState: transition.to,
-      event: transition.event,
-    };
-  }
-
-  return {
-    targetState: currentState,
-    event: null,
-  };
-}
-
-// ============= MOCK ASYNC PROCESS =============
-async function simulateCardGuess(word: string): Promise<{
-  success: boolean;
-  outcome: string;
-  message: string;
-  teamName: "red" | "blue" | "neutral" | "assassin";
-}> {
-  console.log(`🎯 Processing guess for: ${word}`);
-
-  // Keep it async but no artificial delay
-  await Promise.resolve();
-
-  const rand = Math.random();
-  if (rand < 0.4) {
-    return {
-      success: true,
-      outcome: "CORRECT_TEAM_CARD",
-      message: `✅ ${word} was your team's agent!`,
-      teamName: "red",
-    };
-  } else if (rand < 0.6) {
-    return {
-      success: true,
-      outcome: "OTHER_TEAM_CARD",
-      message: `❌ ${word} was the enemy agent!`,
-      teamName: "blue",
-    };
-  } else if (rand < 0.9) {
-    return {
-      success: true,
-      outcome: "BYSTANDER_CARD",
-      message: `🟨 ${word} was a bystander`,
-      teamName: "neutral",
-    };
-  } else {
-    return {
-      success: true,
-      outcome: "ASSASSIN_CARD",
-      message: `☠️ ${word} was the assassin!`,
-      teamName: "assassin",
-    };
-  }
-}
-
-// Initial game data (your "database")
-const GAME_DATA: GameData[] = [
-  { word: "AGENT", teamName: "red" },
-  { word: "SPY", teamName: "blue" },
-  { word: "CODE", teamName: "neutral" },
-  { word: "SECRET", teamName: "red" },
-  { word: "MISSION", teamName: "blue" },
-  { word: "TARGET", teamName: "neutral" },
-  { word: "CIPHER", teamName: "red" },
-  { word: "INTEL", teamName: "assassin" },
-  { word: "SHADOW", teamName: "blue" },
-];
-
-// ============= CLEANER STORE =============
-interface CardState {
-  visualState: VisualState;
-  transition?: {
-    from: VisualState;
-    to: VisualState;
-    event: GameEvent;
-    startedAt: number;
-  };
-}
-
-interface CardVisibilityStore {
-  // Core state
-  cards: Map<string, CardState>;
-  viewMode: ViewMode;
-  animationTrackers: AnimationTracker[];
-  timeScale: number;
-
-  // Card operations
-  initCard: (cardId: string, initialState: VisualState) => void;
-  updateCardState: (cardId: string, state: VisualState) => void;
-  startTransition: (cardId: string, from: VisualState, to: VisualState, event: GameEvent) => void;
-  completeTransition: (cardId: string) => void;
-
-  // View operations
-  setViewMode: (mode: ViewMode) => void;
-  toggleViewMode: () => void;
-
-  // Getters
-  getCard: (cardId: string) => CardState | undefined;
-
-  // Animation tracking
-  updateAnimationTracker: (tracker: AnimationTracker) => void;
-  clearAnimationTrackers: (cardId: string) => void;
-  setTimeScale: (scale: number) => void;
-
-  // Utility
-  reset: () => void;
-}
-
-const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => ({
-  cards: new Map(),
-  viewMode: "normal",
-  animationTrackers: [],
-  timeScale: 1,
-
-  initCard: (cardId, initialState) => {
-    set((state) => {
-      if (state.cards.has(cardId)) return state;
-
-      const newCards = new Map(state.cards);
-      newCards.set(cardId, { visualState: initialState });
-      return { cards: newCards };
-    });
-  },
-
-  updateCardState: (cardId, visualState) => {
-    set((state) => {
-      const newCards = new Map(state.cards);
-      const card = newCards.get(cardId);
-      if (card) {
-        newCards.set(cardId, { ...card, visualState });
-      }
-      return { cards: newCards };
-    });
-  },
-
-  startTransition: (cardId, from, to, event) => {
-    console.log(`🎬 Starting transition for ${cardId}: ${from} -> ${to} (${event})`);
-    set((state) => {
-      const newCards = new Map(state.cards);
-      newCards.set(cardId, {
-        visualState: from,
-        transition: { from, to, event, startedAt: Date.now() },
-      });
-      return { cards: newCards };
-    });
-  },
-
-  completeTransition: (cardId) => {
-    const card = get().cards.get(cardId);
-    if (!card?.transition) return;
-
-    console.log(
-      `✅ Completed transition for ${cardId}: ${card.transition.from} -> ${card.transition.to}`,
-    );
-    set((state) => {
-      const newCards = new Map(state.cards);
-      newCards.set(cardId, {
-        visualState: card.transition!.to,
-        transition: undefined,
-      });
-      return { cards: newCards };
-    });
-  },
-
-  setViewMode: (mode) => set({ viewMode: mode }),
-  toggleViewMode: () =>
-    set((state) => ({ viewMode: state.viewMode === "normal" ? "spymaster" : "normal" })),
-
-  getCard: (cardId) => get().cards.get(cardId),
-
-  updateAnimationTracker: (tracker) =>
-    set((state) => ({
-      animationTrackers: [
-        ...state.animationTrackers.filter(
-          (t) => !(t.cardId === tracker.cardId && t.elementName === tracker.elementName),
-        ),
-        tracker,
-      ],
-    })),
-
-  clearAnimationTrackers: (cardId) =>
-    set((state) => ({
-      animationTrackers: state.animationTrackers.filter((t) => t.cardId !== cardId),
-    })),
-
-  setTimeScale: (scale) => set({ timeScale: scale }),
-
-  reset: () => set({ cards: new Map(), viewMode: "normal", animationTrackers: [] }),
-}));
-
-// ============= ANIMATION CONTAINER =============
-interface AnimationContainerProps {
-  event: string | null;
-  index?: number;
-  onComplete?: () => void;
-  animations: AnimationConfig;
-  children: React.ReactNode;
-  cardId: string;
-}
-
-const AnimationContainer: React.FC<AnimationContainerProps> = ({
-  event,
-  index = 0,
-  onComplete,
-  animations,
-  children,
-  cardId,
-}) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const animationsRef = useRef<Animation[]>([]);
-  const timeScale = useCardVisibilityStore((s) => s.timeScale);
-  const updateTracker = useCardVisibilityStore((s) => s.updateAnimationTracker);
-
-  useEffect(() => {
-    if (!ref.current || !event) return;
-
-    const eventConfig = animations[event];
-    if (!eventConfig) return;
-
-    // Cancel previous animations
-    animationsRef.current.forEach((anim) => anim.cancel());
-    animationsRef.current = [];
-
-    const runningAnimations: Animation[] = [];
-
-    // ADD A DEMO DELAY FOR PENDING STATE (200ms so it's visible) - scaled with animation speed
-    const PENDING_DELAY = 200 * timeScale;
-
-    Object.entries(eventConfig).forEach(([selector, definition]) => {
-      const targets = ref.current!.querySelectorAll<HTMLElement>(selector);
-
-      targets.forEach((target) => {
-        const delay =
-          typeof definition.delay === "function" ? definition.delay(index) : definition.delay || 0;
-
-        // Apply time scaling
-        const scaledDuration = (definition.duration || 1000) * timeScale;
-        const scaledDelay = delay * timeScale;
-
-        // Track animation as PENDING immediately
-        if (cardId) {
-          updateTracker({
-            cardId,
-            elementName: selector,
-            status: "pending",
-            progress: 0,
-            event: event as GameEvent,
-            startTime: Date.now(),
-          });
-        }
-
-        // ADD THE DEMO DELAY before starting animation
-        setTimeout(() => {
-          const animation = target.animate(definition.keyframes, {
-            duration: scaledDuration,
-            delay: scaledDelay,
-            easing: definition.easing || "ease",
-            fill: "forwards",
-          });
-
-          runningAnimations.push(animation);
-
-          if (cardId) {
-            // Mark as RUNNING when animation actually starts
-            setTimeout(() => {
-              updateTracker({
-                cardId,
-                elementName: selector,
-                status: "running",
-                progress: 0,
-                event: event as GameEvent,
-                startTime: Date.now(),
-              });
-            }, scaledDelay);
-
-            const updateProgress = () => {
-              if (animation.playState === "running" && animation.currentTime !== null) {
-                const currentTimeMs = Number(animation.currentTime);
-                const progress = Math.min(1, Math.max(0, currentTimeMs / scaledDuration));
-                updateTracker({
-                  cardId,
-                  elementName: selector,
-                  status: "running",
-                  progress,
-                  event: event as GameEvent,
-                });
-              }
-            };
-
-            const progressInterval = setInterval(updateProgress, 50);
-
-            animation.finished
-              .then(() => {
-                clearInterval(progressInterval);
-                updateTracker({
-                  cardId,
-                  elementName: selector,
-                  status: "finished",
-                  progress: 1,
-                  event: event as GameEvent,
-                });
-              })
-              .catch(() => {
-                clearInterval(progressInterval);
-              });
-          }
-        }, PENDING_DELAY); // Use the demo delay here
-      });
-    });
-
-    // Delay the completion tracking to account for pending delay
-    setTimeout(() => {
-      animationsRef.current = runningAnimations;
-
-      if (onComplete && runningAnimations.length > 0) {
-        const allFinished = runningAnimations.map((anim) =>
-          anim.finished.catch(() => {
-            /* cancelled is ok */
-          }),
-        );
-
-        Promise.all(allFinished).then(onComplete);
-      }
-    }, PENDING_DELAY);
-
-    return () => {
-      animationsRef.current.forEach((anim) => anim.cancel());
-    };
-  }, [event, index, onComplete, animations, timeScale, updateTracker, cardId]);
-
-  return <div ref={ref}>{children}</div>;
-};
-
-// ============= HOOKS =============
-/**
- * Hook for managing card visibility state and transitions
- */
-function useCardVisibility(card: Card, initialState: VisualState = "visible") {
-  const viewMode = useCardVisibilityStore((state) => state.viewMode);
-  const cardState = useCardVisibilityStore((state) => state.getCard(card.word));
-  const initCard = useCardVisibilityStore((state) => state.initCard);
-  const startTransition = useCardVisibilityStore((state) => state.startTransition);
-  const completeTransition = useCardVisibilityStore((state) => state.completeTransition);
-
-  // useEffect 1: Initialize card if needed
-  // Why: Only runs once when card doesn't exist in store
-  useEffect(() => {
-    if (!cardState) {
-      initCard(card.word, initialState);
-    }
-  }, [cardState, initCard, card.word, initialState]);
-
-  const currentState = cardState?.visualState || initialState;
-  const activeTransition = cardState?.transition;
-
-  const context: TransitionContext = { viewMode, card };
-  const { targetState, event } = deriveTargetState(currentState, context);
-
-  // useEffect 2: Handle state transitions
-  // Why: Runs when card state changes or target state changes
-  // Moved out of render to avoid React warnings about setState during render
-  useEffect(() => {
-    const needsTransition = !activeTransition && currentState !== targetState && event;
-
-    if (needsTransition && event) {
-      console.log(`🔄 ${card.word}: ${currentState} -> ${targetState} (${event})`);
-      startTransition(card.word, currentState, targetState, event);
-    }
-  }, [card.word, currentState, targetState, event, activeTransition, startTransition]);
-
-  const handleComplete = useCallback(() => {
-    completeTransition(card.word);
-  }, [card.word, completeTransition]);
-
-  return {
-    state: currentState,
-    targetState,
-    isTransitioning: !!activeTransition,
-    animationEvent: activeTransition?.event || null,
-    completeTransition: handleComplete,
-  };
-}
-
-// ============= COMPONENTS =============
+import {
+  Card,
+  GameData,
+  GameEvent,
+  ViewMode,
+  CARD_ANIMATIONS,
+  useCardVisibilityStore,
+  useCardVisibility,
+  AnimationContainer,
+} from "./card-visbility-sandbox.hooks";
+
+// ============= DEMO COMPONENTS =============
 const GameCard = memo<{
   card: Card;
   index: number;
   onClick: (word: string) => void;
-  initialState?: VisualState;
+  initialState?: "hidden" | "visible";
 }>(({ card, index, onClick, initialState = "hidden" }) => {
   const { state, animationEvent, completeTransition } = useCardVisibility(card, initialState);
 
+  // Only apply team color to base card if NOT selected and in colored state
+  const teamColor =
+    !card.selected && card.teamName && state === "visible-colored"
+      ? styles[`color${card.teamName.charAt(0).toUpperCase()}${card.teamName.slice(1)}`]
+      : "";
+
   const handleClick = () => {
-    if (!card.selected) {
+    if (!card.selected && state !== "hidden") {
       onClick(card.word);
     }
   };
-
-  const cardClasses = [
-    styles.cardWrapper,
-    card.selected && styles.selected,
-    state === "visible-colored" && card.teamName &&
-      styles[`color${card.teamName.charAt(0).toUpperCase() + card.teamName.slice(1)}`],
-  ]
-    .filter(Boolean)
-    .join(" ");
 
   return (
     <AnimationContainer
@@ -642,37 +42,25 @@ const GameCard = memo<{
       cardId={card.word}
     >
       <div
-        className={cardClasses}
+        className={`${styles.cardWrapper} ${card.selected ? styles.selected : ""} ${teamColor} card-container`}
         onClick={handleClick}
         data-state={state}
-        data-team={card.teamName}
-        data-card-id={card.word}
       >
-        <div className={`${styles.cardWord} card-container`}>
-          <span className="card-word">{card.word}</span>
+        <div className={`${styles.cardWord} card-word`}>{card.word}</div>
+        <div className={`${styles.cardBadge} card-badge`}>
+          {state === "visible-colored" && card.teamName}
         </div>
-
-        <div className={`${styles.cardState} card-badge`}>
-          {state === "visible-colored" && card.teamName && <span>[{card.teamName}]</span>}
+        <div className={styles.cardState}>
+          {state} {animationEvent && `(${animationEvent})`}
         </div>
-
-        {/* Cover card renders when we have teamName */}
         {card.selected && card.teamName && (
           <div
-            className={`${styles.coverCard} cover-card ${
-              card.teamName === "red"
-                ? styles.coverRed
-                : card.teamName === "blue"
-                  ? styles.coverBlue
-                  : card.teamName === "neutral"
-                    ? styles.coverNeutral
-                    : card.teamName === "assassin"
-                      ? styles.coverAssassin
-                      : ""
-            }`}
+            className={`${styles.coverCard} ${
+              styles[`cover${card.teamName.charAt(0).toUpperCase()}${card.teamName.slice(1)}`]
+            } cover-card`}
           >
-            <span className="cover-word">{card.word}</span>
-            <span className="cover-team">{card.teamName.toUpperCase()}</span>
+            <div className={styles.coverWord}>{card.word}</div>
+            <div className={styles.coverTeam}>{card.teamName}</div>
           </div>
         )}
       </div>
@@ -683,244 +71,560 @@ const GameCard = memo<{
 GameCard.displayName = "GameCard";
 
 // ============= SWIMLANE VISUALIZER =============
-const SwimLaneVisualizer = () => {
-  const trackers = useCardVisibilityStore((s) => s.animationTrackers);
+const SwimlanesVisualizer: React.FC = () => {
+  const animationTrackers = useCardVisibilityStore((s) => s.animationTrackers);
 
-  const lanes = ["pending", "running", "finished"];
-  const laneColors = {
-    pending: "#ffaa00",
-    running: "#00aaff",
-    finished: "#00ff00",
-  };
-
-  const groupedByStatus = lanes.reduce(
-    (acc, lane) => {
-      acc[lane] = trackers.filter((t) => t.status === lane);
-      return acc;
-    },
-    {} as Record<string, AnimationTracker[]>,
-  );
+  const pending = animationTrackers.filter((t) => t.status === "pending");
+  const running = animationTrackers.filter((t) => t.status === "running");
+  const finished = animationTrackers.filter((t) => t.status === "finished");
 
   return (
     <div className={styles.swimlanes}>
-      <h3 className={styles.swimlanesTitle}>Animation Swimlanes</h3>
+      <h2 className={styles.swimlanesTitle}>Animation Timeline</h2>
       <div className={styles.swimlanesContainer}>
-        {lanes.map((lane) => (
-          <div key={lane} className={styles.swimlane}>
-            <div
-              className={`${styles.swimlaneHeader} ${styles[lane]}`}
-              style={{ backgroundColor: laneColors[lane as keyof typeof laneColors] }}
-            >
-              {lane.toUpperCase()} ({groupedByStatus[lane].length})
-            </div>
-            <div className={styles.swimlaneContent}>
-              {groupedByStatus[lane].map((tracker) => (
-                <div
-                  key={`${tracker.cardId}-${tracker.elementName}`}
-                  className={`${styles.swimlaneItem} ${tracker.status === "finished" ? styles.finished : ""}`}
-                  style={{
-                    transform: `translateX(${tracker.progress * 20}px)`,
-                    transition: "transform 0.2s",
-                    opacity: tracker.status === "finished" ? 0.6 : 1,
-                  }}
-                >
-                  <div className={styles.swimlaneItemTitle}>{tracker.cardId}</div>
-                  <div className={styles.swimlaneItemElement}>{tracker.elementName}</div>
-                  {tracker.event && <div className={styles.swimlaneItemEvent}>{tracker.event}</div>}
-                  {tracker.status === "running" && (
-                    <div className={styles.swimlaneProgress}>
-                      <div
-                        className={styles.swimlaneProgressBar}
-                        style={{
-                          width: `${tracker.progress * 100}%`,
-                          backgroundColor: "#00aaff",
-                          height: "4px",
-                          borderRadius: "2px",
-                          transition: "width 0.1s",
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+        <div className={styles.swimlane}>
+          <div className={`${styles.swimlaneHeader} ${styles.pending}`}>
+            Pending ({pending.length})
           </div>
+          <div className={styles.swimlaneContent}>
+            {pending.map((tracker, i) => (
+              <div
+                key={`${tracker.cardId}-${tracker.elementName}-${i}`}
+                className={styles.swimlaneItem}
+              >
+                <div className={styles.swimlaneItemTitle}>{tracker.cardId}</div>
+                <div className={styles.swimlaneItemElement}>{tracker.elementName}</div>
+                {tracker.event && <div className={styles.swimlaneItemEvent}>{tracker.event}</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.swimlane}>
+          <div className={`${styles.swimlaneHeader} ${styles.running}`}>
+            Running ({running.length})
+          </div>
+          <div className={styles.swimlaneContent}>
+            {running.map((tracker, i) => (
+              <div
+                key={`${tracker.cardId}-${tracker.elementName}-${i}`}
+                className={styles.swimlaneItem}
+              >
+                <div className={styles.swimlaneItemTitle}>{tracker.cardId}</div>
+                <div className={styles.swimlaneItemElement}>{tracker.elementName}</div>
+                {tracker.event && <div className={styles.swimlaneItemEvent}>{tracker.event}</div>}
+                <div className={styles.swimlaneProgress}>
+                  <div
+                    className={styles.swimlaneProgressBar}
+                    style={{ width: `${tracker.progress * 100}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.swimlane}>
+          <div className={`${styles.swimlaneHeader} ${styles.finished}`}>
+            Finished ({finished.length})
+          </div>
+          <div className={styles.swimlaneContent}>
+            {finished.slice(-10).map((tracker, i) => (
+              <div
+                key={`${tracker.cardId}-${tracker.elementName}-${i}`}
+                className={`${styles.swimlaneItem} ${styles.finished}`}
+              >
+                <div className={styles.swimlaneItemTitle}>{tracker.cardId}</div>
+                <div className={styles.swimlaneItemElement}>{tracker.elementName}</div>
+                {tracker.event && <div className={styles.swimlaneItemEvent}>{tracker.event}</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============= DEMO SCENES =============
+const DealInScene: React.FC = () => {
+  const [cards, setCards] = useState<Card[]>([]);
+  const reset = useCardVisibilityStore((s) => s.reset);
+
+  const dealCards = useCallback(() => {
+    reset();
+    const words = ["APPLE", "BANANA", "CHERRY", "DATE", "ELDERBERRY", "FIG", "GRAPE", "HONEYDEW"];
+    const newCards = words.map((word) => ({
+      word,
+      selected: false,
+    }));
+    setCards(newCards);
+  }, [reset]);
+
+  return (
+    <div>
+      <h2 className={styles.sceneTitle}>Scene 1: Cards Deal In</h2>
+      <div className={styles.controls}>
+        <button className={styles.button} onClick={dealCards}>
+          Deal Cards
+        </button>
+        <button className={styles.buttonDanger} onClick={() => setCards([])}>
+          Clear
+        </button>
+      </div>
+      <div className={styles.grid}>
+        {cards.map((card, i) => (
+          <GameCard key={card.word} card={card} index={i} onClick={() => {}} />
         ))}
       </div>
     </div>
   );
 };
 
-// ============= MAIN DEMO =============
-export default function CardAnimationSystem() {
-  // Client state - no teamNames initially!
-  const [cards, setCards] = useState<Card[]>(
-    GAME_DATA.map(data => ({
-      word: data.word,
-      selected: false,
-      // teamName intentionally not set - client doesn't know yet
-    }))
-  );
+const SpymasterViewScene: React.FC = () => {
+  const [gameData] = useState<GameData[]>([
+    { word: "OCEAN", teamName: "blue" },
+    { word: "FIRE", teamName: "red" },
+    { word: "MOUNTAIN", teamName: "neutral" },
+    { word: "SHADOW", teamName: "assassin" },
+    { word: "RIVER", teamName: "blue" },
+    { word: "SUNSET", teamName: "red" },
+    { word: "FOREST", teamName: "neutral" },
+    { word: "STORM", teamName: "blue" },
+  ]);
 
-  const [scene, setScene] = useState<"lobby" | "game" | "outcome">("lobby");
+  const [cards] = useState<Card[]>(
+    gameData.map((data) => ({
+      word: data.word,
+      teamName: data.teamName,
+      selected: false,
+    })),
+  );
 
   const viewMode = useCardVisibilityStore((s) => s.viewMode);
   const toggleViewMode = useCardVisibilityStore((s) => s.toggleViewMode);
+
+  return (
+    <div>
+      <h2 className={styles.sceneTitle}>Scene 2: Spymaster View Toggle</h2>
+      <div className={styles.stateInfo}>
+        <strong>View Mode:</strong> {viewMode}
+      </div>
+      <div className={styles.controls}>
+        <button
+          className={viewMode === "spymaster" ? styles.buttonActive : styles.button}
+          onClick={toggleViewMode}
+        >
+          Toggle Spymaster View
+        </button>
+      </div>
+      <div className={styles.grid}>
+        {cards.map((card, i) => (
+          <GameCard
+            key={card.word}
+            card={card}
+            index={i}
+            onClick={() => {}}
+            initialState="visible"
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const PlayerSelectionScene: React.FC = () => {
+  const [cards, setCards] = useState<Card[]>([
+    { word: "OCEAN", selected: false },
+    { word: "FIRE", selected: false },
+    { word: "MOUNTAIN", selected: false },
+    { word: "SHADOW", selected: false },
+    { word: "RIVER", selected: false },
+    { word: "SUNSET", selected: false },
+  ]);
+
+  const gameData: GameData[] = [
+    { word: "OCEAN", teamName: "blue" },
+    { word: "FIRE", teamName: "red" },
+    { word: "MOUNTAIN", teamName: "neutral" },
+    { word: "SHADOW", teamName: "assassin" },
+    { word: "RIVER", teamName: "blue" },
+    { word: "SUNSET", teamName: "red" },
+  ];
+
+  const handleCardClick = useCallback(
+    (word: string) => {
+      setCards((prev) =>
+        prev.map((card) => {
+          if (card.word === word) {
+            const gameCard = gameData.find((g) => g.word === word);
+            return {
+              ...card,
+              selected: true,
+              teamName: gameCard?.teamName,
+            };
+          }
+          return card;
+        }),
+      );
+    },
+    [gameData],
+  );
+
+  const resetCards = useCallback(() => {
+    setCards((prev) =>
+      prev.map((card) => ({
+        ...card,
+        selected: false,
+        teamName: undefined,
+      })),
+    );
+  }, []);
+
+  return (
+    <div>
+      <h2 className={styles.sceneTitle}>Scene 3: Player Card Selection</h2>
+      <div className={styles.controls}>
+        <button className={styles.buttonDanger} onClick={resetCards}>
+          Reset Selections
+        </button>
+      </div>
+      <div className={styles.grid}>
+        {cards.map((card, i) => (
+          <GameCard
+            key={card.word}
+            card={card}
+            index={i}
+            onClick={handleCardClick}
+            initialState="visible"
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const PerformanceStressTest: React.FC = () => {
+  const [cards, setCards] = useState<Card[]>([]);
+  const [isRunning, setIsRunning] = useState(false);
+  const viewMode = useCardVisibilityStore((s) => s.viewMode);
+  const toggleViewMode = useCardVisibilityStore((s) => s.toggleViewMode);
+  const reset = useCardVisibilityStore((s) => s.reset);
+  const setTimeScale = useCardVisibilityStore((s) => s.setTimeScale);
+
+  const teams: Array<"red" | "blue" | "neutral" | "assassin"> = [
+    "red",
+    "blue",
+    "neutral",
+    "assassin",
+  ];
+
+  // Generate a massive grid
+  const generateCards = useCallback((count: number) => {
+    const words = [];
+    for (let i = 0; i < count; i++) {
+      words.push(`WORD${i.toString().padStart(3, "0")}`);
+    }
+    return words.map((word, i) => ({
+      word,
+      teamName: teams[i % teams.length],
+      selected: false,
+    }));
+  }, []);
+
+  const startChaos = useCallback(() => {
+    reset();
+    setIsRunning(true);
+
+    // Start with 100 cards
+    const initialCards = generateCards(100);
+    setCards(initialCards);
+
+    // Randomly select cards over time
+    let selectionCount = 0;
+    const selectionInterval = setInterval(() => {
+      if (selectionCount >= 20) {
+        clearInterval(selectionInterval);
+        return;
+      }
+
+      setCards((prev) => {
+        const unselected = prev.filter((c) => !c.selected);
+        if (unselected.length === 0) return prev;
+
+        const randomIndex = Math.floor(Math.random() * unselected.length);
+        const cardToSelect = unselected[randomIndex];
+
+        return prev.map((card) =>
+          card.word === cardToSelect.word ? { ...card, selected: true } : card,
+        );
+      });
+      selectionCount++;
+    }, 500);
+
+    // Toggle view mode periodically
+    let toggleCount = 0;
+    const toggleInterval = setInterval(() => {
+      if (toggleCount >= 10) {
+        clearInterval(toggleInterval);
+        setIsRunning(false);
+        return;
+      }
+      toggleViewMode();
+      toggleCount++;
+    }, 2000);
+
+    // Cleanup
+    return () => {
+      clearInterval(selectionInterval);
+      clearInterval(toggleInterval);
+      setIsRunning(false);
+    };
+  }, [generateCards, reset, toggleViewMode]);
+
+  const waveDealIn = useCallback(() => {
+    reset();
+    const waveCards = generateCards(64);
+
+    // Deal in waves with different delays
+    waveCards.forEach((card, i) => {
+      setTimeout(
+        () => {
+          setCards((prev) => [...prev, card]);
+        },
+        Math.floor(i / 8) * 200,
+      ); // Groups of 8
+    });
+  }, [generateCards, reset]);
+
+  const spiralDealIn = useCallback(() => {
+    reset();
+    const gridSize = 10;
+    const spiralCards = generateCards(gridSize * gridSize);
+
+    // Calculate spiral order
+    const spiralOrder: number[] = [];
+    let top = 0,
+      bottom = gridSize - 1,
+      left = 0,
+      right = gridSize - 1;
+
+    while (top <= bottom && left <= right) {
+      for (let i = left; i <= right; i++) spiralOrder.push(top * gridSize + i);
+      top++;
+      for (let i = top; i <= bottom; i++) spiralOrder.push(i * gridSize + right);
+      right--;
+      if (top <= bottom) {
+        for (let i = right; i >= left; i--) spiralOrder.push(bottom * gridSize + i);
+        bottom--;
+      }
+      if (left <= right) {
+        for (let i = bottom; i >= top; i--) spiralOrder.push(i * gridSize + left);
+        left++;
+      }
+    }
+
+    spiralOrder.forEach((index, order) => {
+      setTimeout(() => {
+        setCards((prev) => {
+          const newCards = [...prev];
+          newCards[index] = spiralCards[index];
+          return newCards.filter(Boolean);
+        });
+      }, order * 30);
+    });
+  }, [generateCards, reset]);
+
+  return (
+    <div>
+      <h2 className={styles.sceneTitle}>Scene 4: Performance Stress Test 🚀</h2>
+
+      <div className={styles.controls}>
+        <button
+          className={isRunning ? styles.buttonActive : styles.button}
+          onClick={startChaos}
+          disabled={isRunning}
+        >
+          {isRunning ? "🔥 CHAOS MODE ACTIVE 🔥" : "Start Chaos Mode (100 cards)"}
+        </button>
+
+        <button className={styles.button} onClick={waveDealIn}>
+          Wave Deal (64 cards)
+        </button>
+
+        <button className={styles.button} onClick={spiralDealIn}>
+          Spiral Deal (100 cards)
+        </button>
+
+        <button className={styles.button} onClick={() => setTimeScale(0.1)}>
+          HYPERSPEED (0.1x)
+        </button>
+
+        <button
+          className={styles.buttonDanger}
+          onClick={() => {
+            reset();
+            setCards([]);
+          }}
+        >
+          Reset All
+        </button>
+      </div>
+
+      <div className={styles.stateInfo}>
+        <strong>Cards:</strong> {cards.length} |<strong> Selected:</strong>{" "}
+        {cards.filter((c) => c.selected).length} |<strong> View:</strong> {viewMode}
+      </div>
+
+      <div
+        className={styles.grid}
+        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))" }}
+      >
+        {cards.map((card, i) => (
+          <GameCard
+            key={card.word}
+            card={card}
+            index={i}
+            onClick={() => {}}
+            initialState="hidden"
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const HandoffSimulationScene: React.FC = () => {
+  const viewMode = useCardVisibilityStore((s) => s.viewMode);
+  const setViewMode = useCardVisibilityStore((s) => s.setViewMode);
+  const [isPending, setIsPending] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const [cards] = useState<Card[]>([
+    { word: "OCEAN", teamName: "blue", selected: false },
+    { word: "FIRE", teamName: "red", selected: false },
+    { word: "MOUNTAIN", teamName: "neutral", selected: false },
+    { word: "SHADOW", teamName: "assassin", selected: false },
+  ]);
+
+  const simulateHandoff = useCallback(() => {
+    setIsPending(true);
+    setIsSuccess(false);
+
+    setTimeout(() => {
+      setViewMode(viewMode === "normal" ? "spymaster" : "normal");
+      setIsPending(false);
+      setIsSuccess(true);
+
+      setTimeout(() => {
+        setIsSuccess(false);
+      }, 2000);
+    }, 1500);
+  }, [viewMode, setViewMode]);
+
+  return (
+    <div>
+      <h2 className={styles.sceneTitle}>Scene 4: Turn Handoff Simulation</h2>
+
+      <div className={styles.handoffControls}>
+        <h3>Current Player: {viewMode === "spymaster" ? "Spymaster" : "Field Operative"}</h3>
+        <button className={styles.button} onClick={simulateHandoff} disabled={isPending}>
+          {isPending ? "Handing off..." : "Hand Off Turn"}
+        </button>
+        <div
+          className={`${styles.viewIndicator} ${
+            viewMode === "spymaster" ? styles.spymaster : styles.player
+          }`}
+        >
+          {viewMode.toUpperCase()} VIEW
+        </div>
+      </div>
+
+      {isPending && (
+        <div className={styles.pendingMessage}>
+          <div className={styles.spinner}></div>
+          <span>Processing turn handoff...</span>
+        </div>
+      )}
+
+      {isSuccess && (
+        <div className={styles.successMessage}>
+          <span>✓ Turn handed off successfully!</span>
+        </div>
+      )}
+
+      <div className={styles.grid}>
+        {cards.map((card, i) => (
+          <GameCard
+            key={card.word}
+            card={card}
+            index={i}
+            onClick={() => {}}
+            initialState="visible"
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ============= MAIN SANDBOX =============
+export const CardVisibilitySandbox: React.FC = () => {
+  const [activeScene, setActiveScene] = useState(1);
   const timeScale = useCardVisibilityStore((s) => s.timeScale);
   const setTimeScale = useCardVisibilityStore((s) => s.setTimeScale);
+
   const reset = useCardVisibilityStore((s) => s.reset);
 
-  const handleCardClick = async (word: string) => {
-    console.log(`\n========== CARD CLICK FLOW ==========`);
-    console.log(`1️⃣ User clicked: ${word}`);
-
-    // First update: mark as selected (triggers "start-processing")
-    setCards((prev) =>
-      prev.map((card) =>
-        card.word === word
-          ? { ...card, selected: true } // No teamName yet
-          : card,
-      ),
-    );
-
-    // Simulate async work
-    await simulateCardGuess(word);
-    
-    // Get the actual team from game data (simulating server response)
-    const actualTeam = GAME_DATA.find(d => d.word === word)?.teamName;
-    console.log(`2️⃣ Revealed team: ${actualTeam} for ${word}`);
-
-    // Second update: now reveal the team (triggers "cover-card")
-    setCards((prev) =>
-      prev.map((card) => 
-        card.word === word 
-          ? { ...card, selected: true, teamName: actualTeam }
-          : card
-      ),
-    );
-  };
-
-  const handleSceneChange = (newScene: typeof scene) => {
-    console.log(`🎭 Scene change: ${scene} -> ${newScene}`);
-    setScene(newScene);
-  };
-
-  // For spymaster view, you'd temporarily show teams without setting them
-  const getCardForDisplay = (card: Card): Card => {
-    if (viewMode === "spymaster" && !card.selected) {
-      // Show the team from game data, but don't modify the card state
-      const gameData = GAME_DATA.find(d => d.word === card.word);
-      return { ...card, teamName: gameData?.teamName };
-    }
-    return card;
-  };
-
-  // Reset would clear revealed teams
-  const handleReset = () => {
-    setCards(GAME_DATA.map(data => ({
-      word: data.word,
-      selected: false,
-      // teamName cleared again
-    })));
+  React.useEffect(() => {
     reset();
-    setScene("lobby");
-  };
+  }, [activeScene, reset]);
 
   return (
     <div className={styles.container}>
       <div className={styles.wrapper}>
-        <h1 className={styles.title}>Animation System Demo</h1>
+        <h1 className={styles.title}>Card Visibility Animation System</h1>
 
         <div className={styles.controls}>
           <div className={styles.controlGroup}>
+            <strong>Animation Speed:</strong>
+            <button className={styles.button} onClick={() => setTimeScale(0.5)}>
+              0.5x
+            </button>
+            <button
+              className={timeScale === 1 ? styles.buttonActive : styles.button}
+              onClick={() => setTimeScale(1)}
+            >
+              1x
+            </button>
+            <button className={styles.button} onClick={() => setTimeScale(2)}>
+              2x
+            </button>
+          </div>
+
+          <div className={styles.controlGroup}>
             <strong>Scene:</strong>
-            <button
-              className={scene === "lobby" ? styles.buttonActive : styles.button}
-              onClick={() => handleSceneChange("lobby")}
-            >
-              Lobby
-            </button>
-            <button
-              className={scene === "game" ? styles.buttonActive : styles.button}
-              onClick={() => handleSceneChange("game")}
-            >
-              Game
-            </button>
-            <button
-              className={scene === "outcome" ? styles.buttonActive : styles.button}
-              onClick={() => handleSceneChange("outcome")}
-            >
-              Outcome
-            </button>
+            {[1, 2, 3, 4].map((scene) => (
+              <button
+                key={scene}
+                className={activeScene === scene ? styles.buttonActive : styles.button}
+                onClick={() => setActiveScene(scene)}
+              >
+                Scene {scene}
+              </button>
+            ))}
           </div>
-
-          <div className={styles.controlGroup}>
-            <strong>View:</strong>
-            <button
-              className={viewMode === "spymaster" ? styles.buttonActive : styles.button}
-              onClick={toggleViewMode}
-            >
-              Toggle AR ({viewMode === "spymaster" ? "ON" : "OFF"})
-            </button>
-          </div>
-
-          <div className={styles.controlGroup}>
-            <strong>Speed:</strong>
-            <input
-              type="range"
-              min="0.1"
-              max="5"
-              step="0.1"
-              value={timeScale}
-              onChange={(e) => setTimeScale(parseFloat(e.target.value))}
-              style={{ width: "100px" }}
-            />
-            <span>{timeScale.toFixed(1)}x</span>
-          </div>
-
-          <button className={styles.buttonDanger} onClick={handleReset}>
-            Reset
-          </button>
         </div>
 
-        <div className={styles.grid}>
-          {scene === "lobby" &&
-            cards.map((card, index) => (
-              <GameCard
-                key={`${scene}-${card.word}`}
-                card={getCardForDisplay(card)}
-                index={index}
-                onClick={handleCardClick}
-                initialState="hidden"
-              />
-            ))}
+        {activeScene === 1 && <DealInScene />}
+        {activeScene === 2 && <SpymasterViewScene />}
+        {activeScene === 3 && <PlayerSelectionScene />}
+        {activeScene === 4 && <PerformanceStressTest />}
 
-          {scene === "game" &&
-            cards.map((card, index) => (
-              <GameCard
-                key={`${scene}-${card.word}`}
-                card={getCardForDisplay(card)}
-                index={index}
-                onClick={handleCardClick}
-                initialState="visible"
-              />
-            ))}
-
-          {scene === "outcome" &&
-            cards.map((card, index) => (
-              <GameCard
-                key={`${scene}-${card.word}`}
-                card={getCardForDisplay(card)}
-                index={index}
-                onClick={() => {}}
-                initialState="visible"
-              />
-            ))}
-        </div>
-
-        {/* Add swimlanes at the bottom */}
-        <SwimLaneVisualizer />
+        <SwimlanesVisualizer />
       </div>
     </div>
   );
-}
+};
+
+export default CardVisibilitySandbox;

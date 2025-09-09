@@ -149,6 +149,12 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  opacity: 1; /* Default visible */
+}
+
+/* Hide cards in hidden state */
+.cardWrapper[data-state="hidden"] {
+  opacity: 0;
 }
 
 .cardWrapper:hover:not([data-state="visible-covered"]) {
