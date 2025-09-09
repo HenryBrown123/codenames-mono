@@ -403,12 +403,11 @@ export const AnimationContainer: React.FC<AnimationContainerProps> = ({
           typeof definition.delay === "function" ? definition.delay(index) : definition.delay || 0;
 
         // Create animation with native Web Animations API
-        // This is non-blocking - returns immediately and runs on compositor thread
         const animation = target.animate(definition.keyframes, {
           duration: (definition.duration || 300) * timeScale,
-          delay: delay * timeScale, // Native delay handling - no setTimeout needed!
+          delay: delay * timeScale,
           easing: definition.easing || "ease",
-          fill: "both", // Maintains end state after animation
+          fill: "both",
         });
 
         runningAnimations.push(animation);
@@ -422,7 +421,8 @@ export const AnimationContainer: React.FC<AnimationContainerProps> = ({
           event: event as GameEvent,
         });
 
-        // When animation actually starts playing (after its delay)
+        // When animation actually starts playing (after its delay) animation.ready resolves...
+        // this means anything contained in the .then () callback runs after the animation starts.
         animation.ready.then(() => {
           // Update status to running
           updateTracker({
@@ -433,7 +433,7 @@ export const AnimationContainer: React.FC<AnimationContainerProps> = ({
             event: event as GameEvent,
           });
 
-          // Set up progress tracking
+          // Set up progress tracking.... useful for debug/visualisation within demos...
           const updateProgress = () => {
             if (!animation.currentTime || !animation.effect?.getComputedTiming) return;
             const timing = animation.effect.getComputedTiming();
@@ -450,11 +450,12 @@ export const AnimationContainer: React.FC<AnimationContainerProps> = ({
             }
           };
 
-          // Poll for progress updates (20fps is plenty for UI feedback)
+          // Poll for progress updates..
           const progressInterval = setInterval(updateProgress, 50);
 
           // Clean up when animation completes
-          // This promise is nested to ensure proper lifecycle ordering
+          // This promise is nested to ensure proper lifecycle ordering... i.e animation.ready callback will always run
+          // before the finished callback.. even if they resolve at inconsistent times (even if unlikely..)
           animation.finished
             .then(() => {
               clearInterval(progressInterval); // Stop polling
@@ -479,15 +480,9 @@ export const AnimationContainer: React.FC<AnimationContainerProps> = ({
 
     // Handle completion callback when ALL animations finish
     if (onComplete && runningAnimations.length > 0) {
-      // Promise.all waits for all animations but doesn't block
+      // Promise.all waits for all animations
       // This just registers a callback for when they're all done
-      Promise.all(
-        runningAnimations.map((anim) =>
-          anim.finished.catch(() => {
-            // Ignore cancellation errors
-          }),
-        ),
-      ).then(onComplete);
+      Promise.all(runningAnimations.map((anim) => anim.finished.catch(() => {}))).then(onComplete);
     }
 
     // Cleanup function - runs on unmount or when dependencies change
