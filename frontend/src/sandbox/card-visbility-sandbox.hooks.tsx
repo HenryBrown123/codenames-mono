@@ -249,7 +249,6 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
     },
 
     startTransition: (cardId, from, to, event) => {
-      console.log(`🎬 Starting transition for ${cardId}: ${from} -> ${to} (${event})`);
       set((state) => {
         const newCards = new Map(state.cards);
         newCards.set(cardId, {
@@ -264,9 +263,6 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
       const card = get().cards.get(cardId);
       if (!card?.transition) return;
 
-      console.log(
-        `✅ Completed transition for ${cardId}: ${card.transition.from} -> ${card.transition.to}`,
-      );
       set((state) => {
         const newCards = new Map(state.cards);
         newCards.set(cardId, {
@@ -336,7 +332,6 @@ export function useCardVisibility(card: Card, initialState: VisualState = "visib
     const needsTransition = !activeTransition && currentState !== targetState && event;
 
     if (needsTransition && event) {
-      console.log(`🔄 ${card.word}: ${currentState} -> ${targetState} (${event})`);
       actions.startTransition(card.word, currentState, targetState, event);
     }
   }, [card.word, currentState, targetState, event, activeTransition, actions]);
