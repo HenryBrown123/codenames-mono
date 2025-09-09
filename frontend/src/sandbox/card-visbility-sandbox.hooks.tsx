@@ -19,9 +19,11 @@ export interface Card {
   selected: boolean;
 }
 
-interface TransitionContext {
-  viewMode: ViewMode;
-  card: Card;
+interface CardTransition {
+  from: VisualState;
+  to: VisualState;
+  animation: GameEvent;
+  condition: (card: Card, viewMode: ViewMode) => boolean;
 }
 
 interface AnimationTracker {
@@ -49,7 +51,7 @@ interface AnimationConfig {
 // ============= ANIMATION CONFIG =============
 export const CARD_ANIMATIONS: AnimationConfig = {
   "deal-in": {
-    ".card-container": {
+    cardContainer: {
       keyframes: [
         {
           opacity: "0",
@@ -59,9 +61,9 @@ export const CARD_ANIMATIONS: AnimationConfig = {
       ],
       duration: 600,
       delay: (index) => index * 50,
-      easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      easing: "cubic-bezier(0.34, 1.56, 0.64, 1)", // Overshoot for that bouncy feel
     },
-    ".card-word": {
+    cardWord: {
       keyframes: [
         { opacity: "0", transform: "scale(0.3)" },
         { opacity: "1", transform: "scale(1)" },
@@ -72,15 +74,16 @@ export const CARD_ANIMATIONS: AnimationConfig = {
     },
   },
   "spymaster-reveal": {
-    ".card-word": {
+    cardWord: {
       keyframes: [
         { transform: "scale(1)", filter: "brightness(1)" },
         { transform: "scale(1.1)", filter: "brightness(1.2)" },
       ],
       duration: 300,
       delay: (index) => index * 20,
+      easing: "ease-out",
     },
-    ".card-badge": {
+    cardBadge: {
       keyframes: [
         { opacity: "0", transform: "translateY(10px) scale(0.8)" },
         { opacity: "1", transform: "translateY(0) scale(1)" },
@@ -91,7 +94,7 @@ export const CARD_ANIMATIONS: AnimationConfig = {
     },
   },
   "spymaster-hide": {
-    ".card-badge": {
+    cardBadge: {
       keyframes: [
         { opacity: "1", transform: "scale(1)" },
         { opacity: "0", transform: "scale(0.8)" },
@@ -101,7 +104,7 @@ export const CARD_ANIMATIONS: AnimationConfig = {
     },
   },
   "cover-card": {
-    ".cover-card": {
+    coverCard: {
       keyframes: [
         { opacity: "0", transform: "translateX(-100vw) translateY(-100vh) rotate(-6deg)" },
         { opacity: "1", transform: "translateX(0) translateY(0) rotate(0)" },
@@ -113,35 +116,67 @@ export const CARD_ANIMATIONS: AnimationConfig = {
   },
 };
 
-// ============= STATE TRANSITIONS =============
+// ============= STATE MACHINE TRANSITIONS =============
+export const CARD_TRANSITIONS: CardTransition[] = [
+  // Cards appear with dealing animation (normal view)
+  {
+    from: "hidden",
+    to: "visible",
+    animation: "deal-in",
+    condition: (card, viewMode) => viewMode === "normal",
+  },
+  // Cards deal directly to colored in spymaster view
+  {
+    from: "hidden",
+    to: "visible-colored",
+    animation: "deal-in",
+    condition: (card, viewMode) => viewMode === "spymaster" && !!card.teamName,
+  },
+  // Cards reveal their team colors when entering spymaster view
+  {
+    from: "visible",
+    to: "visible-colored",
+    animation: "spymaster-reveal",
+    condition: (card, viewMode) => viewMode === "spymaster" && !!card.teamName,
+  },
+  // Cards hide their team colors when leaving spymaster view
+  {
+    from: "visible-colored",
+    to: "visible",
+    animation: "spymaster-hide",
+    condition: (card, viewMode) => viewMode === "normal" && !card.selected,
+  },
+  // Cards cover when selected (from neutral state)
+  {
+    from: "visible",
+    to: "visible-covered",
+    animation: "cover-card",
+    condition: (card) => card.selected && !!card.teamName,
+  },
+  // Cards cover when selected (from colored state)
+  {
+    from: "visible-colored",
+    to: "visible-covered",
+    animation: "cover-card",
+    condition: (card) => card.selected && !!card.teamName,
+  },
+];
+
+/**
+ * Derive the target state and animation event based on current state and context
+ */
 export function deriveTargetState(
   currentState: VisualState,
-  context: TransitionContext,
+  card: Card,
+  viewMode: ViewMode,
 ): { targetState: VisualState; event: GameEvent | null } {
-  const { viewMode, card } = context;
+  // Find matching transition from current state
+  const transition = CARD_TRANSITIONS.find(
+    (t) => t.from === currentState && t.condition(card, viewMode),
+  );
 
-  if (card.selected && card.teamName) {
-    if (currentState !== "visible-covered") {
-      return { targetState: "visible-covered", event: "cover-card" };
-    }
-    return { targetState: currentState, event: null };
-  }
-
-  if (viewMode === "spymaster") {
-    if (currentState === "hidden") {
-      return { targetState: "visible-colored", event: "deal-in" };
-    }
-    if (currentState === "visible") {
-      return { targetState: "visible-colored", event: "spymaster-reveal" };
-    }
-    return { targetState: currentState, event: null };
-  }
-
-  if (currentState === "hidden") {
-    return { targetState: "visible", event: "deal-in" };
-  }
-  if (currentState === "visible-colored") {
-    return { targetState: "visible", event: "spymaster-hide" };
+  if (transition) {
+    return { targetState: transition.to, event: transition.animation };
   }
 
   return { targetState: currentState, event: null };
@@ -159,145 +194,156 @@ interface CardState {
 }
 
 interface CardVisibilityStore {
+  // State - flat for easy access
   cards: Map<string, CardState>;
   viewMode: ViewMode;
   animationTrackers: AnimationTracker[];
   timeScale: number;
 
-  initCard: (cardId: string, initialState: VisualState) => void;
-  updateCardState: (cardId: string, state: VisualState) => void;
-  startTransition: (cardId: string, from: VisualState, to: VisualState, event: GameEvent) => void;
-  completeTransition: (cardId: string) => void;
-
-  setViewMode: (mode: ViewMode) => void;
-  toggleViewMode: () => void;
-
-  getCard: (cardId: string) => CardState | undefined;
-
-  updateAnimationTracker: (tracker: AnimationTracker) => void;
-  clearAnimationTrackers: (cardId: string) => void;
-  setTimeScale: (scale: number) => void;
-
-  reset: () => void;
+  // Actions - grouped for organization
+  actions: {
+    initCard: (cardId: string, initialState: VisualState) => void;
+    updateCardState: (cardId: string, state: VisualState) => void;
+    startTransition: (cardId: string, from: VisualState, to: VisualState, event: GameEvent) => void;
+    completeTransition: (cardId: string) => void;
+    setViewMode: (mode: ViewMode) => void;
+    toggleViewMode: () => void;
+    updateAnimationTracker: (tracker: AnimationTracker) => void;
+    clearAnimationTrackers: (cardId: string) => void;
+    setTimeScale: (scale: number) => void;
+    reset: () => void;
+  };
 }
 
+/**
+ * Global store for card visibility state management
+ */
 export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => ({
+  // State
   cards: new Map(),
   viewMode: "normal",
   animationTrackers: [],
   timeScale: 1,
 
-  initCard: (cardId, initialState) => {
-    set((state) => {
-      if (state.cards.has(cardId)) return state;
+  // Actions
+  actions: {
+    initCard: (cardId, initialState) => {
+      set((state) => {
+        if (state.cards.has(cardId)) return state;
 
-      const newCards = new Map(state.cards);
-      newCards.set(cardId, { visualState: initialState });
-      return { cards: newCards };
-    });
-  },
-
-  updateCardState: (cardId, visualState) => {
-    set((state) => {
-      const newCards = new Map(state.cards);
-      const card = newCards.get(cardId);
-      if (card) {
-        newCards.set(cardId, { ...card, visualState });
-      }
-      return { cards: newCards };
-    });
-  },
-
-  startTransition: (cardId, from, to, event) => {
-    console.log(`🎬 Starting transition for ${cardId}: ${from} -> ${to} (${event})`);
-    set((state) => {
-      const newCards = new Map(state.cards);
-      newCards.set(cardId, {
-        visualState: from,
-        transition: { from, to, event, startedAt: Date.now() },
+        const newCards = new Map(state.cards);
+        newCards.set(cardId, { visualState: initialState });
+        return { cards: newCards };
       });
-      return { cards: newCards };
-    });
-  },
+    },
 
-  completeTransition: (cardId) => {
-    const card = get().cards.get(cardId);
-    if (!card?.transition) return;
-
-    console.log(
-      `✅ Completed transition for ${cardId}: ${card.transition.from} -> ${card.transition.to}`,
-    );
-    set((state) => {
-      const newCards = new Map(state.cards);
-      newCards.set(cardId, {
-        visualState: card.transition!.to,
-        transition: undefined,
+    updateCardState: (cardId, visualState) => {
+      set((state) => {
+        const newCards = new Map(state.cards);
+        const card = newCards.get(cardId);
+        if (card) {
+          newCards.set(cardId, { ...card, visualState });
+        }
+        return { cards: newCards };
       });
-      return { cards: newCards };
-    });
+    },
+
+    startTransition: (cardId, from, to, event) => {
+      console.log(`🎬 Starting transition for ${cardId}: ${from} -> ${to} (${event})`);
+      set((state) => {
+        const newCards = new Map(state.cards);
+        newCards.set(cardId, {
+          visualState: from,
+          transition: { from, to, event, startedAt: Date.now() },
+        });
+        return { cards: newCards };
+      });
+    },
+
+    completeTransition: (cardId) => {
+      const card = get().cards.get(cardId);
+      if (!card?.transition) return;
+
+      console.log(
+        `✅ Completed transition for ${cardId}: ${card.transition.from} -> ${card.transition.to}`,
+      );
+      set((state) => {
+        const newCards = new Map(state.cards);
+        newCards.set(cardId, {
+          visualState: card.transition!.to,
+          transition: undefined,
+        });
+        return { cards: newCards };
+      });
+    },
+
+    setViewMode: (mode) => set({ viewMode: mode }),
+
+    toggleViewMode: () =>
+      set((state) => ({ viewMode: state.viewMode === "normal" ? "spymaster" : "normal" })),
+
+    updateAnimationTracker: (tracker) =>
+      set((state) => ({
+        animationTrackers: [
+          ...state.animationTrackers.filter(
+            (t) => !(t.cardId === tracker.cardId && t.elementName === tracker.elementName),
+          ),
+          tracker,
+        ],
+      })),
+
+    clearAnimationTrackers: (cardId) =>
+      set((state) => ({
+        animationTrackers: state.animationTrackers.filter((t) => t.cardId !== cardId),
+      })),
+
+    setTimeScale: (scale) => set({ timeScale: scale }),
+
+    reset: () => set({ cards: new Map(), viewMode: "normal", animationTrackers: [] }),
   },
-
-  setViewMode: (mode) => set({ viewMode: mode }),
-  toggleViewMode: () =>
-    set((state) => ({ viewMode: state.viewMode === "normal" ? "spymaster" : "normal" })),
-
-  getCard: (cardId) => get().cards.get(cardId),
-
-  updateAnimationTracker: (tracker) =>
-    set((state) => ({
-      animationTrackers: [
-        ...state.animationTrackers.filter(
-          (t) => !(t.cardId === tracker.cardId && t.elementName === tracker.elementName),
-        ),
-        tracker,
-      ],
-    })),
-
-  clearAnimationTrackers: (cardId) =>
-    set((state) => ({
-      animationTrackers: state.animationTrackers.filter((t) => t.cardId !== cardId),
-    })),
-
-  setTimeScale: (scale) => set({ timeScale: scale }),
-
-  reset: () => set({ cards: new Map(), viewMode: "normal", animationTrackers: [] }),
 }));
 
 // ============= HOOKS =============
 /**
  * Hook for managing card visibility state and transitions
+ * Uses state machine to determine transitions and animations
  */
 export function useCardVisibility(card: Card, initialState: VisualState = "visible") {
+  // State selectors
   const viewMode = useCardVisibilityStore((state) => state.viewMode);
-  const cardState = useCardVisibilityStore((state) => state.getCard(card.word));
-  const initCard = useCardVisibilityStore((state) => state.initCard);
-  const startTransition = useCardVisibilityStore((state) => state.startTransition);
-  const completeTransition = useCardVisibilityStore((state) => state.completeTransition);
+  const cardState = useCardVisibilityStore(
+    useCallback((state) => state.cards.get(card.word), [card.word]),
+  );
 
+  // Actions - single stable reference
+  const actions = useCardVisibilityStore((state) => state.actions);
+
+  // Initialize card if it doesn't exist
   useEffect(() => {
     if (!cardState) {
-      initCard(card.word, initialState);
+      actions.initCard(card.word, initialState);
     }
-  }, [cardState, initCard, card.word, initialState]);
+  }, [cardState, actions, card.word, initialState]);
 
   const currentState = cardState?.visualState || initialState;
   const activeTransition = cardState?.transition;
 
-  const context: TransitionContext = { viewMode, card };
-  const { targetState, event } = deriveTargetState(currentState, context);
+  // Use state machine to determine target state
+  const { targetState, event } = deriveTargetState(currentState, card, viewMode);
 
+  // Trigger transitions when needed
   useEffect(() => {
     const needsTransition = !activeTransition && currentState !== targetState && event;
 
     if (needsTransition && event) {
       console.log(`🔄 ${card.word}: ${currentState} -> ${targetState} (${event})`);
-      startTransition(card.word, currentState, targetState, event);
+      actions.startTransition(card.word, currentState, targetState, event);
     }
-  }, [card.word, currentState, targetState, event, activeTransition, startTransition]);
+  }, [card.word, currentState, targetState, event, activeTransition, actions]);
 
   const handleComplete = useCallback(() => {
-    completeTransition(card.word);
-  }, [card.word, completeTransition]);
+    actions.completeTransition(card.word);
+  }, [card.word, actions]);
 
   return {
     state: currentState,
@@ -318,18 +364,22 @@ interface AnimationContainerProps {
   cardId: string;
 }
 
+/**
+ * Container component that orchestrates Web Animations API animations
+ * Handles animation scheduling, progress tracking, and lifecycle management
+ */
 export const AnimationContainer: React.FC<AnimationContainerProps> = ({
   event,
   index = 0,
   onComplete,
   animations,
-  cardId,
   children,
+  cardId,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const animationsRef = useRef<Animation[]>([]);
   const timeScale = useCardVisibilityStore((s) => s.timeScale);
-  const updateTracker = useCardVisibilityStore((s) => s.updateAnimationTracker);
+  const updateTracker = useCardVisibilityStore((s) => s.actions.updateAnimationTracker);
 
   useEffect(() => {
     if (!ref.current || !event) return;
@@ -337,39 +387,33 @@ export const AnimationContainer: React.FC<AnimationContainerProps> = ({
     const eventConfig = animations[event];
     if (!eventConfig) return;
 
+    // Cancel any existing animations
     animationsRef.current.forEach((anim) => anim.cancel());
     animationsRef.current = [];
 
     const runningAnimations: Animation[] = [];
 
-    // loop through the event/animation config objects using the key as the class for the query selector..
-    //
-    // e.g. if eventConfig = {".card-container" : {keyframes : []....}, {"".card-word" : {keyframes: [...]}}}
-    // then child elements of the animation container that include .card-container and .card-word as classes
-    // are animated based on the keyframe/animation config in the AnimationConfig object...
-    //
-
+    // Create animations for each selector in the config
     Object.entries(eventConfig).forEach(([selector, definition]) => {
-      const targets = ref.current!.querySelectorAll<HTMLElement>(selector);
+      const targets = ref.current!.querySelectorAll<HTMLElement>(`.${selector}`);
 
       targets.forEach((target) => {
+        // Calculate delay based on index if function, otherwise use static delay
         const delay =
           typeof definition.delay === "function" ? definition.delay(index) : definition.delay || 0;
 
+        // Create animation with native Web Animations API
+        // This is non-blocking - returns immediately and runs on compositor thread
         const animation = target.animate(definition.keyframes, {
           duration: (definition.duration || 300) * timeScale,
-          delay: delay * timeScale,
+          delay: delay * timeScale, // Native delay handling - no setTimeout needed!
           easing: definition.easing || "ease",
-          fill: "both",
+          fill: "both", // Maintains end state after animation
         });
 
-        // push promise up into the runningAnimations array...
-        // at this point the animation will start to animate based on the params passed into the .animate()
-        // func..
         runningAnimations.push(animation);
 
-        // this is updating the global store so other components can use the animation status, as well as helping
-        // with debug..
+        // Track animation as pending initially
         updateTracker({
           cardId,
           elementName: selector,
@@ -378,9 +422,9 @@ export const AnimationContainer: React.FC<AnimationContainerProps> = ({
           event: event as GameEvent,
         });
 
-        // another promise, this time the animation.ready() promise will resolve when the animation
-        // has started, and no longer in a "ready" state...
+        // When animation actually starts playing (after its delay)
         animation.ready.then(() => {
+          // Update status to running
           updateTracker({
             cardId,
             elementName: selector,
@@ -389,6 +433,7 @@ export const AnimationContainer: React.FC<AnimationContainerProps> = ({
             event: event as GameEvent,
           });
 
+          // Set up progress tracking
           const updateProgress = () => {
             if (!animation.currentTime || !animation.effect?.getComputedTiming) return;
             const timing = animation.effect.getComputedTiming();
@@ -405,11 +450,14 @@ export const AnimationContainer: React.FC<AnimationContainerProps> = ({
             }
           };
 
+          // Poll for progress updates (20fps is plenty for UI feedback)
           const progressInterval = setInterval(updateProgress, 50);
 
+          // Clean up when animation completes
+          // This promise is nested to ensure proper lifecycle ordering
           animation.finished
             .then(() => {
-              clearInterval(progressInterval);
+              clearInterval(progressInterval); // Stop polling
               updateTracker({
                 cardId,
                 elementName: selector,
@@ -419,18 +467,30 @@ export const AnimationContainer: React.FC<AnimationContainerProps> = ({
               });
             })
             .catch(() => {
+              // Animation was cancelled - clean up interval
               clearInterval(progressInterval);
             });
         });
       });
     });
 
+    // Store reference to all animations for cleanup
     animationsRef.current = runningAnimations;
 
+    // Handle completion callback when ALL animations finish
     if (onComplete && runningAnimations.length > 0) {
-      Promise.all(runningAnimations.map((anim) => anim.finished.catch(() => {}))).then(onComplete);
+      // Promise.all waits for all animations but doesn't block
+      // This just registers a callback for when they're all done
+      Promise.all(
+        runningAnimations.map((anim) =>
+          anim.finished.catch(() => {
+            // Ignore cancellation errors
+          }),
+        ),
+      ).then(onComplete);
     }
 
+    // Cleanup function - runs on unmount or when dependencies change
     return () => {
       animationsRef.current.forEach((anim) => anim.cancel());
     };

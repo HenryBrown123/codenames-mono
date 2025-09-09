@@ -42,12 +42,12 @@ const GameCard = memo<{
       cardId={card.word}
     >
       <div
-        className={`${styles.cardWrapper} ${card.selected ? styles.selected : ""} ${teamColor} card-container`}
+        className={`${styles.cardWrapper} ${teamColor} cardContainer`}
         onClick={handleClick}
         data-state={state}
       >
-        <div className={`${styles.cardWord} card-word`}>{card.word}</div>
-        <div className={`${styles.cardBadge} card-badge`}>
+        <div className={`${styles.cardWord} cardWord`}>{card.word}</div>
+        <div className={`${styles.cardBadge} cardBadge`}>
           {state === "visible-colored" && card.teamName}
         </div>
         <div className={styles.cardState}>
@@ -57,7 +57,7 @@ const GameCard = memo<{
           <div
             className={`${styles.coverCard} ${
               styles[`cover${card.teamName.charAt(0).toUpperCase()}${card.teamName.slice(1)}`]
-            } cover-card`}
+            } coverCard`}
           >
             <div className={styles.coverWord}>{card.word}</div>
             <div className={styles.coverTeam}>{card.teamName}</div>
@@ -149,7 +149,7 @@ const SwimlanesVisualizer: React.FC = () => {
 // ============= DEMO SCENES =============
 const DealInScene: React.FC = () => {
   const [cards, setCards] = useState<Card[]>([]);
-  const reset = useCardVisibilityStore((s) => s.reset);
+  const reset = useCardVisibilityStore((s) => s.actions.reset);
 
   const dealCards = useCallback(() => {
     reset();
@@ -202,7 +202,7 @@ const SpymasterViewScene: React.FC = () => {
   );
 
   const viewMode = useCardVisibilityStore((s) => s.viewMode);
-  const toggleViewMode = useCardVisibilityStore((s) => s.toggleViewMode);
+  const toggleViewMode = useCardVisibilityStore((s) => s.actions.toggleViewMode);
 
   return (
     <div>
@@ -308,9 +308,9 @@ const PerformanceStressTest: React.FC = () => {
   const [cards, setCards] = useState<Card[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const viewMode = useCardVisibilityStore((s) => s.viewMode);
-  const toggleViewMode = useCardVisibilityStore((s) => s.toggleViewMode);
-  const reset = useCardVisibilityStore((s) => s.reset);
-  const setTimeScale = useCardVisibilityStore((s) => s.setTimeScale);
+  const toggleViewMode = useCardVisibilityStore((s) => s.actions.toggleViewMode);
+  const reset = useCardVisibilityStore((s) => s.actions.reset);
+  const setTimeScale = useCardVisibilityStore((s) => s.actions.setTimeScale);
 
   const teams: Array<"red" | "blue" | "neutral" | "assassin"> = [
     "red",
@@ -496,7 +496,7 @@ const PerformanceStressTest: React.FC = () => {
 
 const HandoffSimulationScene: React.FC = () => {
   const viewMode = useCardVisibilityStore((s) => s.viewMode);
-  const setViewMode = useCardVisibilityStore((s) => s.setViewMode);
+  const setViewMode = useCardVisibilityStore((s) => s.actions.setViewMode);
   const [isPending, setIsPending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -572,9 +572,9 @@ const HandoffSimulationScene: React.FC = () => {
 export const CardVisibilitySandbox: React.FC = () => {
   const [activeScene, setActiveScene] = useState(1);
   const timeScale = useCardVisibilityStore((s) => s.timeScale);
-  const setTimeScale = useCardVisibilityStore((s) => s.setTimeScale);
+  const setTimeScale = useCardVisibilityStore((s) => s.actions.setTimeScale);
 
-  const reset = useCardVisibilityStore((s) => s.reset);
+  const reset = useCardVisibilityStore((s) => s.actions.reset);
 
   React.useEffect(() => {
     reset();
