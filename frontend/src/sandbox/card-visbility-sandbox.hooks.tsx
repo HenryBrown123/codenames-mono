@@ -204,7 +204,6 @@ export function useAnimationEngine(): AnimationEngine {
         const duration = (animDef.options?.duration || 300) * timeScale;
         const startTime = Date.now();
 
-        // Track as pending
         updateTracker({
           cardId,
           elementName,
@@ -219,7 +218,6 @@ export function useAnimationEngine(): AnimationEngine {
         if (animation) {
           activeAnimations.current.set(element, animation);
 
-          // When animation starts (after delay)
           animation.ready.then(() => {
             updateTracker({
               cardId,
@@ -231,7 +229,6 @@ export function useAnimationEngine(): AnimationEngine {
               duration,
             });
 
-            // Progress tracking
             const updateProgress = () => {
               if (!animation.currentTime || !animation.effect?.getComputedTiming) return;
               const timing = animation.effect.getComputedTiming();
@@ -252,7 +249,6 @@ export function useAnimationEngine(): AnimationEngine {
 
             const progressInterval = setInterval(updateProgress, 50);
 
-            // Clean up when complete
             animation.finished
               .then(() => {
                 clearInterval(progressInterval);
@@ -555,7 +551,7 @@ export function useCardVisibility(
   const animatedRef = useCallback(
     (config: AnimatedElementConfig) => {
       return (element: HTMLElement | null) => {
-        console.log(element, "Mounted element with animatedRef");
+        console.log(element?.textContent || element, " Mounted element with animatedRef");
         if (element) {
           elements.current.set(config.id, element);
           if (config.animations) {
@@ -590,7 +586,8 @@ export function useCardVisibility(
 
 // ============= ANIMATION DEFINITIONS =============
 export const CARD_ANIMATIONS: Record<string, AnimationTriggerMap> = {
-  container: {
+  // Fallback for cards without teams
+  baseCard: {
     "deal-in": {
       keyframes: [
         {
@@ -606,6 +603,176 @@ export const CARD_ANIMATIONS: Record<string, AnimationTriggerMap> = {
       },
     },
   },
+
+  // Base card animations for each team color
+  "baseCard-red": {
+    "deal-in": {
+      keyframes: [
+        {
+          opacity: "0",
+          transform: "translateY(-100vh) translateX(-50vw) rotate(-15deg) scale(0.8)",
+        },
+        { opacity: "1", transform: "translateY(0) translateX(0) rotate(0) scale(1)" },
+      ],
+      options: {
+        duration: 600,
+        easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        stagger: 50,
+      },
+    },
+    "spymaster-reveal": {
+      keyframes: [
+        { backgroundColor: "#f4f1e8", borderColor: "#d4d1c8" },
+        { backgroundColor: "#ff4444", borderColor: "#ff6666" },
+      ],
+      options: {
+        duration: 500,
+        easing: "ease-in-out",
+        fill: "forwards",
+        stagger: 30,
+      },
+    },
+    "spymaster-hide": {
+      keyframes: [
+        { backgroundColor: "#ff4444", borderColor: "#ff6666" },
+        { backgroundColor: "#f4f1e8", borderColor: "#d4d1c8" },
+      ],
+      options: {
+        duration: 300,
+        easing: "ease-in-out",
+        fill: "forwards",
+      },
+    },
+  },
+
+  "baseCard-blue": {
+    "deal-in": {
+      keyframes: [
+        {
+          opacity: "0",
+          transform: "translateY(-100vh) translateX(-50vw) rotate(-15deg) scale(0.8)",
+        },
+        { opacity: "1", transform: "translateY(0) translateX(0) rotate(0) scale(1)" },
+      ],
+      options: {
+        duration: 600,
+        easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        stagger: 50,
+      },
+    },
+    "spymaster-reveal": {
+      keyframes: [
+        { backgroundColor: "#f4f1e8", borderColor: "#d4d1c8" },
+        { backgroundColor: "#4444ff", borderColor: "#6666ff" },
+      ],
+      options: {
+        duration: 500,
+        easing: "ease-in-out",
+        fill: "forwards",
+        stagger: 30,
+      },
+    },
+    "spymaster-hide": {
+      keyframes: [
+        { backgroundColor: "#4444ff", borderColor: "#6666ff" },
+        { backgroundColor: "#f4f1e8", borderColor: "#d4d1c8" },
+      ],
+      options: {
+        duration: 300,
+        easing: "ease-in-out",
+        fill: "forwards",
+      },
+    },
+  },
+
+  "baseCard-neutral": {
+    "deal-in": {
+      keyframes: [
+        {
+          opacity: "0",
+          transform: "translateY(-100vh) translateX(-50vw) rotate(-15deg) scale(0.8)",
+        },
+        { opacity: "1", transform: "translateY(0) translateX(0) rotate(0) scale(1)" },
+      ],
+      options: {
+        duration: 600,
+        easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        stagger: 50,
+      },
+    },
+    "spymaster-reveal": {
+      keyframes: [
+        { backgroundColor: "#f4f1e8", borderColor: "#d4d1c8" },
+        { backgroundColor: "#888", borderColor: "#aaa" },
+      ],
+      options: {
+        duration: 500,
+        easing: "ease-in-out",
+        fill: "forwards",
+        stagger: 30,
+      },
+    },
+    "spymaster-hide": {
+      keyframes: [
+        { backgroundColor: "#888", borderColor: "#aaa" },
+        { backgroundColor: "#f4f1e8", borderColor: "#d4d1c8" },
+      ],
+      options: {
+        duration: 300,
+        easing: "ease-in-out",
+        fill: "forwards",
+      },
+    },
+  },
+
+  "baseCard-assassin": {
+    "deal-in": {
+      keyframes: [
+        {
+          opacity: "0",
+          transform: "translateY(-100vh) translateX(-50vw) rotate(-15deg) scale(0.8)",
+        },
+        { opacity: "1", transform: "translateY(0) translateX(0) rotate(0) scale(1)" },
+      ],
+      options: {
+        duration: 600,
+        easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        stagger: 50,
+      },
+    },
+    "spymaster-reveal": {
+      keyframes: [
+        { backgroundColor: "#f4f1e8", borderColor: "#d4d1c8", boxShadow: "none" },
+        {
+          backgroundColor: "#000",
+          borderColor: "#ffff00",
+          boxShadow: "0 0 20px rgba(255, 255, 0, 0.5)",
+        },
+      ],
+      options: {
+        duration: 600,
+        easing: "ease-in-out",
+        fill: "forwards",
+        stagger: 30,
+      },
+    },
+    "spymaster-hide": {
+      keyframes: [
+        {
+          backgroundColor: "#000",
+          borderColor: "#ffff00",
+          boxShadow: "0 0 20px rgba(255, 255, 0, 0.5)",
+        },
+        { backgroundColor: "#f4f1e8", borderColor: "#d4d1c8", boxShadow: "none" },
+      ],
+      options: {
+        duration: 300,
+        easing: "ease-in-out",
+        fill: "forwards",
+      },
+    },
+  },
+
   word: {
     "deal-in": {
       keyframes: [
@@ -619,7 +786,20 @@ export const CARD_ANIMATIONS: Record<string, AnimationTriggerMap> = {
         stagger: 50,
       },
     },
+    "spymaster-reveal": {
+      keyframes: [
+        { filter: "brightness(1)", transform: "scale(1)" },
+        { filter: "brightness(1.2)", transform: "scale(1.05)" },
+        { filter: "brightness(1)", transform: "scale(1)" },
+      ],
+      options: {
+        duration: 400,
+        delay: 100,
+        easing: "ease-in-out",
+      },
+    },
   },
+
   badge: {
     "spymaster-reveal": {
       keyframes: [
@@ -645,6 +825,7 @@ export const CARD_ANIMATIONS: Record<string, AnimationTriggerMap> = {
       },
     },
   },
+
   coverCard: {
     "cover-card": {
       keyframes: [
