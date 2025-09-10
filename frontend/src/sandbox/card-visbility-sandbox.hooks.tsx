@@ -1,4 +1,3 @@
-// card-visibility-sandbox.hooks.tsx
 import React, { useRef, useEffect, useCallback, useMemo } from "react";
 import { create } from "zustand";
 
@@ -28,6 +27,14 @@ export interface AnimationEngine {
   createRef(animations: AnimationTriggerMap): (element: HTMLElement | null) => void;
   getSize(): number;
   isAnimating(): boolean;
+}
+
+export interface AnimationTracker {
+  cardId: string;
+  elementName: string;
+  startTime: number;
+  duration: number;
+  trigger: string;
 }
 
 // ============= CARD TYPES =============
@@ -67,14 +74,10 @@ function animateElement(
 ): Animation | null {
   try {
     const staggerDelay = index * (animDef.options?.stagger || 0);
-
-    // Handle duration - could be number, string, or CSSNumericValue
     let duration = 0;
     if (typeof animDef.options?.duration === "number") {
       duration = animDef.options.duration;
     }
-
-    // Handle delay
     let delay = 0;
     if (typeof animDef.options?.delay === "number") {
       delay = animDef.options.delay;
@@ -90,12 +93,10 @@ function animateElement(
     return element.animate(animDef.keyframes, animationOptions);
   } catch (error) {
     console.error("Animation failed:", error);
-
     if (animDef.keyframes.length > 0) {
       const finalKeyframe = animDef.keyframes[animDef.keyframes.length - 1];
       Object.assign(element.style, finalKeyframe);
     }
-
     return null;
   }
 }
@@ -135,14 +136,12 @@ export function useAnimationEngine(): AnimationEngine {
 
     const createRef = (animations: AnimationTriggerMap) => {
       let myElement: HTMLElement | null = null;
-
       return (element: HTMLElement | null) => {
         if (!element && myElement) {
           unregister(myElement);
           myElement = null;
           return;
         }
-
         if (element) {
           myElement = element;
           register(element, animations);
@@ -155,9 +154,7 @@ export function useAnimationEngine(): AnimationEngine {
       options: AnimationOptions = {},
     ): Promise<void> => {
       const { index = 0, timeScale = 1 } = options;
-
       cancelAll();
-
       const animationPromises: Promise<void>[] = [];
 
       elementRegistry.current.forEach((animations, element) => {
@@ -167,7 +164,6 @@ export function useAnimationEngine(): AnimationEngine {
         const animation = animateElement(element, animDef, index, timeScale);
         if (animation) {
           activeAnimations.current.set(element, animation);
-
           animationPromises.push(
             animation.finished
               .then(() => {
@@ -205,7 +201,7 @@ export function useAnimationEngine(): AnimationEngine {
   return engine;
 }
 
-// ============= ANIMATION ORCHESTRATOR =============
+// ============= ANIMATION HOOK =============
 export interface UseAnimationProps {
   trigger: string | null;
   onComplete?: () => void;
@@ -225,16 +221,11 @@ export function useAnimation({
   const animationRef = engine.createRef;
 
   useEffect(() => {
-    if (!trigger) {
-      return;
-    }
-
+    if (!trigger) return;
     if (onStart) onStart();
-
     engine.runAnimations(trigger, { index, timeScale }).then(() => {
       if (onComplete) onComplete();
     });
-
     return () => {
       engine.cancelAll();
     };
@@ -249,23 +240,12 @@ export function useAnimation({
   return { animationRef };
 }
 
-/**
- * Animation tracker for swimlane visualization (demo only).
- */
-export interface AnimationTracker {
-  cardId: string;
-  elementName: string;
-  startTime: number;
-  duration: number;
-  trigger: CardAnimationTrigger;
-}
-
 // ============= CARD VISIBILITY STORE =============
 interface CardVisibilityStore {
   cards: Map<string, CardState>;
   viewMode: ViewMode;
   timeScale: number;
-  animationTrackers: AnimationTracker[]; // <-- YOU NEED TO ADD THIS
+  animationTrackers: AnimationTracker[];
 
   actions: {
     initCard: (cardId: string, initialState: CardDisplayState) => void;
@@ -279,8 +259,8 @@ interface CardVisibilityStore {
     setViewMode: (mode: ViewMode) => void;
     toggleViewMode: () => void;
     setTimeScale: (scale: number) => void;
-    updateAnimationTracker: (tracker: AnimationTracker) => void; // Add this
-    clearAnimationTrackers: (cardId: string) => void; // Add this
+    updateAnimationTracker: (tracker: AnimationTracker) => void;
+    clearAnimationTrackers: (cardId: string) => void;
     reset: () => void;
   };
 }
@@ -315,7 +295,6 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
     completeTransition: (cardId) => {
       const card = get().cards.get(cardId);
       if (!card?.transition) return;
-
       set((state) => {
         const newCards = new Map(state.cards);
         newCards.set(cardId, {
@@ -400,13 +379,12 @@ function deriveTargetState(
   const transition = CARD_TRANSITIONS.find(
     (t) => t.from === currentState && t.condition(card, viewMode),
   );
-
   return transition
     ? { targetState: transition.to, trigger: transition.trigger }
     : { targetState: currentState, trigger: null };
 }
 
-// ============= CARD VISIBILITY HOOK =============
+// ============= ANIMATED ELEMENT CONFIG =============
 export interface AnimatedElementConfig {
   id: string;
   animations?: AnimationTriggerMap;
@@ -433,7 +411,6 @@ export function useCardVisibility(
     useCallback((state) => state.cards.get(card.word), [card.word]),
   );
   const actions = useCardVisibilityStore((state) => state.actions);
-
   const elements = useRef(new Map<string, HTMLElement>());
 
   useEffect(() => {
@@ -452,14 +429,26 @@ export function useCardVisibility(
 
   useEffect(() => {
     const needsTransition = !activeTransition && currentState !== targetState && trigger;
-
     if (needsTransition && trigger) {
       actions.startTransition(card.word, currentState, targetState, trigger);
+
+      // Track animations for swimlanes
+      const duration = trigger === "deal-in" ? 600 : 400;
+      ["container", "word", "badge", "coverCard"].forEach((elementName) => {
+        actions.updateAnimationTracker({
+          cardId: card.word,
+          elementName,
+          startTime: Date.now(),
+          duration,
+          trigger,
+        });
+      });
     }
   }, [card.word, currentState, targetState, trigger, activeTransition, actions]);
 
   const handleComplete = useCallback(() => {
     actions.completeTransition(card.word);
+    actions.clearAnimationTrackers(card.word);
   }, [card.word, actions]);
 
   const { animationRef } = useAnimation({
@@ -474,12 +463,10 @@ export function useCardVisibility(
       return (element: HTMLElement | null) => {
         if (element) {
           elements.current.set(config.id, element);
-
           if (config.animations) {
             const ref = animationRef(config.animations);
             ref(element);
           }
-
           config.onMount?.(element);
         } else {
           const stored = elements.current.get(config.id);
