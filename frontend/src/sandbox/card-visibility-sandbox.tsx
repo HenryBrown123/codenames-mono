@@ -6,6 +6,7 @@ import {
   CARD_ANIMATIONS,
   useCardVisibilityStore,
   useCardVisibility,
+  AnimationTracker,
 } from "./card-visbility-sandbox.hooks";
 
 // ============= GAME CARD COMPONENT =============
@@ -17,6 +18,8 @@ const GameCard = memo<{
 }>(({ card, index, onClick, initialState = "hidden" }) => {
   const { displayState, animatedRef } = useCardVisibility(card, initialState, { index });
 
+  console.log(card.word, "Rendering with displayState:", displayState);
+
   const teamColor =
     !card.selected && card.teamName && displayState === "visible-colored"
       ? styles[`color${card.teamName.charAt(0).toUpperCase()}${card.teamName.slice(1)}`]
@@ -27,6 +30,8 @@ const GameCard = memo<{
       onClick(card.word);
     }
   };
+
+  console.log(card.word, "Rendering with teamColor:", teamColor, displayState);
 
   return (
     <div
@@ -70,29 +75,25 @@ GameCard.displayName = "GameCard";
 // ============= SWIMLANES VISUALIZER =============
 const SwimlanesVisualizer: React.FC = () => {
   const animationTrackers = useCardVisibilityStore((s) => s.animationTrackers);
-  const [currentTime, setCurrentTime] = useState(Date.now());
 
-  useEffect(() => {
-    const interval = setInterval(() => setCurrentTime(Date.now()), 50);
-    return () => clearInterval(interval);
-  }, []);
-
+  // Use status for categorization, progress is already in tracker
   const categorizedTrackers = animationTrackers.reduce(
     (acc, tracker) => {
-      const elapsed = currentTime - tracker.startTime;
-      const progress = Math.min(elapsed / tracker.duration, 1);
-
-      if (elapsed < 0) {
-        acc.pending.push({ ...tracker, progress: 0 });
-      } else if (progress < 1) {
-        acc.running.push({ ...tracker, progress });
-      } else {
-        acc.finished.push({ ...tracker, progress: 1 });
+      if (tracker.status === "pending") {
+        acc.pending.push(tracker);
+      } else if (tracker.status === "running") {
+        acc.running.push(tracker);
+      } else if (tracker.status === "finished") {
+        acc.finished.push(tracker);
       }
 
       return acc;
     },
-    { pending: [] as any[], running: [] as any[], finished: [] as any[] },
+    {
+      pending: [] as AnimationTracker[],
+      running: [] as AnimationTracker[],
+      finished: [] as AnimationTracker[],
+    },
   );
 
   return (
@@ -133,7 +134,7 @@ const SwimlanesVisualizer: React.FC = () => {
                 <div className={styles.swimlaneProgress}>
                   <div
                     className={styles.swimlaneProgressBar}
-                    style={{ width: `${tracker.progress * 100}%` }}
+                    style={{ width: `${(tracker.progress || 0) * 100}%` }}
                   />
                 </div>
               </div>
@@ -211,6 +212,7 @@ const SpymasterViewScene: React.FC = () => {
   ]);
 
   const viewMode = useCardVisibilityStore((s) => s.viewMode);
+
   const toggleViewMode = useCardVisibilityStore((s) => s.actions.toggleViewMode);
 
   return (

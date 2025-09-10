@@ -4,7 +4,11 @@ import { create } from "zustand";
 // ============= ANIMATION TYPES =============
 export interface AnimationDefinition {
   keyframes: Keyframe[];
-  options?: KeyframeAnimationOptions & {
+  options?: {
+    duration?: number;
+    delay?: number;
+    easing?: string;
+    fill?: FillMode;
     stagger?: number;
   };
 }
@@ -13,18 +17,30 @@ export interface AnimationTriggerMap {
   [trigger: string]: AnimationDefinition;
 }
 
+export interface AnimationMetadata {
+  id: string;
+  cardId?: string;
+}
+
 export interface AnimationOptions {
   index?: number;
   timeScale?: number;
 }
 
 export interface AnimationEngine {
-  register(element: HTMLElement, animations: AnimationTriggerMap): void;
+  register(
+    element: HTMLElement,
+    animations: AnimationTriggerMap,
+    metadata: AnimationMetadata,
+  ): void;
   unregister(element: HTMLElement): void;
   runAnimations(trigger: string, options?: AnimationOptions): Promise<void>;
   cancelAll(): void;
   dispose(): void;
-  createRef(animations: AnimationTriggerMap): (element: HTMLElement | null) => void;
+  createRef(
+    animations: AnimationTriggerMap,
+    metadata: AnimationMetadata,
+  ): (element: HTMLElement | null) => void;
   getSize(): number;
   isAnimating(): boolean;
 }
@@ -35,6 +51,8 @@ export interface AnimationTracker {
   startTime: number;
   duration: number;
   trigger: string;
+  status: "pending" | "running" | "finished";
+  progress?: number;
 }
 
 // ============= CARD TYPES =============
@@ -102,7 +120,15 @@ function animateElement(
 }
 
 export function useAnimationEngine(): AnimationEngine {
-  const elementRegistry = useRef(new Map<HTMLElement, AnimationTriggerMap>());
+  const elementRegistry = useRef(
+    new Map<
+      HTMLElement,
+      {
+        animations: AnimationTriggerMap;
+        metadata: AnimationMetadata;
+      }
+    >(),
+  );
   const activeAnimations = useRef(new Map<HTMLElement, Animation>());
 
   const engine = useMemo<AnimationEngine>(() => {
@@ -125,8 +151,12 @@ export function useAnimationEngine(): AnimationEngine {
       activeAnimations.current.clear();
     };
 
-    const register = (element: HTMLElement, animations: AnimationTriggerMap) => {
-      elementRegistry.current.set(element, animations);
+    const register = (
+      element: HTMLElement,
+      animations: AnimationTriggerMap,
+      metadata: AnimationMetadata,
+    ) => {
+      elementRegistry.current.set(element, { animations, metadata });
     };
 
     const unregister = (element: HTMLElement) => {
@@ -134,7 +164,7 @@ export function useAnimationEngine(): AnimationEngine {
       cancelAnimation(element);
     };
 
-    const createRef = (animations: AnimationTriggerMap) => {
+    const createRef = (animations: AnimationTriggerMap, metadata: AnimationMetadata) => {
       let myElement: HTMLElement | null = null;
       return (element: HTMLElement | null) => {
         if (!element && myElement) {
@@ -144,7 +174,7 @@ export function useAnimationEngine(): AnimationEngine {
         }
         if (element) {
           myElement = element;
-          register(element, animations);
+          register(element, animations, metadata);
         }
       };
     };
@@ -153,26 +183,97 @@ export function useAnimationEngine(): AnimationEngine {
       trigger: string,
       options: AnimationOptions = {},
     ): Promise<void> => {
+      console.log(
+        "runAnimations triggered:",
+        trigger,
+        "registered elements:",
+        elementRegistry.current.size,
+      );
       const { index = 0, timeScale = 1 } = options;
       cancelAll();
       const animationPromises: Promise<void>[] = [];
 
-      elementRegistry.current.forEach((animations, element) => {
-        const animDef = animations[trigger];
+      const updateTracker = useCardVisibilityStore.getState().actions.updateAnimationTracker;
+
+      elementRegistry.current.forEach((data, element) => {
+        const animDef = data.animations[trigger];
         if (!animDef) return;
+
+        const elementName = data.metadata.id;
+        const cardId = data.metadata.cardId || "unknown";
+        const duration = (animDef.options?.duration || 300) * timeScale;
+        const startTime = Date.now();
+
+        // Track as pending
+        updateTracker({
+          cardId,
+          elementName,
+          status: "pending",
+          progress: 0,
+          trigger,
+          startTime,
+          duration,
+        });
 
         const animation = animateElement(element, animDef, index, timeScale);
         if (animation) {
           activeAnimations.current.set(element, animation);
-          animationPromises.push(
+
+          // When animation starts (after delay)
+          animation.ready.then(() => {
+            updateTracker({
+              cardId,
+              elementName,
+              status: "running",
+              progress: 0,
+              trigger,
+              startTime,
+              duration,
+            });
+
+            // Progress tracking
+            const updateProgress = () => {
+              if (!animation.currentTime || !animation.effect?.getComputedTiming) return;
+              const timing = animation.effect.getComputedTiming();
+              const progress = timing.progress ?? 0;
+
+              if (animation.playState === "running") {
+                updateTracker({
+                  cardId,
+                  elementName,
+                  status: "running",
+                  progress,
+                  trigger,
+                  startTime,
+                  duration,
+                });
+              }
+            };
+
+            const progressInterval = setInterval(updateProgress, 50);
+
+            // Clean up when complete
             animation.finished
               .then(() => {
+                clearInterval(progressInterval);
+                updateTracker({
+                  cardId,
+                  elementName,
+                  status: "finished",
+                  progress: 1,
+                  trigger,
+                  startTime,
+                  duration,
+                });
                 activeAnimations.current.delete(element);
               })
               .catch(() => {
+                clearInterval(progressInterval);
                 activeAnimations.current.delete(element);
-              }),
-          );
+              });
+          });
+
+          animationPromises.push(animation.finished.then(() => {}).catch(() => {}));
         }
       });
 
@@ -218,7 +319,12 @@ export function useAnimation({
   timeScale = 1,
 }: UseAnimationProps) {
   const engine = useAnimationEngine();
-  const animationRef = engine.createRef;
+
+  const animationRef = useCallback(
+    (animations: AnimationTriggerMap, metadata: AnimationMetadata) =>
+      engine.createRef(animations, metadata),
+    [engine],
+  );
 
   useEffect(() => {
     if (!trigger) return;
@@ -431,18 +537,6 @@ export function useCardVisibility(
     const needsTransition = !activeTransition && currentState !== targetState && trigger;
     if (needsTransition && trigger) {
       actions.startTransition(card.word, currentState, targetState, trigger);
-
-      // Track animations for swimlanes
-      const duration = trigger === "deal-in" ? 600 : 400;
-      ["container", "word", "badge", "coverCard"].forEach((elementName) => {
-        actions.updateAnimationTracker({
-          cardId: card.word,
-          elementName,
-          startTime: Date.now(),
-          duration,
-          trigger,
-        });
-      });
     }
   }, [card.word, currentState, targetState, trigger, activeTransition, actions]);
 
@@ -461,24 +555,31 @@ export function useCardVisibility(
   const animatedRef = useCallback(
     (config: AnimatedElementConfig) => {
       return (element: HTMLElement | null) => {
+        console.log(element, "Mounted element with animatedRef");
         if (element) {
           elements.current.set(config.id, element);
           if (config.animations) {
-            const ref = animationRef(config.animations);
+            const ref = animationRef(config.animations, {
+              id: config.id,
+              cardId: card.word,
+            });
             ref(element);
           }
           config.onMount?.(element);
         } else {
           const stored = elements.current.get(config.id);
           if (stored && config.animations) {
-            const ref = animationRef(config.animations);
+            const ref = animationRef(config.animations, {
+              id: config.id,
+              cardId: card.word,
+            });
             ref(null);
           }
           elements.current.delete(config.id);
         }
       };
     },
-    [animationRef],
+    [animationRef, card.word],
   );
 
   return {
