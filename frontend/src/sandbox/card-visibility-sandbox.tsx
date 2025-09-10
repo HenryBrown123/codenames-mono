@@ -17,13 +17,7 @@ const GameCard = memo<{
   initialState?: CardDisplayState;
 }>(({ card, index, onClick, initialState = "hidden" }) => {
   const { displayState, animatedRef } = useCardVisibility(card, initialState, { index });
-
-  console.log(card.word, "Rendering with displayState:", displayState);
-
-  const teamColor =
-    !card.selected && card.teamName && displayState === "visible-colored"
-      ? styles[`color${card.teamName.charAt(0).toUpperCase()}${card.teamName.slice(1)}`]
-      : "";
+  const viewMode = useCardVisibilityStore((state) => state.viewMode);
 
   const handleClick = () => {
     if (!card.selected && displayState !== "hidden") {
@@ -31,12 +25,16 @@ const GameCard = memo<{
     }
   };
 
-  console.log(card.word, "Rendering with teamColor:", teamColor, displayState);
+  // Build the animation key directly from teamName
+  const baseCardAnimationKey = card.teamName ? `baseCard-${card.teamName}` : "baseCard";
 
   return (
     <div
-      ref={animatedRef({ id: "container", animations: CARD_ANIMATIONS.container })}
-      className={`${styles.cardWrapper} ${card.selected ? styles.selected : ""} ${teamColor}`}
+      ref={animatedRef({
+        id: baseCardAnimationKey,
+        animations: CARD_ANIMATIONS[baseCardAnimationKey] || CARD_ANIMATIONS.baseCard,
+      })}
+      className={`${styles.cardWrapper} ${card.selected ? styles.selected : ""}`}
       onClick={handleClick}
       data-state={displayState}
     >
@@ -46,7 +44,8 @@ const GameCard = memo<{
       >
         {card.word}
       </div>
-      {displayState === "visible-colored" && card.teamName && (
+
+      {viewMode === "spymaster" && card.teamName && (
         <div
           ref={animatedRef({ id: "badge", animations: CARD_ANIMATIONS.badge })}
           className={styles.cardBadge}
@@ -54,7 +53,7 @@ const GameCard = memo<{
           {card.teamName}
         </div>
       )}
-      <div className={styles.cardState}>{displayState}</div>
+
       {card.selected && card.teamName && (
         <div
           ref={animatedRef({ id: "coverCard", animations: CARD_ANIMATIONS.coverCard })}
