@@ -249,11 +249,23 @@ export function useAnimation({
   return { animationRef };
 }
 
+/**
+ * Animation tracker for swimlane visualization (demo only).
+ */
+export interface AnimationTracker {
+  cardId: string;
+  elementName: string;
+  startTime: number;
+  duration: number;
+  trigger: CardAnimationTrigger;
+}
+
 // ============= CARD VISIBILITY STORE =============
 interface CardVisibilityStore {
   cards: Map<string, CardState>;
   viewMode: ViewMode;
   timeScale: number;
+  animationTrackers: AnimationTracker[]; // <-- YOU NEED TO ADD THIS
 
   actions: {
     initCard: (cardId: string, initialState: CardDisplayState) => void;
@@ -267,7 +279,8 @@ interface CardVisibilityStore {
     setViewMode: (mode: ViewMode) => void;
     toggleViewMode: () => void;
     setTimeScale: (scale: number) => void;
-
+    updateAnimationTracker: (tracker: AnimationTracker) => void; // Add this
+    clearAnimationTrackers: (cardId: string) => void; // Add this
     reset: () => void;
   };
 }
