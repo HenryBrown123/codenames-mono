@@ -74,88 +74,141 @@ GameCard.displayName = "GameCard";
 // ============= SWIMLANES VISUALIZER =============
 const SwimlanesVisualizer: React.FC = () => {
   const animationTrackers = useCardVisibilityStore((s) => s.animationTrackers);
+  const [currentTime, setCurrentTime] = useState(Date.now());
 
-  // Use status for categorization, progress is already in tracker
-  const categorizedTrackers = animationTrackers.reduce(
-    (acc, tracker) => {
-      if (tracker.status === "pending") {
-        acc.pending.push(tracker);
-      } else if (tracker.status === "running") {
-        acc.running.push(tracker);
-      } else if (tracker.status === "finished") {
-        acc.finished.push(tracker);
-      }
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTime(Date.now()), 50);
+    return () => clearInterval(interval);
+  }, []);
 
-      return acc;
-    },
-    {
-      pending: [] as AnimationTracker[],
-      running: [] as AnimationTracker[],
-      finished: [] as AnimationTracker[],
-    },
-  );
+  // Group by card, then get the latest event for each card
+  const eventsByCard = animationTrackers.reduce((acc, tracker) => {
+    if (!acc[tracker.cardId]) {
+      acc[tracker.cardId] = {
+        trigger: tracker.trigger,
+        startTime: tracker.startTime,
+        endTime: tracker.startTime + tracker.duration,
+        elements: []
+      };
+    }
+    
+    const event = acc[tracker.cardId];
+    // If this is a different trigger, replace the whole event (new animation started)
+    if (event.trigger !== tracker.trigger) {
+      acc[tracker.cardId] = {
+        trigger: tracker.trigger,
+        startTime: tracker.startTime,
+        endTime: tracker.startTime + tracker.duration,
+        elements: [tracker]
+      };
+    } else {
+      // Same trigger, add to elements
+      event.elements.push(tracker);
+      event.startTime = Math.min(event.startTime, tracker.startTime);
+      event.endTime = Math.max(event.endTime, tracker.startTime + tracker.duration);
+    }
+    
+    return acc;
+  }, {} as Record<string, {
+    trigger: string;
+    startTime: number;
+    endTime: number;
+    elements: AnimationTracker[];
+  }>);
 
-  return (
-    <div className={styles.swimlanes}>
-      <h2 className={styles.swimlanesTitle}>Animation Timeline</h2>
-      <div className={styles.swimlanesContainer}>
-        <div className={styles.swimlane}>
-          <div className={`${styles.swimlaneHeader} ${styles.pending}`}>
-            Pending ({categorizedTrackers.pending.length})
-          </div>
-          <div className={styles.swimlaneContent}>
-            {categorizedTrackers.pending.map((tracker, i) => (
-              <div
-                key={`${tracker.cardId}-${tracker.elementName}-${i}`}
-                className={styles.swimlaneItem}
-              >
-                <div className={styles.swimlaneItemTitle}>{tracker.cardId}</div>
-                <div className={styles.swimlaneItemElement}>{tracker.elementName}</div>
-                <div className={styles.swimlaneItemEvent}>{tracker.trigger}</div>
-              </div>
-            ))}
-          </div>
+  // Determine event status based on ALL elements
+  const getEventStatus = (event: typeof eventsByCard[string]) => {
+    const allFinished = event.elements.every(el => el.status === 'finished');
+    const anyRunning = event.elements.some(el => el.status === 'running');
+    const allPending = event.elements.every(el => el.status === 'pending');
+    
+    if (allFinished) return 'finished';
+    if (allPending) return 'pending';
+    if (anyRunning) return 'running';
+    return 'running'; // Some finished, some pending
+  };
+
+  // Group cards by their event status
+  const cardsByStatus = Object.entries(eventsByCard).reduce((acc, [cardId, event]) => {
+    const status = getEventStatus(event);
+    if (!acc[status]) acc[status] = [];
+    acc[status].push({ cardId, event });
+    return acc;
+  }, {} as Record<string, Array<{ cardId: string; event: typeof eventsByCard[string] }>>);
+
+  const renderEventBlock = (cardId: string, event: typeof eventsByCard[string]) => {
+    const eventStatus = getEventStatus(event);
+    
+    return (
+      <div key={cardId} className={styles.eventBlock} data-status={eventStatus}>
+        <div className={styles.eventHeader}>
+          <span className={styles.eventCard}>{cardId}</span>
+          <span className={styles.eventTrigger}>{event.trigger}</span>
         </div>
-
-        <div className={styles.swimlane}>
-          <div className={`${styles.swimlaneHeader} ${styles.running}`}>
-            Running ({categorizedTrackers.running.length})
-          </div>
-          <div className={styles.swimlaneContent}>
-            {categorizedTrackers.running.map((tracker, i) => (
+        <div className={styles.eventElements}>
+          {event.elements.map((el, i) => {
+            const progress = el.status === 'running' 
+              ? Math.min((currentTime - el.startTime) / el.duration, 1)
+              : el.status === 'finished' ? 1 : 0;
+            
+            return (
               <div
-                key={`${tracker.cardId}-${tracker.elementName}-${i}`}
-                className={styles.swimlaneItem}
+                key={`${el.elementName}-${i}`}
+                className={styles.eventElement}
+                data-status={el.status}
               >
-                <div className={styles.swimlaneItemTitle}>{tracker.cardId}</div>
-                <div className={styles.swimlaneItemElement}>{tracker.elementName}</div>
-                <div className={styles.swimlaneItemEvent}>{tracker.trigger}</div>
-                <div className={styles.swimlaneProgress}>
-                  <div
-                    className={styles.swimlaneProgressBar}
-                    style={{ width: `${(tracker.progress || 0) * 100}%` }}
+                <span className={styles.elementName}>{el.elementName}</span>
+                <div className={styles.elementProgress}>
+                  <div 
+                    className={styles.elementProgressBar}
+                    style={{ width: `${progress * 100}%` }}
                   />
                 </div>
               </div>
-            ))}
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className={styles.timeline}>
+      <h2 className={styles.timelineTitle}>Animation Timeline</h2>
+      <div className={styles.timelineColumns}>
+        {/* Pending column */}
+        <div className={styles.timelineColumn}>
+          <div className={styles.columnHeader} data-status="pending">
+            Pending ({cardsByStatus.pending?.length || 0})
+          </div>
+          <div className={styles.columnContent}>
+            {cardsByStatus.pending?.map(({ cardId, event }) => 
+              renderEventBlock(cardId, event)
+            )}
           </div>
         </div>
 
-        <div className={styles.swimlane}>
-          <div className={`${styles.swimlaneHeader} ${styles.finished}`}>
-            Finished ({categorizedTrackers.finished.length})
+        {/* Running column */}
+        <div className={styles.timelineColumn}>
+          <div className={styles.columnHeader} data-status="running">
+            Running ({cardsByStatus.running?.length || 0})
           </div>
-          <div className={styles.swimlaneContent}>
-            {categorizedTrackers.finished.slice(-10).map((tracker, i) => (
-              <div
-                key={`${tracker.cardId}-${tracker.elementName}-${i}`}
-                className={styles.swimlaneItem}
-              >
-                <div className={styles.swimlaneItemTitle}>{tracker.cardId}</div>
-                <div className={styles.swimlaneItemElement}>{tracker.elementName}</div>
-                <div className={styles.swimlaneItemEvent}>{tracker.trigger}</div>
-              </div>
-            ))}
+          <div className={styles.columnContent}>
+            {cardsByStatus.running?.map(({ cardId, event }) => 
+              renderEventBlock(cardId, event)
+            )}
+          </div>
+        </div>
+
+        {/* Finished column */}
+        <div className={styles.timelineColumn}>
+          <div className={styles.columnHeader} data-status="finished">
+            Finished ({cardsByStatus.finished?.length || 0})
+          </div>
+          <div className={styles.columnContent}>
+            {cardsByStatus.finished?.slice(-10).map(({ cardId, event }) => 
+              renderEventBlock(cardId, event)
+            )}
           </div>
         </div>
       </div>
@@ -262,6 +315,8 @@ const PlayerSelectionScene: React.FC = () => {
     { word: "SUNSET", teamName: "red" as const },
   ];
 
+  const reset = useCardVisibilityStore((s) => s.actions.reset); // Add this
+
   const handleCardClick = useCallback((word: string) => {
     setCards((prev) =>
       prev.map((card) => {
@@ -279,6 +334,7 @@ const PlayerSelectionScene: React.FC = () => {
   }, []);
 
   const resetCards = useCallback(() => {
+    reset();
     setCards((prev) =>
       prev.map((card) => ({
         ...card,

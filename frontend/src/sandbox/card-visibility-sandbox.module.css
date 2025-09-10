@@ -198,6 +198,10 @@
   margin-bottom: 0.5rem;
 }
 
+.cardWrapper[data-state="visible-colored"] .cardWord {
+  color: white;
+}
+
 .cardState {
   font-size: 0.9rem;
   opacity: 0.8;
@@ -212,6 +216,7 @@
   background: rgba(0, 0, 0, 0.2);
   border-radius: 4px;
   text-transform: uppercase;
+  color: white;
 }
 
 /* Make cover cards start hidden/offscreen by default */
@@ -274,97 +279,140 @@
   text-transform: uppercase;
 }
 
-/* Swimlane Visualizer */
-.swimlanes {
+/* Timeline Visualizer */
+.timeline {
   background: #1a1a1a;
   padding: 1rem;
   border-radius: 8px;
   margin-top: 2rem;
 }
 
-.swimlanesTitle {
+.timelineTitle {
   color: #fff;
   margin-bottom: 1rem;
 }
 
-.swimlanesContainer {
+.timelineColumns {
   display: flex;
   gap: 1rem;
 }
 
-.swimlane {
+.timelineColumn {
   flex: 1;
 }
 
-.swimlaneHeader {
+.columnHeader {
   padding: 0.5rem;
   border-radius: 4px 4px 0 0;
   text-align: center;
   font-weight: bold;
-  color: #fff;
+  color: white;
 }
 
-.swimlaneHeader.pending {
+.columnHeader[data-status="pending"] {
   background: #ffaa00;
 }
 
-.swimlaneHeader.running {
+.columnHeader[data-status="running"] {
   background: #00aaff;
 }
 
-.swimlaneHeader.finished {
-  background: #00ff00;
+.columnHeader[data-status="finished"] {
+  background: #00ff88;
 }
 
-.swimlaneContent {
+.columnContent {
   min-height: 200px;
   background: #2a2a2a;
   padding: 0.5rem;
   border-radius: 0 0 4px 4px;
 }
 
-.swimlaneItem {
+.eventBlock {
   background: #333;
-  padding: 0.5rem;
-  margin-bottom: 0.5rem;
+  border: 1px solid #444;
   border-radius: 4px;
-  font-size: 0.8rem;
-  color: #fff;
-  transition:
-    transform 0.2s,
-    opacity 0.2s;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
 }
 
-.swimlaneItem.finished {
-  opacity: 0.6;
+.eventBlock[data-status="running"] {
+  border-color: #00aaff;
+  box-shadow: 0 0 10px rgba(0, 170, 255, 0.3);
 }
 
-.swimlaneItemTitle {
-  font-weight: bold;
-}
-
-.swimlaneItemElement {
+.eventBlock[data-status="finished"] {
   opacity: 0.8;
-  font-size: 0.9em;
 }
 
-.swimlaneItemEvent {
-  opacity: 0.6;
-  font-size: 0.7rem;
+.eventHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #444;
 }
 
-.swimlaneProgress {
+.eventCard {
+  font-weight: bold;
+  color: #00aaff;
+}
+
+.eventTrigger {
+  font-size: 0.8rem;
+  color: #ffaa00;
+  font-family: monospace;
+}
+
+.eventElements {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.eventElement {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  background: #3a3a3a;
+  border-radius: 2px;
+}
+
+.eventElement[data-status="finished"] {
+  background: #2a4a3a;
+}
+
+.eventElement[data-status="running"] {
+  background: #2a3a4a;
+}
+
+.elementName {
+  font-size: 0.75rem;
+  color: #ccc;
+  min-width: 80px;
+}
+
+.elementProgress {
+  flex: 1;
   height: 4px;
   background: #555;
   border-radius: 2px;
-  margin-top: 0.25rem;
   overflow: hidden;
 }
 
-.swimlaneProgressBar {
+.elementProgressBar {
   height: 100%;
-  background: #00aaff;
+  background: #00ff88;
   transition: width 0.1s;
+}
+
+.eventElement[data-status="running"] .elementProgressBar {
+  background: #00aaff;
+}
+
+.eventElement[data-status="pending"] .elementProgressBar {
+  background: #ffaa00;
 }
 
 /* Scene specific styles */

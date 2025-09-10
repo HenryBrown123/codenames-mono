@@ -532,13 +532,14 @@ export function useCardVisibility(
   useEffect(() => {
     const needsTransition = !activeTransition && currentState !== targetState && trigger;
     if (needsTransition && trigger) {
+      // Clear any existing finished animations for this card when starting new one
+      actions.clearAnimationTrackers(card.word);
       actions.startTransition(card.word, currentState, targetState, trigger);
     }
   }, [card.word, currentState, targetState, trigger, activeTransition, actions]);
 
   const handleComplete = useCallback(() => {
     actions.completeTransition(card.word);
-    actions.clearAnimationTrackers(card.word);
   }, [card.word, actions]);
 
   const { animationRef } = useAnimation({
