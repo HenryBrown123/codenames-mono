@@ -1,17 +1,39 @@
-import React, { useCallback, useRef, useEffect, useState } from "react";
+// card-visibility-sandbox.hooks.tsx
+import React, { useRef, useEffect, useCallback, useMemo } from "react";
 import { create } from "zustand";
 
-// ============= TYPES =============
-export type VisualState = "hidden" | "visible" | "visible-colored" | "visible-covered";
-
-export type GameEvent = "deal-in" | "spymaster-reveal" | "spymaster-hide" | "cover-card";
-
-export type ViewMode = "normal" | "spymaster";
-
-export interface GameData {
-  word: string;
-  teamName: "red" | "blue" | "neutral" | "assassin";
+// ============= ANIMATION TYPES =============
+export interface AnimationDefinition {
+  keyframes: Keyframe[];
+  options?: KeyframeAnimationOptions & {
+    stagger?: number;
+  };
 }
+
+export interface AnimationTriggerMap {
+  [trigger: string]: AnimationDefinition;
+}
+
+export interface AnimationOptions {
+  index?: number;
+  timeScale?: number;
+}
+
+export interface AnimationEngine {
+  register(element: HTMLElement, animations: AnimationTriggerMap): void;
+  unregister(element: HTMLElement): void;
+  runAnimations(trigger: string, options?: AnimationOptions): Promise<void>;
+  cancelAll(): void;
+  dispose(): void;
+  createRef(animations: AnimationTriggerMap): (element: HTMLElement | null) => void;
+  getSize(): number;
+  isAnimating(): boolean;
+}
+
+// ============= CARD TYPES =============
+export type CardDisplayState = "hidden" | "visible" | "visible-colored" | "visible-covered";
+export type CardAnimationTrigger = "deal-in" | "spymaster-reveal" | "spymaster-hide" | "cover-card";
+export type ViewMode = "normal" | "spymaster";
 
 export interface Card {
   word: string;
@@ -19,241 +41,259 @@ export interface Card {
   selected: boolean;
 }
 
-interface CardTransition {
-  from: VisualState;
-  to: VisualState;
-  animation: GameEvent;
-  condition: (card: Card, viewMode: ViewMode) => boolean;
-}
-
-interface AnimationTracker {
-  cardId: string;
-  elementName: string;
-  status: "pending" | "running" | "finished";
-  progress: number;
-  event?: GameEvent;
-  startTime?: number;
-}
-
-interface AnimationDefinition {
-  keyframes: Keyframe[];
-  duration?: number;
-  delay?: number | ((index: number) => number);
-  easing?: string;
-}
-
-interface AnimationConfig {
-  [event: string]: {
-    [selector: string]: AnimationDefinition;
-  };
-}
-
-// ============= ANIMATION CONFIG =============
-export const CARD_ANIMATIONS: AnimationConfig = {
-  "deal-in": {
-    cardContainer: {
-      keyframes: [
-        {
-          opacity: "0",
-          transform: "translateY(-100vh) translateX(-50vw) rotate(-15deg) scale(0.8)",
-        },
-        { opacity: "1", transform: "translateY(0) translateX(0) rotate(0) scale(1)" },
-      ],
-      duration: 600,
-      delay: (index) => index * 50,
-      easing: "cubic-bezier(0.34, 1.56, 0.64, 1)", // Overshoot for that bouncy feel
-    },
-    cardWord: {
-      keyframes: [
-        { opacity: "0", transform: "scale(0.3)" },
-        { opacity: "1", transform: "scale(1)" },
-      ],
-      duration: 400,
-      delay: (index) => index * 50 + 200,
-      easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-    },
-  },
-  "spymaster-reveal": {
-    cardWord: {
-      keyframes: [
-        { transform: "scale(1)", filter: "brightness(1)" },
-        { transform: "scale(1.1)", filter: "brightness(1.2)" },
-      ],
-      duration: 300,
-      delay: (index) => index * 20,
-      easing: "ease-out",
-    },
-    cardBadge: {
-      keyframes: [
-        { opacity: "0", transform: "translateY(10px) scale(0.8)" },
-        { opacity: "1", transform: "translateY(0) scale(1)" },
-      ],
-      duration: 400,
-      delay: (index) => index * 20 + 150,
-      easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-    },
-  },
-  "spymaster-hide": {
-    cardBadge: {
-      keyframes: [
-        { opacity: "1", transform: "scale(1)" },
-        { opacity: "0", transform: "scale(0.8)" },
-      ],
-      duration: 200,
-      easing: "ease-in",
-    },
-  },
-  "cover-card": {
-    coverCard: {
-      keyframes: [
-        { opacity: "0", transform: "translateX(-100vw) translateY(-100vh) rotate(-6deg)" },
-        { opacity: "1", transform: "translateX(0) translateY(0) rotate(0)" },
-      ],
-      duration: 600,
-      delay: 50,
-      easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-    },
-  },
-};
-
-// ============= STATE MACHINE TRANSITIONS =============
-export const CARD_TRANSITIONS: CardTransition[] = [
-  // Cards appear with dealing animation (normal view)
-  {
-    from: "hidden",
-    to: "visible",
-    animation: "deal-in",
-    condition: (card, viewMode) => viewMode === "normal",
-  },
-  // Cards deal directly to colored in spymaster view
-  {
-    from: "hidden",
-    to: "visible-colored",
-    animation: "deal-in",
-    condition: (card, viewMode) => viewMode === "spymaster" && !!card.teamName,
-  },
-  // Cards reveal their team colors when entering spymaster view
-  {
-    from: "visible",
-    to: "visible-colored",
-    animation: "spymaster-reveal",
-    condition: (card, viewMode) => viewMode === "spymaster" && !!card.teamName,
-  },
-  // Cards hide their team colors when leaving spymaster view
-  {
-    from: "visible-colored",
-    to: "visible",
-    animation: "spymaster-hide",
-    condition: (card, viewMode) => viewMode === "normal" && !card.selected,
-  },
-  // Cards cover when selected (from neutral state)
-  {
-    from: "visible",
-    to: "visible-covered",
-    animation: "cover-card",
-    condition: (card) => card.selected && !!card.teamName,
-  },
-  // Cards cover when selected (from colored state)
-  {
-    from: "visible-colored",
-    to: "visible-covered",
-    animation: "cover-card",
-    condition: (card) => card.selected && !!card.teamName,
-  },
-];
-
-/**
- * Derive the target state and animation event based on current state and context
- */
-export function deriveTargetState(
-  currentState: VisualState,
-  card: Card,
-  viewMode: ViewMode,
-): { targetState: VisualState; event: GameEvent | null } {
-  // Find matching transition from current state
-  const transition = CARD_TRANSITIONS.find(
-    (t) => t.from === currentState && t.condition(card, viewMode),
-  );
-
-  if (transition) {
-    return { targetState: transition.to, event: transition.animation };
-  }
-
-  return { targetState: currentState, event: null };
-}
-
-// ============= ZUSTAND STORE =============
 interface CardState {
-  visualState: VisualState;
+  displayState: CardDisplayState;
   transition?: {
-    from: VisualState;
-    to: VisualState;
-    event: GameEvent;
+    from: CardDisplayState;
+    to: CardDisplayState;
+    trigger: CardAnimationTrigger;
     startedAt: number;
   };
 }
 
+interface CardTransition {
+  from: CardDisplayState;
+  to: CardDisplayState;
+  trigger: CardAnimationTrigger;
+  condition: (card: Card, viewMode: ViewMode) => boolean;
+}
+
+// ============= ANIMATION ENGINE =============
+function animateElement(
+  element: HTMLElement,
+  animDef: AnimationDefinition,
+  index: number,
+  timeScale: number,
+): Animation | null {
+  try {
+    const staggerDelay = index * (animDef.options?.stagger || 0);
+
+    // Handle duration - could be number, string, or CSSNumericValue
+    let duration = 0;
+    if (typeof animDef.options?.duration === "number") {
+      duration = animDef.options.duration;
+    }
+
+    // Handle delay
+    let delay = 0;
+    if (typeof animDef.options?.delay === "number") {
+      delay = animDef.options.delay;
+    }
+
+    const animationOptions: KeyframeAnimationOptions = {
+      duration: duration / timeScale,
+      delay: (delay + staggerDelay) / timeScale,
+      easing: animDef.options?.easing,
+      fill: animDef.options?.fill,
+    };
+
+    return element.animate(animDef.keyframes, animationOptions);
+  } catch (error) {
+    console.error("Animation failed:", error);
+
+    if (animDef.keyframes.length > 0) {
+      const finalKeyframe = animDef.keyframes[animDef.keyframes.length - 1];
+      Object.assign(element.style, finalKeyframe);
+    }
+
+    return null;
+  }
+}
+
+export function useAnimationEngine(): AnimationEngine {
+  const elementRegistry = useRef(new Map<HTMLElement, AnimationTriggerMap>());
+  const activeAnimations = useRef(new Map<HTMLElement, Animation>());
+
+  const engine = useMemo<AnimationEngine>(() => {
+    const cancelAnimation = (element: HTMLElement) => {
+      const animation = activeAnimations.current.get(element);
+      if (animation) {
+        try {
+          animation.cancel();
+        } catch (e) {}
+        activeAnimations.current.delete(element);
+      }
+    };
+
+    const cancelAll = () => {
+      activeAnimations.current.forEach((animation) => {
+        try {
+          animation.cancel();
+        } catch (e) {}
+      });
+      activeAnimations.current.clear();
+    };
+
+    const register = (element: HTMLElement, animations: AnimationTriggerMap) => {
+      elementRegistry.current.set(element, animations);
+    };
+
+    const unregister = (element: HTMLElement) => {
+      elementRegistry.current.delete(element);
+      cancelAnimation(element);
+    };
+
+    const createRef = (animations: AnimationTriggerMap) => {
+      let myElement: HTMLElement | null = null;
+
+      return (element: HTMLElement | null) => {
+        if (!element && myElement) {
+          unregister(myElement);
+          myElement = null;
+          return;
+        }
+
+        if (element) {
+          myElement = element;
+          register(element, animations);
+        }
+      };
+    };
+
+    const runAnimations = async (
+      trigger: string,
+      options: AnimationOptions = {},
+    ): Promise<void> => {
+      const { index = 0, timeScale = 1 } = options;
+
+      cancelAll();
+
+      const animationPromises: Promise<void>[] = [];
+
+      elementRegistry.current.forEach((animations, element) => {
+        const animDef = animations[trigger];
+        if (!animDef) return;
+
+        const animation = animateElement(element, animDef, index, timeScale);
+        if (animation) {
+          activeAnimations.current.set(element, animation);
+
+          animationPromises.push(
+            animation.finished
+              .then(() => {
+                activeAnimations.current.delete(element);
+              })
+              .catch(() => {
+                activeAnimations.current.delete(element);
+              }),
+          );
+        }
+      });
+
+      if (animationPromises.length > 0) {
+        await Promise.all(animationPromises);
+      }
+    };
+
+    const dispose = () => {
+      cancelAll();
+      elementRegistry.current.clear();
+    };
+
+    return {
+      register,
+      unregister,
+      runAnimations,
+      cancelAll,
+      dispose,
+      createRef,
+      getSize: () => elementRegistry.current.size,
+      isAnimating: () => activeAnimations.current.size > 0,
+    };
+  }, []);
+
+  return engine;
+}
+
+// ============= ANIMATION ORCHESTRATOR =============
+export interface UseAnimationProps {
+  trigger: string | null;
+  onComplete?: () => void;
+  onStart?: () => void;
+  index?: number;
+  timeScale?: number;
+}
+
+export function useAnimation({
+  trigger,
+  onComplete,
+  onStart,
+  index = 0,
+  timeScale = 1,
+}: UseAnimationProps) {
+  const engine = useAnimationEngine();
+  const animationRef = engine.createRef;
+
+  useEffect(() => {
+    if (!trigger) {
+      return;
+    }
+
+    if (onStart) onStart();
+
+    engine.runAnimations(trigger, { index, timeScale }).then(() => {
+      if (onComplete) onComplete();
+    });
+
+    return () => {
+      engine.cancelAll();
+    };
+  }, [trigger, onComplete, onStart, index, timeScale, engine]);
+
+  useEffect(() => {
+    return () => {
+      engine.dispose();
+    };
+  }, [engine]);
+
+  return { animationRef };
+}
+
+// ============= CARD VISIBILITY STORE =============
 interface CardVisibilityStore {
-  // State - flat for easy access
   cards: Map<string, CardState>;
   viewMode: ViewMode;
-  animationTrackers: AnimationTracker[];
   timeScale: number;
 
-  // Actions - grouped for organization
   actions: {
-    initCard: (cardId: string, initialState: VisualState) => void;
-    updateCardState: (cardId: string, state: VisualState) => void;
-    startTransition: (cardId: string, from: VisualState, to: VisualState, event: GameEvent) => void;
+    initCard: (cardId: string, initialState: CardDisplayState) => void;
+    startTransition: (
+      cardId: string,
+      from: CardDisplayState,
+      to: CardDisplayState,
+      trigger: CardAnimationTrigger,
+    ) => void;
     completeTransition: (cardId: string) => void;
     setViewMode: (mode: ViewMode) => void;
     toggleViewMode: () => void;
-    updateAnimationTracker: (tracker: AnimationTracker) => void;
-    clearAnimationTrackers: (cardId: string) => void;
     setTimeScale: (scale: number) => void;
+
     reset: () => void;
   };
 }
 
-/**
- * Global store for card visibility state management
- */
 export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => ({
-  // State
   cards: new Map(),
   viewMode: "normal",
-  animationTrackers: [],
   timeScale: 1,
+  animationTrackers: [],
 
-  // Actions
   actions: {
     initCard: (cardId, initialState) => {
       set((state) => {
         if (state.cards.has(cardId)) return state;
-
         const newCards = new Map(state.cards);
-        newCards.set(cardId, { visualState: initialState });
+        newCards.set(cardId, { displayState: initialState });
         return { cards: newCards };
       });
     },
 
-    updateCardState: (cardId, visualState) => {
-      set((state) => {
-        const newCards = new Map(state.cards);
-        const card = newCards.get(cardId);
-        if (card) {
-          newCards.set(cardId, { ...card, visualState });
-        }
-        return { cards: newCards };
-      });
-    },
-
-    startTransition: (cardId, from, to, event) => {
+    startTransition: (cardId, from, to, trigger) => {
       set((state) => {
         const newCards = new Map(state.cards);
         newCards.set(cardId, {
-          visualState: from,
-          transition: { from, to, event, startedAt: Date.now() },
+          displayState: from,
+          transition: { from, to, trigger, startedAt: Date.now() },
         });
         return { cards: newCards };
       });
@@ -266,7 +306,7 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
       set((state) => {
         const newCards = new Map(state.cards);
         newCards.set(cardId, {
-          visualState: card.transition!.to,
+          displayState: card.transition!.to,
           transition: undefined,
         });
         return { cards: newCards };
@@ -274,9 +314,11 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
     },
 
     setViewMode: (mode) => set({ viewMode: mode }),
-
     toggleViewMode: () =>
-      set((state) => ({ viewMode: state.viewMode === "normal" ? "spymaster" : "normal" })),
+      set((state) => ({
+        viewMode: state.viewMode === "normal" ? "spymaster" : "normal",
+      })),
+    setTimeScale: (scale) => set({ timeScale: scale }),
 
     updateAnimationTracker: (tracker) =>
       set((state) => ({
@@ -293,198 +335,227 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
         animationTrackers: state.animationTrackers.filter((t) => t.cardId !== cardId),
       })),
 
-    setTimeScale: (scale) => set({ timeScale: scale }),
-
     reset: () => set({ cards: new Map(), viewMode: "normal", animationTrackers: [] }),
   },
 }));
 
-// ============= HOOKS =============
-/**
- * Hook for managing card visibility state and transitions
- * Uses state machine to determine transitions and animations
- */
-export function useCardVisibility(card: Card, initialState: VisualState = "visible") {
-  // State selectors
+// ============= STATE MACHINE =============
+const CARD_TRANSITIONS: CardTransition[] = [
+  {
+    from: "hidden",
+    to: "visible",
+    trigger: "deal-in",
+    condition: (card, viewMode) => viewMode === "normal",
+  },
+  {
+    from: "hidden",
+    to: "visible-colored",
+    trigger: "deal-in",
+    condition: (card, viewMode) => viewMode === "spymaster" && !!card.teamName,
+  },
+  {
+    from: "visible",
+    to: "visible-colored",
+    trigger: "spymaster-reveal",
+    condition: (card, viewMode) => viewMode === "spymaster" && !!card.teamName,
+  },
+  {
+    from: "visible-colored",
+    to: "visible",
+    trigger: "spymaster-hide",
+    condition: (card, viewMode) => viewMode === "normal" && !card.selected,
+  },
+  {
+    from: "visible",
+    to: "visible-covered",
+    trigger: "cover-card",
+    condition: (card) => card.selected && !!card.teamName,
+  },
+  {
+    from: "visible-colored",
+    to: "visible-covered",
+    trigger: "cover-card",
+    condition: (card) => card.selected && !!card.teamName,
+  },
+];
+
+function deriveTargetState(
+  currentState: CardDisplayState,
+  card: Card,
+  viewMode: ViewMode,
+): { targetState: CardDisplayState; trigger: CardAnimationTrigger | null } {
+  const transition = CARD_TRANSITIONS.find(
+    (t) => t.from === currentState && t.condition(card, viewMode),
+  );
+
+  return transition
+    ? { targetState: transition.to, trigger: transition.trigger }
+    : { targetState: currentState, trigger: null };
+}
+
+// ============= CARD VISIBILITY HOOK =============
+export interface AnimatedElementConfig {
+  id: string;
+  animations?: AnimationTriggerMap;
+  onMount?: (element: HTMLElement) => void;
+}
+
+export interface CardVisibilityOptions {
+  index?: number;
+}
+
+export interface CardVisibilityResult {
+  displayState: CardDisplayState;
+  animatedRef: (config: AnimatedElementConfig) => (element: HTMLElement | null) => void;
+}
+
+export function useCardVisibility(
+  card: Card,
+  initialState: CardDisplayState = "hidden",
+  options?: CardVisibilityOptions,
+): CardVisibilityResult {
   const viewMode = useCardVisibilityStore((state) => state.viewMode);
+  const timeScale = useCardVisibilityStore((state) => state.timeScale);
   const cardState = useCardVisibilityStore(
     useCallback((state) => state.cards.get(card.word), [card.word]),
   );
-
-  // Actions - single stable reference
   const actions = useCardVisibilityStore((state) => state.actions);
 
-  // Initialize card if it doesn't exist
+  const elements = useRef(new Map<string, HTMLElement>());
+
   useEffect(() => {
     if (!cardState) {
       actions.initCard(card.word, initialState);
     }
   }, [cardState, actions, card.word, initialState]);
 
-  const currentState = cardState?.visualState || initialState;
+  const currentState = cardState?.displayState || initialState;
   const activeTransition = cardState?.transition;
 
-  // Use state machine to determine target state
-  const { targetState, event } = deriveTargetState(currentState, card, viewMode);
+  const { targetState, trigger } = useMemo(
+    () => deriveTargetState(currentState, card, viewMode),
+    [currentState, card, viewMode],
+  );
 
-  // Trigger transitions when needed
   useEffect(() => {
-    const needsTransition = !activeTransition && currentState !== targetState && event;
+    const needsTransition = !activeTransition && currentState !== targetState && trigger;
 
-    if (needsTransition && event) {
-      actions.startTransition(card.word, currentState, targetState, event);
+    if (needsTransition && trigger) {
+      actions.startTransition(card.word, currentState, targetState, trigger);
     }
-  }, [card.word, currentState, targetState, event, activeTransition, actions]);
+  }, [card.word, currentState, targetState, trigger, activeTransition, actions]);
 
   const handleComplete = useCallback(() => {
     actions.completeTransition(card.word);
   }, [card.word, actions]);
 
+  const { animationRef } = useAnimation({
+    trigger: activeTransition?.trigger || null,
+    onComplete: handleComplete,
+    index: options?.index || 0,
+    timeScale,
+  });
+
+  const animatedRef = useCallback(
+    (config: AnimatedElementConfig) => {
+      return (element: HTMLElement | null) => {
+        if (element) {
+          elements.current.set(config.id, element);
+
+          if (config.animations) {
+            const ref = animationRef(config.animations);
+            ref(element);
+          }
+
+          config.onMount?.(element);
+        } else {
+          const stored = elements.current.get(config.id);
+          if (stored && config.animations) {
+            const ref = animationRef(config.animations);
+            ref(null);
+          }
+          elements.current.delete(config.id);
+        }
+      };
+    },
+    [animationRef],
+  );
+
   return {
-    state: currentState,
-    targetState,
-    isTransitioning: !!activeTransition,
-    animationEvent: activeTransition?.event || null,
-    completeTransition: handleComplete,
+    displayState: currentState,
+    animatedRef,
   };
 }
 
-// ============= ANIMATION CONTAINER COMPONENT =============
-interface AnimationContainerProps {
-  event: string | null;
-  index?: number;
-  onComplete?: () => void;
-  animations: AnimationConfig;
-  children: React.ReactNode;
-  cardId: string;
-}
-
-/**
- * Container component that orchestrates Web Animations API animations
- * Handles animation scheduling, progress tracking, and lifecycle management
- */
-export const AnimationContainer: React.FC<AnimationContainerProps> = ({
-  event,
-  index = 0,
-  onComplete,
-  animations,
-  children,
-  cardId,
-}) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const animationsRef = useRef<Animation[]>([]);
-  const timeScale = useCardVisibilityStore((s) => s.timeScale);
-  const updateTracker = useCardVisibilityStore((s) => s.actions.updateAnimationTracker);
-
-  useEffect(() => {
-    if (!ref.current || !event) return;
-
-    const eventConfig = animations[event];
-    if (!eventConfig) return;
-
-    // Cancel any existing animations
-    animationsRef.current.forEach((anim) => anim.cancel());
-    animationsRef.current = [];
-
-    const runningAnimations: Animation[] = [];
-
-    // Create animations for each selector in the config
-    Object.entries(eventConfig).forEach(([selector, definition]) => {
-      const targets = ref.current!.querySelectorAll<HTMLElement>(`.${selector}`);
-
-      targets.forEach((target) => {
-        // Calculate delay based on index if function, otherwise use static delay
-        const delay =
-          typeof definition.delay === "function" ? definition.delay(index) : definition.delay || 0;
-
-        // Create animation with native Web Animations API
-        const animation = target.animate(definition.keyframes, {
-          duration: (definition.duration || 300) * timeScale,
-          delay: delay * timeScale,
-          easing: definition.easing || "ease",
-          fill: "both",
-        });
-
-        runningAnimations.push(animation);
-
-        // Track animation as pending initially
-        updateTracker({
-          cardId,
-          elementName: selector,
-          status: "pending",
-          progress: 0,
-          event: event as GameEvent,
-        });
-
-        // When animation actually starts playing (after its delay) animation.ready resolves...
-        // this means anything contained in the .then () callback runs after the animation starts.
-        animation.ready.then(() => {
-          // Update status to running
-          updateTracker({
-            cardId,
-            elementName: selector,
-            status: "running",
-            progress: 0,
-            event: event as GameEvent,
-          });
-
-          // Set up progress tracking.... useful for debug/visualisation within demos...
-          const updateProgress = () => {
-            if (!animation.currentTime || !animation.effect?.getComputedTiming) return;
-            const timing = animation.effect.getComputedTiming();
-            const progress = timing.progress ?? 0;
-
-            if (animation.playState === "running") {
-              updateTracker({
-                cardId,
-                elementName: selector,
-                status: "running",
-                progress,
-                event: event as GameEvent,
-              });
-            }
-          };
-
-          // Poll for progress updates..
-          const progressInterval = setInterval(updateProgress, 50);
-
-          // Clean up when animation completes
-          // This promise is nested to ensure proper lifecycle ordering... i.e animation.ready callback will always run
-          // before the finished callback.. even if they resolve at inconsistent times (even if unlikely..)
-          animation.finished
-            .then(() => {
-              clearInterval(progressInterval); // Stop polling
-              updateTracker({
-                cardId,
-                elementName: selector,
-                status: "finished",
-                progress: 1,
-                event: event as GameEvent,
-              });
-            })
-            .catch(() => {
-              // Animation was cancelled - clean up interval
-              clearInterval(progressInterval);
-            });
-        });
-      });
-    });
-
-    // Store reference to all animations for cleanup
-    animationsRef.current = runningAnimations;
-
-    // Handle completion callback when ALL animations finish
-    if (onComplete && runningAnimations.length > 0) {
-      // Promise.all waits for all animations
-      // This just registers a callback for when they're all done
-      Promise.all(runningAnimations.map((anim) => anim.finished.catch(() => {}))).then(onComplete);
-    }
-
-    // Cleanup function - runs on unmount or when dependencies change
-    return () => {
-      animationsRef.current.forEach((anim) => anim.cancel());
-    };
-  }, [event, index, onComplete, animations, timeScale, updateTracker, cardId]);
-
-  return <div ref={ref}>{children}</div>;
+// ============= ANIMATION DEFINITIONS =============
+export const CARD_ANIMATIONS: Record<string, AnimationTriggerMap> = {
+  container: {
+    "deal-in": {
+      keyframes: [
+        {
+          opacity: "0",
+          transform: "translateY(-100vh) translateX(-50vw) rotate(-15deg) scale(0.8)",
+        },
+        { opacity: "1", transform: "translateY(0) translateX(0) rotate(0) scale(1)" },
+      ],
+      options: {
+        duration: 600,
+        easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        stagger: 50,
+      },
+    },
+  },
+  word: {
+    "deal-in": {
+      keyframes: [
+        { opacity: "0", transform: "scale(0.3)" },
+        { opacity: "1", transform: "scale(1)" },
+      ],
+      options: {
+        duration: 400,
+        delay: 200,
+        easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        stagger: 50,
+      },
+    },
+  },
+  badge: {
+    "spymaster-reveal": {
+      keyframes: [
+        { opacity: "0", transform: "translateY(10px) scale(0.8)" },
+        { opacity: "1", transform: "translateY(0) scale(1)" },
+      ],
+      options: {
+        duration: 400,
+        delay: 150,
+        easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        stagger: 20,
+      },
+    },
+    "spymaster-hide": {
+      keyframes: [
+        { opacity: "1", transform: "scale(1)" },
+        { opacity: "0", transform: "scale(0.8)" },
+      ],
+      options: {
+        duration: 200,
+        easing: "ease-in",
+        stagger: 0,
+      },
+    },
+  },
+  coverCard: {
+    "cover-card": {
+      keyframes: [
+        { opacity: "0", transform: "translateX(-100vw) translateY(-100vh) rotate(-6deg)" },
+        { opacity: "1", transform: "translateX(0) translateY(0) rotate(0)" },
+      ],
+      options: {
+        duration: 600,
+        delay: 50,
+        easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        stagger: 0,
+      },
+    },
+  },
 };

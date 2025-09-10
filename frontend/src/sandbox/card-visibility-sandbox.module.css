@@ -17,6 +17,7 @@
   margin-bottom: 2rem;
   font-size: 2rem;
   color: #fff;
+  text-align: center;
 }
 
 /* Controls Section */
@@ -26,6 +27,7 @@
   margin-bottom: 2rem;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
 }
 
 .controlGroup {
@@ -92,35 +94,38 @@
   border-color: #dd3333;
 }
 
-.buttonDanger:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+/* Scene Wrapper */
+.sceneWrapper {
+  background: #222;
+  border-radius: 8px;
+  padding: 2rem;
+  min-height: 500px;
 }
 
-/* Messages - MOVED TO ABSOLUTE POSITIONING */
-.pendingMessage,
-.successMessage {
-  position: fixed;
-  bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 1rem 2rem;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+.sceneContainer {
+  animation: fadeIn 0.3s ease-in;
 }
 
-.pendingMessage {
-  background: #ffaa00;
-  color: #000;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-.successMessage {
-  background: #00ff00;
-  color: #000;
+.sceneTitle {
+  text-align: center;
+  color: #00ff88;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.sceneDescription {
+  text-align: center;
+  color: #aaa;
+  margin-bottom: 1rem;
 }
 
 /* Grid Layout */
@@ -128,7 +133,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1rem;
-  margin-bottom: 2rem;
+  margin: 2rem auto;
+  max-width: 800px;
 }
 
 /* Card Styles */
@@ -149,7 +155,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  opacity: 1; /* Default visible */
+  opacity: 1;
 }
 
 /* Hide cards in hidden state */
@@ -159,36 +165,6 @@
 
 .cardWrapper:hover:not([data-state="visible-covered"]) {
   transform: scale(1.05);
-}
-
-/* For selected cards - show the team color when selected */
-.cardWrapper.selected {
-  cursor: default;
-}
-
-.cardWrapper.selected.colorRed {
-  background: #ff4444;
-  border-color: #ff6666;
-  color: white;
-}
-
-.cardWrapper.selected.colorBlue {
-  background: #4444ff;
-  border-color: #6666ff;
-  color: white;
-}
-
-.cardWrapper.selected.colorNeutral {
-  background: #888;
-  border-color: #aaa;
-  color: white;
-}
-
-.cardWrapper.selected.colorAssassin {
-  background: #000;
-  border-color: #ffff00;
-  box-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
-  color: white;
 }
 
 /* Team color backgrounds for spymaster view */
@@ -224,205 +200,14 @@
   margin-bottom: 0.5rem;
 }
 
-.cardState {
+.cardBadge {
   font-size: 0.9rem;
   opacity: 0.8;
-  min-height: 1.5rem;
+  text-transform: uppercase;
+  min-height: 1.2rem;
 }
 
-/* Pending overlay */
-.pendingOverlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background: rgba(0, 0, 0, 0.7);
-  border-radius: 8px;
-  color: white;
-}
-
-/* Spinner animation */
-.spinner {
-  width: 24px;
-  height: 24px;
-  border: 3px solid transparent;
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Render count badge (for debugging) */
-.renderCount {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  background: red;
-  color: white;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-/* Swimlane Visualizer */
-.swimlanes {
-  background: #1a1a1a;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-top: 2rem;
-}
-
-.swimlanesTitle {
-  color: #fff;
-  margin-bottom: 1rem;
-}
-
-.swimlanesContainer {
-  display: flex;
-  gap: 1rem;
-}
-
-.swimlane {
-  flex: 1;
-}
-
-.swimlaneHeader {
-  padding: 0.5rem;
-  border-radius: 4px 4px 0 0;
-  text-align: center;
-  font-weight: bold;
-  color: #fff;
-}
-
-.swimlaneHeader.pending {
-  background: #ffaa00;
-}
-
-.swimlaneHeader.running {
-  background: #00aaff;
-}
-
-.swimlaneHeader.finished {
-  background: #00ff00;
-}
-
-.swimlaneContent {
-  min-height: 200px;
-  background: #2a2a2a;
-  padding: 0.5rem;
-  border-radius: 0 0 4px 4px;
-}
-
-.swimlaneItem {
-  background: #333;
-  padding: 0.5rem;
-  margin-bottom: 0.5rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  color: #fff;
-  transition:
-    transform 0.2s,
-    opacity 0.2s;
-}
-
-.swimlaneItem.finished {
-  opacity: 0.6;
-}
-
-.swimlaneItemTitle {
-  font-weight: bold;
-}
-
-.swimlaneItemElement {
-  opacity: 0.8;
-  font-size: 0.9em;
-}
-
-.swimlaneItemEvent {
-  opacity: 0.6;
-  font-size: 0.7rem;
-}
-
-.swimlaneProgress {
-  height: 4px;
-  background: #555;
-  border-radius: 2px;
-  margin-top: 0.25rem;
-  overflow: hidden;
-}
-
-.swimlaneProgressBar {
-  height: 100%;
-  background: #00aaff;
-  transition: width 0.1s;
-}
-
-/* Scene specific styles */
-.sceneTitle {
-  text-align: center;
-  color: #00ff88;
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-}
-
-.stateInfo {
-  display: flex;
-  gap: 2rem;
-  padding: 1rem;
-  background: #333;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-}
-
-.stateInfo strong {
-  color: #00ff88;
-}
-
-/* Handoff controls */
-.handoffControls {
-  background: #2a2a2a;
-  padding: 1.5rem;
-  border-radius: 8px;
-  border: 2px solid #00ff88;
-  text-align: center;
-}
-
-.handoffControls h3 {
-  color: #00ff88;
-  margin-bottom: 1rem;
-}
-
-/* View indicator */
-.viewIndicator {
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  transition: background-color 0.3s;
-}
-
-.viewIndicator.spymaster {
-  background: #8b0000;
-}
-
-.viewIndicator.player {
-  background: #2c5aa0;
-}
-
-/* Make cover cards start hidden/offscreen by default */
+/* Cover Card Overlay */
 .coverCard {
   position: absolute;
   inset: 0;
@@ -437,7 +222,7 @@
   z-index: 5;
   transform-origin: center;
 
-  /* START OFFSCREEN - this is the key fix */
+  /* Start offscreen */
   transform: translateX(-100vw) translateY(-100vh) rotate(-6deg);
   opacity: 0;
 }
@@ -480,4 +265,20 @@
   font-size: 0.9rem;
   opacity: 0.8;
   text-transform: uppercase;
+}
+
+/* View Indicator */
+.viewIndicator {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+  font-weight: bold;
+}
+
+.viewIndicator.spymaster {
+  background: #8b0000;
+}
+
+.viewIndicator.player {
+  background: #2c5aa0;
 }
