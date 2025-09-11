@@ -15,21 +15,32 @@ import React, {
 
 // ============= TYPES =============
 
+export interface AnimationDefinition {
+  keyframes: Keyframe[];
+  options?: {
+    duration?: number;
+    delay?: number;
+    easing?: string;
+    fill?: FillMode;
+    stagger?: number;
+  };
+}
+
 export interface AnimationMetadata {
   elementId: string;
   entityId: string;
-  [key: string]: any;
+  [key: string]: string | undefined;
 }
 
 export interface EntityContext {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface AnimationEngineData {
   elementRegistry: Map<
     HTMLElement,
     {
-      animations: Record<string, any>;
+      animations: Record<string, AnimationDefinition>;
       metadata: AnimationMetadata;
     }
   >;
@@ -39,7 +50,7 @@ export interface AnimationEngineData {
   getElementRegistry?: () => Map<
     HTMLElement,
     {
-      animations: Record<string, any>;
+      animations: Record<string, AnimationDefinition>;
       metadata: AnimationMetadata;
     }
   >;
@@ -164,6 +175,20 @@ export const AnimationDevTools: React.FC<AnimationDevToolsProps> = ({
 
 // ============= DEVTOOLS PANEL =============
 
+interface EntityData {
+  context: EntityContext;
+  elements: ElementData[];
+}
+
+interface ElementData {
+  elementId: string;
+  metadata: AnimationMetadata;
+  animations: string[];
+  tracker?: AnimationTracker;
+  isAnimating: boolean;
+  engineId: string;
+}
+
 const DevToolsPanel: React.FC<{
   position: string;
   defaultOpen: boolean;
@@ -214,20 +239,7 @@ const DevToolsPanel: React.FC<{
   const getEntityGroups = () => {
     if (!snapshot) return new Map();
 
-    const entities = new Map<
-      string,
-      {
-        context: EntityContext;
-        elements: Array<{
-          elementId: string;
-          metadata: AnimationMetadata;
-          animations: string[];
-          tracker?: AnimationTracker;
-          isAnimating: boolean;
-          engineId: string;
-        }>;
-      }
-    >();
+    const entities = new Map<string, EntityData>();
 
     // Process each engine
     snapshot.engines.forEach((engine, engineId) => {
@@ -243,7 +255,8 @@ const DevToolsPanel: React.FC<{
           });
         }
 
-        const tracker = snapshot.animationTrackers.get(entityId);
+        const trackerKey = `${entityId}-${elementId}`;
+        const tracker = snapshot.animationTrackers.get(trackerKey);
 
         entities.get(entityId)!.elements.push({
           elementId,
@@ -423,17 +436,27 @@ const DevToolsPanel: React.FC<{
 
 const EntityView: React.FC<{
   entityId: string;
-  entity: any;
+  entity: EntityData;
   isExpanded: boolean;
   onToggle: () => void;
   currentTime: number;
   theme: string;
 }> = ({ entityId, entity, isExpanded, onToggle, currentTime, theme }) => {
   const isDark = theme === "dark";
-  const context = entity.context;
+  const { context } = entity;
+
+  const word = typeof context.word === "string" ? context.word : entityId;
+  const displayState = typeof context.displayState === "string" ? context.displayState : undefined;
+  const teamName = typeof context.teamName === "string" ? context.teamName : undefined;
+  const selected = !!context.selected;
+  const transition =
+    typeof context.transition === "object" && context.transition !== null
+      ? (context.transition as { trigger?: string })
+      : undefined;
+  const viewMode = typeof context.viewMode === "string" ? context.viewMode : undefined;
 
   // Count animation states
-  const animationCounts = entity.elements.reduce((acc: any, el: any) => {
+  const animationCounts = entity.elements.reduce((acc: Record<string, number>, el) => {
     if (el.tracker) {
       acc[el.tracker.status] = (acc[el.tracker.status] || 0) + 1;
     }
@@ -540,31 +563,31 @@ const EntityView: React.FC<{
     <div style={styles.container}>
       <div style={styles.header} onClick={onToggle}>
         <div style={styles.title}>
-          <span style={styles.entityName}>{context.word || entityId}</span>
+          <span style={styles.entityName}>{word}</span>
           <div style={styles.badges}>
-            {context.displayState && (
+            {displayState && (
               <span
                 style={{
                   ...styles.badge,
-                  background: getStateColor(context.displayState),
+                  background: getStateColor(displayState),
                   color: "#fff",
                 }}
               >
-                {context.displayState}
+                {displayState}
               </span>
             )}
-            {context.teamName && (
+            {teamName && (
               <span
                 style={{
                   ...styles.badge,
-                  background: getTeamColor(context.teamName),
-                  color: context.teamName === "assassin" ? "#000" : "#fff",
+                  background: getTeamColor(teamName),
+                  color: teamName === "assassin" ? "#000" : "#fff",
                 }}
               >
-                {context.teamName}
+                {teamName}
               </span>
             )}
-            {context.selected && (
+            {selected && (
               <span
                 style={{
                   ...styles.badge,
@@ -575,7 +598,7 @@ const EntityView: React.FC<{
                 selected
               </span>
             )}
-            {context.transition?.trigger && (
+            {transition?.trigger && (
               <span
                 style={{
                   ...styles.badge,
@@ -583,10 +606,10 @@ const EntityView: React.FC<{
                   color: "#fff",
                 }}
               >
-                {context.transition.trigger}
+                {transition.trigger}
               </span>
             )}
-            {context.viewMode && (
+            {viewMode && (
               <span
                 style={{
                   ...styles.badge,
@@ -594,7 +617,7 @@ const EntityView: React.FC<{
                   color: "#fff",
                 }}
               >
-                {context.viewMode}
+                {viewMode}
               </span>
             )}
           </div>
@@ -657,7 +680,7 @@ const EntityView: React.FC<{
             Elements ({entity.elements.length})
           </h5>
           <div style={styles.elements}>
-            {entity.elements.map((element: any, i: number) => (
+            {entity.elements.map((element, i) => (
               <ElementView
                 key={`${element.elementId}-${i}`}
                 element={element}
@@ -675,7 +698,7 @@ const EntityView: React.FC<{
 // ============= ELEMENT VIEW COMPONENT =============
 
 const ElementView: React.FC<{
-  element: any;
+  element: ElementData;
   currentTime: number;
   theme: string;
 }> = ({ element, currentTime, theme }) => {
@@ -788,7 +811,7 @@ const ElementView: React.FC<{
       {tracker?.status === "running" && <div style={styles.indicator} />}
 
       <div style={styles.header}>
-        <div style={styles.name}>{element.elementId}</div>
+        <div style={styles.name}>{element.metadata.elementId}</div>
         <div style={styles.engineBadge}>eng:{element.engineId.slice(-4)}</div>
       </div>
 
