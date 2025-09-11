@@ -1,23 +1,30 @@
-import React, { memo, useCallback, useState, useEffect } from "react";
-import styles from "./card-visibility-sandbox.module.css";
+/**
+ * Card Visibility Sandbox with Animation DevTools
+ * Clean implementation with metadata-based context system
+ */
+
+import React, { memo, useCallback, useState } from "react";
+import { AnimationDevTools } from "./animation-devtools";
 import {
   Card,
-  CardDisplayState,
-  CARD_ANIMATIONS,
-  useCardVisibilityStore,
   useCardVisibility,
-  AnimationTracker,
+  useCardVisibilityStore,
+  CARD_ANIMATIONS,
 } from "./card-visbility-sandbox.hooks";
+import styles from "./card-visibility-sandbox.module.css";
 
-// ============= GAME CARD COMPONENT =============
+// ============= GAME CARD COMPONENT - CLEAN & SIMPLE =============
 const GameCard = memo<{
   card: Card;
   index: number;
   onClick: (word: string) => void;
-  initialState?: CardDisplayState;
-}>(({ card, index, onClick, initialState = "hidden" }) => {
-  const { displayState, animatedRef } = useCardVisibility(card, initialState, { index });
-  const viewMode = useCardVisibilityStore((state) => state.viewMode);
+}>(({ card, index, onClick }) => {
+  const { displayState, animatedRef } = useCardVisibility(card, "hidden", { index });
+
+  const teamColor =
+    !card.selected && card.teamName && displayState === "visible-colored"
+      ? styles[`color${card.teamName.charAt(0).toUpperCase()}${card.teamName.slice(1)}`]
+      : "";
 
   const handleClick = () => {
     if (!card.selected && displayState !== "hidden") {
@@ -25,38 +32,44 @@ const GameCard = memo<{
     }
   };
 
-  // Build the animation key directly from teamName
-  const baseCardAnimationKey = card.teamName ? `baseCard-${card.teamName}` : "baseCard";
-
+  // Clean component - just semantic HTML with animations
   return (
     <div
-      ref={animatedRef({
-        id: baseCardAnimationKey,
-        animations: CARD_ANIMATIONS[baseCardAnimationKey] || CARD_ANIMATIONS.baseCard,
-      })}
-      className={`${styles.cardWrapper} ${card.selected ? styles.selected : ""}`}
+      id={`${card.word}-container`}
+      data-element="container"
+      data-team={card.teamName}
+      ref={animatedRef(CARD_ANIMATIONS.container || CARD_ANIMATIONS.baseCard)}
+      className={`${styles.cardWrapper} ${card.selected ? styles.selected : ""} ${teamColor}`}
       onClick={handleClick}
       data-state={displayState}
     >
       <div
-        ref={animatedRef({ id: "word", animations: CARD_ANIMATIONS.word })}
+        id={`${card.word}-word`}
+        data-element="word"
+        ref={animatedRef(CARD_ANIMATIONS.word)}
         className={styles.cardWord}
       >
         {card.word}
       </div>
 
-      {viewMode === "spymaster" && card.teamName && (
+      {displayState === "visible-colored" && card.teamName && (
         <div
-          ref={animatedRef({ id: "badge", animations: CARD_ANIMATIONS.badge })}
+          id={`${card.word}-badge`}
+          data-element="badge"
+          ref={animatedRef(CARD_ANIMATIONS.badge)}
           className={styles.cardBadge}
         >
           {card.teamName}
         </div>
       )}
 
+      <div className={styles.cardState}>{displayState}</div>
+
       {card.selected && card.teamName && (
         <div
-          ref={animatedRef({ id: "coverCard", animations: CARD_ANIMATIONS.coverCard })}
+          id={`${card.word}-cover`}
+          data-element="cover"
+          ref={animatedRef(CARD_ANIMATIONS.coverCard)}
           className={`${styles.coverCard} ${
             styles[`cover${card.teamName.charAt(0).toUpperCase()}${card.teamName.slice(1)}`]
           }`}
@@ -71,151 +84,6 @@ const GameCard = memo<{
 
 GameCard.displayName = "GameCard";
 
-// ============= SWIMLANES VISUALIZER =============
-const SwimlanesVisualizer: React.FC = () => {
-  const animationTrackers = useCardVisibilityStore((s) => s.animationTrackers);
-  const [currentTime, setCurrentTime] = useState(Date.now());
-
-  useEffect(() => {
-    const interval = setInterval(() => setCurrentTime(Date.now()), 50);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Group by card, then get the latest event for each card
-  const eventsByCard = animationTrackers.reduce((acc, tracker) => {
-    if (!acc[tracker.cardId]) {
-      acc[tracker.cardId] = {
-        trigger: tracker.trigger,
-        startTime: tracker.startTime,
-        endTime: tracker.startTime + tracker.duration,
-        elements: []
-      };
-    }
-    
-    const event = acc[tracker.cardId];
-    // If this is a different trigger, replace the whole event (new animation started)
-    if (event.trigger !== tracker.trigger) {
-      acc[tracker.cardId] = {
-        trigger: tracker.trigger,
-        startTime: tracker.startTime,
-        endTime: tracker.startTime + tracker.duration,
-        elements: [tracker]
-      };
-    } else {
-      // Same trigger, add to elements
-      event.elements.push(tracker);
-      event.startTime = Math.min(event.startTime, tracker.startTime);
-      event.endTime = Math.max(event.endTime, tracker.startTime + tracker.duration);
-    }
-    
-    return acc;
-  }, {} as Record<string, {
-    trigger: string;
-    startTime: number;
-    endTime: number;
-    elements: AnimationTracker[];
-  }>);
-
-  // Determine event status based on ALL elements
-  const getEventStatus = (event: typeof eventsByCard[string]) => {
-    const allFinished = event.elements.every(el => el.status === 'finished');
-    const anyRunning = event.elements.some(el => el.status === 'running');
-    const allPending = event.elements.every(el => el.status === 'pending');
-    
-    if (allFinished) return 'finished';
-    if (allPending) return 'pending';
-    if (anyRunning) return 'running';
-    return 'running'; // Some finished, some pending
-  };
-
-  // Group cards by their event status
-  const cardsByStatus = Object.entries(eventsByCard).reduce((acc, [cardId, event]) => {
-    const status = getEventStatus(event);
-    if (!acc[status]) acc[status] = [];
-    acc[status].push({ cardId, event });
-    return acc;
-  }, {} as Record<string, Array<{ cardId: string; event: typeof eventsByCard[string] }>>);
-
-  const renderEventBlock = (cardId: string, event: typeof eventsByCard[string]) => {
-    const eventStatus = getEventStatus(event);
-    
-    return (
-      <div key={cardId} className={styles.eventBlock} data-status={eventStatus}>
-        <div className={styles.eventHeader}>
-          <span className={styles.eventCard}>{cardId}</span>
-          <span className={styles.eventTrigger}>{event.trigger}</span>
-        </div>
-        <div className={styles.eventElements}>
-          {event.elements.map((el, i) => {
-            const progress = el.status === 'running' 
-              ? Math.min((currentTime - el.startTime) / el.duration, 1)
-              : el.status === 'finished' ? 1 : 0;
-            
-            return (
-              <div
-                key={`${el.elementName}-${i}`}
-                className={styles.eventElement}
-                data-status={el.status}
-              >
-                <span className={styles.elementName}>{el.elementName}</span>
-                <div className={styles.elementProgress}>
-                  <div 
-                    className={styles.elementProgressBar}
-                    style={{ width: `${progress * 100}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
-  return (
-    <div className={styles.timeline}>
-      <h2 className={styles.timelineTitle}>Animation Timeline</h2>
-      <div className={styles.timelineColumns}>
-        {/* Pending column */}
-        <div className={styles.timelineColumn}>
-          <div className={styles.columnHeader} data-status="pending">
-            Pending ({cardsByStatus.pending?.length || 0})
-          </div>
-          <div className={styles.columnContent}>
-            {cardsByStatus.pending?.map(({ cardId, event }) => 
-              renderEventBlock(cardId, event)
-            )}
-          </div>
-        </div>
-
-        {/* Running column */}
-        <div className={styles.timelineColumn}>
-          <div className={styles.columnHeader} data-status="running">
-            Running ({cardsByStatus.running?.length || 0})
-          </div>
-          <div className={styles.columnContent}>
-            {cardsByStatus.running?.map(({ cardId, event }) => 
-              renderEventBlock(cardId, event)
-            )}
-          </div>
-        </div>
-
-        {/* Finished column */}
-        <div className={styles.timelineColumn}>
-          <div className={styles.columnHeader} data-status="finished">
-            Finished ({cardsByStatus.finished?.length || 0})
-          </div>
-          <div className={styles.columnContent}>
-            {cardsByStatus.finished?.slice(-10).map(({ cardId, event }) => 
-              renderEventBlock(cardId, event)
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // ============= DEMO SCENES =============
 const DealInScene: React.FC = () => {
   const [cards, setCards] = useState<Card[]>([]);
@@ -224,21 +92,34 @@ const DealInScene: React.FC = () => {
   const dealCards = useCallback(() => {
     reset();
     const words = ["APPLE", "BANANA", "CHERRY", "DATE", "ELDERBERRY", "FIG", "GRAPE", "HONEYDEW"];
-    const newCards = words.map((word) => ({
+    const teams: Array<"red" | "blue" | "neutral" | "assassin"> = [
+      "red",
+      "blue",
+      "neutral",
+      "assassin",
+    ];
+
+    const newCards = words.map((word, i) => ({
       word,
       selected: false,
+      teamName: teams[i % teams.length],
     }));
     setCards(newCards);
   }, [reset]);
 
+  const clearCards = useCallback(() => {
+    reset();
+    setCards([]);
+  }, [reset]);
+
   return (
-    <div>
+    <div className={styles.scene}>
       <h2 className={styles.sceneTitle}>Scene 1: Cards Deal In</h2>
       <div className={styles.controls}>
         <button className={styles.button} onClick={dealCards}>
           Deal Cards
         </button>
-        <button className={styles.buttonDanger} onClick={() => setCards([])}>
+        <button className={styles.buttonDanger} onClick={clearCards}>
           Clear
         </button>
       </div>
@@ -264,11 +145,10 @@ const SpymasterViewScene: React.FC = () => {
   ]);
 
   const viewMode = useCardVisibilityStore((s) => s.viewMode);
-
   const toggleViewMode = useCardVisibilityStore((s) => s.actions.toggleViewMode);
 
   return (
-    <div>
+    <div className={styles.scene}>
       <h2 className={styles.sceneTitle}>Scene 2: Spymaster View Toggle</h2>
       <div className={styles.stateInfo}>
         <strong>View Mode:</strong> {viewMode}
@@ -283,13 +163,7 @@ const SpymasterViewScene: React.FC = () => {
       </div>
       <div className={styles.grid}>
         {cards.map((card, i) => (
-          <GameCard
-            key={card.word}
-            card={card}
-            index={i}
-            onClick={() => {}}
-            initialState="visible"
-          />
+          <GameCard key={card.word} card={card} index={i} onClick={() => {}} />
         ))}
       </div>
     </div>
@@ -306,6 +180,8 @@ const PlayerSelectionScene: React.FC = () => {
     { word: "SUNSET", selected: false },
   ]);
 
+  const reset = useCardVisibilityStore((s) => s.actions.reset);
+
   const gameData = [
     { word: "OCEAN", teamName: "blue" as const },
     { word: "FIRE", teamName: "red" as const },
@@ -314,8 +190,6 @@ const PlayerSelectionScene: React.FC = () => {
     { word: "RIVER", teamName: "blue" as const },
     { word: "SUNSET", teamName: "red" as const },
   ];
-
-  const reset = useCardVisibilityStore((s) => s.actions.reset); // Add this
 
   const handleCardClick = useCallback((word: string) => {
     setCards((prev) =>
@@ -342,10 +216,10 @@ const PlayerSelectionScene: React.FC = () => {
         teamName: undefined,
       })),
     );
-  }, []);
+  }, [reset]);
 
   return (
-    <div>
+    <div className={styles.scene}>
       <h2 className={styles.sceneTitle}>Scene 3: Player Card Selection</h2>
       <div className={styles.controls}>
         <button className={styles.buttonDanger} onClick={resetCards}>
@@ -354,20 +228,14 @@ const PlayerSelectionScene: React.FC = () => {
       </div>
       <div className={styles.grid}>
         {cards.map((card, i) => (
-          <GameCard
-            key={card.word}
-            card={card}
-            index={i}
-            onClick={handleCardClick}
-            initialState="visible"
-          />
+          <GameCard key={card.word} card={card} index={i} onClick={handleCardClick} />
         ))}
       </div>
     </div>
   );
 };
 
-// ============= MAIN SANDBOX =============
+// ============= MAIN SANDBOX WITH DEVTOOLS WRAPPER =============
 export default function CardVisibilitySandbox() {
   const [activeScene, setActiveScene] = useState(1);
   const timeScale = useCardVisibilityStore((s) => s.timeScale);
@@ -379,47 +247,54 @@ export default function CardVisibilitySandbox() {
   }, [activeScene, reset]);
 
   return (
-    <div className={styles.container}>
-      <div className={styles.wrapper}>
-        <h1 className={styles.title}>Card Visibility Animation System</h1>
+    // Simple wrapper - that's it!
+    <AnimationDevTools enabled={true} position="bottom-right" defaultOpen={false} theme="dark">
+      <div className={styles.container}>
+        <div className={styles.wrapper}>
+          <h1 className={styles.title}>Card Visibility Animation System</h1>
 
-        <div className={styles.controls}>
-          <div className={styles.controlGroup}>
-            <strong>Animation Speed:</strong>
-            <button className={styles.button} onClick={() => setTimeScale(0.5)}>
-              0.5x
-            </button>
-            <button
-              className={timeScale === 1 ? styles.buttonActive : styles.button}
-              onClick={() => setTimeScale(1)}
-            >
-              1x
-            </button>
-            <button className={styles.button} onClick={() => setTimeScale(2)}>
-              2x
-            </button>
-          </div>
-
-          <div className={styles.controlGroup}>
-            <strong>Scene:</strong>
-            {[1, 2, 3].map((scene) => (
+          <div className={styles.controls}>
+            <div className={styles.controlGroup}>
+              <strong>Animation Speed:</strong>
               <button
-                key={scene}
-                className={activeScene === scene ? styles.buttonActive : styles.button}
-                onClick={() => setActiveScene(scene)}
+                className={timeScale === 0.5 ? styles.buttonActive : styles.button}
+                onClick={() => setTimeScale(0.5)}
               >
-                Scene {scene}
+                0.5x
               </button>
-            ))}
+              <button
+                className={timeScale === 1 ? styles.buttonActive : styles.button}
+                onClick={() => setTimeScale(1)}
+              >
+                1x
+              </button>
+              <button
+                className={timeScale === 2 ? styles.buttonActive : styles.button}
+                onClick={() => setTimeScale(2)}
+              >
+                2x
+              </button>
+            </div>
+
+            <div className={styles.controlGroup}>
+              <strong>Scene:</strong>
+              {[1, 2, 3].map((scene) => (
+                <button
+                  key={scene}
+                  className={activeScene === scene ? styles.buttonActive : styles.button}
+                  onClick={() => setActiveScene(scene)}
+                >
+                  Scene {scene}
+                </button>
+              ))}
+            </div>
           </div>
+
+          {activeScene === 1 && <DealInScene />}
+          {activeScene === 2 && <SpymasterViewScene />}
+          {activeScene === 3 && <PlayerSelectionScene />}
         </div>
-
-        {activeScene === 1 && <DealInScene />}
-        {activeScene === 2 && <SpymasterViewScene />}
-        {activeScene === 3 && <PlayerSelectionScene />}
-
-        <SwimlanesVisualizer />
       </div>
-    </div>
+    </AnimationDevTools>
   );
 }

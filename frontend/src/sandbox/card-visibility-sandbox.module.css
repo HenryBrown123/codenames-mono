@@ -1,11 +1,17 @@
-/* card-visibility-sandbox.module.css */
+/* Card Visibility Sandbox Styles */
 
-/* Container and Layout */
+/* ============= Container and Layout ============= */
 .container {
   padding: 2rem;
-  background: #1a1a1a;
+  background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
   min-height: 100vh;
   color: white;
+  font-family:
+    "JetBrains Mono",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    monospace;
 }
 
 .wrapper {
@@ -15,44 +21,73 @@
 
 .title {
   margin-bottom: 2rem;
-  font-size: 2rem;
-  color: #fff;
+  font-size: 2.5rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #00ff88 0%, #00aaff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 40px rgba(0, 255, 136, 0.3);
 }
 
-/* Controls Section */
+/* ============= Controls Section ============= */
 .controls {
   display: flex;
   gap: 2rem;
   margin-bottom: 2rem;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  backdrop-filter: blur(10px);
 }
 
 .controlGroup {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
   align-items: center;
 }
 
 .controlGroup strong {
-  color: #fff;
+  color: #00ff88;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-/* Buttons */
+/* ============= Buttons ============= */
 .button {
-  padding: 0.5rem 1rem;
-  background: #333;
-  color: #fff;
-  border: 1px solid #555;
-  border-radius: 4px;
+  padding: 0.6rem 1.2rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
   cursor: pointer;
-  font-weight: bold;
-  transition: all 0.2s;
+  font-weight: 600;
+  font-family: inherit;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
 }
 
 .button:hover:not(:disabled) {
-  background: #444;
-  border-color: #666;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .button:disabled {
@@ -61,35 +96,48 @@
 }
 
 .buttonActive {
-  padding: 0.5rem 1rem;
-  background: #00aaff;
-  color: #fff;
-  border: 1px solid #00aaff;
-  border-radius: 4px;
+  padding: 0.6rem 1.2rem;
+  background: #00ff88;
+  color: #0a0a0f;
+  border: 1px solid #00ff88;
+  border-radius: 6px;
   cursor: pointer;
-  font-weight: bold;
-  transition: all 0.2s;
+  font-weight: 700;
+  font-family: inherit;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
 }
 
 .buttonActive:hover:not(:disabled) {
-  background: #0099ee;
-  border-color: #0099ee;
+  background: #00ff88;
+  border-color: #00ff88;
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.6);
 }
 
 .buttonDanger {
-  padding: 0.5rem 1rem;
-  background: #ff4444;
-  color: #fff;
+  padding: 0.6rem 1.2rem;
+  background: rgba(255, 68, 68, 0.1);
+  color: #ff4444;
   border: 1px solid #ff4444;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  font-weight: bold;
-  transition: all 0.2s;
+  font-weight: 600;
+  font-family: inherit;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .buttonDanger:hover:not(:disabled) {
-  background: #dd3333;
-  border-color: #dd3333;
+  background: #ff4444;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(255, 68, 68, 0.4);
 }
 
 .buttonDanger:disabled {
@@ -97,98 +145,137 @@
   cursor: not-allowed;
 }
 
-/* Grid Layout */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
+/* ============= Scene Container ============= */
+.scene {
   margin-bottom: 2rem;
 }
 
-/* Card Styles */
+.sceneTitle {
+  text-align: center;
+  color: #00ff88;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+}
+
+.stateInfo {
+  display: flex;
+  gap: 2rem;
+  padding: 1rem;
+  background: rgba(0, 255, 136, 0.05);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(10px);
+}
+
+.stateInfo strong {
+  color: #00ff88;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ============= Grid Layout ============= */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 136, 0.1);
+}
+
+/* ============= Card Styles ============= */
 .cardWrapper {
   position: relative;
   aspect-ratio: 3/2;
   padding: 1rem;
   border: 2px solid #d4d1c8;
   border-radius: 8px;
-  background: #f4f1e8;
+  background: linear-gradient(to bottom, #f4f1e8 0%, #ebe7dc 100%);
   color: #333;
   text-align: center;
   cursor: pointer;
-  transition:
-    transform 0.2s,
-    background-color 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  opacity: 1; /* Default visible */
+  opacity: 1;
+  transform-style: preserve-3d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Hide cards in hidden state */
 .cardWrapper[data-state="hidden"] {
   opacity: 0;
+  transform: translateY(-20px) scale(0.9);
 }
 
-.cardWrapper:hover:not([data-state="visible-covered"]) {
-  transform: scale(1.05);
+.cardWrapper:hover:not([data-state="visible-covered"]):not(.selected) {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.2),
+    0 0 20px rgba(0, 255, 136, 0.1);
 }
 
-/* For selected cards - show the team color when selected */
+/* Selected cards */
 .cardWrapper.selected {
   cursor: default;
-}
-
-.cardWrapper.selected.colorRed {
-  background: #ff4444;
-  border-color: #ff6666;
-  color: white;
-}
-
-.cardWrapper.selected.colorBlue {
-  background: #4444ff;
-  border-color: #6666ff;
-  color: white;
-}
-
-.cardWrapper.selected.colorNeutral {
-  background: #888;
-  border-color: #aaa;
-  color: white;
-}
-
-.cardWrapper.selected.colorAssassin {
-  background: #000;
-  border-color: #ffff00;
-  box-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
-  color: white;
+  pointer-events: none;
 }
 
 /* Team color backgrounds for spymaster view */
 .cardWrapper.colorRed:not(.selected) {
-  background: #ff4444;
+  background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
   border-color: #ff6666;
   color: white;
+  box-shadow: 0 4px 15px rgba(255, 68, 68, 0.3);
 }
 
 .cardWrapper.colorBlue:not(.selected) {
-  background: #4444ff;
+  background: linear-gradient(135deg, #4444ff 0%, #0000cc 100%);
   border-color: #6666ff;
   color: white;
+  box-shadow: 0 4px 15px rgba(68, 68, 255, 0.3);
 }
 
 .cardWrapper.colorNeutral:not(.selected) {
-  background: #888;
+  background: linear-gradient(135deg, #888 0%, #555 100%);
   border-color: #aaa;
   color: white;
+  box-shadow: 0 4px 15px rgba(136, 136, 136, 0.3);
 }
 
 .cardWrapper.colorAssassin:not(.selected) {
-  background: #000;
+  background: linear-gradient(135deg, #000 0%, #333 100%);
   border-color: #ffff00;
-  box-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
-  color: white;
+  box-shadow:
+    0 0 30px rgba(255, 255, 0, 0.5),
+    inset 0 0 20px rgba(255, 255, 0, 0.1);
+  color: #ffff00;
+  animation: assassinPulse 2s ease-in-out infinite;
+}
+
+@keyframes assassinPulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 30px rgba(255, 255, 0, 0.5),
+      inset 0 0 20px rgba(255, 255, 0, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 50px rgba(255, 255, 0, 0.8),
+      inset 0 0 30px rgba(255, 255, 0, 0.2);
+  }
 }
 
 /* Card content */
@@ -196,30 +283,48 @@
   font-weight: bold;
   font-size: 1.2rem;
   margin-bottom: 0.5rem;
-}
-
-.cardWrapper[data-state="visible-colored"] .cardWord {
-  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  z-index: 2;
+  position: relative;
 }
 
 .cardState {
-  font-size: 0.9rem;
-  opacity: 0.8;
+  font-size: 0.75rem;
+  opacity: 0.6;
   min-height: 1.5rem;
+  position: absolute;
+  bottom: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  color: #333;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Badge for spymaster view */
 .cardBadge {
-  font-size: 0.9rem;
-  opacity: 0.9;
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 0.7rem;
   padding: 0.2rem 0.5rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.8);
   border-radius: 4px;
   text-transform: uppercase;
-  color: white;
+  letter-spacing: 0.05em;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  z-index: 3;
 }
 
-/* Make cover cards start hidden/offscreen by default */
+/* Cover cards */
 .coverCard {
   position: absolute;
   inset: 0;
@@ -233,205 +338,111 @@
   color: white;
   z-index: 5;
   transform-origin: center;
-
-  /* START OFFSCREEN - this is the key fix */
-  transform: translateX(-100vw) translateY(-100vh) rotate(-6deg);
-  opacity: 0;
-}
-
-/* Only show when animation completes and state is visible-covered */
-.cardWrapper[data-state="visible-covered"] .coverCard {
   transform: translateX(0) translateY(0) rotate(0);
   opacity: 1;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 /* Team color variants for cover cards */
 .coverCard.coverRed {
   background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
   border-color: #ff6666;
+  box-shadow:
+    0 4px 20px rgba(255, 68, 68, 0.4),
+    inset 0 0 20px rgba(0, 0, 0, 0.2);
 }
 
 .coverCard.coverBlue {
   background: linear-gradient(135deg, #4444ff 0%, #0000cc 100%);
   border-color: #6666ff;
+  box-shadow:
+    0 4px 20px rgba(68, 68, 255, 0.4),
+    inset 0 0 20px rgba(0, 0, 0, 0.2);
 }
 
 .coverCard.coverNeutral {
   background: linear-gradient(135deg, #999 0%, #666 100%);
   border-color: #aaa;
+  box-shadow:
+    0 4px 20px rgba(136, 136, 136, 0.4),
+    inset 0 0 20px rgba(0, 0, 0, 0.2);
 }
 
 .coverCard.coverAssassin {
   background: linear-gradient(135deg, #333 0%, #000 100%);
   border-color: #ffff00;
-  box-shadow: inset 0 0 30px rgba(255, 255, 0, 0.3);
+  box-shadow:
+    0 0 40px rgba(255, 255, 0, 0.6),
+    inset 0 0 30px rgba(255, 255, 0, 0.3);
+  animation: assassinGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes assassinGlow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 40px rgba(255, 255, 0, 0.6),
+      inset 0 0 30px rgba(255, 255, 0, 0.3);
+    border-color: #ffff00;
+  }
+  50% {
+    box-shadow:
+      0 0 60px rgba(255, 255, 0, 0.9),
+      inset 0 0 40px rgba(255, 255, 0, 0.5);
+    border-color: #ffff66;
+  }
 }
 
 .coverWord {
-  font-weight: bold;
-  font-size: 1.2rem;
+  font-weight: 900;
+  font-size: 1.4rem;
   margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .coverTeam {
   font-size: 0.9rem;
-  opacity: 0.8;
+  opacity: 0.9;
   text-transform: uppercase;
-}
-
-/* Timeline Visualizer */
-.timeline {
-  background: #1a1a1a;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-top: 2rem;
-}
-
-.timelineTitle {
-  color: #fff;
-  margin-bottom: 1rem;
-}
-
-.timelineColumns {
-  display: flex;
-  gap: 1rem;
-}
-
-.timelineColumn {
-  flex: 1;
-}
-
-.columnHeader {
-  padding: 0.5rem;
-  border-radius: 4px 4px 0 0;
-  text-align: center;
-  font-weight: bold;
-  color: white;
-}
-
-.columnHeader[data-status="pending"] {
-  background: #ffaa00;
-}
-
-.columnHeader[data-status="running"] {
-  background: #00aaff;
-}
-
-.columnHeader[data-status="finished"] {
-  background: #00ff88;
-}
-
-.columnContent {
-  min-height: 200px;
-  background: #2a2a2a;
-  padding: 0.5rem;
-  border-radius: 0 0 4px 4px;
-}
-
-.eventBlock {
-  background: #333;
-  border: 1px solid #444;
+  letter-spacing: 0.15em;
+  font-weight: 600;
+  padding: 0.3rem 0.6rem;
+  background: rgba(0, 0, 0, 0.3);
   border-radius: 4px;
-  margin-bottom: 0.5rem;
-  padding: 0.5rem;
+  backdrop-filter: blur(10px);
 }
 
-.eventBlock[data-status="running"] {
-  border-color: #00aaff;
-  box-shadow: 0 0 10px rgba(0, 170, 255, 0.3);
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 1.8rem;
+  }
+
+  .controls {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .cardWord {
+    font-size: 1rem;
+  }
 }
 
-.eventBlock[data-status="finished"] {
-  opacity: 0.8;
-}
-
-.eventHeader {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-  padding-bottom: 0.25rem;
-  border-bottom: 1px solid #444;
-}
-
-.eventCard {
-  font-weight: bold;
-  color: #00aaff;
-}
-
-.eventTrigger {
-  font-size: 0.8rem;
-  color: #ffaa00;
-  font-family: monospace;
-}
-
-.eventElements {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.eventElement {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem;
-  background: #3a3a3a;
-  border-radius: 2px;
-}
-
-.eventElement[data-status="finished"] {
-  background: #2a4a3a;
-}
-
-.eventElement[data-status="running"] {
-  background: #2a3a4a;
-}
-
-.elementName {
-  font-size: 0.75rem;
-  color: #ccc;
-  min-width: 80px;
-}
-
-.elementProgress {
-  flex: 1;
-  height: 4px;
-  background: #555;
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.elementProgressBar {
-  height: 100%;
-  background: #00ff88;
-  transition: width 0.1s;
-}
-
-.eventElement[data-status="running"] .elementProgressBar {
-  background: #00aaff;
-}
-
-.eventElement[data-status="pending"] .elementProgressBar {
-  background: #ffaa00;
-}
-
-/* Scene specific styles */
-.sceneTitle {
-  text-align: center;
-  color: #00ff88;
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-}
-
-.stateInfo {
-  display: flex;
-  gap: 2rem;
-  padding: 1rem;
-  background: #333;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-}
-
-.stateInfo strong {
-  color: #00ff88;
+@media (min-width: 1400px) {
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+  }
 }

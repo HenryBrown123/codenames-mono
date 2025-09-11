@@ -1,5 +1,12 @@
+/**
+ * Card Visibility Hooks v4.0
+ * Entity context is stored in engine for debugging purposes only!
+ * The engine remains generic - no business logic!
+ */
+
 import React, { useRef, useEffect, useCallback, useMemo } from "react";
 import { create } from "zustand";
+import { useAnimationDevTools } from "./animation-devtools";
 
 // ============= ANIMATION TYPES =============
 export interface AnimationDefinition {
@@ -18,8 +25,13 @@ export interface AnimationTriggerMap {
 }
 
 export interface AnimationMetadata {
-  id: string;
-  cardId?: string;
+  elementId: string;
+  entityId: string;
+  [key: string]: any;
+}
+
+export interface EntityContext {
+  [key: string]: any;
 }
 
 export interface AnimationOptions {
@@ -34,6 +46,7 @@ export interface AnimationEngine {
     metadata: AnimationMetadata,
   ): void;
   unregister(element: HTMLElement): void;
+  setEntityContext(entityId: string, context: EntityContext): void;
   runAnimations(trigger: string, options?: AnimationOptions): Promise<void>;
   cancelAll(): void;
   dispose(): void;
@@ -43,16 +56,6 @@ export interface AnimationEngine {
   ): (element: HTMLElement | null) => void;
   getSize(): number;
   isAnimating(): boolean;
-}
-
-export interface AnimationTracker {
-  cardId: string;
-  elementName: string;
-  startTime: number;
-  duration: number;
-  trigger: string;
-  status: "pending" | "running" | "finished";
-  progress?: number;
 }
 
 // ============= CARD TYPES =============
@@ -83,7 +86,7 @@ interface CardTransition {
   condition: (card: Card, viewMode: ViewMode) => boolean;
 }
 
-// ============= ANIMATION ENGINE =============
+// ============= ANIMATION ENGINE WITH ENTITY CONTEXT =============
 function animateElement(
   element: HTMLElement,
   animDef: AnimationDefinition,
@@ -92,14 +95,8 @@ function animateElement(
 ): Animation | null {
   try {
     const staggerDelay = index * (animDef.options?.stagger || 0);
-    let duration = 0;
-    if (typeof animDef.options?.duration === "number") {
-      duration = animDef.options.duration;
-    }
-    let delay = 0;
-    if (typeof animDef.options?.delay === "number") {
-      delay = animDef.options.delay;
-    }
+    const duration = animDef.options?.duration || 300;
+    const delay = animDef.options?.delay || 0;
 
     const animationOptions: KeyframeAnimationOptions = {
       duration: duration / timeScale,
@@ -111,15 +108,13 @@ function animateElement(
     return element.animate(animDef.keyframes, animationOptions);
   } catch (error) {
     console.error("Animation failed:", error);
-    if (animDef.keyframes.length > 0) {
-      const finalKeyframe = animDef.keyframes[animDef.keyframes.length - 1];
-      Object.assign(element.style, finalKeyframe);
-    }
     return null;
   }
 }
 
 export function useAnimationEngine(): AnimationEngine {
+  const devtools = useAnimationDevTools();
+  const engineId = useRef(`engine-${Math.random().toString(36).slice(2)}`).current;
   const elementRegistry = useRef(
     new Map<
       HTMLElement,
@@ -130,6 +125,7 @@ export function useAnimationEngine(): AnimationEngine {
     >(),
   );
   const activeAnimations = useRef(new Map<HTMLElement, Animation>());
+  const entityContexts = useRef(new Map<string, EntityContext>());
 
   const engine = useMemo<AnimationEngine>(() => {
     const cancelAnimation = (element: HTMLElement) => {
@@ -157,11 +153,28 @@ export function useAnimationEngine(): AnimationEngine {
       metadata: AnimationMetadata,
     ) => {
       elementRegistry.current.set(element, { animations, metadata });
+      // Notify devtools of change
+      if (devtools) {
+        devtools.registerEngine(engineId, {
+          // Direct refs (for old compatibility)
+          elementRegistry: elementRegistry.current,
+          activeAnimations: activeAnimations.current,
+          entityContexts: entityContexts.current,
+          // Getter functions (for new DevTools)
+          getElementRegistry: () => elementRegistry.current,
+          getActiveAnimations: () => activeAnimations.current,
+          getEntityContexts: () => entityContexts.current,
+        });
+      }
     };
 
     const unregister = (element: HTMLElement) => {
       elementRegistry.current.delete(element);
       cancelAnimation(element);
+    };
+
+    const setEntityContext = (entityId: string, context: EntityContext) => {
+      entityContexts.current.set(entityId, context);
     };
 
     const createRef = (animations: AnimationTriggerMap, metadata: AnimationMetadata) => {
@@ -183,61 +196,62 @@ export function useAnimationEngine(): AnimationEngine {
       trigger: string,
       options: AnimationOptions = {},
     ): Promise<void> => {
-      console.log(
-        "runAnimations triggered:",
-        trigger,
-        "registered elements:",
-        elementRegistry.current.size,
-      );
       const { index = 0, timeScale = 1 } = options;
       cancelAll();
       const animationPromises: Promise<void>[] = [];
 
-      const updateTracker = useCardVisibilityStore.getState().actions.updateAnimationTracker;
-
       elementRegistry.current.forEach((data, element) => {
+        const { entityId, elementId } = data.metadata;
+
+        // Just get the animation - no smart selection!
         const animDef = data.animations[trigger];
         if (!animDef) return;
 
-        const elementName = data.metadata.id;
-        const cardId = data.metadata.cardId || "unknown";
-        const duration = (animDef.options?.duration || 300) * timeScale;
+        const duration = (animDef.options?.duration || 300) / timeScale;
         const startTime = Date.now();
 
-        updateTracker({
-          cardId,
-          elementName,
-          status: "pending",
-          progress: 0,
-          trigger,
-          startTime,
-          duration,
-        });
+        // Update animation tracker in devtools
+        if (devtools) {
+          const trackerKey = `${entityId}-${elementId}`;
+          devtools.updateAnimationTracker(trackerKey, {
+            entityId,
+            elementId,
+            status: "pending",
+            progress: 0,
+            trigger,
+            startTime,
+            duration,
+          });
+        }
 
         const animation = animateElement(element, animDef, index, timeScale);
         if (animation) {
           activeAnimations.current.set(element, animation);
 
           animation.ready.then(() => {
-            updateTracker({
-              cardId,
-              elementName,
-              status: "running",
-              progress: 0,
-              trigger,
-              startTime,
-              duration,
-            });
+            if (devtools) {
+              const trackerKey = `${entityId}-${elementId}`;
+              devtools.updateAnimationTracker(trackerKey, {
+                entityId,
+                elementId,
+                status: "running",
+                progress: 0,
+                trigger,
+                startTime,
+                duration,
+              });
+            }
 
             const updateProgress = () => {
               if (!animation.currentTime || !animation.effect?.getComputedTiming) return;
               const timing = animation.effect.getComputedTiming();
               const progress = timing.progress ?? 0;
 
-              if (animation.playState === "running") {
-                updateTracker({
-                  cardId,
-                  elementName,
+              if (animation.playState === "running" && devtools) {
+                const trackerKey = `${entityId}-${elementId}`;
+                devtools.updateAnimationTracker(trackerKey, {
+                  entityId,
+                  elementId,
                   status: "running",
                   progress,
                   trigger,
@@ -252,15 +266,18 @@ export function useAnimationEngine(): AnimationEngine {
             animation.finished
               .then(() => {
                 clearInterval(progressInterval);
-                updateTracker({
-                  cardId,
-                  elementName,
-                  status: "finished",
-                  progress: 1,
-                  trigger,
-                  startTime,
-                  duration,
-                });
+                if (devtools) {
+                  const trackerKey = `${entityId}-${elementId}`;
+                  devtools.updateAnimationTracker(trackerKey, {
+                    entityId,
+                    elementId,
+                    status: "finished",
+                    progress: 1,
+                    trigger,
+                    startTime,
+                    duration,
+                  });
+                }
                 activeAnimations.current.delete(element);
               })
               .catch(() => {
@@ -281,11 +298,13 @@ export function useAnimationEngine(): AnimationEngine {
     const dispose = () => {
       cancelAll();
       elementRegistry.current.clear();
+      entityContexts.current.clear();
     };
 
     return {
       register,
       unregister,
+      setEntityContext,
       runAnimations,
       cancelAll,
       dispose,
@@ -293,18 +312,47 @@ export function useAnimationEngine(): AnimationEngine {
       getSize: () => elementRegistry.current.size,
       isAnimating: () => activeAnimations.current.size > 0,
     };
-  }, []);
+  }, [devtools, engineId]);
+
+  // Initial registration with devtools
+  useEffect(() => {
+    if (devtools) {
+      // Register with current state
+      devtools.registerEngine(engineId, {
+        // Direct refs (for old compatibility)
+        elementRegistry: elementRegistry.current,
+        activeAnimations: activeAnimations.current,
+        entityContexts: entityContexts.current,
+        // Getter functions (for new DevTools)
+        getElementRegistry: () => elementRegistry.current,
+        getActiveAnimations: () => activeAnimations.current,
+        getEntityContexts: () => entityContexts.current,
+      });
+      return () => {
+        devtools.unregisterEngine(engineId);
+      };
+    }
+  }, [devtools, engineId]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      engine.dispose();
+    };
+  }, [engine]);
 
   return engine;
 }
 
-// ============= ANIMATION HOOK =============
+// ============= ANIMATION HOOK WITH ENTITY CONTEXT =============
 export interface UseAnimationProps {
   trigger: string | null;
   onComplete?: () => void;
   onStart?: () => void;
   index?: number;
   timeScale?: number;
+  entityId?: string; // NEW!
+  entityContext?: EntityContext; // NEW!
 }
 
 export function useAnimation({
@@ -313,8 +361,23 @@ export function useAnimation({
   onStart,
   index = 0,
   timeScale = 1,
+  entityId,
+  entityContext,
 }: UseAnimationProps) {
   const engine = useAnimationEngine();
+  const devtools = useAnimationDevTools();
+
+  // Set entity context in engine AND devtools
+  useEffect(() => {
+    if (entityId && entityContext) {
+      engine.setEntityContext(entityId, entityContext);
+
+      // Also set in devtools for display
+      if (devtools) {
+        devtools.setEntityContext(entityId, entityContext);
+      }
+    }
+  }, [engine, devtools, entityId, entityContext]);
 
   const animationRef = useCallback(
     (animations: AnimationTriggerMap, metadata: AnimationMetadata) =>
@@ -325,29 +388,24 @@ export function useAnimation({
   useEffect(() => {
     if (!trigger) return;
     if (onStart) onStart();
+
     engine.runAnimations(trigger, { index, timeScale }).then(() => {
       if (onComplete) onComplete();
     });
+
     return () => {
       engine.cancelAll();
     };
   }, [trigger, onComplete, onStart, index, timeScale, engine]);
 
-  useEffect(() => {
-    return () => {
-      engine.dispose();
-    };
-  }, [engine]);
-
   return { animationRef };
 }
 
-// ============= CARD VISIBILITY STORE =============
+// ============= CARD VISIBILITY STORE (CLEAN!) =============
 interface CardVisibilityStore {
   cards: Map<string, CardState>;
   viewMode: ViewMode;
   timeScale: number;
-  animationTrackers: AnimationTracker[];
 
   actions: {
     initCard: (cardId: string, initialState: CardDisplayState) => void;
@@ -361,8 +419,6 @@ interface CardVisibilityStore {
     setViewMode: (mode: ViewMode) => void;
     toggleViewMode: () => void;
     setTimeScale: (scale: number) => void;
-    updateAnimationTracker: (tracker: AnimationTracker) => void;
-    clearAnimationTrackers: (cardId: string) => void;
     reset: () => void;
   };
 }
@@ -371,7 +427,6 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
   cards: new Map(),
   viewMode: "normal",
   timeScale: 1,
-  animationTrackers: [],
 
   actions: {
     initCard: (cardId, initialState) => {
@@ -413,23 +468,7 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
         viewMode: state.viewMode === "normal" ? "spymaster" : "normal",
       })),
     setTimeScale: (scale) => set({ timeScale: scale }),
-
-    updateAnimationTracker: (tracker) =>
-      set((state) => ({
-        animationTrackers: [
-          ...state.animationTrackers.filter(
-            (t) => !(t.cardId === tracker.cardId && t.elementName === tracker.elementName),
-          ),
-          tracker,
-        ],
-      })),
-
-    clearAnimationTrackers: (cardId) =>
-      set((state) => ({
-        animationTrackers: state.animationTrackers.filter((t) => t.cardId !== cardId),
-      })),
-
-    reset: () => set({ cards: new Map(), viewMode: "normal", animationTrackers: [] }),
+    reset: () => set({ cards: new Map(), viewMode: "normal" }),
   },
 }));
 
@@ -486,20 +525,14 @@ function deriveTargetState(
     : { targetState: currentState, trigger: null };
 }
 
-// ============= ANIMATED ELEMENT CONFIG =============
-export interface AnimatedElementConfig {
-  id: string;
-  animations?: AnimationTriggerMap;
-  onMount?: (element: HTMLElement) => void;
-}
-
+// ============= CARD VISIBILITY HOOK - THE ORCHESTRATOR =============
 export interface CardVisibilityOptions {
   index?: number;
 }
 
 export interface CardVisibilityResult {
   displayState: CardDisplayState;
-  animatedRef: (config: AnimatedElementConfig) => (element: HTMLElement | null) => void;
+  animatedRef: (animations: AnimationTriggerMap) => (element: HTMLElement | null) => void;
 }
 
 export function useCardVisibility(
@@ -513,7 +546,6 @@ export function useCardVisibility(
     useCallback((state) => state.cards.get(card.word), [card.word]),
   );
   const actions = useCardVisibilityStore((state) => state.actions);
-  const elements = useRef(new Map<string, HTMLElement>());
 
   useEffect(() => {
     if (!cardState) {
@@ -532,8 +564,6 @@ export function useCardVisibility(
   useEffect(() => {
     const needsTransition = !activeTransition && currentState !== targetState && trigger;
     if (needsTransition && trigger) {
-      // Clear any existing finished animations for this card when starting new one
-      actions.clearAnimationTrackers(card.word);
       actions.startTransition(card.word, currentState, targetState, trigger);
     }
   }, [card.word, currentState, targetState, trigger, activeTransition, actions]);
@@ -542,37 +572,49 @@ export function useCardVisibility(
     actions.completeTransition(card.word);
   }, [card.word, actions]);
 
+  // Build entity context
+  const entityContext = useMemo(
+    () => ({
+      word: card.word,
+      teamName: card.teamName,
+      selected: card.selected,
+      displayState: currentState,
+      transition: activeTransition,
+      viewMode,
+      timeScale,
+    }),
+    [card, currentState, activeTransition, viewMode, timeScale],
+  );
+
+  // Pass entity context to useAnimation!
   const { animationRef } = useAnimation({
     trigger: activeTransition?.trigger || null,
     onComplete: handleComplete,
     index: options?.index || 0,
     timeScale,
+    entityId: card.word, // Pass entity ID
+    entityContext, // Pass entity context!
   });
 
+  // Create element refs with minimal metadata
   const animatedRef = useCallback(
-    (config: AnimatedElementConfig) => {
+    (animations: AnimationTriggerMap) => {
       return (element: HTMLElement | null) => {
-        console.log(element?.textContent || element, " Mounted element with animatedRef");
-        if (element) {
-          elements.current.set(config.id, element);
-          if (config.animations) {
-            const ref = animationRef(config.animations, {
-              id: config.id,
-              cardId: card.word,
-            });
-            ref(element);
-          }
-          config.onMount?.(element);
-        } else {
-          const stored = elements.current.get(config.id);
-          if (stored && config.animations) {
-            const ref = animationRef(config.animations, {
-              id: config.id,
-              cardId: card.word,
-            });
-            ref(null);
-          }
-          elements.current.delete(config.id);
+        if (element && animations) {
+          // Just element-specific metadata
+          const metadata: AnimationMetadata = {
+            elementId: element.id || element.className || element.tagName.toLowerCase(),
+            entityId: card.word,
+
+            // Element-specific data only
+            ...element.dataset,
+            className: element.className,
+            tagName: element.tagName,
+            domId: element.id,
+          };
+
+          const ref = animationRef(animations, metadata);
+          ref(element);
         }
       };
     },
@@ -587,190 +629,33 @@ export function useCardVisibility(
 
 // ============= ANIMATION DEFINITIONS =============
 export const CARD_ANIMATIONS: Record<string, AnimationTriggerMap> = {
-  // Fallback for cards without teams
+  // Base card animations
   baseCard: {
     "deal-in": {
       keyframes: [
-        {
-          opacity: "0",
-          transform: "translateY(-100vh) translateX(-50vw) rotate(-15deg) scale(0.8)",
-        },
-        { opacity: "1", transform: "translateY(0) translateX(0) rotate(0) scale(1)" },
+        { opacity: "0", transform: "translateY(-100vh) rotate(-15deg) scale(0.8)" },
+        { opacity: "1", transform: "translateY(0) rotate(0) scale(1)" },
       ],
-      options: {
-        duration: 600,
-        easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-        stagger: 50,
-      },
+      options: { duration: 600, easing: "cubic-bezier(0.34, 1.56, 0.64, 1)", stagger: 50 },
     },
   },
 
-  // Base card animations for each team color
-  "baseCard-red": {
+  // Container animations for each team
+  container: {
     "deal-in": {
       keyframes: [
-        {
-          opacity: "0",
-          transform: "translateY(-100vh) translateX(-50vw) rotate(-15deg) scale(0.8)",
-        },
-        { opacity: "1", transform: "translateY(0) translateX(0) rotate(0) scale(1)" },
+        { opacity: "0", transform: "translateY(-100vh) rotate(-15deg) scale(0.8)" },
+        { opacity: "1", transform: "translateY(0) rotate(0) scale(1)" },
       ],
-      options: {
-        duration: 600,
-        easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-        stagger: 50,
-      },
+      options: { duration: 600, easing: "cubic-bezier(0.34, 1.56, 0.64, 1)", stagger: 50 },
     },
     "spymaster-reveal": {
-      keyframes: [
-        { backgroundColor: "#f4f1e8", borderColor: "#d4d1c8" },
-        { backgroundColor: "#ff4444", borderColor: "#ff6666" },
-      ],
-      options: {
-        duration: 500,
-        easing: "ease-in-out",
-        fill: "forwards",
-        stagger: 30,
-      },
+      keyframes: [{ filter: "brightness(1)" }, { filter: "brightness(1.2)" }],
+      options: { duration: 500, easing: "ease-in-out", fill: "forwards" },
     },
     "spymaster-hide": {
-      keyframes: [
-        { backgroundColor: "#ff4444", borderColor: "#ff6666" },
-        { backgroundColor: "#f4f1e8", borderColor: "#d4d1c8" },
-      ],
-      options: {
-        duration: 300,
-        easing: "ease-in-out",
-        fill: "forwards",
-      },
-    },
-  },
-
-  "baseCard-blue": {
-    "deal-in": {
-      keyframes: [
-        {
-          opacity: "0",
-          transform: "translateY(-100vh) translateX(-50vw) rotate(-15deg) scale(0.8)",
-        },
-        { opacity: "1", transform: "translateY(0) translateX(0) rotate(0) scale(1)" },
-      ],
-      options: {
-        duration: 600,
-        easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-        stagger: 50,
-      },
-    },
-    "spymaster-reveal": {
-      keyframes: [
-        { backgroundColor: "#f4f1e8", borderColor: "#d4d1c8" },
-        { backgroundColor: "#4444ff", borderColor: "#6666ff" },
-      ],
-      options: {
-        duration: 500,
-        easing: "ease-in-out",
-        fill: "forwards",
-        stagger: 30,
-      },
-    },
-    "spymaster-hide": {
-      keyframes: [
-        { backgroundColor: "#4444ff", borderColor: "#6666ff" },
-        { backgroundColor: "#f4f1e8", borderColor: "#d4d1c8" },
-      ],
-      options: {
-        duration: 300,
-        easing: "ease-in-out",
-        fill: "forwards",
-      },
-    },
-  },
-
-  "baseCard-neutral": {
-    "deal-in": {
-      keyframes: [
-        {
-          opacity: "0",
-          transform: "translateY(-100vh) translateX(-50vw) rotate(-15deg) scale(0.8)",
-        },
-        { opacity: "1", transform: "translateY(0) translateX(0) rotate(0) scale(1)" },
-      ],
-      options: {
-        duration: 600,
-        easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-        stagger: 50,
-      },
-    },
-    "spymaster-reveal": {
-      keyframes: [
-        { backgroundColor: "#f4f1e8", borderColor: "#d4d1c8" },
-        { backgroundColor: "#888", borderColor: "#aaa" },
-      ],
-      options: {
-        duration: 500,
-        easing: "ease-in-out",
-        fill: "forwards",
-        stagger: 30,
-      },
-    },
-    "spymaster-hide": {
-      keyframes: [
-        { backgroundColor: "#888", borderColor: "#aaa" },
-        { backgroundColor: "#f4f1e8", borderColor: "#d4d1c8" },
-      ],
-      options: {
-        duration: 300,
-        easing: "ease-in-out",
-        fill: "forwards",
-      },
-    },
-  },
-
-  "baseCard-assassin": {
-    "deal-in": {
-      keyframes: [
-        {
-          opacity: "0",
-          transform: "translateY(-100vh) translateX(-50vw) rotate(-15deg) scale(0.8)",
-        },
-        { opacity: "1", transform: "translateY(0) translateX(0) rotate(0) scale(1)" },
-      ],
-      options: {
-        duration: 600,
-        easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-        stagger: 50,
-      },
-    },
-    "spymaster-reveal": {
-      keyframes: [
-        { backgroundColor: "#f4f1e8", borderColor: "#d4d1c8", boxShadow: "none" },
-        {
-          backgroundColor: "#000",
-          borderColor: "#ffff00",
-          boxShadow: "0 0 20px rgba(255, 255, 0, 0.5)",
-        },
-      ],
-      options: {
-        duration: 600,
-        easing: "ease-in-out",
-        fill: "forwards",
-        stagger: 30,
-      },
-    },
-    "spymaster-hide": {
-      keyframes: [
-        {
-          backgroundColor: "#000",
-          borderColor: "#ffff00",
-          boxShadow: "0 0 20px rgba(255, 255, 0, 0.5)",
-        },
-        { backgroundColor: "#f4f1e8", borderColor: "#d4d1c8", boxShadow: "none" },
-      ],
-      options: {
-        duration: 300,
-        easing: "ease-in-out",
-        fill: "forwards",
-      },
+      keyframes: [{ filter: "brightness(1.2)" }, { filter: "brightness(1)" }],
+      options: { duration: 300, easing: "ease-in-out", fill: "forwards" },
     },
   },
 
@@ -789,15 +674,11 @@ export const CARD_ANIMATIONS: Record<string, AnimationTriggerMap> = {
     },
     "spymaster-reveal": {
       keyframes: [
-        { filter: "brightness(1)", transform: "scale(1)" },
-        { filter: "brightness(1.2)", transform: "scale(1.05)" },
-        { filter: "brightness(1)", transform: "scale(1)" },
+        { transform: "scale(1)" },
+        { transform: "scale(1.05)" },
+        { transform: "scale(1)" },
       ],
-      options: {
-        duration: 400,
-        delay: 100,
-        easing: "ease-in-out",
-      },
+      options: { duration: 400, delay: 100, easing: "ease-in-out" },
     },
   },
 
@@ -819,25 +700,21 @@ export const CARD_ANIMATIONS: Record<string, AnimationTriggerMap> = {
         { opacity: "1", transform: "scale(1)" },
         { opacity: "0", transform: "scale(0.8)" },
       ],
-      options: {
-        duration: 200,
-        easing: "ease-in",
-        stagger: 0,
-      },
+      options: { duration: 200, easing: "ease-in", stagger: 0 },
     },
   },
 
   coverCard: {
     "cover-card": {
       keyframes: [
-        { opacity: "0", transform: "translateX(-100vw) translateY(-100vh) rotate(-6deg)" },
-        { opacity: "1", transform: "translateX(0) translateY(0) rotate(0)" },
+        { opacity: "0", transform: "translateY(-100vh) rotate(-15deg) scale(0.8)" },
+        { opacity: "1", transform: "translateY(0) rotate(0) scale(1)" },
       ],
       options: {
         duration: 600,
         delay: 50,
         easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-        stagger: 0,
+        fill: "both",
       },
     },
   },
