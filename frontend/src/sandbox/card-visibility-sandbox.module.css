@@ -1,448 +1,410 @@
-/* Card Visibility Sandbox Styles */
+/* card-visibility-sandbox.module.css */
 
-/* ============= Container and Layout ============= */
-.container {
+.sandbox {
   padding: 2rem;
-  background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+  background: #1a1a1a;
   min-height: 100vh;
-  color: white;
-  font-family:
-    "JetBrains Mono",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    monospace;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-.wrapper {
-  max-width: 1400px;
+.header {
+  margin-bottom: 3rem;
+}
+
+.header h1 {
+  color: #fff;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.nav {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.nav button {
+  padding: 0.75rem 1.5rem;
+  background: #2a2a2a;
+  color: #fff;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.nav button:hover {
+  background: #3a3a3a;
+  border-color: #4a4a4a;
+}
+
+.nav button.active {
+  background: #0066cc;
+  border-color: #0066cc;
+}
+
+.main {
+  /* Just a wrapper, no specific styling needed */
+}
+
+.scene {
+  background: #2a2a2a;
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.scene h2 {
+  color: #fff;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.controls button {
+  padding: 0.75rem 1.5rem;
+  background: #0066cc;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.controls button:hover:not(:disabled) {
+  background: #0052a3;
+  transform: translateY(-1px);
+}
+
+.controls button:disabled {
+  background: #4a4a4a;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.controls label {
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.controls input[type="range"] {
+  width: 120px;
+}
+
+.controls span {
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.spymasterActive {
+  background: #ff9500 !important;
+}
+
+.modeIndicator {
+  color: #fff;
+  background: #3a3a3a;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.scores {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1rem;
+  background: #3a3a3a;
+  border-radius: 8px;
+  align-items: center;
+}
+
+.scoreRed {
+  color: #ff3b30;
+  font-weight: 600;
+}
+
+.scoreBlue {
+  color: #007aff;
+  font-weight: 600;
+}
+
+.scoreAssassin {
+  background: #ff3b30;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 600;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Card Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  max-width: 800px;
   margin: 0 auto;
 }
 
-.title {
-  margin-bottom: 2rem;
-  font-size: 2.5rem;
-  font-weight: 900;
-  background: linear-gradient(135deg, #00ff88 0%, #00aaff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  text-shadow: 0 0 40px rgba(0, 255, 136, 0.3);
+/* Card Base - Using wrapper pattern from original */
+.cardWrapper {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  perspective: 1000px;
 }
 
-/* ============= Controls Section ============= */
-.controls {
+.card {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  cursor: pointer;
+  /* Removed transition - using Web Animations API instead */
+}
+
+.card:hover:not(.selected):not(.transitioning):not(.hidden) {
+  transform: translateY(-4px);
+  transition: transform 0.2s; /* Only transition on hover */
+}
+
+.cardInner {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s;
+}
+
+/* Card Faces */
+.cardFront,
+.cardBack {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
   display: flex;
-  gap: 2rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
-  background: rgba(0, 0, 0, 0.4);
-  border-radius: 12px;
-  border: 1px solid rgba(0, 255, 136, 0.2);
-  backdrop-filter: blur(10px);
+  backface-visibility: hidden;
+  border: 2px solid transparent;
 }
 
-.controlGroup {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
+.cardFront {
+  background: #f5f5f5;
+  color: #1a1a1a;
+  border-color: #ddd;
 }
 
-.controlGroup strong {
-  color: #00ff88;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.cardBack {
+  background: #3a3a3a;
+  transform: rotateY(180deg);
+  color: white;
 }
 
-/* ============= Buttons ============= */
-.button {
-  padding: 0.6rem 1.2rem;
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  font-family: inherit;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
-}
-
-.button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.4);
-  color: #fff;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.button:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.buttonActive {
-  padding: 0.6rem 1.2rem;
-  background: #00ff88;
-  color: #0a0a0f;
-  border: 1px solid #00ff88;
-  border-radius: 6px;
-  cursor: pointer;
+/* Word Display */
+.word {
+  font-size: 1.25rem;
   font-weight: 700;
-  font-family: inherit;
-  font-size: 0.9rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
-}
-
-.buttonActive:hover:not(:disabled) {
-  background: #00ff88;
-  border-color: #00ff88;
-  transform: translateY(-2px);
-  box-shadow: 0 0 30px rgba(0, 255, 136, 0.6);
-}
-
-.buttonDanger {
-  padding: 0.6rem 1.2rem;
-  background: rgba(255, 68, 68, 0.1);
-  color: #ff4444;
-  border: 1px solid #ff4444;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  font-family: inherit;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.buttonDanger:hover:not(:disabled) {
-  background: #ff4444;
-  color: #fff;
-  transform: translateY(-2px);
-  box-shadow: 0 0 20px rgba(255, 68, 68, 0.4);
-}
-
-.buttonDanger:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* ============= Scene Container ============= */
-.scene {
-  margin-bottom: 2rem;
-}
-
-.sceneTitle {
   text-align: center;
-  color: #00ff88;
-  margin-bottom: 1.5rem;
+  letter-spacing: 0.05em;
+  transition: all 0.3s;
+}
+
+.backText {
   font-size: 1.5rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
 }
 
-.stateInfo {
-  display: flex;
-  gap: 2rem;
-  padding: 1rem;
-  background: rgba(0, 255, 136, 0.05);
-  border: 1px solid rgba(0, 255, 136, 0.2);
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  justify-content: center;
-  align-items: center;
-  backdrop-filter: blur(10px);
-}
-
-.stateInfo strong {
-  color: #00ff88;
+/* Team Badge */
+.teamBadge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-/* ============= Grid Layout ============= */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 1.25rem;
-  margin-top: 1.5rem;
-  padding: 1.5rem;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 12px;
-  border: 1px solid rgba(0, 255, 136, 0.1);
-}
-
-/* ============= Card Styles ============= */
-.cardWrapper {
-  position: relative;
-  aspect-ratio: 3/2;
-  padding: 1rem;
-  border: 2px solid #d4d1c8;
-  border-radius: 8px;
-  background: linear-gradient(to bottom, #f4f1e8 0%, #ebe7dc 100%);
-  color: #333;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  opacity: 1;
-  transform-style: preserve-3d;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Hide cards in hidden state */
-.cardWrapper[data-state="hidden"] {
   opacity: 0;
-  transform: translateY(-20px) scale(0.9);
+  transform: scale(0.8);
+  transition: all 0.3s;
 }
 
-.cardWrapper:hover:not([data-state="visible-covered"]):not(.selected) {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow:
-    0 8px 20px rgba(0, 0, 0, 0.2),
-    0 0 20px rgba(0, 255, 136, 0.1);
-}
-
-/* Selected cards */
-.cardWrapper.selected {
-  cursor: default;
+/* Display States using data attributes */
+[data-state="hidden"] {
+  opacity: 0;
+  /* No transform - let animation handle initial position */
   pointer-events: none;
 }
 
-/* Team color backgrounds for spymaster view */
-.cardWrapper.colorRed:not(.selected) {
-  background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
-  border-color: #ff6666;
-  color: white;
-  box-shadow: 0 4px 15px rgba(255, 68, 68, 0.3);
+[data-state="visible"] {
+  opacity: 1;
+  /* Animation will set final position */
 }
 
-.cardWrapper.colorBlue:not(.selected) {
-  background: linear-gradient(135deg, #4444ff 0%, #0000cc 100%);
-  border-color: #6666ff;
-  color: white;
-  box-shadow: 0 4px 15px rgba(68, 68, 255, 0.3);
+[data-state="visible-colored"] {
+  opacity: 1;
 }
 
-.cardWrapper.colorNeutral:not(.selected) {
-  background: linear-gradient(135deg, #888 0%, #555 100%);
-  border-color: #aaa;
-  color: white;
-  box-shadow: 0 4px 15px rgba(136, 136, 136, 0.3);
+[data-state="visible-colored"] .teamBadge {
+  opacity: 1;
+  transform: scale(1);
 }
 
-.cardWrapper.colorAssassin:not(.selected) {
-  background: linear-gradient(135deg, #000 0%, #333 100%);
-  border-color: #ffff00;
-  box-shadow:
-    0 0 30px rgba(255, 255, 0, 0.5),
-    inset 0 0 20px rgba(255, 255, 0, 0.1);
-  color: #ffff00;
-  animation: assassinPulse 2s ease-in-out infinite;
+[data-state="visible-covered"] .cardInner {
+  transform: rotateY(180deg);
+}
+
+/* Team Colors */
+.team-red.visible-colored .cardFront {
+  background: #ffebee;
+  border-color: #ff3b30;
+}
+
+.team-red.visible-colored .word {
+  color: #ff3b30;
+}
+
+.team-red .teamBadge,
+.badge-red {
+  background: #ff3b30;
+  color: white;
+}
+
+.team-blue.visible-colored .cardFront {
+  background: #e3f2fd;
+  border-color: #007aff;
+}
+
+.team-blue.visible-colored .word {
+  color: #007aff;
+}
+
+.team-blue .teamBadge,
+.badge-blue {
+  background: #007aff;
+  color: white;
+}
+
+.team-neutral.visible-colored .cardFront {
+  background: #fff8e1;
+  border-color: #ff9500;
+}
+
+.team-neutral.visible-colored .word {
+  color: #ff9500;
+}
+
+.team-neutral .teamBadge,
+.badge-neutral {
+  background: #ff9500;
+  color: white;
+}
+
+.team-assassin.visible-colored .cardFront {
+  background: #1a1a1a;
+  border-color: #ff3b30;
+  animation: assassinPulse 2s infinite;
+}
+
+.team-assassin.visible-colored .word {
+  color: #ff3b30;
+  text-shadow: 0 0 10px rgba(255, 59, 48, 0.5);
+}
+
+.team-assassin .teamBadge,
+.badge-assassin {
+  background: #000;
+  color: #ff3b30;
+  border: 1px solid #ff3b30;
 }
 
 @keyframes assassinPulse {
   0%,
   100% {
-    box-shadow:
-      0 0 30px rgba(255, 255, 0, 0.5),
-      inset 0 0 20px rgba(255, 255, 0, 0.1);
+    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.4);
   }
   50% {
-    box-shadow:
-      0 0 50px rgba(255, 255, 0, 0.8),
-      inset 0 0 30px rgba(255, 255, 0, 0.2);
+    box-shadow: 0 0 20px 10px rgba(255, 59, 48, 0.2);
   }
 }
 
-/* Card content */
-.cardWord {
-  font-weight: bold;
-  font-size: 1.2rem;
-  margin-bottom: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  z-index: 2;
-  position: relative;
+/* Card Back Colors */
+.back-red {
+  background: linear-gradient(135deg, #ff3b30 0%, #ff1744 100%);
 }
 
-.cardState {
-  font-size: 0.75rem;
-  opacity: 0.6;
-  min-height: 1.5rem;
-  position: absolute;
-  bottom: 0.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.9);
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  color: #333;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.back-blue {
+  background: linear-gradient(135deg, #007aff 0%, #0051d5 100%);
 }
 
-/* Badge for spymaster view */
-.cardBadge {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  font-size: 0.7rem;
-  padding: 0.2rem 0.5rem;
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #fff;
-  font-weight: 700;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  z-index: 3;
+.back-neutral {
+  background: linear-gradient(135deg, #ff9500 0%, #ff6200 100%);
 }
 
-/* Cover cards */
-.coverCard {
-  position: absolute;
-  inset: 0;
-  background: #555;
-  border: 2px solid #333;
-  border-radius: 8px;
+.back-assassin {
+  background: #000;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-direction: column;
-  color: white;
-  z-index: 5;
-  transform-origin: center;
-  transform: translateX(0) translateY(0) rotate(0);
-  opacity: 1;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* Team color variants for cover cards */
-.coverCard.coverRed {
-  background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
-  border-color: #ff6666;
-  box-shadow:
-    0 4px 20px rgba(255, 68, 68, 0.4),
-    inset 0 0 20px rgba(0, 0, 0, 0.2);
+.back-assassin .backText {
+  color: #ff3b30;
+  font-size: 3rem;
 }
 
-.coverCard.coverBlue {
-  background: linear-gradient(135deg, #4444ff 0%, #0000cc 100%);
-  border-color: #6666ff;
-  box-shadow:
-    0 4px 20px rgba(68, 68, 255, 0.4),
-    inset 0 0 20px rgba(0, 0, 0, 0.2);
+/* Animation States */
+.transitioning {
+  pointer-events: none;
 }
 
-.coverCard.coverNeutral {
-  background: linear-gradient(135deg, #999 0%, #666 100%);
-  border-color: #aaa;
-  box-shadow:
-    0 4px 20px rgba(136, 136, 136, 0.4),
-    inset 0 0 20px rgba(0, 0, 0, 0.2);
+.selected {
+  pointer-events: none;
 }
 
-.coverCard.coverAssassin {
-  background: linear-gradient(135deg, #333 0%, #000 100%);
-  border-color: #ffff00;
-  box-shadow:
-    0 0 40px rgba(255, 255, 0, 0.6),
-    inset 0 0 30px rgba(255, 255, 0, 0.3);
-  animation: assassinGlow 1.5s ease-in-out infinite;
-}
-
-@keyframes assassinGlow {
-  0%,
-  100% {
-    box-shadow:
-      0 0 40px rgba(255, 255, 0, 0.6),
-      inset 0 0 30px rgba(255, 255, 0, 0.3);
-    border-color: #ffff00;
-  }
-  50% {
-    box-shadow:
-      0 0 60px rgba(255, 255, 0, 0.9),
-      inset 0 0 40px rgba(255, 255, 0, 0.5);
-    border-color: #ffff66;
-  }
-}
-
-.coverWord {
-  font-weight: 900;
-  font-size: 1.4rem;
-  margin-bottom: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.coverTeam {
-  font-size: 0.9rem;
-  opacity: 0.9;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  font-weight: 600;
-  padding: 0.3rem 0.6rem;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 4px;
-  backdrop-filter: blur(10px);
-}
-
-/* Responsive adjustments */
+/* Responsive */
 @media (max-width: 768px) {
-  .container {
-    padding: 1rem;
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
   }
 
-  .title {
-    font-size: 1.8rem;
+  .word {
+    font-size: 1rem;
   }
 
   .controls {
     flex-direction: column;
-    gap: 1rem;
+    align-items: stretch;
   }
 
-  .grid {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 0.75rem;
-    padding: 1rem;
-  }
-
-  .cardWord {
-    font-size: 1rem;
-  }
-}
-
-@media (min-width: 1400px) {
-  .grid {
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1.5rem;
+  .controls button {
+    width: 100%;
   }
 }
