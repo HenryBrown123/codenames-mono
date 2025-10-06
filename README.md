@@ -604,10 +604,6 @@ Frontend and backend extend these base types with their specific requirements.
 │       ├── app
 │       │   └── routes
 │       │       └── page-layout
-│       ├── features
-│       │   ├── animations
-│       │   └── game-board
-│       │       └── cards
 │       ├── game-access
 │       │   ├── api
 │       │   │   ├── endpoints
@@ -650,7 +646,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-89 directories
+85 directories
 ```
 
 ## Getting Started
