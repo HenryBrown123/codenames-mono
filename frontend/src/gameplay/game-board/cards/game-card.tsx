@@ -4,6 +4,12 @@ import { useCardVisibility } from "./use-card-visibility";
 import { getTeamType, getCardColor } from "./card-utils";
 import { cx } from "../../../lib/classnames";
 import styles from "./game-card.module.css";
+import {
+  cardContainerAnimations,
+  coverLayerAnimations,
+  spymasterOverlayAnimations,
+} from './card-animation-definitions';
+import { useCardAnimations } from './use-card-animations';
 
 interface GameCardProps {
   card: Card;
@@ -28,7 +34,13 @@ const getTextSizeClass = (word: string, threshold: number = 9): string => {
  * Game card component with visibility state management
  */
 export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable, isCurrentTeam }) => {
-  const { state, animation, handleAnimationStart, handleAnimationEnd } = useCardVisibility(card);
+  const { displayState, isPending, viewMode, createAnimationRef } = useCardVisibility(card, index);
+
+  // Create animation refs for each element
+  const containerRef = createAnimationRef('container', cardContainerAnimations);
+  const coverRef = createAnimationRef('cover', coverLayerAnimations);
+  const overlayRef = createAnimationRef('spymaster-overlay', spymasterOverlayAnimations);
+
   const teamType = getTeamType(card);
   const cardColor = getCardColor(card);
 
@@ -56,15 +68,15 @@ export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable, 
     }
   }, [clickable, card.selected, onClick]);
 
-  const isColored = state === "visible-colored";
+  const isColored = displayState === "visible-colored";
   const showSpymasterOverlay = isColored;
 
   return (
     <div
+      ref={containerRef}
       className={styles.cardContainer}
       data-team={teamType}
-      data-state={state}
-      data-animation={animation}
+      data-state={displayState}
       data-clickable={clickable && !card.selected}
       data-current-team={isCurrentTeam ? "true" : "false"}
       style={
@@ -73,8 +85,6 @@ export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable, 
           "--team-color": cardColor,
         } as React.CSSProperties
       }
-      onAnimationStart={handleAnimationStart}
-      onAnimationEnd={handleAnimationEnd}
     >
       {/* Normal beige card */}
       <div
@@ -88,13 +98,13 @@ export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable, 
       </div>
 
       {/* Cover card - shows when selected */}
-      <div className={styles.coverCard}>
+      <div ref={coverRef} className={styles.coverCard}>
         <TeamSymbol teamType={teamType} />
       </div>
 
       {/* Spymaster overlay - shows in AR mode */}
       {showSpymasterOverlay && (
-        <div className={styles.spymasterOverlay}>
+        <div ref={overlayRef} className={styles.spymasterOverlay}>
           <TeamColorFilter />
           <ScanGrid />
           <SpymasterSymbol />

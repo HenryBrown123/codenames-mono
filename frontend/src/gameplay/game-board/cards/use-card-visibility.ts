@@ -1,14 +1,8 @@
-import React, { useCallback, useState, useRef, useMemo } from "react";
+import { useCallback } from "react";
 import { Card } from "@frontend/shared-types";
 import { useCardVisibilityStore } from "./card-visibility-store";
-import type { VisualState, AnimationType, CardVisibilityData } from "./card-visibility-provider";
-
-export interface CardVisibility {
-  state: VisualState;
-  animation: AnimationType;
-  handleAnimationStart: (e: React.AnimationEvent) => void;
-  handleAnimationEnd: (e: React.AnimationEvent) => void;
-}
+import { useCardAnimations } from "./use-card-animations";
+import type { VisualState, CardVisibilityData } from "./card-visibility-provider";
 
 // Default visibility data to avoid creating new objects
 const DEFAULT_VISIBILITY_DATA: CardVisibilityData = {
@@ -17,102 +11,24 @@ const DEFAULT_VISIBILITY_DATA: CardVisibilityData = {
 };
 
 /**
- * Hook manages animation status lifecycle to handle React dev mode double-rendering
- * Status persists animation attributes across renders until CSS animations complete
+ * Hook for managing card visibility state and animations
+ *
+ * Returns display state from store and animation registration utilities.
+ * No longer handles CSS animation events - animations are WAAPI-based.
  */
-export const useCardVisibility = (card: Card): CardVisibility => {
-  // Use a stable selector
+export const useCardVisibility = (card: Card, index: number) => {
+  // Get visibility data from store
   const visibilityData = useCardVisibilityStore(
     useCallback((state) => state.cardData.get(card.word) || DEFAULT_VISIBILITY_DATA, [card.word]),
   );
 
-  // Use useEffect to update state
-  React.useEffect(() => {
-    if (
-      visibilityData.animation !== transitionState.animation ||
-      visibilityData.state !== transitionState.state
-    ) {
-      setTransitionState({
-        animation: visibilityData.animation,
-        state: visibilityData.state,
-        status: visibilityData.animation ? "waiting" : null,
-      });
-    }
-  }, [visibilityData.animation, visibilityData.state]);
-
-  const setCardData = useCardVisibilityStore((state) => state.setCardData);
-
-  const activeElements = useRef<Set<EventTarget>>(new Set());
-
-  const [transitionState, setTransitionState] = useState<{
-    animation: AnimationType;
-    state: VisualState | null;
-    status: "waiting" | "animating" | "complete" | null;
-  }>({
-    animation: null,
-    state: null,
-    status: null,
-  });
-
-  const animation =
-    transitionState.status === "waiting" || transitionState.status === "animating"
-      ? transitionState.animation
-      : null;
-
-  const handleAnimationStart = useCallback(
-    (e: React.AnimationEvent) => {
-      activeElements.current.add(e.target);
-      setTransitionState((prev) => ({ ...prev, status: "animating" }));
-
-      const currentCardData = useCardVisibilityStore.getState().cardData;
-      const updatedData = new Map(currentCardData);
-      const current = updatedData.get(card.word);
-
-      if (current && current.animationStatus === "pending") {
-        updatedData.set(card.word, {
-          ...current,
-          animationStatus: "playing",
-        });
-        setCardData(updatedData);
-      }
-    },
-    [card.word, setCardData],
-  );
-
-  const handleAnimationEnd = useCallback(
-    (e: React.AnimationEvent) => {
-      if (activeElements.current.has(e.target)) {
-        activeElements.current.delete(e.target);
-        setTransitionState((prev) => ({ ...prev, status: "complete" }));
-
-        const currentCardData = useCardVisibilityStore.getState().cardData;
-        const updatedData = new Map(currentCardData);
-        const current = updatedData.get(card.word);
-
-        if (current && current.animation) {
-          updatedData.set(card.word, {
-            ...current,
-            animation: null,
-            animationStatus: "complete",
-          });
-          setCardData(updatedData);
-        }
-      }
-    },
-    [card.word, setCardData],
-  );
-
-  // Clean up on unmount
-  React.useLayoutEffect(() => {
-    return () => {
-      // Component unmounting - clean up any pending animations
-    };
-  }, [card.word, transitionState.status]);
+  // Get animation registration hook
+  const { createAnimationRef } = useCardAnimations(card.word);
 
   return {
-    state: visibilityData.state,
-    animation,
-    handleAnimationStart,
-    handleAnimationEnd,
+    displayState: visibilityData.state,
+    isPending: visibilityData.animationStatus === "pending",
+    viewMode: visibilityData.state === "visible-colored" ? "spymaster" : "normal",
+    createAnimationRef,
   };
 };
