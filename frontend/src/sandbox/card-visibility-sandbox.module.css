@@ -45,10 +45,6 @@
   border-color: #0066cc;
 }
 
-.main {
-  /* Just a wrapper, no specific styling needed */
-}
-
 .scene {
   background: #2a2a2a;
   border-radius: 16px;
