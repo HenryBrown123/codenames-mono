@@ -1,9 +1,17 @@
 import React, { memo, useCallback } from "react";
 import { Card } from "@frontend/shared-types";
-import { useCardVisibility } from "./use-card-visibility";
+import { useCardVisibility } from "../../../features/game-board/cards/use-card-visibility";
 import { getTeamType, getCardColor } from "./card-utils";
 import { cx } from "../../../lib/classnames";
 import styles from "./game-card.module.css";
+import {
+  cardContainer,
+  cardCover,
+  spymasterOverlay,
+  cardWord as cardWordAnims,
+  cardBadge,
+} from "../../../features/game-board/cards/card-animations";
+import { useGameActions } from "../../game-actions";
 
 interface GameCardProps {
   card: Card;
@@ -28,7 +36,11 @@ const getTextSizeClass = (word: string, threshold: number = 9): string => {
  * Game card component with visibility state management
  */
 export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable, isCurrentTeam }) => {
-  const { state, animation, handleAnimationStart, handleAnimationEnd } = useCardVisibility(card);
+  const { displayState, isPending, viewMode, createAnimationRef } = useCardVisibility(
+    card.word,
+    index
+  );
+  const { makeGuessMutation } = useGameActions();
   const teamType = getTeamType(card);
   const cardColor = getCardColor(card);
 
@@ -51,20 +63,23 @@ export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable, 
   }, []);
 
   const handleClick = useCallback(() => {
-    if (clickable && !card.selected) {
-      onClick();
-    }
-  }, [clickable, card.selected, onClick]);
+    if (isPending) return;
+    if (!clickable) return;
+    if (card.selected) return;
+    if (makeGuessMutation.isPending) return;
 
-  const isColored = state === "visible-colored";
+    onClick();
+  }, [isPending, clickable, card.selected, makeGuessMutation.isPending, onClick]);
+
+  const isColored = displayState === "visible-colored";
   const showSpymasterOverlay = isColored;
 
   return (
     <div
+      ref={createAnimationRef("container", cardContainer)}
       className={styles.cardContainer}
       data-team={teamType}
-      data-state={state}
-      data-animation={animation}
+      data-state={displayState}
       data-clickable={clickable && !card.selected}
       data-current-team={isCurrentTeam ? "true" : "false"}
       style={
@@ -73,8 +88,6 @@ export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable, 
           "--team-color": cardColor,
         } as React.CSSProperties
       }
-      onAnimationStart={handleAnimationStart}
-      onAnimationEnd={handleAnimationEnd}
     >
       {/* Normal beige card */}
       <div
@@ -88,13 +101,18 @@ export const GameCard = memo<GameCardProps>(({ card, index, onClick, clickable, 
       </div>
 
       {/* Cover card - shows when selected */}
-      <div className={styles.coverCard}>
-        <TeamSymbol teamType={teamType} />
-      </div>
+      {displayState === "visible-covered" && (
+        <div ref={createAnimationRef("cover", cardCover)} className={styles.coverCard}>
+          <TeamSymbol teamType={teamType} />
+        </div>
+      )}
 
       {/* Spymaster overlay - shows in AR mode */}
       {showSpymasterOverlay && (
-        <div className={styles.spymasterOverlay}>
+        <div
+          ref={createAnimationRef("spymasterOverlay", spymasterOverlay)}
+          className={styles.spymasterOverlay}
+        >
           <TeamColorFilter />
           <ScanGrid />
           <SpymasterSymbol />

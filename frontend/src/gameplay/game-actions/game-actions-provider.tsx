@@ -9,6 +9,7 @@ import {
 import { useGameDataRequired } from "../game-data/providers";
 import { usePlayerScene } from "../game-scene";
 import { useTurn } from "../game-data/providers";
+import { useCardVisibilityStore } from "../../features/game-board/cards/card-visibility-store";
 
 export type ActionName =
   | "giveClue"
@@ -29,6 +30,7 @@ export interface GameActionsContextValue {
   resetActionState: () => void;
   giveClue: (word: string, count: number) => void;
   makeGuess: (word: string) => void;
+  makeGuessMutation: ReturnType<typeof useMakeGuessMutation>;
   createRound: () => void;
   startRound: () => void;
   dealCards: (redeal?: boolean) => void;
@@ -54,6 +56,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   const { gameData, gameId } = useGameDataRequired();
   const { triggerSceneTransition } = usePlayerScene();
   const { setLastActionTurnId } = useTurn();
+  const visibility = useCardVisibilityStore();
 
   const giveClueMutation = useGiveClueMutation(gameId);
   const makeGuessMutation = useMakeGuessMutation(gameId);
@@ -86,6 +89,8 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
               status: "success",
               error: null,
             });
+
+            visibility.revealCard(word);
 
             // Explicit state transitions based on guess outcome
             if (res.guess.outcome === "CORRECT_TEAM_CARD") {
@@ -199,6 +204,12 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         {
           onSuccess: () => {
             setActionState({ name: "dealCards", status: "success", error: null });
+
+            if (gameData.currentRound?.cards) {
+              const cardWords = gameData.currentRound.cards.map((c) => c.word);
+              visibility.animateDeal(cardWords);
+            }
+
             if (!redeal) {
               triggerSceneTransition("CARDS_DEALT");
             }
@@ -241,6 +252,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
     resetActionState,
     giveClue,
     makeGuess,
+    makeGuessMutation,
     createRound,
     startRound,
     dealCards,

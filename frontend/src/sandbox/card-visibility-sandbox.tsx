@@ -72,6 +72,7 @@ const GameCard: React.FC<GameCardProps> = ({ card, index, onSelect }) => {
     card,
     index,
   );
+
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleClick = async () => {
