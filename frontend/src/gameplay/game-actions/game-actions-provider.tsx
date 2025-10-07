@@ -9,6 +9,7 @@ import {
 import { useGameDataRequired } from "../game-data/providers";
 import { usePlayerScene } from "../game-scene";
 import { useTurn } from "../game-data/providers";
+import { useCardVisibilityStore } from "../game-board/cards/card-visibility-store";
 
 export type ActionName =
   | "giveClue"
@@ -62,6 +63,10 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   const dealCardsMutation = useDealCardsMutation(gameId);
   const endTurnMutation = useEndTurnMutation(gameId);
 
+  const selectCardFromStore = useCardVisibilityStore((state) => state.selectCard);
+  const dealCardsFromStore = useCardVisibilityStore((state) => state.dealCards);
+  const initializeCards = useCardVisibilityStore((state) => state.initializeCards);
+
   const resetActionState = useCallback(() => {
     setActionState(initialState);
   }, []);
@@ -78,8 +83,10 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       makeGuessMutation.mutate(
         { cardWord: word, roundNumber },
         {
-          onSuccess: (res) => {
+          onSuccess: async (res) => {
             setLastActionTurnId(res.turn.id);
+
+            await selectCardFromStore(word);
 
             setActionState({
               name: "makeGuess",
@@ -108,7 +115,13 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         },
       );
     },
-    [makeGuessMutation, gameData.currentRound, triggerSceneTransition, setLastActionTurnId],
+    [
+      makeGuessMutation,
+      gameData.currentRound,
+      triggerSceneTransition,
+      setLastActionTurnId,
+      selectCardFromStore,
+    ],
   );
 
   const giveClue = useCallback(
@@ -197,8 +210,16 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       dealCardsMutation.mutate(
         { roundNumber, redeal },
         {
-          onSuccess: () => {
+          onSuccess: async () => {
+            const cards = gameData.currentRound?.cards || [];
+
+            if (cards.length > 0) {
+              initializeCards(cards);
+              await dealCardsFromStore(cards.map((c) => c.word));
+            }
+
             setActionState({ name: "dealCards", status: "success", error: null });
+
             if (!redeal) {
               triggerSceneTransition("CARDS_DEALT");
             }
@@ -210,7 +231,13 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         },
       );
     },
-    [dealCardsMutation, gameData.currentRound, triggerSceneTransition],
+    [
+      dealCardsMutation,
+      gameData.currentRound,
+      triggerSceneTransition,
+      dealCardsFromStore,
+      initializeCards,
+    ],
   );
 
   const endTurn = useCallback(() => {

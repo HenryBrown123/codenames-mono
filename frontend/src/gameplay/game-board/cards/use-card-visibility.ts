@@ -1,34 +1,39 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { Card } from "@frontend/shared-types";
 import { useCardVisibilityStore } from "./card-visibility-store";
-import { useCardAnimations } from "./use-card-animations";
-import type { VisualState, CardVisibilityData } from "./card-visibility-provider";
+import { useAnimationRegistration } from "../../animations/use-animation-registration";
+import { createWebAnimationEngine } from "@frontend/gameplay/animations";
 
-// Default visibility data to avoid creating new objects
-const DEFAULT_VISIBILITY_DATA: CardVisibilityData = {
-  state: "hidden" as VisualState,
-  animation: null,
-};
+const boardAnimationEngine = createWebAnimationEngine();
 
 /**
- * Hook for managing card visibility state and animations
+ * Main hook for card visibility - combines state management with animation registration
  *
- * Returns display state from store and animation registration utilities.
- * No longer handles CSS animation events - animations are WAAPI-based.
+ * This is the primary interface for GameCard components. It:
+ * - Reads card state from the visibility store
+ * - Provides animation ref factory via the generic animation registration hook
+ * - Auto-initializes cards when first rendered
+ * - Exposes select action for triggering card selection animations
  */
-export const useCardVisibility = (card: Card, index: number) => {
-  // Get visibility data from store
-  const visibilityData = useCardVisibilityStore(
-    useCallback((state) => state.cardData.get(card.word) || DEFAULT_VISIBILITY_DATA, [card.word]),
-  );
+export function useCardVisibility(card: Card, index: number) {
+  const cardState = useCardVisibilityStore((state) => state.cards.get(card.word));
+  const viewMode = useCardVisibilityStore((state) => state.viewMode);
+  const initializeCard = useCardVisibilityStore((state) => state.initializeCard);
+  const selectCard = useCardVisibilityStore((state) => state.selectCard);
 
-  // Get animation registration hook
-  const { createAnimationRef } = useCardAnimations(card.word);
+  const { createAnimationRef } = useAnimationRegistration(card.word, boardAnimationEngine);
+
+  useEffect(() => {
+    if (!cardState) {
+      initializeCard(card.word, card);
+    }
+  }, [card.word, cardState, initializeCard, card]);
 
   return {
-    displayState: visibilityData.state,
-    isPending: visibilityData.animationStatus === "pending",
-    viewMode: visibilityData.state === "visible-colored" ? "spymaster" : "normal",
+    displayState: cardState?.displayState || "hidden",
+    isPending: cardState?.isTransitioning || false,
+    viewMode,
+    select: () => selectCard(card.word),
     createAnimationRef,
   };
-};
+}

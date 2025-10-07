@@ -35,6 +35,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
   const { activeTurn } = useTurn();
   const viewMode = useCardVisibilityStore((state) => state.viewMode);
   const toggleSpymasterView = useCardVisibilityStore((state) => state.toggleSpymasterView);
+  const [isToggling, setIsToggling] = React.useState(false);
 
   // Add keyboard shortcut for power users
   React.useEffect(() => {
@@ -71,8 +72,13 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
     giveClue(word, count);
   };
 
-  const handleARToggle = () => {
-    toggleSpymasterView();
+  const handleARToggle = async () => {
+    setIsToggling(true);
+    try {
+      await toggleSpymasterView();
+    } finally {
+      setIsToggling(false);
+    }
   };
 
   const isARMode = viewMode === "spymaster";
@@ -84,7 +90,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
         <div className={styles.mobileToggleContainer}>
           <span className={styles.toggleLabel}>Spymaster Vision</span>
           <label className={styles.toggleSwitch}>
-            <input type="checkbox" checked={isARMode} onChange={handleARToggle} />
+            <input type="checkbox" checked={isARMode} onChange={handleARToggle} disabled={isToggling} />
             <span className={styles.toggleTrack}>
               <span className={styles.toggleThumb} />
             </span>
@@ -121,7 +127,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
               <SpyGogglesSwitchRow>
                 <SpyGogglesDot active={isARMode} />
                 <SpySwitch>
-                  <input type="checkbox" checked={isARMode} onChange={handleARToggle} />
+                  <input type="checkbox" checked={isARMode} onChange={handleARToggle} disabled={isToggling} />
                   <SpySlider />
                 </SpySwitch>
                 <SpyStatus active={isARMode}>{isARMode ? "ON" : "OFF"}</SpyStatus>

@@ -11,6 +11,7 @@ import { CodeWordInput } from "../game-controls/dashboards/codemaster-input";
 import { useGameActions } from "../game-actions";
 import { CardVisibilityManager } from "../game-board/cards/card-visibility-manager";
 import { UISettingsDashboard } from "../game-controls/settings/ui-settings-dashboard";
+import { useCardVisibilityStore } from "../game-board/cards/card-visibility-store";
 
 /**
  * Game Scene Component with unified mobile-first layout
@@ -27,6 +28,7 @@ export const GameScene: React.FC = () => {
   const [fontLongSize, setFontLongSize] = useState(14);
   const [fontThreshold, setFontThreshold] = useState(9);
   const { giveClue, actionState } = useGameActions();
+  const initializeCards = useCardVisibilityStore((state) => state.initializeCards);
 
   // 2. MEMOIZED HOOKS MUST ALSO BE BEFORE CONDITIONAL RETURNS
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
@@ -86,6 +88,13 @@ export const GameScene: React.FC = () => {
 
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === "SETUP";
+
+  // Initialize cards on mount or when cards change
+  React.useEffect(() => {
+    if (cards.length > 0) {
+      initializeCards(cards);
+    }
+  }, [cards.length, initializeCards]);
 
   const handleSubmitClue = (word: string, count: number) => {
     giveClue(word, count);
