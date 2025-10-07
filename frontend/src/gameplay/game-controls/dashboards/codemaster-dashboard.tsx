@@ -3,6 +3,7 @@ import { CodeWordInput } from "./codemaster-input";
 import { useGameActions } from "../../game-actions";
 import { useTurn } from "../../game-data/providers";
 import { useCardVisibilityStore } from "../../game-board/cards/card-visibility-store";
+import { useAnimationEngine } from "../../animations/animation-engine-context";
 import {
   TerminalSection,
   TerminalPrompt,
@@ -33,8 +34,9 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
 }) => {
   const { giveClue, actionState } = useGameActions();
   const { activeTurn } = useTurn();
-  const viewMode = useCardVisibilityStore((state) => state.viewMode);
   const toggleSpymasterView = useCardVisibilityStore((state) => state.toggleSpymasterView);
+  const viewMode = useCardVisibilityStore((state) => state.viewMode);
+  const animationEngine = useAnimationEngine();
   const [isToggling, setIsToggling] = React.useState(false);
 
   // Add keyboard shortcut for power users
@@ -75,7 +77,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
   const handleARToggle = async () => {
     setIsToggling(true);
     try {
-      await toggleSpymasterView();
+      await toggleSpymasterView(animationEngine);
     } finally {
       setIsToggling(false);
     }

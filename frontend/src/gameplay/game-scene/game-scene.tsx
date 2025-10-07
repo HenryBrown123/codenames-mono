@@ -9,7 +9,6 @@ import { GameInstructions } from "../shared/game-instructions";
 import { ActionButton } from "../shared/components";
 import { CodeWordInput } from "../game-controls/dashboards/codemaster-input";
 import { useGameActions } from "../game-actions";
-import { CardVisibilityManager } from "../game-board/cards/card-visibility-manager";
 import { UISettingsDashboard } from "../game-controls/settings/ui-settings-dashboard";
 import { useCardVisibilityStore } from "../game-board/cards/card-visibility-store";
 
@@ -30,7 +29,6 @@ export const GameScene: React.FC = () => {
   const { giveClue, actionState } = useGameActions();
   const initializeCards = useCardVisibilityStore((state) => state.initializeCards);
 
-  // 2. MEMOIZED HOOKS MUST ALSO BE BEFORE CONDITIONAL RETURNS
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
   const BoardComponent = React.useMemo(() => {
     const Component = getBoardComponent(currentRole, currentScene);
@@ -39,7 +37,6 @@ export const GameScene: React.FC = () => {
     );
   }, [currentRole, currentScene]);
 
-  // 3. DERIVED VALUES (non-hooks)
   const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
   const fontVariables = {
     "--font-normal-size": `${fontNormalSize}px`,
@@ -47,8 +44,6 @@ export const GameScene: React.FC = () => {
     "--font-threshold": fontThreshold,
   } as React.CSSProperties;
 
-  // 4. NOW CONDITIONAL RETURNS ARE ALLOWED
-  // Show skeleton during initial load
   if (isPending && !gameData) {
     return (
       <div className={styles.gameSceneContainer}>
@@ -103,8 +98,6 @@ export const GameScene: React.FC = () => {
 
   return (
     <>
-      <CardVisibilityManager cards={cards} initialState={isRoundSetup ? "hidden" : "visible"} />
-      
       {/* UI Settings Dashboard */}
       <UISettingsDashboard
         fontNormalSize={fontNormalSize}

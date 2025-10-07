@@ -10,6 +10,7 @@ import { useGameDataRequired } from "../game-data/providers";
 import { usePlayerScene } from "../game-scene";
 import { useTurn } from "../game-data/providers";
 import { useCardVisibilityStore } from "../game-board/cards/card-visibility-store";
+import { useAnimationEngine } from "../animations/animation-engine-context";
 
 export type ActionName =
   | "giveClue"
@@ -67,6 +68,8 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   const dealCardsFromStore = useCardVisibilityStore((state) => state.dealCards);
   const initializeCards = useCardVisibilityStore((state) => state.initializeCards);
 
+  const animationEngine = useAnimationEngine();
+
   const resetActionState = useCallback(() => {
     setActionState(initialState);
   }, []);
@@ -86,7 +89,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
           onSuccess: async (res) => {
             setLastActionTurnId(res.turn.id);
 
-            await selectCardFromStore(word);
+            await selectCardFromStore(word, animationEngine);
 
             setActionState({
               name: "makeGuess",
@@ -121,6 +124,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       triggerSceneTransition,
       setLastActionTurnId,
       selectCardFromStore,
+      animationEngine,
     ],
   );
 
@@ -215,7 +219,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
 
             if (cards.length > 0) {
               initializeCards(cards);
-              await dealCardsFromStore(cards.map((c) => c.word));
+              await dealCardsFromStore(cards.map((c) => c.word), animationEngine);
             }
 
             setActionState({ name: "dealCards", status: "success", error: null });
@@ -237,6 +241,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       triggerSceneTransition,
       dealCardsFromStore,
       initializeCards,
+      animationEngine,
     ],
   );
 

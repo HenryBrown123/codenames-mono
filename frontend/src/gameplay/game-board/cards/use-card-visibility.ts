@@ -1,10 +1,8 @@
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 import { Card } from "@frontend/shared-types";
 import { useCardVisibilityStore } from "./card-visibility-store";
 import { useAnimationRegistration } from "../../animations/use-animation-registration";
-import { createWebAnimationEngine } from "@frontend/gameplay/animations";
-
-const boardAnimationEngine = createWebAnimationEngine();
+import { useAnimationEngine } from "../../animations/animation-engine-context";
 
 /**
  * Main hook for card visibility - combines state management with animation registration
@@ -16,24 +14,24 @@ const boardAnimationEngine = createWebAnimationEngine();
  * - Exposes select action for triggering card selection animations
  */
 export function useCardVisibility(card: Card, index: number) {
-  const cardState = useCardVisibilityStore((state) => state.cards.get(card.word));
+  const cardVisibility = useCardVisibilityStore((state) => state.cards.get(card.word));
   const viewMode = useCardVisibilityStore((state) => state.viewMode);
   const initializeCard = useCardVisibilityStore((state) => state.initializeCard);
   const selectCard = useCardVisibilityStore((state) => state.selectCard);
 
-  const { createAnimationRef } = useAnimationRegistration(card.word, boardAnimationEngine);
+  const engine = useAnimationEngine();
+
+  const { createAnimationRef } = useAnimationRegistration(card.word);
 
   useEffect(() => {
-    if (!cardState) {
-      initializeCard(card.word, card);
-    }
-  }, [card.word, cardState, initializeCard, card]);
+    initializeCard(card.word, card);
+  }, [card.word, initializeCard, card]);
 
   return {
-    displayState: cardState?.displayState || "hidden",
-    isPending: cardState?.isTransitioning || false,
+    displayState: cardVisibility?.displayState || "hidden",
+    isPending: cardVisibility?.isTransitioning || false,
     viewMode,
-    select: () => selectCard(card.word),
+    select: () => selectCard(card.word, engine),
     createAnimationRef,
   };
 }
