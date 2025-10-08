@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useMemo } from "react";
 import { create } from "zustand";
+import { useAnimationRegistration } from "../gameplay/animations/use-animation-registration";
 
 // ============= TYPES =============
 
@@ -141,13 +142,19 @@ interface CardVisibilityStore {
   cards: Map<string, CardState>;
   viewMode: ViewMode;
   cardOrder: string[];
+  dealRequested: boolean;
+  selectRequested: boolean;
 
   initializeCard: (word: string, card: Card) => void;
   initializeCards: (gameCards: Card[]) => void;
-  toggleSpymasterView: () => Promise<void>;
-  selectCard: (word: string) => Promise<void>;
-  dealCards: (words: string[]) => Promise<void>;
-  resetCards: () => Promise<void>;
+  toggleSpymasterView: (engine: any) => Promise<void>;
+  selectCard: (word: string, engine: any) => Promise<void>;
+  dealCards: (words: string[], engine: any) => Promise<void>;
+  resetCards: (engine: any) => Promise<void>;
+  requestDeal: () => void;
+  requestSelect: () => void;
+  clearDealRequest: () => void;
+  clearSelectRequest: () => void;
 }
 
 export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => {
@@ -157,6 +164,7 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
   const executeTransitions = async (
     transitions: Map<string, CardTransition>,
     useStagger: boolean = false,
+    engine: any,
   ) => {
     if (transitions.size === 0) return;
 
@@ -166,8 +174,14 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
 
     const { cardOrder } = get();
 
-    await boardAnimationEngine.playTransitions(
-      transitions,
+    // Convert to format expected by real animation engine
+    const animationTransitions = new Map();
+    transitions.forEach((transition, word) => {
+      animationTransitions.set(word, { event: transition.event });
+    });
+
+    await engine.playTransitions(
+      animationTransitions,
       useStagger ? (word) => cardOrder.indexOf(word) : undefined,
     );
 
@@ -207,6 +221,8 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
     cards: new Map(),
     viewMode: "normal",
     cardOrder: [],
+    dealRequested: false,
+    selectRequested: false,
 
     initializeCard: (word, card) =>
       set((state) => {
@@ -228,7 +244,7 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
       ensureCardsInitialized(gameCards.map((c) => c.word));
     },
 
-    toggleSpymasterView: async () => {
+    toggleSpymasterView: async (engine) => {
       const { cards, viewMode } = get();
 
       const newMode = viewMode === "normal" ? "spymaster" : "normal";
@@ -237,10 +253,10 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
       set({ viewMode: newMode });
 
       const transitions = calculateTransitions(cards, event);
-      await executeTransitions(transitions, true);
+      await executeTransitions(transitions, true, engine);
     },
 
-    selectCard: async (word) => {
+    selectCard: async (word, engine) => {
       const { cards } = get();
       const card = cards.get(word);
       if (!card) return;
@@ -248,28 +264,27 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
       const transition = calculateCardTransition(card, "select");
       if (!transition) return;
 
-      await executeTransitions(new Map([[word, transition]]));
+      await executeTransitions(new Map([[word, transition]]), false, engine);
     },
 
-    dealCards: async (words) => {
+    dealCards: async (words, engine) => {
       ensureCardsInitialized(words);
 
       const { cards } = get();
       const transitions = calculateTransitions(cards, "deal", words);
 
-
       if (transitions.size === 0) {
         return;
       }
 
-      await executeTransitions(transitions, true);
+      await executeTransitions(transitions, true, engine);
     },
 
-    resetCards: async () => {
+    resetCards: async (engine) => {
       const { cards } = get();
       const transitions = calculateTransitions(cards, "reset");
 
-      await executeTransitions(transitions);
+      await executeTransitions(transitions, false, engine);
 
       set({
         cards: new Map(),
@@ -277,128 +292,15 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
         viewMode: "normal",
       });
     },
+
+    requestDeal: () => set({ dealRequested: true }),
+    requestSelect: () => set({ selectRequested: true }),
+    clearDealRequest: () => set({ dealRequested: false }),
+    clearSelectRequest: () => set({ selectRequested: false }),
   };
 });
 
-// ============= ANIMATION ENGINE (unchanged) =============
-
-interface AnimationDefinition {
-  keyframes: Keyframe[];
-  options: KeyframeAnimationOptions;
-}
-
-interface AnimationEngine {
-  register: (
-    cardWord: string,
-    elementId: string,
-    element: HTMLElement,
-    animations: Record<string, AnimationDefinition>,
-  ) => void;
-  unregister: (cardWord: string, elementId: string) => void;
-  playTransitions: (
-    transitions: Map<string, CardTransition>,
-    getIndex?: (word: string) => number,
-  ) => Promise<void>;
-  cancelAll: () => void;
-}
-
-function createBoardAnimationEngine(): AnimationEngine {
-  const registry = new Map<
-    string,
-    Map<string, { element: HTMLElement; animations: Record<string, AnimationDefinition> }>
-  >();
-
-  const runningAnimations = new Map<string, Animation>();
-
-  const register = (
-    cardWord: string,
-    elementId: string,
-    element: HTMLElement,
-    animations: Record<string, AnimationDefinition>,
-  ) => {
-    if (!registry.has(cardWord)) {
-      registry.set(cardWord, new Map());
-    }
-    registry.get(cardWord)!.set(elementId, { element, animations });
-  };
-
-  const unregister = (cardWord: string, elementId: string) => {
-    const cardRegistry = registry.get(cardWord);
-    if (cardRegistry) {
-      cardRegistry.delete(elementId);
-      if (cardRegistry.size === 0) {
-        registry.delete(cardWord);
-      }
-    }
-  };
-
-  const playTransitions = async (
-    transitions: Map<string, CardTransition>,
-    getIndex?: (word: string) => number,
-  ): Promise<void> => {
-    const promises: Promise<void>[] = [];
-
-    transitions.forEach((transition, cardWord) => {
-      const cardElements = registry.get(cardWord);
-
-      if (!cardElements) {
-        console.warn(`[AnimationEngine] No elements registered for card: ${cardWord}`);
-        return;
-      }
-
-      const index = getIndex?.(cardWord) ?? 0;
-
-      cardElements.forEach(({ element, animations }, elementId) => {
-        const animDef = animations[transition.event];
-        if (!animDef) {
-          console.warn(`[AnimationEngine] No animation for ${transition.event} on ${elementId}`);
-          return;
-        }
-
-        const animKey = `${cardWord}-${elementId}-${transition.event}`;
-        const existing = runningAnimations.get(animKey);
-
-        if (existing && existing.playState === "running") {
-          return;
-        }
-
-        const staggerDelay = index * 50;
-        const options = {
-          ...animDef.options,
-          delay: (animDef.options.delay ?? 0) + staggerDelay,
-        };
-
-
-        const animation = element.animate(animDef.keyframes, options);
-        runningAnimations.set(animKey, animation);
-
-        const animationPromise: Promise<void> = animation.finished.then(
-          () => {
-            runningAnimations.delete(animKey);
-          },
-          (error) => {
-            runningAnimations.delete(animKey);
-          },
-        );
-
-        promises.push(animationPromise);
-      });
-    });
-
-    await Promise.all(promises);
-  };
-
-  const cancelAll = () => {
-    runningAnimations.forEach((anim) => anim.cancel());
-    runningAnimations.clear();
-  };
-
-  return { register, unregister, playTransitions, cancelAll };
-}
-
-export const boardAnimationEngine = createBoardAnimationEngine();
-
-// ============= UNIFIED CARD VISIBILITY HOOK (unchanged) =============
+// ============= UNIFIED CARD VISIBILITY HOOK =============
 
 export function useCardVisibility(card: Card, index: number) {
   const cardState = useCardVisibilityStore((state) => state.cards.get(card.word));
@@ -406,40 +308,38 @@ export function useCardVisibility(card: Card, index: number) {
   const initializeCard = useCardVisibilityStore((state) => state.initializeCard);
   const selectCard = useCardVisibilityStore((state) => state.selectCard);
 
-  const animationRefCallbacks = useRef<Map<string, (element: HTMLElement | null) => void>>(
-    new Map(),
+  // Build entity context for the real animation engine
+  const entityContext = useMemo(
+    () => ({
+      word: card.word,
+      teamName: card.teamName,
+      selected: card.selected,
+      index,
+      displayState: cardState?.displayState || "hidden",
+      isTransitioning: cardState?.isTransitioning || false,
+      pendingState: cardState?.pendingState,
+      viewMode,
+    }),
+    [
+      card.word,
+      card.teamName,
+      card.selected,
+      index,
+      cardState?.displayState,
+      cardState?.isTransitioning,
+      cardState?.pendingState,
+      viewMode,
+    ],
   );
+
+  // Use the real animation registration hook
+  const { createAnimationRef } = useAnimationRegistration(card.word, entityContext);
 
   useEffect(() => {
     if (!cardState) {
       initializeCard(card.word, card);
     }
   }, [card.word, cardState, initializeCard, card]);
-
-  const createAnimationRef = useCallback(
-    (elementId: string, animations: Record<string, AnimationDefinition>) => {
-      let ref = animationRefCallbacks.current.get(elementId);
-      if (ref) return ref;
-
-      ref = (element: HTMLElement | null) => {
-        if (element) {
-          boardAnimationEngine.register(card.word, elementId, element, animations);
-        } else {
-          boardAnimationEngine.unregister(card.word, elementId);
-        }
-      };
-
-      animationRefCallbacks.current.set(elementId, ref);
-      return ref;
-    },
-    [card.word],
-  );
-
-  useEffect(() => {
-    return () => {
-      animationRefCallbacks.current.clear();
-    };
-  }, [card.word]);
 
   return {
     displayState: cardState?.displayState || "hidden",

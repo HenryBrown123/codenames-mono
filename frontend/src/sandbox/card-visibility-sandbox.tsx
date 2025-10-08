@@ -1,6 +1,6 @@
 // card-visibility-sandbox.tsx
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
   useCardVisibilityStore,
   useCardVisibility,
@@ -8,6 +8,7 @@ import {
 } from "./card-visibility-sandbox.hooks";
 import * as animations from "./card-visibility-sandbox.animations";
 import styles from "./card-visibility-sandbox.module.css";
+import { AnimationEngineProvider, useAnimationEngine } from '../gameplay/animations/animation-engine-context';
 
 const SAMPLE_WORDS = [
   "ROBOT",
@@ -151,6 +152,7 @@ const DealInScene: React.FC<SceneProps> = ({ cards }) => {
   const dealCards = useCardVisibilityStore((state) => state.dealCards);
   const resetCards = useCardVisibilityStore((state) => state.resetCards);
   const initializeCards = useCardVisibilityStore((state) => state.initializeCards);
+  const animationEngine = useAnimationEngine();
   const [isDealing, setIsDealing] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [dealCount, setDealCount] = useState(4);
@@ -162,13 +164,13 @@ const DealInScene: React.FC<SceneProps> = ({ cards }) => {
   const handleDeal = async () => {
     setIsDealing(true);
     const wordsToDeal = cards.slice(0, dealCount).map((c) => c.word);
-    await dealCards(wordsToDeal);
+    await dealCards(wordsToDeal, animationEngine);
     setIsDealing(false);
   };
 
   const handleReset = async () => {
     setIsResetting(true);
-    await resetCards();
+    await resetCards(animationEngine);
     setIsResetting(false);
 
     setTimeout(() => {
@@ -214,6 +216,7 @@ const SpymasterViewScene: React.FC<SceneProps> = ({ cards }) => {
   const initializeCards = useCardVisibilityStore((state) => state.initializeCards);
   const dealCards = useCardVisibilityStore((state) => state.dealCards);
   const resetCards = useCardVisibilityStore((state) => state.resetCards);
+  const animationEngine = useAnimationEngine();
   const [isToggling, setIsToggling] = useState(false);
   const [isDealing, setIsDealing] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -225,20 +228,20 @@ const SpymasterViewScene: React.FC<SceneProps> = ({ cards }) => {
 
   const handleDealAll = async () => {
     setIsDealing(true);
-    await dealCards(cards.map((c) => c.word));
+    await dealCards(cards.map((c) => c.word), animationEngine);
     setHasDealt(true);
     setIsDealing(false);
   };
 
   const handleToggle = async () => {
     setIsToggling(true);
-    await toggleSpymasterView();
+    await toggleSpymasterView(animationEngine);
     setIsToggling(false);
   };
 
   const handleReset = async () => {
     setIsResetting(true);
-    await resetCards();
+    await resetCards(animationEngine);
     setHasDealt(false);
     setIsResetting(false);
 
@@ -292,6 +295,7 @@ const PlayerSelectionScene: React.FC<SceneProps> = ({ cards: initialCards }) => 
   const initializeCards = useCardVisibilityStore((state) => state.initializeCards);
   const dealCards = useCardVisibilityStore((state) => state.dealCards);
   const resetCards = useCardVisibilityStore((state) => state.resetCards);
+  const animationEngine = useAnimationEngine();
   const [isToggling, setIsToggling] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [hasDealt, setHasDealt] = useState(false);
@@ -299,7 +303,7 @@ const PlayerSelectionScene: React.FC<SceneProps> = ({ cards: initialCards }) => 
   React.useEffect(() => {
     const setup = async () => {
       initializeCards(cards);
-      await dealCards(cards.map((c) => c.word));
+      await dealCards(cards.map((c) => c.word), animationEngine);
       setHasDealt(true);
     };
     setup();
@@ -314,20 +318,20 @@ const PlayerSelectionScene: React.FC<SceneProps> = ({ cards: initialCards }) => 
 
   const handleToggleSpymaster = async () => {
     setIsToggling(true);
-    await toggleSpymasterView();
+    await toggleSpymasterView(animationEngine);
     setIsToggling(false);
   };
 
   const handleReset = async () => {
     setIsResetting(true);
-    await resetCards();
+    await resetCards(animationEngine);
     setCards(initialCards);
     setSelectedWords(new Set());
     setIsResetting(false);
 
     setTimeout(async () => {
       initializeCards(initialCards);
-      await dealCards(initialCards.map((c) => c.word));
+      await dealCards(initialCards.map((c) => c.word), animationEngine);
     }, 400);
   };
 
@@ -381,13 +385,194 @@ const PlayerSelectionScene: React.FC<SceneProps> = ({ cards: initialCards }) => 
   );
 };
 
-export const CardVisibilitySandbox: React.FC = () => {
-  const [activeScene, setActiveScene] = useState<"deal" | "spymaster" | "selection">("deal");
+const TimingTestScene: React.FC = () => {
+  const dealCards = useCardVisibilityStore((state) => state.dealCards);
+  const selectCard = useCardVisibilityStore((state) => state.selectCard);
+  const dealRequested = useCardVisibilityStore((state) => state.dealRequested);
+  const selectRequested = useCardVisibilityStore((state) => state.selectRequested);
+  const requestDeal = useCardVisibilityStore((state) => state.requestDeal);
+  const requestSelect = useCardVisibilityStore((state) => state.requestSelect);
+  const clearDealRequest = useCardVisibilityStore((state) => state.clearDealRequest);
+  const clearSelectRequest = useCardVisibilityStore((state) => state.clearSelectRequest);
+  const initializeCards = useCardVisibilityStore((state) => state.initializeCards);
   const resetCards = useCardVisibilityStore((state) => state.resetCards);
+
+  const animationEngine = useAnimationEngine();
+
+  const [card, setCard] = useState<Card | null>(null);
+  const [isDealing, setIsDealing] = useState(false);
+  const [isSelecting, setIsSelecting] = useState(false);
+
+  useEffect(() => {
+    initializeCards([]);
+  }, [initializeCards]);
+
+  // Board container ref - fires AFTER children render
+  const boardContainerRef = useCallback((node: HTMLDivElement | null) => {
+    console.log('[🎬 TimingTest] Board ref callback fired', {
+      hasNode: !!node,
+      hasCard: !!card,
+      dealRequested,
+      selectRequested,
+      timestamp: new Date().toISOString(),
+    });
+
+    if (node && card) {
+      if (dealRequested) {
+        console.log('[✅ TimingTest] Triggering DEAL animation - elements should be registered!');
+        dealCards([card.word], animationEngine);
+        clearDealRequest();
+      }
+
+      if (selectRequested) {
+        console.log('[✅ TimingTest] Triggering SELECT animation - elements should be registered!');
+        selectCard(card.word, animationEngine);
+        clearSelectRequest();
+      }
+    }
+  }, [card, dealRequested, selectRequested, dealCards, selectCard, clearDealRequest, clearSelectRequest, animationEngine]);
+
+  const handleDeal = async () => {
+    console.log('[🔵 TimingTest] Deal clicked - card NOT rendered yet');
+    setIsDealing(true);
+    setCard(null);
+
+    // Set flag BEFORE card exists (like mutation onSuccess)
+    console.log('[🔵 TimingTest] Setting dealRequested flag');
+    requestDeal();
+
+    // Simulate API delay
+    console.log('[⏳ TimingTest] Simulating 500ms API call...');
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Card arrives from "API"
+    console.log('[🟢 TimingTest] Card data arrived - React will re-render and mount GameCard');
+    setCard({
+      word: 'TIMING',
+      teamName: 'blue',
+      selected: false,
+    });
+
+    setIsDealing(false);
+  };
+
+  const handleSelect = async () => {
+    if (!card) return;
+
+    console.log('[🔵 TimingTest] Select clicked - card will UNMOUNT then REMOUNT');
+    setIsSelecting(true);
+
+    // Set flag
+    console.log('[🔵 TimingTest] Setting selectRequested flag');
+    requestSelect();
+
+    // Unmount card
+    console.log('[⏳ TimingTest] Unmounting card...');
+    setCard(null);
+
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    // Remount card with selected=true
+    console.log('[🟢 TimingTest] Card data with selected=true - React will remount GameCard');
+    setCard({
+      word: 'TIMING',
+      teamName: 'blue',
+      selected: true,
+    });
+
+    setIsSelecting(false);
+  };
+
+  const handleReset = async () => {
+    console.log('[🔄 TimingTest] Reset');
+    setCard(null);
+    await resetCards(animationEngine);
+    initializeCards([]);
+  };
+
+  return (
+    <div className={styles.scene}>
+      <h2>🧪 Timing Test - Single Card</h2>
+      <p style={{ color: '#999', fontSize: '0.9rem', marginBottom: '1rem' }}>
+        Tests async flow: Button click → Set flag → API delay → Card renders → Ref fires → Animation plays
+      </p>
+
+      <div className={styles.controls}>
+        <button onClick={handleDeal} disabled={isDealing || isSelecting || !!card}>
+          {isDealing ? '⏳ Dealing...' : '🎴 Deal Card'}
+        </button>
+        <button onClick={handleSelect} disabled={!card || isSelecting || isDealing || card.selected}>
+          {isSelecting ? '⏳ Selecting...' : '👆 Select Card'}
+        </button>
+        <button onClick={handleReset} disabled={isDealing || isSelecting}>
+          🔄 Reset
+        </button>
+      </div>
+
+      <div style={{
+        color: '#666',
+        fontSize: '0.85rem',
+        marginBottom: '1rem',
+        padding: '0.5rem',
+        background: '#1a1a1a',
+        borderRadius: '4px',
+      }}>
+        <div>Card state: {card ? `"${card.word}" (${card.selected ? '✅ selected' : '⭕ not selected'})` : '❌ none'}</div>
+        <div>Deal requested: {dealRequested ? '✅' : '❌'}</div>
+        <div>Select requested: {selectRequested ? '✅' : '❌'}</div>
+      </div>
+
+      {/* Board container with ref callback */}
+      <div ref={boardContainerRef}>
+        <div className={styles.grid} style={{ gridTemplateColumns: '1fr', maxWidth: '200px', margin: '0 auto' }}>
+          {card ? (
+            <GameCard key={card.word} card={card} index={0} />
+          ) : (
+            <div style={{
+              color: '#666',
+              padding: '4rem 2rem',
+              border: '2px dashed #444',
+              borderRadius: '8px',
+              textAlign: 'center',
+            }}>
+              No card rendered.<br/>Click "Deal Card" above.
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ marginTop: '2rem', padding: '1rem', background: '#1a1a1a', borderRadius: '4px', fontSize: '0.85rem' }}>
+        <strong style={{ color: '#fff' }}>Expected flow:</strong>
+        <ol style={{ color: '#999', marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
+          <li>Click button → flag set → card NOT rendered</li>
+          <li>API delay (simulated)</li>
+          <li>Card data arrives → React renders GameCard</li>
+          <li>GameCard callback refs fire → elements register with engine</li>
+          <li>Board container ref fires → checks flag → triggers animation</li>
+          <li>Animation plays successfully (elements are registered!)</li>
+        </ol>
+      </div>
+    </div>
+  );
+};
+
+export const CardVisibilitySandbox: React.FC = () => {
+  return (
+    <AnimationEngineProvider>
+      <SandboxContent />
+    </AnimationEngineProvider>
+  );
+};
+
+const SandboxContent: React.FC = () => {
+  const [activeScene, setActiveScene] = useState<"deal" | "spymaster" | "selection" | "timing">("timing");
+  const resetCards = useCardVisibilityStore((state) => state.resetCards);
+  const animationEngine = useAnimationEngine();
   const cards = useMemo(() => generateCards(), []);
 
-  const handleSceneChange = async (scene: "deal" | "spymaster" | "selection") => {
-    await resetCards();
+  const handleSceneChange = async (scene: "deal" | "spymaster" | "selection" | "timing") => {
+    await resetCards(animationEngine);
     setActiveScene(scene);
   };
 
@@ -414,6 +599,12 @@ export const CardVisibilitySandbox: React.FC = () => {
           >
             Player Selection
           </button>
+          <button
+            onClick={() => handleSceneChange("timing")}
+            className={activeScene === "timing" ? styles.active : ""}
+          >
+            🧪 Timing Test
+          </button>
         </nav>
       </header>
 
@@ -421,6 +612,7 @@ export const CardVisibilitySandbox: React.FC = () => {
         {activeScene === "deal" && <DealInScene cards={cards} />}
         {activeScene === "spymaster" && <SpymasterViewScene cards={cards} />}
         {activeScene === "selection" && <PlayerSelectionScene cards={cards} />}
+        {activeScene === "timing" && <TimingTestScene />}
       </main>
     </div>
   );
