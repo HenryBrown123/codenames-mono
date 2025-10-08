@@ -12,21 +12,27 @@ import {
   TerminalOutput,
 } from "./terminal-components";
 import styles from "./setup-dashboards.module.css";
-
-
+import { useCardVisibilityStore } from "@frontend/gameplay/game-board";
+import { useAnimationEngine } from "@frontend/gameplay/animations";
 /**
  * Lobby Dashboard - Mobile-first with refresh functionality
  */
 export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText }) => {
   const { gameData } = useGameDataRequired();
   const { createRound, startRound, dealCards, actionState } = useGameActions();
+  const dealCardsFromStore = useCardVisibilityStore((state) => state.dealCards);
+  const animationEngine = useAnimationEngine();
+
+  if (!gameData) {
+    return null;
+  }
 
   const canRedeal =
     gameData?.currentRound?.status === "SETUP" &&
     gameData.currentRound.cards &&
     gameData.currentRound.cards.length > 0;
 
-  const handleClick = () => {
+  const handleClick = async () => {
     if (
       gameData?.currentRound?.status === "SETUP" &&
       gameData.currentRound.cards &&
@@ -40,7 +46,12 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
       gameData?.currentRound?.status === "SETUP" &&
       (!gameData.currentRound.cards || gameData.currentRound.cards.length === 0)
     ) {
-      dealCards();
+      console.log("[Click Handler] About to run call dealCards mutation", new Date());
+      await dealCards();
+
+      console.log("[Click Handler] About to run dealCardsFromStore", new Date());
+      const words = gameData.currentRound.cards.map((c) => c.word);
+      dealCardsFromStore(words, animationEngine);
       return;
     }
 
@@ -50,8 +61,14 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
     }
   };
 
-  const handleRedeal = () => {
-    dealCards(true);
+  const handleRedeal = async () => {
+    console.log("[Click Handler] About to run call dealCards mutation", new Date());
+    await dealCards(true);
+
+    console.log("[Click Handler] About to run dealCardsFromStore", new Date());
+    const words = gameData.currentRound!.cards.map((c) => c.word);
+    dealCardsFromStore(words, animationEngine);
+    return;
   };
 
   const getButtonText = () => {

@@ -1,8 +1,4 @@
-import {
-  useMutation,
-  useQueryClient,
-  UseMutationResult,
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient, UseMutationResult } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
 import { usePlayerContext } from "../../game-data/providers/player-context-provider";
@@ -35,10 +31,9 @@ export const useDealCardsMutation = (
 
   return useMutation({
     mutationFn: async ({ roundNumber, redeal = false }) => {
-
       const response: AxiosResponse<DealCardsApiResponse> = await api.post(
         `/games/${gameId}/rounds/${roundNumber}/deal`,
-        { redeal, playerId: currentPlayerId }
+        { redeal, playerId: currentPlayerId },
       );
 
       if (!response.data.success) {

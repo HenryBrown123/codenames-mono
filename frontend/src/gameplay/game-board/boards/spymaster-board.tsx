@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef } from "react";
+import React, { memo, useEffect } from "react";
 import { useGameDataRequired } from "../../game-data/providers";
 import { GameCard } from "../cards/game-card";
 import { useCardVisibilityStore } from "../cards/card-visibility-store";
@@ -23,23 +23,7 @@ export const SpymasterBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   const currentTeamName = gameData.playerContext?.teamName;
 
   const dealCardsFromStore = useCardVisibilityStore((state) => state.dealCards);
-  const initializeCards = useCardVisibilityStore((state) => state.initializeCards);
   const animationEngine = useAnimationEngine();
-
-  const prevCardsLengthRef = useRef(0);
-
-  useEffect(() => {
-    if (cards.length > 0) {
-      initializeCards(cards);
-
-      if (cards.length > prevCardsLengthRef.current) {
-        const words = cards.map((c) => c.word);
-        dealCardsFromStore(words, animationEngine);
-      }
-    }
-
-    prevCardsLengthRef.current = cards.length;
-  }, [cards, dealCardsFromStore, initializeCards, animationEngine]);
 
   return <SpymasterBoardContent cards={cards} tilt={tilt} currentTeamName={currentTeamName} />;
 });

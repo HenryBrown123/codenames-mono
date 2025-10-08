@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useEffect, useRef } from "react";
+import { memo, useCallback, useMemo, useEffect } from "react";
 import { useGameDataRequired, useTurn } from "../../game-data/providers";
 import { useGameActions } from "../../game-actions";
 import { GameCard } from "../cards/game-card";
@@ -91,10 +91,7 @@ export const CodebreakerBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   const currentTeamName = gameData.playerContext?.teamName;
 
   const dealCardsFromStore = useCardVisibilityStore((state) => state.dealCards);
-  const initializeCards = useCardVisibilityStore((state) => state.initializeCards);
   const animationEngine = useAnimationEngine();
-
-  const prevCardsLengthRef = useRef(0);
 
   const isLoading = actionState.status === "loading";
 

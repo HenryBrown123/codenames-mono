@@ -31,7 +31,7 @@ export function useCardVisibility(card: Card, index: number) {
       teamName: card.teamName,
       selected: card.selected,
       index,
-      displayState: cardVisibility?.displayState || "hidden",
+      displayState: cardVisibility?.displayState || "visible",
       isTransitioning: cardVisibility?.isTransitioning || false,
       pendingState: cardVisibility?.pendingState,
       viewMode,
@@ -57,7 +57,7 @@ export function useCardVisibility(card: Card, index: number) {
     return () => {
       uninitializeCard(card.word);
     };
-  }, [card.word, initializeCard, uninitializeCard, card]);
+  }, [card.word, initializeCard, uninitializeCard]);
 
   return {
     displayState: cardVisibility?.displayState || "hidden",

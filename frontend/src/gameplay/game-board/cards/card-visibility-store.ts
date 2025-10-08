@@ -18,10 +18,9 @@ interface CardVisibilityStore {
 
   initializeCard: (word: string, card: Card) => void;
   uninitializeCard: (word: string) => void;
-  initializeCards: (gameCards: Card[]) => void;
   toggleSpymasterView: (engine: WebAnimationEngine) => Promise<void>;
   selectCard: (word: string, engine: WebAnimationEngine) => Promise<void>;
-  dealCards: (words: string[], engine: WebAnimationEngine) => Promise<void>;
+  dealCards: (words: string[], engine: WebAnimationEngine, staggerDelay?: number) => Promise<void>;
   resetCards: (engine: WebAnimationEngine) => Promise<void>;
 }
 
@@ -109,7 +108,7 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
   const executeTransitions = async (
     engine: WebAnimationEngine,
     transitions: Map<string, CardTransition>,
-    useStagger: boolean = false,
+    staggerDelay?: number,
   ) => {
     if (transitions.size === 0) return;
 
@@ -126,37 +125,12 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
 
     await engine.playTransitions(
       animationTransitions,
-      useStagger ? (word) => cardOrder.indexOf(word) : undefined,
+      staggerDelay ? (word) => cardOrder.indexOf(word) * staggerDelay : undefined,
     );
 
     set((state) => ({
       cards: finalizePendingStates(state.cards),
     }));
-  };
-
-  const ensureCardsInitialized = (words: string[]) => {
-    const { cards } = get();
-
-    const uninitializedWords = words.filter((word) => !cards.has(word));
-
-    if (uninitializedWords.length > 0) {
-      set((state) => {
-        const newCards = new Map(state.cards);
-        const newOrder: string[] = [];
-
-        uninitializedWords.forEach((word) => {
-          newCards.set(word, {
-            displayState: "hidden",
-            isTransitioning: false,
-          });
-          if (!newOrder.includes(word)) {
-            newOrder.push(word);
-          }
-        });
-
-        return { cards: newCards, cardOrder: newOrder };
-      });
-    }
   };
 
   return {
@@ -170,7 +144,7 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
 
         const newCards = new Map(state.cards);
         newCards.set(word, {
-          displayState: "hidden",
+          displayState: "visible",
           isTransitioning: false,
         });
 
@@ -191,10 +165,6 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
         };
       }),
 
-    initializeCards: (gameCards) => {
-      ensureCardsInitialized(gameCards.map((c) => c.word));
-    },
-
     toggleSpymasterView: async (engine) => {
       const { cards, viewMode } = get();
 
@@ -204,7 +174,7 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
       set({ viewMode: newMode });
 
       const transitions = calculateTransitions(cards, event);
-      await executeTransitions(engine, transitions, true);
+      await executeTransitions(engine, transitions, 0);
     },
 
     selectCard: async (word, engine) => {
@@ -218,10 +188,8 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
       await executeTransitions(engine, new Map([[word, transition]]));
     },
 
-    dealCards: async (words, engine) => {
+    dealCards: async (words, engine, staggerDelay = 0) => {
       console.log("[Store] dealCards called", { words });
-
-      ensureCardsInitialized(words);
 
       const { cards } = get();
       console.log(
@@ -242,7 +210,7 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
       }
 
       console.log("[Store] About to execute transitions");
-      await executeTransitions(engine, transitions, true);
+      await executeTransitions(engine, transitions, staggerDelay);
       console.log("[Store] Transitions complete");
     },
 

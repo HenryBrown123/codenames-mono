@@ -27,7 +27,6 @@ export const GameScene: React.FC = () => {
   const [fontLongSize, setFontLongSize] = useState(14);
   const [fontThreshold, setFontThreshold] = useState(9);
   const { giveClue, actionState } = useGameActions();
-  const initializeCards = useCardVisibilityStore((state) => state.initializeCards);
 
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
   const BoardComponent = React.useMemo(() => {
@@ -83,13 +82,6 @@ export const GameScene: React.FC = () => {
 
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === "SETUP";
-
-  // Initialize cards on mount or when cards change
-  React.useEffect(() => {
-    if (cards.length > 0) {
-      initializeCards(cards);
-    }
-  }, [cards.length, initializeCards]);
 
   const handleSubmitClue = (word: string, count: number) => {
     giveClue(word, count);

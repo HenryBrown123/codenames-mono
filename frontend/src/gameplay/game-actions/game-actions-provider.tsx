@@ -33,7 +33,7 @@ export interface GameActionsContextValue {
   makeGuess: (word: string) => void;
   createRound: () => void;
   startRound: () => void;
-  dealCards: (redeal?: boolean) => void;
+  dealCards: (redeal?: boolean) => Promise<void>;
   endTurn: () => void;
 }
 
@@ -44,7 +44,6 @@ const initialState: ActionState = {
   status: "idle",
   error: null,
 };
-
 
 interface GameActionsProviderProps {
   children: ReactNode;
@@ -65,6 +64,8 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   const endTurnMutation = useEndTurnMutation(gameId);
 
   const selectCardFromStore = useCardVisibilityStore((state) => state.selectCard);
+
+  const dealCardsFromStore = useCardVisibilityStore((state) => state.dealCards);
 
   const animationEngine = useAnimationEngine();
 
@@ -201,7 +202,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   }, [startRoundMutation, gameData.currentRound, triggerSceneTransition]);
 
   const dealCards = useCallback(
-    (redeal: boolean = false) => {
+    async (redeal: boolean = false) => {
       if (!gameData.currentRound) {
         return;
       }
@@ -212,7 +213,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       dealCardsMutation.mutate(
         { roundNumber, redeal },
         {
-          onSuccess: async () => {
+          onSuccess: () => {
             setActionState({ name: "dealCards", status: "success", error: null });
 
             if (!redeal) {
