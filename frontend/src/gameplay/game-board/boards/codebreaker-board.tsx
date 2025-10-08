@@ -1,8 +1,9 @@
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo, useEffect, useRef } from "react";
 import { useGameDataRequired, useTurn } from "../../game-data/providers";
 import { useGameActions } from "../../game-actions";
 import { GameCard } from "../cards/game-card";
 import { useCardVisibilityStore } from "../cards/card-visibility-store";
+import { useAnimationEngine } from "../../animations/animation-engine-context";
 import { GameBoardLayout } from "./board-layout";
 import { EmptyCard } from "./board-layout";
 import {
@@ -16,7 +17,6 @@ import {
   ARHUDLine,
 } from "../cards/ar-overlay-components";
 
-
 /**
  * Internal component that uses the card visibility context
  */
@@ -29,12 +29,12 @@ const CodebreakerBoardContent = memo<{
   tilt: number;
   currentTeamName?: string;
 }>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick, tilt, currentTeamName }) => {
-  const viewMode = useCardVisibilityStore(state => state.viewMode);
+  const viewMode = useCardVisibilityStore((state) => state.viewMode);
 
   return (
     <>
       {/* AR HUD Overlay - Full screen glasses effect */}
-      {viewMode === 'spymaster' && (
+      {viewMode === "spymaster" && (
         <ARGlassesHUD>
           <ARVisor />
           <ARGlare />
@@ -60,21 +60,20 @@ const CodebreakerBoardContent = memo<{
         </ARGlassesHUD>
       )}
 
-      <GameBoardLayout data-ar-mode={viewMode === 'spymaster'} tilt={tilt}>
-        {cards.length > 0 ? cards.map((card, index) => (
-          <GameCard
-            key={card.word}
-            card={card}
-            index={index}
-            onClick={() => onCardClick(card.word)}
-            clickable={canMakeGuess && !isLoading && !card.selected}
-            isCurrentTeam={currentTeamName === card.teamName}
-          />
-        )) : Array.from({ length: 25 }).map((_, i) => (
-          <EmptyCard key={`empty-${i}`} />
-        ))}
+      <GameBoardLayout data-ar-mode={viewMode === "spymaster"} tilt={tilt}>
+        {cards.length > 0
+          ? cards.map((card, index) => (
+              <GameCard
+                key={card.word}
+                card={card}
+                index={index}
+                onClick={() => onCardClick(card.word)}
+                clickable={canMakeGuess && !isLoading && !card.selected}
+                isCurrentTeam={currentTeamName === card.teamName}
+              />
+            ))
+          : Array.from({ length: 25 }).map((_, i) => <EmptyCard key={`empty-${i}`} />)}
       </GameBoardLayout>
-
     </>
   );
 });
@@ -91,7 +90,11 @@ export const CodebreakerBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   const cards = gameData.currentRound?.cards || [];
   const currentTeamName = gameData.playerContext?.teamName;
 
-  // Don't set viewMode - codebreaker stays in player view
+  const dealCardsFromStore = useCardVisibilityStore((state) => state.dealCards);
+  const initializeCards = useCardVisibilityStore((state) => state.initializeCards);
+  const animationEngine = useAnimationEngine();
+
+  const prevCardsLengthRef = useRef(0);
 
   const isLoading = actionState.status === "loading";
 

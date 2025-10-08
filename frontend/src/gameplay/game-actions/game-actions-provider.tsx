@@ -65,8 +65,6 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   const endTurnMutation = useEndTurnMutation(gameId);
 
   const selectCardFromStore = useCardVisibilityStore((state) => state.selectCard);
-  const dealCardsFromStore = useCardVisibilityStore((state) => state.dealCards);
-  const initializeCards = useCardVisibilityStore((state) => state.initializeCards);
 
   const animationEngine = useAnimationEngine();
 
@@ -215,13 +213,6 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         { roundNumber, redeal },
         {
           onSuccess: async () => {
-            const cards = gameData.currentRound?.cards || [];
-
-            if (cards.length > 0) {
-              initializeCards(cards);
-              await dealCardsFromStore(cards.map((c) => c.word), animationEngine);
-            }
-
             setActionState({ name: "dealCards", status: "success", error: null });
 
             if (!redeal) {
@@ -235,14 +226,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         },
       );
     },
-    [
-      dealCardsMutation,
-      gameData.currentRound,
-      triggerSceneTransition,
-      dealCardsFromStore,
-      initializeCards,
-      animationEngine,
-    ],
+    [dealCardsMutation, gameData.currentRound, triggerSceneTransition],
   );
 
   const endTurn = useCallback(() => {

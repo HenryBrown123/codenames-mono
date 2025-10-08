@@ -1,7 +1,8 @@
-import React, { memo } from "react";
+import React, { memo, useEffect, useRef } from "react";
 import { useGameDataRequired } from "../../game-data/providers";
 import { GameCard } from "../cards/game-card";
 import { useCardVisibilityStore } from "../cards/card-visibility-store";
+import { useAnimationEngine } from "../../animations/animation-engine-context";
 import { GameBoardLayout } from "./board-layout";
 import { EmptyCard } from "./board-layout";
 import {
@@ -19,21 +20,36 @@ import {
 export const SpymasterBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   const { gameData } = useGameDataRequired();
   const cards = gameData.currentRound?.cards || [];
-  const isRoundSetup = gameData.currentRound?.status === "SETUP";
   const currentTeamName = gameData.playerContext?.teamName;
 
-  // Don't set viewMode - let the toggle button handle it
+  const dealCardsFromStore = useCardVisibilityStore((state) => state.dealCards);
+  const initializeCards = useCardVisibilityStore((state) => state.initializeCards);
+  const animationEngine = useAnimationEngine();
 
-  return <SpymasterBoardContent cards={cards} isRoundSetup={isRoundSetup} tilt={tilt} currentTeamName={currentTeamName} />;
+  const prevCardsLengthRef = useRef(0);
+
+  useEffect(() => {
+    if (cards.length > 0) {
+      initializeCards(cards);
+
+      if (cards.length > prevCardsLengthRef.current) {
+        const words = cards.map((c) => c.word);
+        dealCardsFromStore(words, animationEngine);
+      }
+    }
+
+    prevCardsLengthRef.current = cards.length;
+  }, [cards, dealCardsFromStore, initializeCards, animationEngine]);
+
+  return <SpymasterBoardContent cards={cards} tilt={tilt} currentTeamName={currentTeamName} />;
 });
 
 const SpymasterBoardContent = memo<{
   cards: any[];
-  isRoundSetup: boolean;
   tilt: number;
   currentTeamName?: string;
-}>(({ cards, isRoundSetup, tilt, currentTeamName }) => {
-  const viewMode = useCardVisibilityStore(state => state.viewMode);
+}>(({ cards, tilt, currentTeamName }) => {
+  const viewMode = useCardVisibilityStore((state) => state.viewMode);
 
   return (
     <>
@@ -64,9 +80,9 @@ const SpymasterBoardContent = memo<{
             ))
           : Array.from({ length: 25 }).map((_, i) => <EmptyCard key={`empty-${i}`} />)}
       </GameBoardLayout>
-
     </>
   );
 });
 
+SpymasterBoardContent.displayName = "SpymasterBoardContent";
 SpymasterBoard.displayName = "SpymasterBoard";

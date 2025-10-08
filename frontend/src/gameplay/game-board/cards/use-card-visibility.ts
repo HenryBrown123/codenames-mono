@@ -1,8 +1,8 @@
-import { useEffect, useMemo } from 'react';
-import { Card } from '@frontend/shared-types';
-import { useCardVisibilityStore } from './card-visibility-store';
-import { useAnimationRegistration } from '../../animations/use-animation-registration';
-import { useAnimationEngine } from '../../animations/animation-engine-context';
+import { useEffect, useMemo } from "react";
+import { Card } from "@frontend/shared-types";
+import { useCardVisibilityStore } from "./card-visibility-store";
+import { useAnimationRegistration } from "../../animations/use-animation-registration";
+import { useAnimationEngine } from "../../animations/animation-engine-context";
 
 /**
  * Main hook for card visibility - combines state management with animation registration
@@ -17,41 +17,50 @@ import { useAnimationEngine } from '../../animations/animation-engine-context';
 export function useCardVisibility(card: Card, index: number) {
   const cardVisibility = useCardVisibilityStore((state) => state.cards.get(card.word));
   const viewMode = useCardVisibilityStore((state) => state.viewMode);
+
   const initializeCard = useCardVisibilityStore((state) => state.initializeCard);
+  const uninitializeCard = useCardVisibilityStore((state) => state.uninitializeCard);
   const selectCard = useCardVisibilityStore((state) => state.selectCard);
 
   const engine = useAnimationEngine();
 
   // Build entity context - useMemo ensures we only create new object when values change
-  const entityContext = useMemo(() => ({
-    word: card.word,
-    teamName: card.teamName,
-    selected: card.selected,
-    index,
-    displayState: cardVisibility?.displayState || 'hidden',
-    isTransitioning: cardVisibility?.isTransitioning || false,
-    pendingState: cardVisibility?.pendingState,
-    viewMode,
-  }), [
-    card.word,
-    card.teamName,
-    card.selected,
-    index,
-    cardVisibility?.displayState,
-    cardVisibility?.isTransitioning,
-    cardVisibility?.pendingState,
-    viewMode,
-  ]);
+  const entityContext = useMemo(
+    () => ({
+      word: card.word,
+      teamName: card.teamName,
+      selected: card.selected,
+      index,
+      displayState: cardVisibility?.displayState || "hidden",
+      isTransitioning: cardVisibility?.isTransitioning || false,
+      pendingState: cardVisibility?.pendingState,
+      viewMode,
+    }),
+    [
+      card.word,
+      card.teamName,
+      card.selected,
+      index,
+      cardVisibility?.displayState,
+      cardVisibility?.isTransitioning,
+      cardVisibility?.pendingState,
+      viewMode,
+    ],
+  );
 
   // This hook syncs entityContext to engine via useEffect
   const { createAnimationRef } = useAnimationRegistration(card.word, entityContext);
 
   useEffect(() => {
     initializeCard(card.word, card);
-  }, [card.word, initializeCard, card]);
+
+    return () => {
+      uninitializeCard(card.word);
+    };
+  }, [card.word, initializeCard, uninitializeCard, card]);
 
   return {
-    displayState: cardVisibility?.displayState || 'hidden',
+    displayState: cardVisibility?.displayState || "hidden",
     isPending: cardVisibility?.isTransitioning || false,
     viewMode,
     select: () => selectCard(card.word, engine),

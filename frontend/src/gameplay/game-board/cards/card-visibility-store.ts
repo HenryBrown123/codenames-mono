@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import { Card } from '@frontend/shared-types';
-import type { WebAnimationEngine } from '../../animations/web-animation-engine';
-import type { AnimationTransition } from '../../animations/animation-types';
+import { create } from "zustand";
+import { Card } from "@frontend/shared-types";
+import type { WebAnimationEngine } from "../../animations/web-animation-engine";
+import type { AnimationTransition } from "../../animations/animation-types";
 import {
   DisplayState,
   ViewMode,
@@ -9,7 +9,7 @@ import {
   CardState,
   CardTransition,
   CARD_TRANSITIONS,
-} from './card-visibility-types';
+} from "./card-visibility-types";
 
 interface CardVisibilityStore {
   cards: Map<string, CardState>;
@@ -17,6 +17,7 @@ interface CardVisibilityStore {
   cardOrder: string[];
 
   initializeCard: (word: string, card: Card) => void;
+  uninitializeCard: (word: string) => void;
   initializeCards: (gameCards: Card[]) => void;
   toggleSpymasterView: (engine: WebAnimationEngine) => Promise<void>;
   selectCard: (word: string, engine: WebAnimationEngine) => Promise<void>;
@@ -30,7 +31,7 @@ function determineNextCardState(current: DisplayState, event: CardEvent): Displa
 }
 
 function calculateCardTransition(card: CardState, event: CardEvent): CardTransition | null {
-  if (card.isTransitioning) return null;
+  // if (card.isTransitioning) return null;
 
   const nextState = determineNextCardState(card.displayState, event);
   if (!nextState) return null;
@@ -45,7 +46,7 @@ function calculateCardTransition(card: CardState, event: CardEvent): CardTransit
 function calculateTransitions(
   cards: Map<string, CardState>,
   event: CardEvent,
-  targetWords?: string[]
+  targetWords?: string[],
 ): Map<string, CardTransition> {
   const transitions = new Map<string, CardTransition>();
 
@@ -66,13 +67,13 @@ function calculateTransitions(
 
 function applyPendingTransitions(
   cards: Map<string, CardState>,
-  transitions: Map<string, CardTransition>
+  transitions: Map<string, CardTransition>,
 ): Map<string, CardState> {
   const newCards = new Map(cards);
 
   transitions.forEach((transition, word) => {
     const current = newCards.get(word) || {
-      displayState: 'hidden' as DisplayState,
+      displayState: "hidden" as DisplayState,
       isTransitioning: false,
     };
 
@@ -108,7 +109,7 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
   const executeTransitions = async (
     engine: WebAnimationEngine,
     transitions: Map<string, CardTransition>,
-    useStagger: boolean = false
+    useStagger: boolean = false,
   ) => {
     if (transitions.size === 0) return;
 
@@ -125,7 +126,7 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
 
     await engine.playTransitions(
       animationTransitions,
-      useStagger ? (word) => cardOrder.indexOf(word) : undefined
+      useStagger ? (word) => cardOrder.indexOf(word) : undefined,
     );
 
     set((state) => ({
@@ -135,16 +136,17 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
 
   const ensureCardsInitialized = (words: string[]) => {
     const { cards } = get();
+
     const uninitializedWords = words.filter((word) => !cards.has(word));
 
     if (uninitializedWords.length > 0) {
       set((state) => {
         const newCards = new Map(state.cards);
-        const newOrder = [...state.cardOrder];
+        const newOrder: string[] = [];
 
         uninitializedWords.forEach((word) => {
           newCards.set(word, {
-            displayState: 'hidden',
+            displayState: "hidden",
             isTransitioning: false,
           });
           if (!newOrder.includes(word)) {
@@ -159,7 +161,7 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
 
   return {
     cards: new Map(),
-    viewMode: 'normal',
+    viewMode: "normal",
     cardOrder: [],
 
     initializeCard: (word) =>
@@ -168,13 +170,24 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
 
         const newCards = new Map(state.cards);
         newCards.set(word, {
-          displayState: 'hidden',
+          displayState: "hidden",
           isTransitioning: false,
         });
 
         return {
           cards: newCards,
           cardOrder: [...state.cardOrder, word],
+        };
+      }),
+
+    uninitializeCard: (word) =>
+      set((state) => {
+        const newCards = new Map(state.cards);
+        newCards.delete(word);
+
+        return {
+          cards: newCards,
+          cardOrder: state.cardOrder.filter((w) => w !== word),
         };
       }),
 
@@ -185,8 +198,8 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
     toggleSpymasterView: async (engine) => {
       const { cards, viewMode } = get();
 
-      const newMode = viewMode === 'normal' ? 'spymaster' : 'normal';
-      const event = newMode === 'spymaster' ? 'reveal-colors' : 'hide-colors';
+      const newMode = viewMode === "normal" ? "spymaster" : "normal";
+      const event = newMode === "spymaster" ? "reveal-colors" : "hide-colors";
 
       set({ viewMode: newMode });
 
@@ -199,35 +212,50 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
       const card = cards.get(word);
       if (!card) return;
 
-      const transition = calculateCardTransition(card, 'select');
+      const transition = calculateCardTransition(card, "select");
       if (!transition) return;
 
       await executeTransitions(engine, new Map([[word, transition]]));
     },
 
     dealCards: async (words, engine) => {
+      console.log("[Store] dealCards called", { words });
+
       ensureCardsInitialized(words);
 
       const { cards } = get();
-      const transitions = calculateTransitions(cards, 'deal', words);
+      console.log(
+        "[Store] Current card states:",
+        Array.from(cards.entries()).map(([word, state]) => ({ word, ...state })),
+      );
+
+      const transitions = calculateTransitions(cards, "deal", words);
+      console.log(
+        "[Store] Calculated transitions:",
+        transitions.size,
+        Array.from(transitions.entries()),
+      );
 
       if (transitions.size === 0) {
+        console.warn("[Store] No transitions calculated!");
         return;
       }
 
+      console.log("[Store] About to execute transitions");
       await executeTransitions(engine, transitions, true);
+      console.log("[Store] Transitions complete");
     },
 
     resetCards: async (engine) => {
       const { cards } = get();
-      const transitions = calculateTransitions(cards, 'reset');
+      const transitions = calculateTransitions(cards, "reset");
 
       await executeTransitions(engine, transitions);
 
       set({
         cards: new Map(),
         cardOrder: [],
-        viewMode: 'normal',
+        viewMode: "normal",
       });
     },
   };
