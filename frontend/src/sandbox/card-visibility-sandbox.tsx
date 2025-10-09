@@ -162,7 +162,7 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ word, index }) => {
 
 const DealInScene: React.FC = () => {
   const initializeCards = useSandboxStore(state => state.initializeCards);
-  const dealCard = useSandboxStore(state => state.dealCard);
+  const dealCards = useSandboxStore(state => state.dealCards);
   const resetAll = useSandboxStore(state => state.resetAll);
   const cards = useSandboxStore(state => state.cards);
 
@@ -186,8 +186,7 @@ const DealInScene: React.FC = () => {
     setIsDealing(true);
     await new Promise(resolve => setTimeout(resolve, 300));
 
-    // Queue deal transition for each card
-    mockCards.forEach(card => dealCard(card.word));
+    dealCards(mockCards.map(c => c.word));
 
     setIsDealing(false);
   };
@@ -227,7 +226,7 @@ const DealInScene: React.FC = () => {
 
 const SpymasterViewScene: React.FC = () => {
   const initializeCards = useSandboxStore(state => state.initializeCards);
-  const dealCard = useSandboxStore(state => state.dealCard);
+  const dealCards = useSandboxStore(state => state.dealCards);
   const toggleViewMode = useSandboxStore(state => state.toggleViewMode);
   const resetAll = useSandboxStore(state => state.resetAll);
   const viewMode = useSandboxStore(state => state.viewMode);
@@ -244,11 +243,10 @@ const SpymasterViewScene: React.FC = () => {
 
   React.useEffect(() => {
     initializeCards(mockCards);
-    // Auto-deal cards on mount
     setTimeout(() => {
-      mockCards.forEach(card => dealCard(card.word));
+      dealCards(mockCards.map(c => c.word));
     }, 100);
-  }, [initializeCards, dealCard, mockCards]);
+  }, [initializeCards, dealCards, mockCards]);
 
   const handleToggle = () => {
     toggleViewMode();
@@ -258,7 +256,7 @@ const SpymasterViewScene: React.FC = () => {
     resetAll();
     setTimeout(() => {
       initializeCards(mockCards);
-      setTimeout(() => mockCards.forEach(card => dealCard(card.word)), 100);
+      setTimeout(() => dealCards(mockCards.map(c => c.word)), 100);
     }, 100);
   };
 
