@@ -186,7 +186,7 @@ const DealInScene: React.FC = () => {
     setIsDealing(true);
     await new Promise(resolve => setTimeout(resolve, 300));
 
-    dealCards(mockCards.map(c => c.word));
+    dealCards(mockCards.map(c => c.word), 50);  // Pass stagger of 50ms
 
     setIsDealing(false);
   };
@@ -244,19 +244,19 @@ const SpymasterViewScene: React.FC = () => {
   React.useEffect(() => {
     initializeCards(mockCards);
     setTimeout(() => {
-      dealCards(mockCards.map(c => c.word));
+      dealCards(mockCards.map(c => c.word), 50);  // Pass stagger
     }, 100);
   }, [initializeCards, dealCards, mockCards]);
 
   const handleToggle = () => {
-    toggleViewMode();
+    toggleViewMode(30);  // Pass stagger of 30ms for color overlays
   };
 
   const handleReset = () => {
     resetAll();
     setTimeout(() => {
       initializeCards(mockCards);
-      setTimeout(() => dealCards(mockCards.map(c => c.word)), 100);
+      setTimeout(() => dealCards(mockCards.map(c => c.word), 50), 100);
     }, 100);
   };
 
@@ -338,7 +338,7 @@ const PlayerSelectionScene: React.FC = () => {
 
 const TimingTestScene: React.FC = () => {
   const cards = useSandboxStore(state => state.cards);
-  const pendingTransitions = useSandboxStore(state => state.pendingTransitions);
+  const pendingBatch = useSandboxStore(state => state.pendingBatch);
   const initializeCards = useSandboxStore(state => state.initializeCards);
   const dealCard = useSandboxStore(state => state.dealCard);
   const selectCard = useSandboxStore(state => state.selectCard);
@@ -432,7 +432,7 @@ const TimingTestScene: React.FC = () => {
         <div>Card state: {card ? `"${card.word}" (${card.selected ? '✅ selected' : '⭕ not selected'})` : '❌ none'}</div>
         <div>Display state: {card?.displayState || 'N/A'}</div>
         <div>Transitioning: {card?.isTransitioning ? '✅' : '❌'}</div>
-        <div>Pending transitions: {pendingTransitions.size}</div>
+        <div>Pending transitions: {pendingBatch?.transitions.size || 0}</div>
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem 0', minHeight: '200px' }}>

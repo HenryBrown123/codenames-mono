@@ -19,25 +19,30 @@ interface SandboxCardState {
 
 interface SandboxTransition {
   entityId: string;
+  event: SandboxEvent;
   fromState: SandboxDisplayState;
   toState: SandboxDisplayState;
-  animationType: string;
+}
+
+interface PendingBatch {
+  transitions: Map<string, SandboxTransition>;
+  stagger?: number;
 }
 
 interface SandboxStore {
   cards: Map<string, SandboxCardState>;
   viewMode: ViewMode;
   cardOrder: string[];
-  pendingTransitions: Map<string, SandboxTransition>;
+  pendingBatch: PendingBatch | null;
 
   initializeCard: (word: string, teamName: string) => void;
   initializeCards: (cards: Array<{ word: string; teamName: string }>) => void;
   dealCard: (word: string) => void;
-  dealCards: (words: string[]) => void;
+  dealCards: (words: string[], stagger?: number) => void;
   selectCard: (word: string) => void;
   resetCard: (word: string) => void;
   resetAll: () => void;
-  toggleViewMode: () => void;
+  toggleViewMode: (stagger?: number) => void;
 
   commitTransitions: (entityIds: string[]) => void;
 }
@@ -80,7 +85,7 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
   cards: new Map(),
   viewMode: "normal",
   cardOrder: [],
-  pendingTransitions: new Map(),
+  pendingBatch: null,
 
   initializeCard: (word: string, teamName: string) => {
     set((state) => {
@@ -135,25 +140,25 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
       const currentCard = newCards.get(word)!;
       newCards.set(word, { ...currentCard, isTransitioning: true });
 
-      const newTransitions = new Map(state.pendingTransitions);
-      newTransitions.set(word, {
+      const transitions = new Map<string, SandboxTransition>();
+      transitions.set(word, {
         entityId: word,
+        event: "deal",
         fromState: card.displayState,
         toState: nextState,
-        animationType: "deal",
       });
 
       return {
         cards: newCards,
-        pendingTransitions: newTransitions,
+        pendingBatch: { transitions },
       };
     });
   },
 
-  dealCards: (words: string[]) => {
+  dealCards: (words: string[], stagger?: number) => {
     const { cards, viewMode } = get();
 
-    const newTransitions = new Map<string, SandboxTransition>();
+    const transitions = new Map<string, SandboxTransition>();
     const newCards = new Map(cards);
 
     words.forEach((word) => {
@@ -164,19 +169,19 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
       if (!nextState) return;
 
       newCards.set(word, { ...card, isTransitioning: true });
-      newTransitions.set(word, {
+      transitions.set(word, {
         entityId: word,
+        event: "deal",
         fromState: card.displayState,
         toState: nextState,
-        animationType: "deal",
       });
     });
 
-    if (newTransitions.size === 0) return;
+    if (transitions.size === 0) return;
 
     set({
       cards: newCards,
-      pendingTransitions: newTransitions,
+      pendingBatch: { transitions, stagger },
     });
   },
 
@@ -193,17 +198,17 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
       const currentCard = newCards.get(word)!;
       newCards.set(word, { ...currentCard, isTransitioning: true });
 
-      const newTransitions = new Map(state.pendingTransitions);
-      newTransitions.set(word, {
+      const transitions = new Map<string, SandboxTransition>();
+      transitions.set(word, {
         entityId: word,
+        event: "select",
         fromState: card.displayState,
         toState: nextState,
-        animationType: "select",
       });
 
       return {
         cards: newCards,
-        pendingTransitions: newTransitions,
+        pendingBatch: { transitions },
       };
     });
   },
@@ -221,17 +226,17 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
       const currentCard = newCards.get(word)!;
       newCards.set(word, { ...currentCard, isTransitioning: true });
 
-      const newTransitions = new Map(state.pendingTransitions);
-      newTransitions.set(word, {
+      const transitions = new Map<string, SandboxTransition>();
+      transitions.set(word, {
         entityId: word,
+        event: "reset",
         fromState: card.displayState,
         toState: nextState,
-        animationType: "reset",
       });
 
       return {
         cards: newCards,
-        pendingTransitions: newTransitions,
+        pendingBatch: { transitions },
       };
     });
   },
@@ -241,16 +246,16 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
       cards: new Map(),
       cardOrder: [],
       viewMode: "normal",
-      pendingTransitions: new Map(),
+      pendingBatch: null,
     });
   },
 
-  toggleViewMode: () => {
+  toggleViewMode: (stagger?: number) => {
     const { cards, viewMode } = get();
     const newMode: ViewMode = viewMode === "normal" ? "spymaster" : "normal";
     const event: SandboxEvent = newMode === "spymaster" ? "reveal-colors" : "hide-colors";
 
-    const newTransitions = new Map<string, SandboxTransition>();
+    const transitions = new Map<string, SandboxTransition>();
     const newCards = new Map(cards);
 
     cards.forEach((card, word) => {
@@ -262,27 +267,34 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
       if (!nextState) return;
 
       newCards.set(word, { ...card, isTransitioning: true });
-      newTransitions.set(word, {
+      transitions.set(word, {
         entityId: word,
+        event,
         fromState: card.displayState,
         toState: nextState,
-        animationType: event,
       });
     });
+
+    if (transitions.size === 0) {
+      set({ viewMode: newMode });
+      return;
+    }
 
     set({
       cards: newCards,
       viewMode: newMode,
-      pendingTransitions: newTransitions,
+      pendingBatch: { transitions, stagger },
     });
   },
 
   commitTransitions: (entityIds: string[]) => {
     set((state) => {
+      if (!state.pendingBatch) return state;
+
       const newCards = new Map(state.cards);
 
       entityIds.forEach((entityId) => {
-        const transition = state.pendingTransitions.get(entityId);
+        const transition = state.pendingBatch!.transitions.get(entityId);
         const card = newCards.get(entityId);
 
         if (transition && card) {
@@ -297,7 +309,7 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
 
       return {
         cards: newCards,
-        pendingTransitions: new Map(),
+        pendingBatch: null,
       };
     });
   },
@@ -306,10 +318,10 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
 // ============= COORDINATOR =============
 
 export function useSandboxCoordinator() {
-  const pendingTransitions = useSandboxStore((state) => state.pendingTransitions);
+  const pendingBatch = useSandboxStore((state) => state.pendingBatch);
   const commitTransitions = useSandboxStore((state) => state.commitTransitions);
 
-  usePendingAnimations(pendingTransitions, commitTransitions);
+  usePendingAnimations(pendingBatch, commitTransitions);
 }
 
 // ============= CARD HOOK =============
@@ -320,24 +332,11 @@ export function useSandboxCardVisibility(word: string, index: number) {
 
   const entityContext = useMemo(
     () => ({
-      word: card?.word || word,
-      teamName: card?.teamName || "",
-      selected: card?.selected || false,
-      displayState: card?.displayState || "hidden",
-      isTransitioning: card?.isTransitioning || false,
+      ...card,
       viewMode,
       index,
     }),
-    [
-      word,
-      card?.word,
-      card?.teamName,
-      card?.selected,
-      card?.displayState,
-      card?.isTransitioning,
-      viewMode,
-      index,
-    ],
+    [card, viewMode, index],
   );
 
   const { createAnimationRef } = useAnimationRegistration(word, entityContext);
