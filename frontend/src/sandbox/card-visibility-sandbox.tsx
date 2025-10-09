@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { AnimationEngineProvider } from '../gameplay/animations';
+import { DevToolsPanel } from '../gameplay/animations/animation-devtools';
 import {
   useSandboxStore,
   useSandboxCoordinator,
@@ -7,8 +8,14 @@ import {
 } from "./card-visibility-sandbox.hooks";
 import styles from "./card-visibility-sandbox.module.css";
 
-const SandboxCard: React.FC = () => {
-  const { card, displayState, createAnimationRef } = useSandboxCardVisibility();
+interface SandboxCardProps {
+  word: string;
+  index: number;
+}
+
+const SandboxCard: React.FC<SandboxCardProps> = ({ word, index }) => {
+  const { card, displayState, createAnimationRef } = useSandboxCardVisibility(word, index);
+  const viewMode = useSandboxStore(state => state.viewMode);
 
   const cardAnimations = {
     'deal': {
@@ -53,7 +60,31 @@ const SandboxCard: React.FC = () => {
     },
   };
 
-  // If no card initialized, show placeholder
+  const overlayAnimations = {
+    'reveal-colors': {
+      keyframes: [
+        { opacity: '0', transform: 'scale(0.8) translateY(-10px)' },
+        { opacity: '1', transform: 'scale(1) translateY(0)' }
+      ],
+      options: {
+        duration: 400,
+        delay: 100,
+        easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+        fill: 'forwards' as FillMode,
+      }
+    },
+    'hide-colors': {
+      keyframes: [
+        { opacity: '1', transform: 'scale(1)' },
+        { opacity: '0', transform: 'scale(0.8)' }
+      ],
+      options: {
+        duration: 200,
+        fill: 'forwards' as FillMode,
+      }
+    }
+  };
+
   if (!card) {
     return (
       <div style={{
@@ -73,20 +104,20 @@ const SandboxCard: React.FC = () => {
     );
   }
 
-  // Card exists - render it even if hidden (for animation to work)
+  const teamColor = card.teamName === 'red' ? '#dc2626' :
+                   card.teamName === 'blue' ? '#2563eb' :
+                   card.teamName === 'assassin' ? '#000' : '#9ca3af';
+
   return (
     <div
-      ref={createAnimationRef('card', cardAnimations)}
+      ref={createAnimationRef('container', cardAnimations)}
       className={styles.card}
       style={{
         perspective: '1000px',
         width: '200px',
         height: '133px',
-        // Start hidden off-screen for deal animation
-        ...(displayState === 'hidden' && {
-          transform: 'translateY(-100vh)',
-          opacity: 0,
-        })
+        opacity: displayState === 'hidden' ? 0 : 1,
+        transform: displayState === 'hidden' ? 'translateY(-100vh)' : 'translateY(0)',
       }}
     >
       <div
@@ -104,99 +135,163 @@ const SandboxCard: React.FC = () => {
             width: '60%',
             height: '60%',
             borderRadius: '8px',
-            background: card.teamName === 'red' ? '#dc2626' :
-                       card.teamName === 'blue' ? '#2563eb' :
-                       card.teamName === 'neutral' ? '#9ca3af' : '#000',
+            background: teamColor,
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
           }} />
         </div>
       </div>
+
+      {/* Spymaster overlay - separate animated element */}
+      {viewMode === 'spymaster' && displayState !== 'hidden' && displayState !== 'covered' && (
+        <div
+          ref={createAnimationRef('overlay', overlayAnimations)}
+          style={{
+            position: 'absolute',
+            inset: '4px',
+            borderRadius: '4px',
+            backgroundColor: teamColor,
+            opacity: displayState === 'visible-colored' ? 1 : 0,
+            pointerEvents: 'none',
+            zIndex: 10,
+          }}
+        />
+      )}
     </div>
   );
 };
 
 const DealInScene: React.FC = () => {
-  const initializeCard = useSandboxStore(state => state.initializeCard);
+  const initializeCards = useSandboxStore(state => state.initializeCards);
   const dealCard = useSandboxStore(state => state.dealCard);
-  const resetCard = useSandboxStore(state => state.resetCard);
+  const resetAll = useSandboxStore(state => state.resetAll);
+  const cards = useSandboxStore(state => state.cards);
 
   useSandboxCoordinator();
 
   const [isDealing, setIsDealing] = useState(false);
 
+  const mockCards = React.useMemo(() =>
+    Array.from({ length: 16 }, (_, i) => ({
+      word: `CARD-${i + 1}`,
+      teamName: 'neutral'
+    })),
+    []
+  );
+
+  React.useEffect(() => {
+    initializeCards(mockCards);
+  }, [initializeCards, mockCards]);
+
   const handleDeal = async () => {
     setIsDealing(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    initializeCard('DEAL', 'red');
-    dealCard();
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    // Queue deal transition for each card
+    mockCards.forEach(card => dealCard(card.word));
+
     setIsDealing(false);
   };
 
-  const handleReset = async () => {
-    resetCard();
-    await new Promise(resolve => setTimeout(resolve, 500));
+  const handleReset = () => {
+    resetAll();
+    setTimeout(() => initializeCards(mockCards), 100);
   };
 
   return (
     <div className={styles.scene}>
-      <h2>Deal Animation</h2>
+      <h2>Deal Animation - 4x4 Grid</h2>
       <p className={styles.description}>
-        Cards fly in from top with rotation and stagger
+        Cards fly in from top with stagger based on position
       </p>
 
       <div className={styles.controls}>
-        <button onClick={handleDeal} disabled={isDealing}>
-          {isDealing ? "Dealing..." : "Deal Card"}
+        <button onClick={handleDeal} disabled={isDealing || cards.size > 0 && Array.from(cards.values()).some(c => c.displayState !== 'hidden')}>
+          {isDealing ? '⏳ Dealing...' : '🎴 Deal Cards'}
         </button>
-        <button onClick={handleReset}>Reset</button>
+        <button onClick={handleReset}>🔄 Reset</button>
       </div>
 
-      <div className={styles.grid} style={{ gridTemplateColumns: '1fr', maxWidth: '200px', margin: '0 auto' }}>
-        <SandboxCard />
+      <div className={styles.grid} style={{
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '1rem',
+        maxWidth: '800px',
+        margin: '0 auto'
+      }}>
+        {mockCards.map((card, index) => (
+          <SandboxCard key={card.word} word={card.word} index={index} />
+        ))}
       </div>
     </div>
   );
 };
 
 const SpymasterViewScene: React.FC = () => {
-  const initializeCard = useSandboxStore(state => state.initializeCard);
+  const initializeCards = useSandboxStore(state => state.initializeCards);
   const dealCard = useSandboxStore(state => state.dealCard);
-  const resetCard = useSandboxStore(state => state.resetCard);
+  const toggleViewMode = useSandboxStore(state => state.toggleViewMode);
+  const resetAll = useSandboxStore(state => state.resetAll);
+  const viewMode = useSandboxStore(state => state.viewMode);
 
   useSandboxCoordinator();
 
-  const handleDeal = async () => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    initializeCard('SPY', 'blue');
-    dealCard();
+  const mockCards = React.useMemo(() =>
+    Array.from({ length: 16 }, (_, i) => ({
+      word: `SPY-${i + 1}`,
+      teamName: (['red', 'blue', 'neutral', 'assassin'] as const)[i % 4]
+    })),
+    []
+  );
+
+  React.useEffect(() => {
+    initializeCards(mockCards);
+    // Auto-deal cards on mount
+    setTimeout(() => {
+      mockCards.forEach(card => dealCard(card.word));
+    }, 100);
+  }, [initializeCards, dealCard, mockCards]);
+
+  const handleToggle = () => {
+    toggleViewMode();
   };
 
-  const handleReset = async () => {
-    resetCard();
-    await new Promise(resolve => setTimeout(resolve, 500));
+  const handleReset = () => {
+    resetAll();
+    setTimeout(() => {
+      initializeCards(mockCards);
+      setTimeout(() => mockCards.forEach(card => dealCard(card.word)), 100);
+    }, 100);
   };
 
   return (
     <div className={styles.scene}>
-      <h2>Spymaster View</h2>
+      <h2>Spymaster View Toggle</h2>
       <p className={styles.description}>
-        Toggle between normal and spymaster views
+        Toggle to reveal/hide team colors with animation
       </p>
 
       <div className={styles.controls}>
-        <button onClick={handleDeal}>Deal Card</button>
-        <button onClick={handleReset}>Reset</button>
+        <button onClick={handleToggle}>
+          {viewMode === 'spymaster' ? '🕶️ Hide Colors' : '👁️ Reveal Colors'}
+        </button>
+        <button onClick={handleReset}>🔄 Reset</button>
       </div>
 
-      <div className={styles.grid} style={{ gridTemplateColumns: '1fr', maxWidth: '200px', margin: '0 auto' }}>
-        <SandboxCard />
+      <div className={styles.grid} style={{
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '1rem',
+        maxWidth: '800px',
+        margin: '0 auto'
+      }}>
+        {mockCards.map((card, index) => (
+          <SandboxCard key={card.word} word={card.word} index={index} />
+        ))}
       </div>
     </div>
   );
 };
 
 const PlayerSelectionScene: React.FC = () => {
-  const card = useSandboxStore(state => state.card);
+  const cards = useSandboxStore(state => state.cards);
   const initializeCard = useSandboxStore(state => state.initializeCard);
   const dealCard = useSandboxStore(state => state.dealCard);
   const selectCard = useSandboxStore(state => state.selectCard);
@@ -204,19 +299,22 @@ const PlayerSelectionScene: React.FC = () => {
 
   useSandboxCoordinator();
 
+  const cardWord = 'SELECT';
+  const card = cards.get(cardWord);
+
   const handleDeal = async () => {
     await new Promise(resolve => setTimeout(resolve, 500));
-    initializeCard('SELECT', 'neutral');
-    dealCard();
+    initializeCard(cardWord, 'neutral');
+    dealCard(cardWord);
   };
 
   const handleSelect = async () => {
     await new Promise(resolve => setTimeout(resolve, 300));
-    selectCard();
+    selectCard(cardWord);
   };
 
   const handleReset = async () => {
-    resetCard();
+    resetCard(cardWord);
     await new Promise(resolve => setTimeout(resolve, 500));
   };
 
@@ -234,25 +332,28 @@ const PlayerSelectionScene: React.FC = () => {
       </div>
 
       <div className={styles.grid} style={{ gridTemplateColumns: '1fr', maxWidth: '200px', margin: '0 auto' }}>
-        <SandboxCard />
+        <SandboxCard word={cardWord} index={0} />
       </div>
     </div>
   );
 };
 
 const TimingTestScene: React.FC = () => {
-  const card = useSandboxStore(state => state.card);
+  const cards = useSandboxStore(state => state.cards);
   const pendingTransitions = useSandboxStore(state => state.pendingTransitions);
-  const initializeCard = useSandboxStore(state => state.initializeCard);
+  const initializeCards = useSandboxStore(state => state.initializeCards);
   const dealCard = useSandboxStore(state => state.dealCard);
   const selectCard = useSandboxStore(state => state.selectCard);
-  const resetCard = useSandboxStore(state => state.resetCard);
+  const resetAll = useSandboxStore(state => state.resetAll);
 
   const [isDealing, setIsDealing] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
   useSandboxCoordinator();
+
+  const cardWord = 'TIMING-1';
+  const card = cards.get(cardWord);
 
   const handleDeal = async () => {
     console.log('[🔵 TimingTest] Deal clicked');
@@ -261,8 +362,8 @@ const TimingTestScene: React.FC = () => {
     await new Promise(resolve => setTimeout(resolve, 500));
 
     console.log('[🟢 TimingTest] Initializing and dealing');
-    initializeCard('TIMING', 'blue');
-    dealCard();
+    initializeCards([{ word: cardWord, teamName: 'blue' }]);
+    dealCard(cardWord);
 
     setIsDealing(false);
   };
@@ -276,7 +377,7 @@ const TimingTestScene: React.FC = () => {
     await new Promise(resolve => setTimeout(resolve, 300));
 
     console.log('[🟢 TimingTest] Queuing select transition');
-    selectCard();
+    selectCard(cardWord);
 
     setIsSelecting(false);
   };
@@ -285,7 +386,7 @@ const TimingTestScene: React.FC = () => {
     console.log('[🔄 TimingTest] Reset clicked');
     setIsResetting(true);
 
-    resetCard();
+    resetAll();
 
     await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -337,7 +438,7 @@ const TimingTestScene: React.FC = () => {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem 0', minHeight: '200px' }}>
-        <SandboxCard />
+        <SandboxCard word={cardWord} index={0} />
       </div>
 
       <div style={{ marginTop: '2rem', padding: '1rem', background: '#1a1a1a', borderRadius: '4px', fontSize: '0.85rem' }}>
@@ -359,10 +460,10 @@ const TimingTestScene: React.FC = () => {
 
 const SandboxContent: React.FC = () => {
   const [activeScene, setActiveScene] = useState<"deal" | "spymaster" | "selection" | "timing">("timing");
-  const resetCard = useSandboxStore(state => state.resetCard);
+  const resetAll = useSandboxStore(state => state.resetAll);
 
   const handleSceneChange = async (scene: "deal" | "spymaster" | "selection" | "timing") => {
-    resetCard();
+    resetAll();
     await new Promise(resolve => setTimeout(resolve, 100));
     setActiveScene(scene);
   };
@@ -413,6 +514,7 @@ export const CardVisibilitySandbox: React.FC = () => {
   return (
     <AnimationEngineProvider engineId="sandbox">
       <SandboxContent />
+      <DevToolsPanel defaultOpen={true} theme="dark" />
     </AnimationEngineProvider>
   );
 };
