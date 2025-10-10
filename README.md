@@ -638,6 +638,7 @@ Frontend and backend extend these base types with their specific requirements.
 │       │       ├── mutations
 │       │       └── queries
 │       ├── sandbox
+│       │   └── music-visualiser-animation
 │       ├── shared-types
 │       ├── style
 │       └── types
@@ -647,7 +648,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-86 directories
+87 directories
 ```
 
 ## Getting Started
