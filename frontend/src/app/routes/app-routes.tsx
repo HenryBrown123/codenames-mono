@@ -5,6 +5,8 @@ import { CreateGameRoute } from "./create-game-route";
 import { GuestAuthRoute } from "./guest-auth-route";
 import { LobbyRoute } from "./lobby-route"; // Add this import
 import CardVisibilitySandbox from "../../sandbox/card-visibility-sandbox";
+import RippleGridDemoWrapper from "../../sandbox/ripple-grid-demo";
+import BouncingBallDemoWrapper from "../../sandbox/bouncing-ball-demo";
 
 const AppRoutes = () => (
   <Router>
@@ -14,6 +16,8 @@ const AppRoutes = () => (
       <Route path="/create-game" element={<CreateGameRoute />} />
       <Route path="/auth/guest" element={<GuestAuthRoute />} />
       <Route path="/sandbox" element={<CardVisibilitySandbox />} />
+      <Route path="/sandbox/animation-engine" element={<RippleGridDemoWrapper />} />
+      <Route path="/sandbox/bouncing-ball" element={<BouncingBallDemoWrapper />} />
       {/* Optional: a catch-all route for 404 */}
       <Route path="*" element={<div>404 - Page Not Found</div>} />
     </Routes>
