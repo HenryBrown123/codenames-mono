@@ -1,12 +1,31 @@
 import React, { useEffect, useState } from "react";
 import { AnimationEngineProvider, useAnimationEngine } from "../gameplay/animations/animation-engine-context";
 import { useAnimationRegistration } from "../gameplay/animations/use-animation-registration";
-import { VISUALIZER_MODES } from "../gameplay/animations/spring-animation";
+import { SPRING_CONFIGS } from "../gameplay/animations/spring-animation";
 import type { SpringAnimationDefinition } from "../gameplay/animations/animation-types";
+import styles from "./spring-test.module.css";
 
+const SPRING_CONFIG_LABELS: Record<keyof typeof SPRING_CONFIGS, string> = {
+  extreme: "Extreme",
+  bouncy: "Bouncy",
+  smooth: "Smooth",
+  stiff: "Stiff",
+};
+
+// Configuration constants
 const BAR_COUNT = 8;
+const SPRING_DURATION_MS = 1000;
+const DEFAULT_UPDATE_INTERVAL_MS = 2000;
+const MIN_UPDATE_INTERVAL_MS = 500;
+const MAX_UPDATE_INTERVAL_MS = 5000;
+const UPDATE_INTERVAL_STEP_MS = 500;
 
-const BouncyBar: React.FC<{ barId: string; mode: keyof typeof VISUALIZER_MODES }> = ({
+// Scale constants
+const MIN_SCALE_Y = 0.2;
+const MID_SCALE_Y = 0.8;
+const MAX_SCALE_Y = 1.0;
+
+const BouncyBar: React.FC<{ barId: string; mode: keyof typeof SPRING_CONFIGS }> = ({
   barId,
   mode,
 }) => {
@@ -14,43 +33,25 @@ const BouncyBar: React.FC<{ barId: string; mode: keyof typeof VISUALIZER_MODES }
 
   const animations: Record<string, SpringAnimationDefinition> = {
     bounce: {
-      keyframes: [{ transform: "scaleY(0.2)" }, { transform: "scaleY(1)" }],
-      springConfig: VISUALIZER_MODES[mode],
-      options: { duration: 1000 },
-      trackContext: (context) => (context.target as number) ?? 0.2,
+      keyframes: [{ transform: `scaleY(${MIN_SCALE_Y})` }, { transform: `scaleY(${MAX_SCALE_Y})` }],
+      springConfig: SPRING_CONFIGS[mode],
+      options: { duration: SPRING_DURATION_MS },
+      trackContext: (context) => (context.target as number) ?? MIN_SCALE_Y,
     },
   };
 
   return (
-    <div
-      style={{
-        width: "40px",
-        height: "200px",
-        margin: "0 5px",
-        position: "relative",
-        display: "flex",
-        alignItems: "flex-end",
-      }}
-    >
-      <div
-        ref={createAnimationRef("bar", animations)}
-        style={{
-          width: "100%",
-          height: "100%",
-          background: "linear-gradient(to top, #00ff88, #00ffff)",
-          transformOrigin: "bottom",
-          borderRadius: "4px",
-        }}
-      />
+    <div className={styles.barContainer}>
+      <div ref={createAnimationRef("bar", animations)} className={styles.bar} />
     </div>
   );
 };
 
 const SpringTestInner: React.FC = () => {
   const engine = useAnimationEngine();
-  const [mode, setMode] = useState<keyof typeof VISUALIZER_MODES>("bouncy");
+  const [mode, setMode] = useState<keyof typeof SPRING_CONFIGS>("bouncy");
   const [autoUpdate, setAutoUpdate] = useState(false);
-  const [updateInterval, setUpdateInterval] = useState(2000);
+  const [updateInterval, setUpdateInterval] = useState(DEFAULT_UPDATE_INTERVAL_MS);
 
   useEffect(() => {
     engine.startSpringLoop();
@@ -84,116 +85,88 @@ const SpringTestInner: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: "40px", background: "#1a1a1a", minHeight: "100vh" }}>
-      <h1 style={{ color: "white", marginBottom: "20px" }}>Spring Physics Test</h1>
+    <div className={styles.container}>
+      <h1 className={styles.title}>Spring Physics Test</h1>
 
       {/* Controls */}
-      <div
-        style={{
-          background: "#2a2a2a",
-          padding: "20px",
-          borderRadius: "8px",
-          marginBottom: "30px",
-          color: "white",
-        }}
-      >
-        <div style={{ marginBottom: "15px" }}>
-          <label style={{ display: "block", marginBottom: "5px" }}>Spring Mode:</label>
+      <div className={styles.controlPanel}>
+        <div className={styles.controlGroup}>
+          <label className={styles.label}>Spring Mode:</label>
           <select
             value={mode}
-            onChange={(e) => setMode(e.target.value as keyof typeof VISUALIZER_MODES)}
-            style={{ padding: "8px", fontSize: "14px" }}
+            onChange={(e) => setMode(e.target.value as keyof typeof SPRING_CONFIGS)}
+            className={styles.select}
           >
-            {Object.keys(VISUALIZER_MODES).map((key) => (
+            {(Object.keys(SPRING_CONFIGS) as Array<keyof typeof SPRING_CONFIGS>).map((key) => (
               <option key={key} value={key}>
-                {key}
+                {SPRING_CONFIG_LABELS[key]}
               </option>
             ))}
           </select>
         </div>
 
-        <div style={{ marginBottom: "15px" }}>
-          <label style={{ display: "block", marginBottom: "5px" }}>
+        <div className={styles.controlGroup}>
+          <label className={styles.rangeLabel}>
             Auto Update Interval: {updateInterval}ms
           </label>
           <input
             type="range"
-            min="500"
-            max="5000"
-            step="500"
+            min={MIN_UPDATE_INTERVAL_MS}
+            max={MAX_UPDATE_INTERVAL_MS}
+            step={UPDATE_INTERVAL_STEP_MS}
             value={updateInterval}
             onChange={(e) => setUpdateInterval(Number(e.target.value))}
-            style={{ width: "300px" }}
+            className={styles.rangeInput}
           />
         </div>
 
-        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-          <button onClick={() => setAutoUpdate(!autoUpdate)} style={{ padding: "10px 20px" }}>
+        <div className={styles.buttonGroup}>
+          <button onClick={() => setAutoUpdate(!autoUpdate)} className={styles.button}>
             {autoUpdate ? "Stop Auto Update" : "Start Auto Update"}
           </button>
-          <button onClick={setRandomTargets} style={{ padding: "10px 20px" }}>
+          <button onClick={setRandomTargets} className={styles.button}>
             Set Random Targets
           </button>
-          <button onClick={() => setAllTargets(0.2)} style={{ padding: "10px 20px" }}>
+          <button onClick={() => setAllTargets(MIN_SCALE_Y)} className={styles.button}>
             All → 20%
           </button>
-          <button onClick={() => setAllTargets(0.8)} style={{ padding: "10px 20px" }}>
+          <button onClick={() => setAllTargets(MID_SCALE_Y)} className={styles.button}>
             All → 80%
           </button>
-          <button onClick={() => setAllTargets(1.0)} style={{ padding: "10px 20px" }}>
+          <button onClick={() => setAllTargets(MAX_SCALE_Y)} className={styles.button}>
             All → 100%
           </button>
         </div>
 
-        <div
-          style={{ marginTop: "15px", padding: "10px", background: "#1a1a1a", borderRadius: "4px" }}
-        >
-          <p style={{ margin: "5px 0" }}>
+        <div className={styles.instructionsPanel}>
+          <p className={styles.instructionsTitle}>
             <strong>Instructions:</strong>
           </p>
-          <p style={{ margin: "5px 0", fontSize: "14px" }}>
+          <p className={styles.instructionItem}>
             1. Click "All → 20%" then "All → 80%" - watch bars OVERSHOOT and BOUNCE
           </p>
-          <p style={{ margin: "5px 0", fontSize: "14px" }}>
+          <p className={styles.instructionItem}>
             2. Try "Auto Update" with 2000ms interval - bars complete full bounce between updates
           </p>
-          <p style={{ margin: "5px 0", fontSize: "14px" }}>
+          <p className={styles.instructionItem}>
             3. Try 500ms interval - bars get interrupted, no visible bounce
           </p>
-          <p style={{ margin: "5px 0", fontSize: "14px" }}>
+          <p className={styles.instructionItem}>
             4. Switch between modes - "bouncy" should show overshoot, "stiff" should not
           </p>
         </div>
       </div>
 
       {/* Bars */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "flex-end",
-          height: "300px",
-          background: "#0a0a0a",
-          borderRadius: "8px",
-          padding: "20px",
-        }}
-      >
+      <div className={styles.visualizerContainer}>
         {Array.from({ length: BAR_COUNT }, (_, i) => (
           <BouncyBar key={i} barId={`test-bar-${i}`} mode={mode} />
         ))}
       </div>
 
-      <div
-        style={{
-          color: "white",
-          marginTop: "20px",
-          padding: "15px",
-          background: "#2a2a2a",
-          borderRadius: "8px",
-        }}
-      >
-        <h3>What You Should See:</h3>
-        <ul style={{ fontSize: "14px", lineHeight: "1.8" }}>
+      <div className={styles.infoPanel}>
+        <h3 className={styles.infoTitle}>What You Should See:</h3>
+        <ul className={styles.infoList}>
           <li>
             <strong>With "bouncy" mode + manual clicks:</strong> Bars overshoot target, bounce back,
             wobble, settle
@@ -211,7 +184,7 @@ const SpringTestInner: React.FC = () => {
             spring physics)
           </li>
         </ul>
-        <p style={{ marginTop: "15px", fontStyle: "italic", fontSize: "14px" }}>
+        <p className={styles.note}>
           This proves: Your visualizer's 100ms audio refresh is TOO FAST for spring physics to be
           visible!
         </p>

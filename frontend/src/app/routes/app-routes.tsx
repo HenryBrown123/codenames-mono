@@ -6,7 +6,7 @@ import { GuestAuthRoute } from "./guest-auth-route";
 import { LobbyRoute } from "./lobby-route"; // Add this import
 import CardVisibilitySandbox from "../../sandbox/card-visibility-sandbox";
 import BouncingBallDemoWrapper from "../../sandbox/bouncing-ball-demo";
-import { MusicVisualizerDemoWrapper } from "../../sandbox/music-visualiser-animation/music-visualiser-demo";
+import { MusicVisualizerDemo } from "../../sandbox/music-visualiser-animation/music-visualiser-demo";
 import { SpringTest } from "../../sandbox/spring-test";
 
 const AppRoutes = () => (
@@ -18,7 +18,7 @@ const AppRoutes = () => (
       <Route path="/auth/guest" element={<GuestAuthRoute />} />
       <Route path="/sandbox" element={<CardVisibilitySandbox />} />
       <Route path="/sandbox/bouncing-ball" element={<BouncingBallDemoWrapper />} />
-      <Route path="/sandbox/music-visualiser" element={<MusicVisualizerDemoWrapper />} />
+      <Route path="/sandbox/music-visualiser" element={<MusicVisualizerDemo />} />
       <Route path="/sandbox/spring-test" element={<SpringTest />} />
       {/* Optional: a catch-all route for 404 */}
       <Route path="*" element={<div>404 - Page Not Found</div>} />
