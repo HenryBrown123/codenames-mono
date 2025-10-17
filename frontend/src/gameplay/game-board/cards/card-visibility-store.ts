@@ -16,8 +16,8 @@ interface CardVisibilityStore {
   viewMode: ViewMode;
   cardOrder: string[];
 
-  initializeCard: (word: string, card: Card) => void;
-  uninitializeCard: (word: string) => void;
+  initialiseCard: (word: string, card: Card) => void;
+  uninitialiseCard: (word: string) => void;
   toggleSpymasterView: (engine: WebAnimationEngine) => Promise<void>;
   selectCard: (word: string, engine: WebAnimationEngine) => Promise<void>;
   dealCards: (words: string[], engine: WebAnimationEngine, staggerDelay?: number) => Promise<void>;
@@ -138,7 +138,7 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
     viewMode: "normal",
     cardOrder: [],
 
-    initializeCard: (word) =>
+    initialiseCard: (word) =>
       set((state) => {
         if (state.cards.has(word)) return state;
 
@@ -154,7 +154,7 @@ export const useCardVisibilityStore = create<CardVisibilityStore>((set, get) => 
         };
       }),
 
-    uninitializeCard: (word) =>
+    uninitialiseCard: (word) =>
       set((state) => {
         const newCards = new Map(state.cards);
         newCards.delete(word);

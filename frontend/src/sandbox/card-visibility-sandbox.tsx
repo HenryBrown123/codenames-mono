@@ -161,7 +161,7 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ word, index }) => {
 };
 
 const DealInScene: React.FC = () => {
-  const initializeCards = useSandboxStore(state => state.initializeCards);
+  const initialiseCards = useSandboxStore(state => state.initialiseCards);
   const dealCards = useSandboxStore(state => state.dealCards);
   const resetAll = useSandboxStore(state => state.resetAll);
   const cards = useSandboxStore(state => state.cards);
@@ -179,8 +179,8 @@ const DealInScene: React.FC = () => {
   );
 
   React.useEffect(() => {
-    initializeCards(mockCards);
-  }, [initializeCards, mockCards]);
+    initialiseCards(mockCards);
+  }, [initialiseCards, mockCards]);
 
   const handleDeal = async () => {
     setIsDealing(true);
@@ -193,7 +193,7 @@ const DealInScene: React.FC = () => {
 
   const handleReset = () => {
     resetAll();
-    setTimeout(() => initializeCards(mockCards), 100);
+    setTimeout(() => initialiseCards(mockCards), 100);
   };
 
   return (
@@ -225,7 +225,7 @@ const DealInScene: React.FC = () => {
 };
 
 const SpymasterViewScene: React.FC = () => {
-  const initializeCards = useSandboxStore(state => state.initializeCards);
+  const initialiseCards = useSandboxStore(state => state.initialiseCards);
   const dealCards = useSandboxStore(state => state.dealCards);
   const toggleViewMode = useSandboxStore(state => state.toggleViewMode);
   const resetAll = useSandboxStore(state => state.resetAll);
@@ -242,11 +242,11 @@ const SpymasterViewScene: React.FC = () => {
   );
 
   React.useEffect(() => {
-    initializeCards(mockCards);
+    initialiseCards(mockCards);
     setTimeout(() => {
       dealCards(mockCards.map(c => c.word), 50);  // Pass stagger
     }, 100);
-  }, [initializeCards, dealCards, mockCards]);
+  }, [initialiseCards, dealCards, mockCards]);
 
   const handleToggle = () => {
     toggleViewMode(30);  // Pass stagger of 30ms for color overlays
@@ -255,7 +255,7 @@ const SpymasterViewScene: React.FC = () => {
   const handleReset = () => {
     resetAll();
     setTimeout(() => {
-      initializeCards(mockCards);
+      initialiseCards(mockCards);
       setTimeout(() => dealCards(mockCards.map(c => c.word), 50), 100);
     }, 100);
   };
@@ -290,7 +290,7 @@ const SpymasterViewScene: React.FC = () => {
 
 const PlayerSelectionScene: React.FC = () => {
   const cards = useSandboxStore(state => state.cards);
-  const initializeCard = useSandboxStore(state => state.initializeCard);
+  const initialiseCard = useSandboxStore(state => state.initialiseCard);
   const dealCard = useSandboxStore(state => state.dealCard);
   const selectCard = useSandboxStore(state => state.selectCard);
   const resetCard = useSandboxStore(state => state.resetCard);
@@ -302,7 +302,7 @@ const PlayerSelectionScene: React.FC = () => {
 
   const handleDeal = async () => {
     await new Promise(resolve => setTimeout(resolve, 500));
-    initializeCard(cardWord, 'neutral');
+    initialiseCard(cardWord, 'neutral');
     dealCard(cardWord);
   };
 
@@ -339,7 +339,7 @@ const PlayerSelectionScene: React.FC = () => {
 const TimingTestScene: React.FC = () => {
   const cards = useSandboxStore(state => state.cards);
   const pendingBatch = useSandboxStore(state => state.pendingBatch);
-  const initializeCards = useSandboxStore(state => state.initializeCards);
+  const initialiseCards = useSandboxStore(state => state.initialiseCards);
   const dealCard = useSandboxStore(state => state.dealCard);
   const selectCard = useSandboxStore(state => state.selectCard);
   const resetAll = useSandboxStore(state => state.resetAll);
@@ -360,7 +360,7 @@ const TimingTestScene: React.FC = () => {
     await new Promise(resolve => setTimeout(resolve, 500));
 
     console.log('[🟢 TimingTest] Initializing and dealing');
-    initializeCards([{ word: cardWord, teamName: 'blue' }]);
+    initialiseCards([{ word: cardWord, teamName: 'blue' }]);
     dealCard(cardWord);
 
     setIsDealing(false);

@@ -72,8 +72,8 @@ export const getSceneMessage = (
   gameData: GameData,
   activeTurn: TurnData | null,
 ): string => {
-  const normalizedRole = role.toLowerCase();
-  const messageKey = `${normalizedRole}.${scene}`;
+  const normalisedRole = role.toLowerCase();
+  const messageKey = `${normalisedRole}.${scene}`;
   const teamName = activeTurn?.teamName || "Your team";
 
 

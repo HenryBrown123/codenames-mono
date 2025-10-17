@@ -11,15 +11,15 @@ import { useAnimationEngine } from "../../animations/animation-engine-context";
  * - Reads card state from the visibility store
  * - Syncs entity context to animation engine via useEffect
  * - Provides animation ref factory via the generic animation registration hook
- * - Auto-initializes cards when first rendered
+ * - Auto-initialises cards when first rendered
  * - Exposes select action for triggering card selection animations
  */
 export function useCardVisibility(card: Card, index: number) {
   const cardVisibility = useCardVisibilityStore((state) => state.cards.get(card.word));
   const viewMode = useCardVisibilityStore((state) => state.viewMode);
 
-  const initializeCard = useCardVisibilityStore((state) => state.initializeCard);
-  const uninitializeCard = useCardVisibilityStore((state) => state.uninitializeCard);
+  const initialiseCard = useCardVisibilityStore((state) => state.initialiseCard);
+  const uninitialiseCard = useCardVisibilityStore((state) => state.uninitialiseCard);
   const selectCard = useCardVisibilityStore((state) => state.selectCard);
 
   const engine = useAnimationEngine();
@@ -52,12 +52,12 @@ export function useCardVisibility(card: Card, index: number) {
   const { createAnimationRef } = useAnimationRegistration(card.word, entityContext);
 
   useEffect(() => {
-    initializeCard(card.word, card);
+    initialiseCard(card.word, card);
 
     return () => {
-      uninitializeCard(card.word);
+      uninitialiseCard(card.word);
     };
-  }, [card.word, initializeCard, uninitializeCard]);
+  }, [card.word, initialiseCard, uninitialiseCard]);
 
   return {
     displayState: cardVisibility?.displayState || "hidden",

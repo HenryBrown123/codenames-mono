@@ -35,8 +35,8 @@ interface SandboxStore {
   cardOrder: string[];
   pendingBatch: PendingBatch | null;
 
-  initializeCard: (word: string, teamName: string) => void;
-  initializeCards: (cards: Array<{ word: string; teamName: string }>) => void;
+  initialiseCard: (word: string, teamName: string) => void;
+  initialiseCards: (cards: Array<{ word: string; teamName: string }>) => void;
   dealCard: (word: string) => void;
   dealCards: (words: string[], stagger?: number) => void;
   selectCard: (word: string) => void;
@@ -87,7 +87,7 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
   cardOrder: [],
   pendingBatch: null,
 
-  initializeCard: (word: string, teamName: string) => {
+  initialiseCard: (word: string, teamName: string) => {
     set((state) => {
       const newCards = new Map(state.cards);
       const newCardOrder = [...state.cardOrder];
@@ -107,7 +107,7 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
     });
   },
 
-  initializeCards: (cardsData) => {
+  initialiseCards: (cardsData) => {
     set(() => {
       const newCards = new Map<string, SandboxCardState>();
       const newCardOrder: string[] = [];
