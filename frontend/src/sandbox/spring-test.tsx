@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { AnimationEngineProvider, useAnimationEngine } from "../gameplay/animations/animation-engine-context";
+import {
+  AnimationEngineProvider,
+  useAnimationEngine,
+} from "../gameplay/animations/animation-engine-context";
 import { useAnimationRegistration } from "../gameplay/animations/use-animation-registration";
 import { SPRING_CONFIGS } from "../gameplay/animations/spring-animation";
 import type { SpringAnimationDefinition } from "../gameplay/animations/animation-types";
@@ -8,14 +11,7 @@ import styles from "./spring-test.module.css";
 const SPRING_CONFIG_LABELS: Record<keyof typeof SPRING_CONFIGS, string> = {
   extreme: "Extreme",
   bouncy: "Bouncy",
-  smooth: "Smooth",
   stiff: "Stiff",
-  cascadedOverdamped: "Cascaded Overdamped",
-  cascadedUnderdamped: "Cascaded Underdamped",
-  cascadedExtreme: "Cascaded EXTREME",
-  cascadedInsane: "Cascaded INSANE",
-  cascadedHeavy: "Cascaded HEAVY",
-  cascadedSeparated: "Cascaded SEPARATED",
 };
 
 // Configuration constants
@@ -112,9 +108,7 @@ const SpringTestInner: React.FC = () => {
         </div>
 
         <div className={styles.controlGroup}>
-          <label className={styles.rangeLabel}>
-            Auto Update Interval: {updateInterval}ms
-          </label>
+          <label className={styles.rangeLabel}>Auto Update Interval: {updateInterval}ms</label>
           <input
             type="range"
             min={MIN_UPDATE_INTERVAL_MS}
