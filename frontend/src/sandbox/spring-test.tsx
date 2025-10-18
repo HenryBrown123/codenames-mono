@@ -12,6 +12,10 @@ const SPRING_CONFIG_LABELS: Record<keyof typeof SPRING_CONFIGS, string> = {
   stiff: "Stiff",
   cascadedOverdamped: "Cascaded Overdamped",
   cascadedUnderdamped: "Cascaded Underdamped",
+  cascadedExtreme: "Cascaded EXTREME",
+  cascadedInsane: "Cascaded INSANE",
+  cascadedHeavy: "Cascaded HEAVY",
+  cascadedSeparated: "Cascaded SEPARATED",
 };
 
 // Configuration constants
