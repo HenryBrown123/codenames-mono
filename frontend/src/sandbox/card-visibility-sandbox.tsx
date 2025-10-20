@@ -354,12 +354,10 @@ const TimingTestScene: React.FC = () => {
   const card = cards.get(cardWord);
 
   const handleDeal = async () => {
-    console.log('[🔵 TimingTest] Deal clicked');
     setIsDealing(true);
 
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    console.log('[🟢 TimingTest] Initializing and dealing');
     initialiseCards([{ word: cardWord, teamName: 'blue' }]);
     dealCard(cardWord);
 
@@ -369,19 +367,16 @@ const TimingTestScene: React.FC = () => {
   const handleSelect = async () => {
     if (!card) return;
 
-    console.log('[🔵 TimingTest] Select clicked');
     setIsSelecting(true);
 
     await new Promise(resolve => setTimeout(resolve, 300));
 
-    console.log('[🟢 TimingTest] Queuing select transition');
     selectCard(cardWord);
 
     setIsSelecting(false);
   };
 
   const handleReset = async () => {
-    console.log('[🔄 TimingTest] Reset clicked');
     setIsResetting(true);
 
     resetAll();
