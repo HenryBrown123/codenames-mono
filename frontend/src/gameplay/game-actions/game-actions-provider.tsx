@@ -209,45 +209,68 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   }, [startRoundMutation, gameData.currentRound, triggerSceneTransition]);
 
   const dealCards = useCallback(
-    async (redeal: boolean = false) => {
+    async (redeal: boolean = false): Promise<void> => {
       if (!gameData.currentRound) {
-        return;
+        throw new Error("No active round");
       }
 
       const roundNumber = gameData.currentRound.roundNumber;
       setActionState({ name: "dealCards", status: "loading", error: null });
 
-      dealCardsMutation.mutate(
-        { roundNumber, redeal },
-        {
-          onSuccess: async (data) => {
-            setActionState({ name: "dealCards", status: "success", error: null });
+      return new Promise((resolve, reject) => {
+        dealCardsMutation.mutate(
+          { roundNumber, redeal },
+          {
+            onSuccess: async () => {
+              // This fires SECOND - data already refetched by mutation's onSuccess
+              setActionState({ name: "dealCards", status: "success", error: null });
 
-            if (redeal) {
-              // For redeal: animate before invalidating queries
-              const sandboxCards = data.cards.map((c) => ({
-                word: c.word,
-                teamName: c.teamName || 'neutral',
-              }));
+              if (redeal) {
+                // Get fresh data from cache (already refetched)
+                const freshGameData = queryClient.getQueryData<typeof gameData>([
+                  "gameData",
+                  gameId,
+                ]);
 
-              initialiseFromGameCards(sandboxCards);
-              dealCardsFromSandboxStore(sandboxCards.map(c => c.word), 50);
+                console.log(freshGameData);
 
-              // Wait a bit for animations to start, then invalidate
-              await new Promise(resolve => setTimeout(resolve, 100));
-              await queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
-            } else {
-              triggerSceneTransition("CARDS_DEALT");
-            }
+                if (freshGameData?.currentRound?.cards) {
+                  const sandboxCards = freshGameData.currentRound.cards.map((c: any) => ({
+                    word: c.word,
+                    teamName: c.teamName || "neutral",
+                  }));
+
+                  initialiseFromGameCards(sandboxCards);
+
+                  await dealCardsFromStore(
+                    sandboxCards.map((c: any) => c.word),
+                    animationEngine,
+                  );
+                }
+              } else {
+                triggerSceneTransition("CARDS_DEALT");
+              }
+
+              resolve();
+            },
+            onError: (error) => {
+              console.error("Failed to deal cards:", error);
+              setActionState({ name: "dealCards", status: "error", error });
+              reject(error);
+            },
           },
-          onError: (error) => {
-            console.error("Failed to deal cards:", error);
-            setActionState({ name: "dealCards", status: "error", error });
-          },
-        },
-      );
+        );
+      });
     },
-    [dealCardsMutation, gameData.currentRound, triggerSceneTransition, initialiseFromGameCards, dealCardsFromSandboxStore, queryClient, gameId],
+    [
+      dealCardsMutation,
+      gameData.currentRound,
+      triggerSceneTransition,
+      queryClient,
+      gameId,
+      initialiseFromGameCards,
+      dealCardsFromSandboxStore,
+    ],
   );
 
   const endTurn = useCallback(() => {

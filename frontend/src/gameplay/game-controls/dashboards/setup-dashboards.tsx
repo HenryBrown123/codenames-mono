@@ -12,16 +12,12 @@ import {
   TerminalOutput,
 } from "./terminal-components";
 import styles from "./setup-dashboards.module.css";
-import { useSandboxStore } from "../../../sandbox/card-visibility-sandbox.hooks";
 /**
  * Lobby Dashboard - Mobile-first with refresh functionality
  */
 export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText }) => {
   const { gameData } = useGameDataRequired();
   const { createRound, startRound, dealCards, actionState } = useGameActions();
-  const initialiseFromGameCards = useSandboxStore((state) => state.initialiseFromGameCards);
-  const dealCardsFromStore = useSandboxStore((state) => state.dealCards);
-  const resetStore = useSandboxStore((state) => state.resetAll);
 
   if (!gameData) {
     return null;
@@ -46,54 +42,25 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
       gameData?.currentRound?.status === "SETUP" &&
       (!gameData.currentRound.cards || gameData.currentRound.cards.length === 0)
     ) {
-      console.log("[LobbyDashboard] Calling dealCards mutation");
-      await dealCards();
-
-      console.log("[LobbyDashboard] Initializing animation system");
-      const sandboxCards = gameData.currentRound.cards.map((c) => ({
-        word: c.word,
-        teamName: c.teamName || "neutral",
-      }));
-      initialiseFromGameCards(sandboxCards);
-
-      console.log("[LobbyDashboard] Triggering deal animation");
-      dealCardsFromStore(
-        gameData.currentRound.cards.map((c) => c.word),
-        50,
-      );
+      try {
+        await dealCards(false);
+      } catch (error) {
+        console.error("Failed to deal cards:", error);
+      }
       return;
     }
 
     if (!gameData?.currentRound) {
       createRound();
-      return;
     }
   };
 
   const handleRedeal = async () => {
-    console.log('[LobbyDashboard] ========== REDEAL START ==========');
-    console.log('[LobbyDashboard] Current cards:', gameData.currentRound!.cards.length);
-
-    console.log('[LobbyDashboard] Resetting store');
-    resetStore();
-
-    console.log('[LobbyDashboard] Calling redeal mutation');
-    await dealCards(true);
-
-    console.log('[LobbyDashboard] Mutation complete, reinitializing animation system');
-    const sandboxCards = gameData.currentRound!.cards.map((c) => ({
-      word: c.word,
-      teamName: c.teamName || "neutral",
-    }));
-    initialiseFromGameCards(sandboxCards);
-
-    console.log('[LobbyDashboard] Triggering redeal animation');
-    dealCardsFromStore(
-      gameData.currentRound!.cards.map((c) => c.word),
-      50,
-    );
-
-    console.log('[LobbyDashboard] ========== REDEAL COMPLETE ==========');
+    try {
+      await dealCards(true);
+    } catch (error) {
+      console.error("Failed to redeal:", error);
+    }
   };
 
   const getButtonText = () => {
