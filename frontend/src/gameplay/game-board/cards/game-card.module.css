@@ -16,6 +16,23 @@
   z-index: var(--z-base);
   contain: layout style;
   overflow: visible;
+
+  /* Default to visible - CRITICAL for WAAPI with fill: 'forwards' */
+  opacity: 1;
+  transform: translateY(0) rotate(0deg);
+}
+
+/* Only hide when explicitly in hidden state */
+.cardContainer[data-state="hidden"] {
+  opacity: 0;
+  transform: translateY(-100vh) rotate(-15deg);
+  pointer-events: none;
+}
+
+/* Explicit visible state */
+.cardContainer[data-state="visible"] {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* Team color mapping via data attributes */

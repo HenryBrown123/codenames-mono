@@ -12,16 +12,15 @@ import {
   TerminalOutput,
 } from "./terminal-components";
 import styles from "./setup-dashboards.module.css";
-import { useCardVisibilityStore } from "@frontend/gameplay/game-board";
-import { useAnimationEngine } from "@frontend/gameplay/animations";
+import { useSandboxStore } from "../../../sandbox/card-visibility-sandbox.hooks";
 /**
  * Lobby Dashboard - Mobile-first with refresh functionality
  */
 export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText }) => {
   const { gameData } = useGameDataRequired();
   const { createRound, startRound, dealCards, actionState } = useGameActions();
-  const dealCardsFromStore = useCardVisibilityStore((state) => state.dealCards);
-  const animationEngine = useAnimationEngine();
+  const initialiseFromGameCards = useSandboxStore((state) => state.initialiseFromGameCards);
+  const dealCardsFromStore = useSandboxStore((state) => state.dealCards);
 
   if (!gameData) {
     return null;
@@ -46,12 +45,18 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
       gameData?.currentRound?.status === "SETUP" &&
       (!gameData.currentRound.cards || gameData.currentRound.cards.length === 0)
     ) {
-      console.log("[Click Handler] About to run call dealCards mutation", new Date());
+      console.log("[LobbyDashboard] Calling dealCards mutation");
       await dealCards();
 
-      console.log("[Click Handler] About to run dealCardsFromStore", new Date());
-      const words = gameData.currentRound.cards.map((c) => c.word);
-      dealCardsFromStore(words, animationEngine);
+      console.log("[LobbyDashboard] Initializing animation system");
+      const sandboxCards = gameData.currentRound.cards.map((c) => ({
+        word: c.word,
+        teamName: c.teamName || 'neutral',
+      }));
+      initialiseFromGameCards(sandboxCards);
+
+      console.log("[LobbyDashboard] Triggering deal animation");
+      dealCardsFromStore(gameData.currentRound.cards.map((c) => c.word), 50);
       return;
     }
 
@@ -62,13 +67,18 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
   };
 
   const handleRedeal = async () => {
-    console.log("[Click Handler] About to run call dealCards mutation", new Date());
+    console.log("[LobbyDashboard] Calling redeal mutation");
     await dealCards(true);
 
-    console.log("[Click Handler] About to run dealCardsFromStore", new Date());
-    const words = gameData.currentRound!.cards.map((c) => c.word);
-    dealCardsFromStore(words, animationEngine);
-    return;
+    console.log("[LobbyDashboard] Reinitializing animation system");
+    const sandboxCards = gameData.currentRound!.cards.map((c) => ({
+      word: c.word,
+      teamName: c.teamName || 'neutral',
+    }));
+    initialiseFromGameCards(sandboxCards);
+
+    console.log("[LobbyDashboard] Triggering redeal animation");
+    dealCardsFromStore(gameData.currentRound!.cards.map((c) => c.word), 50);
   };
 
   const getButtonText = () => {

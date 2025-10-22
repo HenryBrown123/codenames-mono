@@ -37,6 +37,7 @@ interface SandboxStore {
 
   initialiseCard: (word: string, teamName: string) => void;
   initialiseCards: (cards: Array<{ word: string; teamName: string }>) => void;
+  initialiseFromGameCards: (gameCards: Array<{ word: string; teamName: string }>) => void;
   dealCard: (word: string) => void;
   dealCards: (words: string[], stagger?: number) => void;
   selectCard: (word: string) => void;
@@ -113,6 +114,26 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
       const newCardOrder: string[] = [];
 
       cardsData.forEach((card) => {
+        newCards.set(card.word, {
+          word: card.word,
+          teamName: card.teamName,
+          selected: false,
+          displayState: "hidden",
+          isTransitioning: false,
+        });
+        newCardOrder.push(card.word);
+      });
+
+      return { cards: newCards, cardOrder: newCardOrder };
+    });
+  },
+
+  initialiseFromGameCards: (gameCards) => {
+    set(() => {
+      const newCards = new Map<string, SandboxCardState>();
+      const newCardOrder: string[] = [];
+
+      gameCards.forEach((card) => {
         newCards.set(card.word, {
           word: card.word,
           teamName: card.teamName,

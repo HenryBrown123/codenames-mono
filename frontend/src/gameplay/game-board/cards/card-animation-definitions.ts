@@ -27,7 +27,7 @@ export const dealInAnimation: AnimationDefinition = {
   options: {
     duration: 600,
     easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
-    fill: 'both',
+    fill: 'forwards',
   },
 };
 
