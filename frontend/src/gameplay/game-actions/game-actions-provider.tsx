@@ -7,7 +7,7 @@ import {
   useStartRoundMutation,
   useDealCardsMutation,
 } from "../round-management";
-import { useGameDataRequired } from "../game-data/providers";
+import { useGameDataRequired, usePlayerContext } from "../game-data/providers";
 import { usePlayerScene } from "../game-scene";
 import { useTurn } from "../game-data/providers";
 import { useCardVisibilityStore } from "../game-board/cards/card-visibility-store";
@@ -55,6 +55,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   const [actionState, setActionState] = useState<ActionState>(initialState);
 
   const { gameData, gameId } = useGameDataRequired();
+  const { currentPlayerId } = usePlayerContext();
   const { triggerSceneTransition } = usePlayerScene();
   const { setLastActionTurnId } = useTurn();
   const queryClient = useQueryClient();
@@ -81,7 +82,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   }, []);
 
   const makeGuess = useCallback(
-    (word: string) => {
+    async (word: string) => {
       if (!gameData.currentRound) {
         return;
       }
@@ -217,50 +218,53 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       const roundNumber = gameData.currentRound.roundNumber;
       setActionState({ name: "dealCards", status: "loading", error: null });
 
-      return new Promise((resolve, reject) => {
-        dealCardsMutation.mutate(
-          { roundNumber, redeal },
-          {
-            onSuccess: async () => {
-              // This fires SECOND - data already refetched by mutation's onSuccess
-              setActionState({ name: "dealCards", status: "success", error: null });
+      try {
+        console.log("[Provider] Starting mutation");
 
-              if (redeal) {
-                // Get fresh data from cache (already refetched)
-                const freshGameData = queryClient.getQueryData<typeof gameData>([
-                  "gameData",
-                  gameId,
-                ]);
+        await dealCardsMutation.mutateAsync({ roundNumber, redeal });
 
-                console.log(freshGameData);
+        console.log("[Provider] Mutation complete - query should be refetched by mutation hook");
 
-                if (freshGameData?.currentRound?.cards) {
-                  const sandboxCards = freshGameData.currentRound.cards.map((c: any) => ({
-                    word: c.word,
-                    teamName: c.teamName || "neutral",
-                  }));
+        setActionState({ name: "dealCards", status: "success", error: null });
 
-                  initialiseFromGameCards(sandboxCards);
+        const freshGameData = queryClient.getQueryData<typeof gameData>([
+          "gameData",
+          gameId,
+          currentPlayerId,
+        ]);
 
-                  await dealCardsFromStore(
-                    sandboxCards.map((c: any) => c.word),
-                    animationEngine,
-                  );
-                }
-              } else {
-                triggerSceneTransition("CARDS_DEALT");
-              }
+        console.log("[Provider] Fresh game data:", {
+          hasData: !!freshGameData,
+          hasRound: !!freshGameData?.currentRound,
+          cardCount: freshGameData?.currentRound?.cards?.length,
+          firstCard: freshGameData?.currentRound?.cards?.[0]?.word,
+        });
 
-              resolve();
-            },
-            onError: (error) => {
-              console.error("Failed to deal cards:", error);
-              setActionState({ name: "dealCards", status: "error", error });
-              reject(error);
-            },
-          },
-        );
-      });
+        if (redeal && freshGameData?.currentRound?.cards) {
+          const sandboxCards = freshGameData.currentRound.cards.map((c) => ({
+            word: c.word,
+            teamName: c.teamName || "neutral",
+          }));
+
+          console.log("[Provider] Initializing", sandboxCards.length, "cards");
+          initialiseFromGameCards(sandboxCards);
+
+          console.log("[Provider] Triggering deal animation");
+          dealCardsFromSandboxStore(
+            sandboxCards.map((c) => c.word),
+            50, // stagger delay
+          );
+          console.log("[Provider] Animation triggered");
+        }
+
+        if (!redeal) {
+          triggerSceneTransition("CARDS_DEALT");
+        }
+      } catch (error) {
+        console.error("Failed to deal cards:", error);
+        setActionState({ name: "dealCards", status: "error", error: error as Error });
+        throw error;
+      }
     },
     [
       dealCardsMutation,
@@ -268,8 +272,10 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       triggerSceneTransition,
       queryClient,
       gameId,
+      currentPlayerId,
       initialiseFromGameCards,
-      dealCardsFromSandboxStore,
+      dealCardsFromStore,
+      animationEngine,
     ],
   );
 

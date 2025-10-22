@@ -43,11 +43,14 @@ export const useDealCardsMutation = (
       return response.data.data;
     },
     onSuccess: async () => {
-      // This fires FIRST and awaits before provider's onSuccess
-      console.log("[Mutation] Before invalidate");
-      return await queryClient.invalidateQueries({
+      console.log("[Mutation Hook] Starting invalidation");
+      console.log("[Mutation Hook] Query key:", ["gameData", gameId]);
+
+      await queryClient.invalidateQueries({
         queryKey: ["gameData", gameId],
       });
+
+      console.log("[Mutation Hook] Invalidation complete");
     },
   });
 };
