@@ -25,7 +25,7 @@ interface DealCardsInput {
  */
 export const useDealCardsMutation = (
   gameId: string,
-): UseMutationResult<void, Error, DealCardsInput> => {
+): UseMutationResult<DealCardsApiResponse['data'], Error, DealCardsInput> => {
   const queryClient = useQueryClient();
   const { currentPlayerId } = usePlayerContext();
 
@@ -39,9 +39,9 @@ export const useDealCardsMutation = (
       if (!response.data.success) {
         throw new Error("Failed to deal cards");
       }
+
+      return response.data.data;
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
-    },
+    // Remove onSuccess - let caller handle invalidation timing
   });
 };

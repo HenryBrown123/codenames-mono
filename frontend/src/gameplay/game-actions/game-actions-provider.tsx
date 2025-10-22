@@ -1,4 +1,5 @@
 import { createContext, useState, useCallback, useContext, ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useGiveClueMutation, useMakeGuessMutation, useEndTurnMutation } from "./api";
 import styles from "./game-actions-provider.module.css";
 import {
@@ -11,6 +12,7 @@ import { usePlayerScene } from "../game-scene";
 import { useTurn } from "../game-data/providers";
 import { useCardVisibilityStore } from "../game-board/cards/card-visibility-store";
 import { useAnimationEngine } from "../animations/animation-engine-context";
+import { useSandboxStore } from "../../sandbox/card-visibility-sandbox.hooks";
 
 export type ActionName =
   | "giveClue"
@@ -55,6 +57,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   const { gameData, gameId } = useGameDataRequired();
   const { triggerSceneTransition } = usePlayerScene();
   const { setLastActionTurnId } = useTurn();
+  const queryClient = useQueryClient();
 
   const giveClueMutation = useGiveClueMutation(gameId);
   const makeGuessMutation = useMakeGuessMutation(gameId);
@@ -68,6 +71,10 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   const dealCardsFromStore = useCardVisibilityStore((state) => state.dealCards);
 
   const animationEngine = useAnimationEngine();
+
+  // Sandbox store for redeal animations
+  const initialiseFromGameCards = useSandboxStore((state) => state.initialiseFromGameCards);
+  const dealCardsFromSandboxStore = useSandboxStore((state) => state.dealCards);
 
   const resetActionState = useCallback(() => {
     setActionState(initialState);
@@ -213,10 +220,23 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       dealCardsMutation.mutate(
         { roundNumber, redeal },
         {
-          onSuccess: () => {
+          onSuccess: async (data) => {
             setActionState({ name: "dealCards", status: "success", error: null });
 
-            if (!redeal) {
+            if (redeal) {
+              // For redeal: animate before invalidating queries
+              const sandboxCards = data.cards.map((c) => ({
+                word: c.word,
+                teamName: c.teamName || 'neutral',
+              }));
+
+              initialiseFromGameCards(sandboxCards);
+              dealCardsFromSandboxStore(sandboxCards.map(c => c.word), 50);
+
+              // Wait a bit for animations to start, then invalidate
+              await new Promise(resolve => setTimeout(resolve, 100));
+              await queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
+            } else {
               triggerSceneTransition("CARDS_DEALT");
             }
           },
@@ -227,7 +247,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         },
       );
     },
-    [dealCardsMutation, gameData.currentRound, triggerSceneTransition],
+    [dealCardsMutation, gameData.currentRound, triggerSceneTransition, initialiseFromGameCards, dealCardsFromSandboxStore, queryClient, gameId],
   );
 
   const endTurn = useCallback(() => {

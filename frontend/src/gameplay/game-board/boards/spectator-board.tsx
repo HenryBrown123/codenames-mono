@@ -19,31 +19,6 @@ export const SpectatorBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   // Use sandbox coordinator instead of game coordinator
   useSandboxCoordinator();
 
-  // Initialize and deal cards when they arrive from server
-  useEffect(() => {
-    if (cards.length > 0) {
-      console.log('[SpectatorBoard] Initializing', cards.length, 'cards');
-
-      // Convert game cards to sandbox format, providing default for null teamName
-      const sandboxCards = cards.map((c) => ({
-        word: c.word,
-        teamName: c.teamName || 'neutral',
-      }));
-
-      // Initialize cards in sandbox store
-      initialiseFromGameCards(sandboxCards);
-
-      // Small delay to ensure animation registration completes
-      setTimeout(() => {
-        console.log('[SpectatorBoard] Dealing cards with stagger');
-        dealCards(
-          cards.map((c) => c.word),
-          50,
-        );
-      }, 50);
-    }
-  }, [cards.length, initialiseFromGameCards, dealCards]);
-
   return (
     <GameBoardLayout tilt={tilt}>
       {cards.length > 0
