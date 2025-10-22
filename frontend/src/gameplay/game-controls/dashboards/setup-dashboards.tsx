@@ -71,22 +71,29 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
   };
 
   const handleRedeal = async () => {
+    console.log('[LobbyDashboard] ========== REDEAL START ==========');
+    console.log('[LobbyDashboard] Current cards:', gameData.currentRound!.cards.length);
+
+    console.log('[LobbyDashboard] Resetting store');
     resetStore();
-    console.log("[LobbyDashboard] Calling redeal mutation");
+
+    console.log('[LobbyDashboard] Calling redeal mutation');
     await dealCards(true);
 
-    console.log("[LobbyDashboard] Reinitializing animation system");
+    console.log('[LobbyDashboard] Mutation complete, reinitializing animation system');
     const sandboxCards = gameData.currentRound!.cards.map((c) => ({
       word: c.word,
       teamName: c.teamName || "neutral",
     }));
     initialiseFromGameCards(sandboxCards);
 
-    console.log("[LobbyDashboard] Triggering redeal animation");
+    console.log('[LobbyDashboard] Triggering redeal animation');
     dealCardsFromStore(
       gameData.currentRound!.cards.map((c) => c.word),
       50,
     );
+
+    console.log('[LobbyDashboard] ========== REDEAL COMPLETE ==========');
   };
 
   const getButtonText = () => {
