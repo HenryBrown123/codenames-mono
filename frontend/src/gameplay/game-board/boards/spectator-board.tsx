@@ -3,7 +3,6 @@ import { useGameDataRequired } from "../../game-data/providers";
 import { GameCard } from "../cards/game-card";
 import {
   useSandboxStore,
-  useSandboxCoordinator,
 } from "../../../sandbox/card-visibility-sandbox.hooks";
 import { GameBoardLayout } from "./board-layout";
 import { EmptyCard } from "./board-layout";
@@ -15,9 +14,6 @@ export const SpectatorBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   // Use sandbox store instead of game store
   const initialiseFromGameCards = useSandboxStore((state) => state.initialiseFromGameCards);
   const dealCards = useSandboxStore((state) => state.dealCards);
-
-  // Use sandbox coordinator instead of game coordinator
-  useSandboxCoordinator();
 
   return (
     <GameBoardLayout tilt={tilt}>

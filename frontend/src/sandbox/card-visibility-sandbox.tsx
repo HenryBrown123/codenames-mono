@@ -3,7 +3,6 @@ import { AnimationEngineProvider } from '../gameplay/animations';
 import { DevToolsPanel } from '../gameplay/animations/animation-devtools';
 import {
   useSandboxStore,
-  useSandboxCoordinator,
   useSandboxCardVisibility,
 } from "./card-visibility-sandbox.hooks";
 import styles from "./card-visibility-sandbox.module.css";
@@ -166,8 +165,6 @@ const DealInScene: React.FC = () => {
   const resetAll = useSandboxStore(state => state.resetAll);
   const cards = useSandboxStore(state => state.cards);
 
-  useSandboxCoordinator();
-
   const [isDealing, setIsDealing] = useState(false);
 
   const mockCards = React.useMemo(() =>
@@ -231,8 +228,6 @@ const SpymasterViewScene: React.FC = () => {
   const resetAll = useSandboxStore(state => state.resetAll);
   const viewMode = useSandboxStore(state => state.viewMode);
 
-  useSandboxCoordinator();
-
   const mockCards = React.useMemo(() =>
     Array.from({ length: 16 }, (_, i) => ({
       word: `SPY-${i + 1}`,
@@ -295,8 +290,6 @@ const PlayerSelectionScene: React.FC = () => {
   const selectCard = useSandboxStore(state => state.selectCard);
   const resetCard = useSandboxStore(state => state.resetCard);
 
-  useSandboxCoordinator();
-
   const cardWord = 'SELECT';
   const card = cards.get(cardWord);
 
@@ -338,7 +331,6 @@ const PlayerSelectionScene: React.FC = () => {
 
 const TimingTestScene: React.FC = () => {
   const cards = useSandboxStore(state => state.cards);
-  const pendingBatch = useSandboxStore(state => state.pendingBatch);
   const initialiseCards = useSandboxStore(state => state.initialiseCards);
   const dealCard = useSandboxStore(state => state.dealCard);
   const selectCard = useSandboxStore(state => state.selectCard);
@@ -347,8 +339,6 @@ const TimingTestScene: React.FC = () => {
   const [isDealing, setIsDealing] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
-
-  useSandboxCoordinator();
 
   const cardWord = 'TIMING-1';
   const card = cards.get(cardWord);
@@ -426,8 +416,8 @@ const TimingTestScene: React.FC = () => {
       }}>
         <div>Card state: {card ? `"${card.word}" (${card.selected ? '✅ selected' : '⭕ not selected'})` : '❌ none'}</div>
         <div>Display state: {card?.displayState || 'N/A'}</div>
-        <div>Transitioning: {card?.isTransitioning ? '✅' : '❌'}</div>
-        <div>Pending transitions: {pendingBatch?.transitions.size || 0}</div>
+        <div>Transitioning: {card?.pendingTransition ? '✅' : '❌'}</div>
+        <div>Pending transition: {card?.pendingTransition ? `${card.pendingTransition.event} → ${card.pendingTransition.toState}` : 'none'}</div>
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem 0', minHeight: '200px' }}>
