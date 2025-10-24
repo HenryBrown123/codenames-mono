@@ -615,7 +615,8 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   │   └── api
 │       │   ├── game-board
 │       │   │   ├── boards
-│       │   │   └── cards
+│       │   │   ├── cards
+│       │   │   └── view-mode
 │       │   ├── game-controls
 │       │   │   ├── dashboards
 │       │   │   └── settings
@@ -647,7 +648,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-86 directories
+87 directories
 ```
 
 ## Getting Started

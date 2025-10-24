@@ -1,10 +1,9 @@
-import React, { useState } from "react";
-import { AnimationEngineProvider } from '../gameplay/animations';
+import React, { useState, useMemo } from "react";
+import { AnimationEngineProvider, useAnimationRegistration } from '../gameplay/animations';
 import { DevToolsPanel } from '../gameplay/animations/animation-devtools';
-import {
-  useSandboxStore,
-  useSandboxCardVisibility,
-} from "./card-visibility-sandbox.hooks";
+import { ViewModeProvider, useViewMode } from '../gameplay/game-board/view-mode';
+import { useSandboxStore } from "./card-visibility-sandbox.hooks";
+import { useCardAnimationEffects } from './use-card-animation-effects';
 import styles from "./card-visibility-sandbox.module.css";
 
 interface SandboxCardProps {
@@ -13,8 +12,54 @@ interface SandboxCardProps {
 }
 
 const SandboxCard: React.FC<SandboxCardProps> = ({ word, index }) => {
-  const { card, displayState, createAnimationRef } = useSandboxCardVisibility(word, index);
-  const viewMode = useSandboxStore(state => state.viewMode);
+  const cards = useSandboxStore(s => s.cards);
+  const card = cards.get(word);
+  const { viewMode } = useViewMode();
+
+  const shouldDeal = card?.displayState === 'hidden';
+
+  const entityContext = useMemo(() => ({
+    teamName: card?.teamName,
+    selected: card?.selected,
+    viewMode,
+    index,
+  }), [card?.teamName, card?.selected, viewMode, index]);
+
+  const { createAnimationRef, triggerTransition } = useAnimationRegistration(
+    word,
+    entityContext,
+    {
+      entryTransition: shouldDeal ? 'deal' : undefined,
+      onComplete: (event) => {
+        console.log(`[${word}] Animation completed: ${event}`);
+      },
+    }
+  );
+
+  const { isAnimating } = useCardAnimationEffects(
+    card || { word, teamName: 'neutral', selected: false },
+    viewMode,
+    triggerTransition
+  );
+
+  if (!card) {
+    return (
+      <div style={{
+        width: '200px',
+        height: '133px',
+        border: '2px dashed #444',
+        borderRadius: '8px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0.5rem',
+        background: '#1a1a1a',
+      }}>
+        <div style={{ color: '#666', fontSize: '0.9rem', fontWeight: 500 }}>No card</div>
+      </div>
+    );
+  }
 
   const cardAnimations = {
     'deal': {
@@ -84,25 +129,6 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ word, index }) => {
     }
   };
 
-  if (!card) {
-    return (
-      <div style={{
-        width: '200px',
-        height: '133px',
-        border: '2px dashed #444',
-        borderRadius: '8px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '0.5rem',
-        background: '#1a1a1a',
-      }}>
-        <div style={{ color: '#666', fontSize: '0.9rem', fontWeight: 500 }}>No card</div>
-      </div>
-    );
-  }
-
   const teamColor = card.teamName === 'red' ? '#dc2626' :
                    card.teamName === 'blue' ? '#2563eb' :
                    card.teamName === 'assassin' ? '#000' : '#9ca3af';
@@ -115,8 +141,9 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ word, index }) => {
         perspective: '1000px',
         width: '200px',
         height: '133px',
-        opacity: displayState === 'hidden' ? 0 : 1,
-        transform: displayState === 'hidden' ? 'translateY(-100vh)' : 'translateY(0)',
+        pointerEvents: isAnimating ? 'none' : 'auto',
+        opacity: shouldDeal ? 0 : 1,
+        transform: shouldDeal ? 'translateY(-100vh)' : 'translateY(0)',
       }}
     >
       <div
@@ -141,7 +168,7 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ word, index }) => {
       </div>
 
       {/* Spymaster overlay - separate animated element */}
-      {viewMode === 'spymaster' && displayState !== 'hidden' && displayState !== 'covered' && (
+      {viewMode === 'spymaster' && !shouldDeal && !card.selected && (
         <div
           ref={createAnimationRef('overlay', overlayAnimations)}
           style={{
@@ -149,7 +176,7 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ word, index }) => {
             inset: '4px',
             borderRadius: '4px',
             backgroundColor: teamColor,
-            opacity: displayState === 'visible-colored' ? 1 : 0,
+            opacity: 0,
             pointerEvents: 'none',
             zIndex: 10,
           }}
@@ -161,11 +188,8 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ word, index }) => {
 
 const DealInScene: React.FC = () => {
   const initialiseCards = useSandboxStore(state => state.initialiseCards);
-  const dealCards = useSandboxStore(state => state.dealCards);
   const resetAll = useSandboxStore(state => state.resetAll);
   const cards = useSandboxStore(state => state.cards);
-
-  const [isDealing, setIsDealing] = useState(false);
 
   const mockCards = React.useMemo(() =>
     Array.from({ length: 16 }, (_, i) => ({
@@ -178,15 +202,6 @@ const DealInScene: React.FC = () => {
   React.useEffect(() => {
     initialiseCards(mockCards);
   }, [initialiseCards, mockCards]);
-
-  const handleDeal = async () => {
-    setIsDealing(true);
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    dealCards(mockCards.map(c => c.word), 50);  // Pass stagger of 50ms
-
-    setIsDealing(false);
-  };
 
   const handleReset = () => {
     resetAll();
@@ -201,9 +216,6 @@ const DealInScene: React.FC = () => {
       </p>
 
       <div className={styles.controls}>
-        <button onClick={handleDeal} disabled={isDealing || cards.size > 0 && Array.from(cards.values()).some(c => c.displayState !== 'hidden')}>
-          {isDealing ? '⏳ Dealing...' : '🎴 Deal Cards'}
-        </button>
         <button onClick={handleReset}>🔄 Reset</button>
       </div>
 
@@ -223,10 +235,8 @@ const DealInScene: React.FC = () => {
 
 const SpymasterViewScene: React.FC = () => {
   const initialiseCards = useSandboxStore(state => state.initialiseCards);
-  const dealCards = useSandboxStore(state => state.dealCards);
-  const toggleViewMode = useSandboxStore(state => state.toggleViewMode);
   const resetAll = useSandboxStore(state => state.resetAll);
-  const viewMode = useSandboxStore(state => state.viewMode);
+  const { viewMode, toggleViewMode } = useViewMode();
 
   const mockCards = React.useMemo(() =>
     Array.from({ length: 16 }, (_, i) => ({
@@ -238,20 +248,16 @@ const SpymasterViewScene: React.FC = () => {
 
   React.useEffect(() => {
     initialiseCards(mockCards);
-    setTimeout(() => {
-      dealCards(mockCards.map(c => c.word), 50);  // Pass stagger
-    }, 100);
-  }, [initialiseCards, dealCards, mockCards]);
+  }, [initialiseCards, mockCards]);
 
   const handleToggle = () => {
-    toggleViewMode(30);  // Pass stagger of 30ms for color overlays
+    toggleViewMode();
   };
 
   const handleReset = () => {
     resetAll();
     setTimeout(() => {
       initialiseCards(mockCards);
-      setTimeout(() => dealCards(mockCards.map(c => c.word), 50), 100);
     }, 100);
   };
 
@@ -285,19 +291,16 @@ const SpymasterViewScene: React.FC = () => {
 
 const PlayerSelectionScene: React.FC = () => {
   const cards = useSandboxStore(state => state.cards);
-  const initialiseCard = useSandboxStore(state => state.initialiseCard);
-  const dealCard = useSandboxStore(state => state.dealCard);
+  const initialiseCards = useSandboxStore(state => state.initialiseCards);
   const selectCard = useSandboxStore(state => state.selectCard);
-  const resetCard = useSandboxStore(state => state.resetCard);
+  const resetAll = useSandboxStore(state => state.resetAll);
 
   const cardWord = 'SELECT';
   const card = cards.get(cardWord);
 
-  const handleDeal = async () => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    initialiseCard(cardWord, 'neutral');
-    dealCard(cardWord);
-  };
+  React.useEffect(() => {
+    initialiseCards([{ word: cardWord, teamName: 'neutral' }]);
+  }, [initialiseCards]);
 
   const handleSelect = async () => {
     await new Promise(resolve => setTimeout(resolve, 300));
@@ -305,8 +308,9 @@ const PlayerSelectionScene: React.FC = () => {
   };
 
   const handleReset = async () => {
-    resetCard(cardWord);
-    await new Promise(resolve => setTimeout(resolve, 500));
+    resetAll();
+    await new Promise(resolve => setTimeout(resolve, 100));
+    initialiseCards([{ word: cardWord, teamName: 'neutral' }]);
   };
 
   return (
@@ -317,7 +321,6 @@ const PlayerSelectionScene: React.FC = () => {
       </p>
 
       <div className={styles.controls}>
-        <button onClick={handleDeal} disabled={!!card}>Deal Card</button>
         <button onClick={handleSelect} disabled={!card || card.selected}>Select Card</button>
         <button onClick={handleReset}>Reset</button>
       </div>
@@ -332,27 +335,18 @@ const PlayerSelectionScene: React.FC = () => {
 const TimingTestScene: React.FC = () => {
   const cards = useSandboxStore(state => state.cards);
   const initialiseCards = useSandboxStore(state => state.initialiseCards);
-  const dealCard = useSandboxStore(state => state.dealCard);
   const selectCard = useSandboxStore(state => state.selectCard);
   const resetAll = useSandboxStore(state => state.resetAll);
 
-  const [isDealing, setIsDealing] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
   const cardWord = 'TIMING-1';
   const card = cards.get(cardWord);
 
-  const handleDeal = async () => {
-    setIsDealing(true);
-
-    await new Promise(resolve => setTimeout(resolve, 500));
-
+  React.useEffect(() => {
     initialiseCards([{ word: cardWord, teamName: 'blue' }]);
-    dealCard(cardWord);
-
-    setIsDealing(false);
-  };
+  }, [initialiseCards]);
 
   const handleSelect = async () => {
     if (!card) return;
@@ -371,7 +365,8 @@ const TimingTestScene: React.FC = () => {
 
     resetAll();
 
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 100));
+    initialiseCards([{ word: cardWord, teamName: 'blue' }]);
 
     setIsResetting(false);
   };
@@ -385,22 +380,15 @@ const TimingTestScene: React.FC = () => {
 
       <div className={styles.controls}>
         <button
-          onClick={handleDeal}
-          disabled={isDealing || isSelecting || isResetting || !!card}
-        >
-          {isDealing ? '⏳ Dealing...' : '🎴 Deal Card'}
-        </button>
-
-        <button
           onClick={handleSelect}
-          disabled={!card || isSelecting || isDealing || isResetting || card.selected}
+          disabled={!card || isSelecting || isResetting || card.selected}
         >
           {isSelecting ? '⏳ Selecting...' : '👆 Select Card'}
         </button>
 
         <button
           onClick={handleReset}
-          disabled={!card || isDealing || isSelecting || isResetting}
+          disabled={!card || isSelecting || isResetting}
         >
           {isResetting ? '⏳ Resetting...' : '🔄 Reset'}
         </button>
@@ -416,8 +404,8 @@ const TimingTestScene: React.FC = () => {
       }}>
         <div>Card state: {card ? `"${card.word}" (${card.selected ? '✅ selected' : '⭕ not selected'})` : '❌ none'}</div>
         <div>Display state: {card?.displayState || 'N/A'}</div>
-        <div>Transitioning: {card?.pendingTransition ? '✅' : '❌'}</div>
-        <div>Pending transition: {card?.pendingTransition ? `${card.pendingTransition.event} → ${card.pendingTransition.toState}` : 'none'}</div>
+        <div>Is selecting: {isSelecting ? '✅' : '❌'}</div>
+        <div>Is resetting: {isResetting ? '✅' : '❌'}</div>
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem 0', minHeight: '200px' }}>
@@ -496,8 +484,10 @@ const SandboxContent: React.FC = () => {
 export const CardVisibilitySandbox: React.FC = () => {
   return (
     <AnimationEngineProvider engineId="sandbox">
-      <SandboxContent />
-      <DevToolsPanel defaultOpen={true} theme="dark" />
+      <ViewModeProvider>
+        <SandboxContent />
+        <DevToolsPanel defaultOpen={true} theme="dark" />
+      </ViewModeProvider>
     </AnimationEngineProvider>
   );
 };
