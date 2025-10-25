@@ -1,10 +1,8 @@
-import React, { memo, useEffect } from "react";
+import { memo } from "react";
 import { useGameDataRequired } from "../../game-data/providers";
 import { GameCard } from "../cards/game-card";
-import { useCardVisibilityStore } from "../cards/card-visibility-store";
-import { useAnimationEngine } from "../../animations/animation-engine-context";
-import { GameBoardLayout } from "./board-layout";
-import { EmptyCard } from "./board-layout";
+import { useViewMode } from "../view-mode/view-mode-context";
+import { GameBoardLayout, EmptyCard } from "./board-layout";
 import {
   ARGlassesHUD,
   ARVisor,
@@ -13,40 +11,20 @@ import {
   ARHUDContent,
 } from "../cards/ar-overlay-components";
 
-/**
- * SpymasterBoard - Board view with spymaster AR overlay and toggle
- * Includes team color reveal functionality
- */
 export const SpymasterBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   const { gameData } = useGameDataRequired();
   const cards = gameData.currentRound?.cards || [];
   const currentTeamName = gameData.playerContext?.teamName;
-
-  const dealCardsFromStore = useCardVisibilityStore((state) => state.dealCards);
-  const animationEngine = useAnimationEngine();
-
-  return <SpymasterBoardContent cards={cards} tilt={tilt} currentTeamName={currentTeamName} />;
-});
-
-const SpymasterBoardContent = memo<{
-  cards: any[];
-  tilt: number;
-  currentTeamName?: string;
-}>(({ cards, tilt, currentTeamName }) => {
-  const viewMode = useCardVisibilityStore((state) => state.viewMode);
+  const { viewMode } = useViewMode();
 
   return (
     <>
-      {/* AR HUD Overlay - Full screen glasses effect */}
       {viewMode === "spymaster" && (
         <ARGlassesHUD>
           <ARVisor />
           <ARGlare />
           <ARScanlines />
-
-          <ARHUDContent>
-            {/* Removed screen-level crosshair and corners - keeping card-level ones */}
-          </ARHUDContent>
+          <ARHUDContent />
         </ARGlassesHUD>
       )}
 
@@ -60,6 +38,7 @@ const SpymasterBoardContent = memo<{
                 onClick={() => {}}
                 clickable={false}
                 isCurrentTeam={currentTeamName === card.teamName}
+                shouldDealOnMount={false}
               />
             ))
           : Array.from({ length: 25 }).map((_, i) => <EmptyCard key={`empty-${i}`} />)}
@@ -68,5 +47,4 @@ const SpymasterBoardContent = memo<{
   );
 });
 
-SpymasterBoardContent.displayName = "SpymasterBoardContent";
 SpymasterBoard.displayName = "SpymasterBoard";

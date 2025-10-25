@@ -1,6 +1,4 @@
 export { GameCard } from "./game-card";
-export { useCardVisibilityStore } from "./card-visibility-store";
-export { useCardVisibility } from "./use-card-visibility";
+export { useCardAnimationEffects } from "./use-card-animation-effects";
 export * from "./card-animation-definitions";
-export * from "./card-visibility-types";
 export * from "./card-utils";

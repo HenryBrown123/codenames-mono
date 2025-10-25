@@ -10,8 +10,6 @@ import {
 import { useGameDataRequired, usePlayerContext } from "../game-data/providers";
 import { usePlayerScene } from "../game-scene";
 import { useTurn } from "../game-data/providers";
-import { useCardVisibilityStore } from "../game-board/cards/card-visibility-store";
-import { useAnimationEngine } from "../animations/animation-engine-context";
 
 export type ActionName =
   | "giveClue"
@@ -66,14 +64,6 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   const dealCardsMutation = useDealCardsMutation(gameId);
   const endTurnMutation = useEndTurnMutation(gameId);
 
-  const selectCardFromStore = useCardVisibilityStore((state) => state.selectCard);
-
-  const dealCardsFromStore = useCardVisibilityStore((state) => state.dealCards);
-
-  const animationEngine = useAnimationEngine();
-
-  // TODO: Implement real game card animation system
-
   const resetActionState = useCallback(() => {
     setActionState(initialState);
   }, []);
@@ -90,10 +80,8 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       makeGuessMutation.mutate(
         { cardWord: word, roundNumber },
         {
-          onSuccess: async (res) => {
+          onSuccess: (res) => {
             setLastActionTurnId(res.turn.id);
-
-            await selectCardFromStore(word, animationEngine);
 
             setActionState({
               name: "makeGuess",
@@ -127,8 +115,6 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       gameData.currentRound,
       triggerSceneTransition,
       setLastActionTurnId,
-      selectCardFromStore,
-      animationEngine,
     ],
   );
 
@@ -271,9 +257,6 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       queryClient,
       gameId,
       currentPlayerId,
-      // initialiseFromGameCards,
-      dealCardsFromStore,
-      animationEngine,
     ],
   );
 

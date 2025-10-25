@@ -1,14 +1,12 @@
-import React, { memo, useEffect } from "react";
+import { memo } from "react";
 import { useGameDataRequired } from "../../game-data/providers";
 import { GameCard } from "../cards/game-card";
-import { GameBoardLayout } from "./board-layout";
-import { EmptyCard } from "./board-layout";
+import { GameBoardLayout, EmptyCard } from "./board-layout";
+
 export const SpectatorBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   const { gameData } = useGameDataRequired();
   const cards = gameData.currentRound?.cards || [];
   const currentTeamName = gameData.playerContext?.teamName;
-
-  // TODO: Implement real game card animation system
 
   return (
     <GameBoardLayout tilt={tilt}>
@@ -21,6 +19,7 @@ export const SpectatorBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
               onClick={() => {}}
               clickable={false}
               isCurrentTeam={currentTeamName === card.teamName}
+              shouldDealOnMount={false}
             />
           ))
         : Array.from({ length: 25 }).map((_, i) => <EmptyCard key={`empty-${i}`} />)}

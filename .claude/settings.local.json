@@ -18,7 +18,10 @@
       "Bash(git log:*)",
       "Bash(npx vite build:*)",
       "Bash(timeout 10 npm run dev)",
-      "Bash(gtimeout:*)"
+      "Bash(gtimeout:*)",
+      "Bash(test -f frontend/src/gameplay/game-board/cards/use-card-animation-effects.ts)",
+      "Bash(test -f frontend/src/gameplay/game-board/cards/card-visibility-types.ts)",
+      "Bash(test -f frontend/src/gameplay/game-actions/game-actions-provider.tsx)"
     ]
   },
   "enableAllProjectMcpServers": false

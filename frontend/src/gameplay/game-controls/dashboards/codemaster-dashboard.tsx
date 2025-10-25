@@ -2,8 +2,7 @@ import React from "react";
 import { CodeWordInput } from "./codemaster-input";
 import { useGameActions } from "../../game-actions";
 import { useTurn } from "../../game-data/providers";
-import { useCardVisibilityStore } from "../../game-board/cards/card-visibility-store";
-import { useAnimationEngine } from "../../animations/animation-engine-context";
+import { useViewMode } from "../../game-board/view-mode/view-mode-context";
 import {
   TerminalSection,
   TerminalPrompt,
@@ -34,10 +33,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
 }) => {
   const { giveClue, actionState } = useGameActions();
   const { activeTurn } = useTurn();
-  const toggleSpymasterView = useCardVisibilityStore((state) => state.toggleSpymasterView);
-  const viewMode = useCardVisibilityStore((state) => state.viewMode);
-  const animationEngine = useAnimationEngine();
-  const [isToggling, setIsToggling] = React.useState(false);
+  const { viewMode, toggleViewMode } = useViewMode();
 
   // Add keyboard shortcut for power users
   React.useEffect(() => {
@@ -74,13 +70,8 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
     giveClue(word, count);
   };
 
-  const handleARToggle = async () => {
-    setIsToggling(true);
-    try {
-      await toggleSpymasterView(animationEngine);
-    } finally {
-      setIsToggling(false);
-    }
+  const handleARToggle = () => {
+    toggleViewMode();
   };
 
   const isARMode = viewMode === "spymaster";
@@ -92,7 +83,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
         <div className={styles.mobileToggleContainer}>
           <span className={styles.toggleLabel}>Spymaster Vision</span>
           <label className={styles.toggleSwitch}>
-            <input type="checkbox" checked={isARMode} onChange={handleARToggle} disabled={isToggling} />
+            <input type="checkbox" checked={isARMode} onChange={handleARToggle} />
             <span className={styles.toggleTrack}>
               <span className={styles.toggleThumb} />
             </span>
@@ -129,7 +120,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
               <SpyGogglesSwitchRow>
                 <SpyGogglesDot active={isARMode} />
                 <SpySwitch>
-                  <input type="checkbox" checked={isARMode} onChange={handleARToggle} disabled={isToggling} />
+                  <input type="checkbox" checked={isARMode} onChange={handleARToggle} />
                   <SpySlider />
                 </SpySwitch>
                 <SpyStatus active={isARMode}>{isARMode ? "ON" : "OFF"}</SpyStatus>

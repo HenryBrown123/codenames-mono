@@ -1,7 +1,8 @@
-import React, { memo, useCallback } from "react";
+import { memo, useMemo, useState, useEffect } from "react";
 import { Card } from "@frontend/shared-types";
-// import { useCardVisibility } from "./use-card-visibility";
-// TODO: Re-implement card visibility hook for game cards
+import { useAnimationRegistration } from "../../animations/use-animation-registration";
+import { useCardAnimationEffects } from "./use-card-animation-effects";
+import { useViewMode } from "../view-mode/view-mode-context";
 import { getTeamType, getCardColor } from "./card-utils";
 import { cx } from "../../../lib/classnames";
 import styles from "./game-card.module.css";
@@ -16,31 +17,43 @@ interface GameCardProps {
   index: number;
   onClick: () => void;
   clickable: boolean;
-  isCurrentTeam: boolean; // Pass this from parent to avoid re-renders
+  isCurrentTeam: boolean;
+  shouldDealOnMount?: boolean;
 }
 
-/**
- * Determines text size class based on word length
- * Using semantic naming that describes content
- */
 const getTextSizeClass = (word: string, threshold: number = 9): string => {
   const length = word.length;
-
   if (length <= threshold) return styles.textNormal;
   return styles.textLong;
 };
 
-/**
- * Game card component with visibility state management
- */
 export const GameCard = memo<GameCardProps>(
-  ({ card, index, onClick, clickable, isCurrentTeam }) => {
-    // TODO: Re-implement card visibility hook
-    // const { displayState, createAnimationRef } = useSandboxCardVisibility(card.word, index);
-    const displayState = 'visible' as 'visible' | 'visible-colored' | 'hidden' | 'covered';
-    const createAnimationRef = (_elementId: string, _animations: any) => () => {};
+  ({ card, index, onClick, clickable, isCurrentTeam, shouldDealOnMount = false }) => {
+    const { viewMode } = useViewMode();
 
-    // Create animation refs for each element
+    const entityContext = useMemo(
+      () => ({
+        teamName: card.teamName,
+        selected: card.selected,
+        viewMode,
+        index,
+      }),
+      [card.teamName, card.selected, viewMode, index]
+    );
+
+    const { createAnimationRef, triggerTransition } = useAnimationRegistration(
+      card.word,
+      entityContext,
+      {
+        entryTransition: shouldDealOnMount ? 'deal' : undefined,
+      }
+    );
+
+    const { isAnimating, displayState } = useCardAnimationEffects(card, {
+      viewMode,
+      triggerTransition,
+    });
+
     const containerRef = createAnimationRef("container", cardContainerAnimations);
     const coverRef = createAnimationRef("cover", coverLayerAnimations);
     const overlayRef = createAnimationRef("spymaster-overlay", spymasterOverlayAnimations);
@@ -48,31 +61,22 @@ export const GameCard = memo<GameCardProps>(
     const teamType = getTeamType(card);
     const cardColor = getCardColor(card);
 
-    // Get dynamic threshold from CSS variable
-    const [threshold, setThreshold] = React.useState(9);
+    const [threshold, setThreshold] = useState(9);
 
-    React.useEffect(() => {
+    useEffect(() => {
       const updateThreshold = () => {
-        const value = getComputedStyle(document.documentElement).getPropertyValue(
-          "--font-threshold",
-        );
-        const numValue = parseInt(value) || 9;
-        setThreshold(numValue);
+        const root = document.documentElement;
+        const value = getComputedStyle(root).getPropertyValue('--text-length-threshold');
+        const parsed = parseInt(value, 10);
+        if (!isNaN(parsed)) {
+          setThreshold(parsed);
+        }
       };
 
       updateThreshold();
-      // Set up observer for changes
-      const observer = new MutationObserver(updateThreshold);
-      observer.observe(document.documentElement, { attributes: true, attributeFilter: ["style"] });
-
-      return () => observer.disconnect();
+      window.addEventListener('resize', updateThreshold);
+      return () => window.removeEventListener('resize', updateThreshold);
     }, []);
-
-    const handleClick = useCallback(() => {
-      if (clickable && !card.selected) {
-        onClick();
-      }
-    }, [clickable, card.selected, onClick]);
 
     const isColored = displayState === "visible-colored";
     const showSpymasterOverlay = isColored;
@@ -92,9 +96,8 @@ export const GameCard = memo<GameCardProps>(
           } as React.CSSProperties
         }
       >
-        {/* Normal beige card */}
         <div
-          onClick={handleClick}
+          onClick={!isAnimating && clickable && !card.selected ? onClick : undefined}
           className={cx(styles.normalCard, isCurrentTeam && styles.currentTeam)}
         >
           <div className={styles.ripple} />
@@ -103,47 +106,32 @@ export const GameCard = memo<GameCardProps>(
           </span>
         </div>
 
-        {/* Cover card - shows when selected */}
         <div ref={coverRef} className={styles.coverCard}>
-          <TeamSymbol teamType={teamType} />
+          <div className={styles.teamSymbol} data-team={teamType} />
         </div>
 
-        {/* Spymaster overlay - shows in AR mode */}
         {showSpymasterOverlay && (
           <div ref={overlayRef} className={styles.spymasterOverlay}>
-            <TeamColorFilter />
-            <ScanGrid />
-            <SpymasterSymbol />
+            <div className={styles.teamColorFilter} />
+            <div className={styles.scanGrid} />
+            <div className={styles.spymasterSymbol} />
             <span className={cx(styles.cardWord, getTextSizeClass(card.word, threshold))}>
               {card.word}
             </span>
             <div className={styles.teamBadge}>{teamType.toUpperCase()}</div>
             {isCurrentTeam && (
               <div className={styles.cardARCorners}>
-                <CardARCorner position="tl" />
-                <CardARCorner position="tr" />
-                <CardARCorner position="bl" />
-                <CardARCorner position="br" />
+                <div className={styles.cardARCorner} data-position="tl" />
+                <div className={styles.cardARCorner} data-position="tr" />
+                <div className={styles.cardARCorner} data-position="bl" />
+                <div className={styles.cardARCorner} data-position="br" />
               </div>
             )}
           </div>
         )}
       </div>
     );
-  },
+  }
 );
 
 GameCard.displayName = "GameCard";
-
-// Simple sub-components
-const TeamSymbol = ({ teamType }: { teamType: string }) => (
-  <div className={styles.teamSymbol} data-team={teamType} />
-);
-
-const TeamColorFilter = () => <div className={styles.teamColorFilter} />;
-const ScanGrid = () => <div className={styles.scanGrid} />;
-const SpymasterSymbol = () => <div className={styles.spymasterSymbol} />;
-
-const CardARCorner = ({ position }: { position: "tl" | "tr" | "bl" | "br" }) => (
-  <div className={styles.cardARCorner} data-position={position} />
-);

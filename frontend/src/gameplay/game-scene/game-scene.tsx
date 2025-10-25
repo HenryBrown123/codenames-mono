@@ -10,7 +10,6 @@ import { ActionButton } from "../shared/components";
 import { CodeWordInput } from "../game-controls/dashboards/codemaster-input";
 import { useGameActions } from "../game-actions";
 import { UISettingsDashboard } from "../game-controls/settings/ui-settings-dashboard";
-import { useCardVisibilityStore } from "../game-board/cards/card-visibility-store";
 
 /**
  * Game Scene Component with unified mobile-first layout

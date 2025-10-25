@@ -1,11 +1,9 @@
-import { memo, useCallback, useMemo, useEffect } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { useGameDataRequired, useTurn } from "../../game-data/providers";
 import { useGameActions } from "../../game-actions";
 import { GameCard } from "../cards/game-card";
-import { useCardVisibilityStore } from "../cards/card-visibility-store";
-import { useAnimationEngine } from "../../animations/animation-engine-context";
-import { GameBoardLayout } from "./board-layout";
-import { EmptyCard } from "./board-layout";
+import { useViewMode } from "../view-mode/view-mode-context";
+import { GameBoardLayout, EmptyCard } from "./board-layout";
 import {
   ARGlassesHUD,
   ARVisor,
@@ -17,9 +15,6 @@ import {
   ARHUDLine,
 } from "../cards/ar-overlay-components";
 
-/**
- * Internal component that uses the card visibility context
- */
 const CodebreakerBoardContent = memo<{
   cards: any[];
   canMakeGuess: boolean;
@@ -29,11 +24,10 @@ const CodebreakerBoardContent = memo<{
   tilt: number;
   currentTeamName?: string;
 }>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick, tilt, currentTeamName }) => {
-  const viewMode = useCardVisibilityStore((state) => state.viewMode);
+  const { viewMode } = useViewMode();
 
   return (
     <>
-      {/* AR HUD Overlay - Full screen glasses effect */}
       {viewMode === "spymaster" && (
         <ARGlassesHUD>
           <ARVisor />
@@ -54,8 +48,6 @@ const CodebreakerBoardContent = memo<{
                 <ARHUDLine>TARGET: {activeTurn?.clue?.count || 0}</ARHUDLine>
               </ARHUDStatus>
             </ARHUDTop>
-
-            {/* Removed screen-level crosshair and corners - keeping card-level ones */}
           </ARHUDContent>
         </ARGlassesHUD>
       )}
@@ -70,6 +62,7 @@ const CodebreakerBoardContent = memo<{
                 onClick={() => onCardClick(card.word)}
                 clickable={canMakeGuess && !isLoading && !card.selected}
                 isCurrentTeam={currentTeamName === card.teamName}
+                shouldDealOnMount={false}
               />
             ))
           : Array.from({ length: 25 }).map((_, i) => <EmptyCard key={`empty-${i}`} />)}
@@ -78,11 +71,8 @@ const CodebreakerBoardContent = memo<{
   );
 });
 
-/**
- * CodebreakerBoard - Interactive board for making guesses during active play
- * Consistent 5x5 grid layout across all screen sizes
- * Includes AR mode toggle for enhanced gameplay
- */
+CodebreakerBoardContent.displayName = "CodebreakerBoardContent";
+
 export const CodebreakerBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   const { gameData } = useGameDataRequired();
   const { makeGuess, actionState } = useGameActions();
@@ -90,14 +80,8 @@ export const CodebreakerBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   const cards = gameData.currentRound?.cards || [];
   const currentTeamName = gameData.playerContext?.teamName;
 
-  const dealCardsFromStore = useCardVisibilityStore((state) => state.dealCards);
-  const animationEngine = useAnimationEngine();
-
   const isLoading = actionState.status === "loading";
 
-  /**
-   * Determine if the current player can make guesses
-   */
   const canMakeGuess = useMemo(() => {
     if (gameData.playerContext?.role !== "CODEBREAKER") return false;
     if (!activeTurn || activeTurn.status !== "ACTIVE") return false;

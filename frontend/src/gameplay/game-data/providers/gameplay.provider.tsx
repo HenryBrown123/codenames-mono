@@ -9,6 +9,7 @@ import { ActionButton } from "../../shared/components/action-button";
 import { GameData } from "@frontend/shared-types";
 import { GAME_TYPE } from "@codenames/shared/types";
 import { AnimationEngineProvider } from "../../animations/animation-engine-context";
+import { ViewModeProvider } from "../../game-board/view-mode";
 import styles from "./gameplay.module.css";
 
 interface GameplayProviderProps {
@@ -24,11 +25,13 @@ interface GameplayProviderProps {
 export const GameplayProvider = ({ gameId, children }: GameplayProviderProps) => {
   return (
     <AnimationEngineProvider>
-      <PlayerProvider>
-        <GameDataProvider gameId={gameId}>
-          <ActiveGameProviders gameId={gameId}>{children}</ActiveGameProviders>
-        </GameDataProvider>
-      </PlayerProvider>
+      <ViewModeProvider>
+        <PlayerProvider>
+          <GameDataProvider gameId={gameId}>
+            <ActiveGameProviders gameId={gameId}>{children}</ActiveGameProviders>
+          </GameDataProvider>
+        </PlayerProvider>
+      </ViewModeProvider>
     </AnimationEngineProvider>
   );
 };
