@@ -3,6 +3,7 @@ import { Card } from "@frontend/shared-types";
 import { useAnimationRegistration } from "../../animations/use-animation-registration";
 import { useCardAnimationEffects } from "./use-card-animation-effects";
 import { useViewMode } from "../view-mode/view-mode-context";
+import { useAnimationEngine } from "../../animations/animation-engine-context";
 import { getTeamType, getCardColor } from "./card-utils";
 import { cx } from "../../../lib/classnames";
 import styles from "./game-card.module.css";
@@ -18,7 +19,6 @@ interface GameCardProps {
   onClick: () => void;
   clickable: boolean;
   isCurrentTeam: boolean;
-  shouldDealOnMount?: boolean;
 }
 
 const getTextSizeClass = (word: string, threshold: number = 9): string => {
@@ -28,10 +28,16 @@ const getTextSizeClass = (word: string, threshold: number = 9): string => {
 };
 
 export const GameCard = memo<GameCardProps>(
-  ({ card, index, onClick, clickable, isCurrentTeam, shouldDealOnMount = false }) => {
+  ({ card, index, onClick, clickable, isCurrentTeam }) => {
     const { viewMode } = useViewMode();
+    const engine = useAnimationEngine();
 
-    const entityContext = useMemo(
+    const entryAnimation = useMemo(() => {
+      return viewMode === 'dealing' ? 'deal' : undefined;
+    }, [viewMode]);
+
+    // Base entity context without animation state
+    const baseEntityContext = useMemo(
       () => ({
         teamName: card.teamName,
         selected: card.selected,
@@ -41,18 +47,31 @@ export const GameCard = memo<GameCardProps>(
       [card.teamName, card.selected, viewMode, index]
     );
 
-    const { createAnimationRef, triggerTransition } = useAnimationRegistration(
+    const { createAnimationRef } = useAnimationRegistration(
       card.word,
-      entityContext,
+      baseEntityContext,
       {
-        entryTransition: shouldDealOnMount ? 'deal' : undefined,
+        entryTransition: entryAnimation,
       }
     );
 
     const { isAnimating, displayState } = useCardAnimationEffects(card, {
       viewMode,
-      triggerTransition,
+      triggerTransition: async (event: string) => {
+        const transitionsMap = new Map();
+        transitionsMap.set(card.word, { entityId: card.word, event });
+        await engine.playTransitions(transitionsMap);
+      },
     });
+
+    // Update engine context with animation state separately
+    useEffect(() => {
+      engine.updateEntityContext(card.word, {
+        ...baseEntityContext,
+        displayState,
+        isAnimating,
+      });
+    }, [engine, card.word, baseEntityContext, displayState, isAnimating]);
 
     const containerRef = createAnimationRef("container", cardContainerAnimations);
     const coverRef = createAnimationRef("cover", coverLayerAnimations);

@@ -3,7 +3,7 @@ import { Card } from '@frontend/shared-types';
 
 type CardDisplayState = 'hidden' | 'visible' | 'visible-colored' | 'covered';
 type CardEvent = 'deal' | 'select' | 'reveal-colors' | 'hide-colors';
-type ViewMode = 'normal' | 'spymaster';
+type ViewMode = 'normal' | 'spymaster' | 'dealing';
 
 interface CardAnimationEffectsOptions {
   viewMode: ViewMode;
@@ -39,8 +39,8 @@ function determineNextCardState(
  * Manages card animation triggers based on prop changes.
  * Tracks visual state and derives animation events declaratively.
  *
- * This hook is the state machine - it compares previous props to current props
- * and determines what animation event (if any) should be triggered.
+ * CRITICAL: displayState is React state (not ref) so that updating it
+ * triggers a re-render, which updates entityContext, which syncs to engine.
  */
 export function useCardAnimationEffects(
   card: Card,
@@ -48,15 +48,12 @@ export function useCardAnimationEffects(
 ) {
   const { viewMode, triggerTransition } = options;
   const [isAnimating, setIsAnimating] = useState(false);
-  const [currentAnimation, setCurrentAnimation] = useState<string | null>(null);
+  const [displayState, setDisplayState] = useState<CardDisplayState>('hidden');
 
-  const displayStateRef = useRef<CardDisplayState>('hidden');
   const prevViewMode = useRef<ViewMode | undefined>(undefined);
   const prevSelected = useRef(card.selected);
 
   const nextEvent = useMemo((): CardEvent | null => {
-    const displayState = displayStateRef.current;
-
     if (prevViewMode.current !== viewMode && prevViewMode.current !== undefined) {
       if (viewMode === 'spymaster' && displayState === 'visible') {
         return 'reveal-colors';
@@ -71,25 +68,23 @@ export function useCardAnimationEffects(
     }
 
     return null;
-  }, [viewMode, card.selected]);
+  }, [viewMode, card.selected, displayState]);
 
   useLayoutEffect(() => {
     if (!nextEvent) return;
 
     const animate = async () => {
       setIsAnimating(true);
-      setCurrentAnimation(nextEvent);
 
       try {
         await triggerTransition(nextEvent);
 
-        const nextState = determineNextCardState(displayStateRef.current, nextEvent);
+        const nextState = determineNextCardState(displayState, nextEvent);
         if (nextState) {
-          displayStateRef.current = nextState;
+          setDisplayState(nextState);
         }
       } finally {
         setIsAnimating(false);
-        setCurrentAnimation(null);
       }
     };
 
@@ -97,11 +92,10 @@ export function useCardAnimationEffects(
 
     prevViewMode.current = viewMode;
     prevSelected.current = card.selected;
-  }, [nextEvent, triggerTransition, viewMode, card.selected]);
+  }, [nextEvent, triggerTransition, displayState, viewMode, card.selected]);
 
   return {
     isAnimating,
-    currentAnimation,
-    displayState: displayStateRef.current,
+    displayState,
   };
 }

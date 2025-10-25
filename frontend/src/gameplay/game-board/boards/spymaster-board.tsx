@@ -38,7 +38,6 @@ export const SpymasterBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
                 onClick={() => {}}
                 clickable={false}
                 isCurrentTeam={currentTeamName === card.teamName}
-                shouldDealOnMount={false}
               />
             ))
           : Array.from({ length: 25 }).map((_, i) => <EmptyCard key={`empty-${i}`} />)}

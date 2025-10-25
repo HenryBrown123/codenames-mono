@@ -33,7 +33,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
 }) => {
   const { giveClue, actionState } = useGameActions();
   const { activeTurn } = useTurn();
-  const { viewMode, toggleViewMode } = useViewMode();
+  const { viewMode, toggleSpymasterViewMode } = useViewMode();
 
   // Add keyboard shortcut for power users
   React.useEffect(() => {
@@ -71,7 +71,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
   };
 
   const handleARToggle = () => {
-    toggleViewMode();
+    toggleSpymasterViewMode();
   };
 
   const isARMode = viewMode === "spymaster";

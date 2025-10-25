@@ -1,10 +1,11 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
-export type ViewMode = 'normal' | 'spymaster';
+export type ViewMode = 'normal' | 'spymaster' | 'dealing';
 
 interface ViewModeContextValue {
   viewMode: ViewMode;
-  toggleViewMode: () => void;
+  setViewMode: (mode: ViewMode) => void;
+  toggleSpymasterViewMode: () => void;
 }
 
 const ViewModeContext = createContext<ViewModeContextValue | null>(null);
@@ -12,12 +13,12 @@ const ViewModeContext = createContext<ViewModeContextValue | null>(null);
 export const ViewModeProvider = ({ children }: { children: ReactNode }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('normal');
 
-  const toggleViewMode = useCallback(() => {
-    setViewMode(v => v === 'normal' ? 'spymaster' : 'normal');
+  const toggleSpymasterViewMode = useCallback(() => {
+    setViewMode(prev => prev === 'spymaster' ? 'normal' : 'spymaster');
   }, []);
 
   return (
-    <ViewModeContext.Provider value={{ viewMode, toggleViewMode }}>
+    <ViewModeContext.Provider value={{ viewMode, setViewMode, toggleSpymasterViewMode }}>
       {children}
     </ViewModeContext.Provider>
   );

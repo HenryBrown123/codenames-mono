@@ -214,7 +214,7 @@ const DealInScene: React.FC = () => {
 
 const SpymasterViewScene: React.FC = () => {
   const [cards, setCards] = useState<Array<{ word: string; teamName: string; selected: boolean }>>([]);
-  const { viewMode, toggleViewMode } = useViewMode();
+  const { viewMode, toggleSpymasterViewMode } = useViewMode();
 
   const mockCards = useMemo(() =>
     Array.from({ length: 16 }, (_, i) => ({
@@ -242,7 +242,7 @@ const SpymasterViewScene: React.FC = () => {
       </p>
 
       <div className={styles.controls}>
-        <button onClick={toggleViewMode}>
+        <button onClick={toggleSpymasterViewMode}>
           {viewMode === 'spymaster' ? '🕶️ Hide Colors' : '👁️ Reveal Colors'}
         </button>
         <button onClick={handleReset}>🔄 Reset</button>

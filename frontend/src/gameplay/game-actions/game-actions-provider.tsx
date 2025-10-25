@@ -202,44 +202,8 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       setActionState({ name: "dealCards", status: "loading", error: null });
 
       try {
-        console.log("[Provider] Starting mutation");
-
         await dealCardsMutation.mutateAsync({ roundNumber, redeal });
-
-        console.log("[Provider] Mutation complete - query should be refetched by mutation hook");
-
         setActionState({ name: "dealCards", status: "success", error: null });
-
-        const freshGameData = queryClient.getQueryData<typeof gameData>([
-          "gameData",
-          gameId,
-          currentPlayerId,
-        ]);
-
-        console.log("[Provider] Fresh game data:", {
-          hasData: !!freshGameData,
-          hasRound: !!freshGameData?.currentRound,
-          cardCount: freshGameData?.currentRound?.cards?.length,
-          firstCard: freshGameData?.currentRound?.cards?.[0]?.word,
-        });
-
-        if (redeal && freshGameData?.currentRound?.cards) {
-          const sandboxCards = freshGameData.currentRound.cards.map((c) => ({
-            word: c.word,
-            teamName: c.teamName || "neutral",
-          }));
-
-          console.log("[Provider] Initializing", sandboxCards.length, "cards");
-          // TODO: Re-implement card deal animation
-          // initialiseFromGameCards(sandboxCards);
-
-          console.log("[Provider] Triggering deal animation");
-          // dealCardsFromSandboxStore(
-          //   sandboxCards.map((c) => c.word),
-          //   50, // stagger delay
-          // );
-          console.log("[Provider] Animation triggered");
-        }
 
         if (!redeal) {
           triggerSceneTransition("CARDS_DEALT");
@@ -254,9 +218,6 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       dealCardsMutation,
       gameData.currentRound,
       triggerSceneTransition,
-      queryClient,
-      gameId,
-      currentPlayerId,
     ],
   );
 
