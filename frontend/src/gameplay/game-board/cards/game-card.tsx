@@ -1,7 +1,7 @@
 import React, { memo, useCallback } from "react";
 import { Card } from "@frontend/shared-types";
 // import { useCardVisibility } from "./use-card-visibility";
-import { useSandboxCardVisibility } from "../../../sandbox/card-visibility-sandbox.hooks";
+// TODO: Re-implement card visibility hook for game cards
 import { getTeamType, getCardColor } from "./card-utils";
 import { cx } from "../../../lib/classnames";
 import styles from "./game-card.module.css";
@@ -35,8 +35,10 @@ const getTextSizeClass = (word: string, threshold: number = 9): string => {
  */
 export const GameCard = memo<GameCardProps>(
   ({ card, index, onClick, clickable, isCurrentTeam }) => {
-    // Use sandbox hook - pass card.word as entityId
-    const { displayState, createAnimationRef } = useSandboxCardVisibility(card.word, index);
+    // TODO: Re-implement card visibility hook
+    // const { displayState, createAnimationRef } = useSandboxCardVisibility(card.word, index);
+    const displayState = 'visible' as 'visible' | 'visible-colored' | 'hidden' | 'covered';
+    const createAnimationRef = (_elementId: string, _animations: any) => () => {};
 
     // Create animation refs for each element
     const containerRef = createAnimationRef("container", cardContainerAnimations);

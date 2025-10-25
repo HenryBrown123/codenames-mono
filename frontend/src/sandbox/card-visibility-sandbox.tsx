@@ -1,65 +1,46 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { AnimationEngineProvider, useAnimationRegistration } from '../gameplay/animations';
 import { DevToolsPanel } from '../gameplay/animations/animation-devtools';
 import { ViewModeProvider, useViewMode } from '../gameplay/game-board/view-mode';
-import { useSandboxStore } from "./card-visibility-sandbox.hooks";
 import { useCardAnimationEffects } from './use-card-animation-effects';
 import styles from "./card-visibility-sandbox.module.css";
 
 interface SandboxCardProps {
-  word: string;
+  card: {
+    word: string;
+    teamName: string;
+    selected: boolean;
+  };
   index: number;
+  onSelect?: () => void;
 }
 
-const SandboxCard: React.FC<SandboxCardProps> = ({ word, index }) => {
-  const cards = useSandboxStore(s => s.cards);
-  const card = cards.get(word);
+const SandboxCard: React.FC<SandboxCardProps> = ({ card, index, onSelect }) => {
   const { viewMode } = useViewMode();
 
-  const shouldDeal = card?.displayState === 'hidden';
-
   const entityContext = useMemo(() => ({
-    teamName: card?.teamName,
-    selected: card?.selected,
+    teamName: card.teamName,
+    selected: card.selected,
     viewMode,
     index,
-  }), [card?.teamName, card?.selected, viewMode, index]);
+  }), [card.teamName, card.selected, viewMode, index]);
 
   const { createAnimationRef, triggerTransition } = useAnimationRegistration(
-    word,
+    card.word,
     entityContext,
     {
-      entryTransition: shouldDeal ? 'deal' : undefined,
+      entryTransition: 'deal',
       onComplete: (event) => {
-        console.log(`[${word}] Animation completed: ${event}`);
+        console.log(`[${card.word}] Animation completed: ${event}`);
       },
     }
   );
 
   const { isAnimating } = useCardAnimationEffects(
-    card || { word, teamName: 'neutral', selected: false },
+    card,
     viewMode,
     triggerTransition
   );
-
-  if (!card) {
-    return (
-      <div style={{
-        width: '200px',
-        height: '133px',
-        border: '2px dashed #444',
-        borderRadius: '8px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '0.5rem',
-        background: '#1a1a1a',
-      }}>
-        <div style={{ color: '#666', fontSize: '0.9rem', fontWeight: 500 }}>No card</div>
-      </div>
-    );
-  }
 
   const cardAnimations = {
     'deal': {
@@ -142,9 +123,8 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ word, index }) => {
         width: '200px',
         height: '133px',
         pointerEvents: isAnimating ? 'none' : 'auto',
-        opacity: shouldDeal ? 0 : 1,
-        transform: shouldDeal ? 'translateY(-100vh)' : 'translateY(0)',
       }}
+      onClick={onSelect}
     >
       <div
         className={styles.cardInner}
@@ -168,7 +148,7 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ word, index }) => {
       </div>
 
       {/* Spymaster overlay - separate animated element */}
-      {viewMode === 'spymaster' && !shouldDeal && !card.selected && (
+      {viewMode === 'spymaster' && !card.selected && (
         <div
           ref={createAnimationRef('overlay', overlayAnimations)}
           style={{
@@ -187,25 +167,24 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ word, index }) => {
 };
 
 const DealInScene: React.FC = () => {
-  const initialiseCards = useSandboxStore(state => state.initialiseCards);
-  const resetAll = useSandboxStore(state => state.resetAll);
-  const cards = useSandboxStore(state => state.cards);
+  const [cards, setCards] = useState<Array<{ word: string; teamName: string; selected: boolean }>>([]);
 
-  const mockCards = React.useMemo(() =>
+  const mockCards = useMemo(() =>
     Array.from({ length: 16 }, (_, i) => ({
       word: `CARD-${i + 1}`,
-      teamName: 'neutral'
+      teamName: 'neutral',
+      selected: false,
     })),
     []
   );
 
-  React.useEffect(() => {
-    initialiseCards(mockCards);
-  }, [initialiseCards, mockCards]);
+  useEffect(() => {
+    setCards(mockCards);
+  }, [mockCards]);
 
   const handleReset = () => {
-    resetAll();
-    setTimeout(() => initialiseCards(mockCards), 100);
+    setCards([]);
+    setTimeout(() => setCards(mockCards), 100);
   };
 
   return (
@@ -225,8 +204,8 @@ const DealInScene: React.FC = () => {
         maxWidth: '800px',
         margin: '0 auto'
       }}>
-        {mockCards.map((card, index) => (
-          <SandboxCard key={card.word} word={card.word} index={index} />
+        {cards.map((card, index) => (
+          <SandboxCard key={card.word} card={card} index={index} />
         ))}
       </div>
     </div>
@@ -234,31 +213,25 @@ const DealInScene: React.FC = () => {
 };
 
 const SpymasterViewScene: React.FC = () => {
-  const initialiseCards = useSandboxStore(state => state.initialiseCards);
-  const resetAll = useSandboxStore(state => state.resetAll);
+  const [cards, setCards] = useState<Array<{ word: string; teamName: string; selected: boolean }>>([]);
   const { viewMode, toggleViewMode } = useViewMode();
 
-  const mockCards = React.useMemo(() =>
+  const mockCards = useMemo(() =>
     Array.from({ length: 16 }, (_, i) => ({
       word: `SPY-${i + 1}`,
-      teamName: (['red', 'blue', 'neutral', 'assassin'] as const)[i % 4]
+      teamName: (['red', 'blue', 'neutral', 'assassin'] as const)[i % 4],
+      selected: false,
     })),
     []
   );
 
-  React.useEffect(() => {
-    initialiseCards(mockCards);
-  }, [initialiseCards, mockCards]);
-
-  const handleToggle = () => {
-    toggleViewMode();
-  };
+  useEffect(() => {
+    setCards(mockCards);
+  }, [mockCards]);
 
   const handleReset = () => {
-    resetAll();
-    setTimeout(() => {
-      initialiseCards(mockCards);
-    }, 100);
+    setCards([]);
+    setTimeout(() => setCards(mockCards), 100);
   };
 
   return (
@@ -269,7 +242,7 @@ const SpymasterViewScene: React.FC = () => {
       </p>
 
       <div className={styles.controls}>
-        <button onClick={handleToggle}>
+        <button onClick={toggleViewMode}>
           {viewMode === 'spymaster' ? '🕶️ Hide Colors' : '👁️ Reveal Colors'}
         </button>
         <button onClick={handleReset}>🔄 Reset</button>
@@ -281,8 +254,8 @@ const SpymasterViewScene: React.FC = () => {
         maxWidth: '800px',
         margin: '0 auto'
       }}>
-        {mockCards.map((card, index) => (
-          <SandboxCard key={card.word} word={card.word} index={index} />
+        {cards.map((card, index) => (
+          <SandboxCard key={card.word} card={card} index={index} />
         ))}
       </div>
     </div>
@@ -290,27 +263,18 @@ const SpymasterViewScene: React.FC = () => {
 };
 
 const PlayerSelectionScene: React.FC = () => {
-  const cards = useSandboxStore(state => state.cards);
-  const initialiseCards = useSandboxStore(state => state.initialiseCards);
-  const selectCard = useSandboxStore(state => state.selectCard);
-  const resetAll = useSandboxStore(state => state.resetAll);
+  const [card, setCard] = useState<{ word: string; teamName: string; selected: boolean }>({
+    word: 'SELECT',
+    teamName: 'neutral',
+    selected: false,
+  });
 
-  const cardWord = 'SELECT';
-  const card = cards.get(cardWord);
-
-  React.useEffect(() => {
-    initialiseCards([{ word: cardWord, teamName: 'neutral' }]);
-  }, [initialiseCards]);
-
-  const handleSelect = async () => {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    selectCard(cardWord);
+  const handleSelect = () => {
+    setCard(prev => ({ ...prev, selected: true }));
   };
 
-  const handleReset = async () => {
-    resetAll();
-    await new Promise(resolve => setTimeout(resolve, 100));
-    initialiseCards([{ word: cardWord, teamName: 'neutral' }]);
+  const handleReset = () => {
+    setCard({ word: 'SELECT', teamName: 'neutral', selected: false });
   };
 
   return (
@@ -321,53 +285,39 @@ const PlayerSelectionScene: React.FC = () => {
       </p>
 
       <div className={styles.controls}>
-        <button onClick={handleSelect} disabled={!card || card.selected}>Select Card</button>
+        <button onClick={handleSelect} disabled={card.selected}>
+          Select Card
+        </button>
         <button onClick={handleReset}>Reset</button>
       </div>
 
       <div className={styles.grid} style={{ gridTemplateColumns: '1fr', maxWidth: '200px', margin: '0 auto' }}>
-        <SandboxCard word={cardWord} index={0} />
+        <SandboxCard card={card} index={0} onSelect={handleSelect} />
       </div>
     </div>
   );
 };
 
 const TimingTestScene: React.FC = () => {
-  const cards = useSandboxStore(state => state.cards);
-  const initialiseCards = useSandboxStore(state => state.initialiseCards);
-  const selectCard = useSandboxStore(state => state.selectCard);
-  const resetAll = useSandboxStore(state => state.resetAll);
-
+  const [card, setCard] = useState<{ word: string; teamName: string; selected: boolean }>({
+    word: 'TIMING-1',
+    teamName: 'blue',
+    selected: false,
+  });
   const [isSelecting, setIsSelecting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
-  const cardWord = 'TIMING-1';
-  const card = cards.get(cardWord);
-
-  React.useEffect(() => {
-    initialiseCards([{ word: cardWord, teamName: 'blue' }]);
-  }, [initialiseCards]);
-
   const handleSelect = async () => {
-    if (!card) return;
-
     setIsSelecting(true);
-
     await new Promise(resolve => setTimeout(resolve, 300));
-
-    selectCard(cardWord);
-
+    setCard(prev => ({ ...prev, selected: true }));
     setIsSelecting(false);
   };
 
   const handleReset = async () => {
     setIsResetting(true);
-
-    resetAll();
-
+    setCard({ word: 'TIMING-1', teamName: 'blue', selected: false });
     await new Promise(resolve => setTimeout(resolve, 100));
-    initialiseCards([{ word: cardWord, teamName: 'blue' }]);
-
     setIsResetting(false);
   };
 
@@ -381,14 +331,14 @@ const TimingTestScene: React.FC = () => {
       <div className={styles.controls}>
         <button
           onClick={handleSelect}
-          disabled={!card || isSelecting || isResetting || card.selected}
+          disabled={isSelecting || isResetting || card.selected}
         >
           {isSelecting ? '⏳ Selecting...' : '👆 Select Card'}
         </button>
 
         <button
           onClick={handleReset}
-          disabled={!card || isSelecting || isResetting}
+          disabled={isSelecting || isResetting}
         >
           {isResetting ? '⏳ Resetting...' : '🔄 Reset'}
         </button>
@@ -402,14 +352,13 @@ const TimingTestScene: React.FC = () => {
         background: '#1a1a1a',
         borderRadius: '4px',
       }}>
-        <div>Card state: {card ? `"${card.word}" (${card.selected ? '✅ selected' : '⭕ not selected'})` : '❌ none'}</div>
-        <div>Display state: {card?.displayState || 'N/A'}</div>
+        <div>Card state: "{card.word}" ({card.selected ? '✅ selected' : '⭕ not selected'})</div>
         <div>Is selecting: {isSelecting ? '✅' : '❌'}</div>
         <div>Is resetting: {isResetting ? '✅' : '❌'}</div>
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem 0', minHeight: '200px' }}>
-        <SandboxCard word={cardWord} index={0} />
+        <SandboxCard card={card} index={0} />
       </div>
 
       <div style={{ marginTop: '2rem', padding: '1rem', background: '#1a1a1a', borderRadius: '4px', fontSize: '0.85rem' }}>
@@ -431,13 +380,6 @@ const TimingTestScene: React.FC = () => {
 
 const SandboxContent: React.FC = () => {
   const [activeScene, setActiveScene] = useState<"deal" | "spymaster" | "selection" | "timing">("timing");
-  const resetAll = useSandboxStore(state => state.resetAll);
-
-  const handleSceneChange = async (scene: "deal" | "spymaster" | "selection" | "timing") => {
-    resetAll();
-    await new Promise(resolve => setTimeout(resolve, 100));
-    setActiveScene(scene);
-  };
 
   return (
     <div className={styles.sandbox}>
@@ -445,38 +387,36 @@ const SandboxContent: React.FC = () => {
         <h1>Card Visibility System</h1>
         <nav className={styles.nav}>
           <button
-            onClick={() => handleSceneChange("deal")}
+            onClick={() => setActiveScene("deal")}
             className={activeScene === "deal" ? styles.active : ""}
           >
             Deal Animation
           </button>
           <button
-            onClick={() => handleSceneChange("spymaster")}
+            onClick={() => setActiveScene("spymaster")}
             className={activeScene === "spymaster" ? styles.active : ""}
           >
             Spymaster View
           </button>
           <button
-            onClick={() => handleSceneChange("selection")}
+            onClick={() => setActiveScene("selection")}
             className={activeScene === "selection" ? styles.active : ""}
           >
             Player Selection
           </button>
           <button
-            onClick={() => handleSceneChange("timing")}
+            onClick={() => setActiveScene("timing")}
             className={activeScene === "timing" ? styles.active : ""}
           >
-            🧪 Timing Test
+            Timing Test
           </button>
         </nav>
       </header>
 
-      <main className={styles.main}>
-        {activeScene === "deal" && <DealInScene />}
-        {activeScene === "spymaster" && <SpymasterViewScene />}
-        {activeScene === "selection" && <PlayerSelectionScene />}
-        {activeScene === "timing" && <TimingTestScene />}
-      </main>
+      {activeScene === "deal" && <DealInScene />}
+      {activeScene === "spymaster" && <SpymasterViewScene />}
+      {activeScene === "selection" && <PlayerSelectionScene />}
+      {activeScene === "timing" && <TimingTestScene />}
     </div>
   );
 };

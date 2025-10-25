@@ -1,9 +1,6 @@
 import React, { memo, useEffect } from "react";
 import { useGameDataRequired } from "../../game-data/providers";
 import { GameCard } from "../cards/game-card";
-import {
-  useSandboxStore,
-} from "../../../sandbox/card-visibility-sandbox.hooks";
 import { GameBoardLayout } from "./board-layout";
 import { EmptyCard } from "./board-layout";
 export const SpectatorBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
@@ -11,9 +8,7 @@ export const SpectatorBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   const cards = gameData.currentRound?.cards || [];
   const currentTeamName = gameData.playerContext?.teamName;
 
-  // Use sandbox store instead of game store
-  const initialiseFromGameCards = useSandboxStore((state) => state.initialiseFromGameCards);
-  const dealCards = useSandboxStore((state) => state.dealCards);
+  // TODO: Implement real game card animation system
 
   return (
     <GameBoardLayout tilt={tilt}>

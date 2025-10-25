@@ -12,7 +12,6 @@ import { usePlayerScene } from "../game-scene";
 import { useTurn } from "../game-data/providers";
 import { useCardVisibilityStore } from "../game-board/cards/card-visibility-store";
 import { useAnimationEngine } from "../animations/animation-engine-context";
-import { useSandboxStore } from "../../sandbox/card-visibility-sandbox.hooks";
 
 export type ActionName =
   | "giveClue"
@@ -73,9 +72,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
 
   const animationEngine = useAnimationEngine();
 
-  // Sandbox store for redeal animations
-  const initialiseFromGameCards = useSandboxStore((state) => state.initialiseFromGameCards);
-  const dealCardsFromSandboxStore = useSandboxStore((state) => state.dealCards);
+  // TODO: Implement real game card animation system
 
   const resetActionState = useCallback(() => {
     setActionState(initialState);
@@ -247,13 +244,14 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
           }));
 
           console.log("[Provider] Initializing", sandboxCards.length, "cards");
-          initialiseFromGameCards(sandboxCards);
+          // TODO: Re-implement card deal animation
+          // initialiseFromGameCards(sandboxCards);
 
           console.log("[Provider] Triggering deal animation");
-          dealCardsFromSandboxStore(
-            sandboxCards.map((c) => c.word),
-            50, // stagger delay
-          );
+          // dealCardsFromSandboxStore(
+          //   sandboxCards.map((c) => c.word),
+          //   50, // stagger delay
+          // );
           console.log("[Provider] Animation triggered");
         }
 
@@ -273,7 +271,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
       queryClient,
       gameId,
       currentPlayerId,
-      initialiseFromGameCards,
+      // initialiseFromGameCards,
       dealCardsFromStore,
       animationEngine,
     ],
