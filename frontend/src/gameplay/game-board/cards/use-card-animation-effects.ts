@@ -48,7 +48,10 @@ export function useCardAnimationEffects(
 ) {
   const { viewMode, triggerTransition } = options;
   const [isAnimating, setIsAnimating] = useState(false);
-  const [displayState, setDisplayState] = useState<CardDisplayState>('hidden');
+  // Start as visible unless we're in dealing mode
+  const [displayState, setDisplayState] = useState<CardDisplayState>(
+    viewMode === 'dealing' ? 'hidden' : 'visible'
+  );
 
   const prevViewMode = useRef<ViewMode | undefined>(undefined);
   const prevSelected = useRef(card.selected);
