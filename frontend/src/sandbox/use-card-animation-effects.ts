@@ -1,29 +1,26 @@
-import { useState, useRef, useLayoutEffect } from 'react';
+import { useState, useRef, useLayoutEffect } from "react";
 
-type CardDisplayState = 'hidden' | 'visible' | 'visible-colored' | 'covered';
-type CardEvent = 'deal' | 'select' | 'reveal-colors' | 'hide-colors';
+type CardDisplayState = "hidden" | "visible" | "visible-colored" | "covered";
+type CardEvent = "deal" | "select" | "reveal_colors" | "hide_colors";
 
 /**
  * State machine: defines valid transitions
  */
 function determineNextCardState(
   current: CardDisplayState,
-  event: CardEvent
+  event: CardEvent,
 ): CardDisplayState | null {
-  const transitions: Record<
-    CardDisplayState,
-    Partial<Record<CardEvent, CardDisplayState>>
-  > = {
+  const transitions: Record<CardDisplayState, Partial<Record<CardEvent, CardDisplayState>>> = {
     hidden: {
-      deal: 'visible',
+      deal: "visible",
     },
     visible: {
-      select: 'covered',
-      'reveal-colors': 'visible-colored',
+      select: "covered",
+      reveal_colors: "visible-colored",
     },
-    'visible-colored': {
-      select: 'covered',
-      'hide-colors': 'visible',
+    "visible-colored": {
+      select: "covered",
+      hide_colors: "visible",
     },
     covered: {
       // Terminal state
@@ -39,13 +36,13 @@ function determineNextCardState(
  */
 export function useCardAnimationEffects(
   nextEvent: string | null,
-  triggerTransition: (event: string) => Promise<void>
+  triggerTransition: (event: string) => Promise<void>,
 ) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [currentAnimation, setCurrentAnimation] = useState<string | null>(null);
 
   // Track committed visual state (what we've animated to)
-  const displayStateRef = useRef<CardDisplayState>('hidden');
+  const displayStateRef = useRef<CardDisplayState>("hidden");
 
   // Track the last processed event to prevent reprocessing
   const lastProcessedEventRef = useRef<string | null>(null);

@@ -161,8 +161,9 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
+  padding: 2rem 0;
 }
 
 /* Card Base - Using wrapper pattern from original */

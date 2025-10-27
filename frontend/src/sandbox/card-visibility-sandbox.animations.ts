@@ -84,7 +84,7 @@ export const word: Record<string, AnimationDefinition> = {
       delay: 200,
     },
   },
-  "reveal-colors": {
+  reveal_colors: {
     keyframes: [
       {
         transform: "scale(1)",
@@ -104,7 +104,7 @@ export const word: Record<string, AnimationDefinition> = {
       easing: "ease-in-out",
     },
   },
-  "hide-colors": {
+  hide_colors: {
     keyframes: [
       {
         transform: "scale(1)",
@@ -133,7 +133,7 @@ export const word: Record<string, AnimationDefinition> = {
 };
 
 export const badge: Record<string, AnimationDefinition> = {
-  "reveal-colors": {
+  reveal_colors: {
     keyframes: [
       {
         opacity: "0",
@@ -155,7 +155,7 @@ export const badge: Record<string, AnimationDefinition> = {
       fill: "forwards" as FillMode,
     },
   },
-  "hide-colors": {
+  hide_colors: {
     keyframes: [
       { opacity: "1", transform: "scale(1)" },
       { opacity: "0", transform: "scale(0.8)" },
@@ -169,7 +169,7 @@ export const badge: Record<string, AnimationDefinition> = {
 
 export const badgeAssassin: Record<string, AnimationDefinition> = {
   ...badge,
-  "reveal-colors": {
+  reveal_colors: {
     keyframes: [
       {
         filter: "brightness(1)",
