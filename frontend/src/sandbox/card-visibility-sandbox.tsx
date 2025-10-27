@@ -1,9 +1,55 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { AnimationEngineProvider, useAnimationRegistration } from '../gameplay/animations';
 import { DevToolsPanel } from '../gameplay/animations/animation-devtools';
 import { ViewModeProvider, useViewMode } from '../gameplay/game-board/view-mode';
 import { useCardAnimationEffects } from './use-card-animation-effects';
+import type { GameEvent } from './sandbox-events.types';
 import styles from "./card-visibility-sandbox.module.css";
+
+// Mock events state (simulates React Query in real app)
+function useGameplayEvents() {
+  const [events, setEvents] = useState<GameEvent[]>([]);
+
+  const addEvent = useCallback((type: string, cardId?: string) => {
+    const event: GameEvent = {
+      id: `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: new Date().toISOString(),
+      type,
+      cardId,
+    };
+    setEvents(prev => [...prev, event]);
+  }, []);
+
+  const clearEvents = useCallback(() => setEvents([]), []);
+
+  return { events, addEvent, clearEvents };
+}
+
+// Hook to get next card event (same logic we designed)
+function useCardEvent(events: GameEvent[], cardId: string): string | null {
+  const lastProcessedIdRef = useRef<string | null>(null);
+
+  return useMemo(() => {
+    if (!events?.length) return null;
+
+    const nextEvent = events.find(e => {
+      if (lastProcessedIdRef.current && e.id <= lastProcessedIdRef.current) {
+        return false;
+      }
+
+      if (e.cardId && e.cardId !== cardId) {
+        return false;
+      }
+
+      return true;
+    });
+
+    if (!nextEvent) return null;
+
+    lastProcessedIdRef.current = nextEvent.id;
+    return nextEvent.type;
+  }, [events, cardId]);
+}
 
 interface SandboxCardProps {
   card: {
@@ -12,10 +58,11 @@ interface SandboxCardProps {
     selected: boolean;
   };
   index: number;
+  events: GameEvent[];
   onSelect?: () => void;
 }
 
-const SandboxCard: React.FC<SandboxCardProps> = ({ card, index, onSelect }) => {
+const SandboxCard: React.FC<SandboxCardProps> = ({ card, index, events, onSelect }) => {
   const { viewMode } = useViewMode();
 
   const entityContext = useMemo(() => ({
@@ -25,11 +72,14 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ card, index, onSelect }) => {
     index,
   }), [card.teamName, card.selected, viewMode, index]);
 
+  // Get next event from event log (call BEFORE useAnimationRegistration)
+  const nextEvent = useCardEvent(events, card.word);
+
   const { createAnimationRef, triggerTransition } = useAnimationRegistration(
     card.word,
     entityContext,
     {
-      entryTransition: 'deal',
+      entryTransition: nextEvent === 'deal' ? 'deal' : undefined,
       onComplete: (event) => {
         console.log(`[${card.word}] Animation completed: ${event}`);
       },
@@ -37,8 +87,7 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ card, index, onSelect }) => {
   );
 
   const { isAnimating } = useCardAnimationEffects(
-    card,
-    viewMode,
+    nextEvent,
     triggerTransition
   );
 
@@ -168,6 +217,7 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ card, index, onSelect }) => {
 
 const DealInScene: React.FC = () => {
   const [cards, setCards] = useState<Array<{ word: string; teamName: string; selected: boolean }>>([]);
+  const { events, addEvent, clearEvents } = useGameplayEvents();
 
   const mockCards = useMemo(() =>
     Array.from({ length: 16 }, (_, i) => ({
@@ -178,13 +228,24 @@ const DealInScene: React.FC = () => {
     []
   );
 
-  useEffect(() => {
+  const handleDeal = () => {
+    clearEvents();
     setCards(mockCards);
-  }, [mockCards]);
+    addEvent('deal');
+  };
+
+  useEffect(() => {
+    handleDeal();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleReset = () => {
+    clearEvents();
     setCards([]);
-    setTimeout(() => setCards(mockCards), 100);
+    setTimeout(() => {
+      setCards(mockCards);
+      addEvent('deal');
+    }, 100);
   };
 
   return (
@@ -205,7 +266,7 @@ const DealInScene: React.FC = () => {
         margin: '0 auto'
       }}>
         {cards.map((card, index) => (
-          <SandboxCard key={card.word} card={card} index={index} />
+          <SandboxCard key={card.word} card={card} index={index} events={events} />
         ))}
       </div>
     </div>
@@ -215,6 +276,7 @@ const DealInScene: React.FC = () => {
 const SpymasterViewScene: React.FC = () => {
   const [cards, setCards] = useState<Array<{ word: string; teamName: string; selected: boolean }>>([]);
   const { viewMode, toggleSpymasterViewMode } = useViewMode();
+  const { events, addEvent, clearEvents } = useGameplayEvents();
 
   const mockCards = useMemo(() =>
     Array.from({ length: 16 }, (_, i) => ({
@@ -225,13 +287,33 @@ const SpymasterViewScene: React.FC = () => {
     []
   );
 
-  useEffect(() => {
+  const handleDeal = () => {
+    clearEvents();
     setCards(mockCards);
-  }, [mockCards]);
+    addEvent('deal');
+  };
+
+  useEffect(() => {
+    handleDeal();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleToggleView = () => {
+    toggleSpymasterViewMode();
+    if (viewMode === 'normal') {
+      addEvent('reveal_colors');
+    } else {
+      addEvent('hide_colors');
+    }
+  };
 
   const handleReset = () => {
+    clearEvents();
     setCards([]);
-    setTimeout(() => setCards(mockCards), 100);
+    setTimeout(() => {
+      setCards(mockCards);
+      addEvent('deal');
+    }, 100);
   };
 
   return (
@@ -242,7 +324,7 @@ const SpymasterViewScene: React.FC = () => {
       </p>
 
       <div className={styles.controls}>
-        <button onClick={toggleSpymasterViewMode}>
+        <button onClick={handleToggleView}>
           {viewMode === 'spymaster' ? '🕶️ Hide Colors' : '👁️ Reveal Colors'}
         </button>
         <button onClick={handleReset}>🔄 Reset</button>
@@ -255,7 +337,7 @@ const SpymasterViewScene: React.FC = () => {
         margin: '0 auto'
       }}>
         {cards.map((card, index) => (
-          <SandboxCard key={card.word} card={card} index={index} />
+          <SandboxCard key={card.word} card={card} index={index} events={events} />
         ))}
       </div>
     </div>
@@ -268,13 +350,29 @@ const PlayerSelectionScene: React.FC = () => {
     teamName: 'neutral',
     selected: false,
   });
+  const { events, addEvent, clearEvents } = useGameplayEvents();
+
+  const handleDeal = () => {
+    clearEvents();
+    addEvent('deal');
+  };
+
+  useEffect(() => {
+    handleDeal();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSelect = () => {
     setCard(prev => ({ ...prev, selected: true }));
+    addEvent('select', card.word);
   };
 
   const handleReset = () => {
+    clearEvents();
     setCard({ word: 'SELECT', teamName: 'neutral', selected: false });
+    setTimeout(() => {
+      addEvent('deal');
+    }, 100);
   };
 
   return (
@@ -292,7 +390,7 @@ const PlayerSelectionScene: React.FC = () => {
       </div>
 
       <div className={styles.grid} style={{ gridTemplateColumns: '1fr', maxWidth: '200px', margin: '0 auto' }}>
-        <SandboxCard card={card} index={0} onSelect={handleSelect} />
+        <SandboxCard card={card} index={0} events={events} onSelect={handleSelect} />
       </div>
     </div>
   );
@@ -306,18 +404,32 @@ const TimingTestScene: React.FC = () => {
   });
   const [isSelecting, setIsSelecting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const { events, addEvent, clearEvents } = useGameplayEvents();
+
+  const handleDeal = () => {
+    clearEvents();
+    addEvent('deal');
+  };
+
+  useEffect(() => {
+    handleDeal();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSelect = async () => {
     setIsSelecting(true);
     await new Promise(resolve => setTimeout(resolve, 300));
     setCard(prev => ({ ...prev, selected: true }));
+    addEvent('select', card.word);
     setIsSelecting(false);
   };
 
   const handleReset = async () => {
     setIsResetting(true);
+    clearEvents();
     setCard({ word: 'TIMING-1', teamName: 'blue', selected: false });
     await new Promise(resolve => setTimeout(resolve, 100));
+    addEvent('deal');
     setIsResetting(false);
   };
 
@@ -358,7 +470,7 @@ const TimingTestScene: React.FC = () => {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem 0', minHeight: '200px' }}>
-        <SandboxCard card={card} index={0} />
+        <SandboxCard card={card} index={0} events={events} />
       </div>
 
       <div style={{ marginTop: '2rem', padding: '1rem', background: '#1a1a1a', borderRadius: '4px', fontSize: '0.85rem' }}>

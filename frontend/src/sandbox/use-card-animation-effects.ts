@@ -1,14 +1,7 @@
-import { useState, useRef, useMemo, useLayoutEffect } from 'react';
-import type { ViewMode } from '../gameplay/game-board/view-mode';
+import { useState, useRef, useLayoutEffect } from 'react';
 
 type CardDisplayState = 'hidden' | 'visible' | 'visible-colored' | 'covered';
 type CardEvent = 'deal' | 'select' | 'reveal-colors' | 'hide-colors';
-
-interface Card {
-  word: string;
-  teamName: string;
-  selected: boolean;
-}
 
 /**
  * State machine: defines valid transitions
@@ -41,12 +34,11 @@ function determineNextCardState(
 }
 
 /**
- * Manages card animation triggers based on prop changes.
- * Tracks visual state and derives animation events declaratively.
+ * Manages card animation triggers based on server events.
+ * Consumes events from event log instead of deriving from props.
  */
 export function useCardAnimationEffects(
-  card: Card,
-  viewMode: ViewMode,
+  nextEvent: string | null,
   triggerTransition: (event: string) => Promise<void>
 ) {
   const [isAnimating, setIsAnimating] = useState(false);
@@ -54,34 +46,16 @@ export function useCardAnimationEffects(
 
   // Track committed visual state (what we've animated to)
   const displayStateRef = useRef<CardDisplayState>('hidden');
-  const prevViewMode = useRef<ViewMode | undefined>(undefined);
-  const prevSelected = useRef(card.selected);
 
-  // Derive next animation event from prop changes
-  const nextEvent = useMemo((): CardEvent | null => {
-    const displayState = displayStateRef.current;
+  // Track the last processed event to prevent reprocessing
+  const lastProcessedEventRef = useRef<string | null>(null);
 
-    // ViewMode toggle
-    if (prevViewMode.current !== viewMode && prevViewMode.current !== undefined) {
-      if (viewMode === 'spymaster' && displayState === 'visible') {
-        return 'reveal-colors';
-      }
-      if (viewMode === 'normal' && displayState === 'visible-colored') {
-        return 'hide-colors';
-      }
-    }
-
-    // Card selection (false → true)
-    if (!prevSelected.current && card.selected && displayState !== 'covered') {
-      return 'select';
-    }
-
-    return null;
-  }, [viewMode, card.selected]);
-
-  // Execute animation when event derived
+  // Execute animation when event received
   useLayoutEffect(() => {
-    if (!nextEvent) return;
+    // Skip if no event or already processed
+    if (!nextEvent || nextEvent === lastProcessedEventRef.current) {
+      return;
+    }
 
     const animate = async () => {
       setIsAnimating(true);
@@ -91,10 +65,13 @@ export function useCardAnimationEffects(
         await triggerTransition(nextEvent);
 
         // Update displayState via state machine
-        const nextState = determineNextCardState(displayStateRef.current, nextEvent);
+        const nextState = determineNextCardState(displayStateRef.current, nextEvent as CardEvent);
         if (nextState) {
           displayStateRef.current = nextState;
         }
+
+        // Mark event as processed
+        lastProcessedEventRef.current = nextEvent;
       } finally {
         setIsAnimating(false);
         setCurrentAnimation(null);
@@ -102,11 +79,7 @@ export function useCardAnimationEffects(
     };
 
     animate();
-
-    // Update refs for next comparison
-    prevViewMode.current = viewMode;
-    prevSelected.current = card.selected;
-  }, [nextEvent, triggerTransition, viewMode, card.selected]);
+  }, [nextEvent, triggerTransition]);
 
   return {
     isAnimating,
