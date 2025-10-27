@@ -123,6 +123,8 @@ export const useMakeGuessMutation = (
       const turnData = data.turn;
       queryClient.setQueryData(["turn", turnData.id], turnData);
       await queryClient.refetchQueries({ queryKey: ["gameData", gameId] });
+      // Invalidate events query to fetch new select event
+      queryClient.invalidateQueries({ queryKey: ["game-events", gameId] });
     },
   });
 };

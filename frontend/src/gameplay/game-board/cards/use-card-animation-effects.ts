@@ -1,5 +1,4 @@
-import { useState, useRef, useMemo, useLayoutEffect } from 'react';
-import { Card } from '@frontend/shared-types';
+import { useState, useRef, useLayoutEffect } from 'react';
 
 type CardDisplayState = 'hidden' | 'visible' | 'visible-colored' | 'covered';
 type CardEvent = 'deal' | 'select' | 'reveal-colors' | 'hide-colors';
@@ -7,6 +6,7 @@ type ViewMode = 'normal' | 'spymaster' | 'dealing';
 
 interface CardAnimationEffectsOptions {
   viewMode: ViewMode;
+  nextEvent: string | null; // Event from server (via useCardEvent hook)
   triggerTransition: (event: string) => Promise<void>;
 }
 
@@ -36,45 +36,28 @@ function determineNextCardState(
 }
 
 /**
- * Manages card animation triggers based on prop changes.
- * Tracks visual state and derives animation events declaratively.
+ * Manages card animation triggers based on server events.
+ * Consumes events from the server event log instead of deriving from props.
  *
  * CRITICAL: displayState is React state (not ref) so that updating it
  * triggers a re-render, which updates entityContext, which syncs to engine.
  */
-export function useCardAnimationEffects(
-  card: Card,
-  options: CardAnimationEffectsOptions
-) {
-  const { viewMode, triggerTransition } = options;
+export function useCardAnimationEffects(options: CardAnimationEffectsOptions) {
+  const { viewMode, nextEvent, triggerTransition } = options;
   const [isAnimating, setIsAnimating] = useState(false);
   // Start as visible unless we're in dealing mode
   const [displayState, setDisplayState] = useState<CardDisplayState>(
     viewMode === 'dealing' ? 'hidden' : 'visible'
   );
 
-  const prevViewMode = useRef<ViewMode | undefined>(undefined);
-  const prevSelected = useRef(card.selected);
-
-  const nextEvent = useMemo((): CardEvent | null => {
-    if (prevViewMode.current !== viewMode && prevViewMode.current !== undefined) {
-      if (viewMode === 'spymaster' && displayState === 'visible') {
-        return 'reveal-colors';
-      }
-      if (viewMode === 'normal' && displayState === 'visible-colored') {
-        return 'hide-colors';
-      }
-    }
-
-    if (!prevSelected.current && card.selected && displayState !== 'covered') {
-      return 'select';
-    }
-
-    return null;
-  }, [viewMode, card.selected, displayState]);
+  // Track the last processed event to prevent reprocessing
+  const lastProcessedEventRef = useRef<string | null>(null);
 
   useLayoutEffect(() => {
-    if (!nextEvent) return;
+    // Skip if no event or already processed
+    if (!nextEvent || nextEvent === lastProcessedEventRef.current) {
+      return;
+    }
 
     const animate = async () => {
       setIsAnimating(true);
@@ -82,20 +65,20 @@ export function useCardAnimationEffects(
       try {
         await triggerTransition(nextEvent);
 
-        const nextState = determineNextCardState(displayState, nextEvent);
+        const nextState = determineNextCardState(displayState, nextEvent as CardEvent);
         if (nextState) {
           setDisplayState(nextState);
         }
+
+        // Mark event as processed
+        lastProcessedEventRef.current = nextEvent;
       } finally {
         setIsAnimating(false);
       }
     };
 
     animate();
-
-    prevViewMode.current = viewMode;
-    prevSelected.current = card.selected;
-  }, [nextEvent, triggerTransition, displayState, viewMode, card.selected]);
+  }, [nextEvent, triggerTransition, displayState]);
 
   return {
     isAnimating,

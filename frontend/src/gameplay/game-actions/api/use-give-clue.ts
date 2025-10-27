@@ -133,6 +133,8 @@ export const useGiveClueMutation = (
       const turnData = data.turn;
       queryClient.setQueryData(["turn", turnData.id], turnData);
       await queryClient.refetchQueries({ queryKey: ["gameData", gameId] });
+      // Invalidate events query (for future give_clue events)
+      queryClient.invalidateQueries({ queryKey: ["game-events", gameId] });
     },
   });
 };

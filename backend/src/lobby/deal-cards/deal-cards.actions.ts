@@ -34,22 +34,15 @@ export const dealCardsToRound = (
     const [team1, team2] = gameState.teams;
 
     const startsFirst = Math.random() > 0.5;
-    const [startingTeam, otherTeam] = startsFirst
-      ? [team1._id, team2._id]
-      : [team2._id, team1._id];
+    const [startingTeam, otherTeam] = startsFirst ? [team1._id, team2._id] : [team2._id, team1._id];
 
     const cardsWithoutWords = allocateInitialCardTypes(startingTeam, otherTeam);
     const shuffledCards = shuffleCards(cardsWithoutWords);
 
     // Get current words to exclude (if redealing)
-    const currentWords = gameState.currentRound.cards?.map(c => c.word) || [];
-    
-    const words = await getRandomWords(
-      shuffledCards.length, 
-      "BASE", 
-      "en", 
-      currentWords // Pass words to exclude
-    );
+    const currentWords = gameState.currentRound.cards?.map((c) => c.word) || [];
+
+    const words = await getRandomWords(shuffledCards.length, "BASE", "en", currentWords);
 
     const cardInputs: CardInput[] = words.map((word, position) => ({
       word,
@@ -100,10 +93,7 @@ const shuffleCards = <T>(items: T[]): T[] => {
     // Pick a random position from 0 to currentPos (inclusive)
     const swapPos = Math.floor(Math.random() * (currentPos + 1));
     // Swap the cards at these positions
-    [shuffled[currentPos], shuffled[swapPos]] = [
-      shuffled[swapPos],
-      shuffled[currentPos],
-    ];
+    [shuffled[currentPos], shuffled[swapPos]] = [shuffled[swapPos], shuffled[currentPos]];
   }
 
   return shuffled;
@@ -117,10 +107,7 @@ const shuffleCards = <T>(items: T[]): T[] => {
  * - Bystander: 7 cards
  * Total: 25 cards
  */
-const allocateInitialCardTypes = (
-  startingTeam: TeamId,
-  otherTeam: TeamId,
-): CardInfo[] => [
+const allocateInitialCardTypes = (startingTeam: TeamId, otherTeam: TeamId): CardInfo[] => [
   ...Array(9).fill({ cardType: CARD_TYPE.TEAM, teamId: startingTeam }),
   ...Array(8).fill({ cardType: CARD_TYPE.TEAM, teamId: otherTeam }),
   { cardType: CARD_TYPE.ASSASSIN },

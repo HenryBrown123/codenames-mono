@@ -2,6 +2,7 @@ import { memo, useMemo, useState, useEffect } from "react";
 import { Card } from "@frontend/shared-types";
 import { useAnimationRegistration } from "../../animations/use-animation-registration";
 import { useCardAnimationEffects } from "./use-card-animation-effects";
+import { useCardEvent } from "../../game-data/events";
 import { useViewMode } from "../view-mode/view-mode-context";
 import { useAnimationEngine } from "../../animations/animation-engine-context";
 import { getTeamType, getCardColor } from "./card-utils";
@@ -55,8 +56,12 @@ export const GameCard = memo<GameCardProps>(
       }
     );
 
-    const { isAnimating, displayState } = useCardAnimationEffects(card, {
+    // Get next event from server event log
+    const nextEvent = useCardEvent(card.word);
+
+    const { isAnimating, displayState } = useCardAnimationEffects({
       viewMode,
+      nextEvent,
       triggerTransition: async (event: string) => {
         const transitionsMap = new Map();
         transitionsMap.set(card.word, { entityId: card.word, event });

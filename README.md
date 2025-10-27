@@ -622,6 +622,7 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   │   ├── dashboards
 │       │   │   └── settings
 │       │   ├── game-data
+│       │   │   ├── events
 │       │   │   ├── providers
 │       │   │   └── queries
 │       │   ├── game-scene
@@ -649,7 +650,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-88 directories
+89 directories
 ```
 
 ## Getting Started
