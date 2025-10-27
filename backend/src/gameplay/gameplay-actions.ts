@@ -10,6 +10,7 @@ import * as cardsRepository from "@backend/common/data-access/repositories/cards
 import * as turnRepository from "@backend/common/data-access/repositories/turns.repository";
 import * as roundsRepository from "@backend/common/data-access/repositories/rounds.repository";
 import * as gameRepository from "@backend/common/data-access/repositories/games.repository";
+import * as gameEventsRepository from "@backend/common/data-access/repositories/game-events.repository";
 import * as giveClueActions from "./give-clue/give-clue.actions";
 import * as makeGuessActions from "./make-guess/make-guess.actions";
 import * as makeGuessRules from "./make-guess/make-guess.rules";
@@ -46,6 +47,7 @@ export const gameplayOperations = (trx: TransactionContext) => ({
     updateCards: cardsRepository.updateCards(trx),
     createGuess: turnRepository.createGuess(trx),
     updateTurnGuesses: turnRepository.updateTurnGuesses(trx),
+    createEvent: gameEventsRepository.createEvent(trx),
     validateMakeGuess: makeGuessRules.validateMakeGuess,
   }),
 

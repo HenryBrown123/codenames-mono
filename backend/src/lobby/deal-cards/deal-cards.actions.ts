@@ -6,6 +6,8 @@ import {
   CardType,
 } from "@backend/common/data-access/repositories/cards.repository";
 import type { TeamId } from "@backend/common/data-access/repositories/teams.repository";
+import type { CreateEventInput } from "@backend/common/data-access/repositories/game-events.repository";
+import { GAME_EVENT_TYPE } from "@codenames/shared/types";
 
 import type { DealCardsValidLobbyState } from "./deal-cards.rules";
 
@@ -14,11 +16,13 @@ import type { DealCardsValidLobbyState } from "./deal-cards.rules";
  *
  * @param getRandomWords - Repository function for retrieving random words
  * @param replaceCards - Repository function for replacing cards in a round
+ * @param createEvent - Repository function for creating game events
  * @returns Function that deals cards for a validated game state
  */
 export const dealCardsToRound = (
   getRandomWords: RandomWordsSelector,
   replaceCards: CardsCreator,
+  createEvent: (event: CreateEventInput) => Promise<any>,
 ) => {
   /**
    * Lays out cards on the game grid for a pre-validated game state
@@ -54,6 +58,18 @@ export const dealCardsToRound = (
     }));
 
     const cards = await replaceCards(gameState.currentRound._id, cardInputs);
+
+    // Create event for card dealing
+    await createEvent({
+      gameId: gameState._id,
+      eventType: GAME_EVENT_TYPE.DEAL,
+      roundId: gameState.currentRound._id,
+      metadata: {
+        cardIds: cards.map((c) => c._id),
+        startingTeam,
+        otherTeam,
+      },
+    });
 
     return {
       _roundId: gameState.currentRound._id,

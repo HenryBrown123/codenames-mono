@@ -110,12 +110,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         },
       );
     },
-    [
-      makeGuessMutation,
-      gameData.currentRound,
-      triggerSceneTransition,
-      setLastActionTurnId,
-    ],
+    [makeGuessMutation, gameData.currentRound, triggerSceneTransition, setLastActionTurnId],
   );
 
   const giveClue = useCallback(
@@ -214,11 +209,7 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
         throw error;
       }
     },
-    [
-      dealCardsMutation,
-      gameData.currentRound,
-      triggerSceneTransition,
-    ],
+    [dealCardsMutation, gameData.currentRound, triggerSceneTransition],
   );
 
   const endTurn = useCallback(() => {

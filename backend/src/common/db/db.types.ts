@@ -52,6 +52,18 @@ export interface Games {
   updated_at: Generated<Timestamp | null>;
 }
 
+export interface GameEvents {
+  id: Generated<number>;
+  public_id: string;
+  game_id: number;
+  event_type: string;
+  card_id: number | null;
+  player_id: number | null;
+  round_id: number | null;
+  metadata: unknown | null;
+  created_at: Generated<Timestamp>;
+}
+
 export interface GameStatus {
   id: number;
   status_name: string;
@@ -161,6 +173,7 @@ export interface DB {
   cards: Cards;
   clues: Clues;
   decks: Decks;
+  game_events: GameEvents;
   game_status: GameStatus;
   games: Games;
   guesses: Guesses;

@@ -190,6 +190,67 @@ export function createGameplayPaths() {
         },
       },
     },
+    "/games/{gameId}/events": {
+      get: {
+        summary: "Get all events for a game",
+        description:
+          "Retrieves chronological list of all events that occurred in a game (deals, selects, clues, etc.). Used for animations and replay functionality.",
+        tags: ["Gameplay"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "gameId",
+            in: "path",
+            required: true,
+            schema: {
+              type: "string",
+            },
+            description: "Public ID of the game",
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Events retrieved successfully",
+            content: {
+              "application/json": {
+                example: {
+                  success: true,
+                  data: [
+                    {
+                      id: "evt_1730123456789_abc123",
+                      gameId: "game_xyz",
+                      timestamp: "2025-10-26T10:30:00.000Z",
+                      type: "deal",
+                      roundId: "round_1",
+                      cardIds: ["card_001", "card_002", "card_003"],
+                    },
+                    {
+                      id: "evt_1730123470000_def456",
+                      gameId: "game_xyz",
+                      timestamp: "2025-10-26T10:30:15.000Z",
+                      type: "select",
+                      cardId: "card_003",
+                      playerId: "player_456",
+                      teamName: "red",
+                      outcome: "correct",
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          "401": {
+            description: "Authentication required",
+          },
+          "403": {
+            description: "User does not have access to this game",
+          },
+          "404": {
+            description: "Game not found",
+          },
+        },
+      },
+    },
     "/games/{gameId}/rounds/{roundNumber}/clues": {
       post: {
         summary: "Give a clue",

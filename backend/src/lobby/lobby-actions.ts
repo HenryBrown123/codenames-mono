@@ -5,6 +5,7 @@ import * as gamesRepository from "@backend/common/data-access/repositories/games
 import * as roundsRepository from "@backend/common/data-access/repositories/rounds.repository";
 import * as cardsRepository from "@backend/common/data-access/repositories/cards.repository";
 import * as turnRepository from "@backend/common/data-access/repositories/turns.repository";
+import * as gameEventsRepository from "@backend/common/data-access/repositories/game-events.repository";
 
 import * as newRoundActions from "./new-round/new-round.actions";
 import * as dealCardsActions from "./deal-cards/deal-cards.actions";
@@ -52,6 +53,7 @@ export const lobbyOperations = (trx: TransactionContext) => ({
   dealCards: dealCardsActions.dealCardsToRound(
     cardsRepository.getRandomWords(trx),
     cardsRepository.replaceCards(trx),
+    gameEventsRepository.createEvent(trx),
   ),
   startRound: startRoundActions.startCurrentRound(
     roundsRepository.updateRoundStatus(trx),

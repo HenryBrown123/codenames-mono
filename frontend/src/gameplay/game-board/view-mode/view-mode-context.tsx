@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 
-export type ViewMode = 'normal' | 'spymaster' | 'dealing';
+export type ViewMode = "normal" | "spymaster" | "dealing";
 
 interface ViewModeContextValue {
   viewMode: ViewMode;
@@ -11,10 +11,10 @@ interface ViewModeContextValue {
 const ViewModeContext = createContext<ViewModeContextValue | null>(null);
 
 export const ViewModeProvider = ({ children }: { children: ReactNode }) => {
-  const [viewMode, setViewMode] = useState<ViewMode>('normal');
+  const [viewMode, setViewMode] = useState<ViewMode>("normal");
 
   const toggleSpymasterViewMode = useCallback(() => {
-    setViewMode(prev => prev === 'spymaster' ? 'normal' : 'spymaster');
+    setViewMode((prev) => (prev === "spymaster" ? "normal" : "spymaster"));
   }, []);
 
   return (
@@ -24,10 +24,10 @@ export const ViewModeProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useViewMode = () => {
+export const useViewMode = (viewMode: ViewMode = "normal") => {
   const ctx = useContext(ViewModeContext);
   if (!ctx) {
-    throw new Error('useViewMode must be used within ViewModeProvider');
+    throw new Error("useViewMode must be used within ViewModeProvider");
   }
   return ctx;
 };

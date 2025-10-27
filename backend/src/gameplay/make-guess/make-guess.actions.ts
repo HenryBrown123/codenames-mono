@@ -2,6 +2,7 @@ import {
   ROUND_STATE,
   CODEBREAKER_OUTCOME,
   GAME_STATE,
+  GAME_EVENT_TYPE,
 } from "@codenames/shared/types";
 import { GameplayValidationError } from "../errors/gameplay.errors";
 import { GameAggregate } from "../state/gameplay-state.types";
@@ -24,6 +25,7 @@ import {
 } from "@backend/common/data-access/repositories/rounds.repository";
 
 import { GameStatusUpdater } from "@backend/common/data-access/repositories/games.repository";
+import type { CreateEventInput } from "@backend/common/data-access/repositories/game-events.repository";
 
 import { complexProperties } from "../state/gameplay-state.helpers";
 
@@ -81,6 +83,7 @@ export const createMakeGuessAction = (deps: {
   updateCards: CardUpdater;
   createGuess: GuessCreator;
   updateTurnGuesses: TurnGuessUpdater;
+  createEvent: (event: CreateEventInput) => Promise<any>;
   validateMakeGuess: typeof validateMakeGuess;
 }) => {
   return async (gameState: GameAggregate, cardWord: string) => {
@@ -127,6 +130,20 @@ export const createMakeGuessAction = (deps: {
       currentTurn._id,
       newGuessesRemaining,
     );
+
+    // Create event for card selection
+    await deps.createEvent({
+      gameId: gameState._id,
+      eventType: GAME_EVENT_TYPE.SELECT,
+      cardId: cardValidation.cardId!,
+      playerId: gameState.playerContext._id,
+      roundId: gameState.currentRound?._id,
+      metadata: {
+        cardWord: card.word,
+        teamName: card.teamName,
+        outcome,
+      },
+    });
 
     return {
       card,

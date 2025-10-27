@@ -10,6 +10,7 @@ import { turnState } from "./state";
 
 import getGame from "./get-game";
 import getPlayers from "./get-players";
+import getEvents from "./get-events";
 import giveClue from "./give-clue";
 import makeGuess from "./make-guess";
 import getTurn from "./get-turn";
@@ -41,6 +42,11 @@ export const initialize = (
     getGameState,
   });
 
+  const { controller: getEventsController } = getEvents({
+    getGameState,
+    db,
+  });
+
   const { controller: giveClueController } = giveClue({
     getGameState,
     gameplayHandler,
@@ -62,6 +68,7 @@ export const initialize = (
 
   router.get("/games/:gameId", auth, getGameController);
   router.get("/games/:gameId/players", auth, getPlayersController);
+  router.get("/games/:gameId/events", auth, getEventsController);
   router.post(
     "/games/:gameId/rounds/:roundNumber/clues",
     auth,

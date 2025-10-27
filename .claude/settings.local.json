@@ -21,7 +21,11 @@
       "Bash(gtimeout:*)",
       "Bash(test -f frontend/src/gameplay/game-board/cards/use-card-animation-effects.ts)",
       "Bash(test -f frontend/src/gameplay/game-board/cards/card-visibility-types.ts)",
-      "Bash(test -f frontend/src/gameplay/game-actions/game-actions-provider.tsx)"
+      "Bash(test -f frontend/src/gameplay/game-actions/game-actions-provider.tsx)",
+      "Read(//Users/dev/Developer/backend/**)",
+      "Bash(curl -s http://localhost:3000/api/health)",
+      "Bash(psql postgresql://postgres:dev@localhost:5432/postgres -c \"SELECT id, public_id, event_type, card_id, player_id, round_id, created_at, metadata FROM game_events ORDER BY created_at DESC LIMIT 15;\")",
+      "Bash(curl -s http://localhost:3000/api/games/fwjjM-Ug8/events -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMyMCwidXNlcm5hbWUiOiJDYWxtLUphY2thbDMwNiIsImlhdCI6MTc2MTU3NDQ5MiwiZXhwIjoxNzYyMTc5MjkyLCJpc3MiOiJjb2RlbmFtZXMtYXBwIn0.8NSIMKe3Qpn2KwxJGhsAhlvuEPFpCT-Z04Zvu6Tn4Nc\")"
     ]
   },
   "enableAllProjectMcpServers": false
