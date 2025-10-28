@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useCallback, useRef, useLayoutEffect, Activity } from "react";
-import { AnimationEngineProvider, useAnimationRegistration } from "../gameplay/animations";
-import { DevToolsPanel } from "../gameplay/animations/animation-devtools";
+import React, { useState, useMemo, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ViewModeProvider, useViewMode } from "../gameplay/game-board/view-mode";
+import { useCardVisualState } from "./use-card-visual-state";
 import type { GameEvent } from "./sandbox-events.types";
 import styles from "./card-visibility-sandbox.module.css";
 
@@ -11,7 +11,7 @@ function useGameplayEvents() {
 
   const addEvent = useCallback((type: string, cardId?: string) => {
     const event: GameEvent = {
-      id: `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `evt_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       timestamp: new Date().toISOString(),
       type,
       cardId,
@@ -64,141 +64,53 @@ interface SandboxCardProps {
 const SandboxCard: React.FC<SandboxCardProps> = ({ card, index, events, onSelect }) => {
   const { viewMode } = useViewMode();
 
-  const entityContext = useMemo(
-    () => ({
-      teamName: card.teamName,
-      selected: card.selected,
-      viewMode,
-      index,
-    }),
-    [card.teamName, card.selected, viewMode, index],
-  );
-
-  // Get next event from event log (call BEFORE useAnimationRegistration)
+  // Get next event from event log - KEEP THIS for multiplayer
   const nextEvent = useCardEvent(events, card.word);
-  console.log("Card event found :", nextEvent);
-  const { createAnimationRef, triggerTransition, isAnimating, currentAnimation } = useAnimationRegistration(
-    card.word,
-    entityContext,
-    {
-      entryTransition: nextEvent === "deal" ? "deal" : undefined,
-      onComplete: (event) => {
-        console.log(`[${card.word}] Animation completed: ${event}`);
-      },
-    },
-  );
 
-  // Trigger animations when nextEvent changes (excluding "deal" which is handled by entryTransition)
-  const lastProcessedEventRef = useRef<string | null>(null);
-  useLayoutEffect(() => {
-    if (!nextEvent || nextEvent === "deal" || nextEvent === lastProcessedEventRef.current) {
-      return;
-    }
+  // Derive visual state from events (not props!)
+  const visualState = useCardVisualState(nextEvent, card.selected);
 
-    console.log(`[${card.word}] Triggering animation: ${nextEvent}`);
-    triggerTransition(nextEvent);
-    lastProcessedEventRef.current = nextEvent;
-  }, [nextEvent, triggerTransition, card.word]);
-
-  // Determine overlay visibility
-  const shouldShowOverlay =
-    (viewMode === "spymaster" && !card.selected && !isAnimating) ||
-    currentAnimation === "hide_colors";
-
-  const cardAnimations = {
-    deal: {
-      keyframes: [
-        {
-          transform: "translateY(-100vh) rotate(-15deg)",
-          opacity: 0,
-        },
-        {
-          transform: "translateY(0) rotate(0deg)",
-          opacity: 1,
-        },
-      ],
-      options: {
-        duration: 800,
-        easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-        fill: "both" as FillMode,
-      },
-    },
-    select: {
-      keyframes: [
-        { transform: "rotateY(0deg)" },
-        { transform: "rotateY(90deg)", offset: 0.5 },
-        { transform: "rotateY(180deg)" },
-      ],
-      options: {
-        duration: 600,
-        easing: "ease-in-out",
-        fill: "both" as FillMode,
-      },
-    },
-    reset: {
-      keyframes: [{ opacity: 1 }, { opacity: 0 }],
-      options: {
-        duration: 300,
-        easing: "ease-out",
-        fill: "both" as FillMode,
-      },
-    },
-  };
-
-  const overlayAnimations = {
-    reveal_colors: {
-      keyframes: [
-        { opacity: "0", transform: "scale(0.8) translateY(-10px)" },
-        { opacity: "1", transform: "scale(1) translateY(0)" },
-      ],
-      options: {
-        duration: 400,
-        delay: 100,
-        easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-        fill: "forwards" as FillMode,
-      },
-    },
-    hide_colors: {
-      keyframes: [
-        { opacity: "1", transform: "scale(1)" },
-        { opacity: "0", transform: "scale(0.8)" },
-      ],
-      options: {
-        duration: 200,
-        fill: "forwards" as FillMode,
-      },
-    },
-  };
-
-  const teamColor =
-    card.teamName === "red"
-      ? "#dc2626"
-      : card.teamName === "blue"
-        ? "#2563eb"
-        : card.teamName === "assassin"
-          ? "#000"
-          : "#9ca3af";
+  const teamColor = {
+    red: "#dc2626",
+    blue: "#2563eb",
+    neutral: "#9ca3af",
+    assassin: "#000",
+  }[card.teamName];
 
   return (
-    <div
-      ref={(el) => {
-        console.log(`[${card.word} Container Ref] Callback fired, element:`, el);
-        createAnimationRef("container", cardAnimations)(el);
+    <motion.div
+      // Entry animation (deal)
+      initial={{ opacity: 0, y: -100, rotate: -15, scale: 0.5 }}
+      animate={{
+        opacity: 1,
+        y: 0,
+        rotate: 0,
+        scale: 1,
+      }}
+      transition={{
+        delay: index * 0.05,
+        duration: 0.6,
+        ease: [0.34, 1.56, 0.64, 1],
       }}
       className={styles.card}
       style={{
-        perspective: "1000px",
         width: "200px",
         height: "133px",
-        pointerEvents: isAnimating ? "none" : "auto",
+        perspective: "1000px",
         cursor: card.selected ? "default" : "pointer",
       }}
       onClick={card.selected ? undefined : onSelect}
     >
-      <div
+      <motion.div
+        // Flip animation (select) - reacts to card.selected
+        animate={{ rotateY: visualState.isFlipped ? 180 : 0 }}
+        transition={{ duration: 0.6, ease: "easeInOut" }}
         className={styles.cardInner}
         style={{
-          transform: card.selected ? "rotateY(180deg)" : "rotateY(0deg)",
+          width: "100%",
+          height: "100%",
+          position: "relative",
+          transformStyle: "preserve-3d",
         }}
       >
         <div className={`${styles.cardFace} ${styles.cardFront}`}>
@@ -216,27 +128,32 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ card, index, events, onSelect
             }}
           />
         </div>
-      </div>
+      </motion.div>
 
-      {/* Spymaster overlay - separate animated element */}
-      <Activity mode={shouldShowOverlay ? "visible" : "hidden"}>
-        <div
-          ref={(el) => {
-            console.log(`[${card.word} Overlay Ref] Callback fired, element:`, el);
-            createAnimationRef("overlay", overlayAnimations)(el);
-          }}
-          style={{
-            position: "absolute",
-            inset: "4px",
-            borderRadius: "4px",
-            backgroundColor: teamColor,
-            opacity: 0,
-            pointerEvents: "none",
-            zIndex: 10,
-          }}
-        />
-      </Activity>
-    </div>
+      {/* Spymaster overlay - AnimatePresence for mount/unmount */}
+      <AnimatePresence>
+        {viewMode === "spymaster" && !card.selected && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{
+              duration: 0.4,
+              delay: 0.1,
+              ease: [0.34, 1.56, 0.64, 1],
+            }}
+            style={{
+              position: "absolute",
+              inset: "4px",
+              borderRadius: "4px",
+              backgroundColor: teamColor,
+              pointerEvents: "none",
+              zIndex: 10,
+            }}
+          />
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 
@@ -255,6 +172,7 @@ const SandboxContent: React.FC = () => {
   );
 
   const [cards, setCards] = useState(mockCards);
+  const [dealKey, setDealKey] = useState(0);
 
   const handleDeal = () => {
     clearEvents();
@@ -265,6 +183,7 @@ const SandboxContent: React.FC = () => {
     // Remount with deal event (mimics server request delay)
     setTimeout(() => {
       setCards(mockCards.map((c) => ({ ...c, selected: false })));
+      setDealKey((prev) => prev + 1); // Force new key = remount = re-trigger entry animations
       addEvent("deal");
     }, 50);
   };
@@ -304,15 +223,17 @@ const SandboxContent: React.FC = () => {
         </div>
 
         <div className={styles.grid}>
-          {cards.map((card, index) => (
-            <SandboxCard
-              key={card.word}
-              card={card}
-              index={index}
-              events={events}
-              onSelect={() => handleCardClick(card.word)}
-            />
-          ))}
+          <AnimatePresence mode="wait">
+            {cards.map((card, index) => (
+              <SandboxCard
+                key={`${dealKey}-${card.word}`}
+                card={card}
+                index={index}
+                events={events}
+                onSelect={() => handleCardClick(card.word)}
+              />
+            ))}
+          </AnimatePresence>
         </div>
 
         <div
@@ -345,12 +266,9 @@ const SandboxContent: React.FC = () => {
 
 export const CardVisibilitySandbox: React.FC = () => {
   return (
-    <AnimationEngineProvider engineId="sandbox">
-      <ViewModeProvider>
-        <SandboxContent />
-        <DevToolsPanel defaultOpen={true} theme="dark" />
-      </ViewModeProvider>
-    </AnimationEngineProvider>
+    <ViewModeProvider>
+      <SandboxContent />
+    </ViewModeProvider>
   );
 };
 
