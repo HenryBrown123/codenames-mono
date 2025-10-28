@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState, useEffect } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { useGameDataRequired, useTurn } from "../../game-data/providers";
 import { useGameActions } from "../../game-actions";
 import { GameCard } from "../cards/game-card";
@@ -23,9 +23,8 @@ const CodebreakerBoardContent = memo<{
   onCardClick: (word: string) => void;
   tilt: number;
   currentTeamName?: string;
-  dealKey: number;
-  dealOnEntry: boolean;
-}>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick, tilt, currentTeamName, dealKey, dealOnEntry }) => {
+  shouldAnimateDeal: boolean;
+}>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick, tilt, currentTeamName, shouldAnimateDeal }) => {
   const { viewMode } = useViewMode();
 
   return (
@@ -58,13 +57,13 @@ const CodebreakerBoardContent = memo<{
         {cards.length > 0
           ? cards.map((card, index) => (
               <GameCard
-                key={`${dealKey}-${card.word}`}
+                key={card.word}
                 card={card}
                 index={index}
                 onClick={() => onCardClick(card.word)}
                 clickable={canMakeGuess && !isLoading && !card.selected}
                 isCurrentTeam={currentTeamName === card.teamName}
-                dealOnEntry={dealOnEntry}
+                dealOnEntry={shouldAnimateDeal}
               />
             ))
           : Array.from({ length: 25 }).map((_, i) => <EmptyCard key={`empty-${i}`} />)}
@@ -75,33 +74,18 @@ const CodebreakerBoardContent = memo<{
 
 CodebreakerBoardContent.displayName = "CodebreakerBoardContent";
 
-export const CodebreakerBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
-  const { gameData } = useGameDataRequired();
-  const { makeGuess, actionState } = useGameActions();
-  const { activeTurn } = useTurn();
-  const cards = gameData.currentRound?.cards || [];
-  const currentTeamName = gameData.playerContext?.teamName;
+export const CodebreakerBoard = memo<{ tilt?: number; scene?: string }>(
+  ({ tilt = 0, scene }) => {
+    const { gameData } = useGameDataRequired();
+    const { makeGuess, actionState } = useGameActions();
+    const { activeTurn } = useTurn();
+    const cards = gameData.currentRound?.cards || [];
+    const currentTeamName = gameData.playerContext?.teamName;
 
-  const isLoading = actionState.status === "loading";
+    const isLoading = actionState.status === "loading";
 
-  const [dealKey, setDealKey] = useState(0);
-  const [dealOnEntry, setDealOnEntry] = useState(true);
-
-  // When new round starts, force remount to retrigger deal animations
-  useEffect(() => {
-    if (cards.length > 0) {
-      setDealKey((prev) => prev + 1);
-      setDealOnEntry(true);
-
-      // Reset dealOnEntry after animations complete
-      // Calculation: stagger (50ms) * card count + animation duration (800ms) + buffer (200ms)
-      const timer = setTimeout(() => {
-        setDealOnEntry(false);
-      }, cards.length * 50 + 1000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [gameData.currentRound?.roundNumber, cards.length]);
+    // Animation only plays in lobby/dealing scenes
+    const shouldAnimateDeal = scene === "lobby" || scene === "dealing";
 
   const canMakeGuess = useMemo(() => {
     if (gameData.playerContext?.role !== "CODEBREAKER") return false;
@@ -122,19 +106,19 @@ export const CodebreakerBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
     [makeGuess, isLoading, canMakeGuess],
   );
 
-  return (
-    <CodebreakerBoardContent
-      cards={cards}
-      canMakeGuess={canMakeGuess}
-      isLoading={isLoading}
-      activeTurn={activeTurn}
-      onCardClick={handleCardClick}
-      tilt={tilt}
-      currentTeamName={currentTeamName}
-      dealKey={dealKey}
-      dealOnEntry={dealOnEntry}
-    />
-  );
-});
+    return (
+      <CodebreakerBoardContent
+        cards={cards}
+        canMakeGuess={canMakeGuess}
+        isLoading={isLoading}
+        activeTurn={activeTurn}
+        onCardClick={handleCardClick}
+        tilt={tilt}
+        currentTeamName={currentTeamName}
+        shouldAnimateDeal={shouldAnimateDeal}
+      />
+    );
+  }
+);
 
 CodebreakerBoard.displayName = "CodebreakerBoard";

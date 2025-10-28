@@ -30,8 +30,8 @@ export const GameScene: React.FC = () => {
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
   const BoardComponent = React.useMemo(() => {
     const Component = getBoardComponent(currentRole, currentScene);
-    return (props: { tilt?: number }) => (
-      <Component {...props} key={`${currentRole}-${currentScene}`} />
+    return (props: { tilt?: number; scene?: string }) => (
+      <Component {...props} scene={currentScene} key={`${currentRole}-${currentScene}`} />
     );
   }, [currentRole, currentScene]);
 
@@ -46,7 +46,7 @@ export const GameScene: React.FC = () => {
     return (
       <div className={styles.gameSceneContainer}>
         <div className={styles.boardArea}>
-          <SpectatorBoard tilt={boardTilt} />
+          <SpectatorBoard tilt={boardTilt} scene={currentScene} />
         </div>
         <div className={styles.controlArea} />
       </div>
@@ -70,7 +70,7 @@ export const GameScene: React.FC = () => {
     return (
       <div className={styles.gameSceneContainer}>
         <div className={styles.boardArea}>
-          <SpectatorBoard tilt={boardTilt} />
+          <SpectatorBoard tilt={boardTilt} scene={currentScene} />
         </div>
         <div className={styles.controlArea}>
           <div>Game Completed!</div>
