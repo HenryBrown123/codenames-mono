@@ -1,4 +1,5 @@
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo, useState, useEffect } from "react";
+import { AnimatePresence } from "framer-motion";
 import { useGameDataRequired, useTurn } from "../../game-data/providers";
 import { useGameActions } from "../../game-actions";
 import { GameCard } from "../cards/game-card";
@@ -23,7 +24,8 @@ const CodebreakerBoardContent = memo<{
   onCardClick: (word: string) => void;
   tilt: number;
   currentTeamName?: string;
-}>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick, tilt, currentTeamName }) => {
+  dealKey: number;
+}>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick, tilt, currentTeamName, dealKey }) => {
   const { viewMode } = useViewMode();
 
   return (
@@ -53,18 +55,20 @@ const CodebreakerBoardContent = memo<{
       )}
 
       <GameBoardLayout data-ar-mode={viewMode === "spymaster"} tilt={tilt}>
-        {cards.length > 0
-          ? cards.map((card, index) => (
-              <GameCard
-                key={card.word}
-                card={card}
-                index={index}
-                onClick={() => onCardClick(card.word)}
-                clickable={canMakeGuess && !isLoading && !card.selected}
-                isCurrentTeam={currentTeamName === card.teamName}
-              />
-            ))
-          : Array.from({ length: 25 }).map((_, i) => <EmptyCard key={`empty-${i}`} />)}
+        <AnimatePresence mode="wait">
+          {cards.length > 0
+            ? cards.map((card, index) => (
+                <GameCard
+                  key={`${dealKey}-${card.word}`}
+                  card={card}
+                  index={index}
+                  onClick={() => onCardClick(card.word)}
+                  clickable={canMakeGuess && !isLoading && !card.selected}
+                  isCurrentTeam={currentTeamName === card.teamName}
+                />
+              ))
+            : Array.from({ length: 25 }).map((_, i) => <EmptyCard key={`empty-${i}`} />)}
+        </AnimatePresence>
       </GameBoardLayout>
     </>
   );
@@ -80,6 +84,15 @@ export const CodebreakerBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   const currentTeamName = gameData.playerContext?.teamName;
 
   const isLoading = actionState.status === "loading";
+
+  const [dealKey, setDealKey] = useState(0);
+
+  // When new round starts, force remount to retrigger deal animations
+  useEffect(() => {
+    if (cards.length > 0) {
+      setDealKey((prev) => prev + 1);
+    }
+  }, [gameData.currentRound?.roundNumber]);
 
   const canMakeGuess = useMemo(() => {
     if (gameData.playerContext?.role !== "CODEBREAKER") return false;
@@ -109,6 +122,7 @@ export const CodebreakerBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
       onCardClick={handleCardClick}
       tilt={tilt}
       currentTeamName={currentTeamName}
+      dealKey={dealKey}
     />
   );
 });

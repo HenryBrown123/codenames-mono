@@ -1,18 +1,12 @@
-import { memo, useMemo, useState, useEffect } from "react";
+import { memo, useState, useEffect } from "react";
+import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { Card } from "@frontend/shared-types";
-import { useAnimationRegistration } from "../../animations/use-animation-registration";
-import { useCardAnimationEffects } from "./use-card-animation-effects";
 import { useCardEvent } from "../../game-data/events";
 import { useViewMode } from "../view-mode/view-mode-context";
-import { useAnimationEngine } from "../../animations/animation-engine-context";
+import { useCardAnimationState } from "../../use-card-animation-state";
 import { getTeamType, getCardColor } from "./card-utils";
 import { cx } from "../../../lib/classnames";
 import styles from "./game-card.module.css";
-import {
-  cardContainerAnimations,
-  coverLayerAnimations,
-  spymasterOverlayAnimations,
-} from "./card-animation-definitions";
 
 interface GameCardProps {
   card: Card;
@@ -31,56 +25,12 @@ const getTextSizeClass = (word: string, threshold: number = 9): string => {
 export const GameCard = memo<GameCardProps>(
   ({ card, index, onClick, clickable, isCurrentTeam }) => {
     const { viewMode } = useViewMode();
-    const engine = useAnimationEngine();
-
-    const entryAnimation = useMemo(() => {
-      return viewMode === 'dealing' ? 'deal' : undefined;
-    }, [viewMode]);
-
-    // Base entity context without animation state
-    const baseEntityContext = useMemo(
-      () => ({
-        teamName: card.teamName,
-        selected: card.selected,
-        viewMode,
-        index,
-      }),
-      [card.teamName, card.selected, viewMode, index]
-    );
-
-    const { createAnimationRef } = useAnimationRegistration(
-      card.word,
-      baseEntityContext,
-      {
-        entryTransition: entryAnimation,
-      }
-    );
 
     // Get next event from server event log
     const nextEvent = useCardEvent(card.word);
 
-    const { isAnimating, displayState } = useCardAnimationEffects({
-      viewMode,
-      nextEvent,
-      triggerTransition: async (event: string) => {
-        const transitionsMap = new Map();
-        transitionsMap.set(card.word, { entityId: card.word, event });
-        await engine.playTransitions(transitionsMap);
-      },
-    });
-
-    // Update engine context with animation state separately
-    useEffect(() => {
-      engine.updateEntityContext(card.word, {
-        ...baseEntityContext,
-        displayState,
-        isAnimating,
-      });
-    }, [engine, card.word, baseEntityContext, displayState, isAnimating]);
-
-    const containerRef = createAnimationRef("container", cardContainerAnimations);
-    const coverRef = createAnimationRef("cover", coverLayerAnimations);
-    const overlayRef = createAnimationRef("spymaster-overlay", spymasterOverlayAnimations);
+    // Derive animation state from events
+    const animationState = useCardAnimationState(nextEvent, card.selected, viewMode);
 
     const teamType = getTeamType(card);
     const cardColor = getCardColor(card);
@@ -102,15 +52,21 @@ export const GameCard = memo<GameCardProps>(
       return () => window.removeEventListener('resize', updateThreshold);
     }, []);
 
-    const isColored = displayState === "visible-colored";
+    const isColored = animationState.displayState === "visible-colored";
     const showSpymasterOverlay = isColored;
 
     return (
-      <div
-        ref={containerRef}
+      <motion.div
+        initial={{ x: -200, y: -200, rotate: -45, scale: 0, opacity: 0 }}
+        animate={{ x: 0, y: 0, rotate: 0, scale: 1, opacity: 1 }}
+        transition={{
+          delay: index * 0.05,
+          duration: 0.8,
+          ease: [0.34, 1.56, 0.64, 1],
+        }}
         className={styles.cardContainer}
         data-team={teamType}
-        data-state={displayState}
+        data-state={animationState.displayState}
         data-clickable={clickable && !card.selected}
         data-current-team={isCurrentTeam ? "true" : "false"}
         style={
@@ -121,7 +77,7 @@ export const GameCard = memo<GameCardProps>(
         }
       >
         <div
-          onClick={!isAnimating && clickable && !card.selected ? onClick : undefined}
+          onClick={clickable && !card.selected ? onClick : undefined}
           className={cx(styles.normalCard, isCurrentTeam && styles.currentTeam)}
         >
           <div className={styles.ripple} />
@@ -130,30 +86,59 @@ export const GameCard = memo<GameCardProps>(
           </span>
         </div>
 
-        <div ref={coverRef} className={styles.coverCard}>
-          <div className={styles.teamSymbol} data-team={teamType} />
-        </div>
+        {/* Cover card - slides down on select */}
+        <AnimatePresence>
+          {animationState.shouldShowCover && (
+            <motion.div
+              initial={{ y: -150, opacity: 0, rotateY: -180, scale: 0 }}
+              animate={{
+                y: 0,
+                opacity: 1,
+                rotateY: 0,
+                scale: 1
+              }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
+              className={styles.coverCard}
+            >
+              <div className={styles.teamSymbol} data-team={teamType} />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {showSpymasterOverlay && (
-          <div ref={overlayRef} className={styles.spymasterOverlay}>
-            <div className={styles.teamColorFilter} />
-            <div className={styles.scanGrid} />
-            <div className={styles.spymasterSymbol} />
-            <span className={cx(styles.cardWord, getTextSizeClass(card.word, threshold))}>
-              {card.word}
-            </span>
-            <div className={styles.teamBadge}>{teamType.toUpperCase()}</div>
-            {isCurrentTeam && (
-              <div className={styles.cardARCorners}>
-                <div className={styles.cardARCorner} data-position="tl" />
-                <div className={styles.cardARCorner} data-position="tr" />
-                <div className={styles.cardARCorner} data-position="bl" />
-                <div className={styles.cardARCorner} data-position="br" />
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+        {/* Spymaster overlay */}
+        <AnimatePresence>
+          {showSpymasterOverlay && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{
+                duration: 0.4,
+                delay: 0.1,
+                ease: [0.34, 1.56, 0.64, 1],
+              }}
+              className={styles.spymasterOverlay}
+            >
+              <div className={styles.teamColorFilter} />
+              <div className={styles.scanGrid} />
+              <div className={styles.spymasterSymbol} />
+              <span className={cx(styles.cardWord, getTextSizeClass(card.word, threshold))}>
+                {card.word}
+              </span>
+              <div className={styles.teamBadge}>{teamType.toUpperCase()}</div>
+              {isCurrentTeam && (
+                <div className={styles.cardARCorners}>
+                  <div className={styles.cardARCorner} data-position="tl" />
+                  <div className={styles.cardARCorner} data-position="tr" />
+                  <div className={styles.cardARCorner} data-position="bl" />
+                  <div className={styles.cardARCorner} data-position="br" />
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
     );
   }
 );
