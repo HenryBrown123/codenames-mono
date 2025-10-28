@@ -54,12 +54,24 @@ export function useCardAnimationEffects(
       return;
     }
 
+    console.log(`[useLayoutEffect] Event: ${nextEvent}, displayState: ${displayStateRef.current}`);
+
+    // Check if this event requires certain elements
+    const requiredElements =
+      nextEvent === "reveal_colors" || nextEvent === "hide_colors"
+        ? ["container", "overlay"]
+        : ["container"];
+
+    console.log(`[useLayoutEffect] Required elements:`, requiredElements);
+
     const animate = async () => {
       setIsAnimating(true);
       setCurrentAnimation(nextEvent);
 
       try {
+        console.log(`[useLayoutEffect] About to call triggerTransition(${nextEvent})`);
         await triggerTransition(nextEvent);
+        console.log(`[useLayoutEffect] triggerTransition completed`);
 
         // Update displayState via state machine
         const nextState = determineNextCardState(displayStateRef.current, nextEvent as CardEvent);
@@ -69,6 +81,10 @@ export function useCardAnimationEffects(
 
         // Mark event as processed
         lastProcessedEventRef.current = nextEvent;
+
+        console.log(`[useLayoutEffect] Final state: ${displayStateRef.current}`);
+      } catch (error) {
+        console.error(`[useLayoutEffect] Animation failed:`, error);
       } finally {
         setIsAnimating(false);
         setCurrentAnimation(null);

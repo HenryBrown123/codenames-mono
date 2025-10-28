@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import React, { useState, useMemo, useCallback, useRef, Activity } from "react";
 import { AnimationEngineProvider, useAnimationRegistration } from "../gameplay/animations";
 import { DevToolsPanel } from "../gameplay/animations/animation-devtools";
 import { ViewModeProvider, useViewMode } from "../gameplay/game-board/view-mode";
@@ -77,7 +77,7 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ card, index, events, onSelect
 
   // Get next event from event log (call BEFORE useAnimationRegistration)
   const nextEvent = useCardEvent(events, card.word);
-
+  console.log("Card event found :", nextEvent);
   const { createAnimationRef, triggerTransition } = useAnimationRegistration(
     card.word,
     entityContext,
@@ -167,7 +167,10 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ card, index, events, onSelect
 
   return (
     <div
-      ref={createAnimationRef("container", cardAnimations)}
+      ref={(el) => {
+        console.log(`[${card.word} Container Ref] Callback fired, element:`, el);
+        createAnimationRef("container", cardAnimations)(el);
+      }}
       className={styles.card}
       style={{
         perspective: "1000px",
@@ -202,9 +205,12 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ card, index, events, onSelect
       </div>
 
       {/* Spymaster overlay - separate animated element */}
-      {viewMode === "spymaster" && !card.selected && (
+      <Activity mode={viewMode === "spymaster" && !card.selected ? "visible" : "hidden"}>
         <div
-          ref={createAnimationRef("overlay", overlayAnimations)}
+          ref={(el) => {
+            console.log(`[${card.word} Overlay Ref] Callback fired, element:`, el);
+            createAnimationRef("overlay", overlayAnimations)(el);
+          }}
           style={{
             position: "absolute",
             inset: "4px",
@@ -215,7 +221,7 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ card, index, events, onSelect
             zIndex: 10,
           }}
         />
-      )}
+      </Activity>
     </div>
   );
 };
