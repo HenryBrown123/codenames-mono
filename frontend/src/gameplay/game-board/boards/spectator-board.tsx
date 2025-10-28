@@ -1,5 +1,4 @@
 import { memo, useState, useEffect } from "react";
-import { AnimatePresence } from "framer-motion";
 import { useGameDataRequired } from "../../game-data/providers";
 import { GameCard } from "../cards/game-card";
 import { GameBoardLayout, EmptyCard } from "./board-layout";
@@ -19,31 +18,30 @@ export const SpectatorBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
       setDealOnEntry(true);
 
       // Reset dealOnEntry after animations complete
+      // Calculation: stagger (50ms) * card count + animation duration (800ms) + buffer (200ms)
       const timer = setTimeout(() => {
         setDealOnEntry(false);
-      }, 2000);
+      }, cards.length * 50 + 1000);
 
       return () => clearTimeout(timer);
     }
-  }, [gameData.currentRound?.roundNumber]);
+  }, [gameData.currentRound?.roundNumber, cards.length]);
 
   return (
     <GameBoardLayout tilt={tilt}>
-      <AnimatePresence mode="wait">
-        {cards.length > 0
-          ? cards.map((card, index) => (
-              <GameCard
-                key={`${dealKey}-${card.word}`}
-                card={card}
-                index={index}
-                onClick={() => {}}
-                clickable={false}
-                isCurrentTeam={currentTeamName === card.teamName}
-                dealOnEntry={dealOnEntry}
-              />
-            ))
-          : Array.from({ length: 25 }).map((_, i) => <EmptyCard key={`empty-${i}`} />)}
-      </AnimatePresence>
+      {cards.length > 0
+        ? cards.map((card, index) => (
+            <GameCard
+              key={`${dealKey}-${card.word}`}
+              card={card}
+              index={index}
+              onClick={() => {}}
+              clickable={false}
+              isCurrentTeam={currentTeamName === card.teamName}
+              dealOnEntry={dealOnEntry}
+            />
+          ))
+        : Array.from({ length: 25 }).map((_, i) => <EmptyCard key={`empty-${i}`} />)}
     </GameBoardLayout>
   );
 });

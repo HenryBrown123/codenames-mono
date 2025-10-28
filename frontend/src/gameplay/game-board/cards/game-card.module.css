@@ -22,15 +22,20 @@
   transform: translateY(0) rotate(0deg);
 }
 
-/* Only hide when explicitly in hidden state */
+/* State-based styling (not animation triggers) - Motion controls transitions */
 .cardContainer[data-state="hidden"] {
+  /* Motion controls actual animation, this is just for direct state jumps */
   opacity: 0;
-  transform: translateY(-100vh) rotate(-15deg);
   pointer-events: none;
 }
 
-/* Explicit visible state */
 .cardContainer[data-state="visible"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.cardContainer[data-state="revealed"] {
+  /* Revealed cards stay visible */
   opacity: 1;
   pointer-events: auto;
 }
@@ -61,71 +66,9 @@
   opacity: 0;
 }
 
-/* Performance hints */
-.cardContainer[data-will-animate="true"] {
-  will-change: transform;
-}
-
-.cardContainer[data-animation=""] {
-  will-change: auto;
-}
-
-/* ===== ANIMATIONS ===== */
-/* Deal-in animation */
-@media (prefers-reduced-motion: no-preference) {
-  .cardContainer[data-animation="deal-in"] {
-    opacity: 0;
-    animation: dealIn 700ms calc(var(--card-index) * 75ms) cubic-bezier(0.25, 0.46, 0.45, 0.94)
-      forwards;
-  }
-
-  .cardContainer[data-animation="cover-card"] {
-    z-index: var(--z-card-animating);
-  }
-
-  .cardContainer[data-animation="cover-card"] .coverCard {
-    animation: coverCard 3s ease-out forwards;
-  }
-
-  .cardContainer[data-animation="spymaster-reveal-in"] .spymasterOverlay {
-    animation: spymasterReveal 600ms ease-in forwards;
-  }
-
-  .cardContainer[data-animation="spymaster-reveal-out"] .spymasterOverlay {
-    animation: spymasterReveal 600ms ease-in reverse forwards;
-  }
-}
-
-/* Reduced motion fallbacks */
-@media (prefers-reduced-motion: reduce) {
-  .cardContainer[data-animation="deal-in"] {
-    opacity: 1;
-    transform: none;
-    transition: opacity 0.3s ease;
-  }
-
-  .cardContainer[data-animation="cover-card"] {
-    z-index: var(--z-card-animating);
-  }
-
-  .cardContainer[data-animation="cover-card"] .coverCard {
-    opacity: 1;
-    transform: none;
-    transition: opacity 0.3s ease;
-  }
-
-  .cardContainer[data-animation="spymaster-reveal-in"] .spymasterOverlay {
-    opacity: 1;
-    transform: none;
-    transition: opacity 0.3s ease;
-  }
-
-  .cardContainer[data-animation="spymaster-reveal-out"] .spymasterOverlay {
-    opacity: 0;
-    transform: none;
-    transition: opacity 0.3s ease;
-  }
-}
+/* ===== REMOVED CSS ANIMATIONS ===== */
+/* All animations now handled by Framer Motion via state machine */
+/* No more CSS @keyframes or data-animation attributes */
 
 /* ===== NORMAL CARD (Beige) ===== */
 .normalCard {
@@ -240,7 +183,6 @@
 .normalCard:active .ripple {
   transform: translate(-50%, -50%) scale(1);
   opacity: 0.3;
-  animation: rippleEffect 0.6s ease-out;
 }
 
 /* ===== TEXT SIZING - BEST PRACTICES ===== */
