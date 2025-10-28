@@ -25,7 +25,8 @@ const CodebreakerBoardContent = memo<{
   tilt: number;
   currentTeamName?: string;
   dealKey: number;
-}>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick, tilt, currentTeamName, dealKey }) => {
+  dealOnEntry: boolean;
+}>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick, tilt, currentTeamName, dealKey, dealOnEntry }) => {
   const { viewMode } = useViewMode();
 
   return (
@@ -65,6 +66,7 @@ const CodebreakerBoardContent = memo<{
                   onClick={() => onCardClick(card.word)}
                   clickable={canMakeGuess && !isLoading && !card.selected}
                   isCurrentTeam={currentTeamName === card.teamName}
+                  dealOnEntry={dealOnEntry}
                 />
               ))
             : Array.from({ length: 25 }).map((_, i) => <EmptyCard key={`empty-${i}`} />)}
@@ -86,11 +88,20 @@ export const CodebreakerBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
   const isLoading = actionState.status === "loading";
 
   const [dealKey, setDealKey] = useState(0);
+  const [dealOnEntry, setDealOnEntry] = useState(true);
 
   // When new round starts, force remount to retrigger deal animations
   useEffect(() => {
     if (cards.length > 0) {
       setDealKey((prev) => prev + 1);
+      setDealOnEntry(true);
+
+      // Reset dealOnEntry after animations complete
+      const timer = setTimeout(() => {
+        setDealOnEntry(false);
+      }, 2000);
+
+      return () => clearTimeout(timer);
     }
   }, [gameData.currentRound?.roundNumber]);
 
@@ -123,6 +134,7 @@ export const CodebreakerBoard = memo<{ tilt?: number }>(({ tilt = 0 }) => {
       tilt={tilt}
       currentTeamName={currentTeamName}
       dealKey={dealKey}
+      dealOnEntry={dealOnEntry}
     />
   );
 });

@@ -145,6 +145,10 @@
   overflow: hidden;
   transform: translateZ(0);
 
+  /* 3D flip support */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+
   /* Typography */
   color: #2a2a3e;
   font-family: sans-serif;
@@ -358,11 +362,16 @@
   inset: 0;
   background-color: var(--team-color);
   border-radius: 6px;
-  display: none; /* Hidden by default */
+  display: flex; /* Always display for 3D flip */
   align-items: center;
   justify-content: center;
   z-index: var(--z-card-covered);
   border: 2px solid var(--team-color);
+
+  /* 3D flip support - back face starts rotated */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: rotateY(180deg);
 
   /* 3D thickness effect for cover cards */
   box-shadow:
@@ -379,10 +388,7 @@
     0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
-/* Show when covered */
-.cardContainer[data-state="visible-covered"] .coverCard {
-  display: flex;
-}
+/* Removed old conditional display - now using 3D flip */
 
 /* Special assassin card styling */
 .cardContainer[data-team="assassin"] .coverCard {
@@ -428,16 +434,13 @@
   z-index: var(--z-spymaster-ar-overlay);
   border-radius: 6px;
   overflow: visible;
-  display: none; /* Hidden by default */
+  display: flex; /* Always flex - AnimatePresence handles mounting/unmounting */
   align-items: center;
   justify-content: center;
   flex-direction: column;
 }
 
-/* Show in spymaster mode */
-.cardContainer[data-state="visible-colored"] .spymasterOverlay {
-  display: flex;
-}
+/* Removed old conditional display - now using AnimatePresence */
 
 /* ===== TEAM COLOR FILTER ===== */
 .teamColorFilter {

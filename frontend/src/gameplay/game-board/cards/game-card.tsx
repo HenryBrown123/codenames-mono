@@ -1,9 +1,8 @@
 import { memo, useState, useEffect } from "react";
-import { motion, AnimatePresence, useAnimation } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@frontend/shared-types";
-import { useCardEvent } from "../../game-data/events";
 import { useViewMode } from "../view-mode/view-mode-context";
-import { useCardAnimationState } from "../../use-card-animation-state";
+import { useCardAnimationEffectsV2 } from "./use-card-animation-effects-v2";
 import { getTeamType, getCardColor } from "./card-utils";
 import { cx } from "../../../lib/classnames";
 import styles from "./game-card.module.css";
@@ -14,6 +13,7 @@ interface GameCardProps {
   onClick: () => void;
   clickable: boolean;
   isCurrentTeam: boolean;
+  dealOnEntry: boolean;
 }
 
 const getTextSizeClass = (word: string, threshold: number = 9): string => {
@@ -23,14 +23,15 @@ const getTextSizeClass = (word: string, threshold: number = 9): string => {
 };
 
 export const GameCard = memo<GameCardProps>(
-  ({ card, index, onClick, clickable, isCurrentTeam }) => {
+  ({ card, index, onClick, clickable, isCurrentTeam, dealOnEntry }) => {
     const { viewMode } = useViewMode();
 
-    // Get next event from server event log
-    const nextEvent = useCardEvent(card.word);
-
-    // Derive animation state from events
-    const animationState = useCardAnimationState(nextEvent, card.selected, viewMode);
+    // Animation state machine
+    const { visualState, containerControls, revealControls } = useCardAnimationEffectsV2({
+      card,
+      index,
+      dealOnEntry,
+    });
 
     const teamType = getTeamType(card);
     const cardColor = getCardColor(card);
@@ -40,7 +41,7 @@ export const GameCard = memo<GameCardProps>(
     useEffect(() => {
       const updateThreshold = () => {
         const root = document.documentElement;
-        const value = getComputedStyle(root).getPropertyValue('--text-length-threshold');
+        const value = getComputedStyle(root).getPropertyValue("--text-length-threshold");
         const parsed = parseInt(value, 10);
         if (!isNaN(parsed)) {
           setThreshold(parsed);
@@ -48,67 +49,61 @@ export const GameCard = memo<GameCardProps>(
       };
 
       updateThreshold();
-      window.addEventListener('resize', updateThreshold);
-      return () => window.removeEventListener('resize', updateThreshold);
+      window.addEventListener("resize", updateThreshold);
+      return () => window.removeEventListener("resize", updateThreshold);
     }, []);
 
-    const isColored = animationState.displayState === "visible-colored";
-    const showSpymasterOverlay = isColored;
+    const isClickable = visualState === "visible" && !card.selected && clickable;
+    const isColored = viewMode === "spymaster" && visualState !== "revealed";
 
     return (
       <motion.div
-        initial={{ x: -200, y: -200, rotate: -45, scale: 0, opacity: 0 }}
-        animate={{ x: 0, y: 0, rotate: 0, scale: 1, opacity: 1 }}
-        transition={{
-          delay: index * 0.05,
-          duration: 0.8,
-          ease: [0.34, 1.56, 0.64, 1],
-        }}
+        animate={containerControls}
         className={styles.cardContainer}
         data-team={teamType}
-        data-state={animationState.displayState}
-        data-clickable={clickable && !card.selected}
+        data-state={visualState}
+        data-clickable={isClickable}
         data-current-team={isCurrentTeam ? "true" : "false"}
         style={
           {
             "--card-index": index,
             "--team-color": cardColor,
+            width: "200px",
+            height: "133px",
+            perspective: "1000px",
+            position: "relative",
+            cursor: isClickable ? "pointer" : "default",
           } as React.CSSProperties
         }
+        onClick={isClickable ? onClick : undefined}
       >
-        <div
-          onClick={clickable && !card.selected ? onClick : undefined}
-          className={cx(styles.normalCard, isCurrentTeam && styles.currentTeam)}
+        {/* Card flip container */}
+        <motion.div
+          animate={revealControls}
+          style={{
+            width: "100%",
+            height: "100%",
+            position: "relative",
+            transformStyle: "preserve-3d",
+          }}
         >
-          <div className={styles.ripple} />
-          <span className={cx(styles.cardWord, getTextSizeClass(card.word, threshold))}>
-            {card.word}
-          </span>
-        </div>
+          {/* Front face */}
+          <div className={styles.normalCard}>
+            <div className={styles.ripple} />
+            <span className={cx(styles.cardWord, getTextSizeClass(card.word, threshold))}>
+              {card.word}
+            </span>
+          </div>
 
-        {/* Cover card - slides down on select */}
-        <AnimatePresence>
-          {animationState.shouldShowCover && (
-            <motion.div
-              initial={{ y: -150, opacity: 0, rotateY: -180, scale: 0 }}
-              animate={{
-                y: 0,
-                opacity: 1,
-                rotateY: 0,
-                scale: 1
-              }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
-              className={styles.coverCard}
-            >
-              <div className={styles.teamSymbol} data-team={teamType} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+          {/* Back face - revealed team color */}
+          <div className={styles.coverCard}>
+            <div className={styles.teamSymbol} data-team={teamType} />
+          </div>
+        </motion.div>
 
-        {/* Spymaster overlay */}
+        {/* Spymaster overlay - state-driven, not part of state machine */}
         <AnimatePresence>
-          {showSpymasterOverlay && (
+          {isColored && (
             <motion.div
               initial={{ opacity: 0, scale: 0.8, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}

@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ViewModeProvider, useViewMode } from "../gameplay/game-board/view-mode";
-import { useCardVisualState } from "./use-card-visual-state";
 import type { GameEvent } from "./sandbox-events.types";
 import styles from "./card-visibility-sandbox.module.css";
 
@@ -48,6 +47,15 @@ function useCardEvent(events: GameEvent[], cardId: string): string | null {
     lastProcessedIdRef.current = nextEvent.id;
     return nextEvent.type;
   }, [events, cardId]);
+}
+
+// Simple visual state hook for sandbox
+function useCardVisualState(nextEvent: string | null, isSelected: boolean) {
+  return useMemo(() => {
+    return {
+      isFlipped: isSelected,
+    };
+  }, [nextEvent, isSelected]);
 }
 
 interface SandboxCardProps {
