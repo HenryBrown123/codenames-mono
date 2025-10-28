@@ -1,8 +1,7 @@
-import React, { useState, useMemo, useCallback, useRef, Activity } from "react";
+import React, { useState, useMemo, useCallback, useRef, useLayoutEffect, Activity } from "react";
 import { AnimationEngineProvider, useAnimationRegistration } from "../gameplay/animations";
 import { DevToolsPanel } from "../gameplay/animations/animation-devtools";
 import { ViewModeProvider, useViewMode } from "../gameplay/game-board/view-mode";
-import { useCardAnimationEffects } from "./use-card-animation-effects";
 import type { GameEvent } from "./sandbox-events.types";
 import styles from "./card-visibility-sandbox.module.css";
 
@@ -78,7 +77,7 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ card, index, events, onSelect
   // Get next event from event log (call BEFORE useAnimationRegistration)
   const nextEvent = useCardEvent(events, card.word);
   console.log("Card event found :", nextEvent);
-  const { createAnimationRef, triggerTransition } = useAnimationRegistration(
+  const { createAnimationRef, triggerTransition, isAnimating, currentAnimation } = useAnimationRegistration(
     card.word,
     entityContext,
     {
@@ -89,7 +88,22 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ card, index, events, onSelect
     },
   );
 
-  const { isAnimating } = useCardAnimationEffects(nextEvent, triggerTransition);
+  // Trigger animations when nextEvent changes (excluding "deal" which is handled by entryTransition)
+  const lastProcessedEventRef = useRef<string | null>(null);
+  useLayoutEffect(() => {
+    if (!nextEvent || nextEvent === "deal" || nextEvent === lastProcessedEventRef.current) {
+      return;
+    }
+
+    console.log(`[${card.word}] Triggering animation: ${nextEvent}`);
+    triggerTransition(nextEvent);
+    lastProcessedEventRef.current = nextEvent;
+  }, [nextEvent, triggerTransition, card.word]);
+
+  // Determine overlay visibility
+  const shouldShowOverlay =
+    (viewMode === "spymaster" && !card.selected && !isAnimating) ||
+    currentAnimation === "hide_colors";
 
   const cardAnimations = {
     deal: {
@@ -205,7 +219,7 @@ const SandboxCard: React.FC<SandboxCardProps> = ({ card, index, events, onSelect
       </div>
 
       {/* Spymaster overlay - separate animated element */}
-      <Activity mode={viewMode === "spymaster" && !card.selected ? "visible" : "hidden"}>
+      <Activity mode={shouldShowOverlay ? "visible" : "hidden"}>
         <div
           ref={(el) => {
             console.log(`[${card.word} Overlay Ref] Callback fired, element:`, el);
