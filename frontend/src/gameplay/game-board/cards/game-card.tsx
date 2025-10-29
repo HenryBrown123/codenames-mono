@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@frontend/shared-types";
 import { useViewMode } from "../view-mode/view-mode-context";
@@ -17,6 +17,10 @@ interface GameCardProps {
 export const GameCard = memo<GameCardProps>(
   ({ card, index, onClick, clickable, isCurrentTeam, dealOnEntry }) => {
     const { viewMode } = useViewMode();
+
+    // Capture selected state ONLY on mount (useRef.current doesn't update)
+    const initiallySelected = useRef(card.selected).current;
+
     const teamType = getTeamType(card);
     const cardColor = getCardColor(card);
 
@@ -26,34 +30,41 @@ export const GameCard = memo<GameCardProps>(
     return (
       <motion.div
         // Deal animation - only runs on mount when dealOnEntry is true
-        initial={dealOnEntry ? {
-          opacity: 0,
-          y: -200,
-          rotate: -45,
-          scale: 0
-        } : false}
+        initial={
+          dealOnEntry
+            ? {
+                opacity: 0,
+                y: -200,
+                rotate: -45,
+                scale: 0,
+              }
+            : false
+        }
         animate={{
           opacity: 1,
           y: 0,
           rotate: 0,
-          scale: 1
+          scale: 1,
         }}
         transition={{
           delay: dealOnEntry ? index * 0.05 : 0,
           duration: 0.8,
-          ease: [0.34, 1.56, 0.64, 1]
+          ease: [0.34, 1.56, 0.64, 1],
         }}
         className={styles.cardContainer}
         data-team={teamType}
         data-clickable={isClickable}
         data-current-team={isCurrentTeam}
-        style={{
-          "--team-color": cardColor,
-        } as React.CSSProperties}
+        style={
+          {
+            "--team-color": cardColor,
+          } as React.CSSProperties
+        }
         onClick={isClickable ? onClick : undefined}
       >
         {/* Card flip container */}
         <motion.div
+          initial={{ rotateY: initiallySelected ? 180 : 0 }}
           animate={{ rotateY: card.selected ? 180 : 0 }}
           transition={{ duration: 0.6, ease: "easeInOut" }}
           style={{
@@ -104,7 +115,7 @@ export const GameCard = memo<GameCardProps>(
         </AnimatePresence>
       </motion.div>
     );
-  }
+  },
 );
 
 GameCard.displayName = "GameCard";

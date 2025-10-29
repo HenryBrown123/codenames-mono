@@ -31,7 +31,7 @@ export const GameScene: React.FC = () => {
   const BoardComponent = React.useMemo(() => {
     const Component = getBoardComponent(currentRole, currentScene);
     return (props: { tilt?: number; scene?: string }) => (
-      <Component {...props} scene={currentScene} key={`${currentRole}-${currentScene}`} />
+      <Component {...props} scene={currentScene} key={currentRole} />
     );
   }, [currentRole, currentScene]);
 
