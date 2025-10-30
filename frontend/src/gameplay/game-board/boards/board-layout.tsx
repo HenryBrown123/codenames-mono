@@ -12,14 +12,13 @@ interface GameBoardLayoutProps {
  * Shared board layout component that provides consistent structure
  * for all role-specific boards
  */
-export const GameBoardLayout = React.forwardRef<HTMLDivElement, GameBoardLayoutProps>(({
+export const GameBoardLayout: React.FC<GameBoardLayoutProps> = ({
   children,
   className,
   "data-ar-mode": dataArMode,
   tilt = 0
-}, ref) => (
+}) => (
   <div
-    ref={ref}
     className={`${styles.boardWrapper} ${className || ''}`}
     data-ar-mode={dataArMode}
     style={{ '--board-tilt': `${tilt}deg` } as React.CSSProperties}
@@ -28,9 +27,7 @@ export const GameBoardLayout = React.forwardRef<HTMLDivElement, GameBoardLayoutP
       {children}
     </div>
   </div>
-));
-
-GameBoardLayout.displayName = "GameBoardLayout";
+);
 
 /**
  * Empty card component for loading/skeleton states

@@ -1,4 +1,4 @@
-import { memo, useRef, useEffect } from "react";
+import { memo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@frontend/shared-types";
 import { useViewMode } from "../view-mode/view-mode-context";
@@ -74,33 +74,21 @@ interface GameCardProps {
   onClick: () => void;
   clickable: boolean;
   isCurrentTeam: boolean;
+  dealOnEntry: boolean;
 }
 
 /**
  * GameCard - Main card component with flip animation
  */
 export const GameCard = memo<GameCardProps>(
-  ({ card, index, onClick, clickable, isCurrentTeam }) => {
+  ({ card, index, onClick, clickable, isCurrentTeam, dealOnEntry }) => {
     const { viewMode } = useViewMode();
 
-    // Trigger deal animation when viewMode is "dealing"
-    const shouldDealAnimate = viewMode === "dealing";
-
-    // Track mount/unmount
-    useEffect(() => {
-      console.log(`[${card.word}] 🟢 MOUNTED`);
-      return () => console.log(`[${card.word}] 🔴 UNMOUNTED`);
-    }, [card.word]);
+    // Use dealOnEntry for animation trigger
+    const shouldDealAnimate = dealOnEntry;
 
     // Capture initial selected state
     const initiallySelected = useRef(card.selected).current;
-
-    // DEBUG: Log when card renders and what states we have
-    console.log(`[${card.word}] Render:`, {
-      selected: card.selected,
-      initiallySelected,
-      shouldAnimate: !initiallySelected && card.selected
-    });
 
     const teamType = getTeamType(card);
     const cardColor = getCardColor(card);
@@ -110,7 +98,6 @@ export const GameCard = memo<GameCardProps>(
 
     return (
       <motion.div
-        // Deal animation - only runs when viewMode is "dealing"
         initial={
           shouldDealAnimate
             ? {
@@ -148,12 +135,6 @@ export const GameCard = memo<GameCardProps>(
           initial={{ rotateY: initiallySelected ? 180 : 0 }}
           animate={{ rotateY: card.selected ? 180 : 0 }}
           transition={{ duration: 0.6, ease: "easeInOut" }}
-          onAnimationStart={() => {
-            console.log(`[${card.word}] Animation START`);
-          }}
-          onAnimationComplete={() => {
-            console.log(`[${card.word}] Animation COMPLETE`);
-          }}
           style={{
             width: "100%",
             height: "100%",
@@ -171,16 +152,12 @@ export const GameCard = memo<GameCardProps>(
         {/* Spymaster overlay - AnimatePresence for mount/unmount */}
         <AnimatePresence>
           {showSpymasterOverlay && (
-            <SpymasterOverlay
-              word={card.word}
-              teamType={teamType}
-              isCurrentTeam={isCurrentTeam}
-            />
+            <SpymasterOverlay word={card.word} teamType={teamType} isCurrentTeam={isCurrentTeam} />
           )}
         </AnimatePresence>
       </motion.div>
     );
-  }
+  },
 );
 
 GameCard.displayName = "GameCard";

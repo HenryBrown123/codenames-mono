@@ -1,9 +1,8 @@
-import { memo, useCallback, useMemo, useRef } from "react";
+import { memo, useCallback, useMemo, useRef, useLayoutEffect } from "react";
 import { useGameDataRequired, useTurn } from "../../game-data/providers";
 import { useGameActions } from "../../game-actions";
 import { GameCard } from "../cards/game-card";
 import { GameBoardLayout, EmptyCard } from "./board-layout";
-import { useViewMode } from "../view-mode/view-mode-context";
 
 const CodebreakerBoardContent = memo<{
   cards: any[];
@@ -13,10 +12,26 @@ const CodebreakerBoardContent = memo<{
   onCardClick: (word: string) => void;
   tilt: number;
   currentTeamName?: string;
-  boardRef: (node: HTMLDivElement | null) => void;
-}>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick, tilt, currentTeamName, boardRef }) => {
+}>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick, tilt, currentTeamName }) => {
+  // Create stable key from card words (sorted for consistency)
+  const wordsKey = useMemo(() =>
+    cards.map(c => c.word).sort().join(","),
+    [cards]
+  );
+
+  // Track previous words to detect changes
+  const prevWordsKey = useRef(wordsKey);
+
+  // Deal animation should trigger when words change
+  const dealOnEntry = wordsKey !== prevWordsKey.current && cards.length > 0;
+
+  // Update ref after render (so next render sees current words as "previous")
+  useLayoutEffect(() => {
+    prevWordsKey.current = wordsKey;
+  });
+
   return (
-    <GameBoardLayout ref={boardRef} tilt={tilt}>
+    <GameBoardLayout tilt={tilt}>
         {cards.length > 0
           ? cards.map((card, index) => (
               <GameCard
@@ -26,6 +41,7 @@ const CodebreakerBoardContent = memo<{
                 onClick={() => onCardClick(card.word)}
                 clickable={canMakeGuess && !isLoading && !card.selected}
                 isCurrentTeam={currentTeamName === card.teamName}
+                dealOnEntry={dealOnEntry}
               />
             ))
           : Array.from({ length: 25 }).map((_, i) => <EmptyCard key={`empty-${i}`} />)}
@@ -42,25 +58,8 @@ export const CodebreakerBoard = memo<{ tilt?: number; scene?: string }>(
     const { activeTurn } = useTurn();
     const cards = gameData.currentRound?.cards || [];
     const currentTeamName = gameData.playerContext?.teamName;
-    const { viewMode, setViewMode } = useViewMode();
-
-    // Check if cards array reference changed
-    const cardsRef = useRef(cards);
-    console.log('[CodebreakerBoard] Cards changed?', cards !== cardsRef.current, 'Length:', cards.length);
-    cardsRef.current = cards;
 
     const isLoading = actionState.status === "loading";
-
-    // Callback ref to reset viewMode after board renders
-    const boardRef = useCallback((node: HTMLDivElement | null) => {
-      if (node && viewMode === "dealing") {
-        // After the board has rendered with viewMode="dealing",
-        // reset it so animations don't repeat
-        requestAnimationFrame(() => {
-          setViewMode("normal");
-        });
-      }
-    }, [viewMode, setViewMode]);
 
   const canMakeGuess = useMemo(() => {
     if (gameData.playerContext?.role !== "CODEBREAKER") return false;
@@ -90,7 +89,6 @@ export const CodebreakerBoard = memo<{ tilt?: number; scene?: string }>(
         onCardClick={handleCardClick}
         tilt={tilt}
         currentTeamName={currentTeamName}
-        boardRef={boardRef}
       />
     );
   }

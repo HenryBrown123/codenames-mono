@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 
-export type ViewMode = "normal" | "spymaster" | "dealing";
+export type ViewMode = "normal" | "spymaster";
 
 interface ViewModeContextValue {
   viewMode: ViewMode;

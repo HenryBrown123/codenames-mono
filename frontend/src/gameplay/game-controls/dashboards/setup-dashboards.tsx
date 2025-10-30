@@ -2,7 +2,6 @@ import React from "react";
 import { RefreshCw } from "lucide-react";
 import { useGameDataRequired } from "../../game-data/providers";
 import { useGameActions } from "../../game-actions";
-import { useViewMode } from "../../game-board/view-mode";
 import { ActionButton } from "../../shared/components";
 import { usePlayerScene } from "../../game-scene";
 import {
@@ -19,7 +18,6 @@ import styles from "./setup-dashboards.module.css";
 export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText }) => {
   const { gameData } = useGameDataRequired();
   const { createRound, startRound, dealCards, actionState } = useGameActions();
-  const { setViewMode } = useViewMode();
 
   if (!gameData) {
     return null;
@@ -45,11 +43,9 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
       (!gameData.currentRound.cards || gameData.currentRound.cards.length === 0)
     ) {
       try {
-        setViewMode("dealing");
         await dealCards(false);
       } catch (error) {
         console.error("Failed to deal cards:", error);
-        setViewMode("normal");
       }
       return;
     }
@@ -61,11 +57,9 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
 
   const handleRedeal = async () => {
     try {
-      setViewMode("dealing"); // Set dealing mode BEFORE mutation
       await dealCards(true);
     } catch (error) {
       console.error("Failed to redeal:", error);
-      setViewMode("normal"); // Reset on error
     }
   };
 

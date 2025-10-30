@@ -17,6 +17,7 @@ import { UISettingsDashboard } from "../game-controls/settings/ui-settings-dashb
 export const GameScene: React.FC = () => {
   const { gameData, isPending, isError, error, refetch, isFetching } = useGameDataRequired();
   const { activeTurn } = useTurn();
+
   const { currentRole, currentScene } = usePlayerScene();
   const [showCluePanel, setShowCluePanel] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
@@ -29,7 +30,6 @@ export const GameScene: React.FC = () => {
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
 
   const BoardComponent = React.useMemo(() => {
-    console.log("Fetching new board component for role:", currentRole);
     return getBoardComponent(currentRole);
   }, [currentRole]);
 
