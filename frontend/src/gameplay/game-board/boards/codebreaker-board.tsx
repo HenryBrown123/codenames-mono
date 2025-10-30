@@ -2,18 +2,7 @@ import { memo, useCallback, useMemo } from "react";
 import { useGameDataRequired, useTurn } from "../../game-data/providers";
 import { useGameActions } from "../../game-actions";
 import { GameCard } from "../cards/game-card";
-import { useViewMode } from "../view-mode/view-mode-context";
 import { GameBoardLayout, EmptyCard } from "./board-layout";
-import {
-  ARGlassesHUD,
-  ARVisor,
-  ARGlare,
-  ARScanlines,
-  ARHUDContent,
-  ARHUDTop,
-  ARHUDStatus,
-  ARHUDLine,
-} from "../cards/ar-overlay-components";
 
 const CodebreakerBoardContent = memo<{
   cards: any[];
@@ -25,35 +14,8 @@ const CodebreakerBoardContent = memo<{
   currentTeamName?: string;
   shouldAnimateDeal: boolean;
 }>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick, tilt, currentTeamName, shouldAnimateDeal }) => {
-  const { viewMode } = useViewMode();
-
   return (
-    <>
-      {viewMode === "spymaster" && (
-        <ARGlassesHUD>
-          <ARVisor />
-          <ARGlare />
-          <ARScanlines />
-
-          <ARHUDContent>
-            <ARHUDTop>
-              <ARHUDStatus>
-                <ARHUDLine>SYSTEM: OPERATIVE MODE</ARHUDLine>
-                <ARHUDLine>ROLE: FIELD AGENT</ARHUDLine>
-                <ARHUDLine>STATUS: MISSION ACTIVE</ARHUDLine>
-              </ARHUDStatus>
-
-              <ARHUDStatus>
-                <ARHUDLine>GUESSES: {activeTurn?.guessesRemaining || 0}</ARHUDLine>
-                <ARHUDLine>CLUE: {activeTurn?.clue?.word || "WAITING"}</ARHUDLine>
-                <ARHUDLine>TARGET: {activeTurn?.clue?.count || 0}</ARHUDLine>
-              </ARHUDStatus>
-            </ARHUDTop>
-          </ARHUDContent>
-        </ARGlassesHUD>
-      )}
-
-      <GameBoardLayout data-ar-mode={viewMode === "spymaster"} tilt={tilt}>
+    <GameBoardLayout tilt={tilt}>
         {cards.length > 0
           ? cards.map((card, index) => (
               <GameCard
@@ -67,8 +29,7 @@ const CodebreakerBoardContent = memo<{
               />
             ))
           : Array.from({ length: 25 }).map((_, i) => <EmptyCard key={`empty-${i}`} />)}
-      </GameBoardLayout>
-    </>
+    </GameBoardLayout>
   );
 });
 

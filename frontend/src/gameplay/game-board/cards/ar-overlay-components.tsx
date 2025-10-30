@@ -90,7 +90,3 @@ export const ARHUDLine: React.FC<{ children?: React.ReactNode; alert?: boolean }
     &gt; {children}
   </div>
 );
-
-// Legacy exports for compatibility
-export const SpymasterOverlayGrid = ARScanGrid;
-export const SpymasterAROverlay = ARGlassesHUD;

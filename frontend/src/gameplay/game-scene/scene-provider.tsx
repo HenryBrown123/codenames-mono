@@ -4,10 +4,11 @@
  * Provides scene state and transitions for the current player's turn
  */
 
-import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo } from "react";
+import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo, useEffect } from "react";
 import { useGameDataRequired } from "../game-data/providers";
 import { PLAYER_ROLE } from "@codenames/shared/types";
 import { getStateMachine } from "./scene-config";
+import { useViewMode } from "../game-board/view-mode";
 
 interface PlayerSceneContextValue {
   currentRole: string;
@@ -36,9 +37,15 @@ export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
 }) => {
   const { gameData } = useGameDataRequired();
   const currentRole = gameData.playerContext?.role || PLAYER_ROLE.NONE;
+  const { setViewMode } = useViewMode();
 
   const stateMachine = useMemo(() => getStateMachine(currentRole), [currentRole]);
   const [currentScene, setCurrentScene] = useState<string>(stateMachine.initial);
+
+  // Reset viewMode to normal on scene changes
+  useEffect(() => {
+    setViewMode("normal");
+  }, [currentScene, setViewMode]);
 
   const triggerSceneTransition = useCallback(
     (event: string) => {
