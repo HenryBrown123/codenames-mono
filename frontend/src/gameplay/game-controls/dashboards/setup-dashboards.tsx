@@ -45,10 +45,11 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
       (!gameData.currentRound.cards || gameData.currentRound.cards.length === 0)
     ) {
       try {
+        setViewMode("dealing");
         await dealCards(false);
       } catch (error) {
         console.error("Failed to deal cards:", error);
-        setViewMode("normal"); // Reset on error
+        setViewMode("normal");
       }
       return;
     }

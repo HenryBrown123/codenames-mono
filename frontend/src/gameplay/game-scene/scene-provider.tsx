@@ -49,6 +49,7 @@ export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
 
   const triggerSceneTransition = useCallback(
     (event: string) => {
+      console.log(`[SceneTransition] Event: ${event}, Current: ${currentScene}`);
       const transition = stateMachine.scenes[currentScene]?.on?.[event];
       if (!transition) {
         console.warn(`[PlayerSceneProvider] No transition found for event: ${event}`);
@@ -58,6 +59,7 @@ export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
       if (transition.type === "END") {
         onTurnComplete?.();
       } else if (transition.type === "scene" && transition.target) {
+        console.log(`[SceneTransition] Changing scene: ${currentScene} → ${transition.target}`);
         setCurrentScene(transition.target);
       }
     },

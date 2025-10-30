@@ -1,4 +1,4 @@
-import { memo, useRef } from "react";
+import { memo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@frontend/shared-types";
 import { useViewMode } from "../view-mode/view-mode-context";
@@ -74,15 +74,23 @@ interface GameCardProps {
   onClick: () => void;
   clickable: boolean;
   isCurrentTeam: boolean;
-  dealOnEntry: boolean;
 }
 
 /**
  * GameCard - Main card component with flip animation
  */
 export const GameCard = memo<GameCardProps>(
-  ({ card, index, onClick, clickable, isCurrentTeam, dealOnEntry }) => {
+  ({ card, index, onClick, clickable, isCurrentTeam }) => {
     const { viewMode } = useViewMode();
+
+    // Trigger deal animation when viewMode is "dealing"
+    const shouldDealAnimate = viewMode === "dealing";
+
+    // Track mount/unmount
+    useEffect(() => {
+      console.log(`[${card.word}] 🟢 MOUNTED`);
+      return () => console.log(`[${card.word}] 🔴 UNMOUNTED`);
+    }, [card.word]);
 
     // Capture initial selected state
     const initiallySelected = useRef(card.selected).current;
@@ -102,9 +110,9 @@ export const GameCard = memo<GameCardProps>(
 
     return (
       <motion.div
-        // Deal animation - only runs on mount when dealOnEntry is true
+        // Deal animation - only runs when viewMode is "dealing"
         initial={
-          dealOnEntry
+          shouldDealAnimate
             ? {
                 opacity: 0,
                 y: -200,
@@ -120,7 +128,7 @@ export const GameCard = memo<GameCardProps>(
           scale: 1,
         }}
         transition={{
-          delay: dealOnEntry ? index * 0.05 : 0,
+          delay: shouldDealAnimate ? index * 0.05 : 0,
           duration: 0.8,
           ease: [0.34, 1.56, 0.64, 1],
         }}

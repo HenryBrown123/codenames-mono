@@ -15,7 +15,6 @@ import { UISettingsDashboard } from "../game-controls/settings/ui-settings-dashb
  * Game Scene Component with unified mobile-first layout
  */
 export const GameScene: React.FC = () => {
-  // 1. ALL HOOKS AT THE TOP - BEFORE ANY CONDITIONAL RETURNS
   const { gameData, isPending, isError, error, refetch, isFetching } = useGameDataRequired();
   const { activeTurn } = useTurn();
   const { currentRole, currentScene } = usePlayerScene();
@@ -28,12 +27,11 @@ export const GameScene: React.FC = () => {
   const { giveClue, actionState } = useGameActions();
 
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
+
   const BoardComponent = React.useMemo(() => {
-    const Component = getBoardComponent(currentRole, currentScene);
-    return (props: { tilt?: number; scene?: string }) => (
-      <Component {...props} scene={currentScene} key={currentRole} />
-    );
-  }, [currentRole, currentScene]);
+    console.log("Fetching new board component for role:", currentRole);
+    return getBoardComponent(currentRole);
+  }, [currentRole]);
 
   const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
   const fontVariables = {
@@ -104,7 +102,7 @@ export const GameScene: React.FC = () => {
       <div className={styles.gameSceneContainer} style={fontVariables}>
         {/* Main game board */}
         <div className={styles.boardArea}>
-          <BoardComponent tilt={boardTilt} />
+          <BoardComponent tilt={boardTilt} scene={currentScene} />
         </div>
 
         {/* Control area - SINGLE dashboard, CSS handles layout */}
