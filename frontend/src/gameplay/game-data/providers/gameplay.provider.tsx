@@ -39,7 +39,6 @@ export const GameplayProvider = ({ gameId, children }: GameplayProviderProps) =>
 const ActiveGameProviders = ({ gameId, children }: GameplayProviderProps) => {
   const { gameData, isPending, isError, error, refetch } = useGameData();
 
-  // Show skeleton during initial load
   if (!gameData) {
     return (
       <div className={styles.loadingContainer}>
@@ -59,7 +58,6 @@ const ActiveGameProviders = ({ gameId, children }: GameplayProviderProps) => {
     );
   }
 
-  // Show error state
   if (isError) {
     return (
       <div className={styles.errorContainer}>
@@ -70,7 +68,6 @@ const ActiveGameProviders = ({ gameId, children }: GameplayProviderProps) => {
     );
   }
 
-  // Now we have gameData for sure
   return (
     <TurnDataProvider>
       <GameplaySceneProvider gameId={gameId} gameData={gameData}>

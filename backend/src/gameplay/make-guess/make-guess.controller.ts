@@ -137,7 +137,6 @@ export const makeGuessController = ({ makeGuess }: Dependencies) => {
 
       const { params, auth, body } = validationResult.data;
 
-      // Call make guess service
       const result = await makeGuess({
         gameId: params.gameId,
         roundNumber: params.roundNumber,
@@ -226,12 +225,11 @@ export const makeGuessController = ({ makeGuess }: Dependencies) => {
         }
       }
 
-      // Success response with complete turn data
       res.status(200).json({
         success: true,
         data: {
           guess: result.data.guess,
-          turn: result.data.turn, // ← Now includes complete turn data
+          turn: result.data.turn,
         },
       });
     } catch (error) {

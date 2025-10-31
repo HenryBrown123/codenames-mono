@@ -9,7 +9,6 @@ import {
   PLAYER_ROLE,
 } from "./shared.constants";
 
-// Enum value types
 export type Team = (typeof CARD_TYPE)[keyof typeof CARD_TYPE];
 export type Stage = (typeof STAGE)[keyof typeof STAGE];
 export type TurnOutcome =
@@ -22,7 +21,6 @@ export type RoundState = (typeof ROUND_STATE)[keyof typeof ROUND_STATE];
 
 export type PlayerRole = (typeof PLAYER_ROLE)[keyof typeof PLAYER_ROLE];
 
-// Player types
 export interface Player {
   id: number;
   userId: number;
@@ -32,22 +30,19 @@ export interface Player {
   isActive: boolean;
 }
 
-// Card types
 export interface Card {
   id: number;
   word: string;
-  teamId: number; // Reference to team
+  teamId: number;
   selected: boolean;
 }
 
-// Clue type
 export interface Clue {
   id: number;
   word: string;
   number: number;
 }
 
-// Guess type
 export interface Guess {
   id: number;
   cardId: number;
@@ -55,7 +50,6 @@ export interface Guess {
   outcome?: TurnOutcome;
 }
 
-// Turn type
 export interface Turn {
   id: number;
   teamId: number;
@@ -63,7 +57,6 @@ export interface Turn {
   guesses: Guess[];
 }
 
-// Round type
 export interface Round {
   id: number;
   number: number;
@@ -101,7 +94,9 @@ export interface GameSettings {
   numberOfAssassins?: number;
 }
 
-// Simplified game data for listings
+/**
+ * Simplified game data for listings
+ */
 export interface GameSummary {
   id: number;
   publicId: string;

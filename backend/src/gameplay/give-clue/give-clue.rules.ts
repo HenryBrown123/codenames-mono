@@ -77,7 +77,6 @@ export const validateClueWord = (
 
   const normalizedClue = clueWord.toLowerCase().trim();
 
-  // Check against current round card words
   const cardWords = game.currentRound.cards.map((card) =>
     card.word.toLowerCase(),
   );
@@ -88,7 +87,6 @@ export const validateClueWord = (
     };
   }
 
-  // Check against previous clues in this round
   if (game.currentRound.turns) {
     const previousClues = game.currentRound.turns
       .map((turn) => turn.clue?.word.toLowerCase())
@@ -102,7 +100,6 @@ export const validateClueWord = (
     }
   }
 
-  // Check for obvious derivatives/variations
   const hasCardWordAsSubstring = cardWords.some(
     (cardWord) =>
       normalizedClue.includes(cardWord) || cardWord.includes(normalizedClue),

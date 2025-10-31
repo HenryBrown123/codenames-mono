@@ -228,7 +228,6 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
     // result.status === 'found' (all other cases handled above)
     const gameData = result.data;
 
-    // Validate round exists
     if (!gameData.currentRound) {
       return {
         success: false,
@@ -250,7 +249,6 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
       };
     }
 
-    // Validate clue word against cards and previous clues
     const clueWordValidation = validateClueWord(gameData, input.word);
     if (!clueWordValidation.valid) {
       return {
@@ -296,7 +294,7 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
           targetCardCount: operationResult.clue.number,
           createdAt: operationResult.clue.createdAt,
         },
-        turn: completeTurnData, // ← Return complete enriched turn data
+        turn: completeTurnData,
       },
     };
   };

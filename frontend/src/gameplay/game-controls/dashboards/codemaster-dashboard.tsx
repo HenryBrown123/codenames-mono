@@ -49,7 +49,6 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, []);
 
-  // Don't show anything if not the codemaster's turn
   if (!activeTurn || activeTurn.clue !== null) {
     return (
       <>
@@ -78,7 +77,6 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
 
   return (
     <>
-      {/* Mobile view - NEW GRID LAYOUT */}
       <div className={`${styles.container} mobile-only`}>
         <div className={styles.mobileToggleContainer}>
           <span className={styles.toggleLabel}>Spymaster Vision</span>
@@ -101,9 +99,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
         </div>
       </div>
 
-      {/* Desktop terminal view - unchanged */}
       <div className={styles.desktopContainer}>
-        {/* TOP - Instructions */}
         <TerminalSection>
           <TerminalCommand>MISSION LOG</TerminalCommand>
           <TerminalPrompt>
@@ -111,7 +107,6 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
           </TerminalPrompt>
         </TerminalSection>
 
-        {/* MIDDLE - Intel (Spy Goggles) - wrapped to expand */}
         <MiddleSection>
           <TerminalSection>
             <TerminalCommand>SPY GOGGLES</TerminalCommand>
@@ -129,7 +124,6 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
           </TerminalSection>
         </MiddleSection>
 
-        {/* BOTTOM - Action */}
         <TerminalSection>
           <TerminalCommand>ACTION</TerminalCommand>
           <CodeWordInput

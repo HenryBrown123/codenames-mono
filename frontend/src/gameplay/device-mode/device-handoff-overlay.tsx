@@ -82,13 +82,11 @@ export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
   const nextPlayer = players?.find((p) => p.status === "ACTIVE");
   const isReady = !!nextPlayer;
 
-  // Handle continue click
   const handleContinueClick = (playerId: string) => {
     setSelectedPlayerId(playerId);
     setIsExiting(true);
   };
 
-  // Handle animation end
   const handleAnimationEnd = () => {
     if (isExiting && selectedPlayerId) {
       onContinue(selectedPlayerId);
@@ -100,7 +98,6 @@ export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
   const targetTeam = nextPlayer?.teamName || "Team";
   const teamColor = getTeamColor(targetTeam);
 
-  // Display name based on role
   const displayName = nextPlayer
     ? targetRole === PLAYER_ROLE.CODEMASTER
       ? nextPlayer.name

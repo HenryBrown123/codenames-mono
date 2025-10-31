@@ -49,7 +49,6 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
   } | null>(null);
   const [dragOverTeam, setDragOverTeam] = useState<string | null>(null);
 
-  // React Query hooks
   const { data: lobbyData, isLoading: initialLoading, error: queryError } = useLobbyQuery(gameId);
   const addPlayerMutation = useAddPlayer(gameId);
   const removePlayerMutation = useRemovePlayer(gameId);
@@ -80,7 +79,6 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
     "Team Blue": "var(--color-team-blue, #00d4ff)",
   };
 
-  // Calculate stats
   const totalPlayers =
     currentLobbyData?.teams?.reduce((sum, team) => sum + (team?.players?.length || 0), 0) || 0;
   const canStartGame =
@@ -183,7 +181,6 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
     setDragOverTeam(null);
   };
 
-  // Render empty slots
   const renderEmptySlots = (currentCount: number, maxSlots: number = 6) => {
     const emptyCount = Math.max(0, maxSlots - currentCount);
     return Array.from({ length: emptyCount }).map((_, i) => (

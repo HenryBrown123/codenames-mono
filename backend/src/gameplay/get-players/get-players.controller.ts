@@ -30,7 +30,6 @@ export const createGetPlayersController = (
 ): GetPlayersController => {
   return async (req: Request, res: Response): Promise<void> => {
     try {
-      // Validate request parameters
       const { gameId } = getPlayersParamsSchema.parse(req.params);
       const userId = req.auth?.userId;
 
@@ -42,7 +41,6 @@ export const createGetPlayersController = (
         return;
       }
 
-      // Get players with their status
       const result = await deps.getPlayersService(gameId, userId);
 
       if (result.status === "game-not-found") {
@@ -61,7 +59,6 @@ export const createGetPlayersController = (
         return;
       }
 
-      // Success response
       res.status(200).json({
         success: true,
         data: {

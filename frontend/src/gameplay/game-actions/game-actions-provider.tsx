@@ -246,7 +246,6 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
     endTurn,
   };
 
-  // Show error UI when any action fails
   if (actionState.status === "error") {
     return (
       <div className={styles.errorContainer}>

@@ -92,8 +92,7 @@ const determinePlayerContext = (
     };
   }
 
-  // For general game state (no specific player), return null
-  return null;  // No player context when no player specified
+  return null;
 };
 
 /**
@@ -137,7 +136,6 @@ export const gameplayStateProvider = (
     const game = await getGameById(gameId);
     if (!game) return { status: "game-not-found", gameId };
 
-    // If playerId provided, validate and find the specific player
     let specificPlayer: PlayerResult | null = null;
     if (playerId) {
       specificPlayer = await findPlayerByPublicId(playerId);
@@ -161,7 +159,6 @@ export const gameplayStateProvider = (
       getPlayersByGameId(game._id),
     ]);
 
-    // Verify user is a player in the game first
     const allGamePlayers = await getPlayersByGameId(game._id);
     const userIsPlayer = allGamePlayers.some(p => p._userId === userId);
     if (!userIsPlayer) {
@@ -172,7 +169,6 @@ export const gameplayStateProvider = (
     const roundId = latestRound?._id || null;
     const userPlayers = await getPlayerContext(game._id, userId, roundId);
 
-    // Transform teams data and populate with players immediately
     const teamsWithPlayers = teams.map((team: TeamResult) => ({
       _id: team._id,
       _gameId: team._gameId,
@@ -182,7 +178,6 @@ export const gameplayStateProvider = (
       ),
     }));
 
-    // Create historical rounds data
     const historicalRounds = allRounds
       .filter((round) => !latestRound || round._id !== latestRound._id)
       .map((round) => ({
@@ -194,7 +189,6 @@ export const gameplayStateProvider = (
         createdAt: round.createdAt,
       }));
 
-    // Base state for when no current round exists
     if (!latestRound) {
       const playerContext = determinePlayerContext(
         userPlayers || [],
@@ -221,7 +215,6 @@ export const gameplayStateProvider = (
       };
     }
 
-    // Collect round-specific state (cards and turns)
     const [cards, turns] = await Promise.all([
       getCardsByRoundId(latestRound._id),
       getTurnsByRoundId(latestRound._id),
@@ -237,7 +230,6 @@ export const gameplayStateProvider = (
       selected: card.selected,
     }));
 
-    // Determine appropriate player context based on specific player or user's players
     const playerContext = determinePlayerContext(
       userPlayers || [],
       specificPlayer,

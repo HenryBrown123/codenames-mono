@@ -34,7 +34,6 @@ export const controller =
   (getTurnService: GetTurnService) =>
   async (req: Request, res: Response): Promise<void> => {
     try {
-      // Validate request
       const validationResult = getTurnRequestSchema.safeParse({
         params: req.params,
         auth: req.auth, // gameId and userId from auth middleware
@@ -51,7 +50,6 @@ export const controller =
 
       const { params, auth }: ValidatedGetTurnRequest = validationResult.data;
 
-      // Get sanitized turn data
       const turnData = await getTurnService(params.turnId);
 
       if (!turnData) {
@@ -62,7 +60,6 @@ export const controller =
         return;
       }
 
-      // Response with compile-time type safety
       const response: GetTurnResponse = {
         success: true,
         data: {

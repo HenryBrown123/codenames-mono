@@ -54,7 +54,6 @@ export function useCardAnimationEffects(options: CardAnimationEffectsOptions) {
   const lastProcessedEventRef = useRef<string | null>(null);
 
   useLayoutEffect(() => {
-    // Skip if no event or already processed
     if (!nextEvent || nextEvent === lastProcessedEventRef.current) {
       return;
     }
@@ -70,7 +69,6 @@ export function useCardAnimationEffects(options: CardAnimationEffectsOptions) {
           setDisplayState(nextState);
         }
 
-        // Mark event as processed
         lastProcessedEventRef.current = nextEvent;
       } finally {
         setIsAnimating(false);

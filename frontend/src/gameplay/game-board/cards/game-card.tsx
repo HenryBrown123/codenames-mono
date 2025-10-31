@@ -84,10 +84,8 @@ export const GameCard = memo<GameCardProps>(
   ({ card, index, onClick, clickable, isCurrentTeam, dealOnEntry }) => {
     const { viewMode } = useViewMode();
 
-    // Use dealOnEntry for animation trigger
     const shouldDealAnimate = dealOnEntry;
 
-    // Capture initial selected state
     const initiallySelected = useRef(card.selected).current;
 
     const teamType = getTeamType(card);
@@ -130,7 +128,6 @@ export const GameCard = memo<GameCardProps>(
         }
         onClick={isClickable ? onClick : undefined}
       >
-        {/* Card flip container */}
         <motion.div
           initial={{ rotateY: initiallySelected ? 180 : 0 }}
           animate={{ rotateY: card.selected ? 180 : 0 }}
@@ -142,14 +139,12 @@ export const GameCard = memo<GameCardProps>(
             transformStyle: "preserve-3d",
           }}
         >
-          {/* Front face */}
           <WordCard word={card.word} />
 
-          {/* Back face - revealed team color */}
           <CoverCard teamType={teamType} />
         </motion.div>
 
-        {/* Spymaster overlay - AnimatePresence for mount/unmount */}
+        {/* AnimatePresence needed for spymaster overlay exit animation */}
         <AnimatePresence>
           {showSpymasterOverlay && (
             <SpymasterOverlay word={card.word} teamType={teamType} isCurrentTeam={isCurrentTeam} />
