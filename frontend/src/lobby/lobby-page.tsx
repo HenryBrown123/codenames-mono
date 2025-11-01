@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { GripVertical, Edit2 } from "lucide-react";
 import styles from "./lobby-page.module.css";
 import {
   useLobbyQuery,
@@ -8,7 +10,6 @@ import {
   useRenamePlayer,
   useMovePlayerToTeam,
   useStartGame,
-  type LobbyData,
   type LobbyPlayer,
 } from "@frontend/lobby/api";
 
@@ -16,22 +17,53 @@ interface LobbyInterfaceProps {
   gameId: string;
 }
 
-// Mock data structure as fallback
-const mockLobbyData: LobbyData = {
-  publicId: "unknown",
-  status: "LOBBY",
-  gameType: "SINGLE_DEVICE",
-  canModifyGame: true,
-  teams: [
-    {
-      name: "Team Red",
-      players: [],
+const boxVariants = {
+  initial: {
+    opacity: 0,
+    scale: 0.8,
+    y: 20,
+  },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: [0.4, 0, 0.2, 1],
     },
-    {
-      name: "Team Blue",
-      players: [],
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.95,
+    y: -20,
+    transition: {
+      duration: 0.3,
+      ease: [0.4, 0, 0.2, 1],
     },
-  ],
+  },
+};
+
+const dotVariants = {
+  initial: {
+    opacity: 0,
+    scale: 0,
+  },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 0.2,
+      ease: [0.4, 0, 0.2, 1],
+    },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0,
+    transition: {
+      duration: 0.2,
+      ease: [0.4, 0, 0.2, 1],
+    },
+  },
 };
 
 /**
@@ -39,6 +71,7 @@ const mockLobbyData: LobbyData = {
  */
 export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
   const navigate = useNavigate();
+  const [activeTeam, setActiveTeam] = useState<"Team Red" | "Team Blue">("Team Red");
   const [editingPlayer, setEditingPlayer] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [teamRedInput, setTeamRedInput] = useState("");
@@ -56,7 +89,6 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
   const movePlayerMutation = useMovePlayerToTeam(gameId);
   const startGameMutation = useStartGame(gameId);
 
-  // Derived loading and error states
   const isLoading =
     addPlayerMutation.isPending ||
     removePlayerMutation.isPending ||
@@ -72,7 +104,22 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
     movePlayerMutation.error?.message ||
     startGameMutation.error?.message;
 
-  const currentLobbyData = lobbyData || mockLobbyData;
+  if (initialLoading || !lobbyData) {
+    return (
+      <div className={styles.container}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key="loading"
+            className={styles.loadingDot}
+            variants={dotVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+          />
+        </AnimatePresence>
+      </div>
+    );
+  }
 
   const teamColors = {
     "Team Red": "var(--color-team-red, #ff0040)",
@@ -80,10 +127,9 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
   };
 
   const totalPlayers =
-    currentLobbyData?.teams?.reduce((sum, team) => sum + (team?.players?.length || 0), 0) || 0;
+    lobbyData.teams?.reduce((sum, team) => sum + (team.players?.length ?? 0), 0) ?? 0;
   const canStartGame =
-    totalPlayers >= 4 &&
-    (currentLobbyData?.teams?.every((team) => (team?.players?.length || 0) >= 2) || false);
+    totalPlayers >= 4 && lobbyData.teams?.every((team) => (team.players?.length ?? 0) >= 2);
 
   const handleQuickAdd = (teamName: string) => {
     const playerName = teamName === "Team Red" ? teamRedInput.trim() : teamBlueInput.trim();
@@ -136,7 +182,6 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
     });
   };
 
-  // Drag and drop handlers
   const handleDragStart = (e: React.DragEvent, player: LobbyPlayer, fromTeam: string) => {
     setDraggedPlayer({ player, fromTeam });
     e.dataTransfer.effectAllowed = "move";
@@ -181,41 +226,45 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
     setDragOverTeam(null);
   };
 
-  const renderEmptySlots = (currentCount: number, maxSlots: number = 6) => {
-    const emptyCount = Math.max(0, maxSlots - currentCount);
-    return Array.from({ length: emptyCount }).map((_, i) => (
-      <div key={`empty-${i}`} className={styles.playerSlot}>
-        [empty]
-      </div>
-    ));
-  };
-
-  if (initialLoading) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.mainContent}>
-          <div className={styles.loadingSpinner}>
-            <p>LOADING OPERATIVE CONTROL...</p>
-            <div className={styles.spinner}></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const teamsToRender = lobbyData.teams ?? [];
+  const mobileFilteredTeams = teamsToRender.filter((team) => team.name === activeTeam);
 
   return (
     <div className={styles.container}>
-      <div className={styles.mainContent}>
+      <motion.div
+        className={styles.mainContent}
+        variants={boxVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+      >
         <div className={styles.header}>
           <h1 className={styles.title}>OPERATIVE CONTROL</h1>
           <div className={styles.gameInfo}>
-            Game ID: {currentLobbyData?.publicId || "LOADING..."} | {totalPlayers} Players
+            Game ID: {lobbyData.publicId} | {totalPlayers} Players
           </div>
         </div>
 
+        <div className={styles.teamSwitcher}>
+          <button
+            className={styles.teamSwitchButton}
+            data-active={activeTeam === "Team Red"}
+            onClick={() => setActiveTeam("Team Red")}
+          >
+            TEAM RED
+          </button>
+          <button
+            className={styles.teamSwitchButton}
+            data-active={activeTeam === "Team Blue"}
+            onClick={() => setActiveTeam("Team Blue")}
+          >
+            TEAM BLUE
+          </button>
+        </div>
+
         <div className={styles.teamsGrid}>
-          {currentLobbyData?.teams?.map((team) => {
-            const teamColor = teamColors[team.name as keyof typeof teamColors] || "#6b7280";
+          {teamsToRender.map((team) => {
+            const teamColor = teamColors[team.name as keyof typeof teamColors] ?? "#6b7280";
             return (
               <div
                 key={team.name}
@@ -233,11 +282,13 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
                   >
                     {team.name === "Team Red" ? "TEAM RED OPERATIVES" : "TEAM BLUE OPERATIVES"}
                   </h2>
-                  <div className={styles.playerCount}>{team?.players?.length || 0}/6 operatives</div>
+                  <div className={styles.playerCount}>
+                    {team.players?.length ?? 0}/6 operatives
+                  </div>
                 </div>
 
                 <div className={styles.playersContainer}>
-                  {team?.players?.map((player, index) => (
+                  {team.players?.map((player) => (
                     <div
                       key={player.publicId}
                       className={styles.playerTile}
@@ -246,6 +297,8 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
                       onDragStart={(e) => handleDragStart(e, player, team.name)}
                       onDragEnd={handleDragEnd}
                     >
+                      <GripVertical className={styles.dragHandle} size={16} />
+
                       {editingPlayer === player.publicId ? (
                         <input
                           className={styles.editableInput}
@@ -262,23 +315,139 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
                           autoFocus
                         />
                       ) : (
-                        <span className={styles.playerName} onDoubleClick={() => handleEditPlayer(player)}>
-                          {player?.name || "Unknown Player"}
-                        </span>
+                        <span className={styles.playerName}>{player.name}</span>
                       )}
 
-                      <div className={styles.statusDot} />
-
-                      <button
-                        className={styles.removeButton}
-                        onClick={() => handleRemovePlayer(player?.publicId || "")}
-                        disabled={isLoading}
-                      >
-                        [X]
-                      </button>
+                      <div className={styles.playerActions}>
+                        <button
+                          className={styles.editButton}
+                          onClick={() => handleEditPlayer(player)}
+                          disabled={isLoading}
+                          title="Edit name"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                        <button
+                          className={styles.removeButton}
+                          onClick={() => handleRemovePlayer(player.publicId)}
+                          disabled={isLoading}
+                          title="Remove player"
+                        >
+                          ×
+                        </button>
+                      </div>
                     </div>
                   ))}
-                  {renderEmptySlots(team?.players?.length || 0)}
+                </div>
+
+                <div className={styles.addPlayerArea}>
+                  <input
+                    className={styles.addInput}
+                    placeholder="Enter operative name..."
+                    value={team.name === "Team Red" ? teamRedInput : teamBlueInput}
+                    onChange={(e) => {
+                      if (team.name === "Team Red") {
+                        setTeamRedInput(e.target.value);
+                      } else {
+                        setTeamBlueInput(e.target.value);
+                      }
+                    }}
+                    onKeyDown={(e) => e.key === "Enter" && handleQuickAdd(team.name)}
+                    disabled={isLoading}
+                  />
+                  <button
+                    className={styles.addButton}
+                    style={{ "--team-color": teamColor } as React.CSSProperties}
+                    onClick={() => handleQuickAdd(team.name)}
+                    disabled={
+                      isLoading ||
+                      (team.name === "Team Red" ? !teamRedInput.trim() : !teamBlueInput.trim())
+                    }
+                  >
+                    ADD
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className={styles.teamsGridMobile}>
+          {mobileFilteredTeams.map((team) => {
+            const teamColor = teamColors[team.name as keyof typeof teamColors] ?? "#6b7280";
+            return (
+              <div
+                key={team.name}
+                className={styles.teamTile}
+                style={{ "--team-color": teamColor } as React.CSSProperties}
+                data-drag-over={dragOverTeam === team.name}
+                onDragOver={(e) => handleDragOver(e, team.name)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, team.name)}
+              >
+                <div className={styles.teamHeader}>
+                  <h2
+                    className={styles.teamName}
+                    style={{ "--team-color": teamColor } as React.CSSProperties}
+                  >
+                    {team.name === "Team Red" ? "TEAM RED OPERATIVES" : "TEAM BLUE OPERATIVES"}
+                  </h2>
+                  <div className={styles.playerCount}>
+                    {team.players?.length ?? 0}/6 operatives
+                  </div>
+                </div>
+
+                <div className={styles.playersContainer}>
+                  {team.players?.map((player) => (
+                    <div
+                      key={player.publicId}
+                      className={styles.playerTile}
+                      draggable
+                      data-dragging={draggedPlayer?.player.publicId === player.publicId}
+                      onDragStart={(e) => handleDragStart(e, player, team.name)}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <GripVertical className={styles.dragHandle} size={16} />
+
+                      {editingPlayer === player.publicId ? (
+                        <input
+                          className={styles.editableInput}
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          onBlur={handleSaveEdit}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleSaveEdit();
+                            if (e.key === "Escape") {
+                              setEditingPlayer(null);
+                              setEditName("");
+                            }
+                          }}
+                          autoFocus
+                        />
+                      ) : (
+                        <span className={styles.playerName}>{player.name}</span>
+                      )}
+
+                      <div className={styles.playerActions}>
+                        <button
+                          className={styles.editButton}
+                          onClick={() => handleEditPlayer(player)}
+                          disabled={isLoading}
+                          title="Edit name"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                        <button
+                          className={styles.removeButton}
+                          onClick={() => handleRemovePlayer(player.publicId)}
+                          disabled={isLoading}
+                          title="Remove player"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
                 <div className={styles.addPlayerArea}>
@@ -323,7 +492,7 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
         </button>
 
         {error && <div className={styles.errorMessage}>{error}</div>}
-      </div>
+      </motion.div>
     </div>
   );
 };

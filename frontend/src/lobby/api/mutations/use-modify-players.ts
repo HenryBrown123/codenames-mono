@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
-import { LobbyPlayer } from "../queries/use-lobby-query";
+import { LobbyPlayer, LobbyData } from "../queries/use-lobby-query";
 
 export interface PlayerUpdateData {
   playerId: string;
@@ -90,25 +90,112 @@ export const useModifyPlayers = (gameId: string) => {
   });
 };
 
+/**
+ * Moves a player to a different team with optimistic update
+ */
 export const useMovePlayerToTeam = (gameId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ playerId, newTeamName }: { playerId: string; newTeamName: string }) => 
       movePlayerToTeamApi(gameId, playerId, newTeamName),
-    onSuccess: () => {
+    onMutate: async ({ playerId, newTeamName }) => {
+      await queryClient.cancelQueries({ queryKey: ["lobby", gameId] });
+      
+      const previousLobby = queryClient.getQueryData<LobbyData>(["lobby", gameId]);
+      
+      if (previousLobby) {
+        const updatedLobby = {
+          ...previousLobby,
+          teams: previousLobby.teams.map(team => {
+            const playerInTeam = team.players.find(p => p.publicId === playerId);
+            
+            if (playerInTeam) {
+              return {
+                ...team,
+                players: team.players.filter(p => p.publicId !== playerId),
+              };
+            }
+            
+            if (team.name === newTeamName && playerInTeam) {
+              return {
+                ...team,
+                players: [...team.players, { ...playerInTeam, teamName: newTeamName }],
+              };
+            }
+            
+            return team;
+          }).map(team => {
+            if (team.name === newTeamName) {
+              const movedPlayer = previousLobby.teams
+                .flatMap(t => t.players)
+                .find(p => p.publicId === playerId);
+              
+              if (movedPlayer && !team.players.find(p => p.publicId === playerId)) {
+                return {
+                  ...team,
+                  players: [...team.players, { ...movedPlayer, teamName: newTeamName }],
+                };
+              }
+            }
+            return team;
+          }),
+        };
+        
+        queryClient.setQueryData(["lobby", gameId], updatedLobby);
+      }
+      
+      return { previousLobby };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousLobby) {
+        queryClient.setQueryData(["lobby", gameId], context.previousLobby);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["lobby", gameId] });
     },
   });
 };
 
+/**
+ * Renames a player with optimistic update
+ */
 export const useRenamePlayer = (gameId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ playerId, newPlayerName }: { playerId: string; newPlayerName: string }) => 
       renamePlayerApi(gameId, playerId, newPlayerName),
-    onSuccess: () => {
+    onMutate: async ({ playerId, newPlayerName }) => {
+      await queryClient.cancelQueries({ queryKey: ["lobby", gameId] });
+      
+      const previousLobby = queryClient.getQueryData<LobbyData>(["lobby", gameId]);
+      
+      if (previousLobby) {
+        const updatedLobby = {
+          ...previousLobby,
+          teams: previousLobby.teams.map(team => ({
+            ...team,
+            players: team.players.map(player =>
+              player.publicId === playerId
+                ? { ...player, name: newPlayerName }
+                : player
+            ),
+          })),
+        };
+        
+        queryClient.setQueryData(["lobby", gameId], updatedLobby);
+      }
+      
+      return { previousLobby };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousLobby) {
+        queryClient.setQueryData(["lobby", gameId], context.previousLobby);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["lobby", gameId] });
     },
   });

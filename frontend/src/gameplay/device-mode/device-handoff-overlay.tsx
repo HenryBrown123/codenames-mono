@@ -5,7 +5,6 @@ import { usePlayersQuery } from "../game-data/queries";
 import { FaLeaf } from "react-icons/fa";
 import styles from "./device-handoff-overlay.module.css";
 
-
 interface DeviceHandoffOverlayProps {
   gameData: GameData;
   onContinue: (playerId: string) => void;
@@ -23,22 +22,6 @@ const getTeamSymbol = (teamName: string) => {
 };
 
 /**
- * Gets role symbol
- */
-const getRoleSymbol = (role: string) => {
-  switch (role) {
-    case PLAYER_ROLE.CODEMASTER:
-      return "⚡";
-    case PLAYER_ROLE.CODEBREAKER:
-      return "🔍";
-    case PLAYER_ROLE.SPECTATOR:
-      return "👁";
-    default:
-      return "◆";
-  }
-};
-
-/**
  * Gets team color using design system colors
  */
 const getTeamColor = (teamName: string) => {
@@ -47,22 +30,6 @@ const getTeamColor = (teamName: string) => {
   if (team.includes("blue")) return "var(--color-team-blue, #00d4ff)";
   if (team.includes("green")) return "var(--color-primary, #00ff88)";
   return "var(--color-neutral, #888888)";
-};
-
-/**
- * Gets action text based on role - hacker themed
- */
-const getActionText = (role: PlayerRole): string => {
-  switch (role) {
-    case PLAYER_ROLE.CODEMASTER:
-      return ">>> CLASSIFIED DATA INCOMING\n>>> HIDE SCREEN FROM OPERATIVES\n>>> INTEL COMPROMISED IF SEEN";
-    case PLAYER_ROLE.CODEBREAKER:
-      return ">>> DECODE TRANSMISSION\n>>> ANALYZE OPERATIVE INTEL\n>>> LOCATE TARGET ASSETS";
-    case PLAYER_ROLE.SPECTATOR:
-      return ">>> SURVEILLANCE MODE ACTIVE\n>>> MONITOR FIELD OPERATIONS";
-    default:
-      return ">>> CONTINUE MISSION";
-  }
 };
 
 /**
@@ -75,10 +42,8 @@ export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
   const [isExiting, setIsExiting] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
-  // Query players to find who's active
   const { data: players } = usePlayersQuery(gameData.publicId);
 
-  // Find the next active player - if no data yet, we'll show loading state
   const nextPlayer = players?.find((p) => p.status === "ACTIVE");
   const isReady = !!nextPlayer;
 
@@ -93,7 +58,6 @@ export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
     }
   };
 
-  // Determine display values - use placeholders if still loading
   const targetRole = nextPlayer?.role || PLAYER_ROLE.NONE;
   const targetTeam = nextPlayer?.teamName || "Team";
   const teamColor = getTeamColor(targetTeam);
@@ -104,8 +68,6 @@ export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
       : `${targetTeam} Operatives`
     : "LOADING...";
 
-  const actionText = getActionText(targetRole);
-
   return (
     <div 
       className={styles.overlayContainer} 
@@ -114,51 +76,25 @@ export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
     >
       <div className={styles.backgroundBlur} />
       <div className={styles.handoffCard}>
-        <div 
-          className={styles.handoffIcon}
+        <h1 className={styles.title}>DEVICE HANDOFF</h1>
+
+        <div
+          className={styles.playerInfo}
           style={{
             '--team-color': teamColor,
-            '--team-color-start': `${teamColor}dd`,
-            '--team-color-end': `${teamColor}99`
           } as React.CSSProperties}
         >
-          {targetRole === PLAYER_ROLE.CODEMASTER ? getRoleSymbol(targetRole) : getTeamSymbol(targetTeam)}
-        </div>
-
-        <h1 className={styles.title}>Device Handoff</h1>
-        <p className={styles.subtitle}>
-          {isReady
-            ? ">>> TRANSFERRING CONTROL"
-            : ">>> ESTABLISHING CONNECTION..."}
-        </p>
-
-        <div className={styles.playerInfo} style={{ opacity: isReady ? 1 : 0.5 }}>
-          <h2 
-            className={styles.playerName}
-            data-team={targetRole === PLAYER_ROLE.CODEBREAKER ? "true" : undefined}
-            style={targetRole === PLAYER_ROLE.CODEBREAKER ? {
-              '--team-color': teamColor,
-              '--team-color-start': `${teamColor}dd`,
-              '--team-color-end': `${teamColor}99`
-            } as React.CSSProperties : undefined}
-          >
-            {displayName}
-          </h2>
-
+          <div className={styles.playerName}>{displayName}</div>
           {targetRole === PLAYER_ROLE.CODEMASTER && nextPlayer && (
-            <div 
-              className={styles.teamInfo}
-              style={{
-                '--team-color': teamColor,
-                '--team-color-start': `${teamColor}dd`,
-                '--team-color-end': `${teamColor}99`
-              } as React.CSSProperties}
-            >
-              {targetTeam} Spymaster
+            <div className={styles.roleLabel}>
+              {getTeamSymbol(targetTeam)} {targetTeam} Spymaster
             </div>
           )}
-
-          <p className={styles.actionText}>{actionText}</p>
+          {targetRole === PLAYER_ROLE.CODEBREAKER && (
+            <div className={styles.roleLabel}>
+              {getTeamSymbol(targetTeam)} {targetTeam}
+            </div>
+          )}
         </div>
 
         <button

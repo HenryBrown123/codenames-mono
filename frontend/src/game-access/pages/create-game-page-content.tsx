@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useCreateNewGame } from "@frontend/game-access/api/query-hooks/use-create-new-game";
 import { useNavigate } from "react-router-dom";
-import { LoadingSpinner, ActionButton } from "@frontend/gameplay/shared/components";
+import { motion, AnimatePresence } from "framer-motion";
+import { ActionButton } from "@frontend/gameplay/shared/components";
 import {
   GAME_TYPE,
   GAME_FORMAT,
@@ -10,13 +11,64 @@ import {
 } from "@codenames/shared/types";
 import styles from "./create-game-page-content.module.css";
 
+const boxVariants = {
+  initial: {
+    opacity: 0,
+    scale: 0.8,
+    y: 20,
+  },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: [0.4, 0, 0.2, 1],
+    },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.8,
+    y: -20,
+    transition: {
+      duration: 0.3,
+      ease: [0.4, 0, 0.2, 1],
+    },
+  },
+};
+
+const dotVariants = {
+  initial: {
+    opacity: 0,
+    scale: 0,
+  },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 0.2,
+      ease: [0.4, 0, 0.2, 1],
+    },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0,
+    transition: {
+      duration: 0.2,
+      ease: [0.4, 0, 0.2, 1],
+    },
+  },
+};
+
+/**
+ * Game creation page - configure and start a new game
+ */
 const CreateGamePageContent: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const { mutate: createNewGame, isPending: isCreatingGame } =
     useCreateNewGame();
   const navigate = useNavigate();
 
-  // Game settings - simplified to match backend
   const [gameType, setGameType] = useState<GameType>(GAME_TYPE.SINGLE_DEVICE);
   const [gameFormat, setGameFormat] = useState<GameFormat>(GAME_FORMAT.QUICK);
 
@@ -37,91 +89,109 @@ const CreateGamePageContent: React.FC = () => {
     });
   };
 
-  const getButtonThemeClass = (gameType: GameType, gameFormat: GameFormat, currentType: GameType | GameFormat) => {
-    if (currentType === GAME_TYPE.SINGLE_DEVICE) return 'primary';
-    if (currentType === GAME_TYPE.MULTI_DEVICE) return 'secondary';
-    if (currentType === GAME_FORMAT.QUICK) return 'team1';
-    if (currentType === GAME_FORMAT.BEST_OF_THREE) return 'team2';
-    return 'primary';
-  };
-
   return (
-    <div className={styles.createGameLayout}>
-      <div className={styles.gameContainer}>
-        <div className={styles.welcomeContainer}>
-          <h2>Welcome to Codenames!</h2>
-          <p>
-            Codenames is a word association game where players split into two
-            teams and take turns giving clues to identify their team's secret
-            words while avoiding the assassin. It's a game of strategy, wit, and
-            deduction!
-          </p>
-
-          <div className={styles.settingsContainer}>
-            <div className={styles.settingItem}>
-              <label>Game Type</label>
-              <div className={styles.buttonGroup}>
-                <button
-                  className={`${styles.button} ${styles.primary} ${
-                    gameType === GAME_TYPE.SINGLE_DEVICE ? styles.selected : ''
-                  }`}
-                  onClick={() => setGameType(GAME_TYPE.SINGLE_DEVICE)}
-                >
-                  Single Device
-                </button>
-                <button
-                  className={`${styles.button} ${styles.secondary} ${
-                    gameType === GAME_TYPE.MULTI_DEVICE ? styles.selected : ''
-                  }`}
-                  onClick={() => setGameType(GAME_TYPE.MULTI_DEVICE)}
-                >
-                  Multi Device
-                </button>
-              </div>
+    <div className={styles.container}>
+      <AnimatePresence mode="wait">
+        {isCreatingGame ? (
+          <motion.div
+            key="loading"
+            className={styles.loadingDot}
+            variants={dotVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+          />
+        ) : (
+          <motion.div
+            key="content"
+            className={styles.mainContent}
+            variants={boxVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+          >
+            <div className={styles.header}>
+              <h1 className={styles.title}>NEW GAME</h1>
+              <div className={styles.subtitle}>Configure game parameters</div>
             </div>
 
-            <hr className="divider" />
-
-            <div className={styles.settingItem}>
-              <label>Game Format</label>
-              <div className={styles.buttonGroup}>
-                <button
-                  className={`${styles.button} ${styles.team1} ${
-                    gameFormat === GAME_FORMAT.QUICK ? styles.selected : ''
-                  }`}
-                  onClick={() => setGameFormat(GAME_FORMAT.QUICK)}
-                >
-                  Quick
-                </button>
-                <button
-                  className={`${styles.button} ${styles.team2} ${
-                    gameFormat === GAME_FORMAT.BEST_OF_THREE ? styles.selected : ''
-                  }`}
-                  onClick={() => setGameFormat(GAME_FORMAT.BEST_OF_THREE)}
-                >
-                  Best of 3
-                </button>
+            <div className={styles.terminalBox}>
+              <div className={styles.section}>
+                <div className={styles.sectionHeader}>
+                  <span className={styles.prompt}>{'>'}</span>
+                  <span className={styles.sectionTitle}>GAME TYPE</span>
+                </div>
+                <div className={styles.buttonGroup}>
+                  <button
+                    className={`${styles.optionButton} ${
+                      gameType === GAME_TYPE.SINGLE_DEVICE ? styles.selected : ''
+                    }`}
+                    onClick={() => setGameType(GAME_TYPE.SINGLE_DEVICE)}
+                  >
+                    <span className={styles.buttonLabel}>SINGLE DEVICE</span>
+                    <span className={styles.buttonDesc}>Pass & play on one device</span>
+                  </button>
+                  <button
+                    className={`${styles.optionButton} ${
+                      gameType === GAME_TYPE.MULTI_DEVICE ? styles.selected : ''
+                    }`}
+                    onClick={() => setGameType(GAME_TYPE.MULTI_DEVICE)}
+                  >
+                    <span className={styles.buttonLabel}>MULTI DEVICE</span>
+                    <span className={styles.buttonDesc}>Each player on their device</span>
+                  </button>
+                </div>
               </div>
+
+              <div className={styles.divider} />
+
+              <div className={styles.section}>
+                <div className={styles.sectionHeader}>
+                  <span className={styles.prompt}>{'>'}</span>
+                  <span className={styles.sectionTitle}>GAME FORMAT</span>
+                </div>
+                <div className={styles.buttonGroup}>
+                  <button
+                    className={`${styles.optionButton} ${
+                      gameFormat === GAME_FORMAT.QUICK ? styles.selected : ''
+                    }`}
+                    onClick={() => setGameFormat(GAME_FORMAT.QUICK)}
+                  >
+                    <span className={styles.buttonLabel}>QUICK</span>
+                    <span className={styles.buttonDesc}>Single round</span>
+                  </button>
+                  <button
+                    className={`${styles.optionButton} ${
+                      gameFormat === GAME_FORMAT.BEST_OF_THREE ? styles.selected : ''
+                    }`}
+                    onClick={() => setGameFormat(GAME_FORMAT.BEST_OF_THREE)}
+                  >
+                    <span className={styles.buttonLabel}>BEST OF 3</span>
+                    <span className={styles.buttonDesc}>First to 2 wins</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className={styles.actionSection}>
+                <ActionButton
+                  onClick={handleCreateGame}
+                  enabled={!isCreatingGame}
+                  text="CREATE GAME"
+                />
+              </div>
+
+              {error && (
+                <div className={styles.errorBox}>
+                  <span className={styles.errorPrompt}>ERROR:</span>
+                  <span className={styles.errorText}>{error}</span>
+                </div>
+              )}
             </div>
-
-            <hr className="divider" />
-          </div>
-
-          {isCreatingGame ? (
-            <LoadingSpinner displayText={"Creating Game..."} />
-          ) : (
-            <ActionButton
-              onClick={handleCreateGame}
-              enabled={!isCreatingGame}
-              text={"Start New Game"}
-            />
-          )}
-          {error && <p className={styles.errorText}>{error}</p>}
-        </div>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
 export default CreateGamePageContent;
-
