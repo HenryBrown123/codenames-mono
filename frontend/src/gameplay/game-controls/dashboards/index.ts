@@ -5,6 +5,7 @@ export {
   DealingDashboard,
   GameoverDashboard,
   OutcomeDashboard,
+  HandoffDashboard,
 } from "./setup-dashboards";
 export { CodemasterDashboard } from "./codemaster-dashboard";
 export { CodebreakerDashboard } from "./codebreaker-dashboard";

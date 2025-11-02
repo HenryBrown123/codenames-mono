@@ -392,3 +392,13 @@
 .terminalSection:last-child {
   overflow: visible; /* Allow content to be fully visible */
 }
+
+.centeredContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 1rem;
+  grid-row: 1 / 3; /* Span first two rows, leaving bottom for actions */
+}

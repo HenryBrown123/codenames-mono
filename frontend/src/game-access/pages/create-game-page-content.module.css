@@ -63,16 +63,30 @@
   animation: dotBlink 1s ease-in-out infinite;
 }
 
+.backgroundDot {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-primary, #00ff88);
+  box-shadow: 0 0 20px var(--color-primary, #00ff88);
+  pointer-events: none;
+}
+
 .mainContent {
   width: 100%;
   max-width: 700px;
   padding: 35px;
-  background: linear-gradient(120deg, rgba(10, 16, 14, 0.76) 65%, rgba(20, 20, 30, 0.7) 100%);
+  background: linear-gradient(120deg, rgba(10, 16, 14, 0.95) 65%, rgba(20, 20, 30, 0.9) 100%);
   border: 1px solid var(--color-primary);
   border-radius: 8px;
   box-shadow: 0 0 24px 0 rgba(64, 255, 166, 0.14);
   position: relative;
   overflow: hidden;
+  z-index: 10;
 }
 
 .mainContent::before {
@@ -90,6 +104,7 @@
   );
   animation: scanlineAnimation 4s linear infinite;
   pointer-events: none;
+  z-index: 1;
 }
 
 .header {

@@ -45,9 +45,10 @@ const SpymasterOverlay = memo<{
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.8 }}
       transition={{
-        duration: 0.4,
+        type: "spring",
+        stiffness: 400,
+        damping: 20,
         delay: 0.1,
-        ease: [0.34, 1.56, 0.64, 1],
       }}
       className={styles.spymasterOverlay}
     >
@@ -114,8 +115,9 @@ export const GameCard = memo<GameCardProps>(
         }}
         transition={{
           delay: shouldDealAnimate ? index * 0.05 : 0,
-          duration: 0.8,
-          ease: [0.34, 1.56, 0.64, 1],
+          type: "spring",
+          stiffness: 260,
+          damping: 20,
         }}
         className={styles.cardContainer}
         data-team={teamType}
@@ -131,7 +133,11 @@ export const GameCard = memo<GameCardProps>(
         <motion.div
           initial={{ rotateY: initiallySelected ? 180 : 0 }}
           animate={{ rotateY: card.selected ? 180 : 0 }}
-          transition={{ duration: 0.6, ease: "easeInOut" }}
+          transition={{ 
+            type: "spring",
+            stiffness: 200,
+            damping: 18,
+          }}
           style={{
             width: "100%",
             height: "100%",

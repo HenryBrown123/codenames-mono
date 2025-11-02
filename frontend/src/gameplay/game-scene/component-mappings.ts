@@ -6,6 +6,7 @@ import {
   CodebreakerDashboard,
   WaitingDashboard,
   OutcomeDashboard,
+  HandoffDashboard,
 } from "../game-controls/dashboards";
 import {
   SpymasterBoard,
@@ -42,6 +43,8 @@ export const getDashboardComponent = (
     case "none.dealing":
     case "none.gameover":
       return LobbyDashboard;        // FIXED: removed View suffix
+    case "none.handoff":
+      return HandoffDashboard;      // Blank dashboard during device handoff
     default:
       console.warn(
         `No dashboard component found for ${sceneKey}, falling back to SpectatorDashboard`,

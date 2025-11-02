@@ -1,5 +1,6 @@
 import React from "react";
 import { RefreshCw } from "lucide-react";
+import { PLAYER_ROLE } from "@codenames/shared/types";
 import { useGameDataRequired } from "../../game-data/providers";
 import { useGameActions } from "../../game-actions";
 import { ActionButton } from "../../shared/components";
@@ -10,6 +11,7 @@ import {
   TerminalCommand,
   TerminalStatus,
   TerminalOutput,
+  CenteredContent,
 } from "./terminal-components";
 import styles from "./setup-dashboards.module.css";
 /**
@@ -21,6 +23,19 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
 
   if (!gameData) {
     return null;
+  }
+
+  // During handoff (IN_PROGRESS with no active player), show blank dashboard
+  if (
+    gameData.currentRound?.status === "IN_PROGRESS" &&
+    (gameData.playerContext?.role || PLAYER_ROLE.NONE) === PLAYER_ROLE.NONE
+  ) {
+    return (
+      <>
+        <div className={`${styles.container} mobile-only`} />
+        <div className={styles.desktopContainer} />
+      </>
+    );
   }
 
   const canRedeal =
@@ -105,7 +120,7 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
 
       {/* Desktop terminal view */}
       <div className={styles.desktopContainer}>
-        <TerminalSection>
+        <TerminalSection layoutId="dashboard-main">
           <TerminalCommand>SYSTEM READY</TerminalCommand>
           <TerminalPrompt>
             <TerminalOutput>{messageText || "Initialize mission parameters..."}</TerminalOutput>
@@ -113,12 +128,12 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
         </TerminalSection>
 
         {canRedeal && (
-          <TerminalSection>
+          <TerminalSection layoutId="dashboard-status">
             <TerminalStatus>Cards dealt. Verify configuration or request new deal.</TerminalStatus>
           </TerminalSection>
         )}
 
-        <TerminalSection>
+        <TerminalSection layoutId="dashboard-actions">
           <div className={styles.buttonGroup}>
             <ActionButton
               onClick={handleClick}
@@ -148,12 +163,10 @@ export const WaitingDashboard: React.FC<{ messageText?: string }> = ({ messageTe
     <>
       <div className={`${styles.container} mobile-only`} />
       <div className={styles.desktopContainer}>
-        <TerminalSection>
+        <CenteredContent layoutId="dashboard-main">
           <TerminalCommand>STANDBY MODE</TerminalCommand>
-          <TerminalPrompt>
-            <TerminalOutput>{messageText || "Waiting for orders..."}</TerminalOutput>
-          </TerminalPrompt>
-        </TerminalSection>
+          <TerminalOutput>{messageText || "Waiting for orders..."}</TerminalOutput>
+        </CenteredContent>
       </div>
     </>
   );
@@ -167,12 +180,10 @@ export const SpectatorDashboard: React.FC<{ messageText?: string }> = ({ message
     <>
       <div className={`${styles.container} mobile-only`} />
       <div className={styles.desktopContainer}>
-        <TerminalSection>
+        <CenteredContent layoutId="dashboard-main">
           <TerminalCommand>OBSERVER MODE</TerminalCommand>
-          <TerminalPrompt>
-            <TerminalOutput>{messageText || "Monitoring field operations..."}</TerminalOutput>
-          </TerminalPrompt>
-        </TerminalSection>
+          <TerminalOutput>{messageText || "Monitoring field operations..."}</TerminalOutput>
+        </CenteredContent>
       </div>
     </>
   );
@@ -189,12 +200,10 @@ export const DealingDashboard: React.FC<{ messageText?: string }> = ({ messageTe
       </div>
 
       <div className={styles.desktopContainer}>
-        <TerminalSection>
+        <CenteredContent layoutId="dashboard-main">
           <TerminalCommand>SYSTEM PROCESSING</TerminalCommand>
-          <TerminalPrompt>
-            <TerminalOutput>{messageText || "Dealing cards..."}</TerminalOutput>
-          </TerminalPrompt>
-        </TerminalSection>
+          <TerminalOutput>{messageText || "Dealing cards..."}</TerminalOutput>
+        </CenteredContent>
       </div>
     </>
   );
@@ -221,18 +230,13 @@ export const GameoverDashboard: React.FC<{ messageText?: string }> = ({ messageT
       </div>
 
       <div className={styles.desktopContainer}>
-        <TerminalSection>
+        <CenteredContent layoutId="dashboard-main">
           <TerminalCommand>MISSION COMPLETE</TerminalCommand>
-          <TerminalPrompt>
-            <TerminalOutput>
-              {messageText || "Mission concluded. Ready for new assignment."}
-            </TerminalOutput>
-          </TerminalPrompt>
-        </TerminalSection>
-
-        <TerminalSection />
-
-        <TerminalSection>
+          <TerminalOutput>
+            {messageText || "Mission concluded. Ready for new assignment."}
+          </TerminalOutput>
+        </CenteredContent>
+        <TerminalSection layoutId="dashboard-actions">
           <ActionButton
             onClick={handleNewGame}
             text="NEW MISSION"
@@ -240,6 +244,18 @@ export const GameoverDashboard: React.FC<{ messageText?: string }> = ({ messageT
           />
         </TerminalSection>
       </div>
+    </>
+  );
+};
+
+/**
+ * Blank dashboard for device handoff - shows nothing behind the overlay
+ */
+export const HandoffDashboard: React.FC<{ messageText?: string }> = () => {
+  return (
+    <>
+      <div className={`${styles.container} mobile-only`} />
+      <div className={styles.desktopContainer} />
     </>
   );
 };
@@ -261,16 +277,11 @@ export const OutcomeDashboard: React.FC<{ messageText?: string }> = ({ messageTe
       </div>
 
       <div className={styles.desktopContainer}>
-        <TerminalSection>
+        <CenteredContent layoutId="dashboard-main">
           <TerminalCommand>MISSION OUTCOME</TerminalCommand>
-          <TerminalPrompt>
-            <TerminalOutput>{messageText || "Analyzing mission results..."}</TerminalOutput>
-          </TerminalPrompt>
-        </TerminalSection>
-
-        <TerminalSection />
-
-        <TerminalSection>
+          <TerminalOutput>{messageText || "Analyzing mission results..."}</TerminalOutput>
+        </CenteredContent>
+        <TerminalSection layoutId="dashboard-actions">
           <ActionButton onClick={handleContinue} text="ACKNOWLEDGE" enabled={true} />
         </TerminalSection>
       </div>

@@ -27,9 +27,7 @@ interface GetLobbyStateResponse {
 }
 
 const fetchLobbyState = async (gameId: string): Promise<LobbyData> => {
-  const response: AxiosResponse<GetLobbyStateResponse> = await api.get(
-    `/games/${gameId}`,
-  );
+  const response: AxiosResponse<GetLobbyStateResponse> = await api.get(`/games/${gameId}`);
 
   if (!response.data.success) {
     throw new Error("Failed to get lobby state");
@@ -41,9 +39,7 @@ const fetchLobbyState = async (gameId: string): Promise<LobbyData> => {
 /**
  * Fetches and caches lobby state data.
  */
-export const useLobbyQuery = (
-  gameId: string | null,
-): UseQueryResult<LobbyData, Error> => {
+export const useLobbyQuery = (gameId: string | null): UseQueryResult<LobbyData, Error> => {
   return useQuery<LobbyData>({
     queryKey: ["lobby", gameId],
     queryFn: () => {

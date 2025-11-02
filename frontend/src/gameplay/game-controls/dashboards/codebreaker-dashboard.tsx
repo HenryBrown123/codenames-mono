@@ -8,6 +8,7 @@ import {
   TerminalCommand,
   TerminalOutput,
   TerminalMessageBlock,
+  CenteredContent,
 } from "./terminal-components";
 import sharedStyles from "./shared-dashboard.module.css";
 import styles from "./codebreaker-dashboard.module.css";
@@ -32,12 +33,10 @@ export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messa
       <>
         <div className={`${sharedStyles.dashboardContainer} mobile-only`} />
         <div className={sharedStyles.desktopContainer}>
-          <TerminalSection>
+          <CenteredContent layoutId="dashboard-main">
             <TerminalCommand>FIELD REPORT</TerminalCommand>
-            <TerminalPrompt>
-              <TerminalOutput>{messageText || "Standing by..."}</TerminalOutput>
-            </TerminalPrompt>
-          </TerminalSection>
+            <TerminalOutput>{messageText || "Standing by..."}</TerminalOutput>
+          </CenteredContent>
         </div>
       </>
     );
@@ -74,7 +73,7 @@ export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messa
 
       {/* Desktop view */}
       <div className={sharedStyles.desktopContainer}>
-        <TerminalSection>
+        <TerminalSection layoutId="dashboard-main">
           <TerminalCommand>FIELD REPORT</TerminalCommand>
           <TerminalPrompt>
             <TerminalOutput>{messageText || "Standing by..."}</TerminalOutput>
@@ -82,7 +81,7 @@ export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messa
         </TerminalSection>
 
 {activeTurn?.clue && (
-          <TerminalSection>
+          <TerminalSection layoutId="dashboard-intel">
             <TerminalCommand>
               ACTIVE INTEL <span className={styles.intelPing} />
             </TerminalCommand>
@@ -107,7 +106,7 @@ export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messa
         )}
 
         {canEndTurn && (
-          <TerminalSection>
+          <TerminalSection layoutId="dashboard-actions">
             <ActionButton
               onClick={endTurn}
               text={actionState.status === "loading" ? "PROCESSING..." : "END TRANSMISSION"}

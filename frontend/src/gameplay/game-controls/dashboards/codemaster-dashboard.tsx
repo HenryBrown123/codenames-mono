@@ -16,6 +16,7 @@ import {
   SpySlider,
   SpyStatus,
   MiddleSection,
+  CenteredContent,
 } from "./terminal-components";
 import styles from "./codemaster-dashboard.module.css";
 
@@ -54,12 +55,10 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
       <>
         <div className={`${styles.container} mobile-only`} />
         <div className="desktop-only">
-          <TerminalSection>
+          <CenteredContent layoutId="dashboard-main">
             <TerminalCommand>MISSION LOG</TerminalCommand>
-            <TerminalPrompt>
-              <TerminalOutput>Waiting for operative turn...</TerminalOutput>
-            </TerminalPrompt>
-          </TerminalSection>
+            <TerminalOutput>Waiting for operative turn...</TerminalOutput>
+          </CenteredContent>
         </div>
       </>
     );
@@ -100,7 +99,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
       </div>
 
       <div className={styles.desktopContainer}>
-        <TerminalSection>
+        <TerminalSection layoutId="dashboard-main">
           <TerminalCommand>MISSION LOG</TerminalCommand>
           <TerminalPrompt>
             <TerminalOutput>{messageText || "Awaiting orders..."}</TerminalOutput>
@@ -108,7 +107,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
         </TerminalSection>
 
         <MiddleSection>
-          <TerminalSection>
+          <TerminalSection layoutId="dashboard-goggles">
             <TerminalCommand>SPY GOGGLES</TerminalCommand>
             <SpyGogglesContainer>
               <SpyGogglesText>Toggle enhanced vision</SpyGogglesText>
@@ -124,7 +123,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
           </TerminalSection>
         </MiddleSection>
 
-        <TerminalSection>
+        <TerminalSection layoutId="dashboard-actions">
           <TerminalCommand>ACTION</TerminalCommand>
           <CodeWordInput
             codeWord=""

@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import styles from "./terminal-components.module.css";
 
 /**
@@ -10,9 +11,34 @@ export const TerminalContent: React.FC<{ children: React.ReactNode }> = ({ child
 
 /**
  * Terminal section card - provides visual container for content
+ * Supports layoutId for morphing animations between states
  */
-export const TerminalSection: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
-  <div className={styles.terminalSection}>{children}</div>
+export const TerminalSection: React.FC<{ 
+  children?: React.ReactNode;
+  layoutId?: string;
+}> = ({ children, layoutId }) => (
+  <motion.div 
+    className={styles.terminalSection}
+    layoutId={layoutId}
+    layout
+    initial={{ opacity: 0, scale: 0.9, y: 10 }}
+    animate={{ 
+      opacity: 1, 
+      scale: 1, 
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 25,
+      }
+    }}
+    transition={{ 
+      layout: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
+      opacity: { duration: 0.2 }
+    }}
+  >
+    {children}
+  </motion.div>
 );
 
 export const TerminalPrompt: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
@@ -78,6 +104,39 @@ export const TerminalToggleRow: React.FC<{ children: React.ReactNode }> = ({ chi
  */
 export const MiddleSection: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className={styles.middleSection}>{children}</div>
+);
+
+/**
+ * Centered content for simple 2-panel dashboards
+ * Vertically centers text/content in the middle grid row while buttons stay anchored at bottom
+ * Supports layoutId for morphing animations
+ */
+export const CenteredContent: React.FC<{ 
+  children: React.ReactNode;
+  layoutId?: string;
+}> = ({ children, layoutId }) => (
+  <motion.div 
+    className={styles.centeredContent}
+    layoutId={layoutId}
+    layout
+    initial={{ opacity: 0, scale: 0.9, y: 10 }}
+    animate={{ 
+      opacity: 1, 
+      scale: 1, 
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 25,
+      }
+    }}
+    transition={{ 
+      layout: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
+      opacity: { duration: 0.2 }
+    }}
+  >
+    {children}
+  </motion.div>
 );
 
 /**
