@@ -9,7 +9,6 @@ import { GameInstructions } from "../shared/game-instructions";
 import { ActionButton } from "../shared/components";
 import { CodeWordInput } from "../game-controls/dashboards/codemaster-input";
 import { useGameActions } from "../game-actions";
-import { UISettingsDashboard } from "../game-controls/settings/ui-settings-dashboard";
 
 /**
  * Game Scene Component with unified mobile-first layout
@@ -21,10 +20,6 @@ export const GameScene: React.FC = () => {
   const { currentRole, currentScene } = usePlayerScene();
   const [showCluePanel, setShowCluePanel] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
-  const [boardTilt, setBoardTilt] = useState(0);
-  const [fontNormalSize, setFontNormalSize] = useState(14);
-  const [fontLongSize, setFontLongSize] = useState(14);
-  const [fontThreshold, setFontThreshold] = useState(9);
   const { giveClue, actionState } = useGameActions();
 
   const DashboardComponent = getDashboardComponent(currentRole, currentScene);
@@ -34,17 +29,12 @@ export const GameScene: React.FC = () => {
   }, [currentRole]);
 
   const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
-  const fontVariables = {
-    "--font-normal-size": `${fontNormalSize}px`,
-    "--font-long-size": `${fontLongSize}px`,
-    "--font-threshold": fontThreshold,
-  } as React.CSSProperties;
 
   if (isPending && !gameData) {
     return (
       <div className={styles.gameSceneContainer}>
         <div className={styles.boardArea}>
-          <SpectatorBoard tilt={boardTilt} scene={currentScene} />
+          <SpectatorBoard scene={currentScene} />
         </div>
         <div className={styles.controlArea} />
       </div>
@@ -68,7 +58,7 @@ export const GameScene: React.FC = () => {
     return (
       <div className={styles.gameSceneContainer}>
         <div className={styles.boardArea}>
-          <SpectatorBoard tilt={boardTilt} scene={currentScene} />
+          <SpectatorBoard scene={currentScene} />
         </div>
         <div className={styles.controlArea}>
           <div>Game Completed!</div>
@@ -87,22 +77,10 @@ export const GameScene: React.FC = () => {
 
   return (
     <>
-      {/* UI Settings Dashboard */}
-      <UISettingsDashboard
-        fontNormalSize={fontNormalSize}
-        fontLongSize={fontLongSize}
-        fontThreshold={fontThreshold}
-        onFontNormalSizeChange={setFontNormalSize}
-        onFontLongSizeChange={setFontLongSize}
-        onFontThresholdChange={setFontThreshold}
-        tiltValue={boardTilt}
-        onTiltChange={setBoardTilt}
-      />
-
-      <div className={styles.gameSceneContainer} style={fontVariables}>
+      <div className={styles.gameSceneContainer}>
         {/* Main game board */}
         <div className={styles.boardArea}>
-          <BoardComponent tilt={boardTilt} scene={currentScene} />
+          <BoardComponent scene={currentScene} />
         </div>
 
         {/* Control area - SINGLE dashboard, CSS handles layout */}

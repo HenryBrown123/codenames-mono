@@ -8,10 +8,20 @@ import styles from "./game-card.module.css";
 /**
  * WordCard - Front face of the card showing the word
  */
-const WordCard = memo<{ word: string }>(({ word }) => {
+const WordCard = memo<{ word: string; showOverlay: boolean }>(({ word, showOverlay }) => {
   return (
     <div className={styles.normalCard}>
-      <span className={styles.cardWord}>{word}</span>
+      <motion.span 
+        className={styles.cardWord}
+        animate={{ opacity: showOverlay ? 0 : 1 }}
+        transition={{
+          type: "spring",
+          stiffness: 400,
+          damping: 20,
+        }}
+      >
+        {word}
+      </motion.span>
     </div>
   );
 });
@@ -145,7 +155,7 @@ export const GameCard = memo<GameCardProps>(
             transformStyle: "preserve-3d",
           }}
         >
-          <WordCard word={card.word} />
+          <WordCard word={card.word} showOverlay={showSpymasterOverlay} />
 
           <CoverCard teamType={teamType} />
         </motion.div>

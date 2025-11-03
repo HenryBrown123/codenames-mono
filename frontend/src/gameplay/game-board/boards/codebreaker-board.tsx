@@ -10,9 +10,8 @@ const CodebreakerBoardContent = memo<{
   isLoading: boolean;
   activeTurn: any;
   onCardClick: (word: string) => void;
-  tilt: number;
   currentTeamName?: string;
-}>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick, tilt, currentTeamName }) => {
+}>(({ cards, canMakeGuess, isLoading, activeTurn, onCardClick, currentTeamName }) => {
   // Create stable key from card words (sorted for consistency)
   const wordsKey = useMemo(() =>
     cards.map(c => c.word).sort().join(","),
@@ -31,7 +30,7 @@ const CodebreakerBoardContent = memo<{
   });
 
   return (
-    <GameBoardLayout tilt={tilt}>
+    <GameBoardLayout>
         {cards.length > 0
           ? cards.map((card, index) => (
               <GameCard
@@ -51,8 +50,8 @@ const CodebreakerBoardContent = memo<{
 
 CodebreakerBoardContent.displayName = "CodebreakerBoardContent";
 
-export const CodebreakerBoard = memo<{ tilt?: number; scene?: string }>(
-  ({ tilt = 0, scene }) => {
+export const CodebreakerBoard = memo<{ scene?: string }>(
+  ({ scene }) => {
     const { gameData } = useGameDataRequired();
     const { makeGuess, actionState } = useGameActions();
     const { activeTurn } = useTurn();
@@ -87,7 +86,6 @@ export const CodebreakerBoard = memo<{ tilt?: number; scene?: string }>(
         isLoading={isLoading}
         activeTurn={activeTurn}
         onCardClick={handleCardClick}
-        tilt={tilt}
         currentTeamName={currentTeamName}
       />
     );

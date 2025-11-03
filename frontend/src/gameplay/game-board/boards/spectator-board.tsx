@@ -3,7 +3,7 @@ import { useGameDataRequired } from "../../game-data/providers";
 import { GameCard } from "../cards/game-card";
 import { GameBoardLayout, EmptyCard } from "./board-layout";
 
-export const SpectatorBoard = memo<{ tilt?: number; scene?: string }>(({ tilt = 0, scene }) => {
+export const SpectatorBoard = memo<{ scene?: string }>(({ scene }) => {
   const { gameData } = useGameDataRequired();
   const cards = gameData.currentRound?.cards || [];
   const currentTeamName = gameData.playerContext?.teamName;
@@ -26,7 +26,7 @@ export const SpectatorBoard = memo<{ tilt?: number; scene?: string }>(({ tilt = 
   });
 
   return (
-    <GameBoardLayout tilt={tilt}>
+    <GameBoardLayout>
       {cards.length > 0
         ? cards.map((card, index) => (
             <GameCard

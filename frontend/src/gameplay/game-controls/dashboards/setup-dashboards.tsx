@@ -7,9 +7,7 @@ import { ActionButton } from "../../shared/components";
 import { usePlayerScene } from "../../game-scene";
 import {
   TerminalSection,
-  TerminalPrompt,
   TerminalCommand,
-  TerminalStatus,
   TerminalOutput,
   CenteredContent,
 } from "./terminal-components";
@@ -120,18 +118,13 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
 
       {/* Desktop terminal view */}
       <div className={styles.desktopContainer}>
-        <TerminalSection layoutId="dashboard-main">
+        <CenteredContent layoutId="dashboard-main">
           <TerminalCommand>SYSTEM READY</TerminalCommand>
-          <TerminalPrompt>
-            <TerminalOutput>{messageText || "Initialize mission parameters..."}</TerminalOutput>
-          </TerminalPrompt>
-        </TerminalSection>
-
-        {canRedeal && (
-          <TerminalSection layoutId="dashboard-status">
-            <TerminalStatus>Cards dealt. Verify configuration or request new deal.</TerminalStatus>
-          </TerminalSection>
-        )}
+          <TerminalOutput>
+            {messageText || "Initialize mission parameters..."}
+            {canRedeal && " Cards dealt."}
+          </TerminalOutput>
+        </CenteredContent>
 
         <TerminalSection layoutId="dashboard-actions">
           <div className={styles.buttonGroup}>

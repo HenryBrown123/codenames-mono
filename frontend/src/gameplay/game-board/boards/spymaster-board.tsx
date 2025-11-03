@@ -11,7 +11,7 @@ import {
   ARHUDContent,
 } from "../cards/ar-overlay-components";
 
-export const SpymasterBoard = memo<{ tilt?: number; scene?: string }>(({ tilt = 0, scene }) => {
+export const SpymasterBoard = memo<{ scene?: string }>(({ scene }) => {
   const { gameData } = useGameDataRequired();
   const cards = gameData.currentRound?.cards || [];
   const currentTeamName = gameData.playerContext?.teamName;
@@ -49,7 +49,7 @@ export const SpymasterBoard = memo<{ tilt?: number; scene?: string }>(({ tilt = 
         </ARGlassesHUD>
       )}
 
-      <GameBoardLayout data-ar-mode={viewMode === "spymaster"} tilt={tilt}>
+      <GameBoardLayout data-ar-mode={viewMode === "spymaster"}>
         {cards.length > 0
           ? cards.map((card, index) => (
               <GameCard

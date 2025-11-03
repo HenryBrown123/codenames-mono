@@ -5,7 +5,6 @@ interface GameBoardLayoutProps {
   children: React.ReactNode;
   className?: string;
   'data-ar-mode'?: boolean;
-  tilt?: number;
 }
 
 /**
@@ -16,12 +15,10 @@ export const GameBoardLayout: React.FC<GameBoardLayoutProps> = ({
   children,
   className,
   "data-ar-mode": dataArMode,
-  tilt = 0
 }) => (
   <div
     className={`${styles.boardWrapper} ${className || ''}`}
     data-ar-mode={dataArMode}
-    style={{ '--board-tilt': `${tilt}deg` } as React.CSSProperties}
   >
     <div className={styles.boardGrid} aria-label="game board" data-ar-mode={dataArMode}>
       {children}

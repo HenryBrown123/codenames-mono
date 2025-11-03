@@ -58,7 +58,7 @@ export const getDashboardComponent = (
  */
 export const getBoardComponent = (
   role: string,
-): React.ComponentType<{ tilt?: number; scene?: string }> => {
+): React.ComponentType<{ scene?: string }> => {
   const normalizedRole = role.toLowerCase();
 
   // Return board based on role only - same board for all scenes within a role

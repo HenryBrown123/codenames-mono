@@ -62,9 +62,10 @@
 }
 
 /* Hide base card text when spymaster overlay is active to prevent overlap */
-.cardContainer:has(.spymasterOverlay) .normalCard .cardWord {
+/* REMOVED: Now controlled by Framer Motion in WordCard component */
+/* .cardContainer:has(.spymasterOverlay) .normalCard .cardWord {
   opacity: 0;
-}
+} */
 
 /* ===== REMOVED CSS ANIMATIONS ===== */
 /* All animations now handled by Framer Motion via state machine */
@@ -142,19 +143,11 @@
 /* Hover only for clickable cards on devices with hover */
 @media (hover: hover) and (pointer: fine) {
   .cardContainer[data-clickable="true"] .normalCard:hover {
-    transform: translateY(-4px);
+    transform: translateY(-8px);
     box-shadow:
-      0 2px 0 #d4d1c8,
-      0 4px 0 #c8c5bc,
-      0 6px 0 #bab7ae,
-      0 8px 0 #ada9a0,
-      0 10px 0 #9f9c93,
-      0 12px 1px rgba(0, 0, 0, 0.1),
-      0 0 5px rgba(0, 0, 0, 0.1),
-      0 2px 3px rgba(0, 0, 0, 0.3),
-      0 6px 10px rgba(0, 0, 0, 0.2),
-      0 10px 20px rgba(0, 0, 0, 0.25),
-      0 20px 40px rgba(0, 0, 0, 0.15);
+      0 12px 24px rgba(0, 0, 0, 0.15),
+      0 8px 16px rgba(0, 0, 0, 0.1),
+      0 4px 8px rgba(0, 0, 0, 0.08);
   }
 }
 
@@ -209,7 +202,7 @@
   -webkit-hyphens: auto; /* Safari support */
   -ms-hyphens: auto; /* IE/Edge support */
 
-  transition: opacity 0.2s ease;
+  /* Removed transition - now controlled by Framer Motion */
   text-shadow: none;
   white-space: normal;
   line-height: 1.2;
@@ -234,9 +227,9 @@
   }
 }
 
-/* Semantic size classes - Dynamic sizing */
+/* Semantic size classes - Fixed sizing */
 .textNormal {
-  font-size: var(--font-normal-size, 14px);
+  font-size: 14px;
 }
 
 .textLong {
@@ -251,7 +244,7 @@
 @media (min-width: 400px) {
   .textLong,
   .textExtraLong {
-    font-size: var(--font-normal-size, 14px);
+    font-size: 14px;
   }
 }
 

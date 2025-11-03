@@ -105,46 +105,37 @@ export const useMovePlayerToTeam = (gameId: string) => {
       const previousLobby = queryClient.getQueryData<LobbyData>(["lobby", gameId]);
 
       if (previousLobby) {
-        const updatedLobby = {
-          ...previousLobby,
-          teams: previousLobby.teams
-            .map((team) => {
-              const playerInTeam = team.players.find((p) => p.publicId === playerId);
+        // Find the player being moved
+        const movedPlayer = previousLobby.teams
+          .flatMap((t) => t.players)
+          .find((p) => p.publicId === playerId);
 
-              if (playerInTeam) {
+        if (movedPlayer) {
+          const updatedLobby = {
+            ...previousLobby,
+            teams: previousLobby.teams.map((team) => {
+              // Remove player from their old team
+              if (team.players.some((p) => p.publicId === playerId)) {
                 return {
                   ...team,
                   players: team.players.filter((p) => p.publicId !== playerId),
                 };
               }
-
-              if (team.name === newTeamName && playerInTeam) {
+              
+              // Add player to their new team
+              if (team.name === newTeamName) {
                 return {
                   ...team,
-                  players: [...team.players, { playerInTeam, teamName: newTeamName }],
+                  players: [...team.players, { ...movedPlayer, teamName: newTeamName }],
                 };
               }
-
-              return team;
-            })
-            .map((team) => {
-              if (team.name === newTeamName) {
-                const movedPlayer = previousLobby.teams
-                  .flatMap((t) => t.players)
-                  .find((p) => p.publicId === playerId);
-
-                if (movedPlayer && !team.players.find((p) => p.publicId === playerId)) {
-                  return {
-                    ...team,
-                    players: [...team.players, { ...movedPlayer, teamName: newTeamName }],
-                  };
-                }
-              }
+              
               return team;
             }),
-        };
+          };
 
-        queryClient.setQueryData(["lobby", gameId], updatedLobby);
+          queryClient.setQueryData(["lobby", gameId], updatedLobby);
+        }
       }
 
       return { previousLobby };
