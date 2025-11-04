@@ -9,6 +9,7 @@ import { GameInstructions } from "../shared/game-instructions";
 import { ActionButton } from "../shared/components";
 import { CodeWordInput } from "../game-controls/dashboards/codemaster-input";
 import { useGameActions } from "../game-actions";
+import { GameOverOverlay } from "../game-over";
 
 /**
  * Game Scene Component with unified mobile-first layout
@@ -53,22 +54,12 @@ export const GameScene: React.FC = () => {
     );
   }
 
-  // Handle game over state
-  if (gameData?.currentRound?.status === "COMPLETED") {
-    return (
-      <div className={styles.gameSceneContainer}>
-        <div className={styles.boardArea}>
-          <SpectatorBoard scene={currentScene} />
-        </div>
-        <div className={styles.controlArea}>
-          <div>Game Completed!</div>
-        </div>
-      </div>
-    );
-  }
-
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === "SETUP";
+  
+  // Check for game over - either status is COMPLETED or assassin was found
+  const isGameOver = gameData.status === "COMPLETED" || 
+    activeTurn?.lastGuess?.outcome === "ASSASSIN_CARD";
 
   const handleSubmitClue = (word: string, count: number) => {
     giveClue(word, count);
@@ -134,6 +125,9 @@ export const GameScene: React.FC = () => {
         <button className={styles.helpButton} onClick={() => setShowInstructions(true)}>
           ?
         </button>
+
+        {/* Game Over Overlay */}
+        {isGameOver && <GameOverOverlay />}
       </div>
     </>
   );

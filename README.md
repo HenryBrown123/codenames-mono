@@ -625,6 +625,7 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   │   ├── events
 │       │   │   ├── providers
 │       │   │   └── queries
+│       │   ├── game-over
 │       │   ├── game-scene
 │       │   ├── round-management
 │       │   │   └── api
@@ -650,7 +651,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-89 directories
+90 directories
 ```
 
 ## Getting Started
