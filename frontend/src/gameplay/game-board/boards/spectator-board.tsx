@@ -1,10 +1,15 @@
 import { memo, useMemo, useRef, useLayoutEffect } from "react";
+import { motion } from "framer-motion";
 import { useGameDataRequired } from "../../game-data/providers";
+import { useViewMode } from "../view-mode/view-mode-context";
 import { GameCard } from "../cards/game-card";
-import { GameBoardLayout, EmptyCard } from "./board-layout";
+import { EmptyCard } from "./board-layout";
+import { boardVariants } from "../cards/card-animation-variants";
+import styles from "./board-layout.module.css";
 
 export const SpectatorBoard = memo<{ scene?: string }>(({ scene }) => {
   const { gameData } = useGameDataRequired();
+  const { viewMode } = useViewMode();
   const cards = gameData.currentRound?.cards || [];
   const currentTeamName = gameData.playerContext?.teamName;
 
@@ -26,21 +31,34 @@ export const SpectatorBoard = memo<{ scene?: string }>(({ scene }) => {
   });
 
   return (
-    <GameBoardLayout>
-      {cards.length > 0
-        ? cards.map((card, index) => (
+    <div className={styles.boardWrapper}>
+      {cards.length > 0 ? (
+        <motion.div
+          key={wordsKey}
+          className={styles.boardGrid}
+          variants={boardVariants}
+          initial={dealOnEntry ? "hidden" : false}
+          animate="visible"
+        >
+          {cards.map((card) => (
             <GameCard
               key={card.word}
               card={card}
-              index={index}
               onClick={() => {}}
               clickable={false}
               isCurrentTeam={currentTeamName === card.teamName}
-              dealOnEntry={dealOnEntry}
+              showAROverlay={viewMode === "spymaster" && !card.selected}
             />
-          ))
-        : Array.from({ length: 25 }).map((_, i) => <EmptyCard key={`empty-${i}`} />)}
-    </GameBoardLayout>
+          ))}
+        </motion.div>
+      ) : (
+        <div className={styles.boardGrid}>
+          {Array.from({ length: 25 }).map((_, i) => (
+            <EmptyCard key={`empty-${i}`} />
+          ))}
+        </div>
+      )}
+    </div>
   );
 });
 
