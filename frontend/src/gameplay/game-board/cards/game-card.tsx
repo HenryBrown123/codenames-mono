@@ -17,6 +17,7 @@ interface CardDisplay {
   word: string;
   selected: boolean;
   teamName: string | null;
+  cardType: string;
 }
 
 /**

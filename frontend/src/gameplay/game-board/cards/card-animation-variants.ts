@@ -21,14 +21,14 @@ export const sceneVariants = {
       rotate: -45,
       scale: 0 
     },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
+    visible: {
+      opacity: 1,
+      y: 0,
       rotate: 0,
       scale: 1,
       transition: {
         duration: 0.6,
-        ease: [0.34, 1.56, 0.64, 1]
+        ease: [0.34, 1.56, 0.64, 1] as [number, number, number, number]
       }
     }
   }
@@ -62,11 +62,11 @@ export const cardStateVariants = {
     normal: { 
       rotateY: 0 
     },
-    flipped: { 
+    flipped: {
       rotateY: 180,
       transition: {
         duration: 0.6,
-        ease: [0.4, 0, 0.2, 1]
+        ease: [0.4, 0, 0.2, 1] as [number, number, number, number]
       }
     },
     revealing: { 
@@ -113,11 +113,11 @@ export const arRevealVariants = {
         duration: 0.2  // Faster exit
       }
     },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       scale: 1,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 400,
         damping: 20
       }
