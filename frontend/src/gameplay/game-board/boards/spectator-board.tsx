@@ -42,11 +42,15 @@ export const SpectatorBoard = memo<{ scene?: string }>(({ scene }) => {
           animate="visible"
         >
           {cards.map((card) => {
-            const displayOptions = deriveDisplayOptions({
-              viewMode,
-              isCurrentTeam: currentTeamName === card.teamName,
-              canInteract: false
-            });
+            const isRoundComplete = gameData.currentRound?.status === 'COMPLETED';
+            
+            const displayOptions = isRoundComplete
+              ? { mode: 'game-over' as const, isCurrentTeam: currentTeamName === card.teamName }
+              : deriveDisplayOptions({
+                  viewMode,
+                  isCurrentTeam: currentTeamName === card.teamName,
+                  canInteract: false
+                });
             
             return (
               <GameCard

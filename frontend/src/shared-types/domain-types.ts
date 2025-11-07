@@ -62,7 +62,7 @@ export interface Card {
   word: string;
   selected: boolean;
   teamName: string | null;
-  cardType: string;
+  cardType?: string;
 }
 
 export interface Turn {

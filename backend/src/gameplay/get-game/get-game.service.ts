@@ -1,5 +1,5 @@
 import { GameAggregate } from "../state/gameplay-state.types";
-import { PLAYER_ROLE, PlayerRole } from "@codenames/shared/types";
+import { PLAYER_ROLE, PlayerRole, ROUND_STATE } from "@codenames/shared/types";
 import { GameplayStateProvider } from "../state/gameplay-state.provider";
 
 /**
@@ -191,7 +191,7 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
           roundNumber: gameData.currentRound.number,
           status: gameData.currentRound.status,
           cards: gameData.currentRound.cards.map((card) =>
-            applyCardVisibility(card, playerRole),
+            applyCardVisibility(card, playerRole, gameData.currentRound!.status),
           ),
 
           turns: gameData.currentRound.turns.map((turn) => ({
@@ -222,16 +222,23 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
 }
 
 /**
- * Applies visibility rules to a card based on player role
+ * Applies visibility rules to a card based on player role and round status
  */
-function applyCardVisibility(card: any, playerRole: PlayerRole) {
+function applyCardVisibility(card: any, playerRole: PlayerRole, roundStatus: string) {
   const baseCard = {
     word: card.word,
     selected: card.selected,
   };
 
-  // Codemasters see everything, others only see revealed cards
-  if (playerRole === PLAYER_ROLE.CODEMASTER || card.selected) {
+  // Show all team names if:
+  // 1. Player is a codemaster
+  // 2. Card has been selected
+  // 3. Round is completed (game over - show all cards)
+  if (
+    playerRole === PLAYER_ROLE.CODEMASTER ||
+    card.selected ||
+    roundStatus === ROUND_STATE.COMPLETED
+  ) {
     return {
       ...baseCard,
       teamName: card.teamName,

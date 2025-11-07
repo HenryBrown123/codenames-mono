@@ -16,7 +16,8 @@ const CodebreakerBoardContent = memo<{
   onCardClick: (word: string) => void;
   currentTeamName?: string;
   viewMode: string;
-}>(({ cards, canMakeGuess, isLoading, onCardClick, currentTeamName, viewMode }) => {
+  isRoundComplete: boolean;
+}>(({ cards, canMakeGuess, isLoading, onCardClick, currentTeamName, viewMode, isRoundComplete }) => {
   // Create stable key from card words (sorted for consistency)
   const wordsKey = useMemo(() =>
     cards.map((c: any) => c.word).sort().join(","),
@@ -45,11 +46,13 @@ const CodebreakerBoardContent = memo<{
           animate="visible"
         >
           {cards.map((card) => {
-            const displayOptions = deriveDisplayOptions({
-              viewMode,
-              isCurrentTeam: currentTeamName === card.teamName,
-              canInteract: canMakeGuess && !isLoading && !card.selected
-            });
+            const displayOptions = isRoundComplete
+              ? { mode: 'game-over' as const, isCurrentTeam: currentTeamName === card.teamName }
+              : deriveDisplayOptions({
+                  viewMode,
+                  isCurrentTeam: currentTeamName === card.teamName,
+                  canInteract: canMakeGuess && !isLoading && !card.selected
+                });
             
             return (
               <GameCard
@@ -112,6 +115,7 @@ export const CodebreakerBoard = memo<{ scene?: string }>(
         onCardClick={handleCardClick}
         currentTeamName={currentTeamName}
         viewMode={viewMode}
+        isRoundComplete={gameData.currentRound?.status === 'COMPLETED'}
       />
     );
   }

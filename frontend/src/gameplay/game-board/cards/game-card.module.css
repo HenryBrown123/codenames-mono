@@ -333,8 +333,7 @@
     0 0 30px rgba(255, 255, 0, 0.8),
     0 0 60px rgba(255, 255, 0, 0.4),
     inset 0 0 30px rgba(255, 255, 0, 0.1);
-  position: relative;
-  overflow: hidden;
+  overflow: visible; /* Allow glow to extend beyond card */
 }
 
 /* Animated electric sweep effect on assassin border */
@@ -359,6 +358,8 @@
   animation: assassinElectricSweep 3s linear infinite;
   opacity: 0.6;
   z-index: 0;
+  border-radius: inherit;
+  overflow: hidden; /* Contain sweep within border */
 }
 
 /* ===== REVEAL OVERLAY ===== */
@@ -610,10 +611,22 @@
 /* ===== TEAM SYMBOL ===== */
 .teamSymbol {
   position: absolute;
-  font-size: 3rem;
+  font-size: 0; /* Collapse the div itself */
   font-weight: 900;
   color: rgba(0, 0, 0, 0.3);
+  background: none !important;
+  display: inline-block;
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
   z-index: 1;
+  box-shadow: none;
+}
+
+.teamSymbol::before {
+  font-size: 3rem; /* Set size on the actual content */
   text-shadow:
     1px 1px 0px rgba(255, 255, 255, 0.3),
     -1px -1px 1px rgba(0, 0, 0, 0.8);
@@ -623,35 +636,54 @@
 /* Team symbols for cover cards */
 .cardContainer[data-team="red"] .teamSymbol::before {
   content: "★";
+  display: inline-block;
+  background: transparent;
 }
 
 .cardContainer[data-team="blue"] .teamSymbol::before {
   content: "♦";
+  display: inline-block;
+  background: transparent;
 }
 
 .cardContainer[data-team="assassin"] .teamSymbol::before {
   content: "☠";
+  display: inline-block;
+  background: transparent;
 }
 
 .cardContainer[data-team="neutral"] .teamSymbol::before {
   content: "●";
+  display: inline-block;
+  background: transparent;
 }
 
 .cardContainer[data-team="green"] .teamSymbol::before {
   content: "🌿";
+  display: inline-block;
+  background: transparent;
 }
 
 /* Assassin symbol - bright yellow with electric glow */
 .cardContainer[data-team="assassin"] .teamSymbol {
+  background: none !important;
+  z-index: 10;
+  /* Apply filter to parent so it affects the ::before */
+  filter: 
+    drop-shadow(0 0 20px rgba(255, 255, 0, 1))
+    drop-shadow(0 0 40px rgba(255, 255, 0, 0.8))
+    drop-shadow(0 0 60px rgba(255, 255, 0, 0.6));
+}
+
+.cardContainer[data-team="assassin"] .teamSymbol::before {
   color: #ffff00;
-  font-size: 4rem; /* Bigger for visibility */
+  font-size: 4rem; /* Bigger for assassin */
+  /* Apply text-shadow to the actual emoji */
   text-shadow:
     0 0 20px rgba(255, 255, 0, 1),
     0 0 40px rgba(255, 255, 0, 0.8),
     0 0 60px rgba(255, 0, 0, 0.6),
-    2px 2px 0 rgba(0, 0, 0, 0.8); /* Add outline for contrast */
-  filter: drop-shadow(0 0 30px rgba(255, 255, 0, 1));
-  z-index: 10; /* Above electric sweep */
+    2px 2px 0 rgba(0, 0, 0, 0.8);
 }
 
 @media (prefers-reduced-motion: no-preference) {
