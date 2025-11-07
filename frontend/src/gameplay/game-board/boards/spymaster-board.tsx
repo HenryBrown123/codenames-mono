@@ -2,6 +2,7 @@ import { memo, useMemo, useRef, useLayoutEffect } from "react";
 import { motion } from "framer-motion";
 import { useGameDataRequired } from "../../game-data/providers";
 import { GameCard } from "../cards/game-card";
+import { deriveDisplayOptions } from "../cards/card-types";
 import { useViewMode } from "../view-mode/view-mode-context";
 import { EmptyCard } from "./board-layout";
 import { boardVariants } from "../cards/card-animation-variants";
@@ -64,16 +65,22 @@ export const SpymasterBoard = memo<{ scene?: string }>(({ scene }) => {
             initial={dealOnEntry ? "hidden" : false}
             animate="visible"
           >
-            {cards.map((card) => (
-              <GameCard
-                key={card.word}
-                card={card}
-                onClick={() => {}}
-                clickable={false}
-                isCurrentTeam={currentTeamName === card.teamName}
-                showAROverlay={viewMode === "spymaster" && !card.selected}
-              />
-            ))}
+            {cards.map((card) => {
+              const displayOptions = deriveDisplayOptions({
+                viewMode,
+                isCurrentTeam: currentTeamName === card.teamName,
+                canInteract: false
+              });
+              
+              return (
+                <GameCard
+                  key={card.word}
+                  card={card}
+                  onClick={() => {}}
+                  displayOptions={displayOptions}
+                />
+              );
+            })}
           </motion.div>
         ) : (
           <div className={styles.boardGrid}>

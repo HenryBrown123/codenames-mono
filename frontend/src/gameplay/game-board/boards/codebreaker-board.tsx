@@ -4,6 +4,7 @@ import { useGameDataRequired, useTurn } from "../../game-data/providers";
 import { useGameActions } from "../../game-actions";
 import { useViewMode } from "../view-mode/view-mode-context";
 import { GameCard } from "../cards/game-card";
+import { deriveDisplayOptions } from "../cards/card-types";
 import { EmptyCard } from "./board-layout";
 import { boardVariants } from "../cards/card-animation-variants";
 import styles from "./board-layout.module.css";
@@ -43,16 +44,22 @@ const CodebreakerBoardContent = memo<{
           initial={dealOnEntry ? "hidden" : false}
           animate="visible"
         >
-          {cards.map((card) => (
-            <GameCard
-              key={card.word}
-              card={card}
-              onClick={() => onCardClick(card.word)}
-              clickable={canMakeGuess && !isLoading && !card.selected}
-              isCurrentTeam={currentTeamName === card.teamName}
-              showAROverlay={viewMode === "spymaster" && !card.selected}
-            />
-          ))}
+          {cards.map((card) => {
+            const displayOptions = deriveDisplayOptions({
+              viewMode,
+              isCurrentTeam: currentTeamName === card.teamName,
+              canInteract: canMakeGuess && !isLoading && !card.selected
+            });
+            
+            return (
+              <GameCard
+                key={card.word}
+                card={card}
+                onClick={() => onCardClick(card.word)}
+                displayOptions={displayOptions}
+              />
+            );
+          })}
         </motion.div>
       ) : (
         <div className={styles.boardGrid}>

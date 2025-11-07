@@ -51,13 +51,17 @@ export const boardVariants = {
  * Card visibility states - visual presentation layer
  * Independent of React component state
  */
-export type CardVisibilityState = 'normal' | 'flipped' | 'revealing';
+export type CardVisibilityState = 
+  | 'normal' 
+  | 'flipped' 
+  | 'revealed'
+  | 'gameOver'
+  | 'gameOverSelected';
 
 /**
  * Card state variants - controls flip and reveal animations
  */
 export const cardStateVariants = {
-  // Container controls 3D flip
   container: {
     normal: { 
       rotateY: 0 
@@ -69,58 +73,30 @@ export const cardStateVariants = {
         ease: [0.4, 0, 0.2, 1] as [number, number, number, number]
       }
     },
-    revealing: { 
-      rotateY: 0  // No flip during AR reveal
+    revealed: { 
+      rotateY: 0
+    },
+    gameOver: {
+      rotateY: 0
+    },
+    gameOverSelected: {
+      rotateY: 180  // Stay flipped - already showing cover card
     }
   },
   
-  // Front face visibility during states
   frontFace: {
     normal: { opacity: 1 },
     flipped: { opacity: 1 },
-    revealing: { 
+    revealed: { 
       opacity: 0,
-      transition: { duration: 0.15 }  // Quick fade for reveal
-    }
-  }
-};
-
-/**
- * AR reveal orchestration - for spymaster overlay elements
- */
-export type ARRevealState = 'hidden' | 'visible';
-
-export const arRevealVariants = {
-  container: {
-    hidden: {
-      transition: {
-        staggerChildren: 0.03,  // Much faster exit stagger
-        staggerDirection: -1,    // Reverse order on exit
-      }
+      transition: { duration: 0.15 }
     },
-    visible: {
-      transition: {
-        staggerChildren: 0.08,
-        delayChildren: 0,
-      }
-    }
-  },
-  item: {
-    hidden: { 
+    gameOver: {
       opacity: 0,
-      scale: 0.95,
-      transition: {
-        duration: 0.2  // Faster exit
-      }
+      transition: { duration: 0.3, ease: "easeOut" as const }
     },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      transition: {
-        type: "spring" as const,
-        stiffness: 400,
-        damping: 20
-      }
+    gameOverSelected: {
+      opacity: 1  // Keep visible since card stays flipped
     }
   }
 };

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useGameDataRequired } from "../../game-data/providers";
 import { useViewMode } from "../view-mode/view-mode-context";
 import { GameCard } from "../cards/game-card";
+import { deriveDisplayOptions } from "../cards/card-types";
 import { EmptyCard } from "./board-layout";
 import { boardVariants } from "../cards/card-animation-variants";
 import styles from "./board-layout.module.css";
@@ -40,16 +41,22 @@ export const SpectatorBoard = memo<{ scene?: string }>(({ scene }) => {
           initial={dealOnEntry ? "hidden" : false}
           animate="visible"
         >
-          {cards.map((card) => (
-            <GameCard
-              key={card.word}
-              card={card}
-              onClick={() => {}}
-              clickable={false}
-              isCurrentTeam={currentTeamName === card.teamName}
-              showAROverlay={viewMode === "spymaster" && !card.selected}
-            />
-          ))}
+          {cards.map((card) => {
+            const displayOptions = deriveDisplayOptions({
+              viewMode,
+              isCurrentTeam: currentTeamName === card.teamName,
+              canInteract: false
+            });
+            
+            return (
+              <GameCard
+                key={card.word}
+                card={card}
+                onClick={() => {}}
+                displayOptions={displayOptions}
+              />
+            );
+          })}
         </motion.div>
       ) : (
         <div className={styles.boardGrid}>

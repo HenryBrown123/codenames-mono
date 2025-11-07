@@ -361,21 +361,31 @@
   z-index: 0;
 }
 
-/* ===== SPYMASTER OVERLAY ===== */
-.spymasterOverlay {
+/* ===== REVEAL OVERLAY ===== */
+.revealOverlay {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: var(--z-spymaster-ar-overlay);
   border-radius: 6px;
   overflow: visible;
-  display: flex; /* Always flex - AnimatePresence handles mounting/unmounting */
+  display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
 }
 
-/* Removed old conditional display - now using AnimatePresence */
+/* ===== OUTLINE PULSE ===== */
+.outlinePulse {
+  position: absolute;
+  inset: -4px;
+  border: 3px solid var(--team-color);
+  border-radius: 8px;
+  pointer-events: none;
+  box-shadow: 
+    0 0 15px var(--team-color),
+    inset 0 0 15px var(--team-color);
+}
 
 /* ===== TEAM COLOR FILTER ===== */
 .teamColorFilter {
@@ -670,7 +680,7 @@
     border-radius: 8px;
   }
 
-  .spymasterOverlay {
+  .revealOverlay {
     border-radius: 8px;
   }
 
@@ -704,7 +714,7 @@
     border-radius: 12px;
   }
 
-  .spymasterOverlay {
+  .revealOverlay {
     border-radius: 12px;
   }
 
