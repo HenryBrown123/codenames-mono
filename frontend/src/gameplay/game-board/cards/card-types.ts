@@ -45,6 +45,7 @@ export const deriveCardVariant = (
   displayOptions: CardDisplayOptions,
   isSelected: boolean,
 ): CardVisibilityState => {
+  console.log("displayOptions", displayOptions);
   if (isSelected) {
     return "flipped";
   }

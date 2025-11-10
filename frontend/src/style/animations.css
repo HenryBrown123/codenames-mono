@@ -32,11 +32,11 @@
 
 /* Spymaster reveal animation */
 @keyframes spymasterReveal {
-  from { 
+  from {
     opacity: 0;
     transform: scale(0.95);
   }
-  to { 
+  to {
     opacity: 1;
     transform: scale(1);
   }
@@ -44,8 +44,9 @@
 
 /* Team color pulse */
 @keyframes teamPulse {
-  0%, 100% {
-    box-shadow: 
+  0%,
+  100% {
+    box-shadow:
       0 0 0 2px var(--team-color),
       0 0 15px var(--team-color),
       0 1px 0 rgba(0, 0, 0, 0.2),
@@ -55,7 +56,7 @@
       0 5px 10px rgba(0, 0, 0, 0.3);
   }
   50% {
-    box-shadow: 
+    box-shadow:
       0 0 0 3px var(--team-color),
       0 0 25px var(--team-color),
       0 1px 0 rgba(0, 0, 0, 0.2),
@@ -71,27 +72,29 @@
   0% {
     opacity: 0.6;
     filter: brightness(0.8);
-    box-shadow: 0 0 20px rgba(255, 255, 0, 0);
+    text-shadow: 0 0 20px rgba(255, 255, 0, 0);
   }
   10% {
     opacity: 1;
     filter: brightness(1.8);
-    box-shadow: 0 0 40px rgba(255, 255, 0, 0.8);
+    text-shadow: 0 0 40px rgba(255, 255, 0, 0.8);
   }
-  20%, 100% {
+  20%,
+  100% {
     opacity: 0.9;
     filter: brightness(1.1);
-    box-shadow: 0 0 25px rgba(255, 255, 0, 0.5);
+    text-shadow: 0 0 25px rgba(255, 255, 0, 0.5);
   }
 }
 
 /* Scan grid pulse */
 @keyframes gridPulse {
-  0%, 100% { 
-    opacity: 0.3; 
+  0%,
+  100% {
+    opacity: 0.3;
   }
-  50% { 
-    opacity: 0.6; 
+  50% {
+    opacity: 0.6;
   }
 }
 
@@ -119,16 +122,17 @@
 
 /* Danger pulse */
 @keyframes dangerPulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.8;
-    text-shadow: 
+    text-shadow:
       0 0 20px #ffff00,
       0 0 40px #ffff00,
       0 0 60px #ff0000;
   }
   50% {
     opacity: 1;
-    text-shadow: 
+    text-shadow:
       0 0 30px #ffff00,
       0 0 60px #ffff00,
       0 0 80px #ff0000;
@@ -137,7 +141,8 @@
 
 /* AR targeting corners blink */
 @keyframes cornerBlink {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     filter: drop-shadow(0 0 15px #00ff88) drop-shadow(0 0 30px #00ff88);
     border-color: #00ff88;
@@ -161,18 +166,19 @@
 
 /* Terminal glitch effect */
 @keyframes glitch {
-  0%, 100% {
-    text-shadow: 
+  0%,
+  100% {
+    text-shadow:
       0 0 2px var(--color-primary),
       0 0 4px var(--color-primary);
   }
   25% {
-    text-shadow: 
+    text-shadow:
       -2px 0 var(--color-accent),
       2px 0 var(--color-team-blue);
   }
   50% {
-    text-shadow: 
+    text-shadow:
       2px 0 var(--color-accent),
       -2px 0 var(--color-primary);
   }
