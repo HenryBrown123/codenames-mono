@@ -9,6 +9,7 @@ import CardVisibilitySandbox from "../../sandbox/card-visibility-sandbox";
 import BouncingBallDemoWrapper from "../../sandbox/bouncing-ball-demo";
 import { MusicVisualizerDemo } from "../../sandbox/music-visualiser-animation/music-visualiser-demo";
 import { SpringTest } from "../../sandbox/spring-test";
+import GameOverLayoutsSandbox from "../../sandbox/game-over-layouts-sandbox";
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -24,6 +25,7 @@ const AnimatedRoutes = () => {
         <Route path="/sandbox/bouncing-ball" element={<BouncingBallDemoWrapper />} />
         <Route path="/sandbox/music-visualiser" element={<MusicVisualizerDemo />} />
         <Route path="/sandbox/spring-test" element={<SpringTest />} />
+        <Route path="/sandbox/game-over" element={<GameOverLayoutsSandbox />} />
         <Route path="*" element={<div>404 - Page Not Found</div>} />
       </Routes>
     </AnimatePresence>
