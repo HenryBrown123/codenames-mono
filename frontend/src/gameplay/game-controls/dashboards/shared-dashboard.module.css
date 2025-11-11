@@ -238,13 +238,9 @@
 
 /* Desktop: Show desktop layout */
 @media (min-width: 769px) and (orientation: landscape) {
-  /* Hide mobile container */
-  .dashboardContainer {
-    display: none;
-  }
-  
-  /* Show desktop container with display: contents */
-  .desktopContainer {
+  /* Game over dashboard uses dashboardContainer on all screen sizes */
+  /* Other dashboards use desktopContainer pattern */
+  .desktopContainer {  
     display: contents;
   }
 }
@@ -346,4 +342,13 @@
   .scoreComparison {
     padding: 1rem 0.75rem;
   }
+}
+
+/* Game Over Dashboard Layout Override */
+.dashboardContainer:has(.terminalHeader) {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  justify-content: center;
 }

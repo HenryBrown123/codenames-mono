@@ -64,10 +64,10 @@ export const debriefOverlayVariants = {
     opacity: 1,
     y: 0,
     transition: {
-      duration: TIMING.DEBRIEF_FADE_DURATION + TIMING.CARD_REVEAL_START_DELAY,
+      duration: TIMING.DEBRIEF_FADE_DURATION,
       ease: "easeOut",
-      delay: TIMING.CARD_REVEAL_START_DELAY,
-      // staggerChildren: TIMING.DEBRIEF_STAT_STAGGER,
+      delay: TIMING.DEBRIEF_DELAY,
+      staggerChildren: TIMING.DEBRIEF_STAT_STAGGER,
       delayChildren: TIMING.DEBRIEF_DELAY + 0.5,
     },
   },
@@ -84,7 +84,6 @@ export const debriefStatVariants = {
     transition: {
       duration: 0.8,
       ease: "easeOut",
-      delay: 10,
     },
   },
 } satisfies Variants;

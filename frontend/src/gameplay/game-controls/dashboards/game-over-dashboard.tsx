@@ -12,6 +12,10 @@ export const GameOverDashboard = () => {
   const { gameData } = useGameDataRequired();
   const { createRound } = useGameActions();
 
+  console.log('🎯 GameOverDashboard MOUNTING - Fresh instance!');
+  console.log('debriefOverlayVariants:', debriefOverlayVariants);
+  console.log('variants.visible.transition:', debriefOverlayVariants.visible.transition);
+
   const winningTeam = gameData.teams?.find((team) => team.score >= 9);
   const losingTeam = gameData.teams?.find((team) => team.score < 9);
   
@@ -24,6 +28,8 @@ export const GameOverDashboard = () => {
       variants={debriefOverlayVariants}
       initial="hidden"
       animate="visible"
+      onAnimationStart={() => console.log('⏱️ Animation STARTED')}
+      onAnimationComplete={() => console.log('✅ Animation COMPLETE')}
     >
       <motion.div variants={debriefStatVariants}>
         <div className={styles.terminalHeader}>MISSION COMPLETE</div>
