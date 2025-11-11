@@ -1,10 +1,5 @@
 import { z } from "zod";
-import {
-  GAME_STATE,
-  GAME_FORMAT,
-  ROUND_STATE,
-  PLAYER_ROLE,
-} from "@codenames/shared/types";
+import { GAME_STATE, GAME_FORMAT, ROUND_STATE, PLAYER_ROLE } from "@codenames/shared/types";
 
 /**
  * Schema for validating player data
@@ -91,11 +86,9 @@ export const turnSchema = z.object({
 export const roundSchema = z.object({
   _id: z.number().int().positive(),
   number: z.number().int().positive(),
-  status: z.enum([
-    ROUND_STATE.SETUP,
-    ROUND_STATE.IN_PROGRESS,
-    ROUND_STATE.COMPLETED,
-  ]),
+  status: z.enum([ROUND_STATE.SETUP, ROUND_STATE.IN_PROGRESS, ROUND_STATE.COMPLETED]),
+  _winningTeamId: z.number().int().positive().nullable(),
+  winningTeamName: z.string().nullable(),
   cards: z.array(cardSchema).optional().default([]),
   turns: z.array(turnSchema).optional().default([]),
   players: z.array(playerSchema).optional().default([]),
@@ -128,11 +121,7 @@ export const currentRoundSchema = roundSchema;
 export const historicalRoundSchema = z.object({
   _id: z.number().int().positive(),
   number: z.number().int().positive(),
-  status: z.enum([
-    ROUND_STATE.SETUP,
-    ROUND_STATE.IN_PROGRESS,
-    ROUND_STATE.COMPLETED,
-  ]),
+  status: z.enum([ROUND_STATE.SETUP, ROUND_STATE.IN_PROGRESS, ROUND_STATE.COMPLETED]),
   _winningTeamId: z.number().int().positive().nullable(),
   winningTeamName: z.string().nullable(),
   createdAt: z.date(),
@@ -149,11 +138,7 @@ export const gameplayBaseSchema = z.object({
     GAME_STATE.ABANDONED,
     GAME_STATE.PAUSED,
   ]),
-  game_format: z.enum([
-    GAME_FORMAT.BEST_OF_THREE,
-    GAME_FORMAT.QUICK,
-    GAME_FORMAT.ROUND_ROBIN,
-  ]),
+  game_format: z.enum([GAME_FORMAT.BEST_OF_THREE, GAME_FORMAT.QUICK, GAME_FORMAT.ROUND_ROBIN]),
   teams: z.array(teamSchema),
   currentRound: currentRoundSchema.optional().nullable(),
   historicalRounds: z.array(historicalRoundSchema).optional().default([]),

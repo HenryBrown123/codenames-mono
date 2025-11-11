@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { RefreshCw } from "lucide-react";
 import { PLAYER_ROLE } from "@codenames/shared/types";
 import { useGameDataRequired } from "../../game-data/providers";
@@ -209,11 +209,25 @@ export const GameoverDashboard: React.FC<{ messageText?: string }> = ({ messageT
   const { gameData } = useGameDataRequired();
   const { createRound, actionState } = useGameActions();
 
-  const winningTeam = gameData.teams?.find((team) => team.score >= 9);
-  const losingTeam = gameData.teams?.find((team) => team.score < 9);
-  
+  const winningTeamName = gameData.currentRound?.winningTeamName;
+  const teams = gameData.teams;
+
+  const winningTeam = teams.find((t) => t.name === winningTeamName);
+  const winningCardCount = gameData.currentRound?.cards.filter(
+    (c) => c.teamName === winningTeam!.name && c.selected,
+  ).length;
+
+  const losingTeam = teams.find((t) => t.name !== winningTeamName);
+  const losingCardCount = gameData.currentRound?.cards.filter(
+    (c) => c.teamName === losingTeam!.name && c.selected,
+  ).length;
+
   const totalTurns = gameData.currentRound?.turns?.length || 0;
-  const totalCards = gameData.currentRound?.cards?.filter(c => c.selected).length || 0;
+  const totalCards = gameData.currentRound?.cards?.filter((c) => c.selected).length || 0;
+
+  useEffect(() => {
+    console.log("Rendering game over dash");
+  }, []);
 
   const handleNewGame = () => {
     createRound();
@@ -227,12 +241,12 @@ export const GameoverDashboard: React.FC<{ messageText?: string }> = ({ messageT
         <div className={styles.scoreComparison}>
           <div className={styles.teamScore}>
             <div className={styles.teamName}>{winningTeam?.name.toUpperCase()}</div>
-            <div className={`${styles.score} ${styles.winner}`}>{winningTeam?.score}</div>
+            <div className={`${styles.score} ${styles.winner}`}>{winningCardCount}</div>
           </div>
           <div className={styles.scoreDivider}>—</div>
           <div className={styles.teamScore}>
             <div className={styles.teamName}>{losingTeam?.name.toUpperCase()}</div>
-            <div className={styles.score}>{losingTeam?.score}</div>
+            <div className={styles.score}>{losingCardCount}</div>
           </div>
         </div>
         <div className={styles.secondaryStats}>
@@ -254,10 +268,29 @@ export const GameoverDashboard: React.FC<{ messageText?: string }> = ({ messageT
       <div className={styles.desktopContainer}>
         <CenteredContent layoutId="dashboard-main">
           <TerminalCommand>MISSION COMPLETE</TerminalCommand>
-          <TerminalOutput>
-            {messageText || "Mission concluded. Ready for new assignment."}
-          </TerminalOutput>
+
+          <div className={styles.scoreComparison}>
+            <div className={styles.teamScore}>
+              <div className={styles.teamName}>{winningTeam?.name.toUpperCase()}</div>
+              <div className={`${styles.score} ${styles.winner}`}>{winningCardCount}</div>
+            </div>
+            <div className={styles.scoreDivider}>—</div>
+            <div className={styles.teamScore}>
+              <div className={styles.teamName}>{losingTeam?.name.toUpperCase()}</div>
+              <div className={styles.score}>{losingCardCount}</div>
+            </div>
+          </div>
+
+          <div className={styles.secondaryStats}>
+            <div className={styles.miniStat}>
+              <span>{totalTurns}</span> TURNS
+            </div>
+            <div className={styles.miniStat}>
+              <span>{totalCards}</span> / 25 REVEALED
+            </div>
+          </div>
         </CenteredContent>
+
         <TerminalSection layoutId="dashboard-actions">
           <ActionButton
             onClick={handleNewGame}

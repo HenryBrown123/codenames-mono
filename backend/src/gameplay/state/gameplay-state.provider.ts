@@ -4,10 +4,7 @@ import {
   GameFinder,
 } from "@backend/common/data-access/repositories/games.repository";
 
-import {
-  TeamsFinder,
-  TeamResult,
-} from "@backend/common/data-access/repositories/teams.repository";
+import { TeamsFinder, TeamResult } from "@backend/common/data-access/repositories/teams.repository";
 
 import {
   PlayerFinderAll,
@@ -22,10 +19,7 @@ import {
   RoundFinderAll,
 } from "@backend/common/data-access/repositories/rounds.repository";
 
-import {
-  CardsFinder,
-  CardResult,
-} from "@backend/common/data-access/repositories/cards.repository";
+import { CardsFinder, CardResult } from "@backend/common/data-access/repositories/cards.repository";
 
 import { TurnsFinder } from "@backend/common/data-access/repositories/turns.repository";
 
@@ -160,7 +154,7 @@ export const gameplayStateProvider = (
     ]);
 
     const allGamePlayers = await getPlayersByGameId(game._id);
-    const userIsPlayer = allGamePlayers.some(p => p._userId === userId);
+    const userIsPlayer = allGamePlayers.some((p) => p._userId === userId);
     if (!userIsPlayer) {
       return { status: "user-not-player", gameId, userId };
     }
@@ -173,9 +167,7 @@ export const gameplayStateProvider = (
       _id: team._id,
       _gameId: team._gameId,
       teamName: team.teamName,
-      players: players.filter(
-        (player: PlayerResult) => player._teamId === team._id,
-      ),
+      players: players.filter((player: PlayerResult) => player._teamId === team._id),
     }));
 
     const historicalRounds = allRounds
@@ -230,11 +222,7 @@ export const gameplayStateProvider = (
       selected: card.selected,
     }));
 
-    const playerContext = determinePlayerContext(
-      userPlayers || [],
-      specificPlayer,
-      game.game_type,
-    );
+    const playerContext = determinePlayerContext(userPlayers || [], specificPlayer, game.game_type);
 
     // playerContext can be null when no specific player is provided - this is valid
 
@@ -250,6 +238,8 @@ export const gameplayStateProvider = (
           _id: latestRound._id,
           number: latestRound.roundNumber,
           status: latestRound.status,
+          winningTeamName: latestRound.winningTeamName,
+          _winningTeamId: latestRound._winningTeamId,
           players,
           cards: cardsMapped,
           turns,

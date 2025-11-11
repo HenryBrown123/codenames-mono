@@ -9,11 +9,7 @@ import {
   HandoffDashboard,
   GameoverDashboard,
 } from "../game-controls/dashboards";
-import {
-  SpymasterBoard,
-  SpectatorBoard,
-  CodebreakerBoard,
-} from "../game-board/boards";
+import { SpymasterBoard, SpectatorBoard, CodebreakerBoard } from "../game-board/boards";
 
 /**
  * Maps scene keys to dashboard components
@@ -25,7 +21,7 @@ export const getDashboardComponent = (
   gameData?: any,
 ): React.ComponentType<{ messageText?: string; onOpenCluePanel?: () => void }> => {
   // Check for game over first - takes precedence over role/scene
-  if (gameData?.currentRound?.status === 'COMPLETED') {
+  if (gameData?.currentRound?.status === "COMPLETED") {
     return GameoverDashboard;
   }
 
@@ -33,50 +29,50 @@ export const getDashboardComponent = (
   const normalizedRole = role.toLowerCase();
   const sceneKey = `${normalizedRole}.${scene}`;
 
+  console.log("scene key", sceneKey);
+
   switch (sceneKey) {
     case "codebreaker.main":
-      return CodebreakerDashboard;  // FIXED: removed View suffix
+      return CodebreakerDashboard;
     case "codebreaker.outcome":
-      return OutcomeDashboard;      // FIXED: removed View suffix
+      return OutcomeDashboard;
     case "codebreaker.waiting":
-      return WaitingDashboard;      // FIXED: removed View suffix
+      return WaitingDashboard;
     case "codemaster.main":
-      return CodemasterDashboard;   // FIXED: removed View suffix
+      return CodemasterDashboard;
     case "codemaster.waiting":
-      return WaitingDashboard;      // FIXED: removed View suffix
+      return WaitingDashboard;
     case "spectator.watching":
-      return SpectatorDashboard;    // FIXED: removed View suffix
+      return SpectatorDashboard;
     case "none.lobby":
     case "none.dealing":
     case "none.gameover":
-      return LobbyDashboard;        // FIXED: removed View suffix
+      return LobbyDashboard;
     case "none.handoff":
-      return HandoffDashboard;      // Blank dashboard during device handoff
+      return HandoffDashboard; // Blank dashboard during device handoff
     default:
       console.warn(
         `No dashboard component found for ${sceneKey}, falling back to SpectatorDashboard`,
       );
-      return SpectatorDashboard;    // FIXED: removed View suffix
+      return SpectatorDashboard; // FIXED: removed View suffix
   }
 };
 
 /**
  * Maps role to board component - boards persist across scenes within a role
  */
-export const getBoardComponent = (
-  role: string,
-): React.ComponentType<{ scene?: string }> => {
+export const getBoardComponent = (role: string): React.ComponentType<{ scene?: string }> => {
   const normalizedRole = role.toLowerCase();
 
   // Return board based on role only - same board for all scenes within a role
   switch (normalizedRole) {
-    case 'codebreaker':
+    case "codebreaker":
       return CodebreakerBoard;
-    case 'codemaster':
+    case "codemaster":
       return SpymasterBoard;
-    case 'spectator':
+    case "spectator":
       return SpectatorBoard;
-    case 'none':
+    case "none":
     default:
       // Lobby/setup scenes don't need overlay
       return SpectatorBoard;

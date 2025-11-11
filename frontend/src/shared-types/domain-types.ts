@@ -30,6 +30,7 @@ export interface GameData {
   currentRound: {
     roundNumber: number;
     status: RoundState;
+    winningTeamName: string | null;
     cards: Array<{
       word: string;
       selected: boolean;

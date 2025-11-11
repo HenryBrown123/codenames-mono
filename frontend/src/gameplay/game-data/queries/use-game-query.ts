@@ -25,6 +25,7 @@ interface GameStateApiResponse {
       currentRound: {
         roundNumber: number;
         status: string;
+        winningTeamName: string | null;
         cards: Array<{
           word: string;
           selected: boolean;
@@ -83,6 +84,7 @@ function transformApiResponseToGameData(apiResponse: GameStateApiResponse): Game
             teamName: card.teamName,
             cardType: card.cardType,
           })),
+          winningTeamName: game.currentRound.winningTeamName,
           turns: game.currentRound.turns.map((turn) => ({
             id: turn.id,
             teamName: turn.teamName,
@@ -111,6 +113,8 @@ const fetchGame = async (gameId: string, playerId?: string): Promise<GameData> =
   if (!response.data.success) {
     throw new Error("Failed to fetch game data");
   }
+
+  console.log(response.data.data.game);
 
   return transformApiResponseToGameData(response.data);
 };

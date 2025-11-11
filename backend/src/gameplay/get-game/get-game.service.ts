@@ -36,6 +36,7 @@ export type PublicGameStateResponse = {
   currentRound: {
     roundNumber: number;
     status: string;
+    winningTeamName?: string | null;
     cards: {
       word: string;
       selected: boolean;
@@ -92,11 +93,7 @@ export type GetGameStateDependencies = {
  */
 export const getGameStateService = (dependencies: GetGameStateDependencies) => {
   return async (input: GetGameStateInput): Promise<GetGameStateResult> => {
-    const result = await dependencies.getGameState(
-      input.gameId,
-      input.userId,
-      input.playerId,
-    );
+    const result = await dependencies.getGameState(input.gameId, input.userId, input.playerId);
 
     if (result.status === "game-not-found") {
       console.log(`Game not found: gameId=${input.gameId}`);
@@ -190,6 +187,7 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
       ? {
           roundNumber: gameData.currentRound.number,
           status: gameData.currentRound.status,
+          winningTeamName: gameData.currentRound.winningTeamName,
           cards: gameData.currentRound.cards.map((card) =>
             applyCardVisibility(card, playerRole, gameData.currentRound!.status),
           ),
@@ -213,11 +211,13 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
         }
       : null,
 
-    playerContext: gameData.playerContext ? {
-      playerName: gameData.playerContext.publicName,
-      teamName: gameData.playerContext.teamName,
-      role: gameData.playerContext.role,
-    } : null,
+    playerContext: gameData.playerContext
+      ? {
+          playerName: gameData.playerContext.publicName,
+          teamName: gameData.playerContext.teamName,
+          role: gameData.playerContext.role,
+        }
+      : null,
   };
 }
 

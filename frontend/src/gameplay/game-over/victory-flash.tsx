@@ -5,10 +5,9 @@ import styles from "./victory-flash.module.css";
 interface VictoryFlashProps {
   winnerName: string;
   teamColor: string;
-  afterflash: (...args: any[]) => void;
 }
 
-export const VictoryFlash = ({ winnerName, teamColor, afterflash }: VictoryFlashProps) => {
+export const VictoryFlash = ({ winnerName, teamColor }: VictoryFlashProps) => {
   return (
     <motion.div
       className={styles.victoryFlash}
@@ -17,7 +16,6 @@ export const VictoryFlash = ({ winnerName, teamColor, afterflash }: VictoryFlash
       initial="hidden"
       animate="visible"
       exit="exit"
-      onAnimationComplete={afterflash}
     >
       <div className={styles.flashContent}>
         <div className={styles.flashStatus}>MISSION COMPLETE</div>
