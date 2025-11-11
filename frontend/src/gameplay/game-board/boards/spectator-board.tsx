@@ -14,19 +14,15 @@ export const SpectatorBoard = memo<{ scene?: string }>(({ scene }) => {
   const cards = gameData.currentRound?.cards || [];
   const currentTeamName = gameData.playerContext?.teamName;
 
-  // Create stable key from card words (sorted for consistency)
   const wordsKey = useMemo(() =>
     cards.map(c => c.word).sort().join(","),
     [cards]
   );
 
-  // Track previous words to detect changes
   const prevWordsKey = useRef(wordsKey);
 
-  // Deal animation should trigger when words change
   const dealOnEntry = wordsKey !== prevWordsKey.current && cards.length > 0;
 
-  // Update ref after render (so next render sees current words as "previous")
   useLayoutEffect(() => {
     prevWordsKey.current = wordsKey;
   });
@@ -46,7 +42,7 @@ export const SpectatorBoard = memo<{ scene?: string }>(({ scene }) => {
           initial={dealOnEntry ? "hidden" : false}
           animate={boardAnimationState}
         >
-          {cards.map((card) => {
+          {cards.map((card, index) => {
             
             const displayOptions = isRoundComplete
               ? { mode: 'game-over' as const, isCurrentTeam: currentTeamName === card.teamName }
@@ -60,6 +56,7 @@ export const SpectatorBoard = memo<{ scene?: string }>(({ scene }) => {
               <GameCard
                 key={card.word}
                 card={card}
+                cardIndex={index}
                 onClick={() => {}}
                 displayOptions={displayOptions}
               />

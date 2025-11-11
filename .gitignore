@@ -87,3 +87,6 @@ frontend/package-lock.json
 codenames-card-animations-complete.css
 .claude/settings.local.json
 .claude/settings.local.json
+
+# Agent logs
+/_AGENT_LOG.md

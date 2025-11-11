@@ -2,16 +2,50 @@ import { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@frontend/shared-types";
 import { getTeamType, getCardColor } from "./card-utils";
-import { CardDisplayOptions, deriveCardVariant } from "./card-types";
+import { CardDisplayOptions, deriveCardVariant, CardVisibilityState } from "./card-types";
 import { sceneVariants, cardStateVariants } from "./card-animation-variants";
-import { SpymasterOverlay, GameOverOverlay } from "./overlays";
+import { SpymasterOverlay } from "./overlays";
 import styles from "./game-card.module.css";
 
-const CardFace = memo<{ word: string }>(({ word }) => (
-  <div className={styles.normalCard}>
-    <span className={styles.cardWord}>{word}</span>
-  </div>
-));
+const CardFace = memo<{ word: string; variant: CardVisibilityState; cardIndex?: number }>(({ word, variant, cardIndex }) => {
+  const isGameOver = variant === 'gameOver';
+  
+  return (
+    <motion.div 
+      className={styles.normalCard}
+      animate={isGameOver ? {
+        background: 'var(--team-color)',
+        boxShadow: [
+          '0 0 20px var(--team-color)',
+          '0 0 40px var(--team-color)',
+          '0 0 20px var(--team-color)',
+        ],
+      } : {}}
+      transition={{
+        duration: 0.6,
+        delay: isGameOver && cardIndex !== undefined ? 3.5 + (cardIndex * 0.08) : 0,
+        boxShadow: {
+          duration: 2,
+          repeat: Infinity,
+          repeatType: 'reverse',
+        }
+      }}
+    >
+      <motion.span 
+        className={styles.cardWord}
+        animate={isGameOver ? {
+          scale: 1.15,
+        } : {}}
+        transition={{
+          duration: 0.4,
+          delay: isGameOver && cardIndex !== undefined ? 3.5 + (cardIndex * 0.08) + 0.1 : 0,
+        }}
+      >
+        {word}
+      </motion.span>
+    </motion.div>
+  );
+});
 CardFace.displayName = "CardFace";
 
 const CoverCard = memo<{ teamType: string }>(({ teamType }) => (
@@ -23,12 +57,14 @@ CoverCard.displayName = "CoverCard";
 
 interface GameCardProps {
   card: Card;
+  cardIndex: number;
   onClick: () => void;
   displayOptions: CardDisplayOptions;
 }
 
 export const GameCard = memo<GameCardProps>(({ 
-  card, 
+  card,
+  cardIndex,
   onClick, 
   displayOptions 
 }) => {
@@ -61,7 +97,7 @@ export const GameCard = memo<GameCardProps>(({
         onClick={isClickable ? onClick : undefined}
       >
         <motion.div variants={cardStateVariants.frontFace}>
-          <CardFace word={card.word} />
+          <CardFace word={card.word} variant={variant} cardIndex={cardIndex} />
         </motion.div>
         
         <CoverCard teamType={teamType} />
@@ -72,12 +108,6 @@ export const GameCard = memo<GameCardProps>(({
               key="spymaster"
               card={card}
               isCurrentTeam={isCurrentTeam}
-            />
-          )}
-          {variant === 'gameOver' && (
-            <GameOverOverlay
-              key="gameover"
-              card={card}
             />
           )}
         </AnimatePresence>

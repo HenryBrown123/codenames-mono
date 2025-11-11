@@ -14,5 +14,4 @@ export const Gameplay: React.FC<GameplayProps> = ({ gameId }) => {
   );
 };
 
-// For backwards compatibility if needed
 export { Gameplay as GameplayPageContent };

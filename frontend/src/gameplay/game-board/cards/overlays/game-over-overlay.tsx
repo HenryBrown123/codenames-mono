@@ -6,18 +6,21 @@ import {
   cardOverlayRevealVariants, 
   wordPopVariants 
 } from '../../../game-over/game-over-animation-variants';
+import { GAME_OVER_TIMING as TIMING } from '../../../game-over/game-over-timing';
 import styles from '../game-card.module.css';
 
 interface GameOverOverlayProps {
   card: Card;
+  cardIndex: number;
 }
 
-export const GameOverOverlay = memo<GameOverOverlayProps>(({ card }) => {
+export const GameOverOverlay = memo<GameOverOverlayProps>(({ card, cardIndex }) => {
   const teamType = getTeamType(card);
   
   return (
     <motion.div
       className={styles.revealOverlay}
+      custom={cardIndex}
       variants={cardOverlayRevealVariants}
       initial="idle"
       animate="revealed"
@@ -26,6 +29,7 @@ export const GameOverOverlay = memo<GameOverOverlayProps>(({ card }) => {
       <div className={styles.teamColorFilter} />
       <motion.span 
         className={styles.cardWord}
+        custom={cardIndex}
         variants={wordPopVariants}
       >
         {card.word}

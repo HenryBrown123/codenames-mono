@@ -3,6 +3,7 @@ import { useGameDataRequired } from '../../game-data/providers';
 import { useGameActions } from '../../game-actions';
 import { ActionButton } from '../../shared/components';
 import { 
+  debriefOverlayVariants,
   debriefStatVariants 
 } from '../../game-over/game-over-animation-variants';
 import styles from './shared-dashboard.module.css';
@@ -20,6 +21,7 @@ export const GameOverDashboard = () => {
   return (
     <motion.div 
       className={styles.dashboardContainer}
+      variants={debriefOverlayVariants}
       initial="hidden"
       animate="visible"
     >

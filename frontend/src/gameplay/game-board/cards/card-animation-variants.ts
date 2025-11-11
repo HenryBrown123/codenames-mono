@@ -8,6 +8,8 @@
 /**
  * Scene-level states - for board orchestration (dealing, game over reveal)
  */
+import { GAME_OVER_TIMING } from "../../game-over/game-over-timing";
+
 export type SceneState = "hidden" | "visible" | "gameOverReveal";
 
 /**
@@ -47,8 +49,8 @@ export const boardVariants = {
   },
   gameOverReveal: {
     transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0,
+      staggerChildren: GAME_OVER_TIMING.CARD_STAGGER,
+      delayChildren: GAME_OVER_TIMING.CARD_REVEAL_START_DELAY,
     },
   },
 };
@@ -98,8 +100,7 @@ export const cardStateVariants = {
       transition: { duration: 0.15 },
     },
     gameOver: {
-      opacity: 0,
-      transition: { duration: 0.3, ease: "easeOut" as const },
+      opacity: 1,
     },
     gameOverSelected: {
       opacity: 1,

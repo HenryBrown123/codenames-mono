@@ -28,12 +28,13 @@ export const cardOverlayRevealVariants = {
   idle: {
     opacity: 0,
   },
-  revealed: {
+  revealed: (cardIndex: number) => ({
     opacity: 0.9,
     transition: {
       duration: TIMING.CARD_FADE_DURATION,
+      delay: TIMING.CARD_REVEAL_START_DELAY + cardIndex * TIMING.CARD_STAGGER,
     },
-  },
+  }),
 } satisfies Variants;
 
 export const wordPopVariants = {
@@ -41,16 +42,17 @@ export const wordPopVariants = {
     scale: 0,
     opacity: 0,
   },
-  revealed: {
+  revealed: (cardIndex: number) => ({
     scale: 1,
     opacity: 1,
     transition: {
       type: "spring",
       stiffness: 600,
       damping: 20,
-      delay: TIMING.WORD_POP_DELAY,
+      delay:
+        TIMING.CARD_REVEAL_START_DELAY + cardIndex * TIMING.CARD_STAGGER + TIMING.WORD_POP_DELAY,
     },
-  },
+  }),
 } satisfies Variants;
 
 export const debriefOverlayVariants = {
@@ -62,10 +64,10 @@ export const debriefOverlayVariants = {
     opacity: 1,
     y: 0,
     transition: {
-      duration: TIMING.DEBRIEF_FADE_DURATION,
+      duration: TIMING.DEBRIEF_FADE_DURATION + TIMING.CARD_REVEAL_START_DELAY,
       ease: "easeOut",
-      delay: TIMING.DEBRIEF_DELAY,
-      staggerChildren: TIMING.DEBRIEF_STAT_STAGGER,
+      delay: TIMING.CARD_REVEAL_START_DELAY,
+      // staggerChildren: TIMING.DEBRIEF_STAT_STAGGER,
       delayChildren: TIMING.DEBRIEF_DELAY + 0.5,
     },
   },
@@ -82,6 +84,7 @@ export const debriefStatVariants = {
     transition: {
       duration: 0.8,
       ease: "easeOut",
+      delay: 10,
     },
   },
 } satisfies Variants;

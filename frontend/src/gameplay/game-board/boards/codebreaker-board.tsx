@@ -49,7 +49,7 @@ const CodebreakerBoardContent = memo<{
           initial={dealOnEntry ? "hidden" : false}
           animate={boardAnimationState}
         >
-          {cards.map((card) => {
+          {cards.map((card, index) => {
             const displayOptions = isRoundComplete
               ? { mode: 'game-over' as const, isCurrentTeam: currentTeamName === card.teamName }
               : deriveDisplayOptions({
@@ -62,6 +62,7 @@ const CodebreakerBoardContent = memo<{
               <GameCard
                 key={card.word}
                 card={card}
+                cardIndex={index}
                 onClick={() => onCardClick(card.word)}
                 displayOptions={displayOptions}
               />

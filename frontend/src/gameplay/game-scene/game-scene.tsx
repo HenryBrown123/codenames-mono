@@ -71,6 +71,7 @@ export const GameScene: React.FC = () => {
           {isFetching && <div className={styles.refetchIndicator} />}
 
           <DashboardComponent
+            key={isRoundComplete ? 'game-over' : `${currentRole}-${currentScene}`}
             messageText={messageText}
             onOpenCluePanel={() => setShowCluePanel(true)}
           />

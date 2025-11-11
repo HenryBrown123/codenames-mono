@@ -12,6 +12,7 @@ import {
   CenteredContent,
 } from "./terminal-components";
 import styles from "./setup-dashboards.module.css";
+
 /**
  * Lobby Dashboard - Mobile-first with refresh functionality
  */
@@ -210,17 +211,9 @@ export const GameoverDashboard: React.FC<{ messageText?: string }> = ({ messageT
   const { createRound, actionState } = useGameActions();
 
   const winningTeamName = gameData.currentRound?.winningTeamName;
-  const teams = gameData.teams;
-
+  const teams = gameData.teams || [];
   const winningTeam = teams.find((t) => t.name === winningTeamName);
-  const winningCardCount = gameData.currentRound?.cards.filter(
-    (c) => c.teamName === winningTeam!.name && c.selected,
-  ).length;
-
   const losingTeam = teams.find((t) => t.name !== winningTeamName);
-  const losingCardCount = gameData.currentRound?.cards.filter(
-    (c) => c.teamName === losingTeam!.name && c.selected,
-  ).length;
 
   const totalTurns = gameData.currentRound?.turns?.length || 0;
   const totalCards = gameData.currentRound?.cards?.filter((c) => c.selected).length || 0;
@@ -241,12 +234,12 @@ export const GameoverDashboard: React.FC<{ messageText?: string }> = ({ messageT
         <div className={styles.scoreComparison}>
           <div className={styles.teamScore}>
             <div className={styles.teamName}>{winningTeam?.name.toUpperCase()}</div>
-            <div className={`${styles.score} ${styles.winner}`}>{winningCardCount}</div>
+            <div className={`${styles.score} ${styles.winner}`}>{winningTeam?.score}</div>
           </div>
           <div className={styles.scoreDivider}>—</div>
           <div className={styles.teamScore}>
             <div className={styles.teamName}>{losingTeam?.name.toUpperCase()}</div>
-            <div className={styles.score}>{losingCardCount}</div>
+            <div className={styles.score}>{losingTeam?.score}</div>
           </div>
         </div>
         <div className={styles.secondaryStats}>
@@ -272,12 +265,12 @@ export const GameoverDashboard: React.FC<{ messageText?: string }> = ({ messageT
           <div className={styles.scoreComparison}>
             <div className={styles.teamScore}>
               <div className={styles.teamName}>{winningTeam?.name.toUpperCase()}</div>
-              <div className={`${styles.score} ${styles.winner}`}>{winningCardCount}</div>
+              <div className={`${styles.score} ${styles.winner}`}>{winningTeam?.score}</div>
             </div>
             <div className={styles.scoreDivider}>—</div>
             <div className={styles.teamScore}>
               <div className={styles.teamName}>{losingTeam?.name.toUpperCase()}</div>
-              <div className={styles.score}>{losingCardCount}</div>
+              <div className={styles.score}>{losingTeam?.score}</div>
             </div>
           </div>
 
