@@ -20,8 +20,8 @@ const MOCK_GAME_DATA = {
 };
 
 const FLASH_DURATION = 1500;
-const BOARD_REVEAL_DELAY = 2.0;
-const DASHBOARD_REVEAL_DELAY = 2.1;
+const CARD_REVEAL_DELAY = 1.0;
+const DASHBOARD_DELAY = 1.0;
 
 // Mock cards with team assignments
 const MOCK_CARDS: MockCard[] = [
@@ -92,28 +92,18 @@ const boardVariants = {
   idle: {},
   revealed: {
     transition: {
-      staggerChildren: 0.05,
-      delayChildren: BOARD_REVEAL_DELAY,
+      staggerChildren: 0.2,
+      delayChildren: CARD_REVEAL_DELAY,
     },
   },
 };
 
-const unselectedCardVariants = {
+const cardRevealVariants = {
   idle: {},
   revealed: {
     transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0,
+      staggerChildren: 0.3,
     },
-  },
-};
-
-const selectedCardVariants = {
-  idle: {
-    rotateY: 180,
-  },
-  revealed: {
-    rotateY: 180,
   },
 };
 
@@ -122,10 +112,9 @@ const overlayVariants = {
     opacity: 0,
   },
   revealed: {
-    opacity: 1,
+    opacity: 0.9,
     transition: {
-      delay: 0.16,
-      duration: 0.4,
+      duration: 1.0,
     },
   },
 };
@@ -133,15 +122,13 @@ const overlayVariants = {
 const wordVariants = {
   idle: {
     opacity: 0,
-    scale: 0.95,
+    scale: 0.5,
   },
   revealed: {
     opacity: 1,
     scale: 1,
     transition: {
-      type: "spring" as const,
-      stiffness: 400,
-      damping: 20,
+      duration: 1.0,
     },
   },
 };
@@ -149,17 +136,17 @@ const wordVariants = {
 const dashboardVariants = {
   hidden: {
     opacity: 0,
-    y: 20,
+    y: 50,
   },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.5,
+      duration: 1.0,
       ease: "easeOut" as const,
-      delay: DASHBOARD_REVEAL_DELAY,
-      staggerChildren: 0.1,
-      delayChildren: DASHBOARD_REVEAL_DELAY + 0.2,
+      delay: DASHBOARD_DELAY,
+      staggerChildren: 0.3,
+      delayChildren: DASHBOARD_DELAY + 0.5,
     },
   },
 };
@@ -167,13 +154,13 @@ const dashboardVariants = {
 const statItemVariants = {
   hidden: {
     opacity: 0,
-    y: 10,
+    y: 30,
   },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.4,
+      duration: 0.8,
       ease: "easeOut" as const,
     },
   },
@@ -250,8 +237,8 @@ export const GameOverLayoutsSandbox = () => {
             initial="idle"
             animate={phase === "stats" ? "revealed" : "idle"}
           >
-            {MOCK_CARDS.map((card) => (
-              <MockCard key={card.word} card={card} phase={phase} />
+            {MOCK_CARDS.map((card, index) => (
+              <MockCard key={card.word} card={card} phase={phase} index={index} />
             ))}
           </motion.div>
         </div>
@@ -287,7 +274,7 @@ const VictoryFlash = ({ winner }: { winner: string }) => {
   );
 };
 
-const MockCard = ({ card, phase }: { card: MockCard; phase: GameOverPhase }) => {
+const MockCard = ({ card, phase, index }: { card: MockCard; phase: GameOverPhase; index: number }) => {
   const teamColor =
     card.team === "red"
       ? "var(--color-team-red)"
@@ -298,7 +285,6 @@ const MockCard = ({ card, phase }: { card: MockCard; phase: GameOverPhase }) => 
           : "var(--color-neutral)";
 
   if (card.isSelected) {
-    // Selected cards show team color backs (already flipped in gameplay)
     return (
       <motion.div
         className={styles.mockCard}
@@ -306,18 +292,16 @@ const MockCard = ({ card, phase }: { card: MockCard; phase: GameOverPhase }) => 
           {
             transformStyle: "preserve-3d",
             "--team-color": teamColor,
+            rotateY: 180,
           } as React.CSSProperties
         }
-        variants={selectedCardVariants}
       >
-        {/* Front face - hidden when flipped */}
         <div className={styles.cardFront} style={{ opacity: 0 }}>
           <div className={styles.cardContent}>
             <span className={styles.cardWord}>{card.word}</span>
           </div>
         </div>
 
-        {/* Back face showing */}
         <div className={styles.cardBack}>
           <div className={styles.coverContent}>
             <div className={styles.teamSymbol}>{card.team === "red" ? "★" : "♦"}</div>
@@ -327,28 +311,40 @@ const MockCard = ({ card, phase }: { card: MockCard; phase: GameOverPhase }) => 
     );
   }
 
-  // Unselected cards: fade in overlay
+  const animationState = phase === "stats" ? "revealed" : "idle";
+  const staggerDelay = index * 0.08;
+
   return (
     <motion.div
       className={styles.mockCard}
       style={{ "--team-color": teamColor } as React.CSSProperties}
-      variants={unselectedCardVariants}
+      initial="idle"
+      animate={animationState}
     >
-      {/* Card stays face-up */}
       <div className={styles.cardFront}>
         <div className={styles.cardContent}>
           <span className={styles.cardWord}>{card.word}</span>
         </div>
 
-        {/* Overlay always present, animates in with stagger */}
-        <motion.div
-          className={styles.revealOverlay}
-          initial="idle"
-          animate={phase === "stats" ? "revealed" : "idle"}
-          style={{ "z-index": 100 } as React.CSSProperties}
+        <motion.div 
+          className={styles.revealOverlay} 
+          style={{ zIndex: 100 } as React.CSSProperties}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: animationState === "revealed" ? 0.9 : 0 }}
+          transition={{ duration: 0.3, delay: 1.5 + staggerDelay }}
         >
-          <motion.div className={styles.teamColorFilter} variants={overlayVariants} />
-          <motion.span className={styles.overlayWord} variants={wordVariants}>
+          <div className={styles.teamColorFilter} />
+          <motion.span 
+            className={styles.overlayWord}
+            initial={{ scale: 0 }}
+            animate={{ scale: animationState === "revealed" ? 1 : 0 }}
+            transition={{
+              type: "spring",
+              stiffness: 600,
+              damping: 20,
+              delay: 1.5 + staggerDelay + 0.1
+            }}
+          >
             {card.word}
           </motion.span>
         </motion.div>
