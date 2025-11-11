@@ -1,0 +1,60 @@
+.victoryFlash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: linear-gradient(
+    135deg,
+    var(--flash-color) 0%,
+    color-mix(in srgb, var(--flash-color) 70%, black) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+}
+
+.flashContent {
+  text-align: center;
+}
+
+.flashStatus {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  margin-bottom: 1rem;
+  font-weight: 400;
+}
+
+.flashWinner {
+  font-size: 4rem;
+  font-weight: 900;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  text-shadow:
+    0 0 30px rgba(255, 255, 255, 0.8),
+    0 0 60px rgba(255, 255, 255, 0.6),
+    0 0 90px rgba(255, 255, 255, 0.4);
+  margin: 1rem 0;
+  line-height: 1;
+}
+
+.flashSubtext {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .flashWinner {
+    font-size: 2.5rem;
+  }
+
+  .flashStatus,
+  .flashSubtext {
+    font-size: 1rem;
+  }
+}

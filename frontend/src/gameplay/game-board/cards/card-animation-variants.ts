@@ -6,9 +6,9 @@
  */
 
 /**
- * Scene-level states - for board orchestration (dealing)
+ * Scene-level states - for board orchestration (dealing, game over reveal)
  */
-export type SceneState = "hidden" | "visible";
+export type SceneState = "hidden" | "visible" | "gameOverReveal";
 
 /**
  * Scene variants for cards - how cards respond to board state
@@ -43,6 +43,12 @@ export const boardVariants = {
     transition: {
       staggerChildren: 0.05,
       delayChildren: 0.1,
+    },
+  },
+  gameOverReveal: {
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0,
     },
   },
 };

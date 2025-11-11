@@ -1,30 +1,12 @@
 import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@frontend/shared-types';
-import { OverlayVariants } from '../card-types';
 import { getTeamType } from '../card-utils';
-import { TeamColorFilter, OverlayWord, TeamBadge } from './shared-components';
+import { 
+  cardOverlayRevealVariants, 
+  wordPopVariants 
+} from '../../../game-over/game-over-animation-variants';
 import styles from '../game-card.module.css';
-
-const containerVariants: OverlayVariants = {
-  hidden: {
-    transition: {
-      staggerChildren: 0.03,
-      staggerDirection: -1,
-    }
-  },
-  normal: {},
-  flipped: {},
-  revealed: {
-    transition: { staggerChildren: 0 }
-  },
-  gameOver: {
-    transition: { staggerChildren: 0 }
-  },
-  gameOverSelected: {
-    transition: { staggerChildren: 0 }
-  }
-};
 
 interface GameOverOverlayProps {
   card: Card;
@@ -35,15 +17,19 @@ export const GameOverOverlay = memo<GameOverOverlayProps>(({ card }) => {
   
   return (
     <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="gameOver"
-      exit="hidden"
       className={styles.revealOverlay}
+      variants={cardOverlayRevealVariants}
+      initial="idle"
+      animate="revealed"
+      exit="idle"
     >
-      <TeamColorFilter />
-      <OverlayWord word={card.word} />
-      <TeamBadge teamType={teamType} />
+      <div className={styles.teamColorFilter} />
+      <motion.span 
+        className={styles.cardWord}
+        variants={wordPopVariants}
+      >
+        {card.word}
+      </motion.span>
     </motion.div>
   );
 });

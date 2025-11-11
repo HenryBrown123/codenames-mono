@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { AnimatePresence } from "framer-motion";
 import { useGameDataRequired, useTurn } from "../game-data/providers";
 import styles from "./game-scene.module.css";
 import { usePlayerScene } from "./";
@@ -9,6 +10,8 @@ import { GameInstructions } from "../shared/game-instructions";
 import { ActionButton } from "../shared/components";
 import { CodeWordInput } from "../game-controls/dashboards/codemaster-input";
 import { useGameActions } from "../game-actions";
+import { VictoryFlash } from "../game-over/victory-flash";
+import { GAME_OVER_TIMING } from "../game-over/game-over-timing";
 
 /**
  * Game Scene Component with unified mobile-first layout
@@ -20,9 +23,10 @@ export const GameScene: React.FC = () => {
   const { currentRole, currentScene } = usePlayerScene();
   const [showCluePanel, setShowCluePanel] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showVictoryFlash, setShowVictoryFlash] = useState(false);
   const { giveClue, actionState } = useGameActions();
 
-  const DashboardComponent = getDashboardComponent(currentRole, currentScene);
+  const DashboardComponent = getDashboardComponent(currentRole, currentScene, gameData);
 
   const BoardComponent = React.useMemo(() => {
     return getBoardComponent(currentRole);
@@ -55,6 +59,22 @@ export const GameScene: React.FC = () => {
 
   const cards = gameData.currentRound?.cards || [];
   const isRoundSetup = gameData.currentRound?.status === "SETUP";
+  const isRoundComplete = gameData.currentRound?.status === "COMPLETED";
+
+  useEffect(() => {
+    if (isRoundComplete && !showVictoryFlash) {
+      setShowVictoryFlash(true);
+      const timer = setTimeout(() => {
+        setShowVictoryFlash(false);
+      }, GAME_OVER_TIMING.FLASH_HOLD_DURATION);
+      return () => clearTimeout(timer);
+    }
+  }, [isRoundComplete, showVictoryFlash]);
+
+  const winningTeam = gameData.teams?.find((team) => team.score >= 9);
+  const teamColor = winningTeam?.name.includes('Red') 
+    ? 'var(--color-team-red)' 
+    : 'var(--color-team-blue)';
 
   const handleSubmitClue = (word: string, count: number) => {
     giveClue(word, count);
@@ -63,6 +83,16 @@ export const GameScene: React.FC = () => {
 
   return (
     <>
+      {/* Victory Flash Only */}
+      <AnimatePresence>
+        {showVictoryFlash && (
+          <VictoryFlash 
+            winnerName={winningTeam?.name || 'TEAM'}
+            teamColor={teamColor}
+          />
+        )}
+      </AnimatePresence>
+
       <div className={styles.gameSceneContainer}>
         {/* Main game board */}
         <div className={styles.boardArea}>

@@ -203,10 +203,17 @@ export const DealingDashboard: React.FC<{ messageText?: string }> = ({ messageTe
 };
 
 /**
- * Game over dashboard
+ * Game over dashboard with animated stats
  */
 export const GameoverDashboard: React.FC<{ messageText?: string }> = ({ messageText }) => {
+  const { gameData } = useGameDataRequired();
   const { createRound, actionState } = useGameActions();
+
+  const winningTeam = gameData.teams?.find((team) => team.score >= 9);
+  const losingTeam = gameData.teams?.find((team) => team.score < 9);
+  
+  const totalTurns = gameData.currentRound?.turns?.length || 0;
+  const totalCards = gameData.currentRound?.cards?.filter(c => c.selected).length || 0;
 
   const handleNewGame = () => {
     createRound();
@@ -214,14 +221,36 @@ export const GameoverDashboard: React.FC<{ messageText?: string }> = ({ messageT
 
   return (
     <>
+      {/* Mobile view */}
       <div className={`${styles.centeredContainer} mobile-only`}>
+        <div className={styles.terminalHeader}>MISSION COMPLETE</div>
+        <div className={styles.scoreComparison}>
+          <div className={styles.teamScore}>
+            <div className={styles.teamName}>{winningTeam?.name.toUpperCase()}</div>
+            <div className={`${styles.score} ${styles.winner}`}>{winningTeam?.score}</div>
+          </div>
+          <div className={styles.scoreDivider}>—</div>
+          <div className={styles.teamScore}>
+            <div className={styles.teamName}>{losingTeam?.name.toUpperCase()}</div>
+            <div className={styles.score}>{losingTeam?.score}</div>
+          </div>
+        </div>
+        <div className={styles.secondaryStats}>
+          <div className={styles.miniStat}>
+            <span>{totalTurns}</span> TURNS
+          </div>
+          <div className={styles.miniStat}>
+            <span>{totalCards}</span> / 25 REVEALED
+          </div>
+        </div>
         <ActionButton
           onClick={handleNewGame}
-          text="New Game"
+          text="NEW MISSION"
           enabled={actionState.status !== "loading"}
         />
       </div>
 
+      {/* Desktop terminal view */}
       <div className={styles.desktopContainer}>
         <CenteredContent layoutId="dashboard-main">
           <TerminalCommand>MISSION COMPLETE</TerminalCommand>

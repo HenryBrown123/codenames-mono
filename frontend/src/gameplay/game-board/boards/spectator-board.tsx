@@ -5,7 +5,7 @@ import { useViewMode } from "../view-mode/view-mode-context";
 import { GameCard } from "../cards/game-card";
 import { deriveDisplayOptions } from "../cards/card-types";
 import { EmptyCard } from "./board-layout";
-import { boardVariants } from "../cards/card-animation-variants";
+import { boardVariants, type SceneState } from "../cards/card-animation-variants";
 import styles from "./board-layout.module.css";
 
 export const SpectatorBoard = memo<{ scene?: string }>(({ scene }) => {
@@ -31,6 +31,11 @@ export const SpectatorBoard = memo<{ scene?: string }>(({ scene }) => {
     prevWordsKey.current = wordsKey;
   });
 
+  const isRoundComplete = gameData.currentRound?.status === 'COMPLETED';
+  const boardAnimationState: SceneState = isRoundComplete 
+    ? 'gameOverReveal'
+    : 'visible';
+
   return (
     <div className={styles.boardWrapper}>
       {cards.length > 0 ? (
@@ -39,10 +44,9 @@ export const SpectatorBoard = memo<{ scene?: string }>(({ scene }) => {
           className={styles.boardGrid}
           variants={boardVariants}
           initial={dealOnEntry ? "hidden" : false}
-          animate="visible"
+          animate={boardAnimationState}
         >
           {cards.map((card) => {
-            const isRoundComplete = gameData.currentRound?.status === 'COMPLETED';
             
             const displayOptions = isRoundComplete
               ? { mode: 'game-over' as const, isCurrentTeam: currentTeamName === card.teamName }

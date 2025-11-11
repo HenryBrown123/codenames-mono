@@ -140,6 +140,93 @@
   text-shadow: 0 0 10px var(--winning-color, #00ff88);
 }
 
+/* Terminal Header */
+.terminalHeader {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1rem;
+  color: var(--winning-color, #00ff88);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* Score Comparison */
+.scoreComparison {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 1.5rem 1rem;
+  margin: 1rem 0;
+}
+
+.teamScore {
+  flex: 1;
+  text-align: center;
+}
+
+.teamName {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+}
+
+.score {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 3rem;
+  font-weight: 900;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.score.winner {
+  color: var(--winning-color, #00ff88);
+  text-shadow: 0 0 20px var(--winning-color, #00ff88);
+}
+
+.scoreDivider {
+  font-size: 2rem;
+  color: rgba(255, 255, 255, 0.3);
+  font-weight: 300;
+}
+
+/* Secondary Stats */
+.secondaryStats {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 1.5rem 0;
+}
+
+.miniStat {
+  padding: 0.75rem 1.25rem;
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.25);
+  border-radius: 4px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+.miniStat span {
+  color: var(--winning-color, #00ff88);
+  font-weight: 700;
+  margin-right: 0.25rem;
+}
+
 /* Actions */
 .actions {
   display: flex;
@@ -188,6 +275,18 @@
 
   .statRow {
     font-size: 0.8rem;
+  }
+
+  .score {
+    font-size: 2.5rem;
+  }
+
+  .scoreDivider {
+    font-size: 1.5rem;
+  }
+
+  .scoreComparison {
+    padding: 1rem 0.75rem;
   }
 }
 

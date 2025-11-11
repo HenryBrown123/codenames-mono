@@ -6,7 +6,7 @@ import { useViewMode } from "../view-mode/view-mode-context";
 import { GameCard } from "../cards/game-card";
 import { deriveDisplayOptions } from "../cards/card-types";
 import { EmptyCard } from "./board-layout";
-import { boardVariants } from "../cards/card-animation-variants";
+import { boardVariants, type SceneState } from "../cards/card-animation-variants";
 import styles from "./board-layout.module.css";
 
 const CodebreakerBoardContent = memo<{
@@ -35,6 +35,10 @@ const CodebreakerBoardContent = memo<{
     prevWordsKey.current = wordsKey;
   });
 
+  const boardAnimationState: SceneState = isRoundComplete 
+    ? 'gameOverReveal'
+    : 'visible';
+
   return (
     <div className={styles.boardWrapper}>
       {cards.length > 0 ? (
@@ -43,7 +47,7 @@ const CodebreakerBoardContent = memo<{
           className={styles.boardGrid}
           variants={boardVariants}
           initial={dealOnEntry ? "hidden" : false}
-          animate="visible"
+          animate={boardAnimationState}
         >
           {cards.map((card) => {
             const displayOptions = isRoundComplete

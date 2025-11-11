@@ -7,6 +7,7 @@ import {
   WaitingDashboard,
   OutcomeDashboard,
   HandoffDashboard,
+  GameoverDashboard,
 } from "../game-controls/dashboards";
 import {
   SpymasterBoard,
@@ -21,7 +22,13 @@ import {
 export const getDashboardComponent = (
   role: string,
   scene: string,
+  gameData?: any,
 ): React.ComponentType<{ messageText?: string; onOpenCluePanel?: () => void }> => {
+  // Check for game over first - takes precedence over role/scene
+  if (gameData?.currentRound?.status === 'COMPLETED') {
+    return GameoverDashboard;
+  }
+
   // Normalize to lowercase for consistent mapping
   const normalizedRole = role.toLowerCase();
   const sceneKey = `${normalizedRole}.${scene}`;

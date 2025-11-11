@@ -5,7 +5,7 @@ import { GameCard } from "../cards/game-card";
 import { deriveDisplayOptions } from "../cards/card-types";
 import { useViewMode } from "../view-mode/view-mode-context";
 import { EmptyCard } from "./board-layout";
-import { boardVariants } from "../cards/card-animation-variants";
+import { boardVariants, type SceneState } from "../cards/card-animation-variants";
 import styles from "./board-layout.module.css";
 import {
   ARGlassesHUD,
@@ -42,6 +42,11 @@ export const SpymasterBoard = memo<{ scene?: string }>(({ scene }) => {
     prevWordsKey.current = wordsKey;
   });
 
+  const isRoundComplete = gameData.currentRound?.status === 'COMPLETED';
+  const boardAnimationState: SceneState = isRoundComplete 
+    ? 'gameOverReveal'
+    : 'visible';
+
   return (
     <>
       {viewMode === "spymaster" && (
@@ -63,10 +68,9 @@ export const SpymasterBoard = memo<{ scene?: string }>(({ scene }) => {
             className={styles.boardGrid}
             variants={boardVariants}
             initial={dealOnEntry ? "hidden" : false}
-            animate="visible"
+            animate={boardAnimationState}
           >
             {cards.map((card) => {
-              const isRoundComplete = gameData.currentRound?.status === 'COMPLETED';
               
               const displayOptions = isRoundComplete
                 ? { mode: 'game-over' as const, isCurrentTeam: currentTeamName === card.teamName }
