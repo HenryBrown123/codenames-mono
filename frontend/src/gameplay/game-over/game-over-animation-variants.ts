@@ -39,16 +39,13 @@ export const cardOverlayRevealVariants = {
 
 export const wordPopVariants = {
   idle: {
-    scale: 0,
     opacity: 0,
   },
   revealed: (cardIndex: number) => ({
-    scale: 1,
     opacity: 1,
     transition: {
-      type: "spring",
-      stiffness: 600,
-      damping: 20,
+      duration: 0.3,
+      ease: "easeOut",
       delay:
         TIMING.CARD_REVEAL_START_DELAY + cardIndex * TIMING.CARD_STAGGER + TIMING.WORD_POP_DELAY,
     },

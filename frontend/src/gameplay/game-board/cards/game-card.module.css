@@ -397,8 +397,8 @@
     color-mix(in srgb, var(--team-color) 95%, black),
     color-mix(in srgb, var(--team-color) 85%, black)
   );
-  opacity: 0.9;
-  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.3);
+  opacity: 0.92;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.4);
   border: 3px solid var(--team-color);
   border-radius: 6px;
 }
