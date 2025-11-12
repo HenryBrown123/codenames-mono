@@ -12,10 +12,9 @@
   height: 100%;
   position: relative;
   box-sizing: border-box;
-  perspective: 1000px;
   z-index: var(--z-base);
   contain: layout style;
-  overflow: visible;
+  overflow: visible; /* Allow AR corners to extend beyond bounds */
 
   /* Default to visible - CRITICAL for WAAPI with fill: 'forwards' */
   opacity: 1;
@@ -193,7 +192,7 @@
   text-align: center;
   letter-spacing: 0; /* No letter spacing on small screens */
   position: relative;
-  z-index: var(--z-card-word);
+  z-index: 10; /* Above background filters */
   /* Allow breaking long words while keeping hyphenation */
   word-break: break-word; /* Allows breaking but respects hyphenation */
   word-wrap: break-word;
@@ -292,21 +291,16 @@
 }
 
 /* ===== COVER CARD ===== */
+/* Cover card slides in from top to cover the card when selected/flipped */
 .coverCard {
-  position: absolute;
-  inset: 0;
+  /* Position and motion set via inline styles in component */
   background-color: var(--team-color);
   border-radius: 6px;
-  display: flex; /* Always display for 3D flip */
+  display: flex;
   align-items: center;
   justify-content: center;
-  z-index: var(--z-card-covered);
   border: 2px solid var(--team-color);
-
-  /* 3D flip support - back face starts rotated */
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform: rotateY(180deg);
+  overflow: hidden; /* Clip content when sliding */
 
   /* 3D thickness effect for cover cards */
   box-shadow:
@@ -322,8 +316,6 @@
     0 5px 10px rgba(0, 0, 0, 0.3),
     0 10px 20px rgba(0, 0, 0, 0.2);
 }
-
-/* Removed old conditional display - now using 3D flip */
 
 /* Special assassin card styling */
 .cardContainer[data-team="assassin"] .coverCard {

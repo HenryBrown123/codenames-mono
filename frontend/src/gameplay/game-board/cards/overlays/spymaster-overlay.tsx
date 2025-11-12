@@ -34,12 +34,12 @@ interface SpymasterOverlayProps {
   isCurrentTeam: boolean;
 }
 
-export const SpymasterOverlay = memo<SpymasterOverlayProps>(({ 
-  card, 
-  isCurrentTeam 
+export const SpymasterOverlay = memo<SpymasterOverlayProps>(({
+  card,
+  isCurrentTeam
 }) => {
   const teamType = getTeamType(card);
-  
+
   return (
     <motion.div
       variants={containerVariants}

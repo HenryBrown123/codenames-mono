@@ -66,46 +66,6 @@ export type CardVisibilityState =
   | "gameOver"
   | "gameOverSelected";
 
-/**
- * Card state variants - controls flip and reveal animations
- */
-export const cardStateVariants = {
-  container: {
-    normal: {
-      rotateY: 0,
-    },
-    flipped: {
-      rotateY: 180,
-      transition: {
-        duration: 0.6,
-        ease: [0.4, 0, 0.2, 1] as [number, number, number, number],
-      },
-    },
-    revealed: {
-      rotateY: 0,
-    },
-    gameOver: {
-      rotateY: 0,
-    },
-    gameOverSelected: {
-      rotateY: 180,
-    },
-  },
-
-  frontFace: {
-    normal: { opacity: 1 },
-    flipped: { opacity: 1 },
-    revealed: {
-      opacity: 0,
-      transition: { duration: 0.15 },
-    },
-    gameOver: {
-      opacity: 0,
-      transition: { duration: 0.3 },
-    },
-    gameOverSelected: {
-      opacity: 0,
-      transition: { duration: 0.3 },
-    },
-  },
-};
+// Removed: cardStateVariants no longer needed
+// Card no longer uses 3D flip - CoverCard slides instead
+// Word opacity is handled by FloatingWord component

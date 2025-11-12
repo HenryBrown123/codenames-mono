@@ -1,7 +1,6 @@
 import { memo } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@frontend/shared-types";
-import { getTeamType } from "../card-utils";
 import { TeamColorFilter, OverlayWord } from "./shared-components";
 import { gameOverContainerVariants } from "./game-over-overlay-variants";
 import styles from "../game-card.module.css";
@@ -11,23 +10,22 @@ interface GameOverOverlayProps {
   cardIndex: number;
 }
 
+/**
+ * GameOverOverlay - Team color background + word
+ */
 export const GameOverOverlay = memo<GameOverOverlayProps>(({ card, cardIndex }) => {
-  const teamType = getTeamType(card);
-
   return (
-    <>
-      <motion.div
-        className={styles.revealOverlay}
-        custom={cardIndex}
-        variants={gameOverContainerVariants}
-        initial="hidden"
-        animate="gameOver"
-        exit="hidden"
-      >
-        <TeamColorFilter />
-        <OverlayWord word={card.word} />
-      </motion.div>
-    </>
+    <motion.div
+      className={styles.revealOverlay}
+      custom={cardIndex}
+      variants={gameOverContainerVariants}
+      initial="hidden"
+      animate="gameOver"
+      exit="hidden"
+    >
+      <TeamColorFilter />
+      <OverlayWord word={card.word} />
+    </motion.div>
   );
 });
 
