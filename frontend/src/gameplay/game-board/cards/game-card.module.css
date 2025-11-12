@@ -336,32 +336,6 @@
   overflow: visible; /* Allow glow to extend beyond card */
 }
 
-/* Animated electric sweep effect on assassin border */
-.cardContainer[data-team="assassin"] .coverCard::before {
-  content: "";
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    transparent 30%,
-    #ffff00 40%,
-    #00ffff 45%,
-    #ffff00 50%,
-    transparent 60%,
-    transparent 100%
-  );
-  background-size: 300% 100%;
-  animation: assassinElectricSweep 3s linear infinite;
-  opacity: 0.6;
-  z-index: 0;
-  border-radius: inherit;
-  overflow: hidden; /* Contain sweep within border */
-}
-
 /* ===== REVEAL OVERLAY ===== */
 .revealOverlay {
   position: absolute;

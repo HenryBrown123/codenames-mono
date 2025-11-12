@@ -45,16 +45,14 @@ const contentFadeVariants: OverlayVariants = {
     opacity: 1,
     scale: 1,
     transition: {
-      duration: 0.4,
-      ease: "easeOut",
+      duration: 0,
     },
   },
   gameOverSelected: {
     opacity: 1,
     scale: 1,
     transition: {
-      duration: 0.4,
-      ease: "easeOut",
+      duration: 0,
     },
   },
 };
@@ -91,7 +89,30 @@ const pulseVariants: OverlayVariants = {
   },
 };
 
-export const TeamColorFilter = () => <div className={styles.teamColorFilter} />;
+const teamColorFilterVariants: OverlayVariants = {
+  hidden: {
+    opacity: 0,
+    transition: { duration: 0.15 },
+  },
+  normal: { opacity: 1 },
+  flipped: { opacity: 1 },
+  revealed: {
+    opacity: 1,
+    transition: { delay: 0.16, duration: 0.4 },
+  },
+  gameOver: {
+    opacity: 1,
+    transition: { duration: 0.6 },
+  },
+  gameOverSelected: {
+    opacity: 1,
+    transition: { duration: 0.6 },
+  },
+};
+
+export const TeamColorFilter = () => (
+  <motion.div className={styles.teamColorFilter} variants={teamColorFilterVariants} />
+);
 
 export const OverlayWord = memo<{ word: string }>(({ word }) => (
   <motion.span className={styles.cardWord} variants={contentFadeVariants}>

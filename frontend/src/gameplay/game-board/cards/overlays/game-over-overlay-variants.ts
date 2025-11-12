@@ -1,30 +1,19 @@
 import { GAME_OVER_TIMING as TIMING } from '../../../game-over/game-over-timing';
 import type { Variants } from 'framer-motion';
 
-export const cardOverlayRevealVariants = {
-  idle: {
-    opacity: 0,
+/**
+ * Container variant that coordinates timing for children based on card index
+ * TeamColorFilter animates with delay based on card index
+ * OverlayWord appears instantly (no delay)
+ */
+export const gameOverContainerVariants = {
+  hidden: {
+    transition: { staggerChildren: 0.03, staggerDirection: -1 },
   },
-  revealed: (cardIndex: number) => ({
-    opacity: 1,
+  gameOver: (cardIndex: number) => ({
     transition: {
-      duration: TIMING.CARD_FADE_DURATION,
-      delay: TIMING.CARD_REVEAL_START_DELAY + cardIndex * TIMING.CARD_STAGGER,
-    },
-  }),
-} satisfies Variants;
-
-export const wordPopVariants = {
-  idle: {
-    opacity: 0,
-  },
-  revealed: (cardIndex: number) => ({
-    opacity: 1,
-    transition: {
-      duration: 0.3,
-      ease: "easeOut",
-      delay:
-        TIMING.CARD_REVEAL_START_DELAY + cardIndex * TIMING.CARD_STAGGER + TIMING.WORD_POP_DELAY,
+      delayChildren: TIMING.CARD_REVEAL_START_DELAY + cardIndex * TIMING.CARD_STAGGER,
+      staggerChildren: 0,
     },
   }),
 } satisfies Variants;

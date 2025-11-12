@@ -2,35 +2,31 @@ import { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@frontend/shared-types";
 import { getTeamType, getCardColor } from "./card-utils";
-import { CardDisplayOptions, deriveCardVariant, CardVisibilityState } from "./card-types";
+import { CardDisplayOptions, deriveCardVariant } from "./card-types";
 import { sceneVariants, cardStateVariants } from "./card-animation-variants";
-import { SpymasterOverlay } from "./overlays";
+import { SpymasterOverlay, GameOverOverlay } from "./overlays";
 import styles from "./game-card.module.css";
 
-const CardFace = memo<{ word: string; variant: CardVisibilityState; cardIndex?: number }>(
-  ({ word, variant, cardIndex }) => {
-    const isGameOver = variant === "gameOver";
-
-    return (
-      <motion.div
-        className={styles.normalCard}
-        animate={
-          isGameOver
-            ? {
-                background: "var(--team-color)",
-              }
-            : {}
-        }
-        transition={{
-          duration: 0.6,
-          delay: isGameOver && cardIndex !== undefined ? 3.5 + cardIndex * 0.08 : 0,
+const CardFace = memo<{ word: string; variant: string }>(({ word, variant }) => {
+  return (
+    <div className={styles.normalCard}>
+      <motion.span
+        className={styles.cardWord}
+        initial={false}
+        animate={variant}
+        variants={{
+          normal: { opacity: 1 },
+          flipped: { opacity: 1 },
+          revealed: { opacity: 0, transition: { duration: 0.15 } },
+          gameOver: { opacity: 0, transition: { duration: 0.3 } },
+          gameOverSelected: { opacity: 0, transition: { duration: 0.3 } },
         }}
       >
-        <span className={styles.cardWord}>{word}</span>
-      </motion.div>
-    );
-  },
-);
+        {word}
+      </motion.span>
+    </div>
+  );
+});
 CardFace.displayName = "CardFace";
 
 const CoverCard = memo<{ teamType: string }>(({ teamType }) => (
@@ -75,15 +71,18 @@ export const GameCard = memo<GameCardProps>(({ card, cardIndex, onClick, display
         variants={cardStateVariants.container}
         onClick={isClickable ? onClick : undefined}
       >
-        <motion.div variants={cardStateVariants.frontFace}>
-          <CardFace word={card.word} variant={variant} cardIndex={cardIndex} />
-        </motion.div>
+        <div>
+          <CardFace word={card.word} variant={variant} />
+        </div>
 
         <CoverCard teamType={teamType} />
 
         <AnimatePresence mode="wait">
           {variant === "revealed" && (
             <SpymasterOverlay key="spymaster" card={card} isCurrentTeam={isCurrentTeam} />
+          )}
+          {(variant === "gameOver" || variant === "gameOverSelected") && (
+            <GameOverOverlay key="gameover" card={card} cardIndex={cardIndex} />
           )}
         </AnimatePresence>
 

@@ -100,10 +100,12 @@ export const cardStateVariants = {
       transition: { duration: 0.15 },
     },
     gameOver: {
-      opacity: 1,
+      opacity: 0,
+      transition: { duration: 0.3 },
     },
     gameOverSelected: {
-      opacity: 1,
+      opacity: 0,
+      transition: { duration: 0.3 },
     },
   },
 };
