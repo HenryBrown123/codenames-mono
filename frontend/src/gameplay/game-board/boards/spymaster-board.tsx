@@ -13,7 +13,7 @@ import {
   ARGlare,
   ARScanlines,
   ARHUDContent,
-} from "../cards/ar-overlay-components";
+} from "../cards/overlays/overlay-shared-components";
 
 export const SpymasterBoard = memo<{ scene?: string }>(({ scene }) => {
   const { gameData } = useGameDataRequired();

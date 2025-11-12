@@ -2,7 +2,7 @@
 @import "../../../style/variables.css";
 @import "../../../style/animations.css";
 
-/* Option 1: Barlow Condensed - Best overall */
+/* Barlow Condensed */
 @import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&display=swap");
 
 /* ===== CONTAINER ===== */
@@ -383,7 +383,7 @@
   border: 3px solid var(--team-color);
   border-radius: 8px;
   pointer-events: none;
-  box-shadow: 
+  box-shadow:
     0 0 15px var(--team-color),
     inset 0 0 15px var(--team-color);
 }
@@ -669,9 +669,7 @@
   background: none !important;
   z-index: 10;
   /* Apply filter to parent so it affects the ::before */
-  filter: 
-    drop-shadow(0 0 20px rgba(255, 255, 0, 1))
-    drop-shadow(0 0 40px rgba(255, 255, 0, 0.8))
+  filter: drop-shadow(0 0 20px rgba(255, 255, 0, 1)) drop-shadow(0 0 40px rgba(255, 255, 0, 0.8))
     drop-shadow(0 0 60px rgba(255, 255, 0, 0.6));
 }
 

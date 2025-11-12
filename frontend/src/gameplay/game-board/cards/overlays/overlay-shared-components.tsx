@@ -7,7 +7,7 @@
  */
 
 import React from "react";
-import styles from "./ar-overlay-components.module.css";
+import styles from "./overlay-shared-components.module.css";
 
 /**
  * AR scan grid overlay for cards
