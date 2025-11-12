@@ -1,10 +1,11 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@frontend/shared-types";
 import { getTeamType, getCardColor } from "./card-utils";
 import { CardDisplayOptions, deriveCardVariant, CardVisibilityState } from "./card-types";
 import { sceneVariants } from "./card-animation-variants";
 import { SpymasterOverlay, GameOverOverlay } from "./overlays";
+import { ARCorners } from "./overlays/shared-components";
 import { FloatingWord } from "./floating-word";
 import styles from "./game-card.module.css";
 
@@ -17,7 +18,7 @@ const CardFace = memo(() => {
 CardFace.displayName = "CardFace";
 
 /**
- * CoverCard - Thrown in from a single point (dealer's hand) at the top center of the screen
+ * CoverCard - Thrown in from dealer's hand (top-center off-screen)
  */
 const CoverCard = memo<{ teamType: string; variant: CardVisibilityState }>(
   ({ teamType, variant }) => {
@@ -29,7 +30,7 @@ const CoverCard = memo<{ teamType: string; variant: CardVisibilityState }>(
         initial={
           shouldShow
             ? { x: 0, y: 0, rotate: 0, opacity: 1, scale: 1 }
-            : { x: "-50vw", y: "-80vh", rotate: -25, opacity: 0, scale: 0.8 } // Way off top-center
+            : { x: "-50vw", y: "-80vh", rotate: -25, opacity: 0, scale: 0.8 }
         }
         animate={
           shouldShow
@@ -38,9 +39,9 @@ const CoverCard = memo<{ teamType: string; variant: CardVisibilityState }>(
         }
         transition={{
           type: "spring",
-          damping: 25, // Higher = more resistance, slower approach to final position
-          stiffness: 260, // Lower = slower overall movement
-          mass: 1.2, // Higher = more inertia, heavier feel
+          damping: 25,
+          stiffness: 260,
+          mass: 1.2,
         }}
         style={{
           position: "absolute",
@@ -66,6 +67,7 @@ interface GameCardProps {
 export const GameCard = memo<GameCardProps>(({ card, cardIndex, onClick, displayOptions }) => {
   const teamType = getTeamType(card);
   const cardColor = getCardColor(card);
+  const [isHovered, setIsHovered] = useState(false);
 
   const variant = deriveCardVariant(displayOptions, card.selected);
   const isClickable =
@@ -86,6 +88,8 @@ export const GameCard = memo<GameCardProps>(({ card, cardIndex, onClick, display
           } as React.CSSProperties
         }
         onClick={isClickable ? onClick : undefined}
+        onMouseEnter={() => isClickable && setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
         {/* Base card - always visible */}
         <CardFace />
@@ -121,6 +125,24 @@ export const GameCard = memo<GameCardProps>(({ card, cardIndex, onClick, display
               ease: "easeInOut",
             }}
           />
+        )}
+
+        {/* Hover selection effect - AR corners targeting */}
+        {isHovered && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 50,
+              pointerEvents: "none",
+            }}
+          >
+            <ARCorners />
+          </motion.div>
         )}
       </div>
     </motion.div>

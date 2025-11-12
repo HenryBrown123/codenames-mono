@@ -136,6 +136,21 @@ export const TeamBadge = memo<{ teamType: string }>(({ teamType }) => (
 ));
 TeamBadge.displayName = "TeamBadge";
 
+export const TeamSymbol = memo(() => (
+  <motion.div
+    variants={sharedOverlayVariants}
+    className={styles.spymasterSymbol}
+    style={{
+      position: "absolute",
+      bottom: "8px",
+      left: "50%",
+      transform: "translateX(-50%)",
+      fontSize: "2rem",
+    }}
+  />
+));
+TeamSymbol.displayName = "TeamSymbol";
+
 export const ARCorners = memo(() => (
   <motion.div variants={cornersVariants} className={styles.cardARCorners}>
     <div className={styles.cardARCorner} data-position="tl" />

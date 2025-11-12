@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Card } from '@frontend/shared-types';
 import { OverlayVariants } from '../card-types';
 import { getTeamType } from '../card-utils';
-import { TeamColorFilter, OverlayWord, TeamBadge, ARCorners } from './shared-components';
+import { TeamColorFilter, OverlayWord, TeamSymbol, ARCorners } from './shared-components';
 import styles from '../game-card.module.css';
 
 const containerVariants: OverlayVariants = {
@@ -38,8 +38,6 @@ export const SpymasterOverlay = memo<SpymasterOverlayProps>(({
   card,
   isCurrentTeam
 }) => {
-  const teamType = getTeamType(card);
-
   return (
     <motion.div
       variants={containerVariants}
@@ -50,7 +48,7 @@ export const SpymasterOverlay = memo<SpymasterOverlayProps>(({
     >
       <TeamColorFilter />
       <OverlayWord word={card.word} />
-      <TeamBadge teamType={teamType} />
+      <TeamSymbol />
       {isCurrentTeam && <ARCorners />}
     </motion.div>
   );

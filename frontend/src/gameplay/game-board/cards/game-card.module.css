@@ -139,18 +139,7 @@
   cursor: default;
 }
 
-/* Hover only for clickable cards on devices with hover */
-@media (hover: hover) and (pointer: fine) {
-  .cardContainer[data-clickable="true"] .normalCard:hover {
-    transform: translateY(-8px);
-    box-shadow:
-      0 12px 24px rgba(0, 0, 0, 0.15),
-      0 8px 16px rgba(0, 0, 0, 0.1),
-      0 4px 8px rgba(0, 0, 0, 0.08);
-  }
-}
-
-/* Touch feedback */
+/* Touch feedback - subtle press in */
 .cardContainer[data-clickable="true"] .normalCard:active {
   transform: scale(0.98);
 }
@@ -459,7 +448,7 @@
   position: absolute;
   font-size: 6rem;
   font-weight: 900;
-  color: rgba(255, 255, 255, 0.15);
+  color: color-mix(in srgb, var(--team-color) 70%, black);
   z-index: 2;
   text-shadow:
     0 0 20px var(--team-color),
@@ -529,10 +518,11 @@
   position: absolute;
   width: 20px;
   height: 20px;
-  border: 1px solid #00ff88;
-  border-radius: 3px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  border: 2px solid #00ff88;
+  border-radius: 4px;
+  opacity: 1;
+  filter: drop-shadow(0 0 10px #00ff88);
+  animation: cornerBlink 2s ease-in-out infinite;
 }
 
 .cardContainer[data-current-team="true"] .cardARCorner {

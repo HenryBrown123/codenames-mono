@@ -19,18 +19,22 @@ export const sceneVariants = {
   card: {
     hidden: {
       opacity: 0,
-      y: -200,
-      rotate: -45,
-      scale: 0,
+      x: "-50vw",
+      y: "-80vh",
+      rotate: -25,
+      scale: 0.8,
     },
     visible: {
       opacity: 1,
+      x: 0,
       y: 0,
       rotate: 0,
       scale: 1,
       transition: {
-        duration: 0.6,
-        ease: [0.34, 1.56, 0.64, 1] as [number, number, number, number],
+        type: "spring",
+        damping: 25,
+        stiffness: 260,
+        mass: 1.2,
       },
     },
   },
