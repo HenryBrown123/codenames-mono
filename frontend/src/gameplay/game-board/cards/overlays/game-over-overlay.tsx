@@ -2,11 +2,10 @@ import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@frontend/shared-types';
 import { getTeamType } from '../card-utils';
-import { 
-  cardOverlayRevealVariants, 
-  wordPopVariants 
-} from '../../../game-over/game-over-animation-variants';
-import { GAME_OVER_TIMING as TIMING } from '../../../game-over/game-over-timing';
+import {
+  cardOverlayRevealVariants,
+  wordPopVariants
+} from './game-over-overlay-variants';
 import styles from '../game-card.module.css';
 
 interface GameOverOverlayProps {

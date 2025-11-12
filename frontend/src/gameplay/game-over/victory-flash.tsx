@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { victoryFlashVariants } from "./game-over-animation-variants";
+import { victoryFlashVariants } from "./victory-flash-variants";
 import styles from "./victory-flash.module.css";
 
 interface VictoryFlashProps {

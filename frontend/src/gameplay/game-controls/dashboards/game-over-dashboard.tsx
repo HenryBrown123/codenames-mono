@@ -5,7 +5,7 @@ import { ActionButton } from "../../shared/components";
 import {
   debriefOverlayVariants,
   debriefStatVariants,
-} from "../../game-over/game-over-animation-variants";
+} from "./game-over-dashboard-variants";
 import { TerminalSection, TerminalCommand } from "./terminal-components";
 import styles from "./shared-dashboard.module.css";
 

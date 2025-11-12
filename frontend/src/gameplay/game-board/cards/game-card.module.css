@@ -2,7 +2,7 @@
 @import "../../../style/variables.css";
 @import "../../../style/animations.css";
 
-/* Barlow Condensed */
+/* Option 1: Barlow Condensed - Best overall */
 @import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&display=swap");
 
 /* ===== CONTAINER ===== */
@@ -397,8 +397,10 @@
     color-mix(in srgb, var(--team-color) 95%, black),
     color-mix(in srgb, var(--team-color) 85%, black)
   );
-  opacity: 0.92;
-  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.4);
+  opacity: 0.95;
+  box-shadow:
+    inset 0 0 40px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(0, 0, 0, 0.3);
   border: 3px solid var(--team-color);
   border-radius: 6px;
 }
