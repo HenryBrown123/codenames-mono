@@ -2,10 +2,7 @@ import { motion } from "framer-motion";
 import { useGameDataRequired } from "../../game-data/providers";
 import { useGameActions } from "../../game-actions";
 import { ActionButton } from "../../shared/components";
-import {
-  debriefOverlayVariants,
-  debriefStatVariants,
-} from "./game-over-dashboard-variants";
+import { debriefOverlayVariants, debriefStatVariants } from "./game-over-dashboard-variants";
 import { TerminalSection, TerminalCommand } from "./terminal-components";
 import styles from "./shared-dashboard.module.css";
 
@@ -21,7 +18,7 @@ export const GameOverDashboard = () => {
 
   const losingTeam = gameData.teams?.find((team) => team.name !== winner);
   const losingScore = gameData.currentRound?.cards?.filter(
-    (card) => card.selected && card.teamName !== winner,
+    (card) => card.selected && card.teamName === losingTeam?.name,
   ).length;
 
   const totalTurns = gameData.currentRound?.turns?.length || 0;

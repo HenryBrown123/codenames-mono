@@ -17,44 +17,36 @@ const CardFace = memo(() => {
 CardFace.displayName = "CardFace";
 
 /**
- * CoverCard - Slides in from way above to cover the card when selected/flipped
+ * CoverCard - Thrown in from a single point (dealer's hand) at the top center of the screen
  */
 const CoverCard = memo<{ teamType: string; variant: CardVisibilityState }>(
   ({ teamType, variant }) => {
+    const shouldShow = variant === "flipped" || variant === "gameOverSelected";
+
     return (
       <motion.div
         className={styles.coverCard}
-        initial={false}
-        animate={variant}
-        variants={{
-          normal: {
-            y: -300,
-            opacity: 0,
-            transition: { duration: 0.5, ease: "easeInOut" },
-          },
-          flipped: {
-            y: 0,
-            opacity: 1,
-            transition: {
-              duration: 0.6,
-              ease: [0.34, 1.56, 0.64, 1] as [number, number, number, number], // Bouncy like dealing
-            },
-          },
-          revealed: { y: -300, opacity: 0 },
-          gameOver: { y: -300, opacity: 0 },
-          gameOverSelected: {
-            y: 0,
-            opacity: 1,
-            transition: {
-              duration: 0.6,
-              ease: [0.34, 1.56, 0.64, 1] as [number, number, number, number],
-            },
-          },
+        initial={
+          shouldShow
+            ? { x: 0, y: 0, rotate: 0, opacity: 1, scale: 1 }
+            : { x: "-50vw", y: "-80vh", rotate: -25, opacity: 0, scale: 0.8 } // Way off top-center
+        }
+        animate={
+          shouldShow
+            ? { x: 0, y: 0, rotate: 0, opacity: 1, scale: 1 }
+            : { x: "-50vw", y: "-80vh", rotate: -25, opacity: 0, scale: 0.8, transition: { duration: 0 } }
+        }
+        transition={{
+          type: "spring",
+          damping: 25, // Higher = more resistance, slower approach to final position
+          stiffness: 260, // Lower = slower overall movement
+          mass: 1.2, // Higher = more inertia, heavier feel
         }}
         style={{
           position: "absolute",
           inset: 0,
           zIndex: 40, // Above word (35) and overlays (30)
+          pointerEvents: shouldShow ? "auto" : "none", // Don't block clicks when hidden
         }}
       >
         <div className={styles.teamSymbol} data-team={teamType} />
@@ -101,7 +93,7 @@ export const GameCard = memo<GameCardProps>(({ card, cardIndex, onClick, display
         {/* Floating word - always rendered, handles own visibility */}
         <FloatingWord word={card.word} variant={variant} />
 
-        {/* Cover card - slides in from top when flipped/selected */}
+        {/* Cover card - always rendered, animates in when flipped/selected */}
         <CoverCard teamType={teamType} variant={variant} />
 
         {/* Overlays - just backgrounds and decorations, no word management */}

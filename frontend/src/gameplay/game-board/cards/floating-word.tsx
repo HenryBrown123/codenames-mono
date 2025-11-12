@@ -19,9 +19,7 @@ export const FloatingWord = memo<FloatingWordProps>(({ word, variant }) => {
       animate={variant}
       variants={{
         normal: { opacity: 1 },
-        flipped: { opacity: 0 }, // Hidden when cover card slides over
-        revealed: { opacity: 0, transition: { duration: 0.15 } }, // Fades out for spymaster overlay word
-        gameOver: { opacity: 0, transition: { duration: 0.3 } }, // Fades out for game-over overlay word
+        flipped: { opacity: 0 },
         gameOverSelected: { opacity: 0, transition: { duration: 0.3 } },
       }}
       style={{
@@ -30,9 +28,9 @@ export const FloatingWord = memo<FloatingWordProps>(({ word, variant }) => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 35, // Above overlays (30), below cover card (20 is wrong, should be higher)
-        pointerEvents: "none", // Doesn't interfere with clicks
-        padding: "0.5rem", // Some breathing room
+        zIndex: 35,
+        pointerEvents: "none",
+        padding: "0.5rem",
       }}
     >
       <span className={styles.cardWord}>{word}</span>
