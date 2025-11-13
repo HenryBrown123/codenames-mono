@@ -20,21 +20,28 @@ CardFace.displayName = "CardFace";
 /**
  * CoverCard - Thrown in from dealer's hand (top-center off-screen)
  */
-const CoverCard = memo<{ teamType: string; variant: CardVisibilityState }>(
-  ({ teamType, variant }) => {
+const CoverCard = memo<{ teamType: string; variant: CardVisibilityState; cardIndex: number }>(
+  ({ teamType, variant, cardIndex }) => {
     const shouldShow = variant === "flipped" || variant === "gameOverSelected";
+
+    // Generate a consistent random rotation based on card index
+    // Range: 2 to 5 degrees, randomly positive or negative
+    const randomValue = ((cardIndex * 37) % 101) / 100; // 0 to 1
+    const magnitude = 2 + randomValue * 3; // 2 to 5 degrees
+    const direction = ((cardIndex * 17) % 2) === 0 ? 1 : -1; // Randomly flip sign
+    const finalRotation = magnitude * direction;
 
     return (
       <motion.div
         className={styles.coverCard}
         initial={
           shouldShow
-            ? { x: 0, y: 0, rotate: 0, opacity: 1, scale: 1 }
+            ? { x: 0, y: 0, rotate: finalRotation, opacity: 1, scale: 1 }
             : { x: "-50vw", y: "-80vh", rotate: -25, opacity: 0, scale: 0.8 }
         }
         animate={
           shouldShow
-            ? { x: 0, y: 0, rotate: 0, opacity: 1, scale: 1 }
+            ? { x: 0, y: 0, rotate: finalRotation, opacity: 1, scale: 1 }
             : { x: "-50vw", y: "-80vh", rotate: -25, opacity: 0, scale: 0.8, transition: { duration: 0 } }
         }
         transition={{
@@ -98,7 +105,7 @@ export const GameCard = memo<GameCardProps>(({ card, cardIndex, onClick, display
         <FloatingWord word={card.word} variant={variant} />
 
         {/* Cover card - always rendered, animates in when flipped/selected */}
-        <CoverCard teamType={teamType} variant={variant} />
+        <CoverCard teamType={teamType} variant={variant} cardIndex={cardIndex} />
 
         {/* Overlays - just backgrounds and decorations, no word management */}
         <AnimatePresence mode="wait">
