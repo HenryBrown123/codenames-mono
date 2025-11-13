@@ -3,6 +3,7 @@ import type { TransactionalHandler } from "@backend/common/data-access/transacti
 import type { LobbyOperations } from "../lobby-actions";
 import type { LobbyStateProvider } from "../state/lobby-state.provider";
 import { lobbyHelpers } from "../state/lobby-state.helpers";
+import { GameEventsEmitter } from "@backend/common/websocket";
 
 export type PlayerResult = {
   publicId: string;
@@ -68,7 +69,7 @@ export const addPlayersService = (dependencies: ServiceDependencies) => {
       );
     }
 
-    return await dependencies.lobbyHandler(async (lobbyOps) => {
+    const result = await dependencies.lobbyHandler(async (lobbyOps) => {
       const repositoryRequest = playersToAdd.map((player) => ({
         userId,
         gameId: lobby._id,
@@ -96,6 +97,19 @@ export const addPlayersService = (dependencies: ServiceDependencies) => {
         gamePublicId: lobby.public_id,
       };
     });
+
+    // Emit WebSocket events for each added player
+    result.players.forEach((player) => {
+      const teamId = teamNameToIdMap.get(player.teamName);
+      GameEventsEmitter.playerJoined(
+        publicGameId,
+        player.publicId,
+        player.playerName,
+        teamId,
+      );
+    });
+
+    return result;
   };
 
   return addPlayers;

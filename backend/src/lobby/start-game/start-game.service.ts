@@ -3,6 +3,7 @@ import type { LobbyStateProvider } from "../state/lobby-state.provider";
 import { lobbyHelpers } from "../state/lobby-state.helpers";
 import { GAME_STATE } from "@codenames/shared/types";
 import { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
+import { GameEventsEmitter } from "@backend/common/websocket";
 
 export type GameStartSuccess = {
   _id: number;
@@ -64,7 +65,7 @@ export const startGameService = (dependencies: ServiceDependencies) => {
       };
     }
 
-    return await dependencies.lobbyHandler(async (lobbyOps) => {
+    const result = await dependencies.lobbyHandler(async (lobbyOps) => {
       const updatedGame = await lobbyOps.updateGameStatus(
         lobby._id,
         GAME_STATE.IN_PROGRESS,
@@ -83,6 +84,13 @@ export const startGameService = (dependencies: ServiceDependencies) => {
         status: updatedGame.status,
       };
     });
+
+    // Emit WebSocket event for real-time multiplayer updates
+    if (result.success) {
+      GameEventsEmitter.gameStarted(publicGameId);
+    }
+
+    return result;
   };
 
   return startGame;

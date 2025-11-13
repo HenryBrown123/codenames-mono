@@ -3,6 +3,7 @@ import type { LobbyValidationError } from "../state/lobby-state.validation";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 import type { LobbyOperations } from "../lobby-actions";
 import type { CardResult } from "@backend/common/data-access/repositories/cards.repository";
+import { GameEventsEmitter } from "@backend/common/websocket";
 
 import { validate as checkCardDealingRules } from "./deal-cards.rules";
 
@@ -119,6 +120,9 @@ export const dealCardsService = (dependencies: DealCardsDependencies) => {
     const dealtCards = await dependencies.lobbyHandler(async (ops) => {
       return await ops.dealCards(validationResult.data);
     });
+
+    // Emit WebSocket event for real-time multiplayer updates
+    GameEventsEmitter.cardsDealt(input.gameId, dealtCards.roundNumber);
 
     return {
       success: true,
