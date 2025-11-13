@@ -5,6 +5,7 @@ import type { GameplayOperations } from "../gameplay-actions";
 import { CODEBREAKER_OUTCOME } from "@codenames/shared/types";
 import { complexProperties } from "../state/gameplay-state.helpers";
 import { validateMakeGuess, winningConditions } from "./make-guess.rules";
+import { GameEventsEmitter } from "@backend/common/websocket";
 
 /**
  * Input parameters for making a guess
@@ -475,6 +476,14 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
     const currentTurn = complexProperties.getCurrentTurnOrThrow(gameData);
     const completeTurnData = await getCompleteTurnData(currentTurn.publicId);
 
+    // Emit WebSocket event for real-time multiplayer updates
+    GameEventsEmitter.guessMade(
+      input.gameId,
+      input.roundNumber,
+      currentTurn.publicId,
+      input.playerId,
+    );
+
     return {
       success: true,
       data: {
@@ -483,7 +492,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
           outcome: operationResult.guessResult.outcome,
           createdAt: operationResult.guessResult.createdAt,
         },
-        turn: completeTurnData, 
+        turn: completeTurnData,
       },
     };
   };

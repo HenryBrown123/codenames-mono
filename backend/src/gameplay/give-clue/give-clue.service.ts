@@ -4,6 +4,7 @@ import type { GameplayValidationError } from "../state/gameplay-state.validation
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 import type { GameplayOperations } from "../gameplay-actions";
 import { complexProperties } from "../state/gameplay-state.helpers";
+import { GameEventsEmitter } from "@backend/common/websocket";
 
 import {
   validateClueWord,
@@ -285,6 +286,14 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
     // ← CRITICAL FIX: Fetch complete turn data after transaction completes
     const currentTurn = complexProperties.getCurrentTurnOrThrow(gameData);
     const completeTurnData = await getCompleteTurnData(currentTurn.publicId);
+
+    // Emit WebSocket event for real-time multiplayer updates
+    GameEventsEmitter.clueGiven(
+      input.gameId,
+      input.roundNumber,
+      currentTurn.publicId,
+      input.playerId,
+    );
 
     return {
       success: true,
