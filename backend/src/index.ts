@@ -14,6 +14,7 @@ import { initialize as initializeLobby } from "./lobby";
 import { initialize as initializeGameplay } from "./gameplay";
 import { authMiddleware } from "@backend/common/http-middleware/auth.middleware";
 import { refreshSystemData } from "./common/data/system-data-loader";
+import { initializeWebSocketServer } from "./common/websocket";
 
 /**
  * Runtime validation of env. variables
@@ -106,6 +107,14 @@ app.use(errorHandler);
 const httpServer = createServer(app);
 const PORT = env.PORT || 3000;
 
+// Initialize WebSocket server
+initializeWebSocketServer({
+  httpServer,
+  jwtSecret: env.JWT_SECRET,
+  corsOrigins: corsOptions.origin as string[],
+});
+
 httpServer.listen(PORT, () => {
   console.log(`✅ ${process.env.NODE_ENV} server running on port ${PORT}`);
+  console.log(`🔌 WebSocket server ready for connections`);
 });
