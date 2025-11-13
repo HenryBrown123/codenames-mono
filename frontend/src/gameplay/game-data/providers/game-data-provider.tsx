@@ -1,6 +1,7 @@
 import { useContext, createContext, ReactNode } from "react";
 import { useGameDataQuery } from "../queries/use-game-query";
 import { GameData } from "@frontend/shared-types";
+import { useGameRoom, useWebSocketInvalidation } from "@frontend/lib/websocket";
 
 interface GameDataContextValue {
   gameData: GameData | undefined;
@@ -21,6 +22,11 @@ interface GameDataProviderProps {
 
 export const GameDataProvider = ({ children, gameId }: GameDataProviderProps) => {
   const gameDataQuery = useGameDataQuery(gameId);
+
+  // Enable real-time multiplayer updates via WebSocket
+  useGameRoom(gameId);
+  useWebSocketInvalidation(gameId);
+
   return (
     <GameDataContext.Provider
       value={{
