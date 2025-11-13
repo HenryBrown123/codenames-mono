@@ -90,3 +90,4 @@ codenames-card-animations-complete.css
 
 # Agent logs
 /_AGENT_LOG.md
+.claude/settings.local.json
