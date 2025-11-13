@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { WebSocketProvider } from "../lib/websocket";
 import AppRoutes from "./routes/app-routes";
 import "../style/global.css";
 import styles from "./app.module.css";
@@ -211,22 +212,24 @@ const App: React.FC = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className={styles.appContainer} id="app-container">
-        <div className={styles.sectionsContainer} id="sections-container">
-          <div className={styles.pageSection} id="page-container">
-            <AppRoutes />
+      <WebSocketProvider url="http://192.168.1.156:3000" autoConnect={true}>
+        <div className={styles.appContainer} id="app-container">
+          <div className={styles.sectionsContainer} id="sections-container">
+            <div className={styles.pageSection} id="page-container">
+              <AppRoutes />
+            </div>
           </div>
-        </div>
 
-        {false && (
-          <DraggableDebugTool
-            viewportHeight={innerHeight}
-            visualViewportHeight={visualHeight}
-            screenHeight={screenHeight}
-          />
-        )}
-      </div>
-      <ReactQueryDevtools initialIsOpen={false} />
+          {false && (
+            <DraggableDebugTool
+              viewportHeight={innerHeight}
+              visualViewportHeight={visualHeight}
+              screenHeight={screenHeight}
+            />
+          )}
+        </div>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </WebSocketProvider>
     </QueryClientProvider>
   );
 };
