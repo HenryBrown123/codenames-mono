@@ -402,3 +402,14 @@
   gap: 1rem;
   grid-row: 1 / 3; /* Span first two rows, leaving bottom for actions */
 }
+
+/* PlayerInfoLayout - Special layout for team header with symbol */
+.playerInfoLayout {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}

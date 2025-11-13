@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import { CodeWordInput } from "./codemaster-input";
 import { useGameActions } from "../../game-actions";
 import { useTurn } from "../../game-data/providers";
@@ -17,7 +18,9 @@ import {
   SpyStatus,
   MiddleSection,
   CenteredContent,
+  PlayerInfoLayout,
 } from "./terminal-components";
+
 import styles from "./codemaster-dashboard.module.css";
 
 interface CodemasterDashboardProps {
@@ -100,10 +103,66 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
 
       <div className={styles.desktopContainer}>
         <TerminalSection layoutId="dashboard-main">
-          <TerminalCommand>MISSION LOG</TerminalCommand>
-          <TerminalPrompt>
-            <TerminalOutput>{messageText || "Awaiting orders..."}</TerminalOutput>
-          </TerminalPrompt>
+          <PlayerInfoLayout>
+            {/* Team Symbol */}
+            <motion.div
+              className={styles.symbolContainer}
+              initial={{ opacity: 0.7 }}
+              animate={{
+                opacity: [0.7, 1, 0.7],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              {(() => {
+                // Try both lowercase and capitalized versions
+                const teamLower = activeTurn.teamName.toLowerCase();
+                const isRed = teamLower === "red" || activeTurn.teamName === "Team Red";
+                const isBlue = teamLower === "blue" || activeTurn.teamName === "Team Blue";
+
+                const symbol = isRed ? "◇" : isBlue ? "□" : "○";
+                const color = isRed ? "#ff3333" : isBlue ? "#00ddff" : "#aaaaaa";
+
+                return (
+                  <>
+                    {/* Shadow depression */}
+                    <div className={styles.symbolShadow}>{symbol}</div>
+                    {/* Crisp LED symbol */}
+                    <div
+                      className={styles.symbolLED}
+                      style={{
+                        color: color,
+                        textShadow: `0 0 8px ${color}`,
+                      }}
+                    >
+                      {symbol}
+                    </div>
+                    {/* Inner glow */}
+                    <div
+                      className={styles.symbolGlow}
+                      style={{
+                        textShadow: `0 0 4px ${color}`,
+                      }}
+                    >
+                      {symbol}
+                    </div>
+                  </>
+                );
+              })()}
+            </motion.div>
+
+            {/* Team Info */}
+            <div className={styles.teamInfo}>
+              <div className={styles.teamTitle}>
+                <span className={styles.teamName}>{activeTurn.teamName.toUpperCase()}</span>
+              </div>
+              <div className={styles.teamRole}>CODEMASTER</div>
+              <div className={styles.teamDivider} />
+            </div>
+          </PlayerInfoLayout>
         </TerminalSection>
 
         <MiddleSection>

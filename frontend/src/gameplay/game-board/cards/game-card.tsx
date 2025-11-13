@@ -57,7 +57,30 @@ const CoverCard = memo<{ teamType: string; variant: CardVisibilityState; cardInd
           pointerEvents: shouldShow ? "auto" : "none", // Don't block clicks when hidden
         }}
       >
-        <div className={styles.teamSymbol} data-team={teamType} />
+        {/* Team symbol with embossed effect - clean layers */}
+        {(() => {
+          const symbols = {
+            red: '◇',
+            blue: '□',
+            neutral: '○',
+            assassin: '☠',
+            green: '🌿',
+          };
+          const symbol = symbols[teamType as keyof typeof symbols] || '●';
+
+          return (
+            <>
+              {/* Embossed depression - dark shadow */}
+              <div className={styles.symbolShadow}>{symbol}</div>
+              {/* Crisp LED symbol */}
+              <div className={styles.symbolLED}>{symbol}</div>
+              {/* Subtle inner glow */}
+              <div className={styles.symbolGlow}>{symbol}</div>
+              {/* Highlight edge */}
+              <div className={styles.symbolHighlight}>{symbol}</div>
+            </>
+          );
+        })()}
       </motion.div>
     );
   },

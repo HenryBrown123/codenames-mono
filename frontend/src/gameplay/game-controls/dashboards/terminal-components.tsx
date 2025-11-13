@@ -57,6 +57,14 @@ export const TerminalCommand: React.FC<{ children?: React.ReactNode }> = ({ chil
   <div className={styles.terminalCommand}>{children}</div>
 );
 
+/**
+ * PlayerInfoLayout - Special layout for player/team info header with symbol
+ * Designed to fit symbol + text + divider in dashboard constraint
+ */
+export const PlayerInfoLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
+  <div className={styles.playerInfoLayout}>{children}</div>
+);
+
 interface TerminalStatusProps {
   children: React.ReactNode;
   type?: "success" | "warning" | "error";

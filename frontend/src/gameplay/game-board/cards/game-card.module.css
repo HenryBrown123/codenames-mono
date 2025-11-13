@@ -609,120 +609,61 @@
 }
 
 /* ===== TEAM SYMBOL ===== */
-.teamSymbol {
+/* Inset/debossed shadow - light at top, dark at bottom for pressed-in effect */
+.symbolShadow {
   position: absolute;
-  font-size: 0; /* Hide wrapper */
-  font-weight: 900;
-  line-height: 1;
-  z-index: 10;
-}
-
-/* Main crisp LED symbol - sharp outline with inner glow */
-.teamSymbol::before {
-  font-size: 3rem;
-  font-weight: 900;
-  color: var(--team-color);
-  line-height: 1;
-  text-rendering: geometricPrecision;
-  -webkit-font-smoothing: antialiased;
-  display: inline-block;
-  position: relative;
-  z-index: 10;
-  text-shadow:
-    0 0 12px var(--team-color),
-    0 0 6px var(--team-color),
-    0 0 3px var(--team-color);
-}
-
-/* Embossed depression shadow - dark shadow behind symbol */
-.teamSymbol::after {
-  position: absolute;
-  top: 4px;
-  left: 1px;
   font-size: 3rem;
   font-weight: 900;
   color: transparent;
   text-shadow:
-    0 4px 8px rgba(0, 0, 0, 0.9),
-    0 2px 4px rgba(0, 0, 0, 0.8);
-  filter: blur(1px);
-  opacity: 0.85;
+    -1px -1px 2px rgba(255, 255, 255, 0.1),
+    1px 1px 3px rgba(0, 0, 0, 0.8);
   line-height: 1;
+  opacity: 0.8;
   z-index: 8;
   pointer-events: none;
 }
 
-/* Team symbols for cover cards - Red */
-.cardContainer[data-team="red"] .teamSymbol::before {
-  content: "◇";
-}
-.cardContainer[data-team="red"] .teamSymbol::after {
-  content: "◇";
-}
-
-/* Blue */
-.cardContainer[data-team="blue"] .teamSymbol::before {
-  content: "□";
-}
-.cardContainer[data-team="blue"] .teamSymbol::after {
-  content: "□";
-}
-
-/* Neutral */
-.cardContainer[data-team="neutral"] .teamSymbol::before {
-  content: "○";
-}
-.cardContainer[data-team="neutral"] .teamSymbol::after {
-  content: "○";
-}
-
-/* Assassin */
-.cardContainer[data-team="assassin"] .teamSymbol::before {
-  content: "☠";
-}
-.cardContainer[data-team="assassin"] .teamSymbol::after {
-  content: "☠";
-}
-
-/* Green */
-.cardContainer[data-team="green"] .teamSymbol::before {
-  content: "🌿";
-}
-.cardContainer[data-team="green"] .teamSymbol::after {
-  content: "🌿";
-}
-
-/* Assassin symbol - bright yellow with electric glow */
-.cardContainer[data-team="assassin"] .teamSymbol {
-  background: none !important;
+/* Crisp LED symbol - sharp outline */
+.symbolLED {
+  position: absolute;
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--team-color);
+  text-shadow: none;
+  -webkit-text-stroke: none;
+  filter: none;
+  line-height: 1;
   z-index: 10;
-  /* Apply filter to parent so it affects the ::before */
-  filter: drop-shadow(0 0 20px rgba(255, 255, 0, 1)) drop-shadow(0 0 40px rgba(255, 255, 0, 0.8))
-    drop-shadow(0 0 60px rgba(255, 255, 0, 0.6));
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
 }
 
-.cardContainer[data-team="assassin"] .teamSymbol::before {
-  color: #ffff00;
-  font-size: 4rem; /* Bigger for assassin */
-  /* Apply text-shadow to the actual emoji */
-  text-shadow:
-    0 0 20px rgba(255, 255, 0, 1),
-    0 0 40px rgba(255, 255, 0, 0.8),
-    0 0 60px rgba(255, 0, 0, 0.6),
-    2px 2px 0 rgba(0, 0, 0, 0.8);
+/* Subtle inner glow for LED effect */
+.symbolGlow {
+  position: absolute;
+  font-size: 3rem;
+  font-weight: 900;
+  color: transparent;
+  text-shadow: 0 0 6px var(--team-color);
+  -webkit-text-stroke: none;
+  filter: blur(0.3px);
+  line-height: 1;
+  z-index: 9;
+  opacity: 0.3;
+  pointer-events: none;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .cardContainer[data-team="assassin"] .teamSymbol {
-    animation: assassinReveal 2s ease-out forwards;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cardContainer[data-team="assassin"] .teamSymbol {
-    opacity: 0.9;
-    filter: brightness(1.1) drop-shadow(0 0 25px rgba(255, 255, 0, 0.5));
-  }
+/* Highlight edge - subtle top/left light */
+.symbolHighlight {
+  position: absolute;
+  font-size: 3rem;
+  font-weight: 900;
+  color: transparent;
+  text-shadow: -2px -2px 3px rgba(255, 255, 255, 0.15);
+  line-height: 1;
+  z-index: 11;
+  pointer-events: none;
 }
 
 /* ===== RESPONSIVE DESIGN ===== */
