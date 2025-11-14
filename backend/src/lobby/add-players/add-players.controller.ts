@@ -31,7 +31,11 @@ export const addPlayersController =
 
       const gameId = validatedRequest.params.gameId;
       const userId = validatedRequest.auth.userId;
-      const playersToAdd = validatedRequest.body;
+
+      // Normalize to array: convert single object to array of 1
+      const playersToAdd = Array.isArray(validatedRequest.body)
+        ? validatedRequest.body
+        : [validatedRequest.body];
 
       const { players, gamePublicId } = await addPlayers(
         gameId,

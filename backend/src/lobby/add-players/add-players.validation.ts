@@ -20,7 +20,10 @@ export const addPlayersRequestSchema = z.object({
   auth: z.object({
     userId: z.number().int().positive("User ID must be a positive integer"),
   }),
-  body: z.array(playerSchema).min(1, "At least one player is required"),
+  body: z.union([
+    playerSchema,                                                         // Single player object
+    z.array(playerSchema).min(1, "At least one player is required"),     // Array of players
+  ]),
 });
 
 /**

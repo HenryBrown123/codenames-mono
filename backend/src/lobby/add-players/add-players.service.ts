@@ -57,6 +57,20 @@ export const addPlayersService = (dependencies: ServiceDependencies) => {
       );
     }
 
+    // Multi-device: Prevent user from adding multiple players total
+    if (lobby.gameType === "MULTI_DEVICE") {
+      // Check if user already has a player in this game
+      const userAlreadyHasPlayer = lobby.teams.some((team) =>
+        team.players.some((p) => p._userId === userId),
+      );
+
+      if (userAlreadyHasPlayer) {
+        throw new UnexpectedLobbyError(
+          "You already have a player in this game. Multi-device games allow one player per user.",
+        );
+      }
+    }
+
     const uniqueTeamNames = [...new Set(playersToAdd.map((p) => p.teamName))];
     const teamNameToIdMap = lobbyHelpers.getTeamNameToIdMap(lobby);
     const missingTeams = uniqueTeamNames.filter(
