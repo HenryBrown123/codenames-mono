@@ -12,6 +12,7 @@ import {
   useStartGame,
   type LobbyPlayer,
 } from "@frontend/lobby/api";
+import { MultiDeviceLobby } from "./multi-device-lobby";
 
 interface LobbyInterfaceProps {
   gameId: string;
@@ -120,6 +121,13 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
       </div>
     );
   }
+
+  // Multi-device mode: Show different lobby UI
+  if (lobbyData.gameType === "MULTI_DEVICE") {
+    return <MultiDeviceLobby gameId={gameId} />;
+  }
+
+  // Single-device mode: Original lobby UI below
 
   const teamColors = {
     "Team Red": "var(--color-team-red, #ff0040)",

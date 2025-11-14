@@ -6,6 +6,7 @@ export interface LobbyPlayer {
   publicId: string;
   name: string;
   teamName: string;
+  userId?: number;  // For multi-device: identifies which user owns this player
 }
 
 export interface LobbyTeam {
