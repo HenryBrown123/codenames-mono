@@ -12,23 +12,17 @@
 **/.pnp
 **/.pnp.js
 
-# Environment variables
+# Environment variables (project-wide)
 **/.env
-**/.env.local
 **/.env.development.local
 **/.env.test.local
 **/.env.production.local
 
-# IDE and Editor files
-**/.idea
-**/.vscode/*
+# IDE and Editor files (project settings to keep)
 !**/.vscode/extensions.json
 !**/.vscode/settings.json
 !**/.vscode/tasks.json
 !**/.vscode/launch.json
-**/.DS_Store
-**/*.sublime-project
-**/*.sublime-workspace
 
 # TypeScript
 **/*.tsbuildinfo
@@ -54,11 +48,6 @@
 **/.eslintcache
 **/.stylelintcache
 
-# Backend specific
-**/backend/**/*.js
-**/backend/**/*.js.map
-!**/backend/**/*.config.js
-
 # Frontend specific
 **/frontend/.cache
 **/frontend/public/hot
@@ -70,24 +59,3 @@
 **/*.sqlite
 **/*.sqlite3
 **/*.db
-
-# Analysis
-**/commit_analysis.txt
-
-# Scripts
-branch_changes.sh
-
-# Misc
-.DS_Store
-Thumbs.db
-rebase-script.sh
-package-lock.json
-frontend/package-lock.json
-.claude/settings.local.json
-codenames-card-animations-complete.css
-.claude/settings.local.json
-.claude/settings.local.json
-
-# Agent logs
-/_AGENT_LOG.md
-.claude/settings.local.json
