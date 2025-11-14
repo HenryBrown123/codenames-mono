@@ -9,6 +9,7 @@ import { loadEnvFromPackageDir } from "./common/config";
 import swaggerUi from "swagger-ui-express";
 
 import { initialize as initializeAuth } from "./auth";
+import { initialize as initializeUsers } from "./users";
 import { initialize as initializeGameSetup } from "./setup";
 import { initialize as initializeLobby } from "./lobby";
 import { initialize as initializeGameplay } from "./gameplay";
@@ -92,6 +93,14 @@ const auth = initializeAuth(app, dbInstance, {
 });
 
 // Initialize features
+initializeUsers(app, dbInstance, {
+  secret: env.JWT_SECRET,
+  options: {
+    expiresIn: "7d",
+    algorithm: "HS256",
+    issuer: "codenames-app",
+  },
+});
 const setup = initializeGameSetup(app, dbInstance, authHandlers);
 const lobby = initializeLobby(app, dbInstance, authHandlers);
 const gameplay = initializeGameplay(app, dbInstance, authHandlers);
