@@ -7,6 +7,13 @@ import { createGuestSession, SessionCreatedResult } from "../endpoints/create-gu
 export const useCreateGuestSession = (): UseMutationResult<SessionCreatedResult, Error, void> => {
   return useMutation({
     mutationKey: ["createGuestSession"],
-    mutationFn: () => createGuestSession(),
+    mutationFn: async () => {
+      const result = await createGuestSession();
+
+      // Store username in localStorage for multi-device features
+      localStorage.setItem("username", result.user.username);
+
+      return result;
+    },
   });
 };
