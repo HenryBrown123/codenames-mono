@@ -153,9 +153,11 @@ export const gameplayStateProvider = (
       getPlayersByGameId(game._id),
     ]);
 
+    // Only require player membership for games that are in progress or completed
+    // LOBBY games can be viewed by any authenticated user (for multi-device join flow)
     const allGamePlayers = await getPlayersByGameId(game._id);
     const userIsPlayer = allGamePlayers.some((p) => p._userId === userId);
-    if (!userIsPlayer) {
+    if (!userIsPlayer && game.status !== GAME_STATE.LOBBY) {
       return { status: "user-not-player", gameId, userId };
     }
 

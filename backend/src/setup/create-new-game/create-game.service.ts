@@ -79,38 +79,11 @@ export const createGameService = (dependencies: ServiceDependencies) => {
 
       const uniqueTeamNames = [...new Set(teams.map((team) => team.teamName))];
 
-      let adminPlayer = undefined;
-
-      // For single device games, automatically add the creator as an admin player
-      if (gameType === GAME_TYPE.SINGLE_DEVICE) {
-        const redTeam = teams.find((team) => team.teamName === "Team Red");
-        if (redTeam) {
-          const newPlayers = await setupOps.addPlayers([
-            {
-              userId,
-              gameId: game._id,
-              teamId: redTeam._id,
-              publicName: "Admin", // Default name - user can change it in lobby
-              statusId: 1, // Active status
-            },
-          ]);
-
-          if (newPlayers.length > 0) {
-            adminPlayer = {
-              publicId: newPlayers[0].publicId,
-              playerName: newPlayers[0].publicName,
-              teamName: newPlayers[0].teamName,
-            };
-          }
-        }
-      }
-
       return {
         _id: game._id,
         publicId,
         createdAt: game.created_at,
         teams: uniqueTeamNames,
-        adminPlayer,
       };
     });
   };
