@@ -32,12 +32,13 @@ export const modifyPlayersService = (dependencies: ServiceDependencies) => {
   const updatePlayers = async (
     publicGameId: string,
     playersToModify: PlayerUpdateData,
+    userId: number,
   ): Promise<ModifyPlayersServiceResult> => {
     if (!playersToModify.length) {
       return { modifiedPlayers: [] };
     }
 
-    const lobby = await dependencies.getLobbyState(publicGameId, 0);
+    const lobby = await dependencies.getLobbyState(publicGameId, userId);
     if (!lobby) {
       throw new UnexpectedLobbyError(
         "Failed to modify players... game does not exist",
@@ -48,6 +49,25 @@ export const modifyPlayersService = (dependencies: ServiceDependencies) => {
       throw new UnexpectedLobbyError(
         `Cannot modify players in game state '${lobby.status}'`,
       );
+    }
+
+    // Multi-device authorization: users can only modify their own player
+    if (lobby.gameType === "MULTI_DEVICE") {
+      const allPlayers = lobby.teams.flatMap((t) => t.players);
+
+      for (const playerUpdate of playersToModify) {
+        const playerToModify = allPlayers.find((p) => p.publicId === playerUpdate.playerId);
+
+        if (!playerToModify) {
+          throw new UnexpectedLobbyError(`Player ${playerUpdate.playerId} not found in game`);
+        }
+
+        if (playerToModify._userId !== userId) {
+          throw new UnexpectedLobbyError(
+            "In multi-device mode, you can only modify your own player",
+          );
+        }
+      }
     }
 
     // Validate team names if any are provided

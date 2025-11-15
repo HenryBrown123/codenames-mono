@@ -39,6 +39,7 @@ export const modifyPlayersController = ({
       const { modifiedPlayers } = await modifyPlayersService(
         validatedReq.params.gameId,
         [{ ...validatedReq.body }],
+        validatedReq.auth.userId,
       );
 
       const response = {
@@ -80,6 +81,7 @@ export const modifyPlayersController = ({
       const { modifiedPlayers } = await modifyPlayersService(
         gameId,
         playersToModify,
+        validatedReq.auth.userId,
       );
 
       const response = {
