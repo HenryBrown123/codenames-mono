@@ -16,19 +16,30 @@ interface MultiDeviceLobbyProps {
   gameId: string;
 }
 
+// Animation timing constants
+const TIMINGS = {
+  BOX_ENTER: 0.3,
+  BOX_EXIT: 0.2,
+  CONTENT_FADE: 0.2,
+  TEAM_SWITCH: 0.3, // Used for symbol transitions and border color changes
+  CONTENT_DELAY_SHORT: 0.05,
+  CONTENT_DELAY_MEDIUM: 0.1,
+} as const;
+
+const EASING = [0.4, 0, 0.2, 1] as const;
+
 const boxVariants = {
-  initial: { opacity: 0, scale: 0.8, y: 20 },
+  initial: { opacity: 0, scale: 0.8 },
   animate: {
     opacity: 1,
     scale: 1,
     y: 0,
-    transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] as const },
+    transition: { duration: TIMINGS.BOX_ENTER, ease: EASING },
   },
   exit: {
     opacity: 0,
     scale: 0.95,
-    y: -20,
-    transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] as const },
+    transition: { duration: TIMINGS.BOX_EXIT, ease: EASING },
   },
 };
 
@@ -37,12 +48,12 @@ const dotVariants = {
   animate: {
     opacity: 1,
     scale: 1,
-    transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] as const },
+    transition: { duration: TIMINGS.BOX_EXIT, ease: EASING },
   },
   exit: {
     opacity: 0,
     scale: 0,
-    transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] as const },
+    transition: { duration: TIMINGS.BOX_EXIT, ease: EASING },
   },
 };
 
@@ -148,83 +159,89 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
         {/* Your team box (if joined) */}
         {hasJoined && myTeamName && myPlayerName && (
           <motion.div
-            layout
+            layoutId="player-control-container"
             className={styles.myTeamBox}
-            style={
-              {
-                "--team-color": teamColors[myTeamName as keyof typeof teamColors],
-              } as React.CSSProperties
-            }
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              borderColor: teamColors[myTeamName as keyof typeof teamColors],
+            }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{
+              duration: TIMINGS.BOX_ENTER,
+              ease: EASING,
+              borderColor: { duration: TIMINGS.TEAM_SWITCH, ease: EASING }
+            }}
           >
-            <motion.div layout style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-              <TeamSymbol
-                teamName={myTeamName as "Team Red" | "Team Blue"}
-                teamColor={teamColors[myTeamName as keyof typeof teamColors]}
-                className={styles.bigTeamSymbol}
-              />
-              <motion.div layout className={styles.teamInfoSection}>
-                <motion.div
-                  layout
-                  layoutId="team-name"
-                  className={styles.teamName}
-                  key={`team-${myTeamName}`}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: 0.1 }}
-                >
-                  {myTeamName === "Team Red" ? "TEAM RED" : "TEAM BLUE"}
-                </motion.div>
-                <motion.div
-                  layout
-                  layoutId="player-name"
-                  className={styles.playerLabel}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3, delay: 0.2 }}
-                >
-                  {myPlayerName}
-                </motion.div>
-              </motion.div>
-            </motion.div>
-
-            <motion.div layout className={styles.statusSection}>
+            <AnimatePresence mode="wait">
               <motion.div
-                layout
-                className={styles.waitingMessage}
+                key={`team-content-${myTeamName}`}
+                style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.3, delay: 0.15 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: TIMINGS.TEAM_SWITCH, ease: EASING }}
               >
-                Waiting for other players to join...
+                <TeamSymbol
+                  teamName={myTeamName as "Team Red" | "Team Blue"}
+                  teamColor={teamColors[myTeamName as keyof typeof teamColors]}
+                  className={styles.bigTeamSymbol}
+                />
+                <div className={styles.teamInfoSection}>
+                  <div
+                    className={styles.teamName}
+                    style={{ color: teamColors[myTeamName as keyof typeof teamColors] }}
+                  >
+                    {myTeamName === "Team Red" ? "TEAM RED" : "TEAM BLUE"}
+                  </div>
+                  <div className={styles.playerLabel}>{myPlayerName}</div>
+                </div>
               </motion.div>
-              <motion.div
-                layout
-                className={styles.playerCount}
-                key={totalPlayers}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                {totalPlayers} / 4 players minimum
-              </motion.div>
-            </motion.div>
+            </AnimatePresence>
 
-            <div className={styles.switchButtonContainer}>
-              <TeamSymbol
-                teamName={(myTeamName === "Team Red" ? "Team Blue" : "Team Red") as "Team Red" | "Team Blue"}
-                teamColor={
-                  teamColors[
-                    (myTeamName === "Team Red" ? "Team Blue" : "Team Red") as keyof typeof teamColors
-                  ]
-                }
-                className={styles.switchSymbol}
-                onClick={handleTeamToggle}
-                isButton={true}
-              />
-            </div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key="status-section"
+                className={styles.statusSection}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: TIMINGS.CONTENT_FADE, delay: TIMINGS.CONTENT_DELAY_SHORT, ease: EASING }}
+              >
+                <div className={styles.waitingMessage}>Waiting for other players to join...</div>
+                <div className={styles.playerCount} key={totalPlayers}>
+                  {Math.max(0, 4 - totalPlayers)} more players required
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`switch-button-${myTeamName}`}
+                className={styles.switchButtonContainer}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: TIMINGS.TEAM_SWITCH, delay: TIMINGS.CONTENT_DELAY_MEDIUM, ease: EASING }}
+              >
+                <TeamSymbol
+                  teamName={
+                    (myTeamName === "Team Red" ? "Team Blue" : "Team Red") as "Team Red" | "Team Blue"
+                  }
+                  teamColor={
+                    teamColors[
+                      (myTeamName === "Team Red"
+                        ? "Team Blue"
+                        : "Team Red") as keyof typeof teamColors
+                    ]
+                  }
+                  className={styles.switchSymbol}
+                  onClick={handleTeamToggle}
+                  isButton={true}
+                />
+              </motion.div>
+            </AnimatePresence>
           </motion.div>
         )}
 
@@ -240,36 +257,58 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
 
         {/* Join Area (if not joined yet) */}
         {!hasJoined && (
-          <div className={styles.joinArea}>
-            <h2 className={styles.joinTitle}>Join the Mission</h2>
-            <input
-              className={styles.addInput}
-              placeholder="Enter your operative name..."
-              value={inputPlayerName}
-              onChange={(e) => setInputPlayerName(e.target.value)}
-              disabled={isLoading}
-              autoFocus
-            />
+          <motion.div
+            layoutId="player-control-container"
+            className={styles.joinArea}
+            variants={boxVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key="join-content"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
+              >
+                <h2 className={styles.joinTitle}>Join the Mission</h2>
+                <input
+                  className={styles.addInput}
+                  placeholder="Enter your operative name..."
+                  value={inputPlayerName}
+                  onChange={(e) => setInputPlayerName(e.target.value)}
+                  disabled={isLoading}
+                  autoFocus
+                />
 
-            <div className={styles.teamButtonsGrid}>
-              <button
-                className={styles.joinTeamButton}
-                style={{ "--team-color": teamColors["Team Red"] } as React.CSSProperties}
-                onClick={() => handleJoinTeam("Team Red")}
-                disabled={isLoading || !inputPlayerName.trim()}
-              >
-                JOIN TEAM RED
-              </button>
-              <button
-                className={styles.joinTeamButton}
-                style={{ "--team-color": teamColors["Team Blue"] } as React.CSSProperties}
-                onClick={() => handleJoinTeam("Team Blue")}
-                disabled={isLoading || !inputPlayerName.trim()}
-              >
-                JOIN TEAM BLUE
-              </button>
-            </div>
-          </div>
+                <div className={styles.teamButtonsGrid}>
+                  <motion.button
+                    className={styles.joinTeamButton}
+                    style={{ "--team-color": teamColors["Team Red"] } as React.CSSProperties}
+                    onClick={() => handleJoinTeam("Team Red")}
+                    disabled={isLoading || !inputPlayerName.trim()}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    JOIN TEAM RED
+                  </motion.button>
+                  <motion.button
+                    className={styles.joinTeamButton}
+                    style={{ "--team-color": teamColors["Team Blue"] } as React.CSSProperties}
+                    onClick={() => handleJoinTeam("Team Blue")}
+                    disabled={isLoading || !inputPlayerName.trim()}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    JOIN TEAM BLUE
+                  </motion.button>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </motion.div>
         )}
 
         {/* Teams Display */}
