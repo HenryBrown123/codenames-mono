@@ -627,6 +627,105 @@
   padding: 1rem;
 }
 
+/* Compact header for joined users */
+.compactHeader {
+  margin-bottom: 1.5rem;
+}
+
+.teamIndicator {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--team-color);
+  border-radius: 4px;
+  box-shadow: 0 0 20px rgba(var(--team-color), 0.3);
+}
+
+.teamSymbol {
+  font-size: 2rem;
+  color: var(--team-color);
+  filter: drop-shadow(0 0 8px var(--team-color));
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.teamInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.teamLabel {
+  font-size: 0.75rem;
+  color: var(--team-color);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.playerLabel {
+  font-size: 1rem;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+/* Change team button */
+.myTeamBox {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) auto minmax(280px, 1fr);
+  align-items: center;
+  gap: 2rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid var(--team-color);
+  border-radius: 4px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.bigTeamSymbol {
+  font-size: 4rem;
+  color: var(--team-color);
+  line-height: 1;
+  opacity: 0.9;
+  text-align: center;
+}
+
+.teamInfoSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-start;
+}
+
+.statusSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: center;
+  justify-self: center;
+  grid-column: 2;
+}
+
+.switchButtonContainer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.switchSymbol {
+  font-size: 4rem;
+  line-height: 1;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.switchButtonContainer:hover .switchSymbol {
+  opacity: 1;
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
   .teamButtonsGrid {
