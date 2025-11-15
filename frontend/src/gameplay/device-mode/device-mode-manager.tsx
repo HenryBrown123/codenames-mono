@@ -1,4 +1,4 @@
-import React, { useCallback, ReactNode } from "react";
+import React, { useCallback, ReactNode, useEffect } from "react";
 import { usePlayerContext, useTurn } from "../game-data/providers";
 import { GameData } from "@frontend/shared-types";
 import { PLAYER_ROLE } from "@codenames/shared/types";
@@ -22,6 +22,14 @@ interface DeviceModeManagerProps {
 export const DeviceModeManager: React.FC<DeviceModeManagerProps> = ({ children, gameData }) => {
   const { currentPlayerId, setCurrentPlayerId } = usePlayerContext();
   const { clearActiveTurn } = useTurn();
+
+  // In multi-device mode, sync currentPlayerId with publicId from playerContext
+  const publicId = gameData.playerContext?.publicId;
+  useEffect(() => {
+    if (publicId && currentPlayerId !== publicId) {
+      setCurrentPlayerId(publicId);
+    }
+  }, [publicId, currentPlayerId, setCurrentPlayerId]);
 
   /**
    * Determines if handoff UI should be shown

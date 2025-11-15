@@ -87,9 +87,6 @@ interface GameplaySceneProviderProps {
  * Device mode wrapper that handles both single and multi-device games
  */
 const GameplaySceneProvider = ({ children, gameData }: GameplaySceneProviderProps) => {
-  if (gameData.gameType === GAME_TYPE.SINGLE_DEVICE) {
-    return <DeviceModeManager gameData={gameData}>{children}</DeviceModeManager>;
-  }
-
-  return <PlayerSceneProvider>{children}</PlayerSceneProvider>;
+  // DeviceModeManager handles both single and multi-device games
+  return <DeviceModeManager gameData={gameData}>{children}</DeviceModeManager>;
 };

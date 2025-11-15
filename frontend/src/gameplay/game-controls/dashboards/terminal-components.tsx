@@ -13,28 +13,29 @@ export const TerminalContent: React.FC<{ children: React.ReactNode }> = ({ child
  * Terminal section card - provides visual container for content
  * Supports layoutId for morphing animations between states
  */
-export const TerminalSection: React.FC<{ 
+export const TerminalSection: React.FC<{
   children?: React.ReactNode;
   layoutId?: string;
-}> = ({ children, layoutId }) => (
-  <motion.div 
+  disableLayoutAnimation?: boolean;
+}> = ({ children, layoutId, disableLayoutAnimation = false }) => (
+  <motion.div
     className={styles.terminalSection}
     layoutId={layoutId}
-    layout
+    layout={!disableLayoutAnimation}
     initial={{ opacity: 0, scale: 0.9, y: 10 }}
-    animate={{ 
-      opacity: 1, 
-      scale: 1, 
+    animate={{
+      opacity: 1,
+      scale: 1,
       y: 0,
       transition: {
         type: "spring",
         stiffness: 300,
         damping: 25,
-      }
+      },
     }}
-    transition={{ 
+    transition={{
       layout: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
-      opacity: { duration: 0.2 }
+      opacity: { duration: 0.2 },
     }}
   >
     {children}
@@ -71,12 +72,12 @@ interface TerminalStatusProps {
 }
 
 export const TerminalStatus: React.FC<TerminalStatusProps> = ({ children, type }) => (
-  <div className={styles.terminalStatus} data-type={type}>{children}</div>
+  <div className={styles.terminalStatus} data-type={type}>
+    {children}
+  </div>
 );
 
-export const TerminalDivider: React.FC = () => (
-  <div className={styles.terminalDivider} />
-);
+export const TerminalDivider: React.FC = () => <div className={styles.terminalDivider} />;
 
 export const TerminalActions: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className={styles.terminalActions}>{children}</div>
@@ -96,12 +97,12 @@ interface ARStatusBarProps {
 }
 
 export const ARStatusBar: React.FC<ARStatusBarProps> = ({ children, active }) => (
-  <div className={styles.arStatusBar} data-active={active}>{children}</div>
+  <div className={styles.arStatusBar} data-active={active}>
+    {children}
+  </div>
 );
 
-export const TerminalCursor: React.FC = () => (
-  <span className={styles.terminalCursor} />
-);
+export const TerminalCursor: React.FC = () => <span className={styles.terminalCursor} />;
 
 export const TerminalToggleRow: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className={styles.terminalToggleRow}>{children}</div>
@@ -119,28 +120,28 @@ export const MiddleSection: React.FC<{ children: React.ReactNode }> = ({ childre
  * Vertically centers text/content in the middle grid row while buttons stay anchored at bottom
  * Supports layoutId for morphing animations
  */
-export const CenteredContent: React.FC<{ 
+export const CenteredContent: React.FC<{
   children: React.ReactNode;
   layoutId?: string;
 }> = ({ children, layoutId }) => (
-  <motion.div 
+  <motion.div
     className={styles.centeredContent}
     layoutId={layoutId}
     layout
     initial={{ opacity: 0, scale: 0.9, y: 10 }}
-    animate={{ 
-      opacity: 1, 
-      scale: 1, 
+    animate={{
+      opacity: 1,
+      scale: 1,
       y: 0,
       transition: {
         type: "spring",
         stiffness: 300,
         damping: 25,
-      }
+      },
     }}
-    transition={{ 
+    transition={{
       layout: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
-      opacity: { duration: 0.2 }
+      opacity: { duration: 0.2 },
     }}
   >
     {children}
@@ -178,9 +179,7 @@ export const SpySwitch: React.FC<SpySwitchProps> = ({ children }) => (
   <label className={styles.spySwitch}>{children}</label>
 );
 
-export const SpySlider: React.FC = () => (
-  <span className={styles.spySlider} />
-);
+export const SpySlider: React.FC = () => <span className={styles.spySlider} />;
 
 interface SpyStatusProps {
   children: React.ReactNode;
@@ -188,5 +187,7 @@ interface SpyStatusProps {
 }
 
 export const SpyStatus: React.FC<SpyStatusProps> = ({ children, active }) => (
-  <span className={styles.spyStatus} data-active={active}>{children}</span>
+  <span className={styles.spyStatus} data-active={active}>
+    {children}
+  </span>
 );

@@ -23,8 +23,8 @@ export const GameScene: React.FC = () => {
   const DashboardComponent = getDashboardComponent(currentRole, currentScene, gameData);
 
   const BoardComponent = React.useMemo(() => {
-    return getBoardComponent(currentRole);
-  }, [currentRole]);
+    return getBoardComponent(currentRole, currentScene);
+  }, [currentRole, currentScene]);
 
   const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
 

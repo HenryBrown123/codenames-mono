@@ -9,7 +9,7 @@ const PlayerContext = createContext<PlayerContextValue | undefined>(undefined);
 
 export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);
-  
+
   return (
     <PlayerContext.Provider value={{ currentPlayerId, setCurrentPlayerId }}>
       {children}

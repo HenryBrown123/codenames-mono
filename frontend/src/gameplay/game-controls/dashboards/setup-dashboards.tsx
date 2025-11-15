@@ -5,6 +5,7 @@ import { useGameDataRequired } from "../../game-data/providers";
 import { useGameActions } from "../../game-actions";
 import { ActionButton } from "../../shared/components";
 import { usePlayerScene } from "../../game-scene";
+import { TeamSymbolHeader } from "./team-symbol-header";
 import {
   TerminalSection,
   TerminalCommand,
@@ -153,14 +154,33 @@ export const LobbyDashboard: React.FC<{ messageText?: string }> = ({ messageText
  * Generic waiting dashboard
  */
 export const WaitingDashboard: React.FC<{ messageText?: string }> = ({ messageText }) => {
+  const { gameData } = useGameDataRequired();
+
   return (
     <>
       <div className={`${styles.container} mobile-only`} />
       <div className={styles.desktopContainer}>
-        <CenteredContent layoutId="dashboard-main">
-          <TerminalCommand>STANDBY MODE</TerminalCommand>
-          <TerminalOutput>{messageText || "Waiting for orders..."}</TerminalOutput>
-        </CenteredContent>
+        {gameData.playerContext?.teamName && gameData.playerContext?.role ? (
+          <>
+            <TerminalSection layoutId="waiting-header">
+              <TeamSymbolHeader
+                teamName={gameData.playerContext.teamName}
+                role={gameData.playerContext.role as any}
+                playerName={gameData.playerContext.playerName}
+              />
+            </TerminalSection>
+            <CenteredContent layoutId="waiting-message">
+              <TerminalCommand>STANDBY MODE</TerminalCommand>
+              <TerminalOutput>{messageText || "Waiting for orders..."}</TerminalOutput>
+            </CenteredContent>
+            <div />
+          </>
+        ) : (
+          <CenteredContent layoutId="waiting-message">
+            <TerminalCommand>STANDBY MODE</TerminalCommand>
+            <TerminalOutput>{messageText || "Waiting for orders..."}</TerminalOutput>
+          </CenteredContent>
+        )}
       </div>
     </>
   );
@@ -170,14 +190,33 @@ export const WaitingDashboard: React.FC<{ messageText?: string }> = ({ messageTe
  * Spectator dashboard
  */
 export const SpectatorDashboard: React.FC<{ messageText?: string }> = ({ messageText }) => {
+  const { gameData } = useGameDataRequired();
+
   return (
     <>
       <div className={`${styles.container} mobile-only`} />
       <div className={styles.desktopContainer}>
-        <CenteredContent layoutId="dashboard-main">
-          <TerminalCommand>OBSERVER MODE</TerminalCommand>
-          <TerminalOutput>{messageText || "Monitoring field operations..."}</TerminalOutput>
-        </CenteredContent>
+        {gameData.playerContext?.teamName && gameData.playerContext?.role ? (
+          <>
+            <TerminalSection layoutId="spectator-header">
+              <TeamSymbolHeader
+                teamName={gameData.playerContext.teamName}
+                role={gameData.playerContext.role as any}
+                playerName={gameData.playerContext.playerName}
+              />
+            </TerminalSection>
+            <CenteredContent layoutId="spectator-message">
+              <TerminalCommand>OBSERVER MODE</TerminalCommand>
+              <TerminalOutput>{messageText || "Monitoring field operations..."}</TerminalOutput>
+            </CenteredContent>
+            <div />
+          </>
+        ) : (
+          <CenteredContent layoutId="spectator-message">
+            <TerminalCommand>OBSERVER MODE</TerminalCommand>
+            <TerminalOutput>{messageText || "Monitoring field operations..."}</TerminalOutput>
+          </CenteredContent>
+        )}
       </div>
     </>
   );

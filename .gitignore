@@ -59,3 +59,7 @@
 **/*.sqlite
 **/*.sqlite3
 **/*.db
+backend/test/manual/play-moves-quiet.ts
+backend/test/manual/play-moves.ts
+PLAY_CODENAMES.md
+MULTI_DEVICE_NEXT_STEPS.md

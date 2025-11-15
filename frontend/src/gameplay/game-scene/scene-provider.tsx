@@ -36,7 +36,13 @@ export const PlayerSceneProvider: React.FC<PlayerSceneProviderProps> = ({
   onTurnComplete,
 }) => {
   const { gameData } = useGameDataRequired();
-  const currentRole = gameData.playerContext?.role || PLAYER_ROLE.NONE;
+
+  // During SETUP phase, everyone is NONE (no roles assigned yet)
+  const roundStatus = gameData.currentRound?.status;
+  const currentRole = roundStatus === "SETUP"
+    ? PLAYER_ROLE.NONE
+    : (gameData.playerContext?.role || PLAYER_ROLE.NONE);
+
   const { setViewMode } = useViewMode();
 
   const stateMachine = useMemo(() => getStateMachine(currentRole), [currentRole]);

@@ -70,6 +70,7 @@ export const useMakeGuessMutation = (
 
   return useMutation({
     mutationFn: async ({ cardWord, roundNumber }) => {
+      console.log("[useMakeGuessMutation] currentPlayerId:", currentPlayerId);
       if (!currentPlayerId) {
         throw new Error("Player ID is required to make guess");
       }

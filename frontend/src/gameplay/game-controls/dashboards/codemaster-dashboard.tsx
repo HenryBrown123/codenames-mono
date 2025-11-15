@@ -1,9 +1,9 @@
 import React from "react";
-import { motion } from "framer-motion";
 import { CodeWordInput } from "./codemaster-input";
 import { useGameActions } from "../../game-actions";
-import { useTurn } from "../../game-data/providers";
+import { useGameDataRequired, useTurn } from "../../game-data/providers";
 import { useViewMode } from "../../game-board/view-mode/view-mode-context";
+import { TeamSymbolHeader } from "./team-symbol-header";
 import {
   TerminalSection,
   TerminalPrompt,
@@ -18,7 +18,6 @@ import {
   SpyStatus,
   MiddleSection,
   CenteredContent,
-  PlayerInfoLayout,
 } from "./terminal-components";
 
 import styles from "./codemaster-dashboard.module.css";
@@ -35,6 +34,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
   onOpenCluePanel,
   messageText,
 }) => {
+  const { gameData } = useGameDataRequired();
   const { giveClue, actionState } = useGameActions();
   const { activeTurn } = useTurn();
   const { viewMode, toggleSpymasterViewMode } = useViewMode();
@@ -57,11 +57,19 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
     return (
       <>
         <div className={`${styles.container} mobile-only`} />
-        <div className="desktop-only">
-          <CenteredContent layoutId="dashboard-main">
+        <div className={styles.desktopContainer}>
+          <TerminalSection layoutId="codemaster-header">
+            <TeamSymbolHeader
+              teamName={gameData.playerContext?.teamName || ""}
+              role="CODEMASTER"
+              playerName={gameData.playerContext?.playerName}
+            />
+          </TerminalSection>
+          <CenteredContent layoutId="codemaster-waiting">
             <TerminalCommand>MISSION LOG</TerminalCommand>
             <TerminalOutput>Waiting for operative turn...</TerminalOutput>
           </CenteredContent>
+          <div />
         </div>
       </>
     );
@@ -77,6 +85,9 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
 
   const isARMode = viewMode === "spymaster";
 
+  // Check if this codemaster is for the active team
+  const isActiveTeam = gameData.playerContext?.teamName === activeTurn?.teamName;
+
   return (
     <>
       <div className={`${styles.container} mobile-only`}>
@@ -90,83 +101,30 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
           </label>
         </div>
 
-        <div className={styles.transmitSection}>
-          <button
-            className={styles.transmitButton}
-            onClick={onOpenCluePanel || (() => {})}
-            disabled={actionState.status === "loading"}
-          >
-            {actionState.status === "loading" ? "TRANSMITTING..." : "TRANSMIT CLUE"}
-          </button>
-        </div>
+        {isActiveTeam && (
+          <div className={styles.transmitSection}>
+            <button
+              className={styles.transmitButton}
+              onClick={onOpenCluePanel || (() => {})}
+              disabled={actionState.status === "loading"}
+            >
+              {actionState.status === "loading" ? "TRANSMITTING..." : "TRANSMIT CLUE"}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className={styles.desktopContainer}>
-        <TerminalSection layoutId="dashboard-main">
-          <PlayerInfoLayout>
-            {/* Team Symbol */}
-            <motion.div
-              className={styles.symbolContainer}
-              initial={{ opacity: 0.7 }}
-              animate={{
-                opacity: [0.7, 1, 0.7],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            >
-              {(() => {
-                // Try both lowercase and capitalized versions
-                const teamLower = activeTurn.teamName.toLowerCase();
-                const isRed = teamLower === "red" || activeTurn.teamName === "Team Red";
-                const isBlue = teamLower === "blue" || activeTurn.teamName === "Team Blue";
-
-                const symbol = isRed ? "◇" : isBlue ? "□" : "○";
-                const color = isRed ? "#ff3333" : isBlue ? "#00ddff" : "#aaaaaa";
-
-                return (
-                  <>
-                    {/* Shadow depression */}
-                    <div className={styles.symbolShadow}>{symbol}</div>
-                    {/* Crisp LED symbol */}
-                    <div
-                      className={styles.symbolLED}
-                      style={{
-                        color: color,
-                        textShadow: `0 0 8px ${color}`,
-                      }}
-                    >
-                      {symbol}
-                    </div>
-                    {/* Inner glow */}
-                    <div
-                      className={styles.symbolGlow}
-                      style={{
-                        textShadow: `0 0 4px ${color}`,
-                      }}
-                    >
-                      {symbol}
-                    </div>
-                  </>
-                );
-              })()}
-            </motion.div>
-
-            {/* Team Info */}
-            <div className={styles.teamInfo}>
-              <div className={styles.teamTitle}>
-                <span className={styles.teamName}>{activeTurn.teamName.toUpperCase()}</span>
-              </div>
-              <div className={styles.teamRole}>CODEMASTER</div>
-              <div className={styles.teamDivider} />
-            </div>
-          </PlayerInfoLayout>
+        <TerminalSection layoutId="codemaster-header">
+          <TeamSymbolHeader
+            teamName={gameData.playerContext?.teamName || ""}
+            role="CODEMASTER"
+            playerName={gameData.playerContext?.playerName}
+          />
         </TerminalSection>
 
         <MiddleSection>
-          <TerminalSection layoutId="dashboard-goggles">
+          <TerminalSection layoutId="codemaster-goggles">
             <TerminalCommand>SPY GOGGLES</TerminalCommand>
             <SpyGogglesContainer>
               <SpyGogglesText>Toggle enhanced vision</SpyGogglesText>
@@ -182,16 +140,18 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
           </TerminalSection>
         </MiddleSection>
 
-        <TerminalSection layoutId="dashboard-actions">
-          <TerminalCommand>ACTION</TerminalCommand>
-          <CodeWordInput
-            codeWord=""
-            numberOfCards={null}
-            isEditable={true}
-            isLoading={actionState.status === "loading"}
-            onSubmit={handleDesktopSubmit}
-          />
-        </TerminalSection>
+        {isActiveTeam && (
+          <TerminalSection layoutId="codemaster-actions">
+            <TerminalCommand>ACTION</TerminalCommand>
+            <CodeWordInput
+              codeWord=""
+              numberOfCards={null}
+              isEditable={true}
+              isLoading={actionState.status === "loading"}
+              onSubmit={handleDesktopSubmit}
+            />
+          </TerminalSection>
+        )}
       </div>
     </>
   );

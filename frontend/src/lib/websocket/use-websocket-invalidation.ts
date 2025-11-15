@@ -19,110 +19,79 @@ export const useWebSocketInvalidation = (gameId: string | null) => {
 
     console.log(`Setting up WebSocket event listeners for game: ${gameId}`);
 
-    // Helper to invalidate game data queries
-    const invalidateGameData = () => {
-      console.log(`Invalidating gameData queries for game: ${gameId}`);
-      queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
-    };
-
-    // Helper to invalidate game events
-    const invalidateGameEvents = () => {
-      console.log(`Invalidating game-events queries for game: ${gameId}`);
-      queryClient.invalidateQueries({ queryKey: ["game-events", gameId] });
-    };
-
-    // Helper to invalidate lobby data
-    const invalidateLobby = () => {
-      console.log(`Invalidating lobby queries for game: ${gameId}`);
-      queryClient.invalidateQueries({ queryKey: ["lobby", gameId] });
-    };
-
-    // Helper to invalidate players
-    const invalidatePlayers = () => {
-      console.log(`Invalidating players queries for game: ${gameId}`);
-      queryClient.invalidateQueries({ queryKey: ["players", gameId] });
+    // Helper to invalidate ALL queries (for now - can narrow down later)
+    const invalidateAllQueries = () => {
+      console.log(`Invalidating ALL queries for game: ${gameId}`);
+      queryClient.invalidateQueries();
     };
 
     // Lobby events
     const handlePlayerJoined = (payload: EventPayload) => {
       console.log("Player joined event received:", payload);
-      invalidatePlayers();
-      invalidateLobby();
+      invalidateAllQueries();
     };
 
     const handlePlayerLeft = (payload: EventPayload) => {
       console.log("Player left event received:", payload);
-      invalidatePlayers();
-      invalidateLobby();
+      invalidateAllQueries();
     };
 
     const handlePlayerUpdated = (payload: EventPayload) => {
       console.log("Player updated event received:", payload);
-      invalidatePlayers();
-      invalidateLobby();
+      invalidateAllQueries();
     };
 
     const handleGameStarted = (payload: EventPayload) => {
       console.log("Game started event received:", payload);
-      invalidateGameData();
-      invalidateLobby();
-      invalidateGameEvents();
+      invalidateAllQueries();
     };
 
     // Round events
     const handleRoundCreated = (payload: EventPayload) => {
       console.log("Round created event received:", payload);
-      invalidateGameData();
-      invalidateGameEvents();
+      invalidateAllQueries();
     };
 
     const handleRoundStarted = (payload: EventPayload) => {
       console.log("Round started event received:", payload);
-      invalidateGameData();
-      invalidateGameEvents();
+      invalidateAllQueries();
     };
 
     const handleCardsDealt = (payload: EventPayload) => {
       console.log("Cards dealt event received:", payload);
-      invalidateGameData();
-      invalidateGameEvents();
+      invalidateAllQueries();
     };
 
     const handleRoundEnded = (payload: EventPayload) => {
       console.log("Round ended event received:", payload);
-      invalidateGameData();
-      invalidateGameEvents();
+      invalidateAllQueries();
     };
 
     // Turn events
     const handleClueGiven = (payload: EventPayload) => {
       console.log("Clue given event received:", payload);
-      invalidateGameData();
-      invalidateGameEvents();
+      invalidateAllQueries();
     };
 
     const handleGuessMade = (payload: EventPayload) => {
       console.log("Guess made event received:", payload);
-      invalidateGameData();
-      invalidateGameEvents();
+      invalidateAllQueries();
     };
 
     const handleTurnEnded = (payload: EventPayload) => {
       console.log("Turn ended event received:", payload);
-      invalidateGameData();
-      invalidateGameEvents();
+      invalidateAllQueries();
     };
 
     // Game events
     const handleGameEnded = (payload: EventPayload) => {
       console.log("Game ended event received:", payload);
-      invalidateGameData();
-      invalidateGameEvents();
+      invalidateAllQueries();
     };
 
     const handleGameUpdated = (payload: EventPayload) => {
       console.log("Game updated event received:", payload);
-      invalidateGameData();
+      invalidateAllQueries();
     };
 
     // Register all event listeners

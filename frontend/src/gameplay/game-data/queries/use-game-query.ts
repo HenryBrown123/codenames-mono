@@ -48,6 +48,7 @@ interface GameStateApiResponse {
         }>;
       } | null;
       playerContext: {
+        publicId: string;
         playerName: string;
         teamName: string;
         role: string;
@@ -97,6 +98,7 @@ function transformApiResponseToGameData(apiResponse: GameStateApiResponse): Game
       : null,
     playerContext: game.playerContext
       ? {
+          publicId: game.playerContext.publicId,
           playerName: game.playerContext.playerName,
           teamName: game.playerContext.teamName,
           role: game.playerContext.role as any, // Will be validated by backend

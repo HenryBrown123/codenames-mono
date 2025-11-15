@@ -53,6 +53,7 @@ export interface GameData {
     }>;
   } | null;
   playerContext: {
+    publicId: string;
     playerName: string;
     teamName: string;
     role: PlayerRole;
