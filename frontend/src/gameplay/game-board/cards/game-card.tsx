@@ -28,7 +28,7 @@ const CoverCard = memo<{ teamType: string; variant: CardVisibilityState; cardInd
     // Range: 2 to 5 degrees, randomly positive or negative
     const randomValue = ((cardIndex * 37) % 101) / 100; // 0 to 1
     const magnitude = 2 + randomValue * 3; // 2 to 5 degrees
-    const direction = ((cardIndex * 17) % 2) === 0 ? 1 : -1; // Randomly flip sign
+    const direction = (cardIndex * 17) % 2 === 0 ? 1 : -1; // Randomly flip sign
     const finalRotation = magnitude * direction;
 
     return (
@@ -42,7 +42,14 @@ const CoverCard = memo<{ teamType: string; variant: CardVisibilityState; cardInd
         animate={
           shouldShow
             ? { x: 0, y: 0, rotate: finalRotation, opacity: 1, scale: 1 }
-            : { x: "-50vw", y: "-80vh", rotate: -25, opacity: 0, scale: 0.8, transition: { duration: 0 } }
+            : {
+                x: "-50vw",
+                y: "-80vh",
+                rotate: -25,
+                opacity: 0,
+                scale: 0.8,
+                transition: { duration: 0 },
+              }
         }
         transition={{
           type: "spring",
@@ -60,13 +67,13 @@ const CoverCard = memo<{ teamType: string; variant: CardVisibilityState; cardInd
         {/* Team symbol with embossed effect - clean layers */}
         {(() => {
           const symbols = {
-            red: '◇',
-            blue: '□',
-            neutral: '○',
-            assassin: '☠',
-            green: '🌿',
+            red: "◇",
+            blue: "□",
+            neutral: "○",
+            assassin: "☠",
+            green: "🌿",
           };
-          const symbol = symbols[teamType as keyof typeof symbols] || '●';
+          const symbol = symbols[teamType as keyof typeof symbols] || "●";
 
           return (
             <>

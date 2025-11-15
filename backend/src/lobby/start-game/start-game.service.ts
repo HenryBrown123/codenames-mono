@@ -66,10 +66,7 @@ export const startGameService = (dependencies: ServiceDependencies) => {
     }
 
     const result = await dependencies.lobbyHandler(async (lobbyOps) => {
-      const updatedGame = await lobbyOps.updateGameStatus(
-        lobby._id,
-        GAME_STATE.IN_PROGRESS,
-      );
+      const updatedGame = await lobbyOps.updateGameStatus(lobby._id, GAME_STATE.IN_PROGRESS);
 
       if (updatedGame.status !== GAME_STATE.IN_PROGRESS) {
         throw new Error(
@@ -78,7 +75,7 @@ export const startGameService = (dependencies: ServiceDependencies) => {
       }
 
       return {
-        success: true,
+        success: true as const,
         _id: updatedGame._id,
         publicId: updatedGame.public_id,
         status: updatedGame.status,

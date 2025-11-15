@@ -6,10 +6,7 @@ import type { GameplayOperations } from "../gameplay-actions";
 import { complexProperties } from "../state/gameplay-state.helpers";
 import { GameEventsEmitter } from "@backend/common/websocket";
 
-import {
-  validateClueWord,
-  validate as checkClueGivingRules,
-} from "./give-clue.rules";
+import { validateClueWord, validate as checkClueGivingRules } from "./give-clue.rules";
 
 /**
  * Input parameters for giving a clue
@@ -134,7 +131,7 @@ export type GiveClueResult =
 export type GiveClueDependencies = {
   getGameState: GameplayStateProvider;
   gameplayHandler: TransactionalHandler<GameplayOperations>;
-  getTurnState: TurnStateProvider; // ← Add turn state provider
+  getTurnState: TurnStateProvider;
 };
 
 /**
@@ -144,9 +141,7 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
   /**
    * Helper to get complete turn data for API response
    */
-  const getCompleteTurnData = async (
-    turnPublicId: string,
-  ): Promise<CompleteTurnData> => {
+  const getCompleteTurnData = async (turnPublicId: string): Promise<CompleteTurnData> => {
     const turnData = await dependencies.getTurnState(turnPublicId);
     if (!turnData) {
       throw new Error(`Failed to fetch turn data for ${turnPublicId}`);
@@ -167,11 +162,7 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
   };
 
   return async (input: GiveClueInput): Promise<GiveClueResult> => {
-    const result = await dependencies.getGameState(
-      input.gameId,
-      input.userId,
-      input.playerId,
-    );
+    const result = await dependencies.getGameState(input.gameId, input.userId, input.playerId);
 
     if (result.status === "game-not-found") {
       return {
@@ -276,11 +267,7 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
     }
 
     const operationResult = await dependencies.gameplayHandler(async (ops) => {
-      return await ops.giveClue(
-        validationResult.data,
-        input.word,
-        input.targetCardCount,
-      );
+      return await ops.giveClue(validationResult.data, input.word, input.targetCardCount);
     });
 
     // ← CRITICAL FIX: Fetch complete turn data after transaction completes
