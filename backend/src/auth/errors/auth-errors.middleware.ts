@@ -49,7 +49,7 @@ export const authErrorHandler = (
       stack: err.stack,
       error: err.message,
       cause: err.cause,
-      req: req,
+      reqBody: req.body,
     };
 
     errorResponse.details = errorDetails;

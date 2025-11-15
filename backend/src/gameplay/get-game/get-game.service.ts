@@ -223,6 +223,9 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
         }
       : null,
   };
+
+  console.log("[transformGameState] playerContext being sent:", JSON.stringify(result.playerContext, null, 2));
+  return result;
 }
 
 /**
