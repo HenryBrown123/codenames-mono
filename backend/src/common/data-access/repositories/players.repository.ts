@@ -159,6 +159,7 @@ export const findPlayersByGameId =
   async (gameId) => {
     const players = await db
       .selectFrom("players")
+      .leftJoin("users", "players.user_id", "users.id")
       .leftJoin("player_round_roles as latest_prr", (join) =>
         join
           .onRef("latest_prr.player_id", "=", "players.id")
@@ -176,6 +177,7 @@ export const findPlayersByGameId =
       .select([
         ...playerResultColumns,
         teamNameLookup,
+        "users.username",
         "player_roles.role_name",
       ])
       .execute();
@@ -190,6 +192,7 @@ export const findPlayersByGameId =
       statusId: player.status_id,
       publicName: player.public_name,
       role: parseRoleName(player.role_name),
+      username: player.username || undefined,
     }));
   };
 

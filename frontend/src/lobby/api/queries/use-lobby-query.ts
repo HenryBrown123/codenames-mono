@@ -7,6 +7,7 @@ export interface LobbyPlayer {
   name: string;
   teamName: string;
   userId?: number;  // For multi-device: identifies which user owns this player
+  username?: string;  // Username of the player's owner
 }
 
 export interface LobbyTeam {
@@ -20,6 +21,12 @@ export interface LobbyData {
   gameType: string;
   teams: LobbyTeam[];
   canModifyGame: boolean;
+  playerContext: {
+    publicId: string;
+    playerName: string;
+    teamName: string;
+    role: string;
+  } | null;
 }
 
 interface GetLobbyStateResponse {

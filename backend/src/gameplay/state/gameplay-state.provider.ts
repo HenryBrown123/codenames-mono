@@ -23,7 +23,7 @@ import { CardsFinder, CardResult } from "@backend/common/data-access/repositorie
 
 import { TurnsFinder } from "@backend/common/data-access/repositories/turns.repository";
 
-import { PlayerRole, PLAYER_ROLE, GAME_TYPE } from "@codenames/shared/types";
+import { PlayerRole, PLAYER_ROLE, GAME_TYPE, GAME_STATE } from "@codenames/shared/types";
 
 import { GameAggregate } from "./gameplay-state.types";
 
@@ -83,6 +83,22 @@ const determinePlayerContext = (
       statusId: specificPlayer.statusId,
       publicName: specificPlayer.publicName,
       role: specificPlayer.role, // Use assigned role, not calculated!
+    };
+  }
+
+  // For multi-device mode, always return the user's player context if they have one
+  if (gameType === GAME_TYPE.MULTI_DEVICE && userPlayers.length > 0) {
+    const userPlayer = userPlayers[0]; // User can only have 1 player in multi-device
+    return {
+      _id: userPlayer._id,
+      publicId: userPlayer.publicId,
+      _userId: userPlayer._userId,
+      _gameId: userPlayer._gameId,
+      _teamId: userPlayer._teamId,
+      teamName: userPlayer.teamName,
+      statusId: userPlayer.statusId,
+      publicName: userPlayer.publicName,
+      role: userPlayer.role,
     };
   }
 
@@ -198,6 +214,7 @@ export const gameplayStateProvider = (
           _id: game._id,
           public_id: game.public_id,
           status: game.status,
+          game_type: game.game_type,
           game_format: game.game_format,
           teams: teamsWithPlayers,
           currentRound: null,
@@ -234,6 +251,7 @@ export const gameplayStateProvider = (
         _id: game._id,
         public_id: game.public_id,
         status: game.status,
+        game_type: game.game_type,
         game_format: game.game_format,
         teams: teamsWithPlayers,
         currentRound: {

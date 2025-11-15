@@ -31,6 +31,7 @@ export type PublicGameStateResponse = {
       publicId: string;
       name: string;
       isActive: boolean;
+      username?: string;
     }[];
   }[];
   currentRound: {
@@ -56,6 +57,7 @@ export type PublicGameStateResponse = {
     }[];
   } | null;
   playerContext: {
+    publicId: string;
     playerName: string;
     teamName: string;
     role: PlayerRole;
@@ -168,7 +170,7 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
   return {
     publicId: gameData.public_id,
     status: gameData.status,
-    gameType: "SINGLE_DEVICE", // This could come from gameData if you add it
+    gameType: gameData.game_type,
     gameFormat: gameData.game_format,
     createdAt: gameData.createdAt,
 
@@ -179,6 +181,7 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
         publicId: player.publicId,
         name: player.publicName,
         isActive: player.statusId === 1,
+        username: player.username,
       })),
     })),
 
@@ -213,6 +216,7 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
 
     playerContext: gameData.playerContext
       ? {
+          publicId: gameData.playerContext.publicId,
           playerName: gameData.playerContext.publicName,
           teamName: gameData.playerContext.teamName,
           role: gameData.playerContext.role,

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { GAME_STATE, GAME_FORMAT, ROUND_STATE, PLAYER_ROLE } from "@codenames/shared/types";
+import { GAME_STATE, GAME_FORMAT, GAME_TYPE, ROUND_STATE, PLAYER_ROLE } from "@codenames/shared/types";
 
 /**
  * Schema for validating player data
@@ -101,6 +101,7 @@ export const roundSchema = z.object({
 export const playerContextSchema = z.object({
   _userId: z.number().int().positive(),
   _id: z.number().int().positive(),
+  publicId: z.string(),
   _teamId: z.number().int().positive(),
   username: z.string().optional().nullable(),
   publicName: z.string(),
@@ -138,6 +139,7 @@ export const gameplayBaseSchema = z.object({
     GAME_STATE.ABANDONED,
     GAME_STATE.PAUSED,
   ]),
+  game_type: z.enum([GAME_TYPE.SINGLE_DEVICE, GAME_TYPE.MULTI_DEVICE]),
   game_format: z.enum([GAME_FORMAT.BEST_OF_THREE, GAME_FORMAT.QUICK, GAME_FORMAT.ROUND_ROBIN]),
   teams: z.array(teamSchema),
   currentRound: currentRoundSchema.optional().nullable(),
