@@ -9,7 +9,9 @@
     "moduleResolution": "bundler",
     "paths": {
       "@backend/test/*": ["test/*"],
-      "@backend/common/*": ["src/common/*"]
+      "@backend/common/*": ["src/common/*"],
+      "@backend/gameplay/*": ["src/gameplay/*"],
+      "@backend/ai/*": ["src/ai/*"]
     }
   },
   "include": ["test/**/*", "src/**/*", "src/**/*.json"],

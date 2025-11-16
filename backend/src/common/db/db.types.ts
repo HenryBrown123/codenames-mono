@@ -9,6 +9,18 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
   : ColumnType<T, T | undefined, T>;
 
+export type Json = JsonValue;
+
+export type JsonArray = JsonValue[];
+
+export type JsonObject = {
+  [x: string]: JsonValue | undefined;
+};
+
+export type JsonPrimitive = boolean | number | string | null;
+
+export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
+
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 export interface Cards {
@@ -36,6 +48,27 @@ export interface Decks {
   word: string;
 }
 
+export interface GameEvents {
+  /**
+   * Optional reference to specific card if event is card-specific
+   */
+  card_id: number | null;
+  created_at: Generated<Timestamp>;
+  /**
+   * Type of event: deal, select, reveal_colors, hide_colors, etc.
+   */
+  event_type: string;
+  game_id: number;
+  id: Generated<number>;
+  /**
+   * Additional event-specific data (team name, player name, etc.)
+   */
+  metadata: Json | null;
+  player_id: number | null;
+  public_id: string;
+  round_id: number | null;
+}
+
 export interface Games {
   created_at: Generated<Timestamp>;
   game_format: string;
@@ -50,18 +83,6 @@ export interface Games {
   public_id: string;
   status_id: number;
   updated_at: Generated<Timestamp | null>;
-}
-
-export interface GameEvents {
-  id: Generated<number>;
-  public_id: string;
-  game_id: number;
-  event_type: string;
-  card_id: number | null;
-  player_id: number | null;
-  round_id: number | null;
-  metadata: unknown | null;
-  created_at: Generated<Timestamp>;
 }
 
 export interface GameStatus {
@@ -93,6 +114,7 @@ export interface PlayerRoundRoles {
 export interface Players {
   game_id: number;
   id: Generated<number>;
+  is_ai: Generated<boolean>;
   /**
    * Public UUID identifier for API responses
    */
