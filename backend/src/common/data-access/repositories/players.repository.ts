@@ -51,6 +51,7 @@ export type PlayerInput = {
   publicName: string;
   teamId: number;
   statusId: number;
+  isAi?: boolean;
 };
 
 export type ModifyPlayerInput = {
@@ -420,6 +421,7 @@ export const addPlayers =
       public_name: player.publicName,
       team_id: player.teamId,
       status_id: player.statusId,
+      is_ai: player.isAi ?? false,
       updated_at: new Date(),
     }));
 

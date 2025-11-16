@@ -329,6 +329,8 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
    * Handle clue given event - check if AI codebreakers need to guess
    */
   const handleClueGiven = async (payload: GameplayEventPayload) => {
+    console.log("[AI] Received CLUE_GIVEN event:", payload);
+
     // Small delay
     await randomDelay(500, 1000);
 
@@ -339,6 +341,8 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
       .where("public_id", "=", payload.turnId!)
       .where("status", "=", "ACTIVE")
       .executeTakeFirst();
+
+    console.log("[AI] Turn found:", turn);
 
     if (!turn) {
       return;
@@ -356,7 +360,10 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
       .limit(1)
       .executeTakeFirst();
 
+    console.log("[AI] AI Codebreaker found:", aiCodebreaker);
+
     if (!aiCodebreaker) {
+      console.log("[AI] No AI codebreaker found for team", turn.team_id);
       return;
     }
 
@@ -368,6 +375,7 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
       roundNumber: payload.roundNumber!,
     };
 
+    console.log("[AI] About to make guess with context:", context);
     await aiMakeGuess(context);
   };
 

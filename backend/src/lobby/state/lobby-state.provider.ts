@@ -84,6 +84,7 @@ export const lobbyStateProvider = (
       status: game.status,
       game_format: game.game_format,
       gameType: game.game_type,
+      aiMode: game.ai_mode,
       teams: teamsWithPlayers,
       currentRound: currentRound ? {
         _id: currentRound._id,

@@ -70,6 +70,7 @@ export interface GameEvents {
 }
 
 export interface Games {
+  ai_mode: Generated<boolean>;
   created_at: Generated<Timestamp>;
   game_format: string;
   game_type: string;

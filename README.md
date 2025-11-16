@@ -561,108 +561,109 @@ Frontend and backend extend these base types with their specific requirements.
 
 ```
 .
-|-- backend
-|   `-- src
-|       |-- ai
-|       |   |-- ai-player
-|       |   |-- events
-|       |   |-- llm
-|       |   `-- strategy
-|       |-- auth
-|       |   |-- create-guest-session
-|       |   `-- errors
-|       |-- common
-|       |   |-- config
-|       |   |-- data
-|       |   |   |-- decks
-|       |   |   `-- enums
-|       |   |-- data-access
-|       |   |   `-- repositories
-|       |   |-- db
-|       |   |-- http-middleware
-|       |   `-- websocket
-|       |-- gameplay
-|       |   |-- errors
-|       |   |-- get-events
-|       |   |-- get-game
-|       |   |-- get-players
-|       |   |-- get-turn
-|       |   |-- give-clue
-|       |   |-- make-guess
-|       |   `-- state
-|       |-- lobby
-|       |   |-- add-players
-|       |   |-- assign-roles
-|       |   |-- deal-cards
-|       |   |-- errors
-|       |   |-- modify-players
-|       |   |-- new-round
-|       |   |-- remove-players
-|       |   |-- start-game
-|       |   |-- start-round
-|       |   `-- state
-|       |-- setup
-|       |   |-- create-new-game
-|       |   `-- errors
-|       `-- users
-|-- frontend
-|   |-- public
-|   `-- src
-|       |-- app
-|       |   `-- routes
-|       |       `-- page-layout
-|       |-- dev
-|       |-- game-access
-|       |   |-- api
-|       |   |   |-- endpoints
-|       |   |   `-- query-hooks
-|       |   `-- pages
-|       |-- gameplay
-|       |   |-- animations
-|       |   |-- device-mode
-|       |   |-- game-actions
-|       |   |   `-- api
-|       |   |-- game-board
-|       |   |   |-- boards
-|       |   |   |-- cards
-|       |   |   |   `-- overlays
-|       |   |   `-- view-mode
-|       |   |-- game-controls
-|       |   |   |-- dashboards
-|       |   |   `-- settings
-|       |   |-- game-data
-|       |   |   |-- events
-|       |   |   |-- providers
-|       |   |   `-- queries
-|       |   |-- game-over
-|       |   |-- game-scene
-|       |   |-- round-management
-|       |   |   `-- api
-|       |   `-- shared
-|       |       |-- components
-|       |       |   |-- action-button
-|       |       |   |-- error-message
-|       |       |   `-- loading-spinner
-|       |       `-- game-instructions
-|       |-- lib
-|       |   |-- auth
-|       |   `-- websocket
-|       |-- lobby
-|       |   `-- api
-|       |       |-- mutations
-|       |       `-- queries
-|       |-- sandbox
-|       |   `-- music-visualiser-animation
-|       |-- shared-types
-|       |-- style
-|       `-- types
-`-- shared
-    `-- src
-        |-- api
-        |   `-- modules
-        `-- types
+├── backend
+│   └── src
+│       ├── ai
+│       │   ├── ai-player
+│       │   ├── create-ai-bot
+│       │   ├── events
+│       │   ├── llm
+│       │   └── strategy
+│       ├── auth
+│       │   ├── create-guest-session
+│       │   └── errors
+│       ├── common
+│       │   ├── config
+│       │   ├── data
+│       │   │   ├── decks
+│       │   │   └── enums
+│       │   ├── data-access
+│       │   │   └── repositories
+│       │   ├── db
+│       │   ├── http-middleware
+│       │   └── websocket
+│       ├── gameplay
+│       │   ├── errors
+│       │   ├── get-events
+│       │   ├── get-game
+│       │   ├── get-players
+│       │   ├── get-turn
+│       │   ├── give-clue
+│       │   ├── make-guess
+│       │   └── state
+│       ├── lobby
+│       │   ├── add-players
+│       │   ├── assign-roles
+│       │   ├── deal-cards
+│       │   ├── errors
+│       │   ├── modify-players
+│       │   ├── new-round
+│       │   ├── remove-players
+│       │   ├── start-game
+│       │   ├── start-round
+│       │   └── state
+│       ├── setup
+│       │   ├── create-new-game
+│       │   └── errors
+│       └── users
+├── frontend
+│   ├── public
+│   └── src
+│       ├── app
+│       │   └── routes
+│       │       └── page-layout
+│       ├── dev
+│       ├── game-access
+│       │   ├── api
+│       │   │   ├── endpoints
+│       │   │   └── query-hooks
+│       │   └── pages
+│       ├── gameplay
+│       │   ├── animations
+│       │   ├── device-mode
+│       │   ├── game-actions
+│       │   │   └── api
+│       │   ├── game-board
+│       │   │   ├── boards
+│       │   │   ├── cards
+│       │   │   │   └── overlays
+│       │   │   └── view-mode
+│       │   ├── game-controls
+│       │   │   ├── dashboards
+│       │   │   └── settings
+│       │   ├── game-data
+│       │   │   ├── events
+│       │   │   ├── providers
+│       │   │   └── queries
+│       │   ├── game-over
+│       │   ├── game-scene
+│       │   ├── round-management
+│       │   │   └── api
+│       │   └── shared
+│       │       ├── components
+│       │       │   ├── action-button
+│       │       │   ├── error-message
+│       │       │   └── loading-spinner
+│       │       └── game-instructions
+│       ├── lib
+│       │   ├── auth
+│       │   └── websocket
+│       ├── lobby
+│       │   └── api
+│       │       ├── mutations
+│       │       └── queries
+│       ├── sandbox
+│       │   └── music-visualiser-animation
+│       ├── shared-types
+│       ├── style
+│       └── types
+└── shared
+    └── src
+        ├── api
+        │   └── modules
+        └── types
 
-101 directories
+102 directories
 ```
 
 ## Getting Started

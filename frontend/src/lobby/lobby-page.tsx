@@ -137,7 +137,7 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
   const totalPlayers =
     lobbyData.teams?.reduce((sum, team) => sum + (team.players?.length ?? 0), 0) ?? 0;
   const canStartGame =
-    totalPlayers >= 4 && lobbyData.teams?.every((team) => (team.players?.length ?? 0) >= 2);
+    lobbyData.aiMode || (totalPlayers >= 4 && lobbyData.teams?.every((team) => (team.players?.length ?? 0) >= 2));
 
   const handleQuickAdd = (teamName: string) => {
     const playerName = teamName === "Team Red" ? teamRedInput.trim() : teamBlueInput.trim();

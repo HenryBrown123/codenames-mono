@@ -4,6 +4,9 @@ import { lobbyHelpers } from "../state/lobby-state.helpers";
 import { GAME_STATE } from "@codenames/shared/types";
 import { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 import { GameEventsEmitter } from "@backend/common/websocket";
+import { createAIBotsForTeams } from "./start-game-ai-helper";
+import type { Kysely } from "kysely";
+import type { DB } from "@backend/common/db/db.types";
 
 export type GameStartSuccess = {
   _id: number;
@@ -22,6 +25,7 @@ export type GameStartResult = GameStartSuccess | GameStartError;
 export type ServiceDependencies = {
   lobbyHandler: TransactionalHandler<LobbyOperations>;
   getLobbyState: LobbyStateProvider;
+  db: Kysely<DB>;
 };
 
 export const startGameService = (dependencies: ServiceDependencies) => {
@@ -34,9 +38,6 @@ export const startGameService = (dependencies: ServiceDependencies) => {
       };
     }
 
-    const totalPlayers = lobbyHelpers.getTotalPlayerCount(lobby);
-    const teamCounts = lobbyHelpers.getTeamPlayerCounts(lobby);
-
     if (lobby.status !== "LOBBY") {
       return {
         success: false,
@@ -44,25 +45,31 @@ export const startGameService = (dependencies: ServiceDependencies) => {
       };
     }
 
-    if (totalPlayers < 4) {
-      return {
-        success: false,
-        error: "Cannot start game with less than 4 players",
-      };
-    }
+    // In AI mode, skip player count validation (AI bots will be added when starting rounds)
+    if (!lobby.aiMode) {
+      const totalPlayers = lobbyHelpers.getTotalPlayerCount(lobby);
+      const teamCounts = lobbyHelpers.getTeamPlayerCounts(lobby);
 
-    if (teamCounts.length < 2) {
-      return {
-        success: false,
-        error: "Cannot start game with less than 2 teams",
-      };
-    }
+      if (totalPlayers < 4) {
+        return {
+          success: false,
+          error: "Cannot start game with less than 4 players",
+        };
+      }
 
-    if (teamCounts.some((count) => count < 2)) {
-      return {
-        success: false,
-        error: "Each team must have at least 2 players",
-      };
+      if (teamCounts.length < 2) {
+        return {
+          success: false,
+          error: "Cannot start game with less than 2 teams",
+        };
+      }
+
+      if (teamCounts.some((count) => count < 2)) {
+        return {
+          success: false,
+          error: "Each team must have at least 2 players",
+        };
+      }
     }
 
     const result = await dependencies.lobbyHandler(async (lobbyOps) => {
@@ -81,6 +88,15 @@ export const startGameService = (dependencies: ServiceDependencies) => {
         status: updatedGame.status,
       };
     });
+
+    // Auto-fill with AI bots if in AI mode
+    if (result.success && lobby.aiMode) {
+      await createAIBotsForTeams({
+        lobby,
+        lobbyHandler: dependencies.lobbyHandler,
+        db: dependencies.db,
+      });
+    }
 
     // Emit WebSocket event for real-time multiplayer updates
     if (result.success) {

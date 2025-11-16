@@ -19,6 +19,7 @@ export interface LobbyData {
   publicId: string;
   status: string;
   gameType: string;
+  aiMode: boolean;
   teams: LobbyTeam[];
   canModifyGame: boolean;
   playerContext: {

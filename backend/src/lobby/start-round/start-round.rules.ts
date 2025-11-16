@@ -40,9 +40,16 @@ const startRoundValidationSchema = lobbyBaseSchema
     }
   )
   .refine(
-    (data) => data.teams.every((team) => team.players.length >= 2),
+    (data) => {
+      // In AI mode, skip player count validation (AI bots will be added later)
+      if (data.aiMode) {
+        return true;
+      }
+      // In normal mode, require at least 2 players per team
+      return data.teams.every((team) => team.players.length >= 2);
+    },
     {
-      message: "Each team must have at least 2 players",
+      message: "Each team must have at least 2 players (unless AI mode is enabled)",
       path: ["teams"],
     }
   )

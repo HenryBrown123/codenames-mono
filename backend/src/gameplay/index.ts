@@ -47,13 +47,13 @@ export const initialize = (
     db,
   });
 
-  const { controller: giveClueController } = giveClue({
+  const { controller: giveClueController, service: giveClueService } = giveClue({
     getGameState,
     gameplayHandler,
     getTurnState, // ← Pass turn state provider to give clue
   });
 
-  const { controller: makeGuessController } = makeGuess({
+  const { controller: makeGuessController, service: makeGuessService } = makeGuess({
     getGameState,
     gameplayHandler,
     getTurnState, // ← Pass turn state provider to make guess
@@ -86,4 +86,11 @@ export const initialize = (
 
   app.use("/api", router);
   app.use("/api", gameplayErrorHandler);
+
+  // Return services for AI integration
+  return {
+    giveClueService,
+    makeGuessService,
+    getGameState,
+  };
 };

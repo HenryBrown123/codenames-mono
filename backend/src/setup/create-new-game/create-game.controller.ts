@@ -36,6 +36,7 @@ export const createGameController =
         parsedReq.gameType,
         parsedReq.gameFormat,
         userId, // Pass user ID to create admin player
+        parsedReq.aiMode,
       );
 
       const response: CreateGameResponse = {

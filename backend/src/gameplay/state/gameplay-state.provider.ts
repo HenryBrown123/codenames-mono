@@ -216,6 +216,7 @@ export const gameplayStateProvider = (
           status: game.status,
           game_type: game.game_type,
           game_format: game.game_format,
+          aiMode: game.ai_mode,
           teams: teamsWithPlayers,
           currentRound: null,
           historicalRounds,
@@ -253,6 +254,7 @@ export const gameplayStateProvider = (
         status: game.status,
         game_type: game.game_type,
         game_format: game.game_format,
+        aiMode: game.ai_mode,
         teams: teamsWithPlayers,
         currentRound: {
           _id: latestRound._id,

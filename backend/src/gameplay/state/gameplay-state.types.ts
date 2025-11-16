@@ -141,6 +141,7 @@ export const gameplayBaseSchema = z.object({
   ]),
   game_type: z.enum([GAME_TYPE.SINGLE_DEVICE, GAME_TYPE.MULTI_DEVICE]),
   game_format: z.enum([GAME_FORMAT.BEST_OF_THREE, GAME_FORMAT.QUICK, GAME_FORMAT.ROUND_ROBIN]),
+  aiMode: z.boolean().default(false),
   teams: z.array(teamSchema),
   currentRound: currentRoundSchema.optional().nullable(),
   historicalRounds: z.array(historicalRoundSchema).optional().default([]),

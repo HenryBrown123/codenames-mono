@@ -38,9 +38,15 @@ const assignRolesValidationSchema = lobbyBaseSchema
     }
   )
   .refine(
-    (data) => data.teams.every((team) => team.players.length >= 2),
+    (data) => {
+      // In AI mode, skip player count validation (AI bots will be added during start round)
+      if (data.aiMode) {
+        return true;
+      }
+      return data.teams.every((team) => team.players.length >= 2);
+    },
     {
-      message: "Each team must have at least 2 players to assign roles",
+      message: "Each team must have at least 2 players to assign roles (unless AI mode is enabled)",
       path: ["teams"],
     }
   )

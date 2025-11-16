@@ -13,6 +13,7 @@ export const createGameRequestSchema = z
       GAME_FORMAT.BEST_OF_THREE,
       GAME_FORMAT.ROUND_ROBIN,
     ]),
+    aiMode: z.boolean().optional().default(false),
   })
   .strict();
 

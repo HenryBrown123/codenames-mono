@@ -23,6 +23,7 @@ export type PublicGameStateResponse = {
   status: string;
   gameType: string;
   gameFormat: string;
+  aiMode: boolean;
   createdAt: Date;
   teams: {
     name: string;
@@ -172,6 +173,7 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
     status: gameData.status,
     gameType: gameData.game_type,
     gameFormat: gameData.game_format,
+    aiMode: gameData.aiMode,
     createdAt: gameData.createdAt,
 
     teams: gameData.teams.map((team) => ({

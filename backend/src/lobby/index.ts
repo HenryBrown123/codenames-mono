@@ -58,6 +58,7 @@ export const initialize = (
   const lobbyStartGameService = startGameService({
     lobbyHandler,
     getLobbyState,
+    db,
   });
 
   const lobbyAddPlayersController = addPlayersController({

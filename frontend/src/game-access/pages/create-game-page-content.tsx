@@ -17,6 +17,7 @@ const CreateGamePageContent: React.FC = () => {
 
   const [gameType, setGameType] = useState<GameType>(GAME_TYPE.SINGLE_DEVICE);
   const [gameFormat, setGameFormat] = useState<GameFormat>(GAME_FORMAT.QUICK);
+  const [aiMode, setAiMode] = useState<boolean>(false);
 
   const handleCreateGame = () => {
     setIsExiting(true);
@@ -26,6 +27,7 @@ const CreateGamePageContent: React.FC = () => {
       const payload = {
         gameType,
         gameFormat,
+        aiMode,
       };
 
       createNewGame(payload, {
@@ -128,6 +130,35 @@ const CreateGamePageContent: React.FC = () => {
                       >
                         <span className={styles.buttonLabel}>BEST OF 3</span>
                         <span className={styles.buttonDesc}>First to 2 wins</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className={styles.divider} />
+
+                  <div className={styles.section}>
+                    <div className={styles.sectionHeader}>
+                      <span className={styles.prompt}>{">"}</span>
+                      <span className={styles.sectionTitle}>AI MODE</span>
+                    </div>
+                    <div className={styles.buttonGroup}>
+                      <button
+                        className={`${styles.optionButton} ${
+                          !aiMode ? styles.selected : ""
+                        }`}
+                        onClick={() => setAiMode(false)}
+                      >
+                        <span className={styles.buttonLabel}>OFF</span>
+                        <span className={styles.buttonDesc}>Players only</span>
+                      </button>
+                      <button
+                        className={`${styles.optionButton} ${
+                          aiMode ? styles.selected : ""
+                        }`}
+                        onClick={() => setAiMode(true)}
+                      >
+                        <span className={styles.buttonLabel}>ON</span>
+                        <span className={styles.buttonDesc}>Auto-fill with AI bots</span>
                       </button>
                     </div>
                   </div>

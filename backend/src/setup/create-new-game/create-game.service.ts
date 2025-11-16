@@ -49,11 +49,13 @@ export const createGameService = (dependencies: ServiceDependencies) => {
    * @param gameType - Type of game
    * @param gameFormat - Format of the game
    * @param userId - ID of the user creating the game
+   * @param aiMode - Whether to enable AI mode (allows starting with fewer players)
    */
   return async (
     gameType: GameType,
     gameFormat: GameFormat,
     userId: number,
+    aiMode: boolean = false,
   ): Promise<GameCreationResult> => {
     const publicId = await generateUniquePublicId();
 
@@ -70,6 +72,7 @@ export const createGameService = (dependencies: ServiceDependencies) => {
         publicId,
         gameType,
         gameFormat,
+        aiMode,
       });
 
       const teams = await setupOps.createTeams({

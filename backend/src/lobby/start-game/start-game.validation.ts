@@ -65,11 +65,13 @@ export type GameStartValidationResult =
  *
  * @param gameStatus - Current status of the game
  * @param players - List of players in the game
+ * @param aiMode - Whether AI mode is enabled (allows starting with fewer players)
  * @returns Validation result indicating if the game can be started and why not if applicable
  */
 export function validateGameCanBeStarted(
   gameStatus: string,
   players: PlayerResult[],
+  aiMode: boolean = false,
 ): GameStartValidationResult {
   // Validate game is in LOBBY state
   if (gameStatus !== "LOBBY") {
@@ -79,33 +81,36 @@ export function validateGameCanBeStarted(
     };
   }
 
-  // Validate minimum players
-  if (players.length < 4) {
-    return {
-      valid: false,
-      reason: "Cannot start game with less than 4 players",
-    };
-  }
+  // In AI mode, skip player count validation (AI bots will be added later)
+  if (!aiMode) {
+    // Validate minimum players
+    if (players.length < 4) {
+      return {
+        valid: false,
+        reason: "Cannot start game with less than 4 players",
+      };
+    }
 
-  // Get unique team IDs and ensure we have at least two teams
-  const teamIds = [...new Set(players.map((player) => player._teamId))];
-  if (teamIds.length < 2) {
-    return {
-      valid: false,
-      reason: "Cannot start game with less than 2 teams",
-    };
-  }
+    // Get unique team IDs and ensure we have at least two teams
+    const teamIds = [...new Set(players.map((player) => player._teamId))];
+    if (teamIds.length < 2) {
+      return {
+        valid: false,
+        reason: "Cannot start game with less than 2 teams",
+      };
+    }
 
-  // Ensure each team has at least 2 players
-  const playersPerTeam = teamIds.map(
-    (teamId) => players.filter((player) => player._teamId === teamId).length,
-  );
+    // Ensure each team has at least 2 players
+    const playersPerTeam = teamIds.map(
+      (teamId) => players.filter((player) => player._teamId === teamId).length,
+    );
 
-  if (playersPerTeam.some((count) => count < 2)) {
-    return {
-      valid: false,
-      reason: "Each team must have at least 2 players",
-    };
+    if (playersPerTeam.some((count) => count < 2)) {
+      return {
+        valid: false,
+        reason: "Each team must have at least 2 players",
+      };
+    }
   }
 
   // All validations passed

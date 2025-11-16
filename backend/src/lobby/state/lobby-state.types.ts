@@ -100,6 +100,7 @@ export const lobbyBaseSchema = z.object({
     GAME_FORMAT.ROUND_ROBIN,
   ]),
   gameType: z.enum([GAME_TYPE.SINGLE_DEVICE, GAME_TYPE.MULTI_DEVICE]),
+  aiMode: z.boolean().default(false),
   teams: z.array(teamSchema),
   currentRound: roundSchema.optional().nullable(),
   historicalRounds: z.array(historicalRoundSchema).optional().default([]),

@@ -29,6 +29,7 @@ export type GameData = {
   status: GameState;
   game_type: GameType;
   game_format: GameFormat;
+  ai_mode: boolean;
 };
 
 /** Input and result types */
@@ -36,6 +37,7 @@ export type GameInput = {
   publicId: string;
   gameType: GameType;
   gameFormat: GameFormat;
+  aiMode?: boolean;
 };
 
 export type GameResult = {
@@ -111,6 +113,7 @@ export const findGameByPublicId =
         "games.public_id",
         "games.game_type",
         "games.game_format",
+        "games.ai_mode",
         "game_status.status_name as status",
       ])
       .where("games.public_id", "=", publicId)
@@ -125,6 +128,7 @@ export const findGameByPublicId =
           status: gameStateSchema.parse(game.status),
           game_type: gameTypeSchema.parse(game.game_type),
           game_format: gameFormatSchema.parse(game.game_format),
+          ai_mode: game.ai_mode,
         }
       : null;
   };
@@ -145,6 +149,7 @@ export const findGameById =
         "games.public_id",
         "games.game_type",
         "games.game_format",
+        "games.ai_mode",
         "game_status.status_name as status",
       ])
       .where("games.id", "=", gameId)
@@ -159,6 +164,7 @@ export const findGameById =
           status: gameStateSchema.parse(game.status),
           game_type: gameTypeSchema.parse(game.game_type),
           game_format: gameFormatSchema.parse(game.game_format),
+          ai_mode: game.ai_mode,
         }
       : null;
   };
@@ -179,6 +185,7 @@ export const createGame =
         updated_at: now,
         game_type: gameInput.gameType,
         game_format: gameInput.gameFormat,
+        ai_mode: gameInput.aiMode ?? false,
       })
       .returning(["id", "created_at", "updated_at"])
       .executeTakeFirstOrThrow();
@@ -218,6 +225,7 @@ export const updateGameStatus =
         "public_id",
         "game_type",
         "game_format",
+        "ai_mode",
       ])
       .executeTakeFirstOrThrow();
 
@@ -229,6 +237,7 @@ export const updateGameStatus =
       status: gameStateSchema.parse(statusName),
       game_type: gameTypeSchema.parse(updatedGame.game_type),
       game_format: gameFormatSchema.parse(updatedGame.game_format),
+      ai_mode: updatedGame.ai_mode,
     };
 
     return gameWithStatus;
