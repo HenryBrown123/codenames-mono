@@ -563,6 +563,11 @@ Frontend and backend extend these base types with their specific requirements.
 .
 |-- backend
 |   `-- src
+|       |-- ai
+|       |   |-- ai-player
+|       |   |-- events
+|       |   |-- llm
+|       |   `-- strategy
 |       |-- auth
 |       |   |-- create-guest-session
 |       |   `-- errors
@@ -657,7 +662,7 @@ Frontend and backend extend these base types with their specific requirements.
         |   `-- modules
         `-- types
 
-96 directories
+101 directories
 ```
 
 ## Getting Started

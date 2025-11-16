@@ -6,6 +6,7 @@ import type {
   GameplayEventPayload,
   GameStateEventPayload,
 } from "./websocket-events.types";
+import { emitServerGameEvent } from "@backend/ai/events/game-event-bus";
 
 /**
  * Service for emitting game-related WebSocket events
@@ -132,6 +133,8 @@ export class GameEventsEmitter {
       timestamp: new Date().toISOString(),
     };
     emitToGame(gameId, WebSocketEvent.CLUE_GIVEN, payload);
+    // Also emit to server-side event bus for AI to listen
+    emitServerGameEvent(WebSocketEvent.CLUE_GIVEN, payload);
   }
 
   /**
@@ -151,6 +154,8 @@ export class GameEventsEmitter {
       timestamp: new Date().toISOString(),
     };
     emitToGame(gameId, WebSocketEvent.GUESS_MADE, payload);
+    // Also emit to server-side event bus for AI to listen
+    emitServerGameEvent(WebSocketEvent.GUESS_MADE, payload);
   }
 
   /**
@@ -168,6 +173,8 @@ export class GameEventsEmitter {
       timestamp: new Date().toISOString(),
     };
     emitToGame(gameId, WebSocketEvent.TURN_ENDED, payload);
+    // Also emit to server-side event bus for AI to listen
+    emitServerGameEvent(WebSocketEvent.TURN_ENDED, payload);
   }
 
   /**
