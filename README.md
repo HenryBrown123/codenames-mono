@@ -565,7 +565,6 @@ Frontend and backend extend these base types with their specific requirements.
 │   └── src
 │       ├── ai
 │       │   ├── ai-player
-│       │   ├── create-ai-bot
 │       │   ├── events
 │       │   ├── llm
 │       │   └── strategy
@@ -581,6 +580,7 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   │   └── repositories
 │       │   ├── db
 │       │   ├── http-middleware
+│       │   ├── state
 │       │   └── websocket
 │       ├── gameplay
 │       │   ├── errors
@@ -589,8 +589,7 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   ├── get-players
 │       │   ├── get-turn
 │       │   ├── give-clue
-│       │   ├── make-guess
-│       │   └── state
+│       │   └── make-guess
 │       ├── lobby
 │       │   ├── add-players
 │       │   ├── assign-roles
@@ -663,7 +662,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-102 directories
+101 directories
 ```
 
 ## Getting Started
