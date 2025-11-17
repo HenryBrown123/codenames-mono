@@ -3,12 +3,12 @@
  * Listens to game events and makes intelligent decisions for AI players
  */
 
-import type { Kysely } from "kysely";
-import type { DB } from "@backend/common/db/db.types";
 import type { LocalLLMService } from "../llm/local-llm.service";
 import type { GiveClueService } from "@backend/gameplay/give-clue/give-clue.service";
 import type { MakeGuessService } from "@backend/gameplay/make-guess/make-guess.service";
-import type { GameplayStateProvider } from "@backend/gameplay/state/gameplay-state.provider";
+import type { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
+import type { TurnFinder } from "@backend/common/data-access/repositories/turns.repository";
+import type { PlayerFinderAll } from "@backend/common/data-access/repositories/players.repository";
 import { gameEventBus } from "../events/game-event-bus";
 import { WebSocketEvent } from "@backend/common/websocket/websocket-events.types";
 import type { GameplayEventPayload } from "@backend/common/websocket/websocket-events.types";
@@ -18,7 +18,6 @@ import {
 } from "../strategy/ai-prompts";
 
 export type AIPlayerDependencies = {
-  db: Kysely<DB>;
   llm: LocalLLMService;
   giveClue: GiveClueService;
   makeGuess: MakeGuessService;
@@ -50,53 +49,99 @@ const randomDelay = (min: number, max: number): Promise<void> => {
  * Creates the AI player service
  */
 export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
-  const { db, llm, giveClue, makeGuess, getGameState } = dependencies;
+  const { llm, giveClue, makeGuess, getGameState } = dependencies;
 
   /**
-   * Check if a player is an AI and should act
+   * Check current game state and determine if AI should act
+   * This is the main logic - called after ANY game event
+   *
+   * Simple: Get game state -> Get current round -> Get active turn -> Check if AI needs to act
    */
-  const shouldAIAct = async (
-    gameId: string,
-    playerId: string,
-  ): Promise<AIDecisionContext | null> => {
-    // Query database to check if player is AI
-    const result = await db
-      .selectFrom("players as p")
-      .leftJoin("player_round_roles as prr", "p.id", "prr.player_id")
-      .leftJoin("player_roles as pr", "prr.role_id", "pr.id")
-      .innerJoin("games as g", "p.game_id", "g.id")
-      .innerJoin("rounds as r", (join:any) =>
-        join.onRef("g.id", "=", "r.game_id").on("r.is_current", "=", true)
-      )
-      .select(["p.is_ai", "p.user_id", "pr.role_name"])
-      .where("p.public_id", "=", playerId)
-      .where("g.public_id", "=", gameId)
-      .limit(1)
-      .executeTakeFirst();
+  const checkAndActIfNeeded = async (gameId: string) => {
+    try {
+      // Get game state using userId=0 for server-side AI (bypasses player validation)
+      const gameState = await getGameState(gameId, 0, null);
 
-    if (!result || !result.is_ai) {
-      return null;
+      if (gameState.status !== "found" || !gameState.data.currentRound) {
+        return;
+      }
+
+      const currentRound = gameState.data.currentRound;
+      const turns = currentRound.turns;
+      if (!turns || turns.length === 0) {
+        return;
+      }
+
+      // Get the current/latest turn
+      const currentTurn = turns[turns.length - 1];
+      if (!currentTurn) {
+        return;
+      }
+
+      // Get all players from game state (includes isAi field)
+      const allPlayers = gameState.data.teams.flatMap(team => team.players);
+
+      // Check if current turn needs a clue (no clue yet)
+      if (!currentTurn.clue) {
+        // Find if this team's codemaster is AI
+        const teamName = currentTurn.teamName;
+
+        const aiCodemaster = allPlayers.find(
+          (p) => p.teamName === teamName && p.isAi && p.role === "CODEMASTER"
+        );
+
+        if (aiCodemaster) {
+          console.log(`[AI] No clue for ${teamName}, AI codemaster should act`);
+
+          const context: AIDecisionContext = {
+            gameId,
+            playerId: aiCodemaster.publicId,
+            userId: aiCodemaster._userId,
+            role: "CODEMASTER",
+            roundNumber: currentRound.number,
+          };
+
+          await aiGiveClue(context);
+          return; // Done
+        }
+      }
+
+      // Check if current turn has a clue and needs guesses
+      if (currentTurn.clue && currentTurn.guessesRemaining > 0) {
+        // Check if this team has AI codebreakers
+        const teamName = currentTurn.teamName;
+
+        // Check if ALL codebreakers on this team are AI
+        const teamCodebreakers = allPlayers.filter(
+          (p) => p.teamName === teamName && p.role === "CODEBREAKER"
+        );
+
+        const allCodebreakersAreAI = teamCodebreakers.length > 0 &&
+          teamCodebreakers.every((p) => p.isAi);
+
+        if (allCodebreakersAreAI) {
+          // Pick any AI codebreaker
+          const aiCodebreaker = teamCodebreakers[0];
+
+          console.log(`[AI] ${teamName} needs guess, all codebreakers are AI`);
+
+          const context: AIDecisionContext = {
+            gameId,
+            playerId: aiCodebreaker.publicId,
+            userId: aiCodebreaker._userId,
+            role: "CODEBREAKER",
+            roundNumber: currentRound.number,
+          };
+
+          await aiMakeGuess(context);
+          return; // Done
+        }
+      }
+
+      // No AI action needed
+    } catch (error) {
+      console.error("[AI] Error in checkAndActIfNeeded:", error);
     }
-
-    const role = result.role_name as "CODEMASTER" | "CODEBREAKER" | null;
-
-    if (!role) {
-      return null;
-    }
-
-    // Get current round number
-    const gameState = await getGameState(gameId, result.user_id, playerId);
-    if (gameState.status !== "found" || !gameState.data.currentRound) {
-      return null;
-    }
-
-    return {
-      gameId,
-      playerId,
-      userId: result.user_id,
-      role,
-      roundNumber: gameState.data.currentRound.number,
-    };
   };
 
   /**
@@ -166,13 +211,30 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
 
       // Get AI decision
       const decision = await llm.generateJSON<{
+        targets?: string[];
         word: string;
         count: number;
+        reasoning?: string;
       }>(prompt);
 
       console.log(
         `[AI] ${context.playerId} giving clue: ${decision.word} for ${decision.count}`,
       );
+      if (decision.targets && decision.targets.length > 0) {
+        console.log(`[AI] Targeting cards: ${decision.targets.join(", ")}`);
+      }
+      if (decision.reasoning) {
+        console.log(`[AI] Reasoning: ${decision.reasoning}`);
+      }
+
+      // Validate clue word is not on the board
+      const allBoardWords = [...myTeamCards, ...opponentCards, assassinCard, ...bystanderCards];
+      const clueWordLower = decision.word.toLowerCase();
+      if (allBoardWords.some(w => w.toLowerCase() === clueWordLower)) {
+        console.error(`[AI] ERROR: Clue word "${decision.word}" is on the board! Board words: ${allBoardWords.join(", ")}`);
+        console.error(`[AI] The AI failed validation - this should not happen with improved prompts`);
+        return;
+      }
 
       // Give the clue
       const result = await giveClue({
@@ -249,26 +311,71 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
         difficulty: "medium",
       });
 
-      // Get AI decision
-      const decision = await llm.generateJSON<{ card: string }>(prompt);
+      // Try up to 3 times to get a valid guess
+      const maxAttempts = 3;
+      let attempt = 0;
+      let validGuess = false;
 
-      console.log(`[AI] ${context.playerId} guessing: ${decision.card}`);
+      while (attempt < maxAttempts && !validGuess) {
+        attempt++;
 
-      // Make the guess
-      const result = await makeGuess({
-        gameId: context.gameId,
-        roundNumber: context.roundNumber,
-        userId: context.userId,
-        playerId: context.playerId,
-        cardWord: decision.card,
-      });
+        // Get AI decision
+        const decision = await llm.generateJSON<{ card: string; reasoning?: string }>(prompt);
 
-      if (!result.success) {
-        console.error(`[AI] Failed to make guess:`, result.error);
-      } else {
-        console.log(
-          `[AI] Guess result: ${result.data.guess.outcome}`,
-        );
+        console.log(`[AI] ${context.playerId} guessing (attempt ${attempt}): ${decision.card}`);
+        if (decision.reasoning) {
+          console.log(`[AI] Reasoning: ${decision.reasoning}`);
+        }
+
+        // Validate the guess before making it
+        if (!decision.card || typeof decision.card !== 'string') {
+          console.warn(`[AI] Invalid decision format, retrying...`);
+          continue;
+        }
+
+        // Check if the card is actually in available cards
+        if (!availableCards.includes(decision.card)) {
+          console.warn(`[AI] Card "${decision.card}" not in available cards. Available: ${availableCards.join(", ")}`);
+
+          // If it's the clue word, that's a specific error
+          if (decision.card.toLowerCase() === currentTurn.clue.word.toLowerCase()) {
+            console.warn(`[AI] ERROR: Tried to guess the clue word "${currentTurn.clue.word}"!`);
+          }
+
+          // Try again with more explicit prompt
+          if (attempt < maxAttempts) {
+            console.log(`[AI] Retrying with clearer prompt...`);
+            await randomDelay(500, 1000);
+          }
+          continue;
+        }
+
+        // Make the guess
+        const result = await makeGuess({
+          gameId: context.gameId,
+          roundNumber: context.roundNumber,
+          userId: context.userId,
+          playerId: context.playerId,
+          cardWord: decision.card,
+        });
+
+        if (!result.success) {
+          console.error(`[AI] Failed to make guess:`, result.error);
+
+          // If validation failed, retry
+          if (attempt < maxAttempts) {
+            console.log(`[AI] Guess rejected by service, retrying...`);
+            await randomDelay(500, 1000);
+            continue;
+          }
+        } else {
+          console.log(`[AI] Guess result: ${result.data.guess.outcome}`);
+          validGuess = true;
+        }
+      }
+
+      if (!validGuess) {
+        console.error(`[AI] Failed to make valid guess after ${maxAttempts} attempts`);
       }
     } catch (error) {
       console.error(`[AI] Error making guess:`, error);
@@ -278,173 +385,30 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
   };
 
   /**
-   * Handle turn ended event - check if an AI codemaster needs to give a clue
+   * Generic handler for ALL game events
+   * Just checks state and acts if needed - no special logic per event type
    */
-  const handleTurnEnded = async (payload: GameplayEventPayload) => {
+  const handleGameEvent = async (eventName: string, payload: any) => {
+    console.log(`[AI] ${eventName} event received for game ${payload.gameId}`);
+
     // Small delay to ensure database is updated
     await randomDelay(500, 1000);
 
-    // First get the turn and check if it has a clue
-    const turn = await db
-      .selectFrom("turns")
-      .leftJoin("clues", "turns.id", "clues.turn_id")
-      .select(["turns.id", "turns.team_id", "turns.status", "clues.id as clue_id"])
-      .where("turns.public_id", "=", payload.turnId!)
-      .where("turns.status", "=", "ACTIVE")
-      .executeTakeFirst();
-
-    if (!turn || turn.clue_id) {
-      // Turn not found or already has a clue
-      return;
-    }
-
-    // Find AI codemaster on this team
-    const aiCodemaster = await db
-      .selectFrom("players as p")
-      .innerJoin("player_round_roles as prr", "p.id", "prr.player_id")
-      .innerJoin("player_roles as pr", "prr.role_id", "pr.id")
-      .select(["p.public_id as player_public_id", "p.user_id", "p.is_ai"])
-      .where("p.team_id", "=", turn.team_id)
-      .where("pr.role_name", "=", "CODEMASTER")
-      .where("p.is_ai", "=", true)
-      .limit(1)
-      .executeTakeFirst();
-
-    if (!aiCodemaster) {
-      return;
-    }
-
-    const context: AIDecisionContext = {
-      gameId: payload.gameId,
-      playerId: aiCodemaster.player_public_id,
-      userId: aiCodemaster.user_id,
-      role: "CODEMASTER",
-      roundNumber: payload.roundNumber!,
-    };
-
-    await aiGiveClue(context);
-  };
-
-  /**
-   * Handle clue given event - check if AI codebreakers need to guess
-   */
-  const handleClueGiven = async (payload: GameplayEventPayload) => {
-    console.log("[AI] Received CLUE_GIVEN event:", payload);
-
-    // Small delay
-    await randomDelay(500, 1000);
-
-    // Get the turn to find which team it is
-    const turn = await db
-      .selectFrom("turns")
-      .select(["team_id", "status"])
-      .where("public_id", "=", payload.turnId!)
-      .where("status", "=", "ACTIVE")
-      .executeTakeFirst();
-
-    console.log("[AI] Turn found:", turn);
-
-    if (!turn) {
-      return;
-    }
-
-    // Find AI codebreaker on this team
-    const aiCodebreaker = await db
-      .selectFrom("players as p")
-      .innerJoin("player_round_roles as prr", "p.id", "prr.player_id")
-      .innerJoin("player_roles as pr", "prr.role_id", "pr.id")
-      .select(["p.public_id as player_public_id", "p.user_id"])
-      .where("p.team_id", "=", turn.team_id)
-      .where("p.is_ai", "=", true)
-      .where("pr.role_name", "=", "CODEBREAKER")
-      .limit(1)
-      .executeTakeFirst();
-
-    console.log("[AI] AI Codebreaker found:", aiCodebreaker);
-
-    if (!aiCodebreaker) {
-      console.log("[AI] No AI codebreaker found for team", turn.team_id);
-      return;
-    }
-
-    const context: AIDecisionContext = {
-      gameId: payload.gameId,
-      playerId: aiCodebreaker.player_public_id,
-      userId: aiCodebreaker.user_id,
-      role: "CODEBREAKER",
-      roundNumber: payload.roundNumber!,
-    };
-
-    console.log("[AI] About to make guess with context:", context);
-    await aiMakeGuess(context);
-  };
-
-  /**
-   * Handle guess made event - check if AI codebreaker should guess again
-   */
-  const handleGuessMade = async (payload: GameplayEventPayload) => {
-    // Small delay
-    await randomDelay(500, 1000);
-
-    // First get the turn info
-    const turn = await db
-      .selectFrom("turns")
-      .select(["id", "team_id", "guesses_remaining", "status"])
-      .where("public_id", "=", payload.turnId!)
-      .where("status", "=", "ACTIVE")
-      .executeTakeFirst();
-
-    if (!turn || turn.guesses_remaining <= 0) {
-      return;
-    }
-
-    // Get the most recent guess for this turn
-    const lastGuess = await db
-      .selectFrom("guesses")
-      .select("outcome")
-      .where("turn_id", "=", turn.id)
-      .orderBy("id", "desc")
-      .limit(1)
-      .executeTakeFirst();
-
-    if (!lastGuess || lastGuess.outcome !== "CORRECT") {
-      return;
-    }
-
-    // Find AI codebreaker on this team
-    const aiPlayer = await db
-      .selectFrom("players as p")
-      .innerJoin("player_round_roles as prr", "p.id", "prr.player_id")
-      .innerJoin("player_roles as pr", "prr.role_id", "pr.id")
-      .select(["p.public_id as player_public_id", "p.user_id"])
-      .where("p.team_id", "=", turn.team_id)
-      .where("p.is_ai", "=", true)
-      .where("pr.role_name", "=", "CODEBREAKER")
-      .limit(1)
-      .executeTakeFirst();
-
-    if (!aiPlayer) {
-      return;
-    }
-
-    const context: AIDecisionContext = {
-      gameId: payload.gameId,
-      playerId: aiPlayer.player_public_id,
-      userId: aiPlayer.user_id,
-      role: "CODEBREAKER",
-      roundNumber: payload.roundNumber!,
-    };
-
-    await aiMakeGuess(context);
+    // Simple: just check game state and act if needed
+    await checkAndActIfNeeded(payload.gameId);
   };
 
   /**
    * Initialize event listeners
    */
   const initialize = () => {
-    gameEventBus.onGameEvent(WebSocketEvent.TURN_ENDED, handleTurnEnded);
-    gameEventBus.onGameEvent(WebSocketEvent.CLUE_GIVEN, handleClueGiven);
-    gameEventBus.onGameEvent(WebSocketEvent.GUESS_MADE, handleGuessMade);
+    // Listen to ALL game events - same simple handler for all
+    // Just check state and act if needed
+    gameEventBus.onGameEvent(WebSocketEvent.GAME_STARTED, (p) => handleGameEvent('GAME_STARTED', p));
+    gameEventBus.onGameEvent(WebSocketEvent.ROUND_STARTED, (p) => handleGameEvent('ROUND_STARTED', p));
+    gameEventBus.onGameEvent(WebSocketEvent.TURN_ENDED, (p) => handleGameEvent('TURN_ENDED', p));
+    gameEventBus.onGameEvent(WebSocketEvent.CLUE_GIVEN, (p) => handleGameEvent('CLUE_GIVEN', p));
+    gameEventBus.onGameEvent(WebSocketEvent.GUESS_MADE, (p) => handleGameEvent('GUESS_MADE', p));
 
     console.log("[AI Player Service] Initialized and listening for game events");
   };

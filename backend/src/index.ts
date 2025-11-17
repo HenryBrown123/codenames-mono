@@ -13,11 +13,10 @@ import { initialize as initializeUsers } from "./users";
 import { initialize as initializeGameSetup } from "./setup";
 import { initialize as initializeLobby } from "./lobby";
 import { initialize as initializeGameplay } from "./gameplay";
+import { initialize as initializeAI } from "./ai";
 import { authMiddleware } from "@backend/common/http-middleware/auth.middleware";
 import { refreshSystemData } from "./common/data/system-data-loader";
 import { initializeWebSocketServer } from "./common/websocket";
-import { createLocalLLMService, createAIPlayerService } from "./ai";
-import { createAIBotController } from "./ai/create-ai-bot";
 
 /**
  * Runtime validation of env. variables
@@ -107,10 +106,6 @@ const setup = initializeGameSetup(app, dbInstance, authHandlers);
 const lobby = initializeLobby(app, dbInstance, authHandlers);
 const { giveClueService, makeGuessService, getGameState } = initializeGameplay(app, dbInstance, authHandlers);
 
-// AI bot creation endpoint
-const createBotController = createAIBotController({ db: dbInstance });
-app.post("/api/games/:gameId/ai-bots", authHandlers, createBotController);
-
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "UP" });
 });
@@ -129,26 +124,20 @@ initializeWebSocketServer({
   corsOrigins: corsOptions.origin as string[],
 });
 
-// Initialize AI players
-const llmService = createLocalLLMService({
-  ollamaUrl: "http://localhost:11434",
-  model: "qwen2.5:3b",
-  temperature: 0.7,
-});
-
-const aiPlayerService = createAIPlayerService({
-  db: dbInstance,
-  llm: llmService,
+// Initialize AI feature (uses game state provider + one repository for userId lookup)
+const ai = initializeAI({
+  llmConfig: {
+    ollamaUrl: "http://localhost:11434",
+    model: "qwen2.5:3b",
+    temperature: 0.7,
+  },
   giveClue: giveClueService,
   makeGuess: makeGuessService,
   getGameState,
 });
 
-// Start listening for game events
-aiPlayerService.initialize();
-
 httpServer.listen(PORT, () => {
   console.log(`✅ ${process.env.NODE_ENV} server running on port ${PORT}`);
   console.log(`🔌 WebSocket server ready for connections`);
-  console.log(`🤖 AI players initialized with Ollama (qwen2.5:3b)`);
+  console.log(`🤖 AI players initialized with Ollama (${ai.llm.model})`);
 });

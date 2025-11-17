@@ -1,4 +1,4 @@
-import { TurnStateProvider } from "../state/turn-state.provider";
+import { TurnStateProvider } from "@backend/common/state/turn-state.provider";
 
 /**
  * API response turn data (sanitized - no internal IDs)

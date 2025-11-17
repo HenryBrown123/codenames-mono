@@ -5,8 +5,7 @@ import { GAME_STATE } from "@codenames/shared/types";
 import { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 import { GameEventsEmitter } from "@backend/common/websocket";
 import { createAIBotsForTeams } from "./start-game-ai-helper";
-import type { Kysely } from "kysely";
-import type { DB } from "@backend/common/db/db.types";
+import type { UserCreator } from "@backend/common/data-access/repositories/users.repository";
 
 export type GameStartSuccess = {
   _id: number;
@@ -25,7 +24,7 @@ export type GameStartResult = GameStartSuccess | GameStartError;
 export type ServiceDependencies = {
   lobbyHandler: TransactionalHandler<LobbyOperations>;
   getLobbyState: LobbyStateProvider;
-  db: Kysely<DB>;
+  createUser: UserCreator;
 };
 
 export const startGameService = (dependencies: ServiceDependencies) => {
@@ -94,7 +93,7 @@ export const startGameService = (dependencies: ServiceDependencies) => {
       await createAIBotsForTeams({
         lobby,
         lobbyHandler: dependencies.lobbyHandler,
-        db: dependencies.db,
+        createUser: dependencies.createUser,
       });
     }
 

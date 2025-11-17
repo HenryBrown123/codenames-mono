@@ -1,9 +1,9 @@
-import type { GameplayStateProvider } from "../state/gameplay-state.provider";
-import type { TurnStateProvider } from "../state/turn-state.provider";
-import type { GameplayValidationError } from "../state/gameplay-state.validation";
+import type { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
+import type { TurnStateProvider } from "@backend/common/state/turn-state.provider";
+import type { GameplayValidationError } from "@backend/common/state/gameplay-state.validation";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 import type { GameplayOperations } from "../gameplay-actions";
-import { complexProperties } from "../state/gameplay-state.helpers";
+import { complexProperties } from "@backend/common/state/gameplay-state.helpers";
 import { GameEventsEmitter } from "@backend/common/websocket";
 
 import { validateClueWord, validate as checkClueGivingRules } from "./give-clue.rules";

@@ -4,9 +4,9 @@ import { DB } from "@backend/common/db/db.types";
 import { Router } from "express";
 import { AuthMiddleware } from "@backend/common/http-middleware/auth.middleware";
 
-import { gameplayState } from "./state";
+import { gameplayState } from "@backend/common/state";
 import { gameplayActions } from "./gameplay-actions";
-import { turnState } from "./state";
+import { turnState } from "@backend/common/state";
 
 import getGame from "./get-game";
 import getPlayers from "./get-players";

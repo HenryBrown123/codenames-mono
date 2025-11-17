@@ -1,5 +1,5 @@
 import type { GameEventRow } from "@backend/common/data-access/repositories/game-events.repository";
-import type { GameplayStateProvider } from "../state/gameplay-state.provider";
+import type { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
 
 /**
  * Transformed event for API response

@@ -1,4 +1,4 @@
-import { GameplayStateProvider } from "../state/gameplay-state.provider";
+import { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
 import { PlayerRole, PLAYER_ROLE } from "@codenames/shared/types";
 
 /**

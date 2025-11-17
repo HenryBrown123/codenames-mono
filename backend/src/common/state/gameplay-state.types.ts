@@ -14,6 +14,7 @@ export const playerSchema = z.object({
   statusId: z.number().int().positive(),
   publicName: z.string(),
   role: z.string(),
+  isAi: z.boolean(),
 });
 
 /**

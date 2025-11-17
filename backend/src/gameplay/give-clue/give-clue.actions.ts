@@ -3,7 +3,7 @@ import {
   TurnGuessUpdater,
 } from "@backend/common/data-access/repositories/turns.repository";
 import { GiveClueValidGameState } from "./give-clue.rules";
-import { complexProperties } from "../state/gameplay-state.helpers";
+import { complexProperties } from "@backend/common/state/gameplay-state.helpers";
 import { UnexpectedGameplayError } from "../errors/gameplay.errors";
 
 /**

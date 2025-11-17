@@ -171,9 +171,10 @@ export const gameplayStateProvider = (
 
     // Only require player membership for games that are in progress or completed
     // LOBBY games can be viewed by any authenticated user (for multi-device join flow)
+    // userId=0 is used for server-side AI checks and bypasses this validation
     const allGamePlayers = await getPlayersByGameId(game._id);
     const userIsPlayer = allGamePlayers.some((p) => p._userId === userId);
-    if (!userIsPlayer && game.status !== GAME_STATE.LOBBY) {
+    if (!userIsPlayer && game.status !== GAME_STATE.LOBBY && userId !== 0) {
       return { status: "user-not-player", gameId, userId };
     }
 

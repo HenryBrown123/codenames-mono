@@ -1,4 +1,4 @@
-import { TurnStateProvider } from "../state/turn-state.provider";
+import { TurnStateProvider } from "@backend/common/state/turn-state.provider";
 import { getTurnService } from "./get-turn.service";
 import { controller } from "./get-turn.controller";
 

@@ -40,6 +40,12 @@ export type TeamNameMapper = (
   teamNames: string[],
 ) => Promise<Map<string, TeamId>>;
 
+/** Function that finds a single team by name for a specific game */
+export type TeamByNameFinder = (
+  gameId: GameId,
+  teamName: string,
+) => Promise<{ _id: TeamId } | null>;
+
 /**
  * ==================
  * REPOSITORY FUNCTIONS
@@ -119,4 +125,27 @@ export const getTeamNameToIdMap =
     });
 
     return teamMap;
+  };
+
+/**
+ * Creates a function for finding a team by name for a specific game
+ */
+export const findTeamByName =
+  (db: Kysely<DB>): TeamByNameFinder =>
+  /**
+   * Finds a team by name for a specific game
+   *
+   * @param gameId - The game ID to look up team for
+   * @param teamName - The team name to find
+   * @returns Team ID if found, null otherwise
+   */
+  async (gameId, teamName) => {
+    const team = await db
+      .selectFrom("teams")
+      .where("game_id", "=", gameId)
+      .where("team_name", "=", teamName)
+      .select(["id"])
+      .executeTakeFirst();
+
+    return team ? { _id: team.id } : null;
   };

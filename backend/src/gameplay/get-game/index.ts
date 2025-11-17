@@ -1,4 +1,4 @@
-import type { GameplayStateProvider } from "../state/gameplay-state.provider";
+import type { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
 
 import { getGameStateService } from "./get-game.service";
 import { getGameStateController } from "./get-game.controller";

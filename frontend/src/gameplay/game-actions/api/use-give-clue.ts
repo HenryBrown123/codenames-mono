@@ -7,6 +7,7 @@ import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
 import { TurnData } from "../../game-data/queries/use-turn-query";
 import { usePlayerContext } from "../../game-data/providers/player-context-provider";
+import { useViewMode } from "../../game-board/view-mode/view-mode-context";
 
 interface GiveClueApiResponse {
   success: boolean;
@@ -107,6 +108,7 @@ export const useGiveClueMutation = (
 ): UseMutationResult<ClueGivenResult, Error, GiveClueInput> => {
   const queryClient = useQueryClient();
   const { currentPlayerId } = usePlayerContext();
+  const { setViewMode } = useViewMode();
 
   return useMutation({
     mutationFn: async ({ word, targetCardCount, roundNumber }) => {
@@ -116,8 +118,8 @@ export const useGiveClueMutation = (
 
       const response: AxiosResponse<GiveClueApiResponse> = await api.post(
         `/games/${gameId}/rounds/${roundNumber}/clues`,
-        { 
-          word, 
+        {
+          word,
           targetCardCount,
           playerId: currentPlayerId
         },
@@ -135,6 +137,9 @@ export const useGiveClueMutation = (
       await queryClient.refetchQueries({ queryKey: ["gameData", gameId] });
       // Invalidate events query (for future give_clue events)
       queryClient.invalidateQueries({ queryKey: ["game-events", gameId] });
+
+      // Disable AR mode after clue submission
+      setViewMode("normal");
     },
   });
 };

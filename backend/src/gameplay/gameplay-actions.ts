@@ -16,7 +16,7 @@ import * as makeGuessActions from "./make-guess/make-guess.actions";
 import * as makeGuessRules from "./make-guess/make-guess.rules";
 
 
-import { gameplayState } from "./state";
+import { gameplayState } from "@backend/common/state";
 import { UnexpectedGameplayError } from "./errors/gameplay.errors";
 
 /**

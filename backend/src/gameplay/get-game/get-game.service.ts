@@ -1,6 +1,6 @@
-import { GameAggregate } from "../state/gameplay-state.types";
+import { GameAggregate } from "@backend/common/state/gameplay-state.types";
 import { PLAYER_ROLE, PlayerRole, ROUND_STATE } from "@codenames/shared/types";
-import { GameplayStateProvider } from "../state/gameplay-state.provider";
+import { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
 
 /**
  * Service input parameters
@@ -183,7 +183,7 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
         publicId: player.publicId,
         name: player.publicName,
         isActive: player.statusId === 1,
-        username: player.username,
+        username: player.publicName,
       })),
     })),
 
@@ -225,9 +225,6 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
         }
       : null,
   };
-
-  console.log("[transformGameState] playerContext being sent:", JSON.stringify(result.playerContext, null, 2));
-  return result;
 }
 
 /**

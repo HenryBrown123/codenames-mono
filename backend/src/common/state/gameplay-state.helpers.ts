@@ -1,4 +1,4 @@
-import { UnexpectedGameplayError } from "../errors/gameplay.errors";
+import { UnexpectedGameplayError } from "@backend/gameplay/errors/gameplay.errors";
 import {
   GameAggregate,
   Round,

@@ -5,7 +5,7 @@ import {
   GAME_EVENT_TYPE,
 } from "@codenames/shared/types";
 import { GameplayValidationError } from "../errors/gameplay.errors";
-import { GameAggregate } from "../state/gameplay-state.types";
+import { GameAggregate } from "@backend/common/state/gameplay-state.types";
 import type {
   validateMakeGuess,
   validateEndTurn,
@@ -27,7 +27,7 @@ import {
 import { GameStatusUpdater } from "@backend/common/data-access/repositories/games.repository";
 import type { CreateEventInput } from "@backend/common/data-access/repositories/game-events.repository";
 
-import { complexProperties } from "../state/gameplay-state.helpers";
+import { complexProperties } from "@backend/common/state/gameplay-state.helpers";
 
 /**
  * Validates a specific card can be guessed

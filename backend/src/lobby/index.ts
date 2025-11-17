@@ -5,6 +5,7 @@ import { Router } from "express";
 import { AuthMiddleware } from "@backend/common/http-middleware/auth.middleware";
 
 import { createTransactionalHandler } from "@backend/common/data-access/transaction-handler";
+import { createUser } from "@backend/common/data-access/repositories/users.repository";
 
 // Import feature components
 import { addPlayersService } from "./add-players/add-players.service";
@@ -39,6 +40,9 @@ export const initialize = (
   // Transaction handlers
   const lobbyHandler = createTransactionalHandler(db, lobbyOperations);
 
+  // Partially apply repositories
+  const createUserRepo = createUser(db);
+
   // Create service functions
   const lobbyAddPlayersService = addPlayersService({
     lobbyHandler,
@@ -58,7 +62,7 @@ export const initialize = (
   const lobbyStartGameService = startGameService({
     lobbyHandler,
     getLobbyState,
-    db,
+    createUser: createUserRepo,
   });
 
   const lobbyAddPlayersController = addPlayersController({

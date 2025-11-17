@@ -28,6 +28,7 @@ export type PlayerResult = {
   teamName: string;
   statusId: number;
   publicName: string;
+  isAi: boolean;
   role: PlayerRole;
   username?: string; // Include when user context needed
 };
@@ -120,6 +121,7 @@ const playerResultColumns = [
   "players.team_id as team_id",
   "players.status_id as status_id",
   "players.public_name as public_name",
+  "players.is_ai as is_ai",
   "players.updated_at as updated_at",
   "players.status_last_changed as status_last_changed",
 ] as const;
@@ -192,6 +194,7 @@ export const findPlayersByGameId =
       teamName: player.team_name,
       statusId: player.status_id,
       publicName: player.public_name,
+      isAi: player.is_ai,
       role: parseRoleName(player.role_name),
       username: player.username || undefined,
     }));
@@ -232,6 +235,7 @@ export const findPlayersByRoundId =
       teamName: player.team_name,
       statusId: player.status_id,
       publicName: player.public_name,
+      isAi: player.is_ai,
       role: parseRoleName(player.role_name),
     }));
   };
@@ -276,6 +280,7 @@ export const findPlayerByPublicId =
           teamName: player.team_name,
           statusId: player.status_id,
           publicName: player.public_name,
+          isAi: player.is_ai,
           role: parseRoleName(player.role_name),
         }
       : null;
@@ -318,6 +323,7 @@ export const getPlayerContext =
       teamName: player.team_name,
       statusId: player.status_id,
       publicName: player.public_name,
+      isAi: player.is_ai,
       username: player.username,
       role: player.role_name
         ? parseRoleName(player.role_name)
@@ -440,6 +446,7 @@ export const addPlayers =
       teamName: player.team_name,
       statusId: player.status_id,
       publicName: player.public_name,
+      isAi: player.is_ai,
       role: PLAYER_ROLE.NONE,
     }));
   };
@@ -465,6 +472,7 @@ export const removePlayer =
       teamName: removedPlayer.team_name,
       statusId: removedPlayer.status_id,
       publicName: removedPlayer.public_name,
+      isAi: removedPlayer.is_ai,
       role: PLAYER_ROLE.NONE,
     };
   };
@@ -578,6 +586,7 @@ export const modifyPlayers =
       teamName: player.team_name,
       statusId: player.status_id,
       publicName: player.public_name,
+      isAi: player.is_ai,
       role: parseRoleName(player.role_name),
     }));
   };

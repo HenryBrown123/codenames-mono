@@ -66,6 +66,7 @@ export const createLocalLLMService = (config: LocalLLMConfig) => {
   };
 
   return {
+    model,
     generate,
     generateJSON,
   };
