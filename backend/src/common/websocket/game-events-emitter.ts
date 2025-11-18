@@ -31,6 +31,8 @@ export class GameEventsEmitter {
       timestamp: new Date().toISOString(),
     };
     emitToGame(gameId, WebSocketEvent.PLAYER_JOINED, payload);
+    // Also emit to server-side event bus for AI to listen
+    emitServerGameEvent(WebSocketEvent.PLAYER_JOINED, { gameId });
   }
 
   /**
@@ -78,6 +80,8 @@ export class GameEventsEmitter {
       timestamp: new Date().toISOString(),
     };
     emitToGame(gameId, WebSocketEvent.GAME_STARTED, payload);
+    // Also emit to server-side event bus for AI to listen
+    emitServerGameEvent(WebSocketEvent.GAME_STARTED, payload);
   }
 
   /**
@@ -102,6 +106,8 @@ export class GameEventsEmitter {
       timestamp: new Date().toISOString(),
     };
     emitToGame(gameId, WebSocketEvent.ROUND_STARTED, payload);
+    // Also emit to server-side event bus for AI to listen
+    emitServerGameEvent(WebSocketEvent.ROUND_STARTED, payload);
   }
 
   /**

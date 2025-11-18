@@ -5,6 +5,7 @@ import {
   AuthenticatedSocket,
 } from "./websocket-auth.middleware";
 import { WebSocketEvent } from "./websocket-events.types";
+import { emitServerGameEvent } from "@backend/ai/events/game-event-bus";
 
 /**
  * WebSocket server configuration
@@ -60,6 +61,9 @@ export const initializeWebSocketServer = (
       console.log(
         `User ${socket.auth?.username} joined game room: ${roomName}`,
       );
+
+      // Emit server-side event so AI can check if it needs to act
+      emitServerGameEvent(WebSocketEvent.PLAYER_JOINED, { gameId });
     });
 
     // Handle leaving game rooms

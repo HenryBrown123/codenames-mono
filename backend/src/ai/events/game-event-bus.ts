@@ -18,6 +18,7 @@ type GameEventListeners = {
   [WebSocketEvent.TURN_ENDED]: (payload: GameplayEventPayload) => void | Promise<void>;
   [WebSocketEvent.ROUND_STARTED]: (payload: GameplayEventPayload) => void | Promise<void>;
   [WebSocketEvent.GAME_STARTED]: (payload: { gameId: string }) => void | Promise<void>;
+  [WebSocketEvent.PLAYER_JOINED]: (payload: { gameId: string }) => void | Promise<void>;
 };
 
 /**

@@ -2,7 +2,6 @@
  * AI Module - Initializes AI-related services following the repository pattern
  */
 
-// Service imports
 import { createLocalLLMService } from "./llm/local-llm.service";
 import { createAIPlayerService } from "./ai-player/ai-player.service";
 import type { LocalLLMService } from "./llm/local-llm.service";
@@ -14,11 +13,9 @@ import type { GameplayStateProvider } from "@backend/common/state/gameplay-state
 // Export event bus
 export { gameEventBus, emitServerGameEvent } from "./events/game-event-bus";
 
-// Export prompts
-export {
-  buildCodemasterPrompt,
-  buildCodebreakerPrompt,
-} from "./strategy/ai-prompts";
+// Export new pipeline (production-ready)
+export { createCodenamesPipeline } from "./llm/codenames-pipeline";
+export type { CodenamesPipeline } from "./llm/codenames-pipeline";
 
 // Export types
 export type { LocalLLMService, AIPlayerService };

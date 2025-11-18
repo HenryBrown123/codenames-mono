@@ -1,0 +1,102 @@
+
+ [IMPLEMENTATION TASKS FOR CODE AGENT]
+
+You are an LLM code agent working on the Codenames project. Your goal is to update the Guesser logic to use the JSON `ranked` output described in this prompt file.
+
+You MUST perform the following changes across the codebase:
+
+1. Update AIGuesser.get_answer to use ranked JSON
+   - File: `players/ai_guesser.py` (or the file where `class AIGuesser` is defined).
+   - Instead of expecting the model to return a single word, change the logic so it:
+     a) Builds a prompt using this file (`prompt.txt`) as the base system or instruction text, and interpolates:
+        - {TEAM} with the current team (e.g. "Red" or "Blue").
+        - {REMAINING_WORDS} with the current list from `get_remaining_options()`.
+        - {CLUE} with the current clue string.
+        - {NUMBER} with the current clue number.
+     b) Sends this prompt in a single call to `self.manager.talk_to_ai`.
+     c) Expects the model to return a single JSON object with a `ranked` array as described below.
+     d) Parses the JSON response (e.g. with `json.loads`).
+     e) Validates that `ranked` is a non-empty list and that each entry has `word` and `score` fields.
+     f) Filters the `ranked` entries so only words present in `get_remaining_options()` are kept.
+     g) Sorts the filtered list in descending order by `score`.
+     h) Selects the top-ranked word (`ranked[0]['word']`) as the final guess.
+   - Remove or bypass all the old logic that tries to clean and interpret the model output as a raw string (uppercasing, regex stripping, splitting on quotes, random fallback, etc.). The guess should now come purely from the parsed JSON.
+
+2. Keep `get_remaining_options` as the source of valid guesses
+   - Ensure `get_remaining_options()` returns plain word strings that match the words shown to the model in {REMAINING_WORDS}.
+   - If it currently returns any formatting (e.g. markers like `*WORD`), strip those when building the {REMAINING_WORDS} list for the prompt, but still use raw words for matching against `ranked[i]['word']`.
+
+3. Adjust error handling in get_answer
+   - If the JSON response is invalid (cannot be parsed, missing `ranked`, or `ranked` is empty after filtering), log a warning and fall back to a simple strategy:
+     a) Choose a random word from `get_remaining_options()`, or
+     b) Retry once with a simplified prompt that asks for a single best word.
+   - Make sure `self.guesses` is still incremented once per completed guess.
+
+4. Keep `keep_guessing` behaviour unchanged for now
+   - Do not change the `keep_guessing` method behavior except if it depends on the old single-word response format.
+   - It should still decide whether to continue guessing based on `self.guesses` vs `self.num` or user-configured logic.
+
+5. Ensure prompt usage is consistent
+   - Wherever the Guesser prompt is constructed, use this file's text (`prompt.txt`) as the base instructions.
+   - Do NOT duplicate this prompt in code; load it from the file so that future edits to `prompt.txt` automatically affect the Guesser behavior.
+   - Make sure no extra instructions are appended that contradict the rules here (e.g. do not ask the model to "output only a single word" in the same request).
+
+After making these changes:
+- Run any existing tests for the Guesser (if present).
+- Manually test a few turns to confirm that the model now returns JSON with a `ranked` list and that the game uses `ranked[0].word` as the actual guess.
+
+[END IMPLEMENTATION TASKS]
+
+
+You are the Guesser in a game of Codenames.
+You are playing on the {TEAM} team.
+You will be given:
+- A list of REMAINING WORDS on the board (your possible guesses).
+- A clue from your Spymaster: a single word and a number.
+
+Your job is to evaluate how strongly each remaining word is connected to the clue and to rank them.
+
+Rules:
+- Consider only **strong, direct, common-sense associations** between the clue and each word.
+- Do **not** invent metaphorical, symbolic, or far-fetched connections.
+- If a word has no clear link to the clue, give it a very low score (for example between 0.0 and 0.2) and explicitly say that there is no meaningful connection.
+- You must assign a score to **every** remaining word.
+- Scores must be between 0.0 (no meaningful connection) and 1.0 (very strong, obvious connection).
+- Higher scores should represent clearly better guesses than lower scores.
+- Every word in your output **must** be one of the remaining words, and each remaining word must appear exactly once.
+- Sort the words from highest score to lowest score.
+
+Output format:
+Return **only** a single JSON object in the following format, with no additional text, commentary, or Markdown:
+
+{
+  "ranked": [
+    {
+      "word": "WORD1",
+      "score": 0.9,
+      "reason": "Short explanation of why this word is strongly connected to the clue."
+    },
+    {
+      "word": "WORD2",
+      "score": 0.5,
+      "reason": "Short explanation of a weaker or partial connection."
+    }
+    // ... include all remaining words, in descending score order
+  ]
+}
+
+Additional guidance:
+- Focus first on identifying the **few best candidates** that most strongly match the clue.
+- Then compare all other words against those best candidates and assign lower scores accordingly.
+- If two words feel equally strong, you may give them the same or very similar scores.
+- Do not try to force a connection for every word; it is better to give a low score and say there is no meaningful connection than to invent a bad association.
+
+At inference time, the system will pick the top-ranked word (the one with the highest score in `ranked[0]`) as your final guess.
+
+The calling code will provide:
+- TEAM: {TEAM}
+- REMAINING WORDS: {REMAINING_WORDS}
+- CLUE: {CLUE}
+- NUMBER: {NUMBER}  (the number given by the spymaster)
+
+Use the clue and the remaining words to fill in the JSON object described above.

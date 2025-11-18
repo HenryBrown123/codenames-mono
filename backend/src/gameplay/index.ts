@@ -14,6 +14,7 @@ import getEvents from "./get-events";
 import giveClue from "./give-clue";
 import makeGuess from "./make-guess";
 import getTurn from "./get-turn";
+import endTurn from "./end-turn";
 
 import { gameplayErrorHandler } from "./errors/gameplay-errors.middleware";
 
@@ -63,6 +64,11 @@ export const initialize = (
     getTurnState,
   });
 
+  const { controller: endTurnController } = endTurn({
+    getGameState,
+    gameplayHandler,
+  });
+
   // Routes setup
   const router = Router();
 
@@ -79,6 +85,12 @@ export const initialize = (
     "/games/:gameId/rounds/:roundNumber/guesses",
     auth,
     makeGuessController,
+  );
+
+  router.post(
+    "/games/:gameId/rounds/:roundNumber/end-turn",
+    auth,
+    endTurnController,
   );
 
   // Turn routes
