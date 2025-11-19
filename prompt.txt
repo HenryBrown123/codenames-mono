@@ -1,102 +1,116 @@
+Certainly! I’ll edit the prompt.txt file in your project with full instructions for the two-stage guesser pipeline, including context for the agent and both prompt templates (pre-filter & ranking).
 
- [IMPLEMENTATION TASKS FOR CODE AGENT]
+Here is the full content to place into /Users/dev/Developer/codenames-mono/prompt.txt:
 
-You are an LLM code agent working on the Codenames project. Your goal is to update the Guesser logic to use the JSON `ranked` output described in this prompt file.
+# CODENAMES AI GUESSER PIPELINE PROMPTS
 
-You MUST perform the following changes across the codebase:
+## Context for the LLM Agent  
+You are a Guesser-Assistant working for the current team in a game of Codenames.  
+This pipeline uses a **two-stage approach** to decide which board words to guess:
 
-1. Update AIGuesser.get_answer to use ranked JSON
-   - File: `players/ai_guesser.py` (or the file where `class AIGuesser` is defined).
-   - Instead of expecting the model to return a single word, change the logic so it:
-     a) Builds a prompt using this file (`prompt.txt`) as the base system or instruction text, and interpolates:
-        - {TEAM} with the current team (e.g. "Red" or "Blue").
-        - {REMAINING_WORDS} with the current list from `get_remaining_options()`.
-        - {CLUE} with the current clue string.
-        - {NUMBER} with the current clue number.
-     b) Sends this prompt in a single call to `self.manager.talk_to_ai`.
-     c) Expects the model to return a single JSON object with a `ranked` array as described below.
-     d) Parses the JSON response (e.g. with `json.loads`).
-     e) Validates that `ranked` is a non-empty list and that each entry has `word` and `score` fields.
-     f) Filters the `ranked` entries so only words present in `get_remaining_options()` are kept.
-     g) Sorts the filtered list in descending order by `score`.
-     h) Selects the top-ranked word (`ranked[0]['word']`) as the final guess.
-   - Remove or bypass all the old logic that tries to clean and interpret the model output as a raw string (uppercasing, regex stripping, splitting on quotes, random fallback, etc.). The guess should now come purely from the parsed JSON.
+1. **Pre-Filter Stage**: For each remaining word individually, decide the level of confidence in the link between the word and the spymaster’s clue.  
+2. **Ranking Stage**: Once a shortlist of candidate words passes the pre-filter, evaluate all of them together, consider board context, overlap with previous clues, risk of opponent/assassin words, and produce a final ranked list.
 
-2. Keep `get_remaining_options` as the source of valid guesses
-   - Ensure `get_remaining_options()` returns plain word strings that match the words shown to the model in {REMAINING_WORDS}.
-   - If it currently returns any formatting (e.g. markers like `*WORD`), strip those when building the {REMAINING_WORDS} list for the prompt, but still use raw words for matching against `ranked[i]['word']`.
+Your code will decide thresholds and category logic (“extremely / moderately / no link”) based on game state (allowed guesses, cards remaining). The prompts below provide the instructions for the LLM in each stage.
 
-3. Adjust error handling in get_answer
-   - If the JSON response is invalid (cannot be parsed, missing `ranked`, or `ranked` is empty after filtering), log a warning and fall back to a simple strategy:
-     a) Choose a random word from `get_remaining_options()`, or
-     b) Retry once with a simplified prompt that asks for a single best word.
-   - Make sure `self.guesses` is still incremented once per completed guess.
+---
 
-4. Keep `keep_guessing` behaviour unchanged for now
-   - Do not change the `keep_guessing` method behavior except if it depends on the old single-word response format.
-   - It should still decide whether to continue guessing based on `self.guesses` vs `self.num` or user-configured logic.
+## Stage 1: Pre-Filter – Single Word Confidence Check  
+You will be given:  
+- A clue: `"{CLUE}"`  
+- A board word under consideration: `"{WORD}"`
 
-5. Ensure prompt usage is consistent
-   - Wherever the Guesser prompt is constructed, use this file's text (`prompt.txt`) as the base instructions.
-   - Do NOT duplicate this prompt in code; load it from the file so that future edits to `prompt.txt` automatically affect the Guesser behavior.
-   - Make sure no extra instructions are appended that contradict the rules here (e.g. do not ask the model to "output only a single word" in the same request).
+Your job:  
+Decide how confidently the word `"{WORD}"` is connected to the clue `"{CLUE}"` for your team.
 
-After making these changes:
-- Run any existing tests for the Guesser (if present).
-- Manually test a few turns to confirm that the model now returns JSON with a `ranked` list and that the game uses `ranked[0].word` as the actual guess.
+You must answer **only** in this JSON format:
 
-[END IMPLEMENTATION TASKS]
-
-
-You are the Guesser in a game of Codenames.
-You are playing on the {TEAM} team.
-You will be given:
-- A list of REMAINING WORDS on the board (your possible guesses).
-- A clue from your Spymaster: a single word and a number.
-
-Your job is to evaluate how strongly each remaining word is connected to the clue and to rank them.
+```json
+{
+  "word": "{WORD}",
+  "link_confidence": "<'extremely' | 'moderately' | 'no link'>",
+  "reason": "<short explanation>"
+}
 
 Rules:
-- Consider only **strong, direct, common-sense associations** between the clue and each word.
-- Do **not** invent metaphorical, symbolic, or far-fetched connections.
-- If a word has no clear link to the clue, give it a very low score (for example between 0.0 and 0.2) and explicitly say that there is no meaningful connection.
-- You must assign a score to **every** remaining word.
-- Scores must be between 0.0 (no meaningful connection) and 1.0 (very strong, obvious connection).
-- Higher scores should represent clearly better guesses than lower scores.
-- Every word in your output **must** be one of the remaining words, and each remaining word must appear exactly once.
-- Sort the words from highest score to lowest score.
+	•	You may use metaphors and indirect associations if relevant to gameplay.
+	•	Avoid extremely obscure meanings, rare slang, or associations with a high risk of pointing to opponent, neutral, or assassin words.
+	•	If you judge there is essentially no meaningful link, choose "link_confidence": "no link".
+	•	If you judge the link is strong and direct, choose "link_confidence": "extremely".
+	•	If you judge the link is plausible but less certain, choose "link_confidence": "moderately".
+	•	Do not output any numeric score — only the categorical field.
+	•	Output only the JSON object — no extra text, commentary or lists.
 
-Output format:
-Return **only** a single JSON object in the following format, with no additional text, commentary, or Markdown:
+{CERTAINTY_INSTRUCTION}
+
+⸻
+
+Stage 2: Ranking – Evaluate Candidate Words
+
+You will be given:
+	•	A clue: "{CLUE}"
+	•	A list of candidate words (with their prior confidence levels and brief reasons) derived from the pre-filter step:
+{CANDIDATE_WORDS_WITH_CONFIDENCE}
+
+Your job:
+Evaluate how strongly each candidate word connects to the clue in the broader context (board state, overlap, risk). Then produce a ranked list of all candidate words sorted from strongest to weakest.
+
+Output Format
+
+Your final answer must be a single JSON object:
 
 {
   "ranked": [
     {
       "word": "WORD1",
-      "score": 0.9,
-      "reason": "Short explanation of why this word is strongly connected to the clue."
+      "score": <number between 0.0 and 1.0>,
+      "reason": "Short explanation of the connection"
     },
     {
       "word": "WORD2",
-      "score": 0.5,
-      "reason": "Short explanation of a weaker or partial connection."
+      "score": <number between 0.0 and 1.0>,
+      "reason": "Short explanation of the connection"
     }
-    // ... include all remaining words, in descending score order
+    // … include every candidate word exactly once
   ]
 }
 
-Additional guidance:
-- Focus first on identifying the **few best candidates** that most strongly match the clue.
-- Then compare all other words against those best candidates and assign lower scores accordingly.
-- If two words feel equally strong, you may give them the same or very similar scores.
-- Do not try to force a connection for every word; it is better to give a low score and say there is no meaningful connection than to invent a bad association.
+	•	The list must include every word from the candidate list exactly once.
+	•	Items must be sorted from highest score to lowest.
+	•	Do not include any extra text outside the JSON object.
 
-At inference time, the system will pick the top-ranked word (the one with the highest score in `ranked[0]`) as your final guess.
+Runtime Parameters
+TEAM: {TEAM}
+CANDIDATE WORDS: {CANDIDATE_WORDS}
+CLUE: {CLUE}
 
-The calling code will provide:
-- TEAM: {TEAM}
-- REMAINING WORDS: {REMAINING_WORDS}
-- CLUE: {CLUE}
-- NUMBER: {NUMBER}  (the number given by the spymaster)
+Use the clue and the candidate words (with their prior confidence & reasons) to produce the ranked JSON described above.
 
-Use the clue and the remaining words to fill in the JSON object described above.
+⸻
+
+{CERTAINTY_INSTRUCTION}
+
+HIGH confidence – For example:
+	•	BABY → CRADLE (very clear, direct link)
+	•	BABY → DOLL (strong, unambiguous)
+	•	SPACE → ROCKET (iconic space‐travel link)
+	•	SPACE → PLANET (central to space concept)
+	•	MUSIC → GUITAR (core instrument)
+	•	MUSIC → PIANO (strong musical instrument link)
+	•	OCEAN → WAVES (defining ocean feature)
+	•	OCEAN → SHIP (ships sail oceans)
+	•	FOREST → TREES (trees = forest)
+	•	FOREST → WILDERNESS (forest = wilderness)
+
+MODERATELY confident – For example:
+	•	BABY → SLEEP (babies sleep, but many things sleep)
+	•	BABY → BUNNY (baby-bunny link exists, but less direct)
+	•	SPACE → ROOM (a “space” could be a room)
+	•	SPACE → VOID (space = void, more abstract)
+	•	MUSIC → SOUND (music produces sound, general connection)
+	•	MUSIC → CHART (music charts track songs, somewhat indirect)
+	•	OCEAN → BODY (ocean is a “body” of water, broader)
+	•	OCEAN → SALTWATER (ocean = saltwater, factual but less vivid)
+	•	FOREST → SHADOW (forest has shadows, weaker link)
+	•	FOREST → FOOTPATH (footpath runs through forest, indirect)
+
