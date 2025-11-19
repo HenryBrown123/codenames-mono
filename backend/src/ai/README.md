@@ -45,7 +45,11 @@ brew services start ollama
 
 ### 2. Pull a Model
 ```bash
-ollama pull qwen2.5:3b  # Fast, 3B parameter model
+ollama pull qwen2.5:14b  # Recommended: 14B parameter model (9 GB)
+# or
+ollama pull qwen2.5:7b   # Lighter: 7B parameter model (4.7 GB)
+# or
+ollama pull qwen2.5:3b   # Lightest: 3B parameter model (1.9 GB)
 ```
 
 ### 3. Initialize AI Service (in your app startup)
@@ -58,7 +62,7 @@ import { getGameplayState } from "@backend/gameplay/state";
 // Create LLM service
 const llm = createLocalLLMService({
   ollamaUrl: "http://localhost:11434",
-  model: "qwen2.5:3b",
+  model: "qwen2.5:14b",
   temperature: 0.7,
 });
 
