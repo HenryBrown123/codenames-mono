@@ -104,7 +104,7 @@ initializeUsers(app, dbInstance, {
 });
 const setup = initializeGameSetup(app, dbInstance, authHandlers);
 const lobby = initializeLobby(app, dbInstance, authHandlers);
-const { giveClueService, makeGuessService, getGameState } = initializeGameplay(app, dbInstance, authHandlers);
+const { giveClueService, makeGuessService, endTurnService, getGameState } = initializeGameplay(app, dbInstance, authHandlers);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "UP" });
@@ -128,11 +128,12 @@ initializeWebSocketServer({
 const ai = initializeAI({
   llmConfig: {
     ollamaUrl: "http://localhost:11434",
-    model: "qwen2.5:3b",
+    model: "qwen2.5:14b",
     temperature: 0.7,
   },
   giveClue: giveClueService,
   makeGuess: makeGuessService,
+  endTurn: endTurnService,
   getGameState,
 });
 

@@ -64,7 +64,7 @@ export const initialize = (
     getTurnState,
   });
 
-  const { controller: endTurnController } = endTurn({
+  const { controller: endTurnController, service: endTurnService } = endTurn({
     getGameState,
     gameplayHandler,
   });
@@ -103,6 +103,7 @@ export const initialize = (
   return {
     giveClueService,
     makeGuessService,
+    endTurnService,
     getGameState,
   };
 };

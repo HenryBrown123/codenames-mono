@@ -6,6 +6,7 @@
 import type { LocalLLMService } from "../llm/local-llm.service";
 import type { GiveClueService } from "@backend/gameplay/give-clue/give-clue.service";
 import type { MakeGuessService } from "@backend/gameplay/make-guess/make-guess.service";
+import type { EndTurnService } from "@backend/gameplay/end-turn/end-turn.service";
 import type { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
 import type { TurnFinder } from "@backend/common/data-access/repositories/turns.repository";
 import type { PlayerFinderAll } from "@backend/common/data-access/repositories/players.repository";
@@ -18,6 +19,7 @@ export type AIPlayerDependencies = {
   llm: LocalLLMService;
   giveClue: GiveClueService;
   makeGuess: MakeGuessService;
+  endTurn: EndTurnService;
   getGameState: GameplayStateProvider;
 };
 
@@ -46,24 +48,17 @@ const randomDelay = (min: number, max: number): Promise<void> => {
  * Creates the AI player service
  */
 export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
-  const { llm, giveClue, makeGuess, getGameState } = dependencies;
+  const { llm, giveClue, makeGuess, endTurn, getGameState } = dependencies;
 
-  // Create Codenames LLM pipeline
   const pipeline = createCodenamesPipeline(llm);
-
-  // Create multi-agent debate service
 
   /**
    * Check current game state and determine if AI should act
-   * This is the main logic - called after ANY game event
-   *
-   * Simple: Get game state -> Get current round -> Get active turn -> Check if AI needs to act
    */
   const checkAndActIfNeeded = async (gameId: string) => {
     try {
       console.log(`[AI] checkAndActIfNeeded called for game ${gameId}`);
 
-      // Get game state using userId=0 for server-side AI (bypasses player validation)
       const gameState = await getGameState(gameId, 0, null);
 
       if (gameState.status !== "found") {
@@ -83,18 +78,14 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
         return;
       }
 
-      // Get the current/latest turn
       const currentTurn = turns[turns.length - 1];
       if (!currentTurn) {
         return;
       }
 
-      // Get all players from game state (includes isAi field)
       const allPlayers = gameState.data.teams.flatMap((team) => team.players);
 
-      // Check if current turn needs a clue (no clue yet)
       if (!currentTurn.clue) {
-        // Find if this team's codemaster is AI
         const teamName = currentTurn.teamName;
 
         console.log(`[AI] Checking for AI codemaster on ${teamName} team`);
@@ -124,16 +115,13 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
           };
 
           await aiGiveClue(context);
-          return; // Done
+          return;
         }
       }
 
-      // Check if current turn has a clue and needs guesses
       if (currentTurn.clue && currentTurn.guessesRemaining > 0) {
-        // Check if this team has AI codebreakers
         const teamName = currentTurn.teamName;
 
-        // Check if ALL codebreakers on this team are AI
         const teamCodebreakers = allPlayers.filter(
           (p) => p.teamName === teamName && p.role === "CODEBREAKER",
         );
@@ -142,7 +130,6 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
           teamCodebreakers.length > 0 && teamCodebreakers.every((p) => p.isAi);
 
         if (allCodebreakersAreAI) {
-          // Pick any AI codebreaker
           const aiCodebreaker = teamCodebreakers[0];
 
           console.log(`[AI] ${teamName} needs guess, all codebreakers are AI`);
@@ -156,11 +143,9 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
           };
 
           await aiMakeGuess(context);
-          return; // Done
+          return;
         }
       }
-
-      // No AI action needed
     } catch (error) {
       console.error("[AI] Error in checkAndActIfNeeded:", error);
     }
@@ -180,10 +165,8 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
     activeDecisions.add(decisionKey);
 
     try {
-      // Add realistic delay (1-3 seconds)
       await randomDelay(1000, 3000);
 
-      // Get game state to see all cards
       const gameState = await getGameState(context.gameId, context.userId, context.playerId);
 
       if (gameState.status !== "found" || !gameState.data.currentRound) {
@@ -199,7 +182,6 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
         return;
       }
 
-      // Categorize cards
       const friendlyWords = cards
         .filter((c: any) => c.teamName === myTeam && !c.selected)
         .map((c: any) => c.word);
@@ -217,7 +199,6 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
         return;
       }
 
-      // Extract previous clues from all turns this round
       const previousClues = gameState.data.currentRound.turns
         .filter((t: any) => t.clue && t.clue.word)
         .map((t: any) => t.clue.word);
@@ -228,7 +209,6 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
         console.log(`[AI Pipeline] ${previousClues.length} clues already used: ${previousClues.join(", ")}`);
       }
 
-      // Run spymaster pipeline (single LLM call)
       const pipelineResult = await pipeline.runSpymasterPipeline({
         currentTeam: myTeam,
         friendlyWords,
@@ -251,7 +231,6 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
 
       console.log(`[AI] ${context.playerId} giving clue: ${decision.word} for ${decision.count}`);
 
-      // Give the clue
       const clueResult = await giveClue({
         gameId: context.gameId,
         roundNumber: context.roundNumber,
@@ -272,23 +251,22 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
   };
 
   /**
-   * AI makes a guess as CODEBREAKER
+   * AI makes guesses as CODEBREAKER
+   * Runs pipeline ONCE, then makes guesses sequentially from ranked list
    */
   const aiMakeGuess = async (context: AIDecisionContext): Promise<void> => {
     const decisionKey = `guess:${context.gameId}:${context.playerId}`;
 
     if (activeDecisions.has(decisionKey)) {
-      console.log(`[AI] Already processing guess for ${context.playerId}`);
+      console.log(`[AI] Already processing guesses for ${context.playerId}`);
       return;
     }
 
     activeDecisions.add(decisionKey);
 
     try {
-      // Add realistic delay (2-4 seconds for thinking)
       await randomDelay(2000, 4000);
 
-      // Get game state
       const gameState = await getGameState(context.gameId, context.userId, context.playerId);
 
       if (gameState.status !== "found" || !gameState.data.currentRound) {
@@ -312,12 +290,12 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
       }
 
       const myTeam = currentTurn.teamName;
+      const clueNumber = currentTurn.clue.number;
 
       console.log(`[AI Pipeline] Running Guesser pipeline for ${context.playerId}`);
-      console.log(`[AI Pipeline] Clue: "${currentTurn.clue.word}" for ${currentTurn.clue.number}`);
-      console.log(`[AI Pipeline] ${currentTurn.guessesRemaining} guesses remaining`);
+      console.log(`[AI Pipeline] Clue: "${currentTurn.clue.word}" for ${clueNumber}`);
+      console.log(`[AI Pipeline] Planning to make up to ${clueNumber} guesses`);
 
-      // Run guesser pipeline (single LLM call)
       const operativeDecision = await pipeline.runOperativePipeline({
         currentTeam: myTeam,
         remainingWords,
@@ -327,34 +305,90 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
 
       console.log(`[AI Pipeline] Pipeline complete`);
       console.log(`[AI Pipeline] Decision: ${operativeDecision.action}`);
-      if (operativeDecision.word) {
-        console.log(`[AI Pipeline] Guessing: "${operativeDecision.word}"`);
-        console.log(`[AI Pipeline] Confidence: ${operativeDecision.confidence}`);
-        console.log(`[AI Pipeline] Reason: ${operativeDecision.reason}`);
-      }
 
-      // If AI decided to stop, don't make a guess
       if (operativeDecision.action === "stop") {
-        console.log(`[AI] ${context.playerId} decided to stop guessing`);
+        console.log(`[AI] ${context.playerId} decided to stop guessing: ${operativeDecision.reason}`);
+        console.log(`[AI] Ending turn due to insufficient candidates`);
+
+        const endTurnResult = await endTurn({
+          gameId: context.gameId,
+          roundNumber: context.roundNumber,
+          userId: context.userId,
+          playerId: context.playerId,
+        });
+
+        if (!endTurnResult.success) {
+          console.error(`[AI] Failed to end turn:`, endTurnResult.error);
+        } else {
+          console.log(`[AI] Turn ended successfully`);
+        }
         return;
       }
 
-      // Pipeline already validated the word, so just make the guess
-      const result = await makeGuess({
-        gameId: context.gameId,
-        roundNumber: context.roundNumber,
-        userId: context.userId,
-        playerId: context.playerId,
-        cardWord: operativeDecision.word!,
-      });
+      const rankedList = operativeDecision.rankedList;
+      if (!rankedList || rankedList.length === 0) {
+        console.error(`[AI] No ranked list returned from pipeline`);
+        return;
+      }
 
-      if (!result.success) {
-        console.error(`[AI] Failed to make guess:`, result.error);
-      } else {
-        console.log(`[AI] Guess result: ${result.data.guess.outcome}`);
+      console.log(`[AI] Making up to ${clueNumber} guess(es) sequentially...`);
+      console.log(`[AI] Ranked list has ${rankedList.length} candidates`);
+
+      let correctGuesses = 0;
+
+      for (let i = 0; i < Math.min(clueNumber, rankedList.length); i++) {
+        const candidate = rankedList[i];
+
+        console.log(
+          `[AI] Guess ${i + 1}/${clueNumber}: "${candidate.word}" (score: ${candidate.score.toFixed(2)})`,
+        );
+
+        const result = await makeGuess({
+          gameId: context.gameId,
+          roundNumber: context.roundNumber,
+          userId: context.userId,
+          playerId: context.playerId,
+          cardWord: candidate.word,
+        });
+
+        if (!result.success) {
+          console.error(`[AI] Failed to make guess:`, result.error);
+          break;
+        }
+
+        const outcome = result.data.guess.outcome;
+        console.log(`[AI] Result: ${outcome}`);
+
+        if (outcome === "CORRECT_TEAM_CARD") {
+          correctGuesses++;
+
+          if (correctGuesses >= clueNumber) {
+            console.log(`[AI] Made ${correctGuesses} correct guesses, calling endTurn`);
+
+            const endTurnResult = await endTurn({
+              gameId: context.gameId,
+              roundNumber: context.roundNumber,
+              userId: context.userId,
+              playerId: context.playerId,
+            });
+
+            if (!endTurnResult.success) {
+              console.error(`[AI] Failed to end turn:`, endTurnResult.error);
+            } else {
+              console.log(`[AI] Turn ended successfully`);
+            }
+            break;
+          }
+
+          console.log(`[AI] Waiting 5 seconds before next guess...`);
+          await randomDelay(5000, 5000);
+        } else {
+          console.log(`[AI] Wrong guess (${outcome}), turn will auto-end`);
+          break;
+        }
       }
     } catch (error) {
-      console.error(`[AI] Error making guess:`, error);
+      console.error(`[AI] Error making guesses:`, error);
     } finally {
       activeDecisions.delete(decisionKey);
     }
@@ -362,15 +396,11 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
 
   /**
    * Generic handler for ALL game events
-   * Just checks state and acts if needed - no special logic per event type
    */
   const handleGameEvent = async (eventName: string, payload: any) => {
     console.log(`[AI] ${eventName} event received for game ${payload.gameId}`);
 
-    // Small delay to ensure database is updated
     await randomDelay(500, 1000);
-
-    // Simple: just check game state and act if needed
     await checkAndActIfNeeded(payload.gameId);
   };
 
@@ -378,8 +408,6 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
    * Initialize event listeners
    */
   const initialize = () => {
-    // Listen to ALL game events - same simple handler for all
-    // Just check state and act if needed
     gameEventBus.onGameEvent(WebSocketEvent.GAME_STARTED, (p) =>
       handleGameEvent("GAME_STARTED", p),
     );
@@ -388,7 +416,6 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
     );
     gameEventBus.onGameEvent(WebSocketEvent.TURN_ENDED, (p) => handleGameEvent("TURN_ENDED", p));
     gameEventBus.onGameEvent(WebSocketEvent.CLUE_GIVEN, (p) => handleGameEvent("CLUE_GIVEN", p));
-    gameEventBus.onGameEvent(WebSocketEvent.GUESS_MADE, (p) => handleGameEvent("GUESS_MADE", p));
     gameEventBus.onGameEvent(WebSocketEvent.PLAYER_JOINED, (p) =>
       handleGameEvent("PLAYER_JOINED", p),
     );

@@ -8,16 +8,13 @@ import type { LocalLLMService } from "./llm/local-llm.service";
 import type { AIPlayerService } from "./ai-player/ai-player.service";
 import type { GiveClueService } from "@backend/gameplay/give-clue/give-clue.service";
 import type { MakeGuessService } from "@backend/gameplay/make-guess/make-guess.service";
+import type { EndTurnService } from "@backend/gameplay/end-turn/end-turn.service";
 import type { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
 
 // Export event bus
 export { gameEventBus, emitServerGameEvent } from "./events/game-event-bus";
-
-// Export new pipeline (production-ready)
 export { createCodenamesPipeline } from "./llm/codenames-pipeline";
 export type { CodenamesPipeline } from "./llm/codenames-pipeline";
-
-// Export types
 export type { LocalLLMService, AIPlayerService };
 
 export type AIModuleDependencies = {
@@ -28,6 +25,7 @@ export type AIModuleDependencies = {
   };
   giveClue: GiveClueService;
   makeGuess: MakeGuessService;
+  endTurn: EndTurnService;
   getGameState: GameplayStateProvider;
 };
 
@@ -35,20 +33,18 @@ export type AIModuleDependencies = {
  * Initializes the AI feature module with all dependencies
  */
 export const initialize = (dependencies: AIModuleDependencies) => {
-  const { llmConfig, giveClue, makeGuess, getGameState } = dependencies;
+  const { llmConfig, giveClue, makeGuess, endTurn, getGameState } = dependencies;
 
-  // Create LLM service
   const llm = createLocalLLMService(llmConfig);
 
-  // Create AI player service - simple, just uses game state provider
   const aiPlayerService = createAIPlayerService({
     llm,
     giveClue,
     makeGuess,
+    endTurn,
     getGameState,
   });
 
-  // Initialize event listeners
   aiPlayerService.initialize();
 
   return {
