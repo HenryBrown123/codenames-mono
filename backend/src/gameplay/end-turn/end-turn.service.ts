@@ -71,7 +71,14 @@ export const createEndTurnService = (
         return { success: false, error: "Only codebreakers can end turn" };
       }
 
-      if (player.teamName !== currentTurn.teamName) {
+      // Find the full player object to check if they're an AI
+      const fullPlayer = gameState.data.currentRound?.players.find(
+        p => p.publicId === playerId
+      );
+
+      // For non-AI players, verify it's their team's turn
+      // For AI players, skip this check as they're managed by the AI service
+      if (!fullPlayer?.isAi && player.teamName !== currentTurn.teamName) {
         return { success: false, error: "Not your team's turn" };
       }
 
