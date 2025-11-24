@@ -21,11 +21,7 @@ import { gameplayErrorHandler } from "./errors/gameplay-errors.middleware";
 /**
  * Initializes the gameplay feature module with all routes and dependencies
  */
-export const initialize = (
-  app: Express,
-  db: Kysely<DB>,
-  auth: AuthMiddleware,
-) => {
+export const initialize = (app: Express, db: Kysely<DB>, auth: AuthMiddleware) => {
   // State "providers"
   const { provider: getGameState } = gameplayState(db);
   const { provider: getTurnState } = turnState(db);
@@ -51,13 +47,13 @@ export const initialize = (
   const { controller: giveClueController, service: giveClueService } = giveClue({
     getGameState,
     gameplayHandler,
-    getTurnState, // ← Pass turn state provider to give clue
+    getTurnState,
   });
 
   const { controller: makeGuessController, service: makeGuessService } = makeGuess({
     getGameState,
     gameplayHandler,
-    getTurnState, // ← Pass turn state provider to make guess
+    getTurnState,
   });
 
   const { controller: getTurnController } = getTurn({
@@ -75,23 +71,11 @@ export const initialize = (
   router.get("/games/:gameId", auth, getGameController);
   router.get("/games/:gameId/players", auth, getPlayersController);
   router.get("/games/:gameId/events", auth, getEventsController);
-  router.post(
-    "/games/:gameId/rounds/:roundNumber/clues",
-    auth,
-    giveClueController,
-  );
+  router.post("/games/:gameId/rounds/:roundNumber/clues", auth, giveClueController);
 
-  router.post(
-    "/games/:gameId/rounds/:roundNumber/guesses",
-    auth,
-    makeGuessController,
-  );
+  router.post("/games/:gameId/rounds/:roundNumber/guesses", auth, makeGuessController);
 
-  router.post(
-    "/games/:gameId/rounds/:roundNumber/end-turn",
-    auth,
-    endTurnController,
-  );
+  router.post("/games/:gameId/rounds/:roundNumber/end-turn", auth, endTurnController);
 
   // Turn routes
   router.get("/turns/:turnId", auth, getTurnController);
