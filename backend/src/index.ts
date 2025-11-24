@@ -14,6 +14,8 @@ import { initialize as initializeGameSetup } from "./setup";
 import { initialize as initializeLobby } from "./lobby";
 import { initialize as initializeGameplay } from "./gameplay";
 import { initialize as initializeAI } from "./ai";
+import { initialize as initializeChat } from "./chat";
+
 import { authMiddleware } from "@backend/common/http-middleware/auth.middleware";
 import { refreshSystemData } from "./common/data/system-data-loader";
 import { initializeWebSocketServer } from "./common/websocket";
@@ -104,7 +106,11 @@ initializeUsers(app, dbInstance, {
 });
 const setup = initializeGameSetup(app, dbInstance, authHandlers);
 const lobby = initializeLobby(app, dbInstance, authHandlers);
-const { giveClueService, makeGuessService, endTurnService, getGameState } = initializeGameplay(app, dbInstance, authHandlers);
+const { giveClueService, makeGuessService, endTurnService, getGameState } = initializeGameplay(
+  app,
+  dbInstance,
+  authHandlers,
+);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "UP" });
@@ -124,16 +130,26 @@ initializeWebSocketServer({
   corsOrigins: corsOptions.origin as string[],
 });
 
-// Initialize AI feature (uses game state provider + one repository for userId lookup)
 const ai = initializeAI({
+  app,
+  db: dbInstance,
+  auth: authHandlers,
   llmConfig: {
-    ollamaUrl: "http://localhost:11434",
+    ollamaUrl: `http://localhost:${env.LLM_PORT}`,
     model: "qwen2.5:14b",
     temperature: 0.7,
   },
   giveClue: giveClueService,
   makeGuess: makeGuessService,
   endTurn: endTurnService,
+  getGameState,
+});
+
+// Initialize chat feature
+const chat = initializeChat({
+  app,
+  db: dbInstance,
+  auth: authHandlers,
   getGameState,
 });
 
