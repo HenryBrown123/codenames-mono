@@ -36,6 +36,7 @@ export const loadEnvFromPackageDir = () => {
     console.log(`   • Port: ${parsedEnv.PORT}`);
     console.log(`   • Database: ${parsedEnv.DATABASE_URL}`);
     console.log(`   • JWT Secret: ${parsedEnv.JWT_SECRET}`);
+    console.log(`   • LLM Port: ${parsedEnv.LLM_PORT}`);
   }
 
   console.log("✅ Environment variables validated successfully");
@@ -48,4 +49,5 @@ const EnvSchema = z.object({
   DATABASE_URL: z.string().url("Invalid DATABASE_URL"),
   JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 characters"),
   NODE_ENV: z.enum(["development", "production", "test"]),
+  LLM_PORT: z.string().transform(Number).default("11434"),
 });
