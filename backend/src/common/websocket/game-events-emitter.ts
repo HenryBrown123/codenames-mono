@@ -5,6 +5,8 @@ import type {
   PlayerEventPayload,
   GameplayEventPayload,
   GameStateEventPayload,
+  AiPipelineEventPayload,
+  GameMessageEventPayload,
 } from "./websocket-events.types";
 import { emitServerGameEvent } from "@backend/ai/events/game-event-bus";
 
@@ -220,5 +222,90 @@ export class GameEventsEmitter {
       timestamp: new Date().toISOString(),
     };
     emitToGame(gameId, WebSocketEvent.GAME_UPDATED, payload);
+  }
+
+  /**
+   * Emit an AI pipeline started event
+   */
+  static aiPipelineStarted(
+    gameId: string,
+    runId: string,
+    pipelineType: string,
+  ): void {
+    const payload: AiPipelineEventPayload = {
+      gameId,
+      runId,
+      pipelineType,
+      timestamp: new Date().toISOString(),
+    };
+    emitToGame(gameId, WebSocketEvent.AI_PIPELINE_STARTED, payload);
+  }
+
+  /**
+   * Emit an AI pipeline stage event
+   */
+  static aiPipelineStage(
+    gameId: string,
+    runId: string,
+    stage: string,
+  ): void {
+    const payload: AiPipelineEventPayload = {
+      gameId,
+      runId,
+      stage,
+      timestamp: new Date().toISOString(),
+    };
+    emitToGame(gameId, WebSocketEvent.AI_PIPELINE_STAGE, payload);
+  }
+
+  /**
+   * Emit an AI pipeline complete event
+   */
+  static aiPipelineComplete(gameId: string, runId: string): void {
+    const payload: AiPipelineEventPayload = {
+      gameId,
+      runId,
+      timestamp: new Date().toISOString(),
+    };
+    emitToGame(gameId, WebSocketEvent.AI_PIPELINE_COMPLETE, payload);
+  }
+
+  /**
+   * Emit an AI pipeline failed event
+   */
+  static aiPipelineFailed(
+    gameId: string,
+    runId: string,
+    error: string,
+  ): void {
+    const payload: AiPipelineEventPayload = {
+      gameId,
+      runId,
+      error,
+      timestamp: new Date().toISOString(),
+    };
+    emitToGame(gameId, WebSocketEvent.AI_PIPELINE_FAILED, payload);
+  }
+
+  /**
+   * Emit a game message created event
+   * For team-only messages, only emit to members of that team
+   */
+  static gameMessageCreated(
+    gameId: string,
+    messageId: string,
+    messageType: string,
+    teamId?: number,
+  ): void {
+    const payload: GameMessageEventPayload = {
+      gameId,
+      messageId,
+      messageType,
+      teamId,
+      timestamp: new Date().toISOString(),
+    };
+    // TODO: Implement team-based filtering when emitting
+    // For now, emit to entire game room and let client filter
+    emitToGame(gameId, WebSocketEvent.GAME_MESSAGE_CREATED, payload);
   }
 }
