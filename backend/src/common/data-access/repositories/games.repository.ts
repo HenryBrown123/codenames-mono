@@ -30,6 +30,7 @@ export type GameData = {
   game_type: GameType;
   game_format: GameFormat;
   ai_mode: boolean;
+  host_user_id: number;
 };
 
 /** Input and result types */
@@ -38,6 +39,7 @@ export type GameInput = {
   gameType: GameType;
   gameFormat: GameFormat;
   aiMode?: boolean;
+  hostUserId: number;
 };
 
 export type GameResult = {
@@ -114,6 +116,7 @@ export const findGameByPublicId =
         "games.game_type",
         "games.game_format",
         "games.ai_mode",
+        "games.host_user_id",
         "game_status.status_name as status",
       ])
       .where("games.public_id", "=", publicId)
@@ -129,6 +132,7 @@ export const findGameByPublicId =
           game_type: gameTypeSchema.parse(game.game_type),
           game_format: gameFormatSchema.parse(game.game_format),
           ai_mode: game.ai_mode,
+          host_user_id: game.host_user_id!,
         }
       : null;
   };
@@ -150,6 +154,7 @@ export const findGameById =
         "games.game_type",
         "games.game_format",
         "games.ai_mode",
+        "games.host_user_id",
         "game_status.status_name as status",
       ])
       .where("games.id", "=", gameId)
@@ -165,6 +170,7 @@ export const findGameById =
           game_type: gameTypeSchema.parse(game.game_type),
           game_format: gameFormatSchema.parse(game.game_format),
           ai_mode: game.ai_mode,
+          host_user_id: game.host_user_id!,
         }
       : null;
   };
@@ -180,12 +186,13 @@ export const createGame =
       .insertInto("games")
       .values({
         public_id: gameInput.publicId,
-        status_id: 1, // SETUP status
+        status_id: 1,
         created_at: now,
         updated_at: now,
         game_type: gameInput.gameType,
         game_format: gameInput.gameFormat,
         ai_mode: gameInput.aiMode ?? false,
+        host_user_id: gameInput.hostUserId,
       })
       .returning(["id", "created_at", "updated_at"])
       .executeTakeFirstOrThrow();
@@ -226,6 +233,7 @@ export const updateGameStatus =
         "game_type",
         "game_format",
         "ai_mode",
+        "host_user_id",
       ])
       .executeTakeFirstOrThrow();
 
@@ -238,6 +246,7 @@ export const updateGameStatus =
       game_type: gameTypeSchema.parse(updatedGame.game_type),
       game_format: gameFormatSchema.parse(updatedGame.game_format),
       ai_mode: updatedGame.ai_mode,
+      host_user_id: updatedGame.host_user_id!,
     };
 
     return gameWithStatus;

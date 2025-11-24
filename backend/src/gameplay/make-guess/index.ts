@@ -25,7 +25,7 @@ export const makeGuess = (dependencies: MakeGuessDependencies) => {
   const makeGuessServiceInstance = makeGuessService({
     getGameState: dependencies.getGameState,
     gameplayHandler: dependencies.gameplayHandler,
-    getTurnState: dependencies.getTurnState, // ← Pass turn state provider
+    getTurnState: dependencies.getTurnState,
   });
 
   const controller = makeGuessController({

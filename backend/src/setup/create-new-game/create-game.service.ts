@@ -73,6 +73,7 @@ export const createGameService = (dependencies: ServiceDependencies) => {
         gameType,
         gameFormat,
         aiMode,
+        hostUserId: userId,
       });
 
       const teams = await setupOps.createTeams({

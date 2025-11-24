@@ -23,6 +23,29 @@ export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
+export interface AiPipelineRuns {
+  completed_at: Timestamp | null;
+  error: string | null;
+  game_id: number;
+  id: Generated<string>;
+  pipeline_type: string;
+  player_id: number;
+  /**
+   * Structured output from prefilter stage (audit/recovery)
+   */
+  prefilter_response: Json | null;
+  /**
+   * Structured output from ranker stage (audit/recovery)
+   */
+  ranker_response: Json | null;
+  /**
+   * Structured output from spymaster stage (audit/recovery)
+   */
+  spymaster_response: Json | null;
+  started_at: Generated<Timestamp>;
+  status: string;
+}
+
 export interface Cards {
   card_type: string;
   id: Generated<number>;
@@ -69,11 +92,29 @@ export interface GameEvents {
   round_id: number | null;
 }
 
+export interface GameMessages {
+  content: string;
+  created_at: Generated<Timestamp>;
+  game_id: number;
+  id: Generated<string>;
+  message_type: string;
+  player_id: number | null;
+  /**
+   * Team of the message author
+   */
+  team_id: number | null;
+  /**
+   * If true, only visible to members of team_id
+   */
+  team_only: Generated<boolean>;
+}
+
 export interface Games {
   ai_mode: Generated<boolean>;
   created_at: Generated<Timestamp>;
   game_format: string;
   game_type: string;
+  host_user_id: number | null;
   /**
    * Internal ID
    */
@@ -193,10 +234,12 @@ export interface Users {
 }
 
 export interface DB {
+  ai_pipeline_runs: AiPipelineRuns;
   cards: Cards;
   clues: Clues;
   decks: Decks;
   game_events: GameEvents;
+  game_messages: GameMessages;
   game_status: GameStatus;
   games: Games;
   guesses: Guesses;

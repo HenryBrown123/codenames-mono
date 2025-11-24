@@ -60,9 +60,9 @@ export const lobbyStateProvider = (
     }));
 
     const userPlayer = players.find((player) => player._userId === userId);
+    const isHost = game.host_user_id === userId;
     const canModifyGame = !!userPlayer;
-    
-    // Create player context for validation compatibility
+
     const playerContext = userPlayer ? {
       _userId: userPlayer._userId,
       _id: userPlayer._id,
@@ -81,6 +81,7 @@ export const lobbyStateProvider = (
     return {
       _id: game._id,
       public_id: game.public_id,
+      host_user_id: game.host_user_id,
       status: game.status,
       game_format: game.game_format,
       gameType: game.game_type,
@@ -90,7 +91,7 @@ export const lobbyStateProvider = (
         _id: currentRound._id,
         number: currentRound.roundNumber,
         status: currentRound.status,
-        cards: await getCardsByRoundId(currentRound._id).then(cards => 
+        cards: await getCardsByRoundId(currentRound._id).then(cards =>
           cards.map(card => ({
             _id: card._id,
             _roundId: card._roundId,
@@ -101,7 +102,7 @@ export const lobbyStateProvider = (
             selected: card.selected,
           }))
         ),
-        players: [], // Will be populated when needed for role assignment
+        players: [],
         createdAt: currentRound.createdAt,
       } : null,
       historicalRounds: historicalRounds.map(r => ({
@@ -115,6 +116,7 @@ export const lobbyStateProvider = (
       userContext: {
         _userId: userId,
         canModifyGame,
+        isHost,
       },
       playerContext,
       createdAt: game.created_at,

@@ -26,6 +26,7 @@ export const teamSchema = z.object({
 export const userContextSchema = z.object({
   _userId: z.number().int().positive(),
   canModifyGame: z.boolean().default(true),
+  isHost: z.boolean().default(false),
 });
 
 // Player context for validation compatibility
@@ -87,6 +88,7 @@ export const historicalRoundSchema = z.object({
 export const lobbyBaseSchema = z.object({
   _id: z.number().int().positive(),
   public_id: z.string(),
+  host_user_id: z.number().int().positive(),
   status: z.enum([
     GAME_STATE.LOBBY,
     GAME_STATE.IN_PROGRESS,

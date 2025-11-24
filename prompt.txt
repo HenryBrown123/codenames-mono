@@ -1,116 +1,207 @@
-Certainly! I’ll edit the prompt.txt file in your project with full instructions for the two-stage guesser pipeline, including context for the agent and both prompt templates (pre-filter & ranking).
+# Transaction Handler Pattern - Codenames Backend
 
-Here is the full content to place into /Users/dev/Developer/codenames-mono/prompt.txt:
+## Overview
 
-# CODENAMES AI GUESSER PIPELINE PROMPTS
-
-## Context for the LLM Agent  
-You are a Guesser-Assistant working for the current team in a game of Codenames.  
-This pipeline uses a **two-stage approach** to decide which board words to guess:
-
-1. **Pre-Filter Stage**: For each remaining word individually, decide the level of confidence in the link between the word and the spymaster’s clue.  
-2. **Ranking Stage**: Once a shortlist of candidate words passes the pre-filter, evaluate all of them together, consider board context, overlap with previous clues, risk of opponent/assassin words, and produce a final ranked list.
-
-Your code will decide thresholds and category logic (“extremely / moderately / no link”) based on game state (allowed guesses, cards remaining). The prompts below provide the instructions for the LLM in each stage.
+The transaction handler pattern ensures **atomicity** for database operations - all operations succeed together or all fail together (rollback).
 
 ---
 
-## Stage 1: Pre-Filter – Single Word Confidence Check  
-You will be given:  
-- A clue: `"{CLUE}"`  
-- A board word under consideration: `"{WORD}"`
+## Core Implementation
 
-Your job:  
-Decide how confidently the word `"{WORD}"` is connected to the clue `"{CLUE}"` for your team.
+### Transaction Handler (`backend/src/common/data-access/transaction-handler.ts`)
 
-You must answer **only** in this JSON format:
+```typescript
+import type { Kysely, Transaction } from "kysely";
+import type { DB } from "../db/db.types";
 
-```json
-{
-  "word": "{WORD}",
-  "link_confidence": "<'extremely' | 'moderately' | 'no link'>",
-  "reason": "<short explanation>"
-}
+export type DbContext = Kysely<DB>;
+export type TransactionContext = Transaction<DB>;
 
-Rules:
-	•	You may use metaphors and indirect associations if relevant to gameplay.
-	•	Avoid extremely obscure meanings, rare slang, or associations with a high risk of pointing to opponent, neutral, or assassin words.
-	•	If you judge there is essentially no meaningful link, choose "link_confidence": "no link".
-	•	If you judge the link is strong and direct, choose "link_confidence": "extremely".
-	•	If you judge the link is plausible but less certain, choose "link_confidence": "moderately".
-	•	Do not output any numeric score — only the categorical field.
-	•	Output only the JSON object — no extra text, commentary or lists.
+/**
+ * Creates a transactional handler that executes operations within database transactions
+ */
+export const createTransactionalHandler = <TOperations>(
+  db: DbContext,
+  createOperations: (trx: TransactionContext) => TOperations,
+): TransactionalHandler<TOperations> => {
+  return async <TResult>(
+    operation: (ops: TOperations) => Promise<TResult>,
+  ): Promise<TResult> => {
+    return await db.transaction().execute(async (trx) => {
+      const operations = createOperations(trx);
+      return await operation(operations);
+    });
+  };
+};
 
-{CERTAINTY_INSTRUCTION}
+export type TransactionalHandler<TOperations> = <TResult>(
+  operation: (ops: TOperations) => Promise<TResult>,
+) => Promise<TResult>;
+```
 
-⸻
+---
 
-Stage 2: Ranking – Evaluate Candidate Words
+## Operations Factory Pattern
 
-You will be given:
-	•	A clue: "{CLUE}"
-	•	A list of candidate words (with their prior confidence levels and brief reasons) derived from the pre-filter step:
-{CANDIDATE_WORDS_WITH_CONFIDENCE}
+Define what operations are available within transactions:
 
-Your job:
-Evaluate how strongly each candidate word connects to the clue in the broader context (board state, overlap, risk). Then produce a ranked list of all candidate words sorted from strongest to weakest.
+```typescript
+// backend/src/lobby/lobby-actions.ts
+export const lobbyOperations = (trx: TransactionContext) => ({
+  // Player operations
+  addPlayers: playersRepository.addPlayers(trx),
+  removePlayer: playersRepository.removePlayer(trx),
+  modifyPlayers: playersRepository.modifyPlayers(trx),
 
-Output Format
+  // Game operations
+  updateGameStatus: gamesRepository.updateGameStatus(trx),
 
-Your final answer must be a single JSON object:
+  // Round operations
+  createRound: newRoundActions.createNextRound(
+    roundsRepository.createNewRound(trx),
+  ),
+  assignPlayerRoles: assignRolesActions.assignRolesRandomly(
+    playerRolesRepository.assignPlayerRoles(trx),
+    (gameId) => playersRepository.getRoleHistory(trx)(gameId, "CODEMASTER"),
+  ),
+  dealCards: dealCardsActions.dealCardsToRound(
+    cardsRepository.getRandomWords(trx),
+    cardsRepository.replaceCards(trx),
+    gameEventsRepository.createEvent(trx),
+  ),
+  startRound: startRoundActions.startCurrentRound(
+    roundsRepository.updateRoundStatus(trx),
+    turnRepository.createTurn(trx),
+  ),
+});
 
-{
-  "ranked": [
-    {
-      "word": "WORD1",
-      "score": <number between 0.0 and 1.0>,
-      "reason": "Short explanation of the connection"
-    },
-    {
-      "word": "WORD2",
-      "score": <number between 0.0 and 1.0>,
-      "reason": "Short explanation of the connection"
+export type LobbyOperations = ReturnType<typeof lobbyOperations>;
+```
+
+---
+
+## Usage in Service Layer
+
+```typescript
+export const addPlayersService = (dependencies: ServiceDependencies) => {
+  return async (gameId: string, userId: number, playersToAdd: PlayerAddData[]) => {
+    // 1. Fetch state for validation (OUTSIDE transaction)
+    const lobby = await dependencies.getLobbyState(gameId, userId);
+
+    if (!lobby) {
+      throw new Error("Game not found");
     }
-    // … include every candidate word exactly once
-  ]
-}
 
-	•	The list must include every word from the candidate list exactly once.
-	•	Items must be sorted from highest score to lowest.
-	•	Do not include any extra text outside the JSON object.
+    // 2. Validate business rules
+    if (lobby.status !== "LOBBY") {
+      throw new Error("Cannot add players");
+    }
 
-Runtime Parameters
-TEAM: {TEAM}
-CANDIDATE WORDS: {CANDIDATE_WORDS}
-CLUE: {CLUE}
+    // 3. Execute ALL writes in ONE transaction
+    const result = await dependencies.lobbyHandler(async (ops) => {
+      const newPlayers = await ops.addPlayers(playersToAdd);
+      await ops.updateGameStatus(gameId, "READY");
+      return { newPlayers };
+    });
 
-Use the clue and the candidate words (with their prior confidence & reasons) to produce the ranked JSON described above.
+    // 4. Emit events AFTER transaction succeeds
+    GameEventsEmitter.playersAdded(gameId, result.newPlayers);
 
-⸻
+    return result;
+  };
+};
+```
 
-{CERTAINTY_INSTRUCTION}
+---
 
-HIGH confidence – For example:
-	•	BABY → CRADLE (very clear, direct link)
-	•	BABY → DOLL (strong, unambiguous)
-	•	SPACE → ROCKET (iconic space‐travel link)
-	•	SPACE → PLANET (central to space concept)
-	•	MUSIC → GUITAR (core instrument)
-	•	MUSIC → PIANO (strong musical instrument link)
-	•	OCEAN → WAVES (defining ocean feature)
-	•	OCEAN → SHIP (ships sail oceans)
-	•	FOREST → TREES (trees = forest)
-	•	FOREST → WILDERNESS (forest = wilderness)
+## Key Patterns
 
-MODERATELY confident – For example:
-	•	BABY → SLEEP (babies sleep, but many things sleep)
-	•	BABY → BUNNY (baby-bunny link exists, but less direct)
-	•	SPACE → ROOM (a “space” could be a room)
-	•	SPACE → VOID (space = void, more abstract)
-	•	MUSIC → SOUND (music produces sound, general connection)
-	•	MUSIC → CHART (music charts track songs, somewhat indirect)
-	•	OCEAN → BODY (ocean is a “body” of water, broader)
-	•	OCEAN → SALTWATER (ocean = saltwater, factual but less vivid)
-	•	FOREST → SHADOW (forest has shadows, weaker link)
-	•	FOREST → FOOTPATH (footpath runs through forest, indirect)
+### ✅ DO: Fetch state BEFORE transaction
+```typescript
+const lobby = await getLobbyState(gameId, userId);
+if (lobby.status !== "LOBBY") throw new Error("Invalid state");
 
+await lobbyHandler(async (ops) => {
+  await ops.addPlayers(...);
+});
+```
+
+### ✅ DO: All writes in ONE transaction
+```typescript
+await lobbyHandler(async (ops) => {
+  await ops.createRound(gameId);
+  await ops.dealCards(roundId);
+  await ops.updateGameStatus(gameId, "IN_PROGRESS");
+  // All succeed or all rollback
+});
+```
+
+### ✅ DO: Emit events AFTER transaction
+```typescript
+const result = await lobbyHandler(async (ops) => {
+  return await ops.createPlayer(data);
+});
+
+GameEventsEmitter.playerJoined(gameId, result.id);
+```
+
+### ❌ DON'T: Emit events INSIDE transaction
+```typescript
+await lobbyHandler(async (ops) => {
+  const player = await ops.createPlayer(data);
+  GameEventsEmitter.playerJoined(gameId, player.id); // BAD!
+  await ops.doSomethingElse(); // If fails, event already sent!
+});
+```
+
+---
+
+## Benefits
+
+1. **Atomicity**: All operations succeed or all fail
+2. **Type Safety**: Operations object fully typed
+3. **Testability**: Easy to mock
+4. **Consistency**: Same pattern everywhere
+5. **Automatic Rollback**: Kysely handles it
+6. **Isolation**: Prevents race conditions
+
+---
+
+## Example: Start Game Transaction
+
+```typescript
+const result = await dependencies.lobbyHandler(async (ops) => {
+  // Step 1: Update game status
+  await ops.updateGameStatus(lobby._id, "IN_PROGRESS");
+
+  // Step 2: Create first round
+  const round = await ops.createRound({ gameId: lobby._id, roundNumber: 1 });
+
+  // Step 3: Assign roles
+  const roles = assignRolesRandomly(lobby.players);
+  await ops.assignPlayerRoles(round._id, roles);
+
+  // Step 4: Deal cards
+  const cards = await ops.dealCards(round._id, lobby.teams);
+
+  // Step 5: Create first turn
+  const turn = await ops.createTurn({ roundId: round._id, teamId: lobby.teams[0]._id });
+
+  // If ANY fail, ALL rollback!
+  return { round, cards, turn };
+});
+```
+
+---
+
+## Summary
+
+**Transaction Handler = Atomic Operations**
+
+1. Create operations factory: `(trx) => ({ ...operations })`
+2. Create handler: `createTransactionalHandler(db, operations)`
+3. Use in service: `await handler(async (ops) => { ... })`
+4. Automatic rollback on error
+5. Emit events AFTER success
+
+This ensures **data integrity**!

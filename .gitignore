@@ -59,7 +59,13 @@
 **/*.sqlite
 **/*.sqlite3
 **/*.db
+
+# Adhoc tests
 backend/test/manual/play-moves-quiet.ts
 backend/test/manual/play-moves.ts
+
+# Misc
 PLAY_CODENAMES.md
 MULTI_DEVICE_NEXT_STEPS.md
+PLAN.md
+PLAYER_CONNECTION_STATUS_CONTEXT.md
