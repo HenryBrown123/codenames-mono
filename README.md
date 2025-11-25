@@ -617,7 +617,8 @@ Frontend and backend extend these base types with their specific requirements.
 |   |-- public
 |   `-- src
 |       |-- ai
-|       |   `-- api
+|       |   |-- api
+|       |   `-- components
 |       |-- app
 |       |   `-- routes
 |       |       `-- page-layout
@@ -673,7 +674,7 @@ Frontend and backend extend these base types with their specific requirements.
         |   `-- modules
         `-- types
 
-112 directories
+113 directories
 ```
 
 ## Getting Started
