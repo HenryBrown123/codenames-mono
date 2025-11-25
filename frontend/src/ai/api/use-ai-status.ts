@@ -2,51 +2,24 @@ import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
 
-interface PipelineRun {
-  id: string;
-  gameId: string;
-  playerId: number;
-  pipelineType: "SPYMASTER" | "GUESSER";
-  status: "RUNNING" | "COMPLETE" | "FAILED";
-  errorMessage: string | null;
-  spymasterResponse: {
-    clue: {
-      word: string;
-      targetCardCount: number;
-    };
-    reasoning: string;
-  } | null;
-  prefilterResponse: {
-    candidateWords: string[];
-    reasoning: string;
-  } | null;
-  rankerResponse: {
-    rankedWords: Array<{
-      word: string;
-      score: number;
-      reasoning: string;
-    }>;
-  } | null;
-  createdAt: string;
-  completedAt: string | null;
-}
-
 interface AiStatusApiResponse {
   success: boolean;
   data: {
-    pipelines: PipelineRun[];
+    available: boolean;  // Is it AI's turn and can trigger?
+    thinking: boolean;   // Is pipeline currently running?
+    runId?: string;      // Current run ID if thinking
   };
 }
 
 export interface AiStatus {
-  pipelines: PipelineRun[];
-  hasRunningPipeline: boolean;
-  latestPipeline: PipelineRun | null;
+  available: boolean;
+  thinking: boolean;
+  runId?: string;
 }
 
 /**
- * Fetches the current AI pipeline status for a game.
- * Shows all pipeline runs with their stages and results.
+ * Fetches the current AI status for a game.
+ * Returns whether AI can be triggered and if it's currently thinking.
  */
 export const useAiStatus = (gameId: string): UseQueryResult<AiStatus, Error> => {
   return useQuery({
@@ -60,19 +33,11 @@ export const useAiStatus = (gameId: string): UseQueryResult<AiStatus, Error> => 
         throw new Error("Failed to fetch AI status");
       }
 
-      const pipelines = response.data.data.pipelines;
-      const hasRunningPipeline = pipelines.some((p) => p.status === "RUNNING");
-      const latestPipeline = pipelines.length > 0 ? pipelines[0] : null;
-
-      return {
-        pipelines,
-        hasRunningPipeline,
-        latestPipeline,
-      };
+      return response.data.data;
     },
     refetchInterval: (query) => {
-      // Poll every 2 seconds if there's a running pipeline
-      return query.state.data?.hasRunningPipeline ? 2000 : false;
+      // Poll every 2 seconds if AI is thinking
+      return query.state.data?.thinking ? 2000 : false;
     },
   });
 };
