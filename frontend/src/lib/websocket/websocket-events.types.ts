@@ -31,6 +31,15 @@ export enum WebSocketEvent {
   // Game events
   GAME_ENDED = "game_ended",
   GAME_UPDATED = "game_updated",
+
+  // AI events
+  AI_PIPELINE_STARTED = "ai_pipeline_started",
+  AI_PIPELINE_STAGE = "ai_pipeline_stage",
+  AI_PIPELINE_COMPLETE = "ai_pipeline_complete",
+  AI_PIPELINE_FAILED = "ai_pipeline_failed",
+
+  // Chat events
+  GAME_MESSAGE_CREATED = "game_message_created",
 }
 
 /**
@@ -68,10 +77,31 @@ export interface GameStateEventPayload extends BaseEventPayload {
 }
 
 /**
+ * Event payload for AI pipeline events
+ */
+export interface AIPipelineEventPayload extends BaseEventPayload {
+  runId: string;
+  pipelineType?: string;
+  stage?: string;
+  error?: string;
+}
+
+/**
+ * Event payload for game message events
+ */
+export interface GameMessageEventPayload extends BaseEventPayload {
+  messageId: string;
+  messageType: string;
+  teamId?: number;
+}
+
+/**
  * Union type for all event payloads
  */
 export type EventPayload =
   | BaseEventPayload
   | PlayerEventPayload
   | GameplayEventPayload
-  | GameStateEventPayload;
+  | GameStateEventPayload
+  | AIPipelineEventPayload
+  | GameMessageEventPayload;

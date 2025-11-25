@@ -94,6 +94,33 @@ export const useWebSocketInvalidation = (gameId: string | null) => {
       invalidateAllQueries();
     };
 
+    // AI events
+    const handleAIPipelineStarted = (payload: EventPayload) => {
+      console.log("AI pipeline started event received:", payload);
+      invalidateAllQueries();
+    };
+
+    const handleAIPipelineStage = (payload: EventPayload) => {
+      console.log("AI pipeline stage event received:", payload);
+      invalidateAllQueries();
+    };
+
+    const handleAIPipelineComplete = (payload: EventPayload) => {
+      console.log("AI pipeline complete event received:", payload);
+      invalidateAllQueries();
+    };
+
+    const handleAIPipelineFailed = (payload: EventPayload) => {
+      console.log("AI pipeline failed event received:", payload);
+      invalidateAllQueries();
+    };
+
+    // Chat events
+    const handleGameMessageCreated = (payload: EventPayload) => {
+      console.log("Game message created event received:", payload);
+      invalidateAllQueries();
+    };
+
     // Register all event listeners
     socket.on(WebSocketEvent.PLAYER_JOINED, handlePlayerJoined);
     socket.on(WebSocketEvent.PLAYER_LEFT, handlePlayerLeft);
@@ -108,6 +135,11 @@ export const useWebSocketInvalidation = (gameId: string | null) => {
     socket.on(WebSocketEvent.TURN_ENDED, handleTurnEnded);
     socket.on(WebSocketEvent.GAME_ENDED, handleGameEnded);
     socket.on(WebSocketEvent.GAME_UPDATED, handleGameUpdated);
+    socket.on(WebSocketEvent.AI_PIPELINE_STARTED, handleAIPipelineStarted);
+    socket.on(WebSocketEvent.AI_PIPELINE_STAGE, handleAIPipelineStage);
+    socket.on(WebSocketEvent.AI_PIPELINE_COMPLETE, handleAIPipelineComplete);
+    socket.on(WebSocketEvent.AI_PIPELINE_FAILED, handleAIPipelineFailed);
+    socket.on(WebSocketEvent.GAME_MESSAGE_CREATED, handleGameMessageCreated);
 
     // Cleanup: remove all event listeners
     return () => {
@@ -125,6 +157,11 @@ export const useWebSocketInvalidation = (gameId: string | null) => {
       socket.off(WebSocketEvent.TURN_ENDED, handleTurnEnded);
       socket.off(WebSocketEvent.GAME_ENDED, handleGameEnded);
       socket.off(WebSocketEvent.GAME_UPDATED, handleGameUpdated);
+      socket.off(WebSocketEvent.AI_PIPELINE_STARTED, handleAIPipelineStarted);
+      socket.off(WebSocketEvent.AI_PIPELINE_STAGE, handleAIPipelineStage);
+      socket.off(WebSocketEvent.AI_PIPELINE_COMPLETE, handleAIPipelineComplete);
+      socket.off(WebSocketEvent.AI_PIPELINE_FAILED, handleAIPipelineFailed);
+      socket.off(WebSocketEvent.GAME_MESSAGE_CREATED, handleGameMessageCreated);
     };
   }, [socket, isConnected, gameId, queryClient]);
 };

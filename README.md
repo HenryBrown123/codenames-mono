@@ -616,10 +616,13 @@ Frontend and backend extend these base types with their specific requirements.
 |-- frontend
 |   |-- public
 |   `-- src
+|       |-- ai
+|       |   `-- api
 |       |-- app
 |       |   `-- routes
 |       |       `-- page-layout
-|       |-- dev
+|       |-- chat
+|       |   `-- api
 |       |-- game-access
 |       |   |-- api
 |       |   |   |-- endpoints
@@ -670,7 +673,7 @@ Frontend and backend extend these base types with their specific requirements.
         |   `-- modules
         `-- types
 
-109 directories
+112 directories
 ```
 
 ## Getting Started
