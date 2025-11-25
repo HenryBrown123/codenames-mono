@@ -10,6 +10,7 @@ import {
   TerminalMessageBlock,
   CenteredContent,
 } from "./terminal-components";
+import { AiStatusIndicator } from "@frontend/ai/components";
 import sharedStyles from "./shared-dashboard.module.css";
 import styles from "./codebreaker-dashboard.module.css";
 
@@ -104,6 +105,11 @@ export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messa
             </div>
           </TerminalSection>
         )}
+
+        <TerminalSection layoutId="codebreaker-ai-status">
+          <TerminalCommand>AI ASSISTANT</TerminalCommand>
+          <AiStatusIndicator gameId={gameData.publicId} />
+        </TerminalSection>
 
         {canEndTurn && (
           <TerminalSection layoutId="dashboard-actions">

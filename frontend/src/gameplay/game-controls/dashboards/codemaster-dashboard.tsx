@@ -19,6 +19,7 @@ import {
   MiddleSection,
   CenteredContent,
 } from "./terminal-components";
+import { AiStatusIndicator } from "@frontend/ai/components";
 
 import styles from "./codemaster-dashboard.module.css";
 
@@ -137,6 +138,11 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
                 <SpyStatus active={isARMode}>{isARMode ? "ON" : "OFF"}</SpyStatus>
               </SpyGogglesSwitchRow>
             </SpyGogglesContainer>
+          </TerminalSection>
+
+          <TerminalSection layoutId="codemaster-ai-status">
+            <TerminalCommand>AI ASSISTANT</TerminalCommand>
+            <AiStatusIndicator gameId={gameData.publicId} />
           </TerminalSection>
         </MiddleSection>
 
