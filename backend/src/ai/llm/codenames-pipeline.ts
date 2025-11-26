@@ -27,6 +27,9 @@ export type GuesserInput = {
   remainingWords: string[];
   clueWord: string;
   clueNumber: number;
+  onPrefilterComplete?: (results: import("./guesser-prefilter").PreFilterOutput[]) => void | Promise<void>;
+  onWordEvaluated?: (result: import("./guesser-prefilter").PreFilterOutput) => void | Promise<void>;
+  onPromptGenerated?: (prompt: string) => void | Promise<void>;
 };
 
 /**
@@ -55,9 +58,6 @@ export const createCodenamesPipeline = (llm: LocalLLMService) => {
    * Run the complete two-stage guesser pipeline
    */
   const runGuesser = async (input: GuesserInput): Promise<GuesserDecision> => {
-    console.log(`[Pipeline] Two-stage guesser for clue "${input.clueWord}" (${input.clueNumber})`);
-    console.log(`[Pipeline] ${input.remainingWords.length} words remaining`);
-
     if (input.remainingWords.length === 0) {
       return {
         action: "stop",
@@ -67,7 +67,14 @@ export const createCodenamesPipeline = (llm: LocalLLMService) => {
     }
 
     // STAGE 1: Pre-filter all remaining words
-    const candidates = await runPreFilter(llm, input.clueWord, input.remainingWords);
+    const candidates = await runPreFilter(
+      llm,
+      input.clueWord,
+      input.remainingWords,
+      input.onPrefilterComplete,
+      input.onWordEvaluated,
+      input.onPromptGenerated,
+    );
 
     if (candidates.length === 0) {
       return {
@@ -78,16 +85,18 @@ export const createCodenamesPipeline = (llm: LocalLLMService) => {
     }
 
     // STAGE 2: Rank the filtered candidates
-    const ranked = await runRanking(llm, {
-      currentTeam: input.currentTeam,
-      clueWord: input.clueWord,
-      clueNumber: input.clueNumber,
-      candidates,
-    });
+    const ranked = await runRanking(
+      llm,
+      {
+        currentTeam: input.currentTeam,
+        clueWord: input.clueWord,
+        clueNumber: input.clueNumber,
+        candidates,
+      },
+      input.onPromptGenerated,
+    );
 
     const topChoice = ranked[0];
-
-    console.log(`[Pipeline] Decision: guess "${topChoice.word}" (confidence: ${topChoice.score})`);
 
     return {
       action: "guess",

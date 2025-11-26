@@ -16,6 +16,7 @@ export type SpymasterInput = {
   neutralWords: string[];
   assassinWord: string;
   previousClues: string[]; // All clues used this round (by both teams)
+  onPromptGenerated?: (prompt: string) => void | Promise<void>;
 };
 
 export type SpymasterOutput = {
@@ -99,10 +100,12 @@ export const runSpymasterPipeline = async (
   llm: LocalLLMService,
   input: SpymasterInput,
 ): Promise<SpymasterOutput> => {
-  console.log(`[Spymaster] Generating clue for ${input.currentTeam} team`);
-  console.log(`[Spymaster] ${input.friendlyWords.length} friendly words remaining`);
-
   const prompt = buildSpymasterPrompt(input);
+
+  // Log the prompt if callback provided
+  if (input.onPromptGenerated) {
+    await input.onPromptGenerated(prompt);
+  }
 
   // Keep trying until we get valid output
   let attempts = 0;
@@ -114,16 +117,12 @@ export const runSpymasterPipeline = async (
     try {
       const result = await llm.generateJSON<SpymasterOutput>(prompt);
 
-      console.log(`[Spymaster] LLM Response:`, JSON.stringify(result, null, 2));
-
       // Validate output
       if (!result.clue || typeof result.clue !== "string") {
-        console.warn(`[Spymaster] Attempt ${attempts}: Invalid clue format, retrying...`);
         continue;
       }
 
       if (!result.number || typeof result.number !== "number" || result.number < 1) {
-        console.warn(`[Spymaster] Attempt ${attempts}: Invalid number format, retrying...`);
         continue;
       }
 
@@ -137,22 +136,16 @@ export const runSpymasterPipeline = async (
 
       const clueWordLower = result.clue.toLowerCase();
       if (allBoardWords.some((w) => w.toLowerCase() === clueWordLower)) {
-        console.warn(`[Spymaster] Attempt ${attempts}: Clue "${result.clue}" is on the board, retrying...`);
         continue;
       }
 
       // Check if clue has already been used
       if (input.previousClues.some((c) => c.toLowerCase() === clueWordLower)) {
-        console.warn(
-          `[Spymaster] Attempt ${attempts}: Clue "${result.clue}" has already been used, retrying...`,
-        );
         continue;
       }
 
-      console.log(`[Spymaster] Success: "${result.clue}" for ${result.number}`);
       return result;
     } catch (error) {
-      console.error(`[Spymaster] Attempt ${attempts} error:`, error);
       if (attempts >= maxAttempts) {
         throw error;
       }

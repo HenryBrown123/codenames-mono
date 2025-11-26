@@ -85,10 +85,14 @@ Use the clue and the candidate words (with their prior confidence & reasons) to 
 export const runRanking = async (
   llm: LocalLLMService,
   input: RankingInput,
+  onPromptGenerated?: (prompt: string) => void | Promise<void>,
 ): Promise<RankedWord[]> => {
-  console.log(`[Ranker] Stage 2: Ranking ${input.candidates.length} candidates...`);
-
   const prompt = buildRankingPrompt(input);
+
+  // Log the prompt if callback provided
+  if (onPromptGenerated) {
+    await onPromptGenerated(prompt);
+  }
 
   let attempts = 0;
   const maxAttempts = 5;
@@ -99,26 +103,16 @@ export const runRanking = async (
     try {
       const result = await llm.generateJSON<RankingOutput>(prompt);
 
-      console.log(`[Ranker] LLM Response:`, JSON.stringify(result, null, 2));
-
       // Validate ranked array
       if (!result.ranked || !Array.isArray(result.ranked) || result.ranked.length === 0) {
-        console.warn(`[Ranker] Attempt ${attempts}: Invalid ranking response, retrying...`);
         continue;
       }
 
       // Sort by score descending
       result.ranked.sort((a, b) => b.score - a.score);
 
-      console.log(`[Ranker] Stage 2 complete: ${result.ranked.length} words ranked`);
-      console.log(`[Ranker] All ranked candidates:`);
-      result.ranked.forEach((entry, idx) => {
-        console.log(`  ${idx + 1}. ${entry.word} (${entry.score.toFixed(2)}): ${entry.reason}`);
-      });
-
       return result.ranked;
     } catch (error) {
-      console.error(`[Ranker] Attempt ${attempts} error:`, error);
       if (attempts >= maxAttempts) {
         throw error;
       }

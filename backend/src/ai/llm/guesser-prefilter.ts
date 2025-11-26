@@ -76,13 +76,19 @@ export const runPreFilter = async (
   llm: LocalLLMService,
   clueWord: string,
   remainingWords: string[],
+  onComplete?: (allResults: PreFilterOutput[]) => void | Promise<void>,
+  onWordEvaluated?: (result: PreFilterOutput) => void | Promise<void>,
+  onPromptGenerated?: (prompt: string) => void | Promise<void>,
 ): Promise<PreFilterOutput[]> => {
-  console.log(`[Pre-Filter] Stage 1: Pre-filtering ${remainingWords.length} words...`);
-
   const results: PreFilterOutput[] = [];
 
   for (const word of remainingWords) {
     const prompt = buildPreFilterPrompt({ clueWord, word });
+
+    // Log the prompt if callback provided
+    if (onPromptGenerated) {
+      await onPromptGenerated(prompt);
+    }
 
     let attempts = 0;
     const maxAttempts = 3;
@@ -95,34 +101,46 @@ export const runPreFilter = async (
 
         // Validate output
         if (!result.word || !result.link_confidence || !result.reason) {
-          console.warn(`[Pre-Filter] Invalid response for "${word}", retrying...`);
           continue;
         }
 
         // Valid pre-filter result
         results.push(result);
-        console.log(`[Pre-Filter] ${word} -> ${result.link_confidence}`);
+
+        // Call per-word callback if provided
+        if (onWordEvaluated) {
+          await onWordEvaluated(result);
+        }
+
         break;
       } catch (error) {
-        console.error(`[Pre-Filter] Error for "${word}":`, error);
         if (attempts >= maxAttempts) {
           // If we can't get a valid pre-filter after retries, assume "no link"
-          results.push({
+          const failedResult = {
             word,
-            link_confidence: "no link",
+            link_confidence: "no link" as const,
             reason: "Failed to evaluate",
-          });
+          };
+          results.push(failedResult);
+
+          // Call per-word callback if provided
+          if (onWordEvaluated) {
+            await onWordEvaluated(failedResult);
+          }
         }
       }
     }
+  }
+
+  // Call the callback with all results if provided
+  if (onComplete) {
+    await onComplete(results);
   }
 
   // Filter candidates: keep "extremely" and "moderately" confident words
   const candidates = results.filter(
     (r) => r.link_confidence === "extremely" || r.link_confidence === "moderately"
   );
-
-  console.log(`[Pre-Filter] Stage 1 complete: ${candidates.length} candidates passed`);
 
   return candidates;
 };
