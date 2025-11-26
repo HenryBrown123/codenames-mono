@@ -30,15 +30,20 @@ export const useGameMessages = (gameId: string): UseQueryResult<GameMessage[], E
   return useQuery({
     queryKey: ["game", gameId, "messages"],
     queryFn: async () => {
-      const response: AxiosResponse<GameMessagesApiResponse> = await api.get(
-        `/games/${gameId}/messages`,
-      );
+      try {
+        const response: AxiosResponse<GameMessagesApiResponse> = await api.get(
+          `/games/${gameId}/messages`,
+        );
 
-      if (!response.data.success) {
-        throw new Error("Failed to fetch game messages");
+        if (!response.data.success) {
+          throw new Error("Failed to fetch game messages");
+        }
+
+        return response.data.data.messages || [];
+      } catch (error) {
+        console.error("Error fetching game messages:", error);
+        return []; // Return empty array instead of undefined
       }
-
-      return response.data.data.messages;
     },
     refetchInterval: 5000, // Poll every 5 seconds for new messages
   });

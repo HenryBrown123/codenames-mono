@@ -1,0 +1,50 @@
+/* Game Chat Log Styles */
+
+.chatLog {
+  padding: 0.5rem 0;
+  min-height: 40px;
+}
+
+.message {
+  padding: 0.5rem 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.message.ai_thinking {
+  color: #b5dbcc;
+}
+
+.message.system {
+  color: #9db4c8;
+}
+
+.messageContent {
+  margin-bottom: 0.25rem;
+}
+
+.messageTeam {
+  font-size: 0.7rem;
+  opacity: 0.6;
+  text-transform: uppercase;
+}
+
+/* Scrollbar styling */
+.chatLog::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chatLog::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.chatLog::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 136, 0.3);
+  border-radius: 3px;
+}
+
+.chatLog::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 136, 0.5);
+}
