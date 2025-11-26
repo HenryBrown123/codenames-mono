@@ -16,7 +16,9 @@
       "@frontend/gameplay/*": ["src/gameplay/*"],
       "@frontend/lobby/*": ["src/lobby/*"],
       "@frontend/pages/*": ["src/pages/*"],
-      "@frontend/style/*": ["src/style/*"]
+      "@frontend/style/*": ["src/style/*"],
+      "@frontend/ai/*": ["src/ai/*"],
+      "@frontend/chat/*": ["src/chat/*"]
     },
     "outDir": "./dist"
   },

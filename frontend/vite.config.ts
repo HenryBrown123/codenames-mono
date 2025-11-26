@@ -25,6 +25,8 @@ export default defineConfig({
       "@frontend/lobby": "/src/lobby",
       "@frontend/shared-types": "/src/shared-types",
       "@frontend/style": "/src/style",
+      "@frontend/ai": "/src/ai",
+      "@frontend/chat": "/src/chat",
       "@game": "/src/gameplay",
       "@game-access": "/src/game-access",
       "@style": "/src/style",
