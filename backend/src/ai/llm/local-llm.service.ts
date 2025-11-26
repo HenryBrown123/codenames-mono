@@ -45,6 +45,7 @@ export const createLocalLLMService = (config: LocalLLMConfig) => {
         format: options.format,
         options: {
           temperature: options.temperature ?? temperature,
+          num_ctx: 1024,
         },
       }),
     });

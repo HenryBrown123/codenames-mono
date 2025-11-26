@@ -34,6 +34,7 @@ export interface AiPipelineRuns {
    * Structured output from prefilter stage (audit/recovery)
    */
   prefilter_response: Json | null;
+  prompt: string | null;
   /**
    * Structured output from ranker stage (audit/recovery)
    */

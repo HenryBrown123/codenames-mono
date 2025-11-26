@@ -122,10 +122,7 @@ export const findMessagesByGame =
   (db: Kysely<DB>): MessageFinder =>
   async (params) => {
     try {
-      let query = db
-        .selectFrom("game_messages")
-        .selectAll()
-        .where("game_id", "=", params.gameId);
+      let query = db.selectFrom("game_messages").selectAll().where("game_id", "=", params.gameId);
 
       // Filter by timestamp if provided
       if (params.since) {
@@ -138,16 +135,7 @@ export const findMessagesByGame =
 
       const messages = await query.execute();
 
-      // Filter team-only messages based on requesting team
-      const filteredMessages = messages.filter((msg) => {
-        // If not team-only, everyone can see it
-        if (!msg.team_only) return true;
-
-        // If team-only, only show to members of that team
-        return msg.team_id === params.requestingTeamId;
-      });
-
-      return filteredMessages.map((msg) => ({
+      return messages.map((msg) => ({
         id: msg.id,
         game_id: msg.game_id,
         player_id: msg.player_id,
@@ -158,9 +146,8 @@ export const findMessagesByGame =
         created_at: msg.created_at,
       }));
     } catch (error) {
-      throw new UnexpectedRepositoryError(
-        `Failed to query messages for game ${params.gameId}`,
-        { cause: error },
-      );
+      throw new UnexpectedRepositoryError(`Failed to query messages for game ${params.gameId}`, {
+        cause: error,
+      });
     }
   };
