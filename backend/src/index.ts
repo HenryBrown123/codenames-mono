@@ -112,6 +112,29 @@ const { giveClueService, makeGuessService, endTurnService, getGameState } = init
   authHandlers,
 );
 
+const ai = initializeAI({
+  app,
+  db: dbInstance,
+  auth: authHandlers,
+  llmConfig: {
+    ollamaUrl: env.LLM_URL,
+    model: env.LLM_MODEL,
+    temperature: env.LLM_TEMPERATURE,
+  },
+  giveClue: giveClueService,
+  makeGuess: makeGuessService,
+  endTurn: endTurnService,
+  getGameState,
+});
+
+// Initialize chat feature
+const chat = initializeChat({
+  app,
+  db: dbInstance,
+  auth: authHandlers,
+  getGameState,
+});
+
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "UP" });
 });
@@ -128,29 +151,6 @@ initializeWebSocketServer({
   httpServer,
   jwtSecret: env.JWT_SECRET,
   corsOrigins: corsOptions.origin as string[],
-});
-
-const ai = initializeAI({
-  app,
-  db: dbInstance,
-  auth: authHandlers,
-  llmConfig: {
-    ollamaUrl: `http://localhost:${env.LLM_PORT}`,
-    model: "qwen2.5:14b",
-    temperature: 0.7,
-  },
-  giveClue: giveClueService,
-  makeGuess: makeGuessService,
-  endTurn: endTurnService,
-  getGameState,
-});
-
-// Initialize chat feature
-const chat = initializeChat({
-  app,
-  db: dbInstance,
-  auth: authHandlers,
-  getGameState,
 });
 
 httpServer.listen(PORT, () => {
