@@ -251,8 +251,9 @@
 .middleSection {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-evenly; /* Evenly distribute space between panels */
   height: 100%;
+  gap: 0.75rem; /* Add spacing between panels */
 
   /* CONSTRAINT FIX - Key for flex items to shrink */
   width: 100%;
@@ -262,7 +263,7 @@
 }
 
 .middleSection .terminalSection {
-  flex: 1;
+  flex: 0 0 auto; /* Dynamic height based on content */
   display: flex;
   flex-direction: column;
 }
