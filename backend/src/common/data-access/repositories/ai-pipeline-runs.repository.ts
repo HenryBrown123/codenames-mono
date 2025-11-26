@@ -90,6 +90,7 @@ export type RunResponseUpdater = <T extends keyof Pick<PipelineRunData, 'spymast
   stage: T,
   response: PipelineRunData[T],
 ) => Promise<void>;
+export type PromptAppender = (runId: RunId, newPrompt: string) => Promise<void>;
 
 /**
  * ==================
@@ -302,6 +303,39 @@ export const updateRankerResponse =
     } catch (error) {
       throw new UnexpectedRepositoryError(
         `Failed to update ranker response for run ${runId}`,
+        { cause: error },
+      );
+    }
+  };
+
+/**
+ * Creates a function for appending prompts to pipeline run
+ * Appends new prompts with delimiter for multiple prompts in same run
+ */
+export const appendPrompt =
+  (db: Kysely<DB>): PromptAppender =>
+  async (runId, newPrompt) => {
+    try {
+      // Get current prompt
+      const current = await db
+        .selectFrom("ai_pipeline_runs")
+        .select("prompt")
+        .where("id", "=", runId)
+        .executeTakeFirst();
+
+      const existingPrompt = current?.prompt || "";
+      const updatedPrompt = existingPrompt
+        ? `${existingPrompt}\n\n--- NEXT PROMPT ---\n\n${newPrompt}`
+        : newPrompt;
+
+      await db
+        .updateTable("ai_pipeline_runs")
+        .set({ prompt: updatedPrompt })
+        .where("id", "=", runId)
+        .executeTakeFirstOrThrow();
+    } catch (error) {
+      throw new UnexpectedRepositoryError(
+        `Failed to append prompt for run ${runId}`,
         { cause: error },
       );
     }
