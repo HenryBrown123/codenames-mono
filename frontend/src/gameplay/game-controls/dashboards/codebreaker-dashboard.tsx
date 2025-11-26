@@ -38,6 +38,11 @@ export const CodebreakerDashboard: React.FC<{ messageText?: string }> = ({ messa
             <TerminalCommand>FIELD REPORT</TerminalCommand>
             <TerminalOutput>{messageText || "Standing by..."}</TerminalOutput>
           </CenteredContent>
+
+          <TerminalSection layoutId="codebreaker-ai-status-waiting">
+            <TerminalCommand>AI ASSISTANT</TerminalCommand>
+            <AiStatusIndicator gameId={gameData.publicId} />
+          </TerminalSection>
         </div>
       </>
     );

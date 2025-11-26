@@ -11,7 +11,9 @@ import {
   TerminalCommand,
   TerminalOutput,
   CenteredContent,
+  MiddleSection,
 } from "./terminal-components";
+import { AiStatusIndicator } from "@frontend/ai/components";
 import styles from "./setup-dashboards.module.css";
 
 /**
@@ -205,10 +207,21 @@ export const SpectatorDashboard: React.FC<{ messageText?: string }> = ({ message
                 playerName={gameData.playerContext.playerName}
               />
             </TerminalSection>
-            <CenteredContent layoutId="spectator-message">
-              <TerminalCommand>OBSERVER MODE</TerminalCommand>
-              <TerminalOutput>{messageText || "Monitoring field operations..."}</TerminalOutput>
-            </CenteredContent>
+
+            <MiddleSection>
+              <CenteredContent layoutId="spectator-message">
+                <TerminalCommand>OBSERVER MODE</TerminalCommand>
+                <TerminalOutput>{messageText || "Monitoring field operations..."}</TerminalOutput>
+              </CenteredContent>
+
+              {gameData.playerContext?.publicId && (
+                <TerminalSection layoutId="spectator-ai-status">
+                  <TerminalCommand>AI ASSISTANT</TerminalCommand>
+                  <AiStatusIndicator gameId={gameData.publicId} />
+                </TerminalSection>
+              )}
+            </MiddleSection>
+
             <div />
           </>
         ) : (

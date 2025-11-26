@@ -20,6 +20,7 @@ import {
   CenteredContent,
 } from "./terminal-components";
 import { AiStatusIndicator } from "@frontend/ai/components";
+import { GameChatLog } from "@frontend/chat/components";
 
 import styles from "./codemaster-dashboard.module.css";
 
@@ -66,10 +67,20 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
               playerName={gameData.playerContext?.playerName}
             />
           </TerminalSection>
-          <CenteredContent layoutId="codemaster-waiting">
-            <TerminalCommand>MISSION LOG</TerminalCommand>
-            <TerminalOutput>Waiting for operative turn...</TerminalOutput>
-          </CenteredContent>
+
+          <MiddleSection>
+            <CenteredContent layoutId="codemaster-waiting">
+              <TerminalCommand>MISSION LOG</TerminalCommand>
+              <TerminalOutput>Waiting for operative turn...</TerminalOutput>
+            </CenteredContent>
+
+            <TerminalSection layoutId="codemaster-waiting-ai-status">
+              <TerminalCommand>AI ASSISTANT</TerminalCommand>
+              <AiStatusIndicator gameId={gameData.publicId} />
+              <GameChatLog gameId={gameData.publicId} />
+            </TerminalSection>
+          </MiddleSection>
+
           <div />
         </div>
       </>
@@ -143,6 +154,7 @@ export const CodemasterDashboard: React.FC<CodemasterDashboardProps> = ({
           <TerminalSection layoutId="codemaster-ai-status">
             <TerminalCommand>AI ASSISTANT</TerminalCommand>
             <AiStatusIndicator gameId={gameData.publicId} />
+            <GameChatLog gameId={gameData.publicId} />
           </TerminalSection>
         </MiddleSection>
 
