@@ -22,6 +22,7 @@ import {
   updateSpymasterResponse,
   updatePrefilterResponse,
   updateRankerResponse,
+  appendPrompt,
 } from "@backend/common/data-access/repositories/ai-pipeline-runs.repository";
 import { createMessage } from "@backend/common/data-access/repositories/game-messages.repository";
 import { findGameByPublicId } from "@backend/common/data-access/repositories/games.repository";
@@ -67,6 +68,7 @@ export const initialize = (dependencies: AIModuleDependencies) => {
     updateSpymasterResponse: updateSpymasterResponse(db),
     updatePrefilterResponse: updatePrefilterResponse(db),
     updateRankerResponse: updateRankerResponse(db),
+    appendPrompt: appendPrompt(db),
     createGameMessage: createMessage(db),
     findGameByPublicId: findGameByPublicId(db),
   });

@@ -8,10 +8,8 @@ import type { GiveClueService } from "@backend/gameplay/give-clue/give-clue.serv
 import type { MakeGuessService } from "@backend/gameplay/make-guess/make-guess.service";
 import type { EndTurnService } from "@backend/gameplay/end-turn/end-turn.service";
 import type { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
-import { gameEventBus } from "../events/game-event-bus";
-import { WebSocketEvent } from "@backend/common/websocket/websocket-events.types";
-
 import { createCodenamesPipeline } from "../llm/codenames-pipeline";
+import type { PreFilterOutput } from "../llm/guesser-prefilter";
 import type {
   RunCreator,
   RunFinderByGame,
@@ -19,6 +17,7 @@ import type {
   SpymasterResponse,
   PrefilterResponse,
   RankerResponse,
+  PromptAppender,
 } from "@backend/common/data-access/repositories/ai-pipeline-runs.repository";
 import {
   PIPELINE_TYPE,
@@ -42,6 +41,7 @@ export type AIPlayerDependencies = {
   updateSpymasterResponse: (runId: string, response: SpymasterResponse) => Promise<void>;
   updatePrefilterResponse: (runId: string, response: PrefilterResponse) => Promise<void>;
   updateRankerResponse: (runId: string, response: RankerResponse) => Promise<void>;
+  appendPrompt: PromptAppender;
   createGameMessage: MessageCreator;
   findGameByPublicId: GameFinder<string>;
 };
@@ -62,11 +62,10 @@ type AIDecisionContext = {
 const activeDecisions = new Set<string>();
 
 /**
- * Random delay between min and max (in milliseconds)
+ * Delay utility for waiting between guesses
  */
-const randomDelay = (min: number, max: number): Promise<void> => {
-  const delay = Math.floor(Math.random() * (max - min + 1)) + min;
-  return new Promise((resolve) => setTimeout(resolve, delay));
+const delay = (ms: number): Promise<void> => {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
 /**
@@ -85,6 +84,7 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
     updateSpymasterResponse,
     updatePrefilterResponse,
     updateRankerResponse,
+    appendPrompt,
     createGameMessage,
     findGameByPublicId,
   } = dependencies;
@@ -99,7 +99,6 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
       // Get internal game ID
       const game = await findGameByPublicId(context.gameId);
       if (!game) {
-        console.error(`[AI] Game ${context.gameId} not found for narration`);
         return;
       }
 
@@ -107,7 +106,7 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
         gameId: game._id,
         playerId: null, // AI narration has no player
         teamId: context.teamId,
-        teamOnly: true,
+        teamOnly: false,
         messageType: MESSAGE_TYPE.AI_THINKING,
         content,
       });
@@ -119,7 +118,7 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
         context.teamId,
       );
     } catch (error) {
-      console.error("[AI] Failed to emit narration:", error);
+      // Silently fail narration
     }
   };
 
@@ -128,24 +127,19 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
    */
   const checkAndActIfNeeded = async (gameId: string) => {
     try {
-      console.log(`[AI] checkAndActIfNeeded called for game ${gameId}`);
-
       const gameState = await getGameState(gameId, 0, null);
 
       if (gameState.status !== "found") {
-        console.log(`[AI] Game ${gameId} not found`);
         return;
       }
 
       if (!gameState.data.currentRound) {
-        console.log(`[AI] No current round for game ${gameId}`);
         return;
       }
 
       const currentRound = gameState.data.currentRound;
       const turns = currentRound.turns;
       if (!turns || turns.length === 0) {
-        console.log(`[AI] No turns yet for game ${gameId}`);
         return;
       }
 
@@ -159,24 +153,11 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
       if (!currentTurn.clue) {
         const teamName = currentTurn.teamName;
 
-        console.log(`[AI] Checking for AI codemaster on ${teamName} team`);
-        console.log(
-          `[AI] All players:`,
-          allPlayers.map((p) => ({
-            name: p.publicName,
-            team: p.teamName,
-            role: p.role,
-            isAi: p.isAi,
-          })),
-        );
-
         const aiCodemaster = allPlayers.find(
           (p) => p.teamName === teamName && p.isAi && p.role === "CODEMASTER",
         );
 
         if (aiCodemaster) {
-          console.log(`[AI] No clue for ${teamName}, AI codemaster should act`);
-
           const context: AIDecisionContext = {
             gameId,
             playerId: aiCodemaster.publicId,
@@ -205,8 +186,6 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
         if (allCodebreakersAreAI) {
           const aiCodebreaker = teamCodebreakers[0];
 
-          console.log(`[AI] ${teamName} needs guess, all codebreakers are AI`);
-
           const context: AIDecisionContext = {
             gameId,
             playerId: aiCodebreaker.publicId,
@@ -222,7 +201,7 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
         }
       }
     } catch (error) {
-      console.error("[AI] Error in checkAndActIfNeeded:", error);
+      // Silently handle errors
     }
   };
 
@@ -233,7 +212,6 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
     const decisionKey = `clue:${context.gameId}:${context.playerId}`;
 
     if (activeDecisions.has(decisionKey)) {
-      console.log(`[AI] Already processing clue for ${context.playerId}`);
       return;
     }
 
@@ -242,7 +220,6 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
     // Get internal game ID and player ID for DB operations
     const game = await findGameByPublicId(context.gameId);
     if (!game) {
-      console.error(`[AI] Game ${context.gameId} not found`);
       activeDecisions.delete(decisionKey);
       return;
     }
@@ -256,18 +233,14 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
         pipelineType: PIPELINE_TYPE.SPYMASTER,
       });
 
-      console.log(`[AI] Created pipeline run ${run.id} for ${context.playerId}`);
       GameEventsEmitter.aiPipelineStarted(context.gameId, run.id, PIPELINE_TYPE.SPYMASTER);
     } catch (error) {
-      console.error(`[AI] Failed to create pipeline run:`, error);
       activeDecisions.delete(decisionKey);
       return;
     }
 
     try {
-      await randomDelay(1000, 3000);
-
-      await emitNarration(context, "🤔 Analyzing the board and thinking of a clever clue...");
+      await emitNarration(context, "Analyzing the board and thinking of a clever clue...");
 
       const gameState = await getGameState(context.gameId, context.userId, context.playerId);
 
@@ -302,14 +275,6 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
         .filter((t: any) => t.clue && t.clue.word)
         .map((t: any) => t.clue.word);
 
-      console.log(`[AI Pipeline] Running Spymaster pipeline for ${context.playerId}`);
-      console.log(`[AI Pipeline] ${friendlyWords.length} team cards remaining`);
-      if (previousClues.length > 0) {
-        console.log(
-          `[AI Pipeline] ${previousClues.length} clues already used: ${previousClues.join(", ")}`,
-        );
-      }
-
       const pipelineResult = await pipeline.runSpymasterPipeline({
         currentTeam: myTeam,
         friendlyWords,
@@ -317,13 +282,10 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
         neutralWords,
         assassinWord,
         previousClues,
+        onPromptGenerated: async (prompt) => {
+          await appendPrompt(run.id, prompt);
+        },
       });
-
-      console.log(`[AI Pipeline] Pipeline complete`);
-      console.log(
-        `[AI Pipeline] Chosen clue: "${pipelineResult.clue}" for ${pipelineResult.number}`,
-      );
-      console.log(`[AI Pipeline] Explanation: ${pipelineResult.explanation}`);
 
       // Store spymaster response
       const spymasterResponse: SpymasterResponse = {
@@ -337,15 +299,13 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
 
       await emitNarration(
         context,
-        `💡 I've got it! The clue is "${pipelineResult.clue}" for ${pipelineResult.number}`,
+        `I've got it! The clue is "${pipelineResult.clue}" for ${pipelineResult.number}`,
       );
 
       const decision = {
         word: pipelineResult.clue,
         count: pipelineResult.number,
       };
-
-      console.log(`[AI] ${context.playerId} giving clue: ${decision.word} for ${decision.count}`);
 
       const clueResult = await giveClue({
         gameId: context.gameId,
@@ -356,6 +316,14 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
         targetCardCount: decision.count,
       });
 
+      if (clueResult.success) {
+        // Add chat message when clue is given
+        await emitNarration(
+          context,
+          `Giving clue: "${decision.word}" for ${decision.count} card(s). ${pipelineResult.explanation}`,
+        );
+      }
+
       if (!clueResult.success) {
         throw new Error(`Failed to give clue: ${clueResult.error}`);
       }
@@ -364,15 +332,20 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
       await updatePipelineStatus(run.id, PIPELINE_STATUS.COMPLETE);
       GameEventsEmitter.aiPipelineComplete(context.gameId, run.id);
 
-      console.log(`[AI] Spymaster pipeline complete for run ${run.id}`);
+      // Add completion message
+      emitNarration(context, `Clue given successfully. Let's see what the team does!`);
+
+      // After 20 seconds, show "waiting for prompt" message
+      setTimeout(() => {
+        emitNarration(context, `Waiting for the next prompt...`);
+      }, 20000);
     } catch (error) {
-      console.error(`[AI] Error giving clue:`, error);
       const errorMsg = error instanceof Error ? error.message : "Unknown error";
 
       await updatePipelineStatus(run.id, PIPELINE_STATUS.FAILED, errorMsg);
       GameEventsEmitter.aiPipelineFailed(context.gameId, run.id, errorMsg);
 
-      await emitNarration(context, "❌ Oops! Something went wrong while thinking of a clue.");
+      await emitNarration(context, "Oops! Something went wrong while thinking of a clue.");
     } finally {
       activeDecisions.delete(decisionKey);
     }
@@ -386,7 +359,6 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
     const decisionKey = `guess:${context.gameId}:${context.playerId}`;
 
     if (activeDecisions.has(decisionKey)) {
-      console.log(`[AI] Already processing guesses for ${context.playerId}`);
       return;
     }
 
@@ -395,7 +367,6 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
     // Get internal game ID for DB operations
     const game = await findGameByPublicId(context.gameId);
     if (!game) {
-      console.error(`[AI] Game ${context.gameId} not found`);
       activeDecisions.delete(decisionKey);
       return;
     }
@@ -409,17 +380,13 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
         pipelineType: PIPELINE_TYPE.GUESSER,
       });
 
-      console.log(`[AI] Created pipeline run ${run.id} for ${context.playerId}`);
       GameEventsEmitter.aiPipelineStarted(context.gameId, run.id, PIPELINE_TYPE.GUESSER);
     } catch (error) {
-      console.error(`[AI] Failed to create pipeline run:`, error);
       activeDecisions.delete(decisionKey);
       return;
     }
 
     try {
-      await randomDelay(2000, 4000);
-
       const gameState = await getGameState(context.gameId, context.userId, context.playerId);
 
       if (gameState.status !== "found" || !gameState.data.currentRound) {
@@ -445,31 +412,46 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
       // STAGE 1: Pre-filter
       await emitNarration(
         context,
-        `🔍 Looking at the clue "${currentTurn.clue.word}"... filtering through ${remainingWords.length} words...`,
+        `Looking at the clue "${currentTurn.clue.word}"... filtering through ${remainingWords.length} words...`,
       );
       GameEventsEmitter.aiPipelineStage(context.gameId, run.id, "prefilter");
-
-      console.log(`[AI Pipeline] Running Guesser pipeline for ${context.playerId}`);
-      console.log(`[AI Pipeline] Clue: "${currentTurn.clue.word}" for ${clueNumber}`);
-      console.log(`[AI Pipeline] Planning to make up to ${clueNumber} guesses`);
 
       const operativeDecision = await pipeline.runOperativePipeline({
         currentTeam: myTeam,
         remainingWords,
         clueWord: currentTurn.clue.word,
         clueNumber: currentTurn.clue.number,
+        onWordEvaluated: async (result: PreFilterOutput) => {
+          // Emit message for ALL evaluations (including "no link")
+          emitNarration(
+            context,
+            `"${result.word}": ${result.link_confidence} connection. ${result.reason}`,
+          );
+        },
+        onPrefilterComplete: async (results) => {
+          // Log words with moderate or strong associations
+          const moderateWords = results.filter((r) => r.link_confidence === "moderately");
+          const strongWords = results.filter((r) => r.link_confidence === "extremely");
+
+          if (moderateWords.length > 0 || strongWords.length > 0) {
+            const wordsList = [
+              ...strongWords.map((r) => `${r.word} (strong)`),
+              ...moderateWords.map((r) => `${r.word} (moderate)`),
+            ];
+            // Fire and forget
+            emitNarration(
+              context,
+              `Found ${wordsList.length} promising words: ${wordsList.join(", ")}`,
+            );
+          }
+        },
+        onPromptGenerated: async (prompt: string) => {
+          await appendPrompt(run.id, prompt);
+        },
       });
 
-      console.log(`[AI Pipeline] Pipeline complete`);
-      console.log(`[AI Pipeline] Decision: ${operativeDecision.action}`);
-
       if (operativeDecision.action === "stop") {
-        console.log(
-          `[AI] ${context.playerId} decided to stop guessing: ${operativeDecision.reason}`,
-        );
-        console.log(`[AI] Ending turn due to insufficient candidates`);
-
-        await emitNarration(context, "🤷 Hmm, none of these words feel right. I'll pass.");
+        await emitNarration(context, "Hmm, none of these words feel right. I'll pass.");
 
         const endTurnResult = await endTurn({
           gameId: context.gameId,
@@ -486,7 +468,12 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
         await updatePipelineStatus(run.id, PIPELINE_STATUS.COMPLETE);
         GameEventsEmitter.aiPipelineComplete(context.gameId, run.id);
 
-        console.log(`[AI] Turn ended successfully`);
+        // Log outcome and waiting message
+        emitNarration(context, `Turn ended. Playing it safe this round.`);
+        setTimeout(() => {
+          emitNarration(context, `Waiting for the next prompt...`);
+        }, 20000);
+
         return;
       }
 
@@ -505,7 +492,7 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
       // STAGE 2: Ranking (already done by pipeline)
       await emitNarration(
         context,
-        `🎯 Found ${rankedList.length} good candidates! Ranking them now...`,
+        `Found ${rankedList.length} good candidates! Ranking them now...`,
       );
       GameEventsEmitter.aiPipelineStage(context.gameId, run.id, "ranker");
 
@@ -519,20 +506,27 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
       };
       await updateRankerResponse(run.id, rankerResponse);
 
-      console.log(`[AI] Making up to ${clueNumber} guess(es) sequentially...`);
-      console.log(`[AI] Ranked list has ${rankedList.length} candidates`);
-
       const maxGuesses = Math.min(clueNumber, rankedList.length);
-      await emitNarration(context, `✨ Ready to make up to ${maxGuesses} guess(es). Let's go!`);
+      await emitNarration(context, `Ready to make up to ${maxGuesses} guess(es). Let's go!`);
 
       let correctGuesses = 0;
 
       for (let i = 0; i < Math.min(clueNumber, rankedList.length); i++) {
         const candidate = rankedList[i];
 
-        console.log(
-          `[AI] Guess ${i + 1}/${clueNumber}: "${candidate.word}" (score: ${candidate.score.toFixed(2)})`,
-        );
+        // Announce the next guess
+        await emitNarration(context, `Closest association is "${candidate.word}"`);
+
+        // Wait 5 seconds before making the guess
+        await delay(5000);
+
+        // Add chat message for moderate+ confidence (score >= 0.6)
+        if (candidate.score >= 0.6) {
+          await emitNarration(
+            context,
+            `Choosing "${candidate.word}" with ${(candidate.score * 100).toFixed(0)}% confidence. ${candidate.reason}`,
+          );
+        }
 
         const result = await makeGuess({
           gameId: context.gameId,
@@ -547,14 +541,11 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
         }
 
         const outcome = result.data.guess.outcome;
-        console.log(`[AI] Result: ${outcome}`);
 
         if (outcome === "CORRECT_TEAM_CARD") {
           correctGuesses++;
 
           if (correctGuesses >= clueNumber) {
-            console.log(`[AI] Made ${correctGuesses} correct guesses, calling endTurn`);
-
             const endTurnResult = await endTurn({
               gameId: context.gameId,
               roundNumber: context.roundNumber,
@@ -566,14 +557,16 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
               throw new Error(`Failed to end turn: ${endTurnResult.error}`);
             }
 
-            console.log(`[AI] Turn ended successfully`);
+            // Log successful completion
+            emitNarration(context, `Perfect! Found all ${correctGuesses} cards. Ending my turn.`);
             break;
           }
-
-          console.log(`[AI] Waiting 5 seconds before next guess...`);
-          await randomDelay(5000, 5000);
         } else {
-          console.log(`[AI] Wrong guess (${outcome}), turn will auto-end`);
+          // Log the outcome
+          emitNarration(
+            context,
+            `Wrong card! That was a ${outcome.toLowerCase().replace(/_/g, " ")}. My turn is over.`,
+          );
           break;
         }
       }
@@ -582,47 +575,31 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
       await updatePipelineStatus(run.id, PIPELINE_STATUS.COMPLETE);
       GameEventsEmitter.aiPipelineComplete(context.gameId, run.id);
 
-      console.log(`[AI] Guesser pipeline complete for run ${run.id}`);
+      // Add completion message
+      emitNarration(context, `Move complete. Analyzing the result...`);
+
+      // After 20 seconds, show "waiting for prompt" message
+      setTimeout(() => {
+        emitNarration(context, `Waiting for the next prompt...`);
+      }, 20000);
     } catch (error) {
-      console.error(`[AI] Error making guesses:`, error);
       const errorMsg = error instanceof Error ? error.message : "Unknown error";
 
       await updatePipelineStatus(run.id, PIPELINE_STATUS.FAILED, errorMsg);
       GameEventsEmitter.aiPipelineFailed(context.gameId, run.id, errorMsg);
 
-      await emitNarration(context, "❌ Oops! Something went wrong while making guesses.");
+      await emitNarration(context, "Oops! Something went wrong while making guesses.");
     } finally {
       activeDecisions.delete(decisionKey);
     }
   };
 
   /**
-   * Generic handler for ALL game events
-   */
-  const handleGameEvent = async (eventName: string, payload: any) => {
-    console.log(`[AI] ${eventName} event received for game ${payload.gameId}`);
-
-    await randomDelay(500, 1000);
-    await checkAndActIfNeeded(payload.gameId);
-  };
-
-  /**
    * Initialize event listeners
+   * NOTE: Disabled for now - AI is only triggered manually via trigger endpoint
    */
   const initialize = () => {
-    gameEventBus.onGameEvent(WebSocketEvent.GAME_STARTED, (p) =>
-      handleGameEvent("GAME_STARTED", p),
-    );
-    gameEventBus.onGameEvent(WebSocketEvent.ROUND_STARTED, (p) =>
-      handleGameEvent("ROUND_STARTED", p),
-    );
-    gameEventBus.onGameEvent(WebSocketEvent.TURN_ENDED, (p) => handleGameEvent("TURN_ENDED", p));
-    gameEventBus.onGameEvent(WebSocketEvent.CLUE_GIVEN, (p) => handleGameEvent("CLUE_GIVEN", p));
-    gameEventBus.onGameEvent(WebSocketEvent.PLAYER_JOINED, (p) =>
-      handleGameEvent("PLAYER_JOINED", p),
-    );
-
-    console.log("[AI Player Service] Initialized and listening for game events");
+    // Event listeners disabled - manual triggering only
   };
 
   return {
