@@ -61,7 +61,9 @@ export const getMessagesController =
 
       res.status(200).json({
         success: true,
-        data: result.messages,
+        data: {
+          messages: result.messages,
+        },
       });
     } catch (error) {
       next(error);
