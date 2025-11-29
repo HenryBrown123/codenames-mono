@@ -36,8 +36,6 @@ export const lobbyErrorHandler = (
     error: "Unexpected error",
   };
 
-  console.error(err);
-
   if (process.env.NODE_ENV === "development") {
     const errorDetails = generateAdditionalErrorInfo(err, req);
     errorResponse.details = errorDetails;

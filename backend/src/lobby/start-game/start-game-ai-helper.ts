@@ -28,7 +28,7 @@ export const createAIBotsForTeams = async (input: CreateAIBotsInput): Promise<vo
       continue;
     }
 
-    console.log(`[AI Mode] Adding ${playersNeeded} AI bot(s) to ${team.teamName}`);
+    // Adding AI bots to fill team
 
     // Create AI bot users using repository
     const botUsers: Array<{ userId: number; botName: string }> = [];

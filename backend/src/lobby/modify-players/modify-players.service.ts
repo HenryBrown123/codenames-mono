@@ -121,11 +121,6 @@ export const modifyPlayersService = (dependencies: ServiceDependencies) => {
         return updateData;
       });
 
-      console.log(
-        "Repository request:",
-        JSON.stringify(repositoryRequest, null, 2),
-      );
-
       const modifiedPlayers = await lobbyOps.modifyPlayers(repositoryRequest);
 
       if (modifiedPlayers.length !== playersToModify.length) {
