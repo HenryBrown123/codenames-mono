@@ -494,13 +494,8 @@ export const modifyPlayers =
 
     if (playersWithUpdates.length === 0) return [];
 
-    console.log(
-      "Players with updates:",
-      JSON.stringify(playersWithUpdates, null, 2),
-    );
-
     // Perform all updates
-    const updateResults = await Promise.all(
+    await Promise.all(
       playersWithUpdates.map(async (player) => {
         const updateValues = Object.fromEntries(
           Object.entries({
@@ -511,45 +506,19 @@ export const modifyPlayers =
           }).filter(([_, value]) => value !== undefined),
         );
 
-        console.log(
-          `Updating player ${player.publicPlayerId} with:`,
-          updateValues,
-        );
-
-        const result = await db
+        await db
           .updateTable("players")
           .set(updateValues)
           .where("players.public_id", "=", player.publicPlayerId)
           .where("players.game_id", "=", player.gameId)
           .executeTakeFirst();
-
-        console.log(`Update result for ${player.publicPlayerId}:`, result);
-        return result;
       }),
     );
-
-    // Check if all updates succeeded
-    const updatedCount = updateResults.filter(
-      (result) => result.numUpdatedRows && result.numUpdatedRows > 0,
-    ).length;
-    console.log(
-      `Updated ${updatedCount} out of ${playersWithUpdates.length} players`,
-    );
-
-    if (updatedCount !== playersWithUpdates.length) {
-      console.error(
-        "Some players were not updated. Update results:",
-        updateResults,
-      );
-      // Don't throw here, let the service handle the validation
-    }
 
     // Fetch and return updated players
     const allPublicPlayerIds = playersData.map(
       (player) => player.publicPlayerId,
     );
-
-    console.log("Fetching updated players with IDs:", allPublicPlayerIds);
 
     const updatedPlayers = await db
       .selectFrom("players")
@@ -574,8 +543,6 @@ export const modifyPlayers =
         "player_roles.role_name",
       ])
       .execute();
-
-    console.log("Final fetched players:", updatedPlayers.length);
 
     return updatedPlayers.map((player) => ({
       _id: player.id,

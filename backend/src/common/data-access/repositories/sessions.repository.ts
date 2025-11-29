@@ -143,7 +143,6 @@ export const findSessionByToken =
     //   .executeTakeFirst();
 
     // Placeholder for stateless implementation
-    console.log(`Would validate JWT token: ${token}`);
     return null;
   };
 
@@ -171,10 +170,8 @@ export const invalidateSession =
       //   .where("token", "=", token)
       //   .execute();
 
-      console.log(`Would invalidate session with token: ${token}`);
       return true;
-    } catch (error) {
-      console.error("Error invalidating session:", error);
+    } catch {
       return false;
     }
   };
@@ -203,10 +200,8 @@ export const invalidateUserSessions =
       //   .where("user_id", "=", userId)
       //   .execute();
 
-      console.log(`Would invalidate all sessions for user: ${userId}`);
       return true;
-    } catch (error) {
-      console.error("Error invalidating user sessions:", error);
+    } catch {
       return false;
     }
   };
