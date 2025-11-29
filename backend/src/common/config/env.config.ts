@@ -2,41 +2,76 @@ import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
 import { z } from "zod";
+import winston from "winston";
+import util from "util";
+
+export const consoleFormat = winston.format.printf(
+  ({ level, message, timestamp, meta, ...rest }) => {
+    const prefix = `[env] `;
+
+    const metaStr = meta
+      ? `\n  ↳ ${util.inspect(meta, { colors: true, depth: null }).replace(/\n/g, "\n    ")}`
+      : "";
+
+    return `${timestamp} ${level} ${prefix}${message}${metaStr}`;
+  },
+);
+
+/**
+ * Bespoke logger used as logger config contained in .env
+ */
+const envLoadLogger = winston.createLogger({
+  level: "info",
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+  ),
+  transports: [
+    new winston.transports.Console({
+      level: "info",
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.colorize(),
+        consoleFormat,
+      ),
+    }),
+  ],
+});
 
 export const loadEnvFromPackageDir = () => {
   const envPath = path.resolve(process.cwd(), ".env");
 
   if (!fs.existsSync(envPath)) {
-    console.error(`[X] No .env file found at: ${process.cwd()}`);
+    envLoadLogger.error(`[X] No .env file found at: ${process.cwd()}`);
     throw new Error("Missing .env file. Please create one with required environment variables.");
   }
 
-  console.log(`[*] Loading environment from: ${envPath}`);
+  envLoadLogger.info(`Loading environment from: ${envPath}`);
   dotenv.config({ path: envPath });
 
   // validate env variables against zod schema
   const result = EnvSchema.safeParse(process.env);
 
   if (!result.success) {
-    console.error("[X] Environment validation failed:");
+    envLoadLogger.error("[X] Environment validation failed:");
     result.error.errors.forEach((issue) => {
-      console.error(`    - ${issue.path.join(".")}: ${issue.message}`);
+      envLoadLogger.error(`    - ${issue.path.join(".")}: ${issue.message}`);
     });
-    console.error("Please check your .env file and correct all issues above.");
+    envLoadLogger.error("Please check your .env file and correct all issues above.");
     throw result.error;
   }
 
   const parsedEnv = result.data;
 
   if (parsedEnv.NODE_ENV === "development") {
-    console.log("[*] Environment Configuration:");
-    console.log(`    - Environment: ${parsedEnv.NODE_ENV}`);
-    console.log(`    - Port: ${parsedEnv.PORT}`);
-    console.log(`    - Database: ${parsedEnv.DATABASE_URL}`);
-    console.log(`    - LLM: ${parsedEnv.LLM_MODEL} @ ${parsedEnv.LLM_URL}`);
+    envLoadLogger.info("Environment Configuration:");
+    envLoadLogger.info(`    - Environment: ${parsedEnv.NODE_ENV}`);
+    envLoadLogger.info(`    - Port: ${parsedEnv.PORT}`);
+    envLoadLogger.info(`    - Database: ${parsedEnv.DATABASE_URL}`);
+    envLoadLogger.info(`    - LLM: ${parsedEnv.LLM_MODEL} @ ${parsedEnv.LLM_URL}`);
   }
 
-  console.log("[*] Environment validated");
+  envLoadLogger.info("Environment validated");
   return parsedEnv;
 };
 
@@ -50,7 +85,8 @@ const EnvSchema = z.object({
   LLM_URL: z.string().url("Invalid LLM_URL").default("http://localhost:11434"),
   LLM_MODEL: z.string().min(1, "LLM_MODEL must not be empty").default("qwen2.5:14b"),
   LLM_TEMPERATURE: z.string().transform(Number).default("0.7"),
-  LOG_LEVEL: z.enum(["debug", "info", "warn", "error", "http"]).default("info"),
-  LOG_FILE_PATH: z.string().default("./logs/app.log"),
+  LOG_FILE_LEVEL: z.enum(["debug", "info", "warn", "error", "http"]).default("info"),
+  LOG_CONSOLE_LEVEL: z.enum(["debug", "info", "warn", "error", "http"]).default("info"),
+  LOG_FILE_PATH: z.string().default("./logs/app.info"),
   LOG_HTTP_REQUESTS: z.coerce.boolean().default(false),
 });
