@@ -1,6 +1,6 @@
 import type { Response, NextFunction } from "express";
 import type { Request } from "express-jwt";
-import type { getEventsService } from "./get-events.service";
+import type { GetEventsService } from "./get-events.service";
 import { z } from "zod";
 
 /**
@@ -14,7 +14,7 @@ const getEventsParamsSchema = z.object({
  * Dependencies required by the controller
  */
 export interface GetEventsControllerDeps {
-  getEvents: ReturnType<typeof getEventsService>;
+  getEvents: GetEventsService;
 }
 
 /**

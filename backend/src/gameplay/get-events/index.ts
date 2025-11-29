@@ -1,5 +1,6 @@
 import type { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
 import type { DbContext } from "@backend/common/data-access/transaction-handler";
+import type { AppLogger } from "@backend/common/logging";
 
 import * as gameEventsRepository from "@backend/common/data-access/repositories/game-events.repository";
 import { getEventsService } from "./get-events.service";
@@ -16,8 +17,8 @@ export interface GetEventsDependencies {
 /**
  * Initializes the get events feature with all dependencies
  */
-export const getEvents = (dependencies: GetEventsDependencies) => {
-  const service = getEventsService({
+export const getEvents = (logger: AppLogger) => (dependencies: GetEventsDependencies) => {
+  const service = getEventsService(logger)({
     getEventsByGameId: gameEventsRepository.getEventsByGameId(dependencies.db),
     getGameState: dependencies.getGameState,
   });

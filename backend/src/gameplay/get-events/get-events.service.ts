@@ -1,5 +1,6 @@
 import type { GameEventRow } from "@backend/common/data-access/repositories/game-events.repository";
 import type { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
+import type { AppLogger } from "@backend/common/logging";
 
 /**
  * Transformed event for API response
@@ -34,7 +35,7 @@ export type GetEventsResult =
 /**
  * Creates the get events service
  */
-export const getEventsService = (deps: GetEventsServiceDeps) =>
+export const getEventsService = (logger: AppLogger) => (deps: GetEventsServiceDeps) =>
   async (gameId: string, userId: number): Promise<GetEventsResult> => {
     // Verify user has access to this game
     const gameState = await deps.getGameState(gameId, userId);
@@ -60,7 +61,7 @@ export const getEventsService = (deps: GetEventsServiceDeps) =>
             ? JSON.parse(row.metadata)
             : (row.metadata as Record<string, any>);
         } catch (error) {
-          console.error(`Failed to parse metadata for event ${row.public_id}:`, error);
+          logger.warn(`getEvents metadata_parse_failed: eventId=${row.public_id}`);
         }
       }
 
@@ -78,3 +79,5 @@ export const getEventsService = (deps: GetEventsServiceDeps) =>
 
     return { status: "success", events };
   };
+
+export type GetEventsService = ReturnType<ReturnType<typeof getEventsService>>;
