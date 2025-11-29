@@ -3,6 +3,7 @@ import type { TurnStateProvider } from "@backend/common/state/turn-state.provide
 import type { GameplayValidationError } from "@backend/common/state/gameplay-state.validation";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 import type { GameplayOperations } from "../gameplay-actions";
+import type { AppLogger } from "@backend/common/logging";
 import { complexProperties } from "@backend/common/state/gameplay-state.helpers";
 import { GameEventsEmitter } from "@backend/common/websocket";
 
@@ -137,7 +138,7 @@ export type GiveClueDependencies = {
 /**
  * Creates a service for handling clue giving with business rule validation
  */
-export const giveClueService = (dependencies: GiveClueDependencies) => {
+export const giveClueService = (logger: AppLogger) => (dependencies: GiveClueDependencies) => {
   /**
    * Helper to get complete turn data for API response
    */
@@ -162,9 +163,13 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
   };
 
   return async (input: GiveClueInput): Promise<GiveClueResult> => {
+    const log = logger.for({}).withMeta({ gameId: input.gameId, userId: input.userId }).create();
+    log.info(`giveClue called: ${JSON.stringify(input)}`);
+
     const result = await dependencies.getGameState(input.gameId, input.userId, input.playerId);
 
     if (result.status === "game-not-found") {
+      log.warn(`giveClue failed: game not found`);
       return {
         success: false,
         error: {
@@ -175,6 +180,7 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
     }
 
     if (result.status === "user-not-player") {
+      log.warn(`giveClue failed: user not player`);
       return {
         success: false,
         error: {
@@ -186,6 +192,7 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
     }
 
     if (result.status === "player-not-found") {
+      log.warn(`giveClue failed: player not found`);
       return {
         success: false,
         error: {
@@ -196,6 +203,7 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
     }
 
     if (result.status === "player-not-in-game") {
+      log.warn(`giveClue failed: player not in game`);
       return {
         success: false,
         error: {
@@ -207,6 +215,7 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
     }
 
     if (result.status === "user-not-authorized") {
+      log.warn(`giveClue failed: user not authorized`);
       return {
         success: false,
         error: {
@@ -221,6 +230,7 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
     const gameData = result.data;
 
     if (!gameData.currentRound) {
+      log.warn(`giveClue failed: round not found`);
       return {
         success: false,
         error: {
@@ -231,6 +241,7 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
     }
 
     if (gameData.currentRound.number !== input.roundNumber) {
+      log.warn(`giveClue failed: round mismatch (requested=${input.roundNumber}, current=${gameData.currentRound.number})`);
       return {
         success: false,
         error: {
@@ -243,6 +254,7 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
 
     const clueWordValidation = validateClueWord(gameData, input.word);
     if (!clueWordValidation.valid) {
+      log.warn(`giveClue failed: invalid clue word (${clueWordValidation.error})`);
       return {
         success: false,
         error: {
@@ -256,6 +268,7 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
     const validationResult = checkClueGivingRules(gameData);
 
     if (!validationResult.valid) {
+      log.warn(`giveClue failed: invalid game state (${gameData.status})`);
       return {
         success: false,
         error: {
@@ -282,6 +295,7 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
       input.playerId,
     );
 
+    log.info(`giveClue success: word=${input.word}, count=${input.targetCardCount}`);
     return {
       success: true,
       data: {
@@ -296,4 +310,4 @@ export const giveClueService = (dependencies: GiveClueDependencies) => {
   };
 };
 
-export type GiveClueService = ReturnType<typeof giveClueService>;
+export type GiveClueService = ReturnType<ReturnType<typeof giveClueService>>;

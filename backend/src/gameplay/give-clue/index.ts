@@ -2,40 +2,22 @@ import type { GameplayStateProvider } from "@backend/common/state/gameplay-state
 import type { TurnStateProvider } from "@backend/common/state/turn-state.provider";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 import type { GameplayOperations } from "../gameplay-actions";
+import type { AppLogger } from "@backend/common/logging";
 
 import { giveClueService } from "./give-clue.service";
 import { giveClueController } from "./give-clue.controller";
 
-/**
- * Dependencies required by the give clue feature
- */
 export interface GiveClueDependencies {
   getGameState: GameplayStateProvider;
   gameplayHandler: TransactionalHandler<GameplayOperations>;
-  getTurnState: TurnStateProvider; // ← Add turn state provider
+  getTurnState: TurnStateProvider;
 }
 
-/**
- * Initializes the give clue feature with all dependencies
- *
- * @param dependencies - Required services and handlers
- * @returns Feature components for use in route setup
- */
-export const giveClue = (dependencies: GiveClueDependencies) => {
-  const giveClueServiceInstance = giveClueService({
-    getGameState: dependencies.getGameState,
-    gameplayHandler: dependencies.gameplayHandler,
-    getTurnState: dependencies.getTurnState, // ← Pass turn state provider
-  });
+export const giveClue = (logger: AppLogger) => (dependencies: GiveClueDependencies) => {
+  const service = giveClueService(logger)(dependencies);
+  const controller = giveClueController(logger)({ giveClue: service });
 
-  const controller = giveClueController({
-    giveClue: giveClueServiceInstance,
-  });
-
-  return {
-    controller,
-    service: giveClueServiceInstance,
-  };
+  return { controller, service };
 };
 
 export default giveClue;

@@ -1,6 +1,7 @@
 import type { Response, NextFunction } from "express";
 import type { Request } from "express-jwt";
 import type { GiveClueService } from "./give-clue.service";
+import type { AppLogger } from "@backend/common/logging";
 import { z } from "zod";
 
 /**
@@ -109,18 +110,10 @@ export type Dependencies = {
 /**
  * Creates a controller for handling clue giving
  */
-export const giveClueController = ({ giveClue }: Dependencies) => {
-  /**
-   * Handles HTTP request to give a clue in a game
-   * @param req - Express request with game ID, round number and clue details
-   * @param res - Express response object
-   * @param next - Express error handling function
-   */
-  return async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> => {
+export const giveClueController = (logger: AppLogger) => ({ giveClue }: Dependencies) => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const log = logger.for({}).withMeta({ endpoint: "POST /games/:gameId/rounds/:roundNumber/clues" }).create();
+
     try {
       const validationResult = giveClueRequestSchema.safeParse({
         params: req.params,
@@ -129,6 +122,7 @@ export const giveClueController = ({ giveClue }: Dependencies) => {
       });
 
       if (!validationResult.success) {
+        log.warn("Request validation failed");
         res.status(400).json({
           success: false,
           error: "Invalid request parameters",
@@ -144,6 +138,7 @@ export const giveClueController = ({ giveClue }: Dependencies) => {
       }
 
       const { params, auth, body } = validationResult.data;
+      log.info(`Request: ${JSON.stringify({ ...params, ...auth, ...body })}`);
 
       // Call give clue service
       const result = await giveClue({
@@ -156,6 +151,7 @@ export const giveClueController = ({ giveClue }: Dependencies) => {
       });
 
       if (!result.success) {
+        log.warn(`Response: ${result.error.status}`);
         // Handle specific error types with appropriate HTTP status codes
         switch (result.error.status) {
           case "game-not-found":
@@ -236,15 +232,16 @@ export const giveClueController = ({ giveClue }: Dependencies) => {
       }
 
       // Success response with complete turn data
+      log.info(`Response: 200 OK, word=${result.data.clue.word}`);
       res.status(200).json({
         success: true,
         data: {
           clue: result.data.clue,
-          turn: result.data.turn, // ← Now includes complete turn data
+          turn: result.data.turn,
         },
       });
     } catch (error) {
-      console.error("Error in giveClue controller:", error);
+      logger.error("Error in giveClue controller", { error: error instanceof Error ? error.message : String(error) });
       res.status(500).json({
         success: false,
         error: "Internal server error",
