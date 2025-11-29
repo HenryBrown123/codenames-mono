@@ -18,11 +18,7 @@ export const errorHandler = (
   res: Response,
   next: NextFunction,
 ): void => {
-  console.error(
-    `Unexpected error processing request: ${req.method} ${req.path}`,
-    err,
-  );
-
+  // Error details included in response for dev mode
   const errorResponse: ErrorResponse = {
     success: false,
     error: "An unexpected error occurred",

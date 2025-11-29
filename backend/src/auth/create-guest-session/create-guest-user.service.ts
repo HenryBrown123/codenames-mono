@@ -32,7 +32,7 @@ export const createGuestUserService = ({
       const existingUser = await findUser(username);
 
       if (!existingUser) return username;
-      console.log("Guest username collision detected - ", username);
+      // Username collision - try again
     }
 
     throw new UnexpectedAuthError(
