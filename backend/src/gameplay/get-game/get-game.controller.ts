@@ -27,7 +27,7 @@ export type ValidatedGameStateRequest = z.infer<typeof gameStateRequestSchema>;
  * Dependencies required by the game state controller
  */
 export type Dependencies = {
-  getGameState: ReturnType<typeof getGameStateService>;
+  getGameState: ReturnType<ReturnType<typeof getGameStateService>>;
 };
 
 /**

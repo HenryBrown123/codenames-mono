@@ -1,6 +1,7 @@
 import { GameAggregate } from "@backend/common/state/gameplay-state.types";
 import { PLAYER_ROLE, PlayerRole, ROUND_STATE } from "@codenames/shared/types";
 import { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
+import type { AppLogger } from "@backend/common/logging";
 
 /**
  * Service input parameters
@@ -94,12 +95,12 @@ export type GetGameStateDependencies = {
 /**
  * Creates a service for retrieving role-specific game state
  */
-export const getGameStateService = (dependencies: GetGameStateDependencies) => {
+export const getGameStateService = (logger: AppLogger) => (dependencies: GetGameStateDependencies) => {
   return async (input: GetGameStateInput): Promise<GetGameStateResult> => {
     const result = await dependencies.getGameState(input.gameId, input.userId, input.playerId);
 
     if (result.status === "game-not-found") {
-      console.log(`Game not found: gameId=${input.gameId}`);
+      logger.debug("Game not found", { gameId: input.gameId });
       return {
         success: false,
         error: {
@@ -110,7 +111,7 @@ export const getGameStateService = (dependencies: GetGameStateDependencies) => {
     }
 
     if (result.status === "user-not-player") {
-      console.log(`User not player: gameId=${input.gameId}, userId=${input.userId}`);
+      logger.debug("User not player", { gameId: input.gameId, userId: input.userId });
       return {
         success: false,
         error: {
@@ -121,7 +122,7 @@ export const getGameStateService = (dependencies: GetGameStateDependencies) => {
     }
 
     if (result.status === "player-not-found") {
-      console.log(`Player not found: playerId=${input.playerId}`);
+      logger.debug("Player not found", { playerId: input.playerId });
       return {
         success: false,
         error: {
@@ -132,7 +133,7 @@ export const getGameStateService = (dependencies: GetGameStateDependencies) => {
     }
 
     if (result.status === "player-not-in-game") {
-      console.log(`Player not in game: playerId=${input.playerId}, gameId=${input.gameId}`);
+      logger.debug("Player not in game", { playerId: input.playerId, gameId: input.gameId });
       return {
         success: false,
         error: {
@@ -144,7 +145,7 @@ export const getGameStateService = (dependencies: GetGameStateDependencies) => {
     }
 
     if (result.status === "user-not-authorized") {
-      console.log(`User not authorized: userId=${input.userId}, playerId=${input.playerId}`);
+      logger.debug("User not authorized", { userId: input.userId, playerId: input.playerId });
       return {
         success: false,
         error: {
