@@ -7,6 +7,8 @@ import { Router } from "express";
 import type { Kysely } from "kysely";
 import type { DB } from "@backend/common/db/db.types";
 import type { AuthMiddleware } from "@backend/common/http-middleware/auth.middleware";
+import type { HttpLoggerHandler } from "@backend/common/http-middleware/http-logger.middleware";
+import type { AppLogger } from "@backend/common/logging";
 import { createLocalLLMService } from "./llm/local-llm.service";
 import { createAIPlayerService } from "./ai-player/ai-player.service";
 import type { LocalLLMService } from "./llm/local-llm.service";
@@ -37,6 +39,8 @@ export type AIModuleDependencies = {
   app: Express;
   db: Kysely<DB>;
   auth: AuthMiddleware;
+  httpLogger: HttpLoggerHandler;
+  appLogger: AppLogger;
   llmConfig: {
     ollamaUrl: string;
     model: string;
@@ -52,11 +56,12 @@ export type AIModuleDependencies = {
  * Initializes the AI feature module with all dependencies and registers routes
  */
 export const initialize = (dependencies: AIModuleDependencies) => {
-  const { app, db, auth, llmConfig, giveClue, makeGuess, endTurn, getGameState } = dependencies;
+  const { app, db, auth, httpLogger, appLogger, llmConfig, giveClue, makeGuess, endTurn, getGameState } = dependencies;
 
+  const logger = appLogger.for({ feature: "ai" }).withMeta({ model: llmConfig.model }).create();
   const llm = createLocalLLMService(llmConfig);
 
-  const aiPlayerService = createAIPlayerService({
+  const aiPlayerService = createAIPlayerService(logger)({
     llm,
     giveClue,
     makeGuess,
@@ -75,17 +80,23 @@ export const initialize = (dependencies: AIModuleDependencies) => {
 
   aiPlayerService.initialize();
 
-  const aiMoveFeature = aiMove({
+  const aiMoveFeature = aiMove(logger)({
     aiPlayerService,
     getGameState,
     db,
   });
 
   const router = Router();
+
+  // HTTP request/response logging
+  router.use(httpLogger(logger));
+
   router.post("/games/:gameId/ai/move", auth, aiMoveFeature.triggerMove.controller);
   router.get("/games/:gameId/ai/status", auth, aiMoveFeature.getStatus.controller);
 
   app.use("/api", router);
+
+  logger.info("AI module initialized");
 
   return {
     aiPlayerService,
