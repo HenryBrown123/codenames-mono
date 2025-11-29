@@ -1,7 +1,11 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
+import type { Request } from "express-jwt";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import type { AppLogger } from "@backend/common/logging";
 
 export interface AuthRequest extends Request {
+  id?: string;
   auth?: {
     userId: number;
     username: string;
@@ -14,8 +18,11 @@ export type AuthMiddleware = (
   next: NextFunction,
 ) => void;
 
-export const authMiddleware = (jwtSecret: string): AuthMiddleware => {
+export const authMiddleware = (jwtSecret: string, logger?: AppLogger): AuthMiddleware => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
+    // Idempotent request ID generation
+    req.id = req.id ?? crypto.randomUUID();
+
     try {
       // Try to get token from cookie first
       let token = req.cookies?.authToken;
@@ -49,7 +56,7 @@ export const authMiddleware = (jwtSecret: string): AuthMiddleware => {
 
       next();
     } catch (error) {
-      console.error("Auth middleware error:", error);
+      logger?.warn(`auth_middleware_error: ${error instanceof Error ? error.message : "unknown"}`);
       return res.status(401).json({
         success: false,
         error: "Invalid or expired token",
