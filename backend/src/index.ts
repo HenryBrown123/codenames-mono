@@ -38,26 +38,29 @@ try {
  */
 const appLogger = createAppLogger({
   logFilePath: env.LOG_FILE_PATH,
-  level: env.LOG_LEVEL,
+  level: env.LOG_FILE_LEVEL,
+  consoleLevel: env.LOG_CONSOLE_LEVEL,
   logDir: env.LOG_FILE_PATH,
 });
 
-appLogger.info("Server starting");
+const startupLogger = appLogger.for({ server: "startup" }).toConsole().create();
+
+startupLogger.info("Server starting");
 
 /**
  * Initialize the Express application with all middleware and features
  */
 
 const app = express();
-const dbInstance = await postgresDb.initializeDb(env.DATABASE_URL);
+const dbInstance = await postgresDb.initializeDb(appLogger)(env.DATABASE_URL);
 
 /**
  * Refresh system data from json files.
  */
 try {
-  refreshSystemData(dbInstance);
+  await refreshSystemData(startupLogger)(dbInstance);
 } catch (error) {
-  appLogger.error("Failed to refresh system data", {
+  startupLogger.error("Failed to refresh system data", {
     error: error instanceof Error ? error.message : String(error),
   });
 }
@@ -100,7 +103,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 const authHandlers = authMiddleware(env.JWT_SECRET, appLogger);
 const httpLoggerHandler = httpLoggerMiddleware({
   enabled: env.LOG_HTTP_REQUESTS,
-  verbose: env.LOG_LEVEL === "http",
+  verbose: env.LOG_CONSOLE_LEVEL === "http",
 });
 
 // Initialize auth feature with JWT options
@@ -177,8 +180,8 @@ initializeWebSocketServer({
 });
 
 httpServer.listen(PORT, () => {
-  console.log(`[*] ${env.NODE_ENV} server running on port ${PORT}`);
-  console.log(`[*] WebSocket ready`);
-  console.log(`[*] AI: ${ai.llm.model}`);
-  appLogger.info(`Server running on port ${PORT}`);
+  startupLogger.info(`${env.NODE_ENV} server running on port ${PORT}`);
+  startupLogger.info(`WebSocket ready`);
+  startupLogger.info(`AI: ${ai.llm.model}`);
+  startupLogger.info(`Server running on port ${PORT}`);
 });
