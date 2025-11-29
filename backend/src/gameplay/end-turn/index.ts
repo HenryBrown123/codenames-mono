@@ -1,10 +1,7 @@
-/**
- * End Turn Feature
- */
-
 import type { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 import type { GameplayOperations } from "../gameplay-actions";
+import type { AppLogger } from "@backend/common/logging";
 
 import { createEndTurnService } from "./end-turn.service";
 import { createEndTurnController } from "./end-turn.controller";
@@ -14,18 +11,11 @@ export interface EndTurnFeatureDependencies {
   gameplayHandler: TransactionalHandler<GameplayOperations>;
 }
 
-export const endTurn = (dependencies: EndTurnFeatureDependencies) => {
-  const endTurnServiceInstance = createEndTurnService({
-    getGameState: dependencies.getGameState,
-    gameplayHandler: dependencies.gameplayHandler,
-  });
+export const endTurn = (logger: AppLogger) => (dependencies: EndTurnFeatureDependencies) => {
+  const service = createEndTurnService(logger)(dependencies);
+  const controller = createEndTurnController(logger)(service);
 
-  const controller = createEndTurnController(endTurnServiceInstance); // TODO: add authHandlers
-
-  return {
-    controller,
-    service: endTurnServiceInstance,
-  };
+  return { controller, service };
 };
 
 export default endTurn;
