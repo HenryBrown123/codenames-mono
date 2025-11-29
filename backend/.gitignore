@@ -6,3 +6,6 @@ rebase-script.sh
 # Ignore compiled TypeScript output
 ./dist/*
 ./env
+
+# Logs
+logs/
