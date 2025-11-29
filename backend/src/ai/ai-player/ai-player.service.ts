@@ -27,6 +27,7 @@ import type { MessageCreator } from "@backend/common/data-access/repositories/ga
 import { MESSAGE_TYPE } from "@backend/common/data-access/repositories/game-messages.repository";
 import { GameEventsEmitter } from "@backend/common/websocket";
 import type { GameFinder } from "@backend/common/data-access/repositories/games.repository";
+import type { AppLogger } from "@backend/common/logging";
 
 export type AIPlayerDependencies = {
   llm: LocalLLMService;
@@ -71,7 +72,7 @@ const delay = (ms: number): Promise<void> => {
 /**
  * Creates the AI player service
  */
-export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
+export const createAIPlayerService = (logger: AppLogger) => (dependencies: AIPlayerDependencies) => {
   const {
     llm,
     giveClue,
@@ -118,7 +119,7 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
         context.teamId,
       );
     } catch (error) {
-      // Silently fail narration
+      logger.warn("emitNarration failed", { gameId: context.gameId, error: error instanceof Error ? error.message : "unknown" });
     }
   };
 
@@ -201,7 +202,7 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
         }
       }
     } catch (error) {
-      // Silently handle errors
+      logger.error("checkAndActIfNeeded failed", { error: error instanceof Error ? error.message : String(error) });
     }
   };
 
@@ -608,4 +609,4 @@ export const createAIPlayerService = (dependencies: AIPlayerDependencies) => {
   };
 };
 
-export type AIPlayerService = ReturnType<typeof createAIPlayerService>;
+export type AIPlayerService = ReturnType<ReturnType<typeof createAIPlayerService>>;
