@@ -40,11 +40,11 @@ export const initialize = (
 
   // Feature modules - each gets both read and write capabilities
 
-  const { controller: getGameController } = getGame({
+  const { controller: getGameController } = getGame(logger)({
     getGameState,
   });
 
-  const { controller: getPlayersController } = getPlayers({
+  const { controller: getPlayersController } = getPlayers(logger)({
     getGameState,
   });
 
@@ -65,7 +65,7 @@ export const initialize = (
     getTurnState,
   });
 
-  const { controller: getTurnController } = getTurn({
+  const { controller: getTurnController } = getTurn(logger)({
     getTurnState,
   });
 
