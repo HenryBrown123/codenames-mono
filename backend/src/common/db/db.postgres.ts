@@ -1,6 +1,7 @@
 import { Kysely, PostgresDialect } from "kysely";
 import pg from "pg";
 import { DB } from "./db.types";
+import type { AppLogger } from "../logging";
 
 const { Pool } = pg;
 
@@ -9,13 +10,14 @@ let dbInstance: Kysely<DB> | null = null;
 /**
  * Initialize the database connection and test it
  * @param connectionString The PostgreSQL connection string
+ * @param logger The application logger
  * @returns A Promise resolving to the database instance
  * @throws Error if connection test fails
  */
-export async function initializeDb(
-  connectionString: string,
-): Promise<Kysely<DB>> {
+export const initializeDb = (logger: AppLogger) => async (connectionString: string): Promise<Kysely<DB>> => {
   if (dbInstance) throw new Error("Database already initialized");
+
+  const log = logger.for({ module: "database" }).create();
 
   const pool = new Pool({
     connectionString,
@@ -24,9 +26,11 @@ export async function initializeDb(
   try {
     const client = await pool.connect();
     client.release();
-    console.log("✅ Database connection successful");
+    log.info("Database connection successful");
   } catch (error) {
-    console.error("❌ Database connection failed:", error);
+    log.error("Database connection failed", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     if (error instanceof Error) {
       throw new Error(`Failed to connect to database: ${error.message}`);
     }
