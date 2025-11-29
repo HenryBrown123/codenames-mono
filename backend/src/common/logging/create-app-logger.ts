@@ -1,21 +1,20 @@
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
+import util from "util";
 
 // ============================================================================
 // Types
 // ============================================================================
 
+export type LogLevel = "debug" | "info" | "warn" | "error" | "http";
+
 export type AppLoggerConfig = {
   logFilePath: string;
-  level: "debug" | "info" | "warn" | "error" | "http";
+  level: LogLevel;
+  consoleLevel: LogLevel | "silent";
   logDir: string;
 };
 
-/**
- * these are front loaded in file logs, and enforced via types at compile time when
- * creating a new logger. Forces all logs to belong to a group. May rethink if list gets
- * too long.
- */
 const LOG_SCOPE_KEYS = [
   "app",
   "module",
@@ -24,6 +23,7 @@ const LOG_SCOPE_KEYS = [
   "controller",
   "api",
   "middleware",
+  "server",
 ] as const;
 
 export type LogScope = {
@@ -57,41 +57,69 @@ const orderedFormat = winston.format.printf(({ level, message, timestamp, meta, 
   return JSON.stringify(ordered);
 });
 
+export const consoleFormat = winston.format.printf(
+  ({ level, message, timestamp, meta, ...rest }) => {
+    const scope = LOG_SCOPE_KEYS.filter((key) => rest[key] !== undefined)
+      .map((key) => rest[key])
+      .join(":");
+
+    const prefix = scope ? `[${scope}] ` : "";
+
+    const metaStr = meta
+      ? `\n  ↳ ${util.inspect(meta, { colors: true, depth: null }).replace(/\n/g, "\n    ")}`
+      : "";
+
+    return `${timestamp} ${level} ${prefix}${message}${metaStr}`;
+  },
+);
+
 // ============================================================================
 // Classes
 // ============================================================================
 
 /**
- * Fluent builder for creating scoped AppLogger instances.
- * Accumulates scope and metadata until create() is called.
+ * Builder for creating scoped AppLogger instances.
+ * Accumulates scope other props until create() is called.
  */
 export class LoggerBuilder {
   private logData: LogScope & { meta?: LogMeta } = {};
+  private consoleOverride?: LogLevel;
 
   constructor(private readonly logger: winston.Logger) {}
 
-  /**
-   * Adds structured scope fields to the logger
-   */
   for(scope: LogScope): this {
     Object.assign(this.logData, scope);
     return this;
   }
 
-  /**
-   * Adds freeform metadata nested under 'meta' key
-   */
   withMeta(meta: LogMeta): this {
     this.logData.meta ??= {};
     Object.assign(this.logData.meta, meta);
     return this;
   }
 
-  /**
-   * Creates the AppLogger instance with accumulated scope and metadata
-   */
+  toConsole(level: LogLevel = "info"): this {
+    this.consoleOverride = level;
+    return this;
+  }
+
   create(): AppLogger {
-    return new AppLogger(this.logger.child(this.logData));
+    const childLogger = this.logger.child(this.logData);
+
+    if (this.consoleOverride) {
+      childLogger.add(
+        new winston.transports.Console({
+          level: this.consoleOverride,
+          format: winston.format.combine(
+            winston.format.timestamp(),
+            winston.format.colorize(),
+            consoleFormat,
+          ),
+        }),
+      );
+    }
+
+    return new AppLogger(childLogger);
   }
 }
 
@@ -104,15 +132,19 @@ export class AppLogger {
   info(message: string, meta?: LogMeta) {
     this.logger.info(message, meta);
   }
+
   warn(message: string, meta?: LogMeta) {
     this.logger.warn(message, meta);
   }
+
   error(message: string, meta?: LogMeta) {
     this.logger.error(message, meta);
   }
+
   debug(message: string, meta?: LogMeta) {
     this.logger.debug(message, meta);
   }
+
   http(message: string, meta?: LogMeta) {
     this.logger.http(message, meta);
   }
@@ -130,30 +162,45 @@ export class AppLogger {
 // ============================================================================
 
 /**
- * Creates the root application logger with file rotation
+ * Creates the root application logger with file rotation and optional console output
  */
 export const createAppLogger = (config: AppLoggerConfig): AppLogger => {
+  const transports: winston.transport[] = [
+    new DailyRotateFile({
+      filename: "codenames-backend-%DATE%.log.jsonl",
+      dirname: config.logDir,
+      datePattern: "YYYY-MM-DD",
+      maxSize: "20m",
+      maxFiles: "14d",
+      zippedArchive: true,
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.errors({ stack: true }),
+        orderedFormat,
+      ),
+    }),
+  ];
+
+  if (config.consoleLevel !== "silent") {
+    transports.push(
+      new winston.transports.Console({
+        level: config.consoleLevel,
+        format: winston.format.combine(
+          winston.format.timestamp(),
+          winston.format.colorize(),
+          consoleFormat,
+        ),
+      }),
+    );
+  }
+
   const rootLogger = winston.createLogger({
     level: config.level,
     format: winston.format.combine(
       winston.format.timestamp(),
       winston.format.errors({ stack: true }),
     ),
-    transports: [
-      new DailyRotateFile({
-        filename: "codenames-backend-%DATE%.log.jsonl",
-        dirname: config.logDir,
-        datePattern: "YYYY-MM-DD",
-        maxSize: "20m",
-        maxFiles: "14d",
-        zippedArchive: true,
-        format: winston.format.combine(
-          winston.format.timestamp(),
-          winston.format.errors({ stack: true }),
-          orderedFormat,
-        ),
-      }),
-    ],
+    transports,
   });
 
   return new AppLogger(rootLogger);

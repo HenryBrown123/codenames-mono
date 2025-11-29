@@ -71,3 +71,4 @@ PLAN.md
 PLAYER_CONNECTION_STATUS_CONTEXT.md
 adhoc_test.sh
 test_messages.sh
+commit.sh
