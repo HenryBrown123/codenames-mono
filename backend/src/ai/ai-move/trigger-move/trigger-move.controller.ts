@@ -1,6 +1,6 @@
 import type { Response, NextFunction } from "express";
 import type { Request } from "express-jwt";
-import type { triggerMoveService } from "./trigger-move.service";
+import type { TriggerMoveService } from "./trigger-move.service";
 import { z } from "zod";
 
 /**
@@ -14,7 +14,7 @@ const triggerMoveParamsSchema = z.object({
  * Dependencies required by the controller
  */
 export interface TriggerMoveControllerDeps {
-  triggerMove: ReturnType<typeof triggerMoveService>;
+  triggerMove: TriggerMoveService;
 }
 
 /**

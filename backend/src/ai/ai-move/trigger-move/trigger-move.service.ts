@@ -1,5 +1,6 @@
 import type { AIPlayerService } from "@backend/ai/ai-player/ai-player.service";
 import type { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
+import type { AppLogger } from "@backend/common/logging";
 
 /**
  * Pipeline run info
@@ -36,6 +37,7 @@ export type TriggerMoveResult =
  * the appropriate pipeline.
  */
 export const triggerMoveService =
+  (logger: AppLogger) =>
   (deps: TriggerMoveServiceDeps) =>
   async (gameId: string, userId: number): Promise<TriggerMoveResult> => {
     // Verify user has access to this game
@@ -66,7 +68,9 @@ export const triggerMoveService =
         },
       };
     } catch (error) {
-      console.error("[Trigger Move] Error triggering AI move:", error);
+      logger.error("triggerMove failed", { error: error instanceof Error ? error.message : String(error) });
       throw error;
     }
   };
+
+export type TriggerMoveService = ReturnType<ReturnType<typeof triggerMoveService>>;

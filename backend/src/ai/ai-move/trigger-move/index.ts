@@ -1,5 +1,6 @@
 import type { AIPlayerService } from "@backend/ai/ai-player/ai-player.service";
 import type { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
+import type { AppLogger } from "@backend/common/logging";
 
 import { triggerMoveService } from "./trigger-move.service";
 import { triggerMoveController } from "./trigger-move.controller";
@@ -15,8 +16,8 @@ export interface TriggerMoveDependencies {
 /**
  * Initializes the trigger move feature with all dependencies
  */
-export const triggerMove = (dependencies: TriggerMoveDependencies) => {
-  const service = triggerMoveService({
+export const triggerMove = (logger: AppLogger) => (dependencies: TriggerMoveDependencies) => {
+  const service = triggerMoveService(logger)({
     aiPlayerService: dependencies.aiPlayerService,
     getGameState: dependencies.getGameState,
   });
