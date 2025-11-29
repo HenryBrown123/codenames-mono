@@ -1,6 +1,7 @@
 import { Socket } from "socket.io";
 import jwt from "jsonwebtoken";
 import { parse as parseCookie } from "cookie";
+import type { AppLogger } from "@backend/common/logging";
 
 /**
  * Extended socket interface with auth information
@@ -16,7 +17,7 @@ export interface AuthenticatedSocket extends Socket {
  * WebSocket authentication middleware
  * Verifies JWT token from cookies or auth header
  */
-export const createWebSocketAuthMiddleware = (jwtSecret: string) => {
+export const createWebSocketAuthMiddleware = (jwtSecret: string, logger?: AppLogger) => {
   return (socket: AuthenticatedSocket, next: (err?: Error) => void) => {
     try {
       let token: string | undefined;
@@ -57,7 +58,7 @@ export const createWebSocketAuthMiddleware = (jwtSecret: string) => {
 
       next();
     } catch (error) {
-      console.error("WebSocket auth error:", error);
+      logger?.warn(`websocket_auth_error: ${error instanceof Error ? error.message : "unknown"}`);
       next(new Error("Invalid or expired token"));
     }
   };

@@ -6,6 +6,7 @@ import {
 } from "./websocket-auth.middleware";
 import { WebSocketEvent } from "./websocket-events.types";
 import { emitServerGameEvent } from "@backend/ai/events/game-event-bus";
+import type { AppLogger } from "@backend/common/logging";
 
 /**
  * WebSocket server configuration
@@ -14,6 +15,7 @@ interface WebSocketServerConfig {
   httpServer: HttpServer;
   jwtSecret: string;
   corsOrigins: string[];
+  logger?: AppLogger;
 }
 
 /**
@@ -22,12 +24,18 @@ interface WebSocketServerConfig {
 let io: SocketIOServer | null = null;
 
 /**
+ * Global logger reference for websocket events
+ */
+let wsLogger: AppLogger | undefined;
+
+/**
  * Initialize WebSocket server with Socket.io
  */
 export const initializeWebSocketServer = (
   config: WebSocketServerConfig,
 ): SocketIOServer => {
-  const { httpServer, jwtSecret, corsOrigins } = config;
+  const { httpServer, jwtSecret, corsOrigins, logger } = config;
+  wsLogger = logger;
 
   // Create Socket.io server
   io = new SocketIOServer(httpServer, {
@@ -42,25 +50,21 @@ export const initializeWebSocketServer = (
   });
 
   // Apply authentication middleware
-  io.use(createWebSocketAuthMiddleware(jwtSecret));
+  io.use(createWebSocketAuthMiddleware(jwtSecret, logger));
 
   // Handle connections
   io.on(WebSocketEvent.CONNECTION, (socket: AuthenticatedSocket) => {
-    console.log(
-      `WebSocket client connected: ${socket.id} (User: ${socket.auth?.username})`,
-    );
+    logger?.debug(`websocket_connected: socketId=${socket.id} user=${socket.auth?.username}`);
 
     // Handle joining game rooms
     socket.on(WebSocketEvent.JOIN_GAME, (gameId: string) => {
       if (!gameId) {
-        console.error("Invalid gameId provided to JOIN_GAME");
+        logger?.warn("websocket_join_game_invalid: missing gameId");
         return;
       }
       const roomName = `game:${gameId}`;
       socket.join(roomName);
-      console.log(
-        `User ${socket.auth?.username} joined game room: ${roomName}`,
-      );
+      logger?.debug(`websocket_join_game: user=${socket.auth?.username} room=${roomName}`);
 
       // Emit server-side event so AI can check if it needs to act
       emitServerGameEvent(WebSocketEvent.PLAYER_JOINED, { gameId });
@@ -69,25 +73,21 @@ export const initializeWebSocketServer = (
     // Handle leaving game rooms
     socket.on(WebSocketEvent.LEAVE_GAME, (gameId: string) => {
       if (!gameId) {
-        console.error("Invalid gameId provided to LEAVE_GAME");
+        logger?.warn("websocket_leave_game_invalid: missing gameId");
         return;
       }
       const roomName = `game:${gameId}`;
       socket.leave(roomName);
-      console.log(
-        `User ${socket.auth?.username} left game room: ${roomName}`,
-      );
+      logger?.debug(`websocket_leave_game: user=${socket.auth?.username} room=${roomName}`);
     });
 
     // Handle disconnection
     socket.on(WebSocketEvent.DISCONNECT, (reason: string) => {
-      console.log(
-        `WebSocket client disconnected: ${socket.id} (Reason: ${reason})`,
-      );
+      logger?.debug(`websocket_disconnected: socketId=${socket.id} reason=${reason}`);
     });
   });
 
-  console.log("WebSocket server initialized");
+  logger?.info("WebSocket server initialized");
   return io;
 };
 
@@ -112,13 +112,13 @@ export const emitToGame = (
   payload: any,
 ): void => {
   if (!io) {
-    console.warn("WebSocket server not initialized, skipping event emission");
+    wsLogger?.warn("websocket_emit_skipped: server not initialized");
     return;
   }
 
   const roomName = `game:${gameId}`;
   io.to(roomName).emit(event, payload);
-  console.log(`Emitted ${event} to room ${roomName}`, payload);
+  wsLogger?.debug(`websocket_emit: event=${event} room=${roomName}`);
 };
 
 /**
@@ -126,10 +126,10 @@ export const emitToGame = (
  */
 export const emitToAll = (event: WebSocketEvent, payload: any): void => {
   if (!io) {
-    console.warn("WebSocket server not initialized, skipping event emission");
+    wsLogger?.warn("websocket_emit_skipped: server not initialized");
     return;
   }
 
   io.emit(event, payload);
-  console.log(`Emitted ${event} to all clients`, payload);
+  wsLogger?.debug(`websocket_emit_all: event=${event}`);
 };
