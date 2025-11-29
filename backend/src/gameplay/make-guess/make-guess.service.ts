@@ -2,6 +2,7 @@ import type { GameplayStateProvider } from "@backend/common/state/gameplay-state
 import type { TurnStateProvider } from "@backend/common/state/turn-state.provider";
 import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
 import type { GameplayOperations } from "../gameplay-actions";
+import type { AppLogger } from "@backend/common/logging";
 import { CODEBREAKER_OUTCOME } from "@codenames/shared/types";
 import { complexProperties } from "@backend/common/state/gameplay-state.helpers";
 import { validateMakeGuess, winningConditions } from "./make-guess.rules";
@@ -129,19 +130,17 @@ export type MakeGuessResult =
 export type MakeGuessDependencies = {
   getGameState: GameplayStateProvider;
   gameplayHandler: TransactionalHandler<GameplayOperations>;
-  getTurnState: TurnStateProvider; // ← Add turn state provider
+  getTurnState: TurnStateProvider;
 };
 
 /**
  * Creates the make guess service
  */
-export const makeGuessService = (dependencies: MakeGuessDependencies) => {
+export const makeGuessService = (logger: AppLogger) => (dependencies: MakeGuessDependencies) => {
   /**
    * Helper to get complete turn data for API response
    */
-  const getCompleteTurnData = async (
-    turnPublicId: string,
-  ): Promise<CompleteTurnData> => {
+  const getCompleteTurnData = async (turnPublicId: string): Promise<CompleteTurnData> => {
     const turnData = await dependencies.getTurnState(turnPublicId);
     if (!turnData) {
       throw new Error(`Failed to fetch turn data for ${turnPublicId}`);
@@ -170,10 +169,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
     input: MakeGuessInput,
   ) => {
     const gameState = await ops.getCurrentGameState(input.gameId, input.userId);
-    const otherTeamId = complexProperties.getOtherTeamId(
-      gameState,
-      guessResult.turn._teamId,
-    );
+    const otherTeamId = complexProperties.getOtherTeamId(gameState, guessResult.turn._teamId);
 
     const roundWinner = winningConditions.checkRoundWinner(
       gameState.currentRound!.cards,
@@ -184,20 +180,10 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
     if (roundWinner) {
       await ops.endTurn(gameState, guessResult.turn._id);
 
-      const stateAfterTurnEnd = await ops.getCurrentGameState(
-        input.gameId,
-        input.userId,
-      );
-      await ops.endRound(
-        stateAfterTurnEnd,
-        stateAfterTurnEnd.currentRound!._id,
-        roundWinner,
-      );
+      const stateAfterTurnEnd = await ops.getCurrentGameState(input.gameId, input.userId);
+      await ops.endRound(stateAfterTurnEnd, stateAfterTurnEnd.currentRound!._id, roundWinner);
 
-      const updatedGameState = await ops.getCurrentGameState(
-        input.gameId,
-        input.userId,
-      );
+      const updatedGameState = await ops.getCurrentGameState(input.gameId, input.userId);
       const gameWinner = winningConditions.checkGameWinner(
         updatedGameState.historicalRounds,
         updatedGameState.game_format,
@@ -208,15 +194,8 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
     } else if (guessResult.turn.guessesRemaining === 0) {
       await ops.endTurn(gameState, guessResult.turn._id);
 
-      const updatedGameState = await ops.getCurrentGameState(
-        input.gameId,
-        input.userId,
-      );
-      await ops.startTurn(
-        updatedGameState,
-        updatedGameState.currentRound!._id,
-        otherTeamId,
-      );
+      const updatedGameState = await ops.getCurrentGameState(input.gameId, input.userId);
+      await ops.startTurn(updatedGameState, updatedGameState.currentRound!._id, otherTeamId);
     }
 
     return await ops.getCurrentGameState(input.gameId, input.userId);
@@ -233,10 +212,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
     const gameState = await ops.getCurrentGameState(input.gameId, input.userId);
     await ops.endTurn(gameState, guessResult.turn._id);
 
-    const updatedGameState = await ops.getCurrentGameState(
-      input.gameId,
-      input.userId,
-    );
+    const updatedGameState = await ops.getCurrentGameState(input.gameId, input.userId);
     const otherTeamId = complexProperties.getOtherTeamId(
       updatedGameState,
       guessResult.turn._teamId,
@@ -249,16 +225,9 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
     );
 
     if (roundWinner) {
-      await ops.endRound(
-        updatedGameState,
-        updatedGameState.currentRound!._id,
-        roundWinner,
-      );
+      await ops.endRound(updatedGameState, updatedGameState.currentRound!._id, roundWinner);
 
-      const stateAfterRoundEnd = await ops.getCurrentGameState(
-        input.gameId,
-        input.userId,
-      );
+      const stateAfterRoundEnd = await ops.getCurrentGameState(input.gameId, input.userId);
       const gameWinner = winningConditions.checkGameWinner(
         stateAfterRoundEnd.historicalRounds,
         stateAfterRoundEnd.game_format,
@@ -267,11 +236,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
         await ops.endGame(stateAfterRoundEnd, gameWinner);
       }
     } else {
-      await ops.startTurn(
-        updatedGameState,
-        updatedGameState.currentRound!._id,
-        otherTeamId,
-      );
+      await ops.startTurn(updatedGameState, updatedGameState.currentRound!._id, otherTeamId);
     }
 
     return await ops.getCurrentGameState(input.gameId, input.userId);
@@ -288,19 +253,12 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
     const gameState = await ops.getCurrentGameState(input.gameId, input.userId);
     await ops.endTurn(gameState, guessResult.turn._id);
 
-    const updatedGameState = await ops.getCurrentGameState(
-      input.gameId,
-      input.userId,
-    );
+    const updatedGameState = await ops.getCurrentGameState(input.gameId, input.userId);
     const otherTeamId = complexProperties.getOtherTeamId(
       updatedGameState,
       guessResult.turn._teamId,
     );
-    await ops.startTurn(
-      updatedGameState,
-      updatedGameState.currentRound!._id,
-      otherTeamId,
-    );
+    await ops.startTurn(updatedGameState, updatedGameState.currentRound!._id, otherTeamId);
 
     return await ops.getCurrentGameState(input.gameId, input.userId);
   };
@@ -316,24 +274,14 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
     const gameState = await ops.getCurrentGameState(input.gameId, input.userId);
     await ops.endTurn(gameState, guessResult.turn._id);
 
-    const updatedGameState = await ops.getCurrentGameState(
-      input.gameId,
-      input.userId,
-    );
+    const updatedGameState = await ops.getCurrentGameState(input.gameId, input.userId);
     const otherTeamId = complexProperties.getOtherTeamId(
       updatedGameState,
       guessResult.turn._teamId,
     );
-    await ops.endRound(
-      updatedGameState,
-      updatedGameState.currentRound!._id,
-      otherTeamId,
-    );
+    await ops.endRound(updatedGameState, updatedGameState.currentRound!._id, otherTeamId);
 
-    const stateAfterRoundEnd = await ops.getCurrentGameState(
-      input.gameId,
-      input.userId,
-    );
+    const stateAfterRoundEnd = await ops.getCurrentGameState(input.gameId, input.userId);
     const gameWinner = winningConditions.checkGameWinner(
       stateAfterRoundEnd.historicalRounds,
       stateAfterRoundEnd.game_format,
@@ -346,13 +294,13 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
   };
 
   return async (input: MakeGuessInput): Promise<MakeGuessResult> => {
-    const result = await dependencies.getGameState(
-      input.gameId,
-      input.userId,
-      input.playerId,
-    );
+    const log = logger.for({}).withMeta({ gameId: input.gameId, userId: input.userId }).create();
+    log.info(`makeGuess called: ${JSON.stringify(input)}`);
+
+    const result = await dependencies.getGameState(input.gameId, input.userId, input.playerId);
 
     if (result.status === "game-not-found") {
+      log.warn(`makeGuess failed: game not found`);
       return {
         success: false,
         error: {
@@ -363,6 +311,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
     }
 
     if (result.status === "user-not-player") {
+      log.warn(`makeGuess failed: user not player`);
       return {
         success: false,
         error: {
@@ -374,6 +323,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
     }
 
     if (result.status === "player-not-found") {
+      log.warn(`makeGuess failed: player not found`);
       return {
         success: false,
         error: {
@@ -384,6 +334,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
     }
 
     if (result.status === "player-not-in-game") {
+      log.warn(`makeGuess failed: player not in game`);
       return {
         success: false,
         error: {
@@ -395,6 +346,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
     }
 
     if (result.status === "user-not-authorized") {
+      log.warn(`makeGuess failed: user not authorized`);
       return {
         success: false,
         error: {
@@ -410,6 +362,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
 
     // Validate round exists and is current
     if (!gameData.currentRound) {
+      log.warn(`makeGuess failed: round not found`);
       return {
         success: false,
         error: {
@@ -420,6 +373,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
     }
 
     if (gameData.currentRound.number !== input.roundNumber) {
+      log.warn(`makeGuess failed: round mismatch (requested=${input.roundNumber}, current=${gameData.currentRound.number})`);
       return {
         success: false,
         error: {
@@ -433,6 +387,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
     // Validate game state for making guess
     const validationResult = validateMakeGuess(gameData);
     if (!validationResult.valid) {
+      log.warn(`makeGuess failed: invalid game state (${gameData.status})`);
       return {
         success: false,
         error: {
@@ -446,10 +401,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
     // Execute within transaction
     const operationResult = await dependencies.gameplayHandler(async (ops) => {
       // Make the guess
-      const guessResult = await ops.makeGuess(
-        validationResult.data,
-        input.cardWord,
-      );
+      const guessResult = await ops.makeGuess(validationResult.data, input.cardWord);
 
       // Handle outcome with appropriate game progression
       switch (guessResult.outcome) {
@@ -472,7 +424,6 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
       return { guessResult };
     });
 
-
     const currentTurn = complexProperties.getCurrentTurnOrThrow(gameData);
     const completeTurnData = await getCompleteTurnData(currentTurn.publicId);
 
@@ -484,6 +435,7 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
       input.playerId,
     );
 
+    log.info(`makeGuess success: cardWord=${input.cardWord}, outcome=${operationResult.guessResult.outcome}`);
     return {
       success: true,
       data: {
@@ -498,4 +450,4 @@ export const makeGuessService = (dependencies: MakeGuessDependencies) => {
   };
 };
 
-export type MakeGuessService = ReturnType<typeof makeGuessService>;
+export type MakeGuessService = ReturnType<ReturnType<typeof makeGuessService>>;
