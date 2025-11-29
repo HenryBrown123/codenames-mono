@@ -1,5 +1,6 @@
 import type { Response } from "express";
 import type { Request } from "express-jwt";
+import type { AppLogger } from "@backend/common/logging";
 import { GetPlayersService } from "./get-players.service";
 import { z } from "zod";
 
@@ -25,7 +26,7 @@ export type GetPlayersController = (req: Request, res: Response) => Promise<void
 /**
  * Creates the get players controller
  */
-export const createGetPlayersController = (
+export const createGetPlayersController = (logger: AppLogger) => (
   deps: GetPlayersDependencies,
 ): GetPlayersController => {
   return async (req: Request, res: Response): Promise<void> => {
@@ -66,7 +67,9 @@ export const createGetPlayersController = (
         },
       });
     } catch (error) {
-      console.error("Error in get players controller:", error);
+      logger.error("Error in get players controller", {
+        error: error instanceof Error ? error.message : String(error),
+      });
       res.status(500).json({
         success: false,
         error: "Internal server error",

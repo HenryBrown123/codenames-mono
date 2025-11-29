@@ -1,11 +1,12 @@
-import { 
-  createGetPlayersController, 
+import type { AppLogger } from "@backend/common/logging";
+import {
+  createGetPlayersController,
   GetPlayersDependencies,
-  GetPlayersController 
+  GetPlayersController
 } from "./get-players.controller";
-import { 
-  createGetPlayersService, 
-  GetPlayersServiceDependencies 
+import {
+  createGetPlayersService,
+  GetPlayersServiceDependencies
 } from "./get-players.service";
 
 /**
@@ -23,11 +24,12 @@ export type GetPlayersModule = {
 /**
  * Creates and configures the complete get-players module
  */
-export const createGetPlayersModule = (
+export const createGetPlayersModule = (logger: AppLogger) => (
   deps: GetPlayersModuleDependencies,
 ): GetPlayersModule => {
+  const serviceLogger = logger.for({ service: "get-players" }).create();
   const getPlayersService = createGetPlayersService(deps);
-  const controller = createGetPlayersController({ getPlayersService });
+  const controller = createGetPlayersController(serviceLogger)({ getPlayersService });
 
   return {
     controller,
