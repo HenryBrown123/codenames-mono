@@ -6,6 +6,7 @@ import { errorHandler, notFoundHandler } from "./common/http-middleware/error-ha
 import * as postgresDb from "./common/db";
 import { createOpenApiSpec } from "@codenames/shared/api";
 import { loadEnvFromPackageDir } from "./common/config";
+import { createAppLogger } from "./common/logging";
 import swaggerUi from "swagger-ui-express";
 
 import { initialize as initializeAuth } from "./auth";
@@ -17,6 +18,7 @@ import { initialize as initializeAI } from "./ai";
 import { initialize as initializeChat } from "./chat";
 
 import { authMiddleware } from "@backend/common/http-middleware/auth.middleware";
+import { httpLoggerMiddleware } from "@backend/common/http-middleware/http-logger.middleware";
 import { refreshSystemData } from "./common/data/system-data-loader";
 import { initializeWebSocketServer } from "./common/websocket";
 
@@ -27,9 +29,20 @@ let env;
 try {
   env = loadEnvFromPackageDir();
 } catch (error) {
-  console.error("Exiting procces due to invalid environmental variables.");
+  console.error("[X] Exiting due to invalid environment variables");
   process.exit(1);
 }
+
+/**
+ * Initialize application logger
+ */
+const appLogger = createAppLogger({
+  logFilePath: env.LOG_FILE_PATH,
+  level: env.LOG_LEVEL,
+  logDir: env.LOG_FILE_PATH,
+});
+
+appLogger.info("Server starting");
 
 /**
  * Initialize the Express application with all middleware and features
@@ -44,8 +57,9 @@ const dbInstance = await postgresDb.initializeDb(env.DATABASE_URL);
 try {
   refreshSystemData(dbInstance);
 } catch (error) {
-  console.error(error);
-  console.error("Exiting process as failed to refresh system data");
+  appLogger.error("Failed to refresh system data", {
+    error: error instanceof Error ? error.message : String(error),
+  });
 }
 
 // CORS configuration that allows credentials
@@ -83,7 +97,11 @@ const swaggerSpec = createOpenApiSpec();
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // this is the auth middleware handlers to be injected into features
-const authHandlers = authMiddleware(env.JWT_SECRET);
+const authHandlers = authMiddleware(env.JWT_SECRET, appLogger);
+const httpLoggerHandler = httpLoggerMiddleware({
+  enabled: env.LOG_HTTP_REQUESTS,
+  verbose: env.LOG_LEVEL === "http",
+});
 
 // Initialize auth feature with JWT options
 const auth = initializeAuth(app, dbInstance, {
@@ -110,12 +128,16 @@ const { giveClueService, makeGuessService, endTurnService, getGameState } = init
   app,
   dbInstance,
   authHandlers,
+  httpLoggerHandler,
+  appLogger,
 );
 
 const ai = initializeAI({
   app,
   db: dbInstance,
   auth: authHandlers,
+  httpLogger: httpLoggerHandler,
+  appLogger,
   llmConfig: {
     ollamaUrl: env.LLM_URL,
     model: env.LLM_MODEL,
@@ -151,10 +173,12 @@ initializeWebSocketServer({
   httpServer,
   jwtSecret: env.JWT_SECRET,
   corsOrigins: corsOptions.origin as string[],
+  logger: appLogger,
 });
 
 httpServer.listen(PORT, () => {
-  console.log(`✅ ${process.env.NODE_ENV} server running on port ${PORT}`);
-  console.log(`🔌 WebSocket server ready for connections`);
-  console.log(`🤖 AI players initialized with Ollama (${ai.llm.model})`);
+  console.log(`[*] ${env.NODE_ENV} server running on port ${PORT}`);
+  console.log(`[*] WebSocket ready`);
+  console.log(`[*] AI: ${ai.llm.model}`);
+  appLogger.info(`Server running on port ${PORT}`);
 });
