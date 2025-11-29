@@ -1,5 +1,6 @@
 import type { Response, NextFunction } from "express";
 import type { Request } from "express-jwt";
+import type { AppLogger } from "@backend/common/logging";
 import { z } from "zod";
 import { GetTurnService, ApiTurnData } from "./get-turn.service";
 
@@ -31,6 +32,7 @@ interface GetTurnResponse {
  * Controller for GET /api/turns/:publicId
  */
 export const controller =
+  (logger: AppLogger) =>
   (getTurnService: GetTurnService) =>
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -80,7 +82,9 @@ export const controller =
         return;
       }
 
-      console.error("Error in getTurn controller:", error);
+      logger.error("Error in getTurn controller", {
+        error: error instanceof Error ? error.message : String(error),
+      });
       res.status(500).json({
         success: false,
         error: "Internal server error",

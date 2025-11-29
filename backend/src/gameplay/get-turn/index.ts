@@ -1,3 +1,4 @@
+import type { AppLogger } from "@backend/common/logging";
 import { TurnStateProvider } from "@backend/common/state/turn-state.provider";
 import { getTurnService } from "./get-turn.service";
 import { controller } from "./get-turn.controller";
@@ -12,9 +13,10 @@ export interface GetTurnDependencies {
 /**
  * Creates get-turn feature with dependencies
  */
-export const getTurn = (deps: GetTurnDependencies) => {
+export const getTurn = (logger: AppLogger) => (deps: GetTurnDependencies) => {
+  const serviceLogger = logger.for({ service: "get-turn" }).create();
   const turnService = getTurnService(deps.getTurnState);
-  const getTurnController = controller(turnService);
+  const getTurnController = controller(serviceLogger)(turnService);
 
   return {
     service: turnService,
