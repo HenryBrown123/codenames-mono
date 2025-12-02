@@ -14,19 +14,13 @@ import {
   MyTeamBoxView,
 } from "./components";
 
-//todo: sort out hardcoded naviagtion URLs
-
-// ============================================================================
-// TYPES
-// ============================================================================
+/**
+ * Lobby for multi-device play with join controls
+ */
 
 interface MultiDeviceLobbyProps {
   gameId: string;
 }
-
-// ============================================================================
-// ANIMATION VARIANTS
-// ============================================================================
 
 const boxVariants = {
   initial: { opacity: 0, scale: 0.8 },
@@ -57,18 +51,10 @@ const dotVariants = {
   },
 };
 
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
 const TEAM_COLORS = {
   "Team Red": "var(--color-team-red, #ff0040)",
   "Team Blue": "var(--color-team-blue, #00d4ff)",
 };
-
-// ============================================================================
-// COMPONENT
-// ============================================================================
 
 export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) => {
   const navigate = useNavigate();

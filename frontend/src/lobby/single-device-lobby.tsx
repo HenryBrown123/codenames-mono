@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import styles from "./lobby.module.css";
 import { useLobbyMutations, type LobbyPlayer, type LobbyData } from "@frontend/lobby/api";
 import {
@@ -13,18 +13,14 @@ import {
   AddPlayerInputView,
 } from "./components";
 
-// ============================================================================
-// TYPES
-// ============================================================================
+/**
+ * Lobby for single-device play with drag-drop team management
+ */
 
 interface SingleDeviceLobbyProps {
   gameId: string;
   lobbyData: LobbyData;
 }
-
-// ============================================================================
-// ANIMATION VARIANTS
-// ============================================================================
 
 const boxVariants = {
   initial: { opacity: 0, scale: 0.8, y: 20 },
@@ -42,18 +38,10 @@ const boxVariants = {
   },
 };
 
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
 const TEAM_COLORS = {
   "Team Red": "var(--color-team-red, #ff0040)",
   "Team Blue": "var(--color-team-blue, #00d4ff)",
 };
-
-// ============================================================================
-// COMPONENT
-// ============================================================================
 
 export const SingleDeviceLobby: React.FC<SingleDeviceLobbyProps> = ({ gameId, lobbyData }) => {
   const navigate = useNavigate();

@@ -5,17 +5,13 @@ import { useLobbyQuery } from "@frontend/lobby/api";
 import { SingleDeviceLobby } from "./single-device-lobby";
 import { MultiDeviceLobby } from "./multi-device-lobby";
 
-// ============================================================================
-// TYPES
-// ============================================================================
+/**
+ * Lobby page routing between single and multi-device modes
+ */
 
 interface LobbyPageProps {
   gameId: string;
 }
-
-// ============================================================================
-// ANIMATION VARIANTS
-// ============================================================================
 
 const dotVariants = {
   initial: { opacity: 0, scale: 0 },
@@ -31,13 +27,6 @@ const dotVariants = {
   },
 };
 
-// ============================================================================
-// COMPONENT
-// ============================================================================
-
-/**
- * Lobby page entry point - loads data and picks the appropriate lobby mode
- */
 export const LobbyInterface: React.FC<LobbyPageProps> = ({ gameId }) => {
   const { data: lobbyData, isLoading } = useLobbyQuery(gameId);
 

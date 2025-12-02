@@ -1,6 +1,10 @@
 import React from "react";
 import { motion } from "framer-motion";
 
+/**
+ * Team logo symbol with optional button behavior
+ */
+
 interface TeamSymbolProps {
   teamName: "Team Red" | "Team Blue";
   teamColor: string;
