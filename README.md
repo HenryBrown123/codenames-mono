@@ -568,7 +568,6 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   │   ├── get-status
 │       │   │   └── trigger-move
 │       │   ├── ai-player
-│       │   ├── debate
 │       │   ├── events
 │       │   ├── llm
 │       │   └── strategy
@@ -643,6 +642,9 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   │   └── view-mode
 │       │   ├── game-controls
 │       │   │   ├── dashboards
+│       │   │   │   ├── config
+│       │   │   │   ├── panels
+│       │   │   │   └── shared
 │       │   │   └── settings
 │       │   ├── game-data
 │       │   │   ├── events
@@ -676,7 +678,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-115 directories
+117 directories
 ```
 
 ## Getting Started

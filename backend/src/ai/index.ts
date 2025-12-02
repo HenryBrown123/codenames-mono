@@ -30,7 +30,6 @@ import { createMessage } from "@backend/common/data-access/repositories/game-mes
 import { findGameByPublicId } from "@backend/common/data-access/repositories/games.repository";
 import aiMove from "./ai-move";
 
-export { gameEventBus, emitServerGameEvent } from "./events/game-event-bus";
 export { createCodenamesPipeline } from "./llm/codenames-pipeline";
 export type { CodenamesPipeline } from "./llm/codenames-pipeline";
 export type { LocalLLMService, AIPlayerService };
@@ -56,7 +55,18 @@ export type AIModuleDependencies = {
  * Initializes the AI feature module with all dependencies and registers routes
  */
 export const initialize = (dependencies: AIModuleDependencies) => {
-  const { app, db, auth, httpLogger, appLogger, llmConfig, giveClue, makeGuess, endTurn, getGameState } = dependencies;
+  const {
+    app,
+    db,
+    auth,
+    httpLogger,
+    appLogger,
+    llmConfig,
+    giveClue,
+    makeGuess,
+    endTurn,
+    getGameState,
+  } = dependencies;
 
   const logger = appLogger.for({ feature: "ai" }).withMeta({ model: llmConfig.model }).create();
   const llm = createLocalLLMService(llmConfig);
