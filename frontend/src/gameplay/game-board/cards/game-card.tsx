@@ -10,16 +10,14 @@ import { FloatingWord } from "./floating-word";
 import styles from "./game-card.module.css";
 
 /**
- * CardFace - Just the beige background, no word
+ * Individual game card with selection and reveal states
  */
+
 const CardFace = memo(() => {
   return <div className={styles.normalCard} />;
 });
 CardFace.displayName = "CardFace";
 
-/**
- * CoverCard - Thrown in from dealer's hand (top-center off-screen)
- */
 const CoverCard = memo<{ teamType: string; variant: CardVisibilityState; cardIndex: number }>(
   ({ teamType, variant, cardIndex }) => {
     const shouldShow = variant === "flipped" || variant === "gameOverSelected";

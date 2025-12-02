@@ -3,15 +3,15 @@ import { motion } from "framer-motion";
 import { CardVisibilityState } from "./card-types";
 import styles from "./game-card.module.css";
 
+/**
+ * Animated floating word with 3D tilt effect
+ */
+
 interface FloatingWordProps {
   word: string;
   variant: CardVisibilityState;
 }
 
-/**
- * FloatingWord - Always rendered word that floats above all card layers
- * Handles its own visibility based on card state
- */
 export const FloatingWord = memo<FloatingWordProps>(({ word, variant }) => {
   return (
     <motion.div

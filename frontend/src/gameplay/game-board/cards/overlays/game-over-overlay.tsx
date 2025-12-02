@@ -5,14 +5,15 @@ import { TeamColorFilter, OverlayWord } from "./shared-components";
 import { gameOverContainerVariants } from "./game-over-overlay-variants";
 import styles from "../game-card.module.css";
 
+/**
+ * Card overlay shown when game ends
+ */
+
 interface GameOverOverlayProps {
   card: Card;
   cardIndex: number;
 }
 
-/**
- * GameOverOverlay - Team color background + word
- */
 export const GameOverOverlay = memo<GameOverOverlayProps>(({ card, cardIndex }) => {
   return (
     <motion.div

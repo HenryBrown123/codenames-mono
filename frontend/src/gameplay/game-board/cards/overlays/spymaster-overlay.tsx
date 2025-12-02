@@ -1,10 +1,13 @@
-import { memo } from 'react';
-import { motion } from 'framer-motion';
-import { Card } from '@frontend/shared-types';
-import { OverlayVariants } from '../card-types';
-import { getTeamType } from '../card-utils';
-import { TeamColorFilter, OverlayWord, TeamSymbol, ARCorners } from './shared-components';
-import styles from '../game-card.module.css';
+import { memo } from "react";
+import { motion } from "framer-motion";
+import { Card } from "@frontend/shared-types";
+import { OverlayVariants } from "../card-types";
+import { TeamColorFilter, OverlayWord, TeamSymbol, ARCorners } from "./shared-components";
+import styles from "../game-card.module.css";
+
+/**
+ * Card overlay showing secret colors for spymaster
+ */
 
 const containerVariants: OverlayVariants = {
   hidden: {
