@@ -3,9 +3,9 @@ import { useGameActions } from "../../../game-actions";
 import { CodeWordInput } from "./codemaster-input";
 import { TerminalSection, TerminalCommand } from "../shared";
 
-// ============================================================================
-// PRESENTATIONAL COMPONENT
-// ============================================================================
+/**
+ * Action panel for codemaster: shows current clue or waiting state
+ */
 
 export interface CodemasterActionsPanelViewProps {
   isLoading: boolean;
@@ -15,36 +15,23 @@ export interface CodemasterActionsPanelViewProps {
 export const CodemasterActionsPanelView: React.FC<CodemasterActionsPanelViewProps> = ({
   isLoading,
   onSubmit,
-}) => {
-  return (
-    <TerminalSection>
-      <TerminalCommand>ACTION</TerminalCommand>
-      <CodeWordInput
-        codeWord=""
-        numberOfCards={null}
-        isEditable={true}
-        isLoading={isLoading}
-        onSubmit={onSubmit}
-      />
-    </TerminalSection>
-  );
-};
-
-// ============================================================================
-// CONNECTED COMPONENT
-// ============================================================================
+}) => (
+  <TerminalSection>
+    <TerminalCommand>ACTION</TerminalCommand>
+    <CodeWordInput
+      codeWord=""
+      numberOfCards={null}
+      isEditable={true}
+      isLoading={isLoading}
+      onSubmit={onSubmit}
+    />
+  </TerminalSection>
+);
 
 export const CodemasterActionsPanel: React.FC = () => {
   const { giveClue, actionState } = useGameActions();
 
-  const handleSubmit = (word: string, count: number) => {
-    giveClue(word, count);
-  };
+  const isLoading = actionState.status === "loading";
 
-  return (
-    <CodemasterActionsPanelView
-      isLoading={actionState.status === "loading"}
-      onSubmit={handleSubmit}
-    />
-  );
+  return <CodemasterActionsPanelView isLoading={isLoading} onSubmit={giveClue} />;
 };

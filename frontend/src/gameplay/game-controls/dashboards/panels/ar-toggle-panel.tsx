@@ -12,47 +12,37 @@ import {
   SpyStatus,
 } from "../shared";
 
-// ============================================================================
-// PRESENTATIONAL COMPONENT
-// ============================================================================
+/**
+ * Toggle switch for enhanced spymaster vision mode
+ */
 
 export interface ARTogglePanelViewProps {
   isARMode: boolean;
   onToggle: () => void;
 }
 
-export const ARTogglePanelView: React.FC<ARTogglePanelViewProps> = ({
-  isARMode,
-  onToggle,
-}) => {
-  return (
-    <TerminalSection>
-      <TerminalCommand>ENHANCED VISION</TerminalCommand>
-      <SpyGogglesContainer>
-        <SpyGogglesText>Toggle enhanced vision</SpyGogglesText>
-        <SpyGogglesSwitchRow>
-          <SpyGogglesDot active={isARMode} />
-          <SpySwitch>
-            <input type="checkbox" checked={isARMode} onChange={onToggle} />
-            <SpySlider />
-          </SpySwitch>
-          <SpyStatus active={isARMode}>{isARMode ? "ON" : "OFF"}</SpyStatus>
-        </SpyGogglesSwitchRow>
-      </SpyGogglesContainer>
-    </TerminalSection>
-  );
-};
-
-// ============================================================================
-// CONNECTED COMPONENT
-// ============================================================================
+export const ARTogglePanelView: React.FC<ARTogglePanelViewProps> = ({ isARMode, onToggle }) => (
+  <TerminalSection>
+    <TerminalCommand>ENHANCED VISION</TerminalCommand>
+    <SpyGogglesContainer>
+      <SpyGogglesText>Toggle enhanced vision</SpyGogglesText>
+      <SpyGogglesSwitchRow>
+        <SpyGogglesDot active={isARMode} />
+        <SpySwitch>
+          <input type="checkbox" checked={isARMode} onChange={onToggle} />
+          <SpySlider />
+        </SpySwitch>
+        <SpyStatus active={isARMode}>{isARMode ? "ON" : "OFF"}</SpyStatus>
+      </SpyGogglesSwitchRow>
+    </SpyGogglesContainer>
+  </TerminalSection>
+);
 
 export const ARTogglePanel: React.FC = () => {
   const { viewMode, toggleSpymasterViewMode } = useViewMode();
 
   const isARMode = viewMode === "spymaster";
 
-  // Keyboard shortcut for power users
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       if ((e.altKey || e.metaKey) && e.key === "a") {

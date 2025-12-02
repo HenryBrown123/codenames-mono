@@ -5,9 +5,9 @@ import { ActionButton } from "../../../shared/components";
 import { TerminalSection, TerminalCommand } from "../shared";
 import styles from "./gameover-panel.module.css";
 
-// ============================================================================
-// PRESENTATIONAL COMPONENT
-// ============================================================================
+/**
+ * End-of-game panel with winner announcement and play again option
+ */
 
 export interface GameoverPanelViewProps {
   winnerName?: string;
@@ -29,9 +29,8 @@ export const GameoverPanelView: React.FC<GameoverPanelViewProps> = ({
   totalCardsRevealed,
   isLoading,
   onNewGame,
-}) => {
-  return (
-    <TerminalSection>
+}) => (
+  <TerminalSection>
       <TerminalCommand>MISSION COMPLETE</TerminalCommand>
 
       <div className={styles.scoreComparison}>
@@ -57,12 +56,7 @@ export const GameoverPanelView: React.FC<GameoverPanelViewProps> = ({
 
       <ActionButton onClick={onNewGame} text="NEW MISSION" enabled={!isLoading} />
     </TerminalSection>
-  );
-};
-
-// ============================================================================
-// CONNECTED COMPONENT
-// ============================================================================
+);
 
 export const GameoverPanel: React.FC = () => {
   const { gameData } = useGameDataRequired();

@@ -4,6 +4,10 @@ import { useGameDataRequired } from "../../../game-data/providers";
 import { Card } from "@frontend/shared-types";
 import styles from "./codemaster-input.module.css";
 
+/**
+ * Form input for codemaster to submit clue and number
+ */
+
 type CodeWordInputProps = {
   codeWord?: string;
   numberOfCards: number | null;

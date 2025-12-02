@@ -8,9 +8,9 @@ import {
 } from "../shared";
 import styles from "./intel-panel.module.css";
 
-// ============================================================================
-// PRESENTATIONAL COMPONENT
-// ============================================================================
+/**
+ * Intelligence panel showing remaining cards by team
+ */
 
 export interface IntelPanelViewProps {
   clueWord?: string;
@@ -22,11 +22,8 @@ export const IntelPanelView: React.FC<IntelPanelViewProps> = ({
   clueWord,
   clueNumber,
   guessesRemaining,
-}) => {
-  const label = guessesRemaining === 1 ? "attempt" : "attempts";
-
-  return (
-    <TerminalSection>
+}) => (
+  <TerminalSection>
       <TerminalCommand>
         ACTIVE INTEL <span className={styles.intelPing} />
       </TerminalCommand>
@@ -44,18 +41,13 @@ export const IntelPanelView: React.FC<IntelPanelViewProps> = ({
         <div className={styles.intelSecondary}>
           <TerminalPrompt>
             <TerminalOutput>
-              {guessesRemaining} {label} left
+              {guessesRemaining} {guessesRemaining === 1 ? "attempt" : "attempts"} left
             </TerminalOutput>
           </TerminalPrompt>
         </div>
       </div>
     </TerminalSection>
-  );
-};
-
-// ============================================================================
-// CONNECTED COMPONENT
-// ============================================================================
+);
 
 export const IntelPanel: React.FC = () => {
   const { activeTurn } = useTurn();

@@ -1,9 +1,9 @@
 import React from "react";
 import { TerminalSection, TerminalCommand, TerminalOutput } from "../shared";
 
-// ============================================================================
-// PRESENTATIONAL COMPONENT
-// ============================================================================
+/**
+ * Panel for spectators showing current game state
+ */
 
 export interface ObserverPanelViewProps {
   message?: string;
@@ -11,19 +11,11 @@ export interface ObserverPanelViewProps {
 
 export const ObserverPanelView: React.FC<ObserverPanelViewProps> = ({
   message = "Monitoring field operations...",
-}) => {
-  return (
-    <TerminalSection>
-      <TerminalCommand>STANDBY MODE</TerminalCommand>
-      <TerminalOutput>{message}</TerminalOutput>
-    </TerminalSection>
-  );
-};
+}) => (
+  <TerminalSection>
+    <TerminalCommand>STANDBY MODE</TerminalCommand>
+    <TerminalOutput>{message}</TerminalOutput>
+  </TerminalSection>
+);
 
-// ============================================================================
-// CONNECTED COMPONENT
-// ============================================================================
-
-export const ObserverPanel: React.FC = () => {
-  return <ObserverPanelView />;
-};
+export const ObserverPanel: React.FC = () => <ObserverPanelView />;

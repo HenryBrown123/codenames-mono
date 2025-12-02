@@ -5,9 +5,9 @@ import { ActionButton } from "../../../shared/components";
 import { TerminalSection } from "../shared";
 import styles from "./lobby-actions-panel.module.css";
 
-// ============================================================================
-// PRESENTATIONAL COMPONENT
-// ============================================================================
+/**
+ * Pre-game actions: role selection and ready status
+ */
 
 export interface LobbyActionsPanelViewProps {
   buttonText: string;
@@ -23,23 +23,16 @@ export const LobbyActionsPanelView: React.FC<LobbyActionsPanelViewProps> = ({
   isLoading,
   onPrimaryAction,
   onRedeal,
-}) => {
-  return (
-    <TerminalSection>
-      <div className={styles.buttonGroup}>
-        <ActionButton onClick={onPrimaryAction} text={buttonText} enabled={!isLoading} />
-
-        {canRedeal && (
-          <ActionButton onClick={onRedeal} text="REDEAL CARDS" enabled={!isLoading} />
-        )}
-      </div>
-    </TerminalSection>
-  );
-};
-
-// ============================================================================
-// CONNECTED COMPONENT
-// ============================================================================
+}) => (
+  <TerminalSection>
+    <div className={styles.buttonGroup}>
+      <ActionButton onClick={onPrimaryAction} text={buttonText} enabled={!isLoading} />
+      {canRedeal && (
+        <ActionButton onClick={onRedeal} text="REDEAL CARDS" enabled={!isLoading} />
+      )}
+    </div>
+  </TerminalSection>
+);
 
 export const LobbyActionsPanel: React.FC = () => {
   const { gameData } = useGameDataRequired();

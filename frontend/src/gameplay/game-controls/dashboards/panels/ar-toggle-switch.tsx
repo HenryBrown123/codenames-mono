@@ -1,6 +1,10 @@
 import React from "react";
 import styles from "./ar-toggle-switch.module.css";
 
+/**
+ * Styled toggle switch for AR mode
+ */
+
 interface ARToggleSwitchProps {
   active: boolean;
   onChange: () => void;

@@ -3,9 +3,9 @@ import { useGameActions } from "../../../game-actions";
 import { ActionButton } from "../../../shared/components";
 import { TerminalSection } from "../shared";
 
-// ============================================================================
-// PRESENTATIONAL COMPONENT
-// ============================================================================
+/**
+ * Action buttons for codebreaker: confirm guess, end turn
+ */
 
 export interface CodebreakerActionsPanelViewProps {
   isLoading: boolean;
@@ -15,21 +15,15 @@ export interface CodebreakerActionsPanelViewProps {
 export const CodebreakerActionsPanelView: React.FC<CodebreakerActionsPanelViewProps> = ({
   isLoading,
   onEndTurn,
-}) => {
-  return (
-    <TerminalSection>
-      <ActionButton
-        onClick={onEndTurn}
-        text={isLoading ? "PROCESSING..." : "END TRANSMISSION"}
-        enabled={!isLoading}
-      />
-    </TerminalSection>
-  );
-};
-
-// ============================================================================
-// CONNECTED COMPONENT
-// ============================================================================
+}) => (
+  <TerminalSection>
+    <ActionButton
+      onClick={onEndTurn}
+      text={isLoading ? "PROCESSING..." : "END TRANSMISSION"}
+      enabled={!isLoading}
+    />
+  </TerminalSection>
+);
 
 export const CodebreakerActionsPanel: React.FC = () => {
   const { endTurn, actionState } = useGameActions();

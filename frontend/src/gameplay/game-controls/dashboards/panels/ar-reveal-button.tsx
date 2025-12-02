@@ -1,6 +1,10 @@
 import React from "react";
 import styles from "./ar-reveal-button.module.css";
 
+/**
+ * Button to temporarily reveal spymaster view
+ */
+
 interface ARRevealButtonProps {
   arMode: boolean;
   enabled?: boolean;

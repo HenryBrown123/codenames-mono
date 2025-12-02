@@ -3,71 +3,50 @@ import { motion } from "framer-motion";
 import { PlayerInfoLayout } from "../shared";
 import styles from "./team-header-panel.module.css";
 
+/**
+ * Animated team symbol with color theming
+ */
+
 interface TeamSymbolHeaderProps {
   teamName: string;
   role: "CODEMASTER" | "CODEBREAKER" | "SPECTATOR";
   playerName?: string;
+  symbol: string;
+  color: string;
 }
 
-/**
- * Team Symbol Header - Common component showing team symbol and info
- * Used across all dashboards (Codemaster, Codebreaker, Spectator)
- */
-export const TeamSymbolHeader: React.FC<TeamSymbolHeaderProps> = ({ teamName, role, playerName }) => {
-  // Try both lowercase and capitalized versions
-  const teamLower = teamName.toLowerCase();
-  const isRed = teamLower === "red" || teamName === "Team Red";
-  const isBlue = teamLower === "blue" || teamName === "Team Blue";
-
-  const symbol = isRed ? "◇" : isBlue ? "□" : "○";
-  const color = isRed ? "#ff3333" : isBlue ? "#00ddff" : "#aaaaaa";
-
-  return (
-    <PlayerInfoLayout>
-      {/* Team Symbol */}
-      <motion.div
-        className={styles.symbolContainer}
-        animate={{
-          opacity: [0.7, 1, 0.7],
-        }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
+export const TeamSymbolHeader: React.FC<TeamSymbolHeaderProps> = ({
+  teamName,
+  role,
+  playerName,
+  symbol,
+  color,
+}) => (
+  <PlayerInfoLayout>
+    <motion.div
+      className={styles.symbolContainer}
+      animate={{ opacity: [0.7, 1, 0.7] }}
+      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+    >
+      <div className={styles.symbolShadow}>{symbol}</div>
+      <div
+        className={styles.symbolLED}
+        style={{ color: color, textShadow: `0 0 8px ${color}` }}
       >
-        {/* Shadow depression */}
-        <div className={styles.symbolShadow}>{symbol}</div>
-        {/* Crisp LED symbol */}
-        <div
-          className={styles.symbolLED}
-          style={{
-            color: color,
-            textShadow: `0 0 8px ${color}`,
-          }}
-        >
-          {symbol}
-        </div>
-        {/* Inner glow */}
-        <div
-          className={styles.symbolGlow}
-          style={{
-            textShadow: `0 0 4px ${color}`,
-          }}
-        >
-          {symbol}
-        </div>
-      </motion.div>
-
-      {/* Team Info */}
-      <div className={styles.teamInfo}>
-        <div className={styles.teamTitle}>
-          <span className={styles.teamName}>{teamName.toUpperCase()}</span>
-        </div>
-        <div className={styles.teamRole}>{role}</div>
-        <div className={styles.teamDivider} />
-        {playerName && <div className={styles.playerName}>{playerName}</div>}
+        {symbol}
       </div>
-    </PlayerInfoLayout>
-  );
-};
+      <div className={styles.symbolGlow} style={{ textShadow: `0 0 4px ${color}` }}>
+        {symbol}
+      </div>
+    </motion.div>
+
+    <div className={styles.teamInfo}>
+      <div className={styles.teamTitle}>
+        <span className={styles.teamName}>{teamName.toUpperCase()}</span>
+      </div>
+      <div className={styles.teamRole}>{role}</div>
+      <div className={styles.teamDivider} />
+      {playerName && <div className={styles.playerName}>{playerName}</div>}
+    </div>
+  </PlayerInfoLayout>
+);
