@@ -5,15 +5,14 @@ import { PanelRenderer } from "./panel-renderer";
 import { MiddleSection } from "./shared";
 import styles from "./shared-dashboard.module.css";
 
+/**
+ * Main dashboard container that renders role-specific panels
+ */
+
 interface GameDashboardProps {
   panels?: PanelSlots;
 }
 
-/**
- * Config-driven dashboard.
- * No visibility logic here - just structure.
- * Panels are rendered based on visibility rules defined in game-panels.ts.
- */
 export const GameDashboard: React.FC<GameDashboardProps> = ({ panels = GAME_PANELS }) => {
   const context = useVisibilityContext();
 

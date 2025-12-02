@@ -3,6 +3,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { PanelConfig } from "./config/types";
 import { VisibilityContext } from "./config/context";
 
+/**
+ * Renders panel components from configuration
+ */
+
 interface PanelRendererProps {
   panels: PanelConfig[];
   context: VisibilityContext;
@@ -21,10 +25,6 @@ const panelTransition = {
   damping: 25,
 };
 
-/**
- * Generic panel renderer with consistent animations.
- * Panels don't know they're animated - this handles it.
- */
 export const PanelRenderer: React.FC<PanelRendererProps> = ({ panels, context, slotId }) => {
   const visiblePanels = panels.filter((panel) => panel.shouldRender(context));
 
