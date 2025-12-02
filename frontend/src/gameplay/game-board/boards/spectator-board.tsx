@@ -8,31 +8,30 @@ import { EmptyCard } from "./board-layout";
 import { boardVariants, type SceneState } from "../cards/card-animation-variants";
 import styles from "./board-layout.module.css";
 
-export const SpectatorBoard = memo<{ scene?: string }>(({ scene }) => {
-  const { gameData } = useGameDataRequired();
-  const { viewMode } = useViewMode();
-  const cards = gameData.currentRound?.cards || [];
-  const currentTeamName = gameData.playerContext?.teamName;
+/**
+ * Read-only game board view for spectators
+ */
 
-  const wordsKey = useMemo(() =>
-    cards.map(c => c.word).sort().join(","),
-    [cards]
-  );
+export interface SpectatorBoardViewProps {
+  cards: any[];
+  wordsKey: string;
+  dealOnEntry: boolean;
+  boardAnimationState: SceneState;
+  currentTeamName?: string;
+  viewMode: string;
+  isRoundComplete: boolean;
+}
 
-  const prevWordsKey = useRef(wordsKey);
-
-  const dealOnEntry = wordsKey !== prevWordsKey.current && cards.length > 0;
-
-  useLayoutEffect(() => {
-    prevWordsKey.current = wordsKey;
-  });
-
-  const isRoundComplete = gameData.currentRound?.status === 'COMPLETED';
-  const boardAnimationState: SceneState = isRoundComplete 
-    ? 'gameOverReveal'
-    : 'visible';
-
-  return (
+export const SpectatorBoardView = memo<SpectatorBoardViewProps>(
+  ({
+    cards,
+    wordsKey,
+    dealOnEntry,
+    boardAnimationState,
+    currentTeamName,
+    viewMode,
+    isRoundComplete,
+  }) => (
     <div className={styles.boardWrapper}>
       {cards.length > 0 ? (
         <motion.div
@@ -43,15 +42,14 @@ export const SpectatorBoard = memo<{ scene?: string }>(({ scene }) => {
           animate={boardAnimationState}
         >
           {cards.map((card, index) => {
-            
             const displayOptions = isRoundComplete
-              ? { mode: 'game-over' as const, isCurrentTeam: currentTeamName === card.teamName }
+              ? { mode: "game-over" as const, isCurrentTeam: currentTeamName === card.teamName }
               : deriveDisplayOptions({
                   viewMode,
                   isCurrentTeam: currentTeamName === card.teamName,
-                  canInteract: false
+                  canInteract: false,
                 });
-            
+
             return (
               <GameCard
                 key={card.word}
@@ -71,6 +69,38 @@ export const SpectatorBoard = memo<{ scene?: string }>(({ scene }) => {
         </div>
       )}
     </div>
+  ),
+);
+
+SpectatorBoardView.displayName = "SpectatorBoardView";
+
+export const SpectatorBoard = memo<{ scene?: string }>(({ scene }) => {
+  const { gameData } = useGameDataRequired();
+  const { viewMode } = useViewMode();
+  const cards = gameData.currentRound?.cards || [];
+  const currentTeamName = gameData.playerContext?.teamName;
+
+  const wordsKey = useMemo(() => cards.map((c) => c.word).sort().join(","), [cards]);
+  const prevWordsKey = useRef(wordsKey);
+  const dealOnEntry = wordsKey !== prevWordsKey.current && cards.length > 0;
+
+  useLayoutEffect(() => {
+    prevWordsKey.current = wordsKey;
+  });
+
+  const isRoundComplete = gameData.currentRound?.status === "COMPLETED";
+  const boardAnimationState: SceneState = isRoundComplete ? "gameOverReveal" : "visible";
+
+  return (
+    <SpectatorBoardView
+      cards={cards}
+      wordsKey={wordsKey}
+      dealOnEntry={dealOnEntry}
+      boardAnimationState={boardAnimationState}
+      currentTeamName={currentTeamName}
+      viewMode={viewMode}
+      isRoundComplete={isRoundComplete}
+    />
   );
 });
 

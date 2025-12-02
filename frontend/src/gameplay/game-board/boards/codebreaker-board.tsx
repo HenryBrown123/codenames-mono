@@ -9,7 +9,11 @@ import { EmptyCard } from "./board-layout";
 import { boardVariants, type SceneState } from "../cards/card-animation-variants";
 import styles from "./board-layout.module.css";
 
-const CodebreakerBoardContent = memo<{
+/**
+ * Game board view for codebreaker role with card selection
+ */
+
+export interface CodebreakerBoardViewProps {
   cards: any[];
   canMakeGuess: boolean;
   isLoading: boolean;
@@ -17,7 +21,10 @@ const CodebreakerBoardContent = memo<{
   currentTeamName?: string;
   viewMode: string;
   isRoundComplete: boolean;
-}>(({ cards, canMakeGuess, isLoading, onCardClick, currentTeamName, viewMode, isRoundComplete }) => {
+}
+
+export const CodebreakerBoardView = memo<CodebreakerBoardViewProps>(
+  ({ cards, canMakeGuess, isLoading, onCardClick, currentTeamName, viewMode, isRoundComplete }) => {
   // Create stable key from card words (sorted for consistency)
   const wordsKey = useMemo(() =>
     cards.map((c: any) => c.word).sort().join(","),
@@ -78,9 +85,10 @@ const CodebreakerBoardContent = memo<{
       )}
     </div>
   );
-});
+  },
+);
 
-CodebreakerBoardContent.displayName = "CodebreakerBoardContent";
+CodebreakerBoardView.displayName = "CodebreakerBoardView";
 
 export const CodebreakerBoard = memo<{ scene?: string }>(
   ({ scene }) => {
@@ -113,17 +121,17 @@ export const CodebreakerBoard = memo<{ scene?: string }>(
   );
 
     return (
-      <CodebreakerBoardContent
+      <CodebreakerBoardView
         cards={cards}
         canMakeGuess={canMakeGuess}
         isLoading={isLoading}
         onCardClick={handleCardClick}
         currentTeamName={currentTeamName}
         viewMode={viewMode}
-        isRoundComplete={gameData.currentRound?.status === 'COMPLETED'}
+        isRoundComplete={gameData.currentRound?.status === "COMPLETED"}
       />
     );
-  }
+  },
 );
 
 CodebreakerBoard.displayName = "CodebreakerBoard";

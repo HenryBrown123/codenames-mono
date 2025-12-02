@@ -1,16 +1,16 @@
 import React from "react";
 import styles from "./board-layout.module.css";
 
+/**
+ * Grid layout container for game cards
+ */
+
 interface GameBoardLayoutProps {
   children: React.ReactNode;
   className?: string;
-  'data-ar-mode'?: boolean;
+  "data-ar-mode"?: boolean;
 }
 
-/**
- * Shared board layout component that provides consistent structure
- * for all role-specific boards
- */
 export const GameBoardLayout: React.FC<GameBoardLayoutProps> = ({
   children,
   className,
@@ -26,9 +26,6 @@ export const GameBoardLayout: React.FC<GameBoardLayoutProps> = ({
   </div>
 );
 
-/**
- * Empty card component for loading/skeleton states
- */
 export const EmptyCard: React.FC = () => (
   <div className={styles.emptyCard} />
 );

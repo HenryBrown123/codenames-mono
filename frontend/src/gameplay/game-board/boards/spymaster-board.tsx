@@ -15,37 +15,34 @@ import {
   ARHUDContent,
 } from "../cards/overlays/overlay-shared-components";
 
-export const SpymasterBoard = memo<{ scene?: string }>(({ scene }) => {
-  const { gameData } = useGameDataRequired();
-  const cards = gameData.currentRound?.cards || [];
-  const currentTeamName = gameData.playerContext?.teamName;
-  const { viewMode } = useViewMode();
+/**
+ * Game board view for spymaster with color reveals
+ */
 
-  const wordsKey = useMemo(
-    () =>
-      cards
-        .map((c) => c.word)
-        .sort()
-        .join(","),
-    [cards],
-  );
+export interface SpymasterBoardViewProps {
+  cards: any[];
+  wordsKey: string;
+  dealOnEntry: boolean;
+  boardAnimationState: SceneState;
+  currentTeamName?: string;
+  viewMode: string;
+  isRoundComplete: boolean;
+  showARHUD: boolean;
+}
 
-  const prevWordsKey = useRef(wordsKey);
-
-  const dealOnEntry = wordsKey !== prevWordsKey.current && cards.length > 0;
-
-  useLayoutEffect(() => {
-    prevWordsKey.current = wordsKey;
-  });
-
-  const isRoundComplete = gameData.currentRound?.status === 'COMPLETED';
-  const boardAnimationState: SceneState = isRoundComplete 
-    ? 'gameOverReveal'
-    : 'visible';
-
-  return (
+export const SpymasterBoardView = memo<SpymasterBoardViewProps>(
+  ({
+    cards,
+    wordsKey,
+    dealOnEntry,
+    boardAnimationState,
+    currentTeamName,
+    viewMode,
+    isRoundComplete,
+    showARHUD,
+  }) => (
     <>
-      {viewMode === "spymaster" && (
+      {showARHUD && (
         <ARGlassesHUD>
           <ARVisor />
           <ARGlare />
@@ -54,10 +51,7 @@ export const SpymasterBoard = memo<{ scene?: string }>(({ scene }) => {
         </ARGlassesHUD>
       )}
 
-      <div 
-        className={styles.boardWrapper}
-        data-ar-mode={viewMode === "spymaster"}
-      >
+      <div className={styles.boardWrapper} data-ar-mode={showARHUD}>
         {cards.length > 0 ? (
           <motion.div
             key={wordsKey}
@@ -67,15 +61,14 @@ export const SpymasterBoard = memo<{ scene?: string }>(({ scene }) => {
             animate={boardAnimationState}
           >
             {cards.map((card, index) => {
-              
               const displayOptions = isRoundComplete
-                ? { mode: 'game-over' as const, isCurrentTeam: currentTeamName === card.teamName }
+                ? { mode: "game-over" as const, isCurrentTeam: currentTeamName === card.teamName }
                 : deriveDisplayOptions({
                     viewMode,
                     isCurrentTeam: currentTeamName === card.teamName,
-                    canInteract: false
+                    canInteract: false,
                   });
-              
+
               return (
                 <GameCard
                   key={card.word}
@@ -96,6 +89,40 @@ export const SpymasterBoard = memo<{ scene?: string }>(({ scene }) => {
         )}
       </div>
     </>
+  ),
+);
+
+SpymasterBoardView.displayName = "SpymasterBoardView";
+
+export const SpymasterBoard = memo<{ scene?: string }>(({ scene }) => {
+  const { gameData } = useGameDataRequired();
+  const { viewMode } = useViewMode();
+  const cards = gameData.currentRound?.cards || [];
+  const currentTeamName = gameData.playerContext?.teamName;
+
+  const wordsKey = useMemo(() => cards.map((c) => c.word).sort().join(","), [cards]);
+  const prevWordsKey = useRef(wordsKey);
+  const dealOnEntry = wordsKey !== prevWordsKey.current && cards.length > 0;
+
+  useLayoutEffect(() => {
+    prevWordsKey.current = wordsKey;
+  });
+
+  const isRoundComplete = gameData.currentRound?.status === "COMPLETED";
+  const boardAnimationState: SceneState = isRoundComplete ? "gameOverReveal" : "visible";
+  const showARHUD = viewMode === "spymaster";
+
+  return (
+    <SpymasterBoardView
+      cards={cards}
+      wordsKey={wordsKey}
+      dealOnEntry={dealOnEntry}
+      boardAnimationState={boardAnimationState}
+      currentTeamName={currentTeamName}
+      viewMode={viewMode}
+      isRoundComplete={isRoundComplete}
+      showARHUD={showARHUD}
+    />
   );
 });
 
