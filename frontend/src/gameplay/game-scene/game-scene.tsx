@@ -72,8 +72,6 @@ export const GameScene: React.FC = () => {
 
           <DashboardComponent
             key={isRoundComplete ? 'game-over' : `${currentRole}-${currentScene}`}
-            messageText={messageText}
-            onOpenCluePanel={() => setShowCluePanel(true)}
           />
         </div>
 

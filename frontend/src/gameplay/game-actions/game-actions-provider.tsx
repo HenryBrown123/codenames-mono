@@ -36,7 +36,7 @@ export interface GameActionsContextValue {
   endTurn: () => void;
 }
 
-const GameActionsContext = createContext<GameActionsContextValue | undefined>(undefined);
+export const GameActionsContext = createContext<GameActionsContextValue | undefined>(undefined);
 
 const initialState: ActionState = {
   name: null,

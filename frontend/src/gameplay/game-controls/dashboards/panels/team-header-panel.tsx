@@ -4,17 +4,21 @@ import { useGameDataRequired } from "../../../game-data/providers";
 import { PlayerInfoLayout } from "../shared";
 import styles from "./team-header-panel.module.css";
 
-/**
- * Team Header Panel - Shows team symbol, role, and player name.
- * Extracted from team-symbol-header.tsx to be a self-contained panel.
- */
-export const TeamHeaderPanel: React.FC = () => {
-  const { gameData } = useGameDataRequired();
+// ============================================================================
+// PRESENTATIONAL COMPONENT
+// ============================================================================
 
-  const teamName = gameData.playerContext?.teamName || "";
-  const role = gameData.playerContext?.role || "SPECTATOR";
-  const playerName = gameData.playerContext?.playerName;
+export interface TeamHeaderPanelViewProps {
+  teamName: string;
+  role: string;
+  playerName?: string;
+}
 
+export const TeamHeaderPanelView: React.FC<TeamHeaderPanelViewProps> = ({
+  teamName,
+  role,
+  playerName,
+}) => {
   const teamLower = teamName.toLowerCase();
   const isRed = teamLower === "red" || teamName === "Team Red";
   const isBlue = teamLower === "blue" || teamName === "Team Blue";
@@ -24,7 +28,6 @@ export const TeamHeaderPanel: React.FC = () => {
 
   return (
     <PlayerInfoLayout>
-      {/* Team Symbol */}
       <motion.div
         className={styles.symbolContainer}
         animate={{
@@ -36,9 +39,7 @@ export const TeamHeaderPanel: React.FC = () => {
           ease: "easeInOut",
         }}
       >
-        {/* Shadow depression */}
         <div className={styles.symbolShadow}>{symbol}</div>
-        {/* Crisp LED symbol */}
         <div
           className={styles.symbolLED}
           style={{
@@ -48,7 +49,6 @@ export const TeamHeaderPanel: React.FC = () => {
         >
           {symbol}
         </div>
-        {/* Inner glow */}
         <div
           className={styles.symbolGlow}
           style={{
@@ -59,7 +59,6 @@ export const TeamHeaderPanel: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* Team Info */}
       <div className={styles.teamInfo}>
         <div className={styles.teamTitle}>
           <span className={styles.teamName}>{teamName.toUpperCase()}</span>
@@ -69,5 +68,21 @@ export const TeamHeaderPanel: React.FC = () => {
         {playerName && <div className={styles.playerName}>{playerName}</div>}
       </div>
     </PlayerInfoLayout>
+  );
+};
+
+// ============================================================================
+// CONNECTED COMPONENT
+// ============================================================================
+
+export const TeamHeaderPanel: React.FC = () => {
+  const { gameData } = useGameDataRequired();
+
+  return (
+    <TeamHeaderPanelView
+      teamName={gameData.playerContext?.teamName || ""}
+      role={gameData.playerContext?.role || "SPECTATOR"}
+      playerName={gameData.playerContext?.playerName}
+    />
   );
 };

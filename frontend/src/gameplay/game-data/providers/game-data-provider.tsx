@@ -3,7 +3,7 @@ import { useGameDataQuery } from "../queries/use-game-query";
 import { GameData } from "@frontend/shared-types";
 import { useGameRoom, useWebSocketInvalidation } from "@frontend/lib/websocket";
 
-interface GameDataContextValue {
+export interface GameDataContextValue {
   gameData: GameData | undefined;
   gameId: string;
   isPending: boolean;
@@ -13,7 +13,7 @@ interface GameDataContextValue {
   isFetching: boolean;
 }
 
-const GameDataContext = createContext<GameDataContextValue | null>(null);
+export const GameDataContext = createContext<GameDataContextValue | null>(null);
 
 interface GameDataProviderProps {
   children: ReactNode;

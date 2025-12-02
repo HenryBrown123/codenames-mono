@@ -5,10 +5,42 @@ import { ActionButton } from "../../../shared/components";
 import { TerminalSection } from "../shared";
 import styles from "./lobby-actions-panel.module.css";
 
-/**
- * Lobby Actions Panel - Deal/start/redeal buttons.
- * Controls for game setup phase.
- */
+// ============================================================================
+// PRESENTATIONAL COMPONENT
+// ============================================================================
+
+export interface LobbyActionsPanelViewProps {
+  buttonText: string;
+  canRedeal: boolean;
+  isLoading: boolean;
+  onPrimaryAction: () => void;
+  onRedeal: () => void;
+}
+
+export const LobbyActionsPanelView: React.FC<LobbyActionsPanelViewProps> = ({
+  buttonText,
+  canRedeal,
+  isLoading,
+  onPrimaryAction,
+  onRedeal,
+}) => {
+  return (
+    <TerminalSection>
+      <div className={styles.buttonGroup}>
+        <ActionButton onClick={onPrimaryAction} text={buttonText} enabled={!isLoading} />
+
+        {canRedeal && (
+          <ActionButton onClick={onRedeal} text="REDEAL CARDS" enabled={!isLoading} />
+        )}
+      </div>
+    </TerminalSection>
+  );
+};
+
+// ============================================================================
+// CONNECTED COMPONENT
+// ============================================================================
+
 export const LobbyActionsPanel: React.FC = () => {
   const { gameData } = useGameDataRequired();
   const { createRound, startRound, dealCards, actionState } = useGameActions();
@@ -21,7 +53,7 @@ export const LobbyActionsPanel: React.FC = () => {
 
   const canRedeal = isSetup && hasCards;
 
-  const handleClick = async () => {
+  const handlePrimaryAction = async () => {
     if (isSetup && hasCards) {
       startRound();
       return;
@@ -66,14 +98,12 @@ export const LobbyActionsPanel: React.FC = () => {
   };
 
   return (
-    <TerminalSection>
-      <div className={styles.buttonGroup}>
-        <ActionButton onClick={handleClick} text={getButtonText()} enabled={!isLoading} />
-
-        {canRedeal && (
-          <ActionButton onClick={handleRedeal} text="REDEAL CARDS" enabled={!isLoading} />
-        )}
-      </div>
-    </TerminalSection>
+    <LobbyActionsPanelView
+      buttonText={getButtonText()}
+      canRedeal={canRedeal}
+      isLoading={isLoading}
+      onPrimaryAction={handlePrimaryAction}
+      onRedeal={handleRedeal}
+    />
   );
 };

@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-interface PlayerContextValue {
+export interface PlayerContextValue {
   currentPlayerId: string | null;
   setCurrentPlayerId: (playerId: string | null) => void;
 }
 
-const PlayerContext = createContext<PlayerContextValue | undefined>(undefined);
+export const PlayerContext = createContext<PlayerContextValue | undefined>(undefined);
 
 export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(null);

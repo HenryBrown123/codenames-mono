@@ -2,13 +2,13 @@ import { createContext, useContext, useState, useCallback, ReactNode } from "rea
 
 export type ViewMode = "normal" | "spymaster";
 
-interface ViewModeContextValue {
+export interface ViewModeContextValue {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
   toggleSpymasterViewMode: () => void;
 }
 
-const ViewModeContext = createContext<ViewModeContextValue | null>(null);
+export const ViewModeContext = createContext<ViewModeContextValue | null>(null);
 
 export const ViewModeProvider = ({ children }: { children: ReactNode }) => {
   const [viewMode, setViewMode] = useState<ViewMode>("normal");

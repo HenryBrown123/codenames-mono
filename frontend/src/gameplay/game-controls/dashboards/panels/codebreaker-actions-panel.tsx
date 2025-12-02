@@ -3,22 +3,41 @@ import { useGameActions } from "../../../game-actions";
 import { ActionButton } from "../../../shared/components";
 import { TerminalSection } from "../shared";
 
-/**
- * Codebreaker Actions Panel - End turn button.
- * Allows codebreaker to end their turn early.
- */
-export const CodebreakerActionsPanel: React.FC = () => {
-  const { endTurn, actionState } = useGameActions();
+// ============================================================================
+// PRESENTATIONAL COMPONENT
+// ============================================================================
 
-  const isLoading = actionState.status === "loading";
+export interface CodebreakerActionsPanelViewProps {
+  isLoading: boolean;
+  onEndTurn: () => void;
+}
 
+export const CodebreakerActionsPanelView: React.FC<CodebreakerActionsPanelViewProps> = ({
+  isLoading,
+  onEndTurn,
+}) => {
   return (
     <TerminalSection>
       <ActionButton
-        onClick={endTurn}
+        onClick={onEndTurn}
         text={isLoading ? "PROCESSING..." : "END TRANSMISSION"}
         enabled={!isLoading}
       />
     </TerminalSection>
+  );
+};
+
+// ============================================================================
+// CONNECTED COMPONENT
+// ============================================================================
+
+export const CodebreakerActionsPanel: React.FC = () => {
+  const { endTurn, actionState } = useGameActions();
+
+  return (
+    <CodebreakerActionsPanelView
+      isLoading={actionState.status === "loading"}
+      onEndTurn={endTurn}
+    />
   );
 };

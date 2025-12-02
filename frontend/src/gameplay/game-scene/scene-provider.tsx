@@ -10,13 +10,13 @@ import { PLAYER_ROLE } from "@codenames/shared/types";
 import { getStateMachine } from "./scene-config";
 import { useViewMode } from "../game-board/view-mode";
 
-interface PlayerSceneContextValue {
+export interface PlayerSceneContextValue {
   currentRole: string;
   currentScene: string;
   triggerSceneTransition: (event: string) => void;
 }
 
-const PlayerSceneContext = createContext<PlayerSceneContextValue | undefined>(undefined);
+export const PlayerSceneContext = createContext<PlayerSceneContextValue | undefined>(undefined);
 
 interface PlayerSceneProviderProps {
   children: ReactNode;

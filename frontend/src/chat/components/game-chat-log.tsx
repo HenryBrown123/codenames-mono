@@ -1,11 +1,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useGameMessages } from "@frontend/chat/api";
+import { useGameMessages, type GameMessage } from "@frontend/chat/api";
 import styles from "./game-chat-log.module.css";
-
-interface GameChatLogProps {
-  gameId: string;
-}
 
 /**
  * Remove emojis from text
@@ -14,13 +10,23 @@ const removeEmojis = (text: string): string => {
   return text.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, "").trim();
 };
 
+// ============================================================================
+// PRESENTATIONAL COMPONENT - Pure, no hooks
+// ============================================================================
+
+export interface GameChatLogViewProps {
+  messages: GameMessage[] | null;
+  isLoading?: boolean;
+}
+
 /**
- * Game Chat Log Component
+ * Game Chat Log View - Pure presentational component
  * Displays only the latest AI thinking message with typewriter animation
  */
-export const GameChatLog: React.FC<GameChatLogProps> = ({ gameId }) => {
-  const { data: messages, isLoading } = useGameMessages(gameId);
-
+export const GameChatLogView: React.FC<GameChatLogViewProps> = ({
+  messages,
+  isLoading = false,
+}) => {
   if (isLoading || !messages) {
     return null;
   }
@@ -68,4 +74,21 @@ export const GameChatLog: React.FC<GameChatLogProps> = ({ gameId }) => {
       </AnimatePresence>
     </div>
   );
+};
+
+// ============================================================================
+// CONNECTED COMPONENT - Fetches data and passes to view
+// ============================================================================
+
+interface GameChatLogProps {
+  gameId: string;
+}
+
+/**
+ * Game Chat Log - Connected component that fetches data
+ */
+export const GameChatLog: React.FC<GameChatLogProps> = ({ gameId }) => {
+  const { data: messages, isLoading } = useGameMessages(gameId);
+
+  return <GameChatLogView messages={messages ?? null} isLoading={isLoading} />;
 };

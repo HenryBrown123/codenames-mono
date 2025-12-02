@@ -1,15 +1,29 @@
 import React from "react";
 import { TerminalSection, TerminalCommand, TerminalOutput } from "../shared";
 
-/**
- * Observer Panel - Displayed when the player is observing (not their turn).
- * Shows a simple status message.
- */
-export const ObserverPanel: React.FC = () => {
+// ============================================================================
+// PRESENTATIONAL COMPONENT
+// ============================================================================
+
+export interface ObserverPanelViewProps {
+  message?: string;
+}
+
+export const ObserverPanelView: React.FC<ObserverPanelViewProps> = ({
+  message = "Monitoring field operations...",
+}) => {
   return (
     <TerminalSection>
       <TerminalCommand>STANDBY MODE</TerminalCommand>
-      <TerminalOutput>Monitoring field operations...</TerminalOutput>
+      <TerminalOutput>{message}</TerminalOutput>
     </TerminalSection>
   );
+};
+
+// ============================================================================
+// CONNECTED COMPONENT
+// ============================================================================
+
+export const ObserverPanel: React.FC = () => {
+  return <ObserverPanelView />;
 };

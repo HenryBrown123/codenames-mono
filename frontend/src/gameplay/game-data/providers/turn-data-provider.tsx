@@ -5,7 +5,7 @@ import { useGameDataRequired as useGameData } from "./game-data-provider";
 /**
  * Turn context type definition
  */
-interface TurnContextType {
+export interface TurnContextType {
   activeTurn: TurnData | null;
   isLoading: boolean;
   error: Error | null;
@@ -16,7 +16,7 @@ interface TurnContextType {
 /**
  * Turn context - shared state for all gameplay components
  */
-const TurnContext = createContext<TurnContextType | undefined>(undefined);
+export const TurnContext = createContext<TurnContextType | undefined>(undefined);
 
 /**
  * Turn provider props

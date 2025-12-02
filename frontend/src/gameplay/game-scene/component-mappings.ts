@@ -10,7 +10,7 @@ export const getDashboardComponent = (
   _role: string,
   _scene: string,
   _gameData?: any,
-): React.ComponentType<{ messageText?: string; onOpenCluePanel?: () => void }> => {
+): React.ComponentType => {
   return GameDashboard;
 };
 
