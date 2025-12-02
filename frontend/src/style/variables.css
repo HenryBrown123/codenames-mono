@@ -5,7 +5,14 @@
   --color-background: #0a0a0f;
   --color-text: white;
   --color-text-muted: rgba(255, 255, 255, 0.7);
-  
+
+  /* Dashboard typography */
+  --dashboard-text-h1: 1.1rem;
+  --dashboard-text-p: 0.875rem;
+  --dashboard-text-small: 0.75rem;
+  --dashboard-text-btn: 0.875rem;
+  --dashboard-text-btn-sm: 0.75rem;
+
   /* Team colors */
   --color-team-red: #ff0040;
   --color-team-blue: #00d4ff;
