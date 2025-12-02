@@ -171,7 +171,7 @@ export const createAppLogger = (config: AppLoggerConfig): AppLogger => {
       dirname: config.logDir,
       datePattern: "YYYY-MM-DD",
       maxSize: "20m",
-      maxFiles: "14d",
+      maxFiles: "2d",
       zippedArchive: true,
       format: winston.format.combine(
         winston.format.timestamp(),
