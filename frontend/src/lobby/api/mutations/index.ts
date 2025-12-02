@@ -1,4 +1,2 @@
-export * from './use-add-players';
-export * from './use-modify-players';
-export * from './use-remove-player';
-export * from './use-start-game';
+export { useLobbyMutations } from "./use-lobby-mutations";
+export { type GameStartedResult } from "./start-game";
