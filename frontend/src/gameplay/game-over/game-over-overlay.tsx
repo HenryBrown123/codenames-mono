@@ -4,6 +4,10 @@ import { useGameDataRequired } from "../game-data/providers";
 import { VictoryFlash } from "./victory-flash";
 import { GAME_OVER_TIMING } from "./game-over-timing";
 
+/**
+ * Full-screen overlay announcing game winner
+ */
+
 export const GameOverOverlay = () => {
   const { gameData } = useGameDataRequired();
   const [showFlash, setShowFlash] = useState(true);
