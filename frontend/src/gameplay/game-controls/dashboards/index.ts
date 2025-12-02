@@ -1,12 +1,12 @@
-export {
-  LobbyDashboard,
-  WaitingDashboard,
-  SpectatorDashboard,
-  DealingDashboard,
-  OutcomeDashboard,
-  HandoffDashboard,
-} from "./setup-dashboards";
-export { GameOverDashboard as GameoverDashboard } from "./game-over-dashboard";
-export { CodemasterDashboard } from "./codemaster-dashboard";
-export { CodebreakerDashboard } from "./codebreaker-dashboard";
-export { CodeWordInput } from "./codemaster-input";
+// New config-driven dashboard
+export { GameDashboard } from "./game-dashboard";
+
+// Panel config exports
+export * from "./config";
+export * from "./panels";
+
+// Shared terminal components
+export * from "./shared";
+
+// Keep CodeWordInput as it's used externally
+export { CodeWordInput } from "./panels/codemaster-input";
