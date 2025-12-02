@@ -7,7 +7,7 @@ import { getDashboardComponent, getBoardComponent } from "./component-mappings";
 import { SpectatorBoard } from "../game-board/boards/spectator-board";
 import { GameInstructions } from "../shared/game-instructions";
 import { ActionButton } from "../shared/components";
-import { CodeWordInput } from "../game-controls/dashboards/codemaster-input";
+import { CodeWordInput } from "../game-controls/dashboards";
 import { useGameActions } from "../game-actions";
 import { GameOverOverlay } from "../game-over";
 
