@@ -4,10 +4,10 @@ import {
   isCodemaster,
   isCodebreakerGuessing,
   isObserving,
-  isRoundInProgress,
   isRoundComplete,
   isInLobby,
   isCodemasterGivingClue,
+  isAiActive,
 } from "./rules";
 import {
   TeamHeaderPanel,
@@ -35,7 +35,7 @@ export const GAME_PANELS: PanelSlots = {
     { id: "ar-toggle", component: ARTogglePanel, shouldRender: isCodemaster },
     { id: "intel", component: IntelPanel, shouldRender: isCodebreakerGuessing },
     { id: "observer", component: ObserverPanel, shouldRender: isObserving },
-    { id: "ai-status", component: AIStatusPanel, shouldRender: isRoundInProgress },
+    { id: "ai-status", component: AIStatusPanel, shouldRender: isAiActive },
     { id: "gameover", component: GameoverPanel, shouldRender: isRoundComplete },
   ],
 

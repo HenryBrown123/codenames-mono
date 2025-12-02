@@ -51,6 +51,11 @@ export const canStartRound = (ctx: VisibilityContext): boolean => isInLobby(ctx)
 
 export const canRedeal = (ctx: VisibilityContext): boolean => isInLobby(ctx) && ctx.hasCards;
 
+// === AI rules ===
+
+export const isAiActive = (ctx: VisibilityContext): boolean =>
+  isRoundInProgress(ctx) && (ctx.aiAvailable || ctx.aiThinking);
+
 // === Utility ===
 
 export const always = (_ctx: VisibilityContext): boolean => true;

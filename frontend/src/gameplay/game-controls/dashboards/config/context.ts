@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useGameDataRequired, useTurn } from "../../../game-data/providers";
 import { useGameActions } from "../../../game-actions";
+import { useAiStatus } from "@frontend/ai/api";
 
 export interface VisibilityContext {
   // Player info
@@ -21,6 +22,10 @@ export interface VisibilityContext {
 
   // Action state
   isActionLoading: boolean;
+
+  // AI state
+  aiAvailable: boolean;
+  aiThinking: boolean;
 }
 
 /**
@@ -31,6 +36,7 @@ export const useVisibilityContext = (): VisibilityContext => {
   const { gameData } = useGameDataRequired();
   const { activeTurn } = useTurn();
   const { actionState } = useGameActions();
+  const { data: aiStatus } = useAiStatus(gameData.publicId);
 
   return useMemo(() => {
     const role = (gameData.playerContext?.role ?? "NONE") as VisibilityContext["role"];
@@ -53,6 +59,8 @@ export const useVisibilityContext = (): VisibilityContext => {
       hasCards,
       hasRound,
       isActionLoading: actionState.status === "loading",
+      aiAvailable: aiStatus?.available ?? false,
+      aiThinking: aiStatus?.thinking ?? false,
     };
-  }, [gameData.playerContext, gameData.currentRound, activeTurn, actionState.status]);
+  }, [gameData.playerContext, gameData.publicId, gameData.currentRound, activeTurn, actionState.status, aiStatus]);
 };
