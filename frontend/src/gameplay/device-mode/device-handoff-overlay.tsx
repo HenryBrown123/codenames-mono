@@ -5,14 +5,10 @@ import { usePlayersQuery } from "../game-data/queries";
 import { FaLeaf } from "react-icons/fa";
 import styles from "./device-handoff-overlay.module.css";
 
-interface DeviceHandoffOverlayProps {
-  gameData: GameData;
-  onContinue: (playerId: string) => void;
-}
-
 /**
- * Gets team symbol using the same symbols as game cards
+ * Overlay prompting device handoff between players
  */
+
 const getTeamSymbol = (teamName: string) => {
   const team = teamName.toLowerCase();
   if (team.includes("red")) return "★";
@@ -21,9 +17,6 @@ const getTeamSymbol = (teamName: string) => {
   return "●";
 };
 
-/**
- * Gets team color using design system colors
- */
 const getTeamColor = (teamName: string) => {
   const team = teamName.toLowerCase();
   if (team.includes("red")) return "var(--color-team-red, #ff0040)";
@@ -32,9 +25,69 @@ const getTeamColor = (teamName: string) => {
   return "var(--color-neutral, #888888)";
 };
 
-/**
- * Device handoff overlay - queries players to determine next player
- */
+export interface DeviceHandoffOverlayViewProps {
+  isExiting: boolean;
+  displayName: string;
+  teamColor: string;
+  targetRole: PlayerRole;
+  targetTeam: string;
+  isReady: boolean;
+  onContinue: () => void;
+  onAnimationEnd: () => void;
+}
+
+export const DeviceHandoffOverlayView: React.FC<DeviceHandoffOverlayViewProps> = ({
+  isExiting,
+  displayName,
+  teamColor,
+  targetRole,
+  targetTeam,
+  isReady,
+  onContinue,
+  onAnimationEnd,
+}) => (
+  <div
+    className={styles.overlayContainer}
+    data-exiting={isExiting}
+    onAnimationEnd={onAnimationEnd}
+  >
+    <div className={styles.backgroundBlur} />
+    <div className={styles.handoffCard}>
+      <h1 className={styles.title}>DEVICE HANDOFF</h1>
+
+      <div
+        className={styles.playerInfo}
+        style={{ "--team-color": teamColor } as React.CSSProperties}
+      >
+        <div className={styles.playerName}>{displayName}</div>
+        {targetRole === PLAYER_ROLE.CODEMASTER && (
+          <div className={styles.roleLabel}>
+            {getTeamSymbol(targetTeam)} {targetTeam} Spymaster
+          </div>
+        )}
+        {targetRole === PLAYER_ROLE.CODEBREAKER && (
+          <div className={styles.roleLabel}>
+            {getTeamSymbol(targetTeam)} {targetTeam}
+          </div>
+        )}
+      </div>
+
+      <button
+        className={styles.continueButton}
+        onClick={onContinue}
+        disabled={!isReady}
+      >
+        {isReady ? "EXECUTE" : "LOADING..."}
+      </button>
+    </div>
+  </div>
+);
+
+interface DeviceHandoffOverlayProps {
+  gameData: GameData;
+  onContinue: (playerId: string) => void;
+}
+
 export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
   gameData,
   onContinue,
@@ -46,10 +99,20 @@ export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
 
   const nextPlayer = players?.find((p) => p.status === "ACTIVE");
   const isReady = !!nextPlayer;
+  const targetRole = nextPlayer?.role || PLAYER_ROLE.NONE;
+  const targetTeam = nextPlayer?.teamName || "Team";
+  const teamColor = getTeamColor(targetTeam);
+  const displayName = nextPlayer
+    ? targetRole === PLAYER_ROLE.CODEMASTER
+      ? nextPlayer.name
+      : `${targetTeam} Operatives`
+    : "LOADING...";
 
-  const handleContinueClick = (playerId: string) => {
-    setSelectedPlayerId(playerId);
-    setIsExiting(true);
+  const handleContinueClick = () => {
+    if (nextPlayer) {
+      setSelectedPlayerId(nextPlayer.publicId);
+      setIsExiting(true);
+    }
   };
 
   const handleAnimationEnd = () => {
@@ -58,53 +121,16 @@ export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
     }
   };
 
-  const targetRole = nextPlayer?.role || PLAYER_ROLE.NONE;
-  const targetTeam = nextPlayer?.teamName || "Team";
-  const teamColor = getTeamColor(targetTeam);
-
-  const displayName = nextPlayer
-    ? targetRole === PLAYER_ROLE.CODEMASTER
-      ? nextPlayer.name
-      : `${targetTeam} Operatives`
-    : "LOADING...";
-
   return (
-    <div 
-      className={styles.overlayContainer} 
-      data-exiting={isExiting}
+    <DeviceHandoffOverlayView
+      isExiting={isExiting}
+      displayName={displayName}
+      teamColor={teamColor}
+      targetRole={targetRole}
+      targetTeam={targetTeam}
+      isReady={isReady}
+      onContinue={handleContinueClick}
       onAnimationEnd={handleAnimationEnd}
-    >
-      <div className={styles.backgroundBlur} />
-      <div className={styles.handoffCard}>
-        <h1 className={styles.title}>DEVICE HANDOFF</h1>
-
-        <div
-          className={styles.playerInfo}
-          style={{
-            '--team-color': teamColor,
-          } as React.CSSProperties}
-        >
-          <div className={styles.playerName}>{displayName}</div>
-          {targetRole === PLAYER_ROLE.CODEMASTER && nextPlayer && (
-            <div className={styles.roleLabel}>
-              {getTeamSymbol(targetTeam)} {targetTeam} Spymaster
-            </div>
-          )}
-          {targetRole === PLAYER_ROLE.CODEBREAKER && (
-            <div className={styles.roleLabel}>
-              {getTeamSymbol(targetTeam)} {targetTeam}
-            </div>
-          )}
-        </div>
-
-        <button
-          className={styles.continueButton}
-          onClick={() => nextPlayer && handleContinueClick(nextPlayer.publicId)}
-          disabled={!isReady}
-        >
-          {isReady ? "EXECUTE" : "LOADING..."}
-        </button>
-      </div>
-    </div>
+    />
   );
 };
