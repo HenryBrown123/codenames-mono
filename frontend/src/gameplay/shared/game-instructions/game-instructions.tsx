@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import styles from "./game-instructions.module.css";
 
+/**
+ * Game instructions with typewriter animation
+ */
 
 interface GameInstructionsProps {
   messageText: string;
 }
 
-/**
- * Game instructions component with mobile-first responsive design and typewriter effect
- */
 export const GameInstructions: React.FC<GameInstructionsProps> = ({ messageText }) => {
   const [displayedText, setDisplayedText] = useState("");
   const [isTyping, setIsTyping] = useState(false);

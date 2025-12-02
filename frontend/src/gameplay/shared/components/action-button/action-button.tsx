@@ -1,5 +1,9 @@
 import React from "react";
-import styles from './action-button.module.css';
+import styles from "./action-button.module.css";
+
+/**
+ * Primary action button with loading state
+ */
 
 type ButtonProp = {
   text?: string;
@@ -13,16 +17,14 @@ const ActionButton: React.FC<ButtonProp> = ({
   enabled = true,
   onClick,
   className,
-}) => {
-  return (
-    <button 
-      className={`${styles.button} ${className || ''}`}
-      onClick={enabled ? onClick : undefined}
-      disabled={!enabled}
-    >
-      {text}
-    </button>
-  );
-};
+}) => (
+  <button
+    className={`${styles.button} ${className || ""}`}
+    onClick={enabled ? onClick : undefined}
+    disabled={!enabled}
+  >
+    {text}
+  </button>
+);
 
 export default ActionButton;
