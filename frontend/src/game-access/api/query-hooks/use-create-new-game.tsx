@@ -5,6 +5,7 @@ import { GameType, GameFormat } from "@frontend/shared-types/domain-types";
 interface CreateGameInput {
   gameType: GameType;
   gameFormat: GameFormat;
+  aiMode: boolean;
 }
 
 /**
