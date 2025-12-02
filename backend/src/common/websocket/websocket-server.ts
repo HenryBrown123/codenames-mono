@@ -1,9 +1,6 @@
 import { Server as HttpServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
-import {
-  createWebSocketAuthMiddleware,
-  AuthenticatedSocket,
-} from "./websocket-auth.middleware";
+import { createWebSocketAuthMiddleware, AuthenticatedSocket } from "./websocket-auth.middleware";
 import { WebSocketEvent } from "./websocket-events.types";
 import { emitServerGameEvent } from "@backend/ai/events/game-event-bus";
 import type { AppLogger } from "@backend/common/logging";
@@ -31,9 +28,7 @@ let wsLogger: AppLogger | undefined;
 /**
  * Initialize WebSocket server with Socket.io
  */
-export const initializeWebSocketServer = (
-  config: WebSocketServerConfig,
-): SocketIOServer => {
+export const initializeWebSocketServer = (config: WebSocketServerConfig): SocketIOServer => {
   const { httpServer, jwtSecret, corsOrigins, logger } = config;
   wsLogger = logger;
 
@@ -96,9 +91,7 @@ export const initializeWebSocketServer = (
  */
 export const getWebSocketServer = (): SocketIOServer => {
   if (!io) {
-    throw new Error(
-      "WebSocket server not initialized. Call initializeWebSocketServer first.",
-    );
+    throw new Error("WebSocket server not initialized. Call initializeWebSocketServer first.");
   }
   return io;
 };
@@ -106,11 +99,7 @@ export const getWebSocketServer = (): SocketIOServer => {
 /**
  * Emit event to a specific game room
  */
-export const emitToGame = (
-  gameId: string,
-  event: WebSocketEvent,
-  payload: any,
-): void => {
+export const emitToGame = (gameId: string, event: WebSocketEvent, payload: any): void => {
   if (!io) {
     wsLogger?.warn("websocket_emit_skipped: server not initialized");
     return;
