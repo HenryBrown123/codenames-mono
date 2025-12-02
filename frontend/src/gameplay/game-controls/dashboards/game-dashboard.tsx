@@ -23,9 +23,8 @@ export const GameDashboard: React.FC<GameDashboardProps> = ({ panels = GAME_PANE
 
       <MiddleSection>
         <PanelRenderer panels={panels.middle} context={context} slotId="middle" />
+        <PanelRenderer panels={panels.bottom} context={context} slotId="bottom" />
       </MiddleSection>
-
-      <PanelRenderer panels={panels.bottom} context={context} slotId="bottom" />
     </div>
   );
 };
