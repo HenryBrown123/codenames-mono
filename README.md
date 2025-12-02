@@ -664,9 +664,10 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   ├── auth
 │       │   └── websocket
 │       ├── lobby
-│       │   └── api
-│       │       ├── mutations
-│       │       └── queries
+│       │   ├── api
+│       │   │   ├── mutations
+│       │   │   └── queries
+│       │   └── components
 │       ├── sandbox
 │       │   └── music-visualiser-animation
 │       ├── shared-types
@@ -678,7 +679,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-117 directories
+118 directories
 ```
 
 ## Getting Started
