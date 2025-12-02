@@ -11,6 +11,10 @@ import { CodeWordInput } from "../game-controls/dashboards";
 import { useGameActions } from "../game-actions";
 import { GameOverOverlay } from "../game-over";
 
+/**
+ * Main game scene orchestrating board and controls
+ */
+
 export const GameScene: React.FC = () => {
   const { gameData, isPending, isError, error, refetch, isFetching } = useGameDataRequired();
   const { activeTurn } = useTurn();
