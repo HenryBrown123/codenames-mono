@@ -15,13 +15,11 @@ export const LobbyHeaderView: React.FC<LobbyHeaderViewProps> = ({
   title,
   gameId,
   playerCount,
-}) => {
-  return (
-    <div className={styles.header}>
-      <h1 className={styles.title}>{title}</h1>
-      <div className={styles.gameInfo}>
-        ID: {gameId} | {playerCount} Players
-      </div>
+}) => (
+  <div className={styles.header}>
+    <h1 className={styles.title}>{title}</h1>
+    <div className={styles.gameInfo}>
+      ID: {gameId} | {playerCount} Players
     </div>
-  );
-};
+  </div>
+);

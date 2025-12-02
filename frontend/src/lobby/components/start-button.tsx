@@ -15,15 +15,13 @@ export const StartButtonView: React.FC<StartButtonViewProps> = ({
   canStart,
   isLoading,
   onClick,
-}) => {
-  return (
-    <button
-      className={styles.startButton}
-      data-can-start={canStart}
-      onClick={onClick}
-      disabled={!canStart || isLoading}
-    >
-      START MISSION
-    </button>
-  );
-};
+}) => (
+  <button
+    className={styles.startButton}
+    data-can-start={canStart}
+    onClick={onClick}
+    disabled={!canStart || isLoading}
+  >
+    START MISSION
+  </button>
+);
