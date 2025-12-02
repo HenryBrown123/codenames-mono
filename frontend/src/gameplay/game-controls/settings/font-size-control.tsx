@@ -1,6 +1,10 @@
 import React from "react";
 import styles from "./font-size-control.module.css";
 
+/**
+ * Slider control for adjusting card font size
+ */
+
 interface FontSizeControlProps {
   normalSize: number;
   longSize: number;

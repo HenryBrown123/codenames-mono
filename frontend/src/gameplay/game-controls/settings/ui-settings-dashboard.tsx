@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import styles from "./ui-settings-dashboard.module.css";
 
+/**
+ * Settings panel for UI customization options
+ */
+
 interface UISettingsDashboardProps {
   // Font controls
   fontNormalSize: number;
