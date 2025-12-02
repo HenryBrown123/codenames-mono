@@ -1,37 +1,70 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useGameMessages, type GameMessage } from "@frontend/chat/api";
+import { useGameMessages } from "@frontend/chat/api";
 import styles from "./game-chat-log.module.css";
 
 /**
- * Remove emojis from text
+ * Scrollable chat log with typewriter effect for AI messages
  */
-const removeEmojis = (text: string): string => {
-  return text.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, "").trim();
-};
-
-// ============================================================================
-// PRESENTATIONAL COMPONENT - Pure, no hooks
-// ============================================================================
 
 export interface GameChatLogViewProps {
-  messages: GameMessage[] | null;
-  isLoading?: boolean;
+  messageId: string;
+  content: string;
+  messageType: string;
+  teamName?: string;
 }
 
-/**
- * Game Chat Log View - Pure presentational component
- * Displays only the latest AI thinking message with typewriter animation
- */
 export const GameChatLogView: React.FC<GameChatLogViewProps> = ({
-  messages,
-  isLoading = false,
-}) => {
+  messageId,
+  content,
+  messageType,
+  teamName,
+}) => (
+  <div className={styles.chatLog}>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={messageId}
+        className={`${styles.message} ${styles[messageType.toLowerCase()]}`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+      >
+        <div className={styles.messageContent}>
+          {content.split("").map((letter, index) => (
+            <motion.span
+              key={`${messageId}-${index}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.05, delay: index * 0.02 }}
+            >
+              {letter}
+            </motion.span>
+          ))}
+        </div>
+        {teamName && <div className={styles.messageTeam}>[{teamName}]</div>}
+      </motion.div>
+    </AnimatePresence>
+  </div>
+);
+
+const removeEmojis = (text: string): string => {
+  return text
+    .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, "")
+    .trim();
+};
+
+interface GameChatLogProps {
+  gameId: string;
+}
+
+export const GameChatLog: React.FC<GameChatLogProps> = ({ gameId }) => {
+  const { data: messages, isLoading } = useGameMessages(gameId);
+
   if (isLoading || !messages) {
     return null;
   }
 
-  // Filter to only show AI_THINKING and SYSTEM messages
   const aiMessages = messages.filter(
     (msg) => msg.messageType === "AI_THINKING" || msg.messageType === "SYSTEM"
   );
@@ -40,55 +73,15 @@ export const GameChatLogView: React.FC<GameChatLogViewProps> = ({
     return null;
   }
 
-  // Get only the latest message
   const latestMessage = aiMessages[aiMessages.length - 1];
   const cleanContent = removeEmojis(latestMessage.content);
 
   return (
-    <div className={styles.chatLog}>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={latestMessage.id}
-          className={`${styles.message} ${styles[latestMessage.messageType.toLowerCase()]}`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <div className={styles.messageContent}>
-            {cleanContent.split('').map((letter, index) => (
-              <motion.span
-                key={`${latestMessage.id}-${index}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.05, delay: index * 0.02 }}
-              >
-                {letter}
-              </motion.span>
-            ))}
-          </div>
-          {latestMessage.teamName && (
-            <div className={styles.messageTeam}>[{latestMessage.teamName}]</div>
-          )}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <GameChatLogView
+      messageId={latestMessage.id}
+      content={cleanContent}
+      messageType={latestMessage.messageType}
+      teamName={latestMessage.teamName ?? undefined}
+    />
   );
-};
-
-// ============================================================================
-// CONNECTED COMPONENT - Fetches data and passes to view
-// ============================================================================
-
-interface GameChatLogProps {
-  gameId: string;
-}
-
-/**
- * Game Chat Log - Connected component that fetches data
- */
-export const GameChatLog: React.FC<GameChatLogProps> = ({ gameId }) => {
-  const { data: messages, isLoading } = useGameMessages(gameId);
-
-  return <GameChatLogView messages={messages ?? null} isLoading={isLoading} />;
 };
