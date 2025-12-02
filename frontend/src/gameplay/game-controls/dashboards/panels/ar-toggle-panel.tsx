@@ -27,7 +27,7 @@ export const ARTogglePanelView: React.FC<ARTogglePanelViewProps> = ({
 }) => {
   return (
     <TerminalSection>
-      <TerminalCommand>SPY GOGGLES</TerminalCommand>
+      <TerminalCommand>ENHANCED VISION</TerminalCommand>
       <SpyGogglesContainer>
         <SpyGogglesText>Toggle enhanced vision</SpyGogglesText>
         <SpyGogglesSwitchRow>
