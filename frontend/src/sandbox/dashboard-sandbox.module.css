@@ -1,0 +1,447 @@
+@import "../style/variables.css";
+
+.sandbox {
+  display: flex;
+  min-height: 100vh;
+  background: #0a0f0d;
+  color: var(--color-primary);
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* Control Panel - Left Side */
+.controlPanel {
+  width: 400px;
+  min-width: 400px;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.8);
+  border-right: 1px solid rgba(0, 255, 136, 0.3);
+  overflow-y: auto;
+  max-height: 100vh;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 1.5rem 0;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--color-primary);
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+.section {
+  margin-bottom: 1.5rem;
+}
+
+.sectionTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 0.75rem 0;
+}
+
+/* Scenario Groups */
+.scenarioGroups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.scenarioGroup {
+  background: rgba(0, 255, 136, 0.05);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.groupLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.scenarioButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.scenarioButton {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.7rem;
+  font-family: inherit;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: capitalize;
+}
+
+.scenarioButton:hover {
+  background: rgba(0, 255, 136, 0.1);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.scenarioButton.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #000;
+  font-weight: 700;
+}
+
+/* Manual Controls */
+.controlGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.control span {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.control select,
+.control input[type="number"] {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 0.5rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  color: var(--color-primary);
+  outline: none;
+}
+
+.control select:focus,
+.control input[type="number"]:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 5px rgba(0, 255, 136, 0.3);
+}
+
+.control input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+/* Context Display */
+.contextDisplay {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 0.75rem;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.6);
+  overflow-x: auto;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Preview Area - Right Side */
+.previewArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #0a0f0d 0%, #0d1512 100%);
+}
+
+.previewLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 1rem;
+}
+
+.dashboardContainer {
+  width: 320px;
+  min-height: 500px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ============================================================================
+   MOCK PANEL STYLES
+   ============================================================================ */
+
+.mockPanel {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.teamHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.panelTitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dotActive {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00ff88;
+  box-shadow: 0 0 8px #00ff88;
+}
+
+.dotInactive {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #333;
+}
+
+.toggle {
+  width: 44px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  cursor: pointer;
+  position: relative;
+  padding: 2px;
+}
+
+.thumbActive {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #00ff88;
+  box-shadow: 0 0 6px #00ff88;
+  right: 2px;
+  top: 2px;
+  transition: all 0.2s ease;
+}
+
+.thumbInactive {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #555;
+  left: 2px;
+  top: 2px;
+  transition: all 0.2s ease;
+}
+
+.pingDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00ff88;
+  animation: ping 1.5s infinite;
+}
+
+@keyframes ping {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+.intelDisplay {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.intelHighlight {
+  color: #00ff88;
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+}
+
+.scoreDisplay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin: 0.75rem 0;
+}
+
+.teamScore {
+  text-align: center;
+}
+
+.teamScore div:first-child {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.25rem;
+}
+
+.winnerScore {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #ff3333;
+  text-shadow: 0 0 10px rgba(255, 51, 51, 0.5);
+}
+
+.loserScore {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #00ddff;
+  text-shadow: 0 0 10px rgba(0, 221, 255, 0.5);
+}
+
+.clueInput {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.codewordInput {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 4px;
+  padding: 0.6rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: #00ff88;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  outline: none;
+}
+
+.codewordInput:focus {
+  border-color: #00ff88;
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.3);
+}
+
+.codewordInput::placeholder {
+  color: rgba(0, 255, 136, 0.4);
+}
+
+.numberRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+}
+
+.numButton {
+  width: 28px;
+  height: 28px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 4px;
+  color: #00ff88;
+  font-size: 1rem;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.numButton:hover {
+  background: rgba(0, 255, 136, 0.1);
+  border-color: #00ff88;
+}
+
+.numDisplay {
+  min-width: 24px;
+  text-align: center;
+  color: #00ff88;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.actionButton {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.2) 0%, rgba(0, 255, 136, 0.1) 100%);
+  border: 1px solid #00ff88;
+  border-radius: 4px;
+  padding: 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: inherit;
+  color: #00ff88;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.actionButton:hover:not(:disabled) {
+  background: rgba(0, 255, 136, 0.3);
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+}
+
+.actionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 900px) {
+  .sandbox {
+    flex-direction: column;
+  }
+
+  .controlPanel {
+    width: 100%;
+    min-width: unset;
+    max-height: unset;
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 255, 136, 0.3);
+  }
+
+  .previewArea {
+    align-items: center;
+  }
+}
