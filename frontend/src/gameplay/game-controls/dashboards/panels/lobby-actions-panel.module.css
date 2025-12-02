@@ -1,0 +1,59 @@
+/* Lobby Actions Panel Styles */
+
+/* Desktop button group for multiple actions */
+.buttonGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+/* Refresh button for redeal */
+.refreshButton {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.refreshButton:hover {
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.refreshButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+
+.refreshButton svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+/* Desktop - smaller, refined */
+@media (min-width: 1025px) {
+  .refreshButton {
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.25rem;
+    min-width: 32px;
+    min-height: 32px;
+  }
+
+  .refreshButton svg {
+    width: 1rem;
+    height: 1rem;
+  }
+}
