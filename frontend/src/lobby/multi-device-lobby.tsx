@@ -111,7 +111,8 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
   const totalPlayers =
     lobbyData.teams?.reduce((sum, team) => sum + (team.players?.length ?? 0), 0) ?? 0;
   const canStartGame =
-    lobbyData.aiMode || (totalPlayers >= 4 && lobbyData.teams?.every((team) => (team.players?.length ?? 0) >= 2));
+    lobbyData.aiMode ||
+    (totalPlayers >= 4 && lobbyData.teams?.every((team) => (team.players?.length ?? 0) >= 2));
 
   const handleJoinTeam = (teamName: string) => {
     if (!inputPlayerName.trim() || hasJoined) return;
@@ -156,6 +157,12 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
         animate="animate"
         exit="exit"
       >
+        <div className={styles.header}>
+          <h1 className={styles.title}>OPERATION LOBBY</h1>
+          <div className={styles.gameInfo}>
+            ID: {lobbyData.publicId} | {totalPlayers} Players
+          </div>
+        </div>
         {/* Your team box (if joined) */}
         {hasJoined && myTeamName && myPlayerName && (
           <motion.div
@@ -171,7 +178,7 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
             transition={{
               duration: TIMINGS.BOX_ENTER,
               ease: EASING,
-              borderColor: { duration: TIMINGS.TEAM_SWITCH, ease: EASING }
+              borderColor: { duration: TIMINGS.TEAM_SWITCH, ease: EASING },
             }}
           >
             <AnimatePresence mode="wait">
@@ -207,7 +214,11 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: TIMINGS.CONTENT_FADE, delay: TIMINGS.CONTENT_DELAY_SHORT, ease: EASING }}
+                transition={{
+                  duration: TIMINGS.CONTENT_FADE,
+                  delay: TIMINGS.CONTENT_DELAY_SHORT,
+                  ease: EASING,
+                }}
               >
                 <div className={styles.waitingMessage}>Waiting for other players to join...</div>
                 <div className={styles.playerCount} key={totalPlayers}>
@@ -223,11 +234,17 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: TIMINGS.TEAM_SWITCH, delay: TIMINGS.CONTENT_DELAY_MEDIUM, ease: EASING }}
+                transition={{
+                  duration: TIMINGS.TEAM_SWITCH,
+                  delay: TIMINGS.CONTENT_DELAY_MEDIUM,
+                  ease: EASING,
+                }}
               >
                 <TeamSymbol
                   teamName={
-                    (myTeamName === "Team Red" ? "Team Blue" : "Team Red") as "Team Red" | "Team Blue"
+                    (myTeamName === "Team Red" ? "Team Blue" : "Team Red") as
+                      | "Team Red"
+                      | "Team Blue"
                   }
                   teamColor={
                     teamColors[
@@ -243,16 +260,6 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
               </motion.div>
             </AnimatePresence>
           </motion.div>
-        )}
-
-        {/* Header for non-joined users */}
-        {!hasJoined && (
-          <div className={styles.header}>
-            <h1 className={styles.title}>OPERATIVE CONTROL - MULTI-DEVICE</h1>
-            <div className={styles.gameInfo}>
-              Game ID: {lobbyData.publicId} | {totalPlayers} Players
-            </div>
-          </div>
         )}
 
         {/* Join Area (if not joined yet) */}
@@ -326,9 +333,9 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
                     className={styles.teamName}
                     style={{ "--team-color": teamColor } as React.CSSProperties}
                   >
-                    {team.name === "Team Red" ? "TEAM RED OPERATIVES" : "TEAM BLUE OPERATIVES"}
+                    {team.name === "Team Red" ? "RED OPERATIVES" : "BLUE OPERATIVES"}
+                    <span className={styles.playerCount}>{team.players?.length ?? 0}/6</span>
                   </h2>
-                  <div className={styles.playerCount}>{team.players?.length ?? 0}/6 operatives</div>
                 </div>
 
                 <div className={styles.playersContainer}>

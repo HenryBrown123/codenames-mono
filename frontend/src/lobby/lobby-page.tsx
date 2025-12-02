@@ -137,7 +137,8 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
   const totalPlayers =
     lobbyData.teams?.reduce((sum, team) => sum + (team.players?.length ?? 0), 0) ?? 0;
   const canStartGame =
-    lobbyData.aiMode || (totalPlayers >= 4 && lobbyData.teams?.every((team) => (team.players?.length ?? 0) >= 2));
+    lobbyData.aiMode ||
+    (totalPlayers >= 4 && lobbyData.teams?.every((team) => (team.players?.length ?? 0) >= 2));
 
   const handleQuickAdd = (teamName: string) => {
     const playerName = teamName === "Team Red" ? teamRedInput.trim() : teamBlueInput.trim();
@@ -288,11 +289,9 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
                     className={styles.teamName}
                     style={{ "--team-color": teamColor } as React.CSSProperties}
                   >
-                    {team.name === "Team Red" ? "TEAM RED OPERATIVES" : "TEAM BLUE OPERATIVES"}
+                    {team.name === "Team Red" ? "RED OPERATIVES" : "BLUE OPERATIVES"}
+                    <span className={styles.playerCount}>{team.players?.length ?? 0}/6</span>
                   </h2>
-                  <div className={styles.playerCount}>
-                    {team.players?.length ?? 0}/6 operatives
-                  </div>
                 </div>
 
                 <div className={styles.playersContainer}>
@@ -398,11 +397,9 @@ export const LobbyInterface: React.FC<LobbyInterfaceProps> = ({ gameId }) => {
                     className={styles.teamName}
                     style={{ "--team-color": teamColor } as React.CSSProperties}
                   >
-                    {team.name === "Team Red" ? "TEAM RED OPERATIVES" : "TEAM BLUE OPERATIVES"}
+                    {team.name === "Team Red" ? "RED OPERATIVES" : "BLUE OPERATIVES"}
+                    <span className={styles.playerCount}>{team.players?.length ?? 0}/6</span>
                   </h2>
-                  <div className={styles.playerCount}>
-                    {team.players?.length ?? 0}/6 operatives
-                  </div>
                 </div>
 
                 <div className={styles.playersContainer}>
