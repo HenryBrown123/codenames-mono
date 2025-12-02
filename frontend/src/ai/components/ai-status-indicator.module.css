@@ -1,8 +1,8 @@
 /* AI Status Indicator Styles */
+@import "../../style/variables.css";
 
 .aiStatusContainer {
   padding: 0.75rem 0;
-  /* Removed min-height to allow dynamic sizing */
 }
 
 .aiStatusRow {
@@ -13,16 +13,16 @@
 
 .aiStatusText {
   color: #b5dbcc;
-  font-size: 0.97em;
+  font-size: var(--dashboard-text-p);
   text-align: left;
   line-height: 1.4;
-  min-width: 0; /* Allow text to shrink if needed */
+  min-width: 0;
 }
 
 .triggerButton {
-  flex: 1; /* Take remaining horizontal space */
+  flex: 1;
   padding: 0.5rem 1rem;
-  font-size: 0.75rem;
+  font-size: var(--dashboard-text-btn-sm);
   font-family: "JetBrains Mono", monospace;
   font-weight: 600;
   text-transform: uppercase;
@@ -37,13 +37,13 @@
 }
 
 .thinkingText {
-  font-size: 0.75rem;
+  font-size: var(--dashboard-text-p);
   font-family: "JetBrains Mono", monospace;
   color: rgba(255, 255, 255, 0.6);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   animation: thinkingPulse 1.5s ease-in-out infinite;
-  flex: 1; /* Take remaining space like button */
+  flex: 1;
 }
 
 .triggerButton:hover:not(:disabled) {
@@ -59,15 +59,6 @@
 .triggerButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-.thinkingText {
-  font-size: 0.75rem;
-  font-family: "JetBrains Mono", monospace;
-  color: rgba(255, 255, 255, 0.6);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  animation: thinkingPulse 1.5s ease-in-out infinite;
 }
 
 @keyframes thinkingPulse {
