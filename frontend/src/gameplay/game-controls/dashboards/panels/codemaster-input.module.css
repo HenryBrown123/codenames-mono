@@ -1,14 +1,5 @@
 /* Codemaster Input Styles */
 
-@keyframes scanlineAnimation {
-  0% {
-    transform: translateY(-100%);
-  }
-  100% {
-    transform: translateY(100%);
-  }
-}
-
 .container {
   display: flex;
   flex-direction: column;
@@ -24,36 +15,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem; /* slightly reduced gap */
+  gap: 1rem;
   width: 100%;
-  max-width: 100%; /* Remove any fixed max-width */
-  padding: 1.5rem; /* reduced padding */
-  background: rgba(0, 0, 0, 0.8);
-  border: 2px solid var(--color-primary, #ffbf00);
-  border-radius: 6px; /* slightly smaller radius */
-  box-shadow:
-    0 0 20px rgba(0, 255, 136, 0.3),
-    inset 0 0 15px rgba(0, 255, 136, 0.05);
+  max-width: 100%;
+  padding: 0.5rem 0;
+  background: transparent;
   position: relative;
-  overflow: hidden;
-  box-sizing: border-box; /* Include padding in width calculation */
+  box-sizing: border-box;
 }
 
-.inputContainer::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1.5px; /* thinner scanline */
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(0, 255, 136, 0.8) 50%,
-    transparent 100%
-  );
-  animation: scanlineAnimation 3s linear infinite;
-}
 
 .codeWordInputField {
   background: transparent;
@@ -133,58 +103,18 @@
   text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
 }
 
-.inlineGroup {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 1;
-  min-width: 0;
-  max-width: 100%;
-}
-
-.inlineText {
-  font-size: inherit;
-  color: var(--color-text, #fff);
-  white-space: nowrap;
-}
-
-.errorMessage {
-  color: white;
-  font-size: clamp(0.75rem, 1.2vw, 0.9rem);
-  text-align: center;
-  padding: 0.4rem;
-  background-color: var(--color-error, #ff4f4f);
-  border-radius: 6px;
-  position: absolute;
-  bottom: -1.5rem;
-  left: 0;
-  right: 0;
-  max-width: 100%;
-}
-
-@media (max-width: 480px) {
-  .errorMessage {
-    position: static;
-    margin-top: 0.4rem;
-  }
-}
-
 /* For desktop, reduce font size to fit better */
 @media (min-width: 769px) and (orientation: landscape) {
   .codeWordInputField {
-    font-size: 1.5rem; /* Smaller on desktop sidebar */
-    letter-spacing: 0.1em; /* Less spacing */
-  }
-
-  .inputContainer {
-    padding: 1rem; /* Less padding in sidebar */
+    font-size: 1.5rem;
+    letter-spacing: 0.1em;
   }
 
   .numberInput {
-    font-size: 1.25rem; /* Smaller numbers */
+    font-size: 1.25rem;
   }
 
   .numberDisplay {
-    font-size: 1.5rem; /* Smaller display */
+    font-size: 1.5rem;
   }
 }

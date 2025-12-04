@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ActionButton } from "../../../shared/components";
+import { ActionButton, BUTTON_VALIDATION, type ButtonValidation } from "../../../shared/components";
 import { useGameDataRequired } from "../../../game-data/providers";
 import { Card } from "@frontend/shared-types";
 import styles from "./codemaster-input.module.css";
@@ -41,19 +41,22 @@ export function CodeWordInput({
     setInputNumberOfCards(numberOfCards || 1);
   }, [codeWord, numberOfCards]);
 
-  const handleSubmit = () => {
-    if (!onSubmit) return;
-    if (!inputCodeWord.trim()) {
-      setErrorMessage("Please enter a clue word");
+  // Clear error when input changes
+  const handleInputChange = (value: string) => {
+    setInputCodeWord(value);
+    if (errorMessage) setErrorMessage("");
+  };
+
+  const validateAndSubmit = () => {
+    if (!onSubmit || !inputCodeWord.trim()) return;
+
+    const cards: Card[] = gameData.currentRound?.cards || [];
+    if (cards.some((c) => c.word.toLowerCase() === inputCodeWord.toLowerCase())) {
+      setErrorMessage("Clue cannot match a board word");
       return;
     }
     if (inputNumberOfCards < 1 || inputNumberOfCards > 9) {
-      setErrorMessage("Number of cards must be between 1 and 9");
-      return;
-    }
-    const cards: Card[] = gameData.currentRound?.cards || [];
-    if (cards.some((c) => c.word.toLowerCase() === inputCodeWord.toLowerCase())) {
-      setErrorMessage("Clue word cannot be a word on the board");
+      setErrorMessage("Number must be 1-9");
       return;
     }
     setErrorMessage("");
@@ -61,61 +64,70 @@ export function CodeWordInput({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && isEditable && !isLoading) handleSubmit();
+    if (e.key === "Enter" && isEditable && !isLoading && inputCodeWord.trim()) {
+      validateAndSubmit();
+    }
   };
   const decrement = () => setInputNumberOfCards((n) => Math.max(1, n - 1));
   const increment = () => setInputNumberOfCards((n) => Math.min(9, n + 1));
+
+  // Determine button state
+  const isEmpty = !inputCodeWord.trim();
   const hasError = errorMessage.length > 0;
+  const canSubmit = !isEmpty && !hasError && !isLoading && isEditable;
+
+  // Button text and validation state
+  const getButtonState = (): { text: string; validation?: ButtonValidation } => {
+    if (isLoading) return { text: "TRANSMITTING..." };
+    if (hasError) return { text: errorMessage, validation: BUTTON_VALIDATION.ERROR };
+    if (isEmpty) return { text: "INTEL REQUIRED", validation: BUTTON_VALIDATION.WARNING };
+    return { text: "SUBMIT INTEL", validation: BUTTON_VALIDATION.OK };
+  };
+
+  const buttonState = getButtonState();
 
   return (
     <div className={styles.container}>
       <div className={styles.inputContainer}>
-        <div className={styles.inlineGroup}>
-          <input
-            ref={textInputRef}
-            type="text"
-            value={inputCodeWord}
-            onChange={(e) => setInputCodeWord(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={!isEditable || isLoading}
-            data-error={hasError}
-            placeholder="CODEWORD"
-            autoComplete="off"
-            className={styles.codeWordInputField}
-          />
-        </div>
-        <div className={styles.inlineGroup}>
-          <span className={styles.inlineText}>for</span>
-          <div className={styles.numberInput}>
-            <button
-              className={styles.numberButton}
-              onClick={decrement}
-              disabled={!isEditable || isLoading || inputNumberOfCards <= 1}
-            >
-              -
-            </button>
-            <div className={styles.numberDisplay}>{inputNumberOfCards}</div>
-            <button
-              className={styles.numberButton}
-              onClick={increment}
-              disabled={!isEditable || isLoading || inputNumberOfCards >= 9}
-            >
-              +
-            </button>
-          </div>
-          <span className={styles.inlineText}>cards</span>
+        <input
+          ref={textInputRef}
+          type="text"
+          value={inputCodeWord}
+          onChange={(e) => handleInputChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={!isEditable || isLoading}
+          data-error={hasError}
+          placeholder="CODEWORD"
+          autoComplete="off"
+          className={styles.codeWordInputField}
+        />
+        <div className={styles.numberInput}>
+          <button
+            className={styles.numberButton}
+            onClick={decrement}
+            disabled={!isEditable || isLoading || inputNumberOfCards <= 1}
+          >
+            -
+          </button>
+          <div className={styles.numberDisplay}>{inputNumberOfCards}</div>
+          <button
+            className={styles.numberButton}
+            onClick={increment}
+            disabled={!isEditable || isLoading || inputNumberOfCards >= 9}
+          >
+            +
+          </button>
         </div>
       </div>
 
       {isEditable && (
         <ActionButton
-          onClick={handleSubmit}
-          text={isLoading ? "TRANSMITTING..." : "SUBMIT CLUE"}
-          enabled={!isLoading}
+          onClick={validateAndSubmit}
+          text={buttonState.text}
+          enabled={canSubmit}
+          validation={buttonState.validation}
         />
       )}
-
-      {hasError && <div className={styles.errorMessage}>{errorMessage}</div>}
     </div>
   );
 }
