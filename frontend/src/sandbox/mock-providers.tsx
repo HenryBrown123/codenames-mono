@@ -33,6 +33,12 @@ import { ViewModeContext, type ViewMode, type ViewModeContextValue } from "../ga
 // SANDBOX CONFIG - Controls mock behavior
 // ============================================================================
 
+export interface MockGuess {
+  cardWord: string;
+  playerName: string;
+  outcome: "CORRECT_TEAM_CARD" | "OTHER_TEAM_CARD" | "BYSTANDER_CARD" | "ASSASSIN_CARD";
+}
+
 export interface SandboxConfig {
   // Player configuration
   role: "CODEMASTER" | "CODEBREAKER" | "SPECTATOR" | "NONE";
@@ -45,6 +51,7 @@ export interface SandboxConfig {
   clueWord: string;
   clueNumber: number;
   guessesRemaining: number;
+  guesses: MockGuess[];
 
   // Round state
   roundStatus: "SETUP" | "IN_PROGRESS" | "COMPLETED" | null;
@@ -69,6 +76,7 @@ export const DEFAULT_SANDBOX_CONFIG: SandboxConfig = {
   clueWord: "CYBER",
   clueNumber: 3,
   guessesRemaining: 0,
+  guesses: [],
   roundStatus: "IN_PROGRESS",
   hasRound: true,
   hasCards: true,
@@ -151,6 +159,10 @@ const createMockTurnData = (config: SandboxConfig) => {
     return null;
   }
 
+  const guesses = config.guesses || [];
+  const lastGuess = guesses.length > 0 ? guesses[guesses.length - 1] : null;
+  const prevGuesses = guesses.length > 1 ? guesses.slice(0, -1) : [];
+
   return {
     id: "turn-1",
     teamName: config.activeTeamName || "Red",
@@ -165,9 +177,21 @@ const createMockTurnData = (config: SandboxConfig) => {
           createdAt: new Date(),
         }
       : null,
-    hasGuesses: false,
-    lastGuess: null,
-    prevGuesses: [],
+    hasGuesses: guesses.length > 0,
+    lastGuess: lastGuess
+      ? {
+          cardWord: lastGuess.cardWord,
+          playerName: lastGuess.playerName,
+          outcome: lastGuess.outcome,
+          createdAt: new Date(),
+        }
+      : null,
+    prevGuesses: prevGuesses.map((g) => ({
+      cardWord: g.cardWord,
+      playerName: g.playerName,
+      outcome: g.outcome,
+      createdAt: new Date(),
+    })),
   };
 };
 

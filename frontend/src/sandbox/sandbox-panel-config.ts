@@ -10,43 +10,36 @@ import {
   hasRole,
   isCodemaster,
   isCodebreakerGuessing,
-  isObserving,
   isRoundInProgress,
   isRoundComplete,
   isInLobby,
-  isCodemasterGivingClue,
 } from "../gameplay/game-controls/dashboards/config/rules";
 import {
   TeamHeaderPanel,
   ARTogglePanel,
-  IntelPanel,
-  ObserverPanel,
-  CodemasterActionsPanel,
   CodebreakerActionsPanel,
   LobbyActionsPanel,
   GameoverPanel,
 } from "../gameplay/game-controls/dashboards/panels";
-import { SandboxAIStatusPanel } from "./sandbox-panels";
+import { SandboxAIStatusPanel, SandboxIntelPanel } from "./sandbox-panels";
 
 /**
  * Sandbox panel configuration - uses mock data panels where needed.
+ * Intel panel shows for all views when round is in progress.
+ * Note: Codemaster input is now integrated into the Intel panel.
  */
 export const SANDBOX_PANELS: PanelSlots = {
-  header: [
-    { id: "team-header", component: TeamHeaderPanel, shouldRender: hasRole },
-  ],
+  header: [{ id: "team-header", component: TeamHeaderPanel, shouldRender: hasRole }],
 
   middle: [
+    { id: "intel", component: SandboxIntelPanel, shouldRender: isRoundInProgress },
     { id: "ar-toggle", component: ARTogglePanel, shouldRender: isCodemaster },
-    { id: "intel", component: IntelPanel, shouldRender: isCodebreakerGuessing },
-    { id: "observer", component: ObserverPanel, shouldRender: isObserving },
     { id: "ai-status", component: SandboxAIStatusPanel, shouldRender: isRoundInProgress },
     { id: "gameover", component: GameoverPanel, shouldRender: isRoundComplete },
   ],
 
   bottom: [
     { id: "lobby-actions", component: LobbyActionsPanel, shouldRender: isInLobby },
-    { id: "codemaster-actions", component: CodemasterActionsPanel, shouldRender: isCodemasterGivingClue },
     { id: "codebreaker-actions", component: CodebreakerActionsPanel, shouldRender: isCodebreakerGuessing },
   ],
 };
