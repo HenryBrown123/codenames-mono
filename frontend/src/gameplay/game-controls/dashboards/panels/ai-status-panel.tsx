@@ -1,27 +1,64 @@
 import React from "react";
 import { useGameDataRequired } from "../../../game-data/providers";
-import { AiStatusIndicator } from "@frontend/ai/components";
+import { useAiStatus, useTriggerAiMove } from "@frontend/ai/api";
 import { GameChatLog } from "@frontend/chat/components";
-import { TerminalSection, TerminalCommand } from "../shared";
+import { StatusDot } from "../../../shared/components";
+import { TerminalSection } from "../shared";
+import styles from "./ai-status-panel.module.css";
 
 /**
- * Panel showing AI thinking status and chat history
+ * Panel showing AI thinking status and chat history.
+ * Status dot is in the header, body contains chat log and optional trigger button.
  */
 
 export interface AIStatusPanelViewProps {
-  gameId: string;
+  isActive: boolean;
+  isThinking?: boolean;
+  showTriggerButton: boolean;
+  onTrigger?: () => void;
+  children?: React.ReactNode;
 }
 
-export const AIStatusPanelView: React.FC<AIStatusPanelViewProps> = ({ gameId }) => (
+export const AIStatusPanelView: React.FC<AIStatusPanelViewProps> = ({
+  isActive,
+  isThinking = false,
+  showTriggerButton,
+  onTrigger,
+  children,
+}) => (
   <TerminalSection>
-    <TerminalCommand>AI ASSISTANT</TerminalCommand>
-    <AiStatusIndicator gameId={gameId} />
-    <GameChatLog gameId={gameId} />
+    <div className={styles.header}>
+      <span className={styles.title}>AI ASSISTANT</span>
+      <StatusDot active={isActive} thinking={isThinking} />
+    </div>
+    <div className={styles.body}>
+      {children}
+      {showTriggerButton && (
+        <button className={styles.triggerButton} onClick={onTrigger}>
+          Trigger AI
+        </button>
+      )}
+    </div>
   </TerminalSection>
 );
 
 export const AIStatusPanel: React.FC = () => {
   const { gameData } = useGameDataRequired();
+  const { data: aiStatus } = useAiStatus(gameData.publicId);
+  const triggerMove = useTriggerAiMove(gameData.publicId);
 
-  return <AIStatusPanelView gameId={gameData.publicId} />;
+  const isThinking = aiStatus?.thinking || triggerMove.isPending;
+  const showTriggerButton = (aiStatus?.available && !isThinking) || false;
+  const isActive = aiStatus?.available || false;
+
+  return (
+    <AIStatusPanelView
+      isActive={isActive}
+      isThinking={isThinking}
+      showTriggerButton={showTriggerButton}
+      onTrigger={() => triggerMove.mutate()}
+    >
+      <GameChatLog gameId={gameData.publicId} />
+    </AIStatusPanelView>
+  );
 };
