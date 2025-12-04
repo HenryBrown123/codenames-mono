@@ -5,10 +5,7 @@ export { ARTogglePanel, ARTogglePanelView } from "./ar-toggle-panel";
 export type { ARTogglePanelViewProps } from "./ar-toggle-panel";
 
 export { IntelPanel, IntelPanelView } from "./intel-panel";
-export type { IntelPanelViewProps } from "./intel-panel";
-
-export { ObserverPanel, ObserverPanelView } from "./observer-panel";
-export type { ObserverPanelViewProps } from "./observer-panel";
+export type { IntelPanelViewProps, GuessDisplay } from "./intel-panel";
 
 export { AIStatusPanel, AIStatusPanelView } from "./ai-status-panel";
 export type { AIStatusPanelViewProps } from "./ai-status-panel";

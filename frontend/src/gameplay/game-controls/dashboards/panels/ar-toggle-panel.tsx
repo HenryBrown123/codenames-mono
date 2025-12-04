@@ -25,7 +25,6 @@ export const ARTogglePanelView: React.FC<ARTogglePanelViewProps> = ({ isARMode, 
   <TerminalSection>
     <TerminalCommand>ENHANCED VISION</TerminalCommand>
     <SpyGogglesContainer>
-      <SpyGogglesText>Toggle enhanced vision</SpyGogglesText>
       <SpyGogglesSwitchRow>
         <SpyGogglesDot active={isARMode} />
         <SpySwitch>
