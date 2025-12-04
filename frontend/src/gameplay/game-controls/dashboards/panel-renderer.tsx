@@ -14,15 +14,15 @@ interface PanelRendererProps {
 }
 
 const panelVariants = {
-  initial: { opacity: 0, y: 10, scale: 0.95 },
-  animate: { opacity: 1, y: 0, scale: 1 },
-  exit: { opacity: 0, y: -10, scale: 0.95 },
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -10 },
 };
 
 const panelTransition = {
   type: "spring" as const,
-  stiffness: 300,
-  damping: 25,
+  stiffness: 400,
+  damping: 30,
 };
 
 export const PanelRenderer: React.FC<PanelRendererProps> = ({ panels, context, slotId }) => {
@@ -39,7 +39,7 @@ export const PanelRenderer: React.FC<PanelRendererProps> = ({ panels, context, s
           animate="animate"
           exit="exit"
           transition={panelTransition}
-          layout
+          layout="position"
         >
           <Component />
         </motion.div>
