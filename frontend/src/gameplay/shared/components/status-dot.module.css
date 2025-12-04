@@ -13,7 +13,7 @@
 .statusDot[data-active="true"] {
   background: #00ff88;
   box-shadow: 0 0 18px 2px rgba(0, 255, 136, 0.5);
-  animation: statusDotBlink 1.25s infinite alternate;
+  animation: statusDotGlow 1.25s infinite alternate;
 }
 
 .statusDot[data-active="false"] {
@@ -21,11 +21,27 @@
   box-shadow: none;
 }
 
-@keyframes statusDotBlink {
+/* Thinking state - faster, more pronounced blink */
+.statusDot[data-thinking="true"] {
+  animation: statusDotThinking 0.5s ease-in-out infinite;
+}
+
+@keyframes statusDotGlow {
   0% {
     box-shadow: 0 0 18px 2px rgba(0, 255, 136, 0.5);
   }
   100% {
     box-shadow: 0 0 22px 4px rgba(0, 255, 136, 0.7);
+  }
+}
+
+@keyframes statusDotThinking {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 18px 2px rgba(0, 255, 136, 0.5);
+  }
+  50% {
+    opacity: 0.4;
+    box-shadow: 0 0 8px 1px rgba(0, 255, 136, 0.3);
   }
 }
