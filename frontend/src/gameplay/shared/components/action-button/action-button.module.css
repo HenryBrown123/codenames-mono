@@ -37,6 +37,37 @@
   animation: none;
 }
 
+/* Validation states */
+.button[data-validation="warning"] {
+  border-color: #ffaa00;
+  color: #ffaa00;
+}
+
+.button[data-validation="warning"]::before {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 2px,
+    rgba(255, 170, 0, 0.03) 2px,
+    rgba(255, 170, 0, 0.03) 4px
+  );
+}
+
+.button[data-validation="error"] {
+  border-color: #ff4444;
+  color: #ff4444;
+}
+
+.button[data-validation="error"]::before {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 2px,
+    rgba(255, 68, 68, 0.03) 2px,
+    rgba(255, 68, 68, 0.03) 4px
+  );
+}
+
 /* Data stream background effect */
 .button::before {
   content: "";

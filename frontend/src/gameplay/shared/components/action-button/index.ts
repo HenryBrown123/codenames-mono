@@ -1,1 +1,2 @@
-export { default as ActionButton } from './action-button';
+export { default as ActionButton, BUTTON_VALIDATION } from './action-button';
+export type { ButtonValidation } from './action-button';
