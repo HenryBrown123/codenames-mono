@@ -3,7 +3,8 @@
 
 .chatLog {
   padding: 0.5rem 0;
-  min-height: 40px;
+  /* Fixed height prevents layout shifts during typewriter */
+  min-height: 3rem;
 }
 
 .message {
@@ -23,6 +24,28 @@
 
 .messageContent {
   margin-bottom: 0.25rem;
+  /* Keep text on same line, allow wrapping */
+  word-wrap: break-word;
+}
+
+/* Hidden text reserves space to prevent layout shifts */
+.hiddenText {
+  visibility: hidden;
+}
+
+/* Blinking cursor */
+.cursor {
+  color: var(--color-primary, #00ff88);
+  animation: cursorBlink 0.8s steps(1) infinite;
+}
+
+@keyframes cursorBlink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
 }
 
 .messageTeam {

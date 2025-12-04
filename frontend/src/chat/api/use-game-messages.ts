@@ -32,7 +32,7 @@ export const useGameMessages = (gameId: string): UseQueryResult<GameMessage[], E
     queryFn: async () => {
       try {
         const response: AxiosResponse<GameMessagesApiResponse> = await api.get(
-          `/games/${gameId}/messages`,
+          `/games/${gameId}/messages?limit=1000`,
         );
 
         if (!response.data.success) {

@@ -1,10 +1,10 @@
-import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect, useRef } from "react";
 import { useGameMessages } from "@frontend/chat/api";
 import styles from "./game-chat-log.module.css";
 
 /**
- * Scrollable chat log with typewriter effect for AI messages
+ * Scrollable chat log with performant typewriter effect for AI messages.
+ * Uses requestAnimationFrame instead of per-character DOM nodes.
  */
 
 export interface GameChatLogViewProps {
@@ -19,34 +19,55 @@ export const GameChatLogView: React.FC<GameChatLogViewProps> = ({
   content,
   messageType,
   teamName,
-}) => (
-  <div className={styles.chatLog}>
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={messageId}
-        className={`${styles.message} ${styles[messageType.toLowerCase()]}`}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-      >
+}) => {
+  const [displayedChars, setDisplayedChars] = useState(0);
+  const prevMessageIdRef = useRef(messageId);
+
+  // Reset animation when message changes
+  useEffect(() => {
+    if (messageId !== prevMessageIdRef.current) {
+      setDisplayedChars(0);
+      prevMessageIdRef.current = messageId;
+    }
+  }, [messageId]);
+
+  // Typewriter effect using requestAnimationFrame for smooth performance
+  useEffect(() => {
+    if (displayedChars >= content.length) return;
+
+    let rafId: number;
+    let lastTime = 0;
+    const charDelay = 20; // ms per character
+
+    const animate = (time: number) => {
+      if (time - lastTime >= charDelay) {
+        setDisplayedChars((prev) => Math.min(prev + 1, content.length));
+        lastTime = time;
+      }
+      rafId = requestAnimationFrame(animate);
+    };
+
+    rafId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafId);
+  }, [content.length, displayedChars]);
+
+  const isComplete = displayedChars >= content.length;
+
+  return (
+    <div className={styles.chatLog}>
+      <div className={`${styles.message} ${styles[messageType.toLowerCase()]}`}>
         <div className={styles.messageContent}>
-          {content.split("").map((letter, index) => (
-            <motion.span
-              key={`${messageId}-${index}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.05, delay: index * 0.02 }}
-            >
-              {letter}
-            </motion.span>
-          ))}
+          <span>{content.slice(0, displayedChars)}</span>
+          <span className={styles.hiddenText} aria-hidden="true">
+            {content.slice(displayedChars)}
+          </span>
+          {!isComplete && <span className={styles.cursor}>▌</span>}
         </div>
         {teamName && <div className={styles.messageTeam}>[{teamName}]</div>}
-      </motion.div>
-    </AnimatePresence>
-  </div>
-);
+      </div>
+    </div>
+  );
+};
 
 const removeEmojis = (text: string): string => {
   return text
