@@ -48,6 +48,7 @@ export const guessSchema = z.object({
   _turnId: z.number().int().positive(),
   _playerId: z.number().int().positive(),
   _cardId: z.number().int().positive(),
+  cardWord: z.string(),
   playerName: z.string(),
   outcome: z.string().nullable(),
   createdAt: z.date(),

@@ -38,6 +38,7 @@ export interface ProviderTurnData {
   prevGuesses: TurnGuess[];
   // Internal fields for service layer
   _gameId: number;
+  _roundId: number;
 }
 
 export type TurnStateProvider = (
@@ -99,5 +100,6 @@ export const turnStateProvider =
 
       // Internal fields for service layer auth/logic
       _gameId: turnData._gameId,
+      _roundId: turnData._roundId,
     };
   };

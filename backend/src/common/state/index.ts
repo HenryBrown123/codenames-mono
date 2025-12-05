@@ -35,6 +35,7 @@ export type TurnStateProvider = ReturnType<typeof createTurnStateProvider>;
 export const turnState = (dbContext: DbContext) => {
   return {
     provider: createTurnStateProvider(dbContext),
+    getTurnsByRoundId: turnsRepository.getTurnsByRoundId(dbContext),
   };
 };
 
