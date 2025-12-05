@@ -69,6 +69,7 @@ export const loadEnvFromPackageDir = () => {
     envLoadLogger.info(`    - Port: ${parsedEnv.PORT}`);
     envLoadLogger.info(`    - Database: ${parsedEnv.DATABASE_URL}`);
     envLoadLogger.info(`    - LLM: ${parsedEnv.LLM_MODEL} @ ${parsedEnv.LLM_URL}`);
+    envLoadLogger.info(`    - Log Console Level: ${parsedEnv.LOG_CONSOLE_LEVEL}`);
   }
 
   envLoadLogger.info("Environment validated");
@@ -86,7 +87,7 @@ const EnvSchema = z.object({
   LLM_MODEL: z.string().min(1, "LLM_MODEL must not be empty").default("qwen2.5:14b"),
   LLM_TEMPERATURE: z.string().transform(Number).default("0.7"),
   LOG_FILE_LEVEL: z.enum(["debug", "info", "warn", "error", "http"]).default("info"),
-  LOG_CONSOLE_LEVEL: z.enum(["debug", "info", "warn", "error", "http"]).default("info"),
+  LOG_CONSOLE_LEVEL: z.enum(["debug", "info", "warn", "error", "http", "silent"]).default("info"),
   LOG_FILE_PATH: z.string().default("./logs/app.info"),
   LOG_HTTP_REQUESTS: z.coerce.boolean().default(false),
 });

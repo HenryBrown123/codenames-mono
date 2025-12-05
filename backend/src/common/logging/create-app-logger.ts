@@ -105,20 +105,6 @@ export class LoggerBuilder {
 
   create(): AppLogger {
     const childLogger = this.logger.child(this.logData);
-
-    if (this.consoleOverride) {
-      childLogger.add(
-        new winston.transports.Console({
-          level: this.consoleOverride,
-          format: winston.format.combine(
-            winston.format.timestamp(),
-            winston.format.colorize(),
-            consoleFormat,
-          ),
-        }),
-      );
-    }
-
     return new AppLogger(childLogger);
   }
 }
@@ -182,6 +168,8 @@ export const createAppLogger = (config: AppLoggerConfig): AppLogger => {
   ];
 
   if (config.consoleLevel !== "silent") {
+    console.log(`[logger] Creating console transport with level: ${config.consoleLevel}`);
+
     transports.push(
       new winston.transports.Console({
         level: config.consoleLevel,
