@@ -100,31 +100,10 @@ export const createEndTurnService = (logger: AppLogger) => (
         return { success: false, error: "Turn not found" };
       }
 
-      // Get the other team's ID to start their turn
-      const currentTeamId = gameState.data.teams.find(t => t.teamName === currentTurn.teamName)?._id;
-      const otherTeamId = gameState.data.teams.find(t => t._id !== currentTeamId)?._id;
-
-      if (!otherTeamId) {
-        log.warn("endTurn failed: could not find other team");
-        return { success: false, error: "Could not find other team" };
-      }
-
-      // End the turn and start the next turn for the other team
+      // End the current turn (next turn must be started manually via start-turn API)
       await gameplayHandler(async (ops) => {
         const gameState = await ops.getCurrentGameState(gameId, userId);
-
-        // End current turn
         await ops.endTurn(gameState, turnWithInternalId._id);
-
-        // Get updated state after ending turn
-        const updatedGameState = await ops.getCurrentGameState(gameId, userId);
-
-        // Start next turn for the other team
-        await ops.startTurn(
-          updatedGameState,
-          updatedGameState.currentRound!._id,
-          otherTeamId,
-        );
       });
 
       log.info(`endTurn success: turnId=${currentTurn.publicId}`);
