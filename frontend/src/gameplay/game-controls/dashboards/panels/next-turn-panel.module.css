@@ -1,0 +1,30 @@
+/* Next Turn Panel Styles - simplified without border/background */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.title {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--color-primary);
+  font-size: var(--dashboard-text-h1);
+  text-shadow: 0 0 7px rgba(0, 255, 136, 0.5);
+}
+
+.buttonWrapper {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.25rem;
+}
