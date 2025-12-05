@@ -37,9 +37,11 @@ export const SandboxIntelPanel: React.FC = () => {
   const { giveClue, actionState } = useGameActions();
 
   const teamName = activeTurn?.teamName || "";
-  const isRed = teamName.toLowerCase().includes("red");
-  const teamSymbol = isRed ? "◇" : "□";
-  const teamColor = isRed ? "#ff3333" : "#00ddff";
+  const teamLower = teamName.toLowerCase();
+  const isRed = teamLower === "red" || teamLower.includes("red");
+  const isBlue = teamLower === "blue" || teamLower.includes("blue");
+  const teamSymbol = isRed ? "◇" : isBlue ? "□" : "○";
+  const teamColor = isRed ? "#ff3333" : isBlue ? "#00ddff" : "#888888";
 
   // Determine if current player is codemaster on active team without a clue
   const playerRole = gameData?.playerContext?.role;
@@ -66,6 +68,7 @@ export const SandboxIntelPanel: React.FC = () => {
 
   return (
     <IntelPanelView
+      teamName={teamName}
       teamSymbol={teamSymbol}
       teamColor={teamColor}
       hasClue={hasClue}

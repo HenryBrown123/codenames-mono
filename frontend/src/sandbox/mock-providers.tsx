@@ -230,6 +230,7 @@ export const MockProviders: React.FC<MockProvidersProps> = ({ children, config }
       error: null,
       setLastActionTurnId: (id: string) => console.log("[Sandbox] setLastActionTurnId:", id),
       clearActiveTurn: () => console.log("[Sandbox] clearActiveTurn called"),
+      historicTurns: turnData ? [turnData] : [],
     }),
     [turnData]
   );
