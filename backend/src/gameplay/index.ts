@@ -17,6 +17,7 @@ import giveClue from "./give-clue";
 import makeGuess from "./make-guess";
 import getTurn from "./get-turn";
 import endTurn from "./end-turn";
+import startTurn from "./start-turn";
 
 import { gameplayErrorHandler } from "./errors/gameplay-errors.middleware";
 
@@ -33,7 +34,7 @@ export const initialize = (
   const logger = appLogger.for({ feature: "gameplay" }).create();
   // State "providers"
   const { provider: getGameState } = gameplayState(db);
-  const { provider: getTurnState } = turnState(db);
+  const { provider: getTurnState, getTurnsByRoundId } = turnState(db);
 
   // Gameplay actions
   const { handler: gameplayHandler } = gameplayActions(db);
@@ -67,9 +68,15 @@ export const initialize = (
 
   const { controller: getTurnController } = getTurn(logger)({
     getTurnState,
+    getTurnsByRoundId,
   });
 
   const { controller: endTurnController, service: endTurnService } = endTurn(logger)({
+    getGameState,
+    gameplayHandler,
+  });
+
+  const { controller: startTurnController, service: startTurnService } = startTurn(logger)({
     getGameState,
     gameplayHandler,
   });
@@ -88,6 +95,7 @@ export const initialize = (
   router.post("/games/:gameId/rounds/:roundNumber/guesses", auth, makeGuessController);
 
   router.post("/games/:gameId/rounds/:roundNumber/end-turn", auth, endTurnController);
+  router.post("/games/:gameId/rounds/:roundNumber/turns", auth, startTurnController);
 
   // Turn routes
   router.get("/turns/:turnId", auth, getTurnController);
@@ -100,6 +108,7 @@ export const initialize = (
     giveClueService,
     makeGuessService,
     endTurnService,
+    startTurnService,
     getGameState,
   };
 };
