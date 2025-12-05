@@ -54,7 +54,12 @@ export const canRedeal = (ctx: VisibilityContext): boolean => isInLobby(ctx) && 
 // === AI rules ===
 
 export const isAiActive = (ctx: VisibilityContext): boolean =>
-  isRoundInProgress(ctx) && (ctx.aiAvailable || ctx.aiThinking);
+  isRoundInProgress(ctx) && ctx.hasActiveTurn && (ctx.aiAvailable || ctx.aiThinking);
+
+// === Turn control rules ===
+
+export const canStartNextTurn = (ctx: VisibilityContext): boolean =>
+  isRoundInProgress(ctx) && hasRole(ctx) && !ctx.hasActiveTurn;
 
 // === Utility ===
 

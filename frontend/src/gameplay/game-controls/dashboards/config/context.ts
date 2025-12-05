@@ -14,6 +14,7 @@ export interface VisibilityContext {
   isActiveTeam: boolean;
   hasClue: boolean;
   guessesRemaining: number;
+  hasActiveTurn: boolean;
 
   // Round state
   roundStatus: "SETUP" | "IN_PROGRESS" | "COMPLETED" | null;
@@ -55,6 +56,7 @@ export const useVisibilityContext = (): VisibilityContext => {
       isActiveTeam: teamName !== undefined && teamName === activeTeamName,
       hasClue: activeTurn?.clue !== null && activeTurn?.clue !== undefined,
       guessesRemaining: activeTurn?.guessesRemaining ?? 0,
+      hasActiveTurn: activeTurn?.status === "ACTIVE",
       roundStatus,
       hasCards,
       hasRound,
