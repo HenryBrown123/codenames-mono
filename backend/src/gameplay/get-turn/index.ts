@@ -1,13 +1,15 @@
 import type { AppLogger } from "@backend/common/logging";
 import { TurnStateProvider } from "@backend/common/state/turn-state.provider";
+import { TurnsFinder, RoundId } from "@backend/common/data-access/repositories/turns.repository";
 import { getTurnService } from "./get-turn.service";
 import { controller } from "./get-turn.controller";
 
 /**
- * Dependencies required by the get game feature
+ * Dependencies required by the get-turn feature
  */
 export interface GetTurnDependencies {
   getTurnState: TurnStateProvider;
+  getTurnsByRoundId: TurnsFinder<RoundId>;
 }
 
 /**
@@ -15,7 +17,10 @@ export interface GetTurnDependencies {
  */
 export const getTurn = (logger: AppLogger) => (deps: GetTurnDependencies) => {
   const serviceLogger = logger.for({ service: "get-turn" }).create();
-  const turnService = getTurnService(deps.getTurnState);
+  const turnService = getTurnService({
+    getTurnState: deps.getTurnState,
+    getTurnsByRoundId: deps.getTurnsByRoundId,
+  });
   const getTurnController = controller(serviceLogger)(turnService);
 
   return {

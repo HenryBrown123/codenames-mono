@@ -1,4 +1,4 @@
-import type { Response, NextFunction } from "express";
+import type { Response } from "express";
 import type { Request } from "express-jwt";
 import type { AppLogger } from "@backend/common/logging";
 import { z } from "zod";
@@ -21,10 +21,11 @@ type ValidatedGetTurnRequest = z.infer<typeof getTurnRequestSchema>;
 /**
  * API response type
  */
-interface GetTurnResponse {
+interface GetTurnApiResponse {
   success: true;
   data: {
     turn: ApiTurnData;
+    historicTurns: ApiTurnData[];
   };
 }
 
@@ -52,9 +53,9 @@ export const controller =
 
       const { params, auth }: ValidatedGetTurnRequest = validationResult.data;
 
-      const turnData = await getTurnService(params.turnId);
+      const result = await getTurnService(params.turnId);
 
-      if (!turnData) {
+      if (!result) {
         res.status(404).json({
           success: false,
           error: "Turn not found",
@@ -62,10 +63,11 @@ export const controller =
         return;
       }
 
-      const response: GetTurnResponse = {
+      const response: GetTurnApiResponse = {
         success: true,
         data: {
-          turn: turnData,
+          turn: result.turn,
+          historicTurns: result.historicTurns,
         },
       };
 
