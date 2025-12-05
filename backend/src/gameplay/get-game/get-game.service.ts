@@ -53,6 +53,7 @@ export type PublicGameStateResponse = {
       guessesRemaining: number;
       clue?: { word: string; number: number };
       guesses: {
+        cardWord: string;
         playerName: string;
         outcome: string | null;
       }[];
@@ -210,6 +211,7 @@ function transformGameState(gameData: GameAggregate): PublicGameStateResponse {
                 }
               : undefined,
             guesses: turn.guesses.map((guess) => ({
+              cardWord: guess.cardWord,
               playerName: guess.playerName,
               outcome: guess.outcome,
             })),
