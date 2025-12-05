@@ -2,35 +2,38 @@ import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/lib/api";
 
+interface ApiTurn {
+  id: string;
+  teamName: string;
+  status: string;
+  guessesRemaining: number;
+  createdAt: string;
+  completedAt: string | null;
+  clue: {
+    word: string;
+    number: number;
+    createdAt: string;
+  } | null;
+  hasGuesses: boolean;
+  lastGuess: {
+    cardWord: string;
+    playerName: string;
+    outcome: string;
+    createdAt: string;
+  } | null;
+  prevGuesses: Array<{
+    cardWord: string;
+    playerName: string;
+    outcome: string;
+    createdAt: string;
+  }>;
+}
+
 interface TurnApiResponse {
   success: boolean;
   data: {
-    turn: {
-      id: string;
-      teamName: string;
-      status: string;
-      guessesRemaining: number;
-      createdAt: string;
-      completedAt: string | null;
-      clue: {
-        word: string;
-        number: number;
-        createdAt: string;
-      } | null;
-      hasGuesses: boolean;
-      lastGuess: {
-        cardWord: string;
-        playerName: string;
-        outcome: string;
-        createdAt: string;
-      } | null;
-      prevGuesses: Array<{
-        cardWord: string;
-        playerName: string;
-        outcome: string;
-        createdAt: string;
-      }>;
-    };
+    turn: ApiTurn;
+    historicTurns: ApiTurn[];
   };
 }
 
@@ -64,7 +67,15 @@ export interface TurnData {
   }>;
 }
 
-function transformApiTurnResponse(apiTurn: TurnApiResponse["data"]["turn"]): TurnData {
+/**
+ * Response from turn query including historic turns
+ */
+export interface TurnQueryResult {
+  turn: TurnData;
+  historicTurns: TurnData[];
+}
+
+function transformApiTurn(apiTurn: ApiTurn): TurnData {
   return {
     id: apiTurn.id,
     teamName: apiTurn.teamName,
@@ -93,7 +104,7 @@ function transformApiTurnResponse(apiTurn: TurnApiResponse["data"]["turn"]): Tur
   };
 }
 
-const fetchTurn = async (turnId: string): Promise<TurnData> => {
+const fetchTurn = async (turnId: string): Promise<TurnQueryResult> => {
   const response: AxiosResponse<TurnApiResponse> = await api.get(
     `/turns/${turnId}`,
   );
@@ -102,17 +113,19 @@ const fetchTurn = async (turnId: string): Promise<TurnData> => {
     throw new Error("Failed to fetch turn data");
   }
 
-  const apiTurn = response.data.data.turn;
-  return transformApiTurnResponse(apiTurn);
+  return {
+    turn: transformApiTurn(response.data.data.turn),
+    historicTurns: response.data.data.historicTurns.map(transformApiTurn),
+  };
 };
 
 /**
- * Fetches detailed turn data including full guess history.
+ * Fetches detailed turn data including full guess history and all historic turns.
  */
 export const useTurnDataQuery = (
   turnId: string | null,
-): UseQueryResult<TurnData, Error> => {
-  return useQuery<TurnData>({
+): UseQueryResult<TurnQueryResult, Error> => {
+  return useQuery<TurnQueryResult>({
     queryKey: ["turn", turnId],
     queryFn: async () => {
       if (!turnId) {

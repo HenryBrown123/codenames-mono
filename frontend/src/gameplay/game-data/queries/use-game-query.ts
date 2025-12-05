@@ -42,6 +42,7 @@ interface GameStateApiResponse {
             number: number;
           };
           guesses: Array<{
+            cardWord: string;
             playerName: string;
             outcome: string | null;
           }>;

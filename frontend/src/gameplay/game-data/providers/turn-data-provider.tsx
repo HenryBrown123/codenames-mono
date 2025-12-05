@@ -11,6 +11,8 @@ export interface TurnContextType {
   error: Error | null;
   setLastActionTurnId: (publicId: string) => void;
   clearActiveTurn: () => void;
+  /** All turns in the current round with full detail */
+  historicTurns: TurnData[];
 }
 
 /**
@@ -36,24 +38,29 @@ export const TurnDataProvider = ({ children }: TurnDataProviderProps) => {
   // after the active turn has changed.
   const [lastActionTurnId, setLastActionTurnId] = useState<string | null>(null);
 
-
   // Auto-populate with current active turn ID if none is being tracked by last action
+  // Fall back to last turn in round (even if completed) to ensure historicTurns loads
+  const turns = gameData.currentRound?.turns ?? [];
   const activeTurnId =
     lastActionTurnId ||
-    gameData.currentRound?.turns?.find((t) => t.status === "ACTIVE")?.id ||
+    turns.find((t) => t.status === "ACTIVE")?.id ||
+    turns[turns.length - 1]?.id ||
     null;
 
-  // Use the query hook to fetch turn data
+  // Use the query hook to fetch turn data (includes historicTurns)
   const turnQuery = useTurnDataQuery(activeTurnId);
 
+  // Get historicTurns from query result (full TurnData[]), fall back to empty
+  const historicTurns: TurnData[] = turnQuery.data?.historicTurns ?? [];
+
   const contextValue: TurnContextType = {
-    activeTurn: turnQuery.data || null,
+    activeTurn: turnQuery.data?.turn || null,
     isLoading: turnQuery.isLoading,
     error: turnQuery.error,
     setLastActionTurnId: setLastActionTurnId,
     clearActiveTurn: () => setLastActionTurnId(null),
+    historicTurns,
   };
-
 
   return <TurnContext.Provider value={contextValue}>{children}</TurnContext.Provider>;
 };
