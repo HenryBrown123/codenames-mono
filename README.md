@@ -597,7 +597,8 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   ├── get-players
 │       │   ├── get-turn
 │       │   ├── give-clue
-│       │   └── make-guess
+│       │   ├── make-guess
+│       │   └── start-turn
 │       ├── lobby
 │       │   ├── add-players
 │       │   ├── assign-roles
@@ -679,7 +680,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-118 directories
+119 directories
 ```
 
 ## Getting Started
