@@ -47,6 +47,7 @@ export interface GameData {
         number: number;
       };
       guesses: Array<{
+        cardWord: string;
         playerName: string;
         outcome: string | null;
       }>;
@@ -77,6 +78,7 @@ export interface Turn {
     number: number;
   };
   guesses: Array<{
+    cardWord: string;
     playerName: string;
     outcome: string | null;
   }>;
