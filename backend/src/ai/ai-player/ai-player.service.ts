@@ -361,7 +361,7 @@ export const createAIPlayerService =
         }
 
         if (!clueResult.success) {
-          throw new Error(`Failed to give clue: ${clueResult.error}`);
+          throw new Error(`Failed to give clue: ${JSON.stringify(clueResult.error)}`);
         }
 
         // Mark complete
@@ -377,6 +377,13 @@ export const createAIPlayerService =
         }, 20000);
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : "Unknown error";
+        const errorStack = error instanceof Error ? error.stack : undefined;
+
+        logger.error("aiGiveClue failed", {
+          error: errorMsg,
+          stack: errorStack,
+          context,
+        });
 
         await updatePipelineStatus(run.id, PIPELINE_STATUS.FAILED, errorMsg);
         GameEventsEmitter.aiPipelineFailed(context.gameId, run.id, errorMsg);
