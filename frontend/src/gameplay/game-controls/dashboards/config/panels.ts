@@ -30,6 +30,7 @@ export const GAME_PANELS: PanelSlots = {
   header: [{ id: "team-header", component: TeamHeaderPanel, shouldRender: hasRole }],
 
   middle: [
+    { id: "lobby-actions", component: LobbyActionsPanel, shouldRender: isInLobby },
     { id: "intel", component: IntelPanel, shouldRender: isRoundInProgress },
     { id: "next-turn", component: NextTurnPanel, shouldRender: canStartNextTurn },
     { id: "ar-toggle", component: ARTogglePanel, shouldRender: isCodemaster },
@@ -38,7 +39,6 @@ export const GAME_PANELS: PanelSlots = {
   ],
 
   bottom: [
-    { id: "lobby-actions", component: LobbyActionsPanel, shouldRender: isInLobby },
     {
       id: "codebreaker-actions",
       component: CodebreakerActionsPanel,
