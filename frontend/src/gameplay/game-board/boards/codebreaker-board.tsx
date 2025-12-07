@@ -31,10 +31,10 @@ export const CodebreakerBoardView = memo<CodebreakerBoardViewProps>(
     [cards]
   );
 
-  // Track previous words to detect changes
-  const prevWordsKey = useRef(wordsKey);
+  // Track previous words to detect changes (init with current to avoid animation on first load)
+  const prevWordsKey = useRef<string>(wordsKey);
 
-  // Deal animation should trigger when words change
+  // Deal animation triggers only when words actually change (e.g., after clicking deal/redeal)
   const dealOnEntry = wordsKey !== prevWordsKey.current && cards.length > 0;
 
   // Update ref after render (so next render sees current words as "previous")
