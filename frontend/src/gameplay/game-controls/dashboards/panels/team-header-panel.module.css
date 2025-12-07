@@ -1,5 +1,11 @@
 /* Team Symbol Header Styles */
 
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
 /* Symbol Container */
 .symbolContainer {
   position: relative;
