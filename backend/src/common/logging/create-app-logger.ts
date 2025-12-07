@@ -116,23 +116,23 @@ export class AppLogger {
   constructor(private readonly logger: winston.Logger) {}
 
   info(message: string, meta?: LogMeta) {
-    this.logger.info(message, meta);
+    this.logger.info(message, meta ? { meta } : undefined);
   }
 
   warn(message: string, meta?: LogMeta) {
-    this.logger.warn(message, meta);
+    this.logger.warn(message, meta ? { meta } : undefined);
   }
 
   error(message: string, meta?: LogMeta) {
-    this.logger.error(message, meta);
+    this.logger.error(message, meta ? { meta } : undefined);
   }
 
   debug(message: string, meta?: LogMeta) {
-    this.logger.debug(message, meta);
+    this.logger.debug(message, meta ? { meta } : undefined);
   }
 
   http(message: string, meta?: LogMeta) {
-    this.logger.http(message, meta);
+    this.logger.http(message, meta ? { meta } : undefined);
   }
 
   /**
