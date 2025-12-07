@@ -29,11 +29,13 @@
   text-shadow: 0 0 7px rgba(0, 255, 136, 0.5);
 }
 
-/* Navigation group with arrows and team symbol */
+/* Navigation group with arrows - centered at bottom */
 .navGroup {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  margin-top: 0.75rem;
 }
 
 .navArrow {
