@@ -68,6 +68,11 @@ export const useWebSocketInvalidation = (gameId: string | null) => {
     };
 
     // Turn events
+    const handleTurnStarted = (payload: EventPayload) => {
+      console.log("Turn started event received:", payload);
+      invalidateAllQueries();
+    };
+
     const handleClueGiven = (payload: EventPayload) => {
       console.log("Clue given event received:", payload);
       invalidateAllQueries();
@@ -130,6 +135,7 @@ export const useWebSocketInvalidation = (gameId: string | null) => {
     socket.on(WebSocketEvent.ROUND_STARTED, handleRoundStarted);
     socket.on(WebSocketEvent.CARDS_DEALT, handleCardsDealt);
     socket.on(WebSocketEvent.ROUND_ENDED, handleRoundEnded);
+    socket.on(WebSocketEvent.TURN_STARTED, handleTurnStarted);
     socket.on(WebSocketEvent.CLUE_GIVEN, handleClueGiven);
     socket.on(WebSocketEvent.GUESS_MADE, handleGuessMade);
     socket.on(WebSocketEvent.TURN_ENDED, handleTurnEnded);
@@ -152,6 +158,7 @@ export const useWebSocketInvalidation = (gameId: string | null) => {
       socket.off(WebSocketEvent.ROUND_STARTED, handleRoundStarted);
       socket.off(WebSocketEvent.CARDS_DEALT, handleCardsDealt);
       socket.off(WebSocketEvent.ROUND_ENDED, handleRoundEnded);
+      socket.off(WebSocketEvent.TURN_STARTED, handleTurnStarted);
       socket.off(WebSocketEvent.CLUE_GIVEN, handleClueGiven);
       socket.off(WebSocketEvent.GUESS_MADE, handleGuessMade);
       socket.off(WebSocketEvent.TURN_ENDED, handleTurnEnded);
