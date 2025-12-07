@@ -64,25 +64,39 @@ const CoverCard = memo<{ teamType: string; variant: CardVisibilityState; cardInd
       >
         {/* Team symbol with embossed effect - clean layers */}
         {(() => {
-          const symbols = {
-            red: "◇",
-            blue: "□",
-            neutral: "○",
-            assassin: "☠",
-            green: "🌿",
+          const symbolConfig = {
+            red: { char: "□", rotate: true },
+            blue: { char: "□", rotate: false },
+            neutral: { char: "○", rotate: false },
+            assassin: { char: "☠", rotate: false },
+            green: { char: "🌿", rotate: false },
           };
-          const symbol = symbols[teamType as keyof typeof symbols] || "●";
+          const config = symbolConfig[teamType as keyof typeof symbolConfig] || {
+            char: "●",
+            rotate: false,
+          };
+          const symbolStyle = config.rotate
+            ? { display: "inline-block", transform: "rotate(45deg)" }
+            : undefined;
 
           return (
             <>
               {/* Embossed depression - dark shadow */}
-              <div className={styles.symbolShadow}>{symbol}</div>
+              <div className={styles.symbolShadow}>
+                <span style={symbolStyle}>{config.char}</span>
+              </div>
               {/* Crisp LED symbol */}
-              <div className={styles.symbolLED}>{symbol}</div>
+              <div className={styles.symbolLED}>
+                <span style={symbolStyle}>{config.char}</span>
+              </div>
               {/* Subtle inner glow */}
-              <div className={styles.symbolGlow}>{symbol}</div>
+              <div className={styles.symbolGlow}>
+                <span style={symbolStyle}>{config.char}</span>
+              </div>
               {/* Highlight edge */}
-              <div className={styles.symbolHighlight}>{symbol}</div>
+              <div className={styles.symbolHighlight}>
+                <span style={symbolStyle}>{config.char}</span>
+              </div>
             </>
           );
         })()}
