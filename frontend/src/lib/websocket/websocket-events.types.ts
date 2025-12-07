@@ -24,6 +24,7 @@ export enum WebSocketEvent {
   ROUND_ENDED = "round_ended",
 
   // Turn events
+  TURN_STARTED = "turn_started",
   CLUE_GIVEN = "clue_given",
   GUESS_MADE = "guess_made",
   TURN_ENDED = "turn_ended",
