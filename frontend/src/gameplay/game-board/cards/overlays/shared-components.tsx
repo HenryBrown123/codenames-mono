@@ -145,7 +145,7 @@ export const TeamSymbol = memo(() => (
       bottom: "8px",
       left: "50%",
       transform: "translateX(-50%)",
-      fontSize: "2rem",
+      fontSize: "1.5rem",
     }}
   />
 ));
