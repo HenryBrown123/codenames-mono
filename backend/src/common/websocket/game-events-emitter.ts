@@ -138,6 +138,19 @@ export class GameEventsEmitter {
   }
 
   /**
+   * Emit a turn started event
+   */
+  static turnStarted(gameId: string, roundNumber: number, turnId: string): void {
+    const payload: GameplayEventPayload = {
+      gameId,
+      roundNumber,
+      turnId,
+      timestamp: new Date().toISOString(),
+    };
+    emitToGame(gameId, WebSocketEvent.TURN_STARTED, payload);
+  }
+
+  /**
    * Emit a turn ended event
    */
   static turnEnded(gameId: string, roundNumber: number, turnId: string): void {
