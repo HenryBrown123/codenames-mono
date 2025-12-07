@@ -193,9 +193,6 @@ export const makeGuessService = (logger: AppLogger) => (dependencies: MakeGuessD
       }
     } else if (guessResult.turn.guessesRemaining === 0) {
       await ops.endTurn(gameState, guessResult.turn._id);
-
-      const updatedGameState = await ops.getCurrentGameState(input.gameId, input.userId);
-      await ops.startTurn(updatedGameState, updatedGameState.currentRound!._id, otherTeamId);
     }
 
     return await ops.getCurrentGameState(input.gameId, input.userId);
@@ -235,8 +232,6 @@ export const makeGuessService = (logger: AppLogger) => (dependencies: MakeGuessD
       if (gameWinner) {
         await ops.endGame(stateAfterRoundEnd, gameWinner);
       }
-    } else {
-      await ops.startTurn(updatedGameState, updatedGameState.currentRound!._id, otherTeamId);
     }
 
     return await ops.getCurrentGameState(input.gameId, input.userId);
@@ -252,13 +247,6 @@ export const makeGuessService = (logger: AppLogger) => (dependencies: MakeGuessD
   ) => {
     const gameState = await ops.getCurrentGameState(input.gameId, input.userId);
     await ops.endTurn(gameState, guessResult.turn._id);
-
-    const updatedGameState = await ops.getCurrentGameState(input.gameId, input.userId);
-    const otherTeamId = complexProperties.getOtherTeamId(
-      updatedGameState,
-      guessResult.turn._teamId,
-    );
-    await ops.startTurn(updatedGameState, updatedGameState.currentRound!._id, otherTeamId);
 
     return await ops.getCurrentGameState(input.gameId, input.userId);
   };
