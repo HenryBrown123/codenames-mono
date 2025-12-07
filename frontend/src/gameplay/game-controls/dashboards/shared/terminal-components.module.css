@@ -65,6 +65,14 @@
   box-sizing: border-box;
 }
 
+.terminalSection[data-borderless="true"] {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 0;
+}
+
 .terminalPrompt {
   display: flex;
   min-width: 0;

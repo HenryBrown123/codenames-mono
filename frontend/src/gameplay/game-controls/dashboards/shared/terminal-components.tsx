@@ -17,9 +17,11 @@ export const TerminalSection: React.FC<{
   children?: React.ReactNode;
   layoutId?: string;
   disableLayoutAnimation?: boolean;
-}> = ({ children, layoutId, disableLayoutAnimation = false }) => (
+  borderless?: boolean;
+}> = ({ children, layoutId, disableLayoutAnimation = false, borderless = false }) => (
   <motion.div
     className={styles.terminalSection}
+    data-borderless={borderless}
     layoutId={layoutId}
     layout={!disableLayoutAnimation}
     initial={{ opacity: 0, scale: 0.9, y: 10 }}
