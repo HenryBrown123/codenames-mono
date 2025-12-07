@@ -49,7 +49,10 @@ export const useStartTurnMutation = (
       }
     },
     onSuccess: async () => {
+      // Invalidate all game-related queries to refresh UI
       await queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
+      // Also invalidate turn queries as a new turn was created
+      await queryClient.invalidateQueries({ queryKey: ["turn"] });
     },
   });
 };

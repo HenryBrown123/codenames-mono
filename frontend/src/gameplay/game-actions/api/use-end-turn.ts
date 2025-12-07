@@ -48,7 +48,10 @@ export const useEndTurnMutation = (
       }
     },
     onSuccess: async () => {
+      // Invalidate all game-related queries to refresh UI
       await queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
+      // Also invalidate turn queries as the turn status changed
+      await queryClient.invalidateQueries({ queryKey: ["turn"] });
     },
   });
 };
