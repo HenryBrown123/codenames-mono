@@ -8,6 +8,7 @@ import type { TransactionalHandler } from "@backend/common/data-access/transacti
 import type { GameplayOperations } from "../gameplay-actions";
 import type { AppLogger } from "@backend/common/logging";
 import { GameplayValidationError } from "../errors/gameplay.errors";
+import { GameEventsEmitter } from "@backend/common/websocket";
 
 export type StartTurnService = (input: {
   gameId: string;
@@ -98,6 +99,9 @@ export const createStartTurnService =
           const newTurn = await ops.startTurn(freshGameState, currentRound._id, nextTeam._id);
           newTurnPublicId = newTurn.publicId;
         });
+
+        // Emit WebSocket event for real-time updates
+        GameEventsEmitter.turnStarted(gameId, roundNumber, newTurnPublicId);
 
         log.info(`startTurn success: new turn for team ${nextTeam.teamName}`);
         return {
