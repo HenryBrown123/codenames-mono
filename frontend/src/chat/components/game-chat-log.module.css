@@ -3,8 +3,10 @@
 
 .chatLog {
   padding: 0.5rem 0;
-  /* Fixed height prevents layout shifts during typewriter */
-  min-height: 3rem;
+  /* Use viewport height for more space, scroll when needed */
+  min-height: 4rem;
+  max-height: 25vh;
+  overflow-y: auto;
 }
 
 .message {
