@@ -8,6 +8,7 @@ import type { TransactionalHandler } from "@backend/common/data-access/transacti
 import type { GameplayOperations } from "../gameplay-actions";
 import type { AppLogger } from "@backend/common/logging";
 import { GameplayValidationError } from "../errors/gameplay.errors";
+import { GameEventsEmitter } from "@backend/common/websocket";
 
 export type EndTurnService = (input: {
   gameId: string;
@@ -105,6 +106,9 @@ export const createEndTurnService = (logger: AppLogger) => (
         const gameState = await ops.getCurrentGameState(gameId, userId);
         await ops.endTurn(gameState, turnWithInternalId._id);
       });
+
+      // Emit WebSocket event for real-time updates
+      GameEventsEmitter.turnEnded(gameId, roundNumber, currentTurn.publicId);
 
       log.info(`endTurn success: turnId=${currentTurn.publicId}`);
       return {
