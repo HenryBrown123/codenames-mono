@@ -24,7 +24,7 @@ export const TeamSymbol: React.FC<TeamSymbolProps> = ({
   onClick,
   isButton = false,
 }) => {
-  const symbol = teamName === "Team Red" ? "◆" : "▪";
+  const isRed = teamName === "Team Red";
 
   const content = (
     <motion.div
@@ -36,7 +36,9 @@ export const TeamSymbol: React.FC<TeamSymbolProps> = ({
       exit={{ scale: 0, rotate: 180 }}
       transition={{ duration: TEAM_SWITCH_DURATION, ease: EASING }}
     >
-      {symbol}
+      <span style={{ display: "inline-block", transform: isRed ? "rotate(45deg)" : "none" }}>
+        ■
+      </span>
     </motion.div>
   );
 
