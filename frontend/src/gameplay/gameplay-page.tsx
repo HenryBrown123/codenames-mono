@@ -1,5 +1,6 @@
 import React from "react";
 import { GameplayProvider } from "./game-data/providers";
+import { DealAnimationProvider } from "./game-board/deal-animation-context";
 import { GameScene } from "./game-scene";
 
 /**
@@ -12,7 +13,9 @@ export interface GameplayProps {
 
 export const Gameplay: React.FC<GameplayProps> = ({ gameId }) => (
   <GameplayProvider gameId={gameId}>
-    <GameScene />
+    <DealAnimationProvider>
+      <GameScene />
+    </DealAnimationProvider>
   </GameplayProvider>
 );
 

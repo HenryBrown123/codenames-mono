@@ -1,6 +1,7 @@
 import React from "react";
 import { useGameDataRequired } from "../../../game-data/providers";
 import { useGameActions } from "../../../game-actions";
+import { useDealAnimation } from "../../../game-board/deal-animation-context";
 import { ActionButton } from "../../../shared/components";
 import { TerminalSection } from "../shared";
 import styles from "./lobby-actions-panel.module.css";
@@ -35,6 +36,7 @@ export const LobbyActionsPanelView: React.FC<LobbyActionsPanelViewProps> = ({
 export const LobbyActionsPanel: React.FC = () => {
   const { gameData } = useGameDataRequired();
   const { createRound, startRound, dealCards, actionState } = useGameActions();
+  const { triggerDeal } = useDealAnimation();
 
   const isLoading = actionState.status === "loading";
 
@@ -52,6 +54,7 @@ export const LobbyActionsPanel: React.FC = () => {
 
     if (isSetup && !hasCards) {
       try {
+        triggerDeal();
         await dealCards(false);
       } catch (error) {
         console.error("Failed to deal cards:", error);
@@ -60,12 +63,14 @@ export const LobbyActionsPanel: React.FC = () => {
     }
 
     if (!hasRound) {
+      triggerDeal();
       createRound();
     }
   };
 
   const handleRedeal = async () => {
     try {
+      triggerDeal();
       await dealCards(true);
     } catch (error) {
       console.error("Failed to redeal:", error);
