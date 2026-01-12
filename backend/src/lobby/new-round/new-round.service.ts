@@ -85,9 +85,7 @@ export type RoundCreationDependencies = {
  * @param dependencies - Required external dependencies
  * @returns Service function for creating rounds
  */
-export const roundCreationService = (
-  dependencies: RoundCreationDependencies,
-) => {
+export const roundCreationService = (dependencies: RoundCreationDependencies) => {
   return async (input: RoundCreationInput): Promise<RoundCreationResult> => {
     const lobbyState = await dependencies.getLobbyState(input.gameId, input.userId);
 
@@ -132,11 +130,8 @@ export const roundCreationService = (
       const newRound = await ops.createRound(validationResult.data);
 
       // Get fresh lobby state after round creation to validate card dealing
-      let currentState = await ops.getLobbyState(
-        input.gameId,
-        input.userId,
-      );
-      
+      let currentState = await ops.getLobbyState(input.gameId, input.userId);
+
       if (!currentState) {
         throw new UnexpectedLobbyError("Failed to get lobby state after round creation");
       }
@@ -146,15 +141,12 @@ export const roundCreationService = (
       if (!dealValidation.valid) {
         throw new UnexpectedLobbyError(`Cannot deal cards: ${dealValidation.errors[0].message}`);
       }
-      
+
       await ops.dealCards(dealValidation.data);
 
       // Get fresh state again after dealing cards
-      currentState = await ops.getLobbyState(
-        input.gameId,
-        input.userId,
-      );
-      
+      currentState = await ops.getLobbyState(input.gameId, input.userId);
+
       if (!currentState) {
         throw new UnexpectedLobbyError("Failed to get lobby state after dealing cards");
       }
@@ -162,17 +154,16 @@ export const roundCreationService = (
       // Assign roles
       const validatedForRoles = checkRoleAssignmentRules(currentState);
       if (!validatedForRoles.valid) {
-        throw new UnexpectedLobbyError(`Cannot assign roles: ${validatedForRoles.errors[0].message}`);
+        throw new UnexpectedLobbyError(
+          `Cannot assign roles: ${validatedForRoles.errors[0].message}`,
+        );
       }
-      
+
       await ops.assignPlayerRoles(validatedForRoles.data);
 
       // Get final state to return full round data
-      const finalState = await ops.getLobbyState(
-        input.gameId,
-        input.userId,
-      );
-      
+      const finalState = await ops.getLobbyState(input.gameId, input.userId);
+
       if (!finalState || !finalState.currentRound) {
         throw new UnexpectedLobbyError("Failed to get final lobby state");
       }
