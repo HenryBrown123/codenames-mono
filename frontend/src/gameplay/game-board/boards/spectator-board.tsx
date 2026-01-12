@@ -80,12 +80,22 @@ export const SpectatorBoard = memo<{ scene?: string }>(({ scene }) => {
   const cards = gameData.currentRound?.cards || [];
   const currentTeamName = gameData.playerContext?.teamName;
 
-  const wordsKey = useMemo(() => cards.map((c) => c.word).sort().join(","), [cards]);
+  const wordsKey = useMemo(
+    () =>
+      cards
+        .map((c) => c.word)
+        .sort()
+        .join(","),
+    [cards],
+  );
   const prevWordsKey = useRef(wordsKey);
-  const dealOnEntry = wordsKey !== prevWordsKey.current && cards.length > 0;
+  const dealOnEntry = wordsKey !== prevWordsKey.current || cards.length === 0;
+  console.log("dealOnEntry ", dealOnEntry);
 
   useLayoutEffect(() => {
     prevWordsKey.current = wordsKey;
+    console.log("wordsKey", wordsKey);
+    console.log("prevWordsKey.current", prevWordsKey.current);
   });
 
   const isRoundComplete = gameData.currentRound?.status === "COMPLETED";
@@ -95,7 +105,7 @@ export const SpectatorBoard = memo<{ scene?: string }>(({ scene }) => {
     <SpectatorBoardView
       cards={cards}
       wordsKey={wordsKey}
-      dealOnEntry={dealOnEntry}
+      dealOnEntry={true}
       boardAnimationState={boardAnimationState}
       currentTeamName={currentTeamName}
       viewMode={viewMode}
