@@ -36,7 +36,7 @@ export const GameScene: React.FC = () => {
     return (
       <div className={styles.gameSceneContainer}>
         <div className={styles.boardArea}>
-          <SpectatorBoard scene={currentScene} />
+          <SpectatorBoard />
         </div>
         <div className={styles.controlArea} />
       </div>
@@ -68,7 +68,7 @@ export const GameScene: React.FC = () => {
 
       <div className={styles.gameSceneContainer}>
         <div className={styles.boardArea}>
-          <BoardComponent scene={currentScene} />
+          <BoardComponent />
         </div>
 
         <div className={styles.controlArea}>

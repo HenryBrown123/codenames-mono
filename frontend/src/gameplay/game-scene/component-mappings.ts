@@ -17,7 +17,7 @@ export const getDashboardComponent = (
 /**
  * Maps role to board component - boards persist across scenes within a role
  */
-export const getBoardComponent = (role: string, scene?: string): React.ComponentType<{ scene?: string }> => {
+export const getBoardComponent = (role: string, scene?: string): React.ComponentType => {
   const normalizedRole = role.toLowerCase();
 
   // During dealing phase (setup), everyone should see spectator board (clean view, no overlays)
