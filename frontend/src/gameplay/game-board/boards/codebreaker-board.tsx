@@ -1,12 +1,13 @@
-import { memo, useCallback, useMemo, useRef, useLayoutEffect } from "react";
-import { motion } from "framer-motion";
+import { memo, useCallback, useMemo } from "react";
 import { useGameDataRequired, useTurn } from "../../game-data/providers";
 import { useGameActions } from "../../game-actions";
 import { useViewMode } from "../view-mode/view-mode-context";
+import { useDealAnimation, type DealInitialState } from "../deal-animation-context";
 import { GameCard } from "../cards/game-card";
 import { deriveDisplayOptions } from "../cards/card-types";
 import { EmptyCard } from "./board-layout";
-import { boardVariants, type SceneState } from "../cards/card-animation-variants";
+import { DealingBoard } from "./dealing-board";
+import { type SceneState } from "../cards/card-animation-variants";
 import styles from "./board-layout.module.css";
 
 /**
@@ -15,6 +16,9 @@ import styles from "./board-layout.module.css";
 
 export interface CodebreakerBoardViewProps {
   cards: any[];
+  wordsKey: string;
+  initialState: DealInitialState;
+  animateState: SceneState;
   canMakeGuess: boolean;
   isLoading: boolean;
   onCardClick: (word: string) => void;
@@ -24,47 +28,35 @@ export interface CodebreakerBoardViewProps {
 }
 
 export const CodebreakerBoardView = memo<CodebreakerBoardViewProps>(
-  ({ cards, canMakeGuess, isLoading, onCardClick, currentTeamName, viewMode, isRoundComplete }) => {
-  // Create stable key from card words (sorted for consistency)
-  const wordsKey = useMemo(() =>
-    cards.map((c: any) => c.word).sort().join(","),
-    [cards]
-  );
-
-  // Track previous words to detect changes (init with current to avoid animation on first load)
-  const prevWordsKey = useRef<string>(wordsKey);
-
-  // Deal animation triggers only when words actually change (e.g., after clicking deal/redeal)
-  const dealOnEntry = wordsKey !== prevWordsKey.current && cards.length > 0;
-
-  // Update ref after render (so next render sees current words as "previous")
-  useLayoutEffect(() => {
-    prevWordsKey.current = wordsKey;
-  });
-
-  const boardAnimationState: SceneState = isRoundComplete 
-    ? 'gameOverReveal'
-    : 'visible';
-
-  return (
+  ({
+    cards,
+    wordsKey,
+    initialState,
+    animateState,
+    canMakeGuess,
+    isLoading,
+    onCardClick,
+    currentTeamName,
+    viewMode,
+    isRoundComplete,
+  }) => (
     <div className={styles.boardWrapper}>
       {cards.length > 0 ? (
-        <motion.div
-          key={wordsKey}
+        <DealingBoard
+          wordsKey={wordsKey}
+          initialState={initialState}
+          animateState={animateState}
           className={styles.boardGrid}
-          variants={boardVariants}
-          initial={dealOnEntry ? "hidden" : false}
-          animate={boardAnimationState}
         >
           {cards.map((card, index) => {
             const displayOptions = isRoundComplete
-              ? { mode: 'game-over' as const, isCurrentTeam: currentTeamName === card.teamName }
+              ? { mode: "game-over" as const, isCurrentTeam: currentTeamName === card.teamName }
               : deriveDisplayOptions({
                   viewMode,
                   isCurrentTeam: currentTeamName === card.teamName,
-                  canInteract: canMakeGuess && !isLoading && !card.selected
+                  canInteract: canMakeGuess && !isLoading && !card.selected,
                 });
-            
+
             return (
               <GameCard
                 key={card.word}
@@ -75,7 +67,7 @@ export const CodebreakerBoardView = memo<CodebreakerBoardViewProps>(
               />
             );
           })}
-        </motion.div>
+        </DealingBoard>
       ) : (
         <div className={styles.boardGrid}>
           {Array.from({ length: 25 }).map((_, i) => (
@@ -84,22 +76,30 @@ export const CodebreakerBoardView = memo<CodebreakerBoardViewProps>(
         </div>
       )}
     </div>
-  );
-  },
+  ),
 );
 
 CodebreakerBoardView.displayName = "CodebreakerBoardView";
 
-export const CodebreakerBoard = memo<{ scene?: string }>(
-  ({ scene }) => {
-    const { gameData } = useGameDataRequired();
-    const { makeGuess, actionState } = useGameActions();
-    const { activeTurn } = useTurn();
-    const { viewMode } = useViewMode();
-    const cards = gameData.currentRound?.cards || [];
-    const currentTeamName = gameData.playerContext?.teamName;
+export const CodebreakerBoard = memo(() => {
+  const { gameData } = useGameDataRequired();
+  const { makeGuess, actionState } = useGameActions();
+  const { activeTurn } = useTurn();
+  const { viewMode } = useViewMode();
+  const { initialState } = useDealAnimation();
+  const cards = gameData.currentRound?.cards || [];
+  const currentTeamName = gameData.playerContext?.teamName;
 
-    const isLoading = actionState.status === "loading";
+  const isLoading = actionState.status === "loading";
+
+  const wordsKey = useMemo(
+    () =>
+      cards
+        .map((c: any) => c.word)
+        .sort()
+        .join(","),
+    [cards],
+  );
 
   const canMakeGuess = useMemo(() => {
     if (gameData.playerContext?.role !== "CODEBREAKER") return false;
@@ -120,18 +120,23 @@ export const CodebreakerBoard = memo<{ scene?: string }>(
     [makeGuess, isLoading, canMakeGuess],
   );
 
-    return (
-      <CodebreakerBoardView
-        cards={cards}
-        canMakeGuess={canMakeGuess}
-        isLoading={isLoading}
-        onCardClick={handleCardClick}
-        currentTeamName={currentTeamName}
-        viewMode={viewMode}
-        isRoundComplete={gameData.currentRound?.status === "COMPLETED"}
-      />
-    );
-  },
-);
+  const isRoundComplete = gameData.currentRound?.status === "COMPLETED";
+  const animateState: SceneState = isRoundComplete ? "gameOverReveal" : "visible";
+
+  return (
+    <CodebreakerBoardView
+      cards={cards}
+      wordsKey={wordsKey}
+      initialState={initialState}
+      animateState={animateState}
+      canMakeGuess={canMakeGuess}
+      isLoading={isLoading}
+      onCardClick={handleCardClick}
+      currentTeamName={currentTeamName}
+      viewMode={viewMode}
+      isRoundComplete={isRoundComplete}
+    />
+  );
+});
 
 CodebreakerBoard.displayName = "CodebreakerBoard";

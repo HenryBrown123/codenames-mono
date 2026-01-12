@@ -1,11 +1,12 @@
-import { memo, useMemo, useRef, useLayoutEffect } from "react";
-import { motion } from "framer-motion";
+import { memo, useMemo } from "react";
 import { useGameDataRequired } from "../../game-data/providers";
 import { GameCard } from "../cards/game-card";
 import { deriveDisplayOptions } from "../cards/card-types";
 import { useViewMode } from "../view-mode/view-mode-context";
+import { useDealAnimation, type DealInitialState } from "../deal-animation-context";
 import { EmptyCard } from "./board-layout";
-import { boardVariants, type SceneState } from "../cards/card-animation-variants";
+import { DealingBoard } from "./dealing-board";
+import { type SceneState } from "../cards/card-animation-variants";
 import styles from "./board-layout.module.css";
 import {
   ARGlassesHUD,
@@ -22,8 +23,8 @@ import {
 export interface SpymasterBoardViewProps {
   cards: any[];
   wordsKey: string;
-  dealOnEntry: boolean;
-  boardAnimationState: SceneState;
+  initialState: DealInitialState;
+  animateState: SceneState;
   currentTeamName?: string;
   viewMode: string;
   isRoundComplete: boolean;
@@ -34,8 +35,8 @@ export const SpymasterBoardView = memo<SpymasterBoardViewProps>(
   ({
     cards,
     wordsKey,
-    dealOnEntry,
-    boardAnimationState,
+    initialState,
+    animateState,
     currentTeamName,
     viewMode,
     isRoundComplete,
@@ -53,12 +54,11 @@ export const SpymasterBoardView = memo<SpymasterBoardViewProps>(
 
       <div className={styles.boardWrapper} data-ar-mode={showARHUD}>
         {cards.length > 0 ? (
-          <motion.div
-            key={wordsKey}
+          <DealingBoard
+            wordsKey={wordsKey}
+            initialState={initialState}
+            animateState={animateState}
             className={styles.boardGrid}
-            variants={boardVariants}
-            initial={dealOnEntry ? "hidden" : false}
-            animate={boardAnimationState}
           >
             {cards.map((card, index) => {
               const displayOptions = isRoundComplete
@@ -79,7 +79,7 @@ export const SpymasterBoardView = memo<SpymasterBoardViewProps>(
                 />
               );
             })}
-          </motion.div>
+          </DealingBoard>
         ) : (
           <div className={styles.boardGrid}>
             {Array.from({ length: 25 }).map((_, i) => (
@@ -94,30 +94,32 @@ export const SpymasterBoardView = memo<SpymasterBoardViewProps>(
 
 SpymasterBoardView.displayName = "SpymasterBoardView";
 
-export const SpymasterBoard = memo<{ scene?: string }>(({ scene }) => {
+export const SpymasterBoard = memo(() => {
   const { gameData } = useGameDataRequired();
   const { viewMode } = useViewMode();
+  const { initialState } = useDealAnimation();
   const cards = gameData.currentRound?.cards || [];
   const currentTeamName = gameData.playerContext?.teamName;
 
-  const wordsKey = useMemo(() => cards.map((c) => c.word).sort().join(","), [cards]);
-  const prevWordsKey = useRef(wordsKey);
-  const dealOnEntry = wordsKey !== prevWordsKey.current && cards.length > 0;
-
-  useLayoutEffect(() => {
-    prevWordsKey.current = wordsKey;
-  });
+  const wordsKey = useMemo(
+    () =>
+      cards
+        .map((c) => c.word)
+        .sort()
+        .join(","),
+    [cards],
+  );
 
   const isRoundComplete = gameData.currentRound?.status === "COMPLETED";
-  const boardAnimationState: SceneState = isRoundComplete ? "gameOverReveal" : "visible";
+  const animateState: SceneState = isRoundComplete ? "gameOverReveal" : "visible";
   const showARHUD = viewMode === "spymaster";
 
   return (
     <SpymasterBoardView
       cards={cards}
       wordsKey={wordsKey}
-      dealOnEntry={dealOnEntry}
-      boardAnimationState={boardAnimationState}
+      initialState={initialState}
+      animateState={animateState}
       currentTeamName={currentTeamName}
       viewMode={viewMode}
       isRoundComplete={isRoundComplete}

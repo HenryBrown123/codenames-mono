@@ -1,11 +1,12 @@
-import { memo, useMemo, useRef, useLayoutEffect } from "react";
-import { motion } from "framer-motion";
+import { memo, useMemo } from "react";
 import { useGameDataRequired } from "../../game-data/providers";
 import { useViewMode } from "../view-mode/view-mode-context";
+import { useDealAnimation, type DealInitialState } from "../deal-animation-context";
 import { GameCard } from "../cards/game-card";
 import { deriveDisplayOptions } from "../cards/card-types";
 import { EmptyCard } from "./board-layout";
-import { boardVariants, type SceneState } from "../cards/card-animation-variants";
+import { DealingBoard } from "./dealing-board";
+import { type SceneState } from "../cards/card-animation-variants";
 import styles from "./board-layout.module.css";
 
 /**
@@ -15,31 +16,22 @@ import styles from "./board-layout.module.css";
 export interface SpectatorBoardViewProps {
   cards: any[];
   wordsKey: string;
-  dealOnEntry: boolean;
-  boardAnimationState: SceneState;
+  initialState: DealInitialState;
+  animateState: SceneState;
   currentTeamName?: string;
   viewMode: string;
   isRoundComplete: boolean;
 }
 
 export const SpectatorBoardView = memo<SpectatorBoardViewProps>(
-  ({
-    cards,
-    wordsKey,
-    dealOnEntry,
-    boardAnimationState,
-    currentTeamName,
-    viewMode,
-    isRoundComplete,
-  }) => (
+  ({ cards, wordsKey, initialState, animateState, currentTeamName, viewMode, isRoundComplete }) => (
     <div className={styles.boardWrapper}>
       {cards.length > 0 ? (
-        <motion.div
-          key={wordsKey}
+        <DealingBoard
+          wordsKey={wordsKey}
+          initialState={initialState}
+          animateState={animateState}
           className={styles.boardGrid}
-          variants={boardVariants}
-          initial={dealOnEntry ? "hidden" : false}
-          animate={boardAnimationState}
         >
           {cards.map((card, index) => {
             const displayOptions = isRoundComplete
@@ -60,7 +52,7 @@ export const SpectatorBoardView = memo<SpectatorBoardViewProps>(
               />
             );
           })}
-        </motion.div>
+        </DealingBoard>
       ) : (
         <div className={styles.boardGrid}>
           {Array.from({ length: 25 }).map((_, i) => (
@@ -74,9 +66,10 @@ export const SpectatorBoardView = memo<SpectatorBoardViewProps>(
 
 SpectatorBoardView.displayName = "SpectatorBoardView";
 
-export const SpectatorBoard = memo<{ scene?: string }>(({ scene }) => {
+export const SpectatorBoard = memo(() => {
   const { gameData } = useGameDataRequired();
   const { viewMode } = useViewMode();
+  const { initialState } = useDealAnimation();
   const cards = gameData.currentRound?.cards || [];
   const currentTeamName = gameData.playerContext?.teamName;
 
@@ -88,25 +81,16 @@ export const SpectatorBoard = memo<{ scene?: string }>(({ scene }) => {
         .join(","),
     [cards],
   );
-  const prevWordsKey = useRef(wordsKey);
-  const dealOnEntry = wordsKey !== prevWordsKey.current || cards.length === 0;
-  console.log("dealOnEntry ", dealOnEntry);
-
-  useLayoutEffect(() => {
-    prevWordsKey.current = wordsKey;
-    console.log("wordsKey", wordsKey);
-    console.log("prevWordsKey.current", prevWordsKey.current);
-  });
 
   const isRoundComplete = gameData.currentRound?.status === "COMPLETED";
-  const boardAnimationState: SceneState = isRoundComplete ? "gameOverReveal" : "visible";
+  const animateState: SceneState = isRoundComplete ? "gameOverReveal" : "visible";
 
   return (
     <SpectatorBoardView
       cards={cards}
       wordsKey={wordsKey}
-      dealOnEntry={true}
-      boardAnimationState={boardAnimationState}
+      initialState={initialState}
+      animateState={animateState}
       currentTeamName={currentTeamName}
       viewMode={viewMode}
       isRoundComplete={isRoundComplete}
