@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@frontend/shared-types";
 import { getTeamType, getCardColor } from "./card-utils";
 import { CardDisplayOptions, deriveCardVariant, CardVisibilityState } from "./card-types";
-import { sceneVariants } from "./card-animation-variants";
+import { dealCardVariants } from "../boards/dealing-board";
 import { SpymasterOverlay, GameOverOverlay } from "./overlays";
 import { ARCorners } from "./overlays/shared-components";
 import { FloatingWord } from "./floating-word";
@@ -125,7 +125,7 @@ export const GameCard = memo<GameCardProps>(({ card, cardIndex, onClick, display
   const isCurrentTeam = displayOptions.mode !== "gameplay" && displayOptions.isCurrentTeam;
 
   return (
-    <motion.div variants={sceneVariants.card}>
+    <motion.div variants={dealCardVariants}>
       <div
         className={styles.cardContainer}
         data-team={teamType}
