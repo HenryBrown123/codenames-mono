@@ -5,52 +5,19 @@
  * Type-safe state machines for card animations.
  */
 
-/**
- * Scene-level states - for board orchestration (dealing, game over reveal)
- */
 import { GAME_OVER_TIMING } from "../../game-over/game-over-timing";
 
+/**
+ * Scene-level states - for board orchestration
+ */
 export type SceneState = "hidden" | "visible" | "gameOverReveal";
 
 /**
- * Scene variants for cards - how cards respond to board state
- */
-export const sceneVariants = {
-  card: {
-    hidden: {
-      opacity: 0,
-      x: "-50vw",
-      y: "-80vh",
-      rotate: -25,
-      scale: 0.8,
-    },
-    visible: {
-      opacity: 1,
-      x: 0,
-      y: 0,
-      rotate: 0,
-      scale: 1,
-      transition: {
-        type: "spring" as const,
-        damping: 25,
-        stiffness: 260,
-        mass: 1.2,
-      },
-    },
-  },
-};
-
-/**
- * Board variants - orchestrates card staggering
+ * Board variants - orchestrates game-over card reveal staggering
+ * Deal animation is handled separately by DealingBoard component
  */
 export const boardVariants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.05,
-      delayChildren: 0.1,
-    },
-  },
+  visible: {},
   gameOverReveal: {
     transition: {
       staggerChildren: GAME_OVER_TIMING.CARD_STAGGER,
