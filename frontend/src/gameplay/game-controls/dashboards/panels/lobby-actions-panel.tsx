@@ -27,9 +27,7 @@ export const LobbyActionsPanelView: React.FC<LobbyActionsPanelViewProps> = ({
   <TerminalSection>
     <div className={styles.buttonGroup}>
       <ActionButton onClick={onPrimaryAction} text={buttonText} enabled={!isLoading} />
-      {canRedeal && (
-        <ActionButton onClick={onRedeal} text="REDEAL CARDS" enabled={!isLoading} />
-      )}
+      {canRedeal && <ActionButton onClick={onRedeal} text="REDEAL CARDS" enabled={!isLoading} />}
     </div>
   </TerminalSection>
 );
@@ -76,7 +74,7 @@ export const LobbyActionsPanel: React.FC = () => {
 
   const getButtonText = () => {
     if (!hasRound) {
-      return "Deal Cards";
+      return "Start Round";
     }
 
     if (isSetup && !hasCards) {
