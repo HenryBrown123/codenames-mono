@@ -7,7 +7,6 @@ import AppRoutes from "./routes/app-routes";
 import "../style/global.css";
 import styles from "./app.module.css";
 
-
 /**
  * Draggable debug widget for mobile development
  */

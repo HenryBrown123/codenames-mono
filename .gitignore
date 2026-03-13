@@ -75,3 +75,6 @@ commit.sh
 SUMMARY.md
 intel_panel_sketch.excalidraw
 FRONTEND_REFACTOR.md
+frontend/src/gameplay/game-board/boards/refactor.md
+.DS_Store
+.clinerules

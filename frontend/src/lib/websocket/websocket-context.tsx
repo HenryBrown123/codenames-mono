@@ -35,7 +35,7 @@ interface WebSocketProviderProps {
  */
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   children,
-  url = "http://192.168.1.156:3000",
+  url = "http://localhost:3000",
   autoConnect = true,
 }) => {
   const [socket, setSocket] = useState<Socket | null>(null);

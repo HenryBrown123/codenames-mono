@@ -17,7 +17,7 @@ export const refreshBaseDecks = (logger: AppLogger) => async (trx: Transaction<D
       .where("deck", "in", BASE_DECK_IDS)
       .executeTakeFirst();
 
-    logger.debug("Deleted existing deck entries", { count: deleteResult.numDeletedRows || 0 });
+    logger.debug("Deleted existing deck entries", { count: Number(deleteResult.numDeletedRows ?? 0) });
 
     for (const deckData of decks) {
       const rows = deckData.decks;
@@ -41,7 +41,7 @@ export const refreshBaseDecks = (logger: AppLogger) => async (trx: Transaction<D
 
         logger.debug("Deck refreshed", {
           deck: deckName,
-          inserted: insertResult.numInsertedOrUpdatedRows || rows.length,
+          inserted: Number(insertResult.numInsertedOrUpdatedRows ?? rows.length),
         });
       } catch (deckError) {
         logger.error("Error refreshing deck", {
