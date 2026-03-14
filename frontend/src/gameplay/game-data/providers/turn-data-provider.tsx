@@ -41,6 +41,16 @@ export const TurnDataProvider = ({ children }: TurnDataProviderProps) => {
   // Auto-populate with current active turn ID if none is being tracked by last action
   // Fall back to last turn in round (even if completed) to ensure historicTurns loads
   const turns = gameData.currentRound?.turns ?? [];
+
+  // Auto-clear lastActionTurnId when that turn has completed
+  // This allows activeTurnId to fall through to the natural game state
+  if (lastActionTurnId) {
+    const lastActionTurnStatus = turns.find((t) => t.id === lastActionTurnId)?.status;
+    if (lastActionTurnStatus === "COMPLETED") {
+      setLastActionTurnId(null);
+    }
+  }
+
   const activeTurnId =
     lastActionTurnId ||
     turns.find((t) => t.status === "ACTIVE")?.id ||

@@ -44,19 +44,33 @@ export const AIStatusPanelView: React.FC<AIStatusPanelViewProps> = ({
 
 export const AIStatusPanel: React.FC = () => {
   const { gameData } = useGameDataRequired();
-  const { data: aiStatus } = useAiStatus(gameData.publicId);
+  const { data: aiStatus, isLoading, error } = useAiStatus(gameData.publicId);
   const triggerMove = useTriggerAiMove(gameData.publicId);
+
+  console.debug("[AI] AIStatusPanel render:", {
+    gameId: gameData.publicId,
+    aiStatus,
+    isLoading,
+    error: error?.message,
+    triggerPending: triggerMove.isPending,
+    triggerError: triggerMove.error?.message,
+  });
 
   const isThinking = aiStatus?.thinking || triggerMove.isPending;
   const showTriggerButton = (aiStatus?.available && !isThinking) || false;
   const isActive = aiStatus?.available || false;
+
+  console.debug("[AI] AIStatusPanel derived:", { isActive, isThinking, showTriggerButton });
 
   return (
     <AIStatusPanelView
       isActive={isActive}
       isThinking={isThinking}
       showTriggerButton={showTriggerButton}
-      onTrigger={() => triggerMove.mutate()}
+      onTrigger={() => {
+        console.debug("[AI] AIStatusPanel trigger button clicked, calling mutate()");
+        triggerMove.mutate();
+      }}
     >
       <GameChatLog gameId={gameData.publicId} />
     </AIStatusPanelView>

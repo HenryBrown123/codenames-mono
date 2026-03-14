@@ -57,7 +57,7 @@ export const useVisibilityContext = (): VisibilityContext => {
     const lastCompletedTurn =
       historicTurns.filter((t) => t.status === "COMPLETED").at(-1) ?? null;
 
-    return {
+    const ctx = {
       role,
       teamName,
       playerName,
@@ -75,6 +75,16 @@ export const useVisibilityContext = (): VisibilityContext => {
       aiAvailable: aiStatus?.available ?? false,
       aiThinking: aiStatus?.thinking ?? false,
     };
+
+    console.debug("[AI] VisibilityContext:", {
+      roundStatus: ctx.roundStatus,
+      hasActiveTurn: ctx.hasActiveTurn,
+      aiAvailable: ctx.aiAvailable,
+      aiThinking: ctx.aiThinking,
+      isAiActive: ctx.roundStatus === "IN_PROGRESS" && ctx.hasActiveTurn && (ctx.aiAvailable || ctx.aiThinking),
+    });
+
+    return ctx;
   }, [
     gameData.playerContext,
     gameData.publicId,

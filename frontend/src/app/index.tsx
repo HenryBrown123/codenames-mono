@@ -211,7 +211,7 @@ const App: React.FC = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <WebSocketProvider url="http://192.168.1.156:3000" autoConnect={true}>
+      <WebSocketProvider url={`${window.location.protocol}//${window.location.hostname}:3000`} autoConnect={true}>
         <div className={styles.appContainer} id="app-container">
           <div className={styles.sectionsContainer} id="sections-container">
             <div className={styles.pageSection} id="page-container">

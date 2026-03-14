@@ -4,7 +4,12 @@ import api from "@frontend/lib/api";
 
 interface TriggerAiMoveApiResponse {
   success: boolean;
-  message: string;
+  data?: {
+    runId: string;
+    pipelineType: string;
+    startedAt: string;
+  };
+  error?: string;
 }
 
 /**
@@ -26,7 +31,7 @@ export const useTriggerAiMove = (gameId: string): UseMutationResult<void, Error,
         throw new Error("Failed to trigger AI move");
       }
 
-      console.debug("[AI] AI move triggered successfully:", response.data.message);
+      console.debug("[AI] AI move triggered successfully:", response.data.data);
     },
     onSuccess: async () => {
       console.debug("[AI] Invalidating queries after AI move trigger");

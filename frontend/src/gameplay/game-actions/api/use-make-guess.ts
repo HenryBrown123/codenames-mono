@@ -1,6 +1,5 @@
 import {
   useMutation,
-  useQueryClient,
   UseMutationResult,
 } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
@@ -65,7 +64,6 @@ export interface GuessResult {
 export const useMakeGuessMutation = (
   gameId: string,
 ): UseMutationResult<GuessResult, Error, MakeGuessInput> => {
-  const queryClient = useQueryClient();
   const { currentPlayerId } = usePlayerContext();
 
   return useMutation({
@@ -120,12 +118,8 @@ export const useMakeGuessMutation = (
         },
       };
     },
-    onSuccess: async (data) => {
-      const turnData = data.turn;
-      queryClient.setQueryData(["turn", turnData.id], turnData);
-      await queryClient.refetchQueries({ queryKey: ["gameData", gameId] });
-      // Invalidate events query to fetch new select event
-      queryClient.invalidateQueries({ queryKey: ["game-events", gameId] });
+    onSuccess: async () => {
+      // Invalidation handled by GameActionsProvider.invalidateGameData()
     },
   });
 };

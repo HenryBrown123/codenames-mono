@@ -35,6 +35,7 @@ export const createLocalLLMService = (config: LocalLLMConfig) => {
    * Generate text/JSON from the LLM
    */
   const generate = async (options: LLMGenerateOptions): Promise<string> => {
+    console.log("[AI-DEBUG] LLM generate called, model:", model, "url:", ollamaUrl);
     const response = await fetch(`${ollamaUrl}/api/generate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -51,10 +52,12 @@ export const createLocalLLMService = (config: LocalLLMConfig) => {
     });
 
     if (!response.ok) {
+      console.log("[AI-DEBUG] LLM request FAILED:", response.statusText);
       throw new Error(`LLM request failed: ${response.statusText}`);
     }
 
     const data: OllamaResponse = await response.json();
+    console.log("[AI-DEBUG] LLM response received, length:", data.response?.length || 0);
     return data.response;
   };
 

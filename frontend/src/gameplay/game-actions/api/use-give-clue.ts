@@ -1,6 +1,5 @@
 import {
   useMutation,
-  useQueryClient,
   UseMutationResult,
 } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
@@ -106,7 +105,6 @@ function transformApiResponseToClueGivenResult(apiResponse: GiveClueApiResponse)
 export const useGiveClueMutation = (
   gameId: string,
 ): UseMutationResult<ClueGivenResult, Error, GiveClueInput> => {
-  const queryClient = useQueryClient();
   const { currentPlayerId } = usePlayerContext();
   const { setViewMode } = useViewMode();
 
@@ -131,14 +129,7 @@ export const useGiveClueMutation = (
 
       return transformApiResponseToClueGivenResult(response.data);
     },
-    onSuccess: async (data) => {
-      const turnData = data.turn;
-      queryClient.setQueryData(["turn", turnData.id], turnData);
-      await queryClient.refetchQueries({ queryKey: ["gameData", gameId] });
-      // Invalidate events query (for future give_clue events)
-      queryClient.invalidateQueries({ queryKey: ["game-events", gameId] });
-
-      // Disable AR mode after clue submission
+    onSuccess: async () => {
       setViewMode("normal");
     },
   });

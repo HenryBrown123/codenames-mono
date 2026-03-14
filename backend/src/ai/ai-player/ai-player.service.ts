@@ -50,6 +50,7 @@ export type AIPlayerDependencies = {
 type AIDecisionContext = {
   gameId: string;
   playerId: string;
+  playerInternalId: number; // The player's _id from players table
   userId: number;
   role: "CODEMASTER" | "CODEBREAKER";
   roundNumber: number;
@@ -132,6 +133,7 @@ export const createAIPlayerService =
      */
     const checkAndActIfNeeded = async (gameId: string) => {
       logger.info("checkAndActIfNeeded called", { gameId });
+      console.log("[AI-DEBUG] checkAndActIfNeeded START", { gameId });
 
       try {
         const gameState = await getGameState(gameId, 0, null);
@@ -166,6 +168,12 @@ export const createAIPlayerService =
           guessesRemaining: currentTurn.guessesRemaining,
           teamName: currentTurn.teamName,
         });
+        console.log("[AI-DEBUG] checking turn:", {
+          turnStatus: currentTurn.status,
+          hasClue: !!currentTurn.clue,
+          guessesRemaining: currentTurn.guessesRemaining,
+          teamName: currentTurn.teamName,
+        });
 
         // Only act on active turns
         if (currentTurn.status !== "ACTIVE") {
@@ -178,20 +186,41 @@ export const createAIPlayerService =
 
         const allPlayers = gameState.data.teams.flatMap((team) => team.players);
 
+        console.log("[AI-DEBUG] allPlayers:", allPlayers.map(p => ({
+          publicId: p.publicId,
+          role: p.role,
+          teamName: p.teamName,
+          isAi: p.isAi,
+        })));
+
         logger.debug("checkAndActIfNeeded: Checking which player role should act", currentTurn);
 
         if (!currentTurn.clue) {
           logger.debug("checkAndActIfNeeded: CHecking whether AI codemaster should act");
           const teamName = currentTurn.teamName;
 
+          const teamPlayers = allPlayers.filter(p => p.teamName === teamName);
+          console.log("[AI-DEBUG] Looking for AI codemaster on team", teamName, "players:", teamPlayers.map(p => ({
+            role: p.role,
+            isAi: p.isAi,
+            publicName: p.publicName,
+          })));
+
           const aiCodemaster = allPlayers.find(
             (p) => p.teamName === teamName && p.isAi && p.role === "CODEMASTER",
           );
+
+          console.log("[AI-DEBUG] aiCodemaster found:", aiCodemaster ? {
+            publicId: aiCodemaster.publicId,
+            role: aiCodemaster.role,
+            isAi: aiCodemaster.isAi,
+          } : null);
 
           if (aiCodemaster) {
             const context: AIDecisionContext = {
               gameId,
               playerId: aiCodemaster.publicId,
+              playerInternalId: aiCodemaster._id,
               userId: aiCodemaster._userId,
               role: "CODEMASTER",
               roundNumber: currentRound.number,
@@ -199,7 +228,9 @@ export const createAIPlayerService =
               teamName: aiCodemaster.teamName,
             };
 
+            console.log("[AI-DEBUG] Calling aiGiveClue with context:", context);
             await aiGiveClue(context);
+            console.log("[AI-DEBUG] aiGiveClue completed");
             return;
           }
         }
@@ -212,8 +243,16 @@ export const createAIPlayerService =
             (p) => p.teamName === teamName && p.role === "CODEBREAKER",
           );
 
+          console.log("[AI-DEBUG] Looking for AI codebreaker on team", teamName, "codebreakers:", teamCodebreakers.map(p => ({
+            role: p.role,
+            isAi: p.isAi,
+            publicName: p.publicName,
+          })));
+
           const allCodebreakersAreAI =
             teamCodebreakers.length > 0 && teamCodebreakers.every((p) => p.isAi);
+
+          console.log("[AI-DEBUG] allCodebreakersAreAI:", allCodebreakersAreAI);
 
           if (allCodebreakersAreAI) {
             const aiCodebreaker = teamCodebreakers[0];
@@ -221,6 +260,7 @@ export const createAIPlayerService =
             const context: AIDecisionContext = {
               gameId,
               playerId: aiCodebreaker.publicId,
+              playerInternalId: aiCodebreaker._id,
               userId: aiCodebreaker._userId,
               role: "CODEBREAKER",
               roundNumber: currentRound.number,
@@ -230,15 +270,19 @@ export const createAIPlayerService =
 
             logger.debug("checkAndActIfNeeded: About to make AI codebreaker guess", context);
 
+            console.log("[AI-DEBUG] Calling aiMakeGuess with context:", context);
             await aiMakeGuess(context);
+            console.log("[AI-DEBUG] aiMakeGuess completed");
             return;
           }
         }
       } catch (error) {
+        console.log("[AI-DEBUG] checkAndActIfNeeded ERROR:", error);
         logger.error("checkAndActIfNeeded failed", {
           error: error instanceof Error ? error.message : String(error),
         });
       }
+      console.log("[AI-DEBUG] checkAndActIfNeeded END - no AI action taken");
     };
 
     /**
@@ -246,31 +290,40 @@ export const createAIPlayerService =
      */
     const aiGiveClue = async (context: AIDecisionContext): Promise<void> => {
       const decisionKey = `clue:${context.gameId}:${context.playerId}`;
+      console.log("[AI-DEBUG] aiGiveClue START, decisionKey:", decisionKey);
 
       if (activeDecisions.has(decisionKey)) {
+        console.log("[AI-DEBUG] aiGiveClue BLOCKED - already running");
         return;
       }
 
       activeDecisions.add(decisionKey);
+      console.log("[AI-DEBUG] aiGiveClue proceeding...");
 
       // Get internal game ID and player ID for DB operations
+      console.log("[AI-DEBUG] aiGiveClue: looking up game by publicId:", context.gameId);
       const game = await findGameByPublicId(context.gameId);
       if (!game) {
+        console.log("[AI-DEBUG] aiGiveClue: GAME NOT FOUND - exiting");
         activeDecisions.delete(decisionKey);
         return;
       }
+      console.log("[AI-DEBUG] aiGiveClue: game found, _id:", game._id);
 
       // Create pipeline run
       let run;
       try {
+        console.log("[AI-DEBUG] aiGiveClue: creating pipeline run...");
         run = await createPipelineRun({
           gameId: game._id,
-          playerId: context.userId, // Using userId as playerId since it's the internal ID
+          playerId: context.playerInternalId,
           pipelineType: PIPELINE_TYPE.SPYMASTER,
         });
+        console.log("[AI-DEBUG] aiGiveClue: pipeline run created, id:", run.id);
 
         GameEventsEmitter.aiPipelineStarted(context.gameId, run.id, PIPELINE_TYPE.SPYMASTER);
       } catch (error) {
+        console.log("[AI-DEBUG] aiGiveClue: PIPELINE RUN CREATION FAILED:", error);
         activeDecisions.delete(decisionKey);
         return;
       }
@@ -311,6 +364,7 @@ export const createAIPlayerService =
           .filter((t: any) => t.clue && t.clue.word)
           .map((t: any) => t.clue.word);
 
+        console.log("[AI-DEBUG] About to call LLM pipeline.runSpymasterPipeline...");
         const pipelineResult = await pipeline.runSpymasterPipeline({
           currentTeam: myTeam,
           friendlyWords,
@@ -323,6 +377,7 @@ export const createAIPlayerService =
           },
         });
 
+        console.log("[AI-DEBUG] LLM pipeline returned:", pipelineResult);
         // Store spymaster response
         const spymasterResponse: SpymasterResponse = {
           clue: {
@@ -401,12 +456,15 @@ export const createAIPlayerService =
     const aiMakeGuess = async (context: AIDecisionContext): Promise<void> => {
       logger.debug("checkAndActIfNeeded: About to make guess", context);
       const decisionKey = `guess:${context.gameId}:${context.playerId}`;
+      console.log("[AI-DEBUG] aiMakeGuess START, decisionKey:", decisionKey);
 
       if (activeDecisions.has(decisionKey)) {
+        console.log("[AI-DEBUG] aiMakeGuess BLOCKED - already running");
         return;
       }
 
       activeDecisions.add(decisionKey);
+      console.log("[AI-DEBUG] aiMakeGuess proceeding...");
 
       // Get internal game ID for DB operations
       const game = await findGameByPublicId(context.gameId);
@@ -426,7 +484,7 @@ export const createAIPlayerService =
 
         run = await createPipelineRun({
           gameId: game._id,
-          playerId: context.userId, // Using userId as playerId since it's the internal ID
+          playerId: context.playerInternalId,
           pipelineType: PIPELINE_TYPE.GUESSER,
         });
 
