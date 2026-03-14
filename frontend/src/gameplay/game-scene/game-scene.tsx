@@ -1,42 +1,57 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useGameDataRequired, useTurn } from "../game-data/providers";
-import styles from "./game-scene.module.css";
-import { usePlayerScene } from "./";
-import { getSceneMessage } from "./scene-messages";
-import { getDashboardComponent, getBoardComponent } from "./component-mappings";
-import { SpectatorBoard } from "../game-board/boards/spectator-board";
+import { useVisibilityContext } from "../game-controls/dashboards/config/context";
+import { isCodebreakerGuessing, isRoundComplete } from "../game-controls/dashboards/config/rules";
+import { useGameActions } from "../game-actions";
+import { deriveMessage } from "./derive-message";
+import { GameBoard } from "../game-board/boards/game-board";
+import { GameDashboard } from "../game-controls/dashboards";
 import { GameInstructions } from "../shared/game-instructions";
 import { ActionButton } from "../shared/components";
 import { CodeWordInput } from "../game-controls/dashboards";
-import { useGameActions } from "../game-actions";
 import { GameOverOverlay } from "../game-over";
+import styles from "./game-scene.module.css";
 
 /**
- * Main game scene orchestrating board and controls
+ * Main game scene — derives everything from server data via VisibilityContext.
+ * No scene state machine. Board behaviour injected via props.
  */
-
 export const GameScene: React.FC = () => {
   const { gameData, isPending, isError, error, refetch, isFetching } = useGameDataRequired();
   const { activeTurn } = useTurn();
+  const ctx = useVisibilityContext();
+  const { makeGuess, giveClue, actionState } = useGameActions();
 
-  const { currentRole, currentScene } = usePlayerScene();
   const [showCluePanel, setShowCluePanel] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
-  const { giveClue, actionState } = useGameActions();
 
-  const DashboardComponent = getDashboardComponent(currentRole, currentScene, gameData);
+  // --- Derive board handlers from visibility context ---
+  const isGuessing = isCodebreakerGuessing(ctx);
+  const isLoading = ctx.isActionLoading;
 
-  const BoardComponent = React.useMemo(() => {
-    return getBoardComponent(currentRole, currentScene);
-  }, [currentRole, currentScene]);
+  const handleCardClick = useCallback(
+    (word: string) => {
+      if (!isLoading && isGuessing) {
+        makeGuess(word);
+      }
+    },
+    [makeGuess, isLoading, isGuessing],
+  );
 
-  const messageText = getSceneMessage(currentRole, currentScene, gameData, activeTurn);
+  const canInteract = useCallback(
+    (card: any) => isGuessing && !isLoading && !card.selected,
+    [isGuessing, isLoading],
+  );
 
+  // --- Derive message ---
+  const messageText = deriveMessage(ctx, ctx.lastCompletedTurn, activeTurn ?? null);
+
+  // --- Loading / error states ---
   if (isPending && !gameData) {
     return (
       <div className={styles.gameSceneContainer}>
         <div className={styles.boardArea}>
-          <SpectatorBoard />
+          <GameBoard />
         </div>
         <div className={styles.controlArea} />
       </div>
@@ -55,7 +70,7 @@ export const GameScene: React.FC = () => {
     );
   }
 
-  const isRoundComplete = gameData.currentRound?.status === "COMPLETED";
+  const roundComplete = isRoundComplete(ctx);
 
   const handleSubmitClue = (word: string, count: number) => {
     giveClue(word, count);
@@ -64,19 +79,17 @@ export const GameScene: React.FC = () => {
 
   return (
     <>
-      {isRoundComplete && <GameOverOverlay />}
+      {roundComplete && <GameOverOverlay />}
 
       <div className={styles.gameSceneContainer}>
         <div className={styles.boardArea}>
-          <BoardComponent />
+          <GameBoard onCardClick={handleCardClick} canInteract={canInteract} />
         </div>
 
         <div className={styles.controlArea}>
           {isFetching && <div className={styles.refetchIndicator} />}
 
-          <DashboardComponent
-            key={isRoundComplete ? 'game-over' : `${currentRole}-${currentScene}`}
-          />
+          <GameDashboard key={roundComplete ? "game-over" : `${ctx.role}-dashboard`} />
         </div>
 
         <div className={styles.instructionsOverlay} data-visible={showInstructions}>

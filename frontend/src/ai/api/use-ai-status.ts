@@ -25,19 +25,26 @@ export const useAiStatus = (gameId: string): UseQueryResult<AiStatus, Error> => 
   return useQuery({
     queryKey: ["game", gameId, "ai", "status"],
     queryFn: async () => {
+      console.debug("[AI] Fetching AI status for game:", gameId);
       const response: AxiosResponse<AiStatusApiResponse> = await api.get(
         `/games/${gameId}/ai/status`,
       );
 
       if (!response.data.success) {
+        console.debug("[AI] AI status fetch failed");
         throw new Error("Failed to fetch AI status");
       }
 
+      console.debug("[AI] AI status:", response.data.data);
       return response.data.data;
     },
     refetchInterval: (query) => {
       // Poll every 2 seconds if AI is thinking
-      return query.state.data?.thinking ? 2000 : false;
+      const interval = query.state.data?.thinking ? 2000 : false;
+      if (interval) {
+        console.debug("[AI] Polling AI status (thinking=true)");
+      }
+      return interval;
     },
   });
 };

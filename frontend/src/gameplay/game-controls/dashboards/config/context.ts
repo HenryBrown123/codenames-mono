@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useGameDataRequired, useTurn } from "../../../game-data/providers";
 import { useGameActions } from "../../../game-actions";
 import { useAiStatus } from "@frontend/ai/api";
+import type { TurnData } from "@frontend/shared-types";
 
 export interface VisibilityContext {
   // Player info
@@ -15,6 +16,10 @@ export interface VisibilityContext {
   hasClue: boolean;
   guessesRemaining: number;
   hasActiveTurn: boolean;
+  activeTurn: TurnData | null;
+
+  // Between-turns context
+  lastCompletedTurn: TurnData | null;
 
   // Round state
   roundStatus: "SETUP" | "IN_PROGRESS" | "COMPLETED" | null;
@@ -35,7 +40,7 @@ export interface VisibilityContext {
  */
 export const useVisibilityContext = (): VisibilityContext => {
   const { gameData } = useGameDataRequired();
-  const { activeTurn } = useTurn();
+  const { activeTurn, historicTurns } = useTurn();
   const { actionState } = useGameActions();
   const { data: aiStatus } = useAiStatus(gameData.publicId);
 
@@ -48,6 +53,10 @@ export const useVisibilityContext = (): VisibilityContext => {
     const hasCards = (gameData.currentRound?.cards?.length ?? 0) > 0;
     const hasRound = gameData.currentRound !== null && gameData.currentRound !== undefined;
 
+    // Last completed turn for "what happened" context between turns
+    const lastCompletedTurn =
+      historicTurns.filter((t) => t.status === "COMPLETED").at(-1) ?? null;
+
     return {
       role,
       teamName,
@@ -57,6 +66,8 @@ export const useVisibilityContext = (): VisibilityContext => {
       hasClue: activeTurn?.clue !== null && activeTurn?.clue !== undefined,
       guessesRemaining: activeTurn?.guessesRemaining ?? 0,
       hasActiveTurn: activeTurn?.status === "ACTIVE",
+      activeTurn: activeTurn ?? null,
+      lastCompletedTurn,
       roundStatus,
       hasCards,
       hasRound,
@@ -64,5 +75,13 @@ export const useVisibilityContext = (): VisibilityContext => {
       aiAvailable: aiStatus?.available ?? false,
       aiThinking: aiStatus?.thinking ?? false,
     };
-  }, [gameData.playerContext, gameData.publicId, gameData.currentRound, activeTurn, actionState.status, aiStatus]);
+  }, [
+    gameData.playerContext,
+    gameData.publicId,
+    gameData.currentRound,
+    activeTurn,
+    historicTurns,
+    actionState.status,
+    aiStatus,
+  ]);
 };

@@ -61,10 +61,19 @@ interface AiStatusIndicatorProps {
 }
 
 export const AiStatusIndicator: React.FC<AiStatusIndicatorProps> = ({ gameId }) => {
-  const { data: aiStatus } = useAiStatus(gameId);
+  const { data: aiStatus, isLoading, error } = useAiStatus(gameId);
   const triggerMove = useTriggerAiMove(gameId);
 
+  console.debug("[AI] AiStatusIndicator render:", {
+    gameId,
+    aiStatus,
+    isLoading,
+    error: error?.message,
+    triggerPending: triggerMove.isPending,
+  });
+
   if (!aiStatus) {
+    console.debug("[AI] AiStatusIndicator: No AI status data yet");
     return null;
   }
 
@@ -72,12 +81,21 @@ export const AiStatusIndicator: React.FC<AiStatusIndicatorProps> = ({ gameId }) 
   const showTriggerButton = aiStatus.available && !isThinking;
   const isActive = aiStatus.available || false;
 
+  console.debug("[AI] AiStatusIndicator derived state:", {
+    isActive,
+    isThinking,
+    showTriggerButton,
+  });
+
   return (
     <AiStatusIndicatorView
       isActive={isActive}
       isThinking={isThinking}
       showTriggerButton={showTriggerButton}
-      onTrigger={() => triggerMove.mutate()}
+      onTrigger={() => {
+        console.debug("[AI] Trigger button clicked");
+        triggerMove.mutate();
+      }}
     />
   );
 };

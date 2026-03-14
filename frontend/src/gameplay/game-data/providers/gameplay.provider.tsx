@@ -1,13 +1,11 @@
 import { ReactNode } from "react";
 import { GameDataProvider, useGameData } from "./game-data-provider";
 import { TurnDataProvider } from "./turn-data-provider";
-import { PlayerSceneProvider } from "../../game-scene";
 import { GameActionsProvider } from "../../game-actions/game-actions-provider";
 import { PlayerProvider } from "./player-context-provider";
 import { DeviceModeManager } from "../../device-mode";
 import { ActionButton } from "../../shared/components/action-button";
 import { GameData } from "@frontend/shared-types";
-import { GAME_TYPE } from "@codenames/shared/types";
 import { ViewModeProvider } from "../../game-board/view-mode";
 import styles from "./gameplay.module.css";
 
@@ -19,7 +17,7 @@ interface GameplayProviderProps {
 
 /**
  * Main gameplay provider that sets up the correct dependency hierarchy:
- * Player Context → Data → Turn → Scene Management → Actions → UI
+ * Player Context → Data → Turn → Device Mode → Actions → UI
  */
 export const GameplayProvider = ({ gameId, children }: GameplayProviderProps) => {
   return (

@@ -26,7 +26,6 @@ import {
   type GameActionsContextValue,
   type ActionState,
 } from "../gameplay/game-actions";
-import { PlayerSceneContext, type PlayerSceneContextValue } from "../gameplay/game-scene";
 import { ViewModeContext, type ViewMode, type ViewModeContextValue } from "../gameplay/game-board/view-mode";
 
 // ============================================================================
@@ -265,16 +264,6 @@ export const MockProviders: React.FC<MockProvidersProps> = ({ children, config }
     []
   );
 
-  const sceneValue: PlayerSceneContextValue = useMemo(
-    () => ({
-      currentRole: config.role,
-      currentScene: config.roundStatus === "SETUP" ? "LOBBY" : "ACTIVE",
-      triggerSceneTransition: (event: string) =>
-        console.log("[Sandbox] triggerSceneTransition:", event),
-    }),
-    [config.role, config.roundStatus]
-  );
-
   const viewModeValue: ViewModeContextValue = useMemo(
     () => ({
       viewMode,
@@ -289,11 +278,9 @@ export const MockProviders: React.FC<MockProvidersProps> = ({ children, config }
       <TurnContext.Provider value={turnValue}>
         <GameActionsContext.Provider value={actionsValue}>
           <PlayerContext.Provider value={playerValue}>
-            <PlayerSceneContext.Provider value={sceneValue}>
-              <ViewModeContext.Provider value={viewModeValue}>
-                {children}
-              </ViewModeContext.Provider>
-            </PlayerSceneContext.Provider>
+            <ViewModeContext.Provider value={viewModeValue}>
+              {children}
+            </ViewModeContext.Provider>
           </PlayerContext.Provider>
         </GameActionsContext.Provider>
       </TurnContext.Provider>
