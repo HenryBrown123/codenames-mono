@@ -10,7 +10,11 @@
     "moduleResolution": "bundler",
     "paths": {
       "@frontend/*": ["src/*"],
-      "@frontend/lib/*": ["src/lib/*"],
+      "@frontend/api": ["src/api/api.ts"],
+      "@frontend/auth/*": ["src/auth/*"],
+      "@frontend/websocket": ["src/websocket/index.ts"],
+      "@frontend/websocket/*": ["src/websocket/*"],
+      "@frontend/utils/*": ["src/utils/*"],
       "@frontend/game/*": ["src/gameplay/*"],
       "@frontend/game-access/*": ["src/game-access/*"],
       "@frontend/gameplay/*": ["src/gameplay/*"],
