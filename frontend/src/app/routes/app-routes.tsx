@@ -2,7 +2,7 @@ import React from "react";
 import { Routes, Route, BrowserRouter as Router, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { GameplayRoute } from "./gameplay-route";
-import { CreateGameRoute } from "./create-game-route";
+import { CreateGameRoute } from "./new-game-route";
 import { GuestAuthRoute } from "./guest-auth-route";
 import { LobbyRoute } from "./lobby-route";
 
