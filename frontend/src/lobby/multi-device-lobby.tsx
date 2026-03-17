@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import styles from "./lobby.module.css";
 import { useLobbyQuery, useLobbyMutations } from "@frontend/lobby/api";
-import { useCurrentUser } from "@frontend/lib/auth/use-current-user";
+import { useCurrentUser } from "@frontend/auth/use-current-user";
 import {
   LobbyHeaderView,
   StartButtonView,
@@ -49,11 +49,6 @@ const dotVariants = {
     scale: 0,
     transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] as const },
   },
-};
-
-const TEAM_COLORS = {
-  "Team Red": "var(--color-team-red, #ff0040)",
-  "Team Blue": "var(--color-team-blue, #00d4ff)",
 };
 
 export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) => {
@@ -164,26 +159,22 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
 
         {/* Teams Display */}
         <TeamsGridView>
-          {lobbyData.teams?.map((team) => {
-            const teamColor = TEAM_COLORS[team.name as keyof typeof TEAM_COLORS] ?? "#6b7280";
-            return (
-              <TeamTileView
-                key={team.name}
-                teamName={team.name}
-                teamColor={teamColor}
-                playerCount={team.players?.length ?? 0}
-                emptyMessage="No operatives yet..."
-              >
-                {team.players?.map((player) => (
-                  <PlayerTileView
-                    key={player.publicId}
-                    playerName={player.name}
-                    isCurrentUser={currentUser?.userId === player.userId}
-                  />
-                ))}
-              </TeamTileView>
-            );
-          })}
+          {lobbyData.teams?.map((team) => (
+            <TeamTileView
+              key={team.name}
+              teamName={team.name}
+              playerCount={team.players?.length ?? 0}
+              emptyMessage="No operatives yet..."
+            >
+              {team.players?.map((player) => (
+                <PlayerTileView
+                  key={player.publicId}
+                  playerName={player.name}
+                  isCurrentUser={currentUser?.userId === player.userId}
+                />
+              ))}
+            </TeamTileView>
+          ))}
         </TeamsGridView>
 
         <StartButtonView canStart={canStartGame} isLoading={isLoading} onClick={handleStartGame} />

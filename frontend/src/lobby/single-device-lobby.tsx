@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import styles from "./lobby.module.css";
-import { useLobbyMutations, type LobbyPlayer, type LobbyData } from "@frontend/lobby/api";
+import { useLobbyMutations, type LobbyData } from "@frontend/lobby/api";
+import { getTeamConfig } from "@frontend/shared-types";
 import {
   LobbyHeaderView,
   StartButtonView,
@@ -12,6 +13,7 @@ import {
   PlayerTileView,
   AddPlayerInputView,
 } from "./components";
+import { useDragState, useEditingState, useTeamInputs } from "./hooks";
 
 /**
  * Lobby for single-device play with drag-drop team management
@@ -38,25 +40,14 @@ const boxVariants = {
   },
 };
 
-const TEAM_COLORS = {
-  "Team Red": "var(--color-team-red, #ff0040)",
-  "Team Blue": "var(--color-team-blue, #00d4ff)",
-};
-
 export const SingleDeviceLobby: React.FC<SingleDeviceLobbyProps> = ({ gameId, lobbyData }) => {
   const navigate = useNavigate();
   const [activeTeam, setActiveTeam] = useState<"Team Red" | "Team Blue">("Team Red");
-  const [editingPlayer, setEditingPlayer] = useState<string | null>(null);
-  const [editName, setEditName] = useState("");
-  const [teamRedInput, setTeamRedInput] = useState("");
-  const [teamBlueInput, setTeamBlueInput] = useState("");
-  const [draggedPlayer, setDraggedPlayer] = useState<{
-    player: LobbyPlayer;
-    fromTeam: string;
-  } | null>(null);
-  const [dragOverTeam, setDragOverTeam] = useState<string | null>(null);
 
   const { ops, isPending: isLoading, error } = useLobbyMutations(gameId);
+  const drag = useDragState();
+  const editing = useEditingState();
+  const teamInputs = useTeamInputs();
 
   // Derived state
   const totalPlayers =
@@ -67,16 +58,13 @@ export const SingleDeviceLobby: React.FC<SingleDeviceLobbyProps> = ({ gameId, lo
 
   // Handlers
   const handleQuickAdd = (teamName: string) => {
-    const playerName = teamName === "Team Red" ? teamRedInput.trim() : teamBlueInput.trim();
+    const playerName = teamInputs.getInputValue(teamName);
     if (!playerName) return;
 
     ops.addPlayer.mutate(
       { playerName, teamName },
       {
-        onSuccess: () => {
-          if (teamName === "Team Red") setTeamRedInput("");
-          else setTeamBlueInput("");
-        },
+        onSuccess: () => teamInputs.clearInput(teamName),
       },
     );
   };
@@ -85,28 +73,16 @@ export const SingleDeviceLobby: React.FC<SingleDeviceLobbyProps> = ({ gameId, lo
     ops.removePlayer.mutate(playerId);
   };
 
-  const handleEditPlayer = (player: LobbyPlayer) => {
-    setEditingPlayer(player.publicId);
-    setEditName(player.name);
-  };
-
   const handleSaveEdit = () => {
-    if (!editingPlayer || !editName.trim()) return;
+    const payload = editing.getEditPayload();
+    if (!payload) return;
 
     ops.renamePlayer.mutate(
-      { playerId: editingPlayer, newPlayerName: editName.trim() },
+      { playerId: payload.playerId, newPlayerName: payload.newName },
       {
-        onSuccess: () => {
-          setEditingPlayer(null);
-          setEditName("");
-        },
+        onSuccess: () => editing.reset(),
       },
     );
-  };
-
-  const handleCancelEdit = () => {
-    setEditingPlayer(null);
-    setEditName("");
   };
 
   const handleStartGame = () => {
@@ -117,68 +93,37 @@ export const SingleDeviceLobby: React.FC<SingleDeviceLobbyProps> = ({ gameId, lo
     });
   };
 
-  // Drag handlers
-  const handleDragStart = (e: React.DragEvent, player: LobbyPlayer, fromTeam: string) => {
-    setDraggedPlayer({ player, fromTeam });
-    e.dataTransfer.effectAllowed = "move";
-  };
-
-  const handleDragOver = (e: React.DragEvent, teamName: string) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    setDragOverTeam(teamName);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setDragOverTeam(null);
-    }
-  };
-
   const handleDrop = (e: React.DragEvent, toTeam: string) => {
-    e.preventDefault();
-    setDragOverTeam(null);
-
-    if (!draggedPlayer || draggedPlayer.fromTeam === toTeam) {
-      setDraggedPlayer(null);
-      return;
-    }
+    const result = drag.onDrop(e, toTeam);
+    if (!result) return;
 
     ops.movePlayerToTeam.mutate(
-      { playerId: draggedPlayer.player.publicId, newTeamName: toTeam },
+      { playerId: result.player.publicId, newTeamName: result.toTeam },
       {
-        onSettled: () => setDraggedPlayer(null),
+        onSettled: () => drag.reset(),
       },
     );
   };
 
-  const handleDragEnd = () => {
-    setDraggedPlayer(null);
-    setDragOverTeam(null);
-  };
-
   // Render helpers
   const renderTeamTile = (team: LobbyData["teams"][0]) => {
-    const teamColor = TEAM_COLORS[team.name as keyof typeof TEAM_COLORS] ?? "#6b7280";
-    const inputValue = team.name === "Team Red" ? teamRedInput : teamBlueInput;
-    const setInputValue = team.name === "Team Red" ? setTeamRedInput : setTeamBlueInput;
+    const teamConfig = getTeamConfig(team.name);
 
     return (
       <TeamTileView
         key={team.name}
         teamName={team.name}
-        teamColor={teamColor}
         playerCount={team.players?.length ?? 0}
-        isDragOver={dragOverTeam === team.name}
-        onDragOver={(e) => handleDragOver(e, team.name)}
-        onDragLeave={handleDragLeave}
+        isDragOver={drag.isDragOver(team.name)}
+        onDragOver={(e) => drag.onDragOver(e, team.name)}
+        onDragLeave={drag.onDragLeave}
         onDrop={(e) => handleDrop(e, team.name)}
         footer={
           <AddPlayerInputView
-            value={inputValue}
-            onChange={setInputValue}
+            value={teamInputs.getValue(team.name)}
+            onChange={(value) => teamInputs.setValue(team.name, value)}
             onSubmit={() => handleQuickAdd(team.name)}
-            teamColor={teamColor}
+            teamColor={teamConfig.cssVar}
             disabled={isLoading}
           />
         }
@@ -188,16 +133,16 @@ export const SingleDeviceLobby: React.FC<SingleDeviceLobbyProps> = ({ gameId, lo
             key={player.publicId}
             playerName={player.name}
             isDraggable
-            isDragging={draggedPlayer?.player.publicId === player.publicId}
-            isEditing={editingPlayer === player.publicId}
-            editValue={editName}
-            onEditChange={setEditName}
+            isDragging={drag.isDragging(player.publicId)}
+            isEditing={editing.isEditing(player.publicId)}
+            editValue={editing.editValue}
+            onEditChange={editing.setEditValue}
             onEditSave={handleSaveEdit}
-            onEditCancel={handleCancelEdit}
-            onEditStart={() => handleEditPlayer(player)}
+            onEditCancel={editing.cancelEdit}
+            onEditStart={() => editing.startEdit(player)}
             onRemove={() => handleRemovePlayer(player.publicId)}
-            onDragStart={(e) => handleDragStart(e, player, team.name)}
-            onDragEnd={handleDragEnd}
+            onDragStart={(e) => drag.onDragStart(e, player, team.name)}
+            onDragEnd={drag.onDragEnd}
             disabled={isLoading}
           />
         ))}
