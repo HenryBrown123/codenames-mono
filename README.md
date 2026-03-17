@@ -620,9 +620,11 @@ Frontend and backend extend these base types with their specific requirements.
 │       ├── ai
 │       │   ├── api
 │       │   └── components
+│       ├── api
 │       ├── app
 │       │   └── routes
 │       │       └── page-layout
+│       ├── auth
 │       ├── chat
 │       │   ├── api
 │       │   └── components
@@ -660,24 +662,24 @@ Frontend and backend extend these base types with their specific requirements.
 │       │       │   ├── error-message
 │       │       │   └── loading-spinner
 │       │       └── game-instructions
-│       ├── lib
-│       │   ├── auth
-│       │   └── websocket
 │       ├── lobby
 │       │   ├── api
 │       │   │   ├── mutations
 │       │   │   └── queries
-│       │   └── components
+│       │   ├── components
+│       │   └── hooks
 │       ├── shared-types
 │       ├── style
-│       └── types
+│       ├── types
+│       ├── utils
+│       └── websocket
 └── shared
     └── src
         ├── api
         │   └── modules
         └── types
 
-116 directories
+118 directories
 ```
 
 ## Getting Started

@@ -1,8 +1,11 @@
 /**
  * GUESSER PRE-FILTER (Stage 1)
  *
- * Evaluates individual words for confidence level.
+ * Evaluates words in batches for confidence level.
  * Filters out words with "no link" to the clue.
+ *
+ * Key improvement: batches 5 words per LLM call instead of 1,
+ * cutting latency by ~5x while giving the model cross-word context.
  */
 
 import type { LocalLLMService } from "./local-llm.service";
@@ -12,7 +15,7 @@ import type { LocalLLMService } from "./local-llm.service";
  */
 export type PreFilterInput = {
   clueWord: string;
-  word: string; // Single word to evaluate
+  word: string;
 };
 
 export type PreFilterOutput = {
@@ -21,56 +24,87 @@ export type PreFilterOutput = {
   reason: string;
 };
 
+const BATCH_SIZE = 5;
+
 /**
- * Build the pre-filter prompt for a single word
+ * Build the pre-filter prompt for a batch of words
+ */
+export const buildBatchPreFilterPrompt = (clueWord: string, words: string[]): string => {
+  const wordList = words.map((w, i) => `${i + 1}. ${w}`).join("\n");
+
+  return `You are a Guesser in Codenames. The Spymaster gave the clue: "${clueWord}"
+
+Evaluate how strongly EACH of the following words connects to that clue.
+
+WORDS TO EVALUATE:
+${wordList}
+
+For each word, decide:
+- "extremely": strong, direct connection (e.g., clue "orbit" → JUPITER is extremely linked)
+- "moderately": plausible but less certain (e.g., clue "orbit" → SPACE is moderately linked)
+- "no link": no meaningful connection (e.g., clue "orbit" → HAMMER has no link)
+
+Respond with a JSON array containing one object per word, in the same order as above:
+
+\`\`\`json
+[
+  { "word": "WORD1", "link_confidence": "extremely", "reason": "brief explanation" },
+  { "word": "WORD2", "link_confidence": "no link", "reason": "brief explanation" }
+]
+\`\`\`
+
+Rules:
+- Evaluate EVERY word in the list. Do not skip any.
+- Consider common associations, synonyms, categories, and thematic links.
+- Do not use extremely obscure meanings or rare slang.
+- Output ONLY the JSON array, no extra text.`;
+};
+
+/**
+ * Build the pre-filter prompt for a single word (fallback)
  */
 export const buildPreFilterPrompt = (input: PreFilterInput): string => {
   const { clueWord, word } = input;
 
-  return `You are a Guesser-Assistant working in a game of Codenames.
+  return `You are a Guesser in Codenames. The Spymaster gave the clue: "${clueWord}"
 
-Your job: Decide how confidently the word "${word}" is connected to the clue "${clueWord}" for your team.
+Evaluate how strongly the word "${word}" connects to that clue.
 
-You must answer **only** in this JSON format:
+Decide:
+- "extremely": strong, direct connection
+- "moderately": plausible but less certain
+- "no link": no meaningful connection
+
+Respond with a JSON object:
 
 \`\`\`json
 {
   "word": "${word}",
-  "link_confidence": "<'extremely' | 'moderately' | 'no link'>",
-  "reason": "<short explanation>"
+  "link_confidence": "extremely" | "moderately" | "no link",
+  "reason": "brief explanation"
 }
 \`\`\`
 
-Rules:
-• You may use metaphors and indirect associations if relevant to gameplay.
-• Avoid extremely obscure meanings, rare slang, or associations with a high risk of pointing to opponent, neutral, or assassin words.
-• If you judge there is essentially no meaningful link, choose "link_confidence": "no link".
-• If you judge the link is strong and direct, choose "link_confidence": "extremely".
-• If you judge the link is plausible but less certain, choose "link_confidence": "moderately".
-• Do not output any numeric score — only the categorical field.
-• Output only the JSON object — no extra text, commentary or lists.
-
-Examples:
-
-HIGH confidence ("extremely"):
-• BABY → CRADLE (very clear, direct link)
-• SPACE → ROCKET (iconic space-travel link)
-• MUSIC → GUITAR (core instrument)
-• OCEAN → WAVES (defining ocean feature)
-• FOREST → TREES (trees = forest)
-
-MODERATE confidence ("moderately"):
-• BABY → SLEEP (babies sleep, but many things sleep)
-• SPACE → ROOM (a "space" could be a room)
-• MUSIC → SOUND (music produces sound, general connection)
-• OCEAN → BODY (ocean is a "body" of water, broader)
-• FOREST → SHADOW (forest has shadows, weaker link)
-
-Now evaluate: Does "${word}" connect to "${clueWord}"?`;
+Output ONLY the JSON object, no extra text.`;
 };
 
 /**
- * Run pre-filter for all remaining words
+ * Validate a single pre-filter result has all required fields
+ * and a valid link_confidence value
+ */
+const isValidPreFilterResult = (r: unknown): r is PreFilterOutput => {
+  if (!r || typeof r !== "object") return false;
+  const obj = r as Record<string, unknown>;
+  return (
+    typeof obj.word === "string" &&
+    typeof obj.link_confidence === "string" &&
+    ["extremely", "moderately", "no link"].includes(obj.link_confidence) &&
+    typeof obj.reason === "string"
+  );
+};
+
+/**
+ * Run pre-filter for all remaining words using batched LLM calls
  */
 export const runPreFilter = async (
   llm: LocalLLMService,
@@ -82,65 +116,150 @@ export const runPreFilter = async (
 ): Promise<PreFilterOutput[]> => {
   const results: PreFilterOutput[] = [];
 
-  for (const word of remainingWords) {
-    const prompt = buildPreFilterPrompt({ clueWord, word });
+  // Process in batches
+  for (let i = 0; i < remainingWords.length; i += BATCH_SIZE) {
+    const batch = remainingWords.slice(i, i + BATCH_SIZE);
 
-    // Log the prompt if callback provided
+    // Use single-word prompt if only 1 word in batch
+    if (batch.length === 1) {
+      const singleResult = await evaluateSingleWord(
+        llm,
+        clueWord,
+        batch[0],
+        onPromptGenerated,
+      );
+      results.push(singleResult);
+      if (onWordEvaluated) {
+        await onWordEvaluated(singleResult);
+      }
+      continue;
+    }
+
+    const prompt = buildBatchPreFilterPrompt(clueWord, batch);
+
     if (onPromptGenerated) {
       await onPromptGenerated(prompt);
     }
 
     let attempts = 0;
     const maxAttempts = 3;
+    let batchProcessed = false;
 
-    while (attempts < maxAttempts) {
+    while (attempts < maxAttempts && !batchProcessed) {
       attempts++;
 
       try {
-        const result = await llm.generateJSON<PreFilterOutput>(prompt);
+        const batchResults = await llm.generateJSON<PreFilterOutput[]>(prompt, {
+          temperature: 0.2,
+          top_k: 30,
+        });
 
-        // Validate output
-        if (!result.word || !result.link_confidence || !result.reason) {
+        if (!Array.isArray(batchResults) || batchResults.length === 0) {
           continue;
         }
 
-        // Valid pre-filter result
-        results.push(result);
-
-        // Call per-word callback if provided
-        if (onWordEvaluated) {
-          await onWordEvaluated(result);
+        // Validate and collect results
+        for (const result of batchResults) {
+          if (isValidPreFilterResult(result)) {
+            results.push(result);
+            if (onWordEvaluated) {
+              await onWordEvaluated(result);
+            }
+          }
         }
 
-        break;
+        // Check we got results for all words in the batch.
+        // Any missing words get marked as "no link".
+        const resultWords = new Set(results.map((r) => r.word.toUpperCase()));
+        for (const word of batch) {
+          if (!resultWords.has(word.toUpperCase())) {
+            const missingResult: PreFilterOutput = {
+              word,
+              link_confidence: "no link",
+              reason: "Not returned in batch evaluation",
+            };
+            results.push(missingResult);
+            if (onWordEvaluated) {
+              await onWordEvaluated(missingResult);
+            }
+          }
+        }
+
+        batchProcessed = true;
       } catch (error) {
         if (attempts >= maxAttempts) {
-          // If we can't get a valid pre-filter after retries, assume "no link"
-          const failedResult = {
-            word,
-            link_confidence: "no link" as const,
-            reason: "Failed to evaluate",
-          };
-          results.push(failedResult);
-
-          // Call per-word callback if provided
-          if (onWordEvaluated) {
-            await onWordEvaluated(failedResult);
+          // Fall back: mark all words in this batch as "no link"
+          for (const word of batch) {
+            const alreadyHasResult = results.some(
+              (r) => r.word.toUpperCase() === word.toUpperCase(),
+            );
+            if (!alreadyHasResult) {
+              const failedResult: PreFilterOutput = {
+                word,
+                link_confidence: "no link",
+                reason: "Failed to evaluate in batch",
+              };
+              results.push(failedResult);
+              if (onWordEvaluated) {
+                await onWordEvaluated(failedResult);
+              }
+            }
           }
         }
       }
     }
   }
 
-  // Call the callback with all results if provided
   if (onComplete) {
     await onComplete(results);
   }
 
   // Filter candidates: keep "extremely" and "moderately" confident words
   const candidates = results.filter(
-    (r) => r.link_confidence === "extremely" || r.link_confidence === "moderately"
+    (r) => r.link_confidence === "extremely" || r.link_confidence === "moderately",
   );
 
   return candidates;
+};
+
+/**
+ * Evaluate a single word (used for batches of 1 or as fallback)
+ */
+const evaluateSingleWord = async (
+  llm: LocalLLMService,
+  clueWord: string,
+  word: string,
+  onPromptGenerated?: (prompt: string) => void | Promise<void>,
+): Promise<PreFilterOutput> => {
+  const prompt = buildPreFilterPrompt({ clueWord, word });
+
+  if (onPromptGenerated) {
+    await onPromptGenerated(prompt);
+  }
+
+  let attempts = 0;
+  const maxAttempts = 3;
+
+  while (attempts < maxAttempts) {
+    attempts++;
+
+    try {
+      const result = await llm.generateJSON<PreFilterOutput>(prompt, {
+        temperature: 0.2,
+        top_k: 30,
+      });
+
+      if (isValidPreFilterResult(result)) {
+        return result;
+      }
+    } catch {
+      // retry
+    }
+  }
+
+  return {
+    word,
+    link_confidence: "no link",
+    reason: "Failed to evaluate",
+  };
 };

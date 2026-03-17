@@ -1,25 +1,24 @@
 /**
- * GUESSER RANKER (Stage 2)
+ * GUESSER RANKER
  *
- * Ranks filtered candidate words from the pre-filter stage.
+ * Ranks all remaining board words against the Spymaster's clue.
+ * Uses a few-shot example to teach the format. Validates that
+ * returned words are actually on the board (prevents hallucination).
  */
 
 import type { LocalLLMService } from "./local-llm.service";
 import type { PreFilterOutput } from "./guesser-prefilter";
 
-/**
- * Ranking Input/Output
- */
 export type RankingInput = {
   currentTeam: string;
   clueWord: string;
   clueNumber: number;
-  candidates: PreFilterOutput[]; // Words that passed the pre-filter
+  candidates: PreFilterOutput[];
 };
 
 export type RankedWord = {
   word: string;
-  score: number; // 0.0 to 1.0
+  score: number;
   reason: string;
 };
 
@@ -28,59 +27,38 @@ export type RankingOutput = {
 };
 
 /**
- * Build the ranking prompt
+ * Build the ranking prompt.
+ *
+ * Design principles:
+ * - One few-shot example teaches format and scoring calibration
+ * - Numbered word list so the model can reference clearly
+ * - Explicit reminder that the clue is NOT a board word
+ * - Short prompt = more attention budget for actual word association
  */
 export const buildRankingPrompt = (input: RankingInput): string => {
-  const { currentTeam, clueWord, clueNumber, candidates } = input;
+  const { clueWord, clueNumber, candidates } = input;
 
-  const candidatesText = candidates
-    .map((c) => `  - ${c.word}: ${c.link_confidence} (${c.reason})`)
-    .join("\n");
+  const wordList = candidates.map((c, i) => `${i + 1}. ${c.word}`).join("\n");
 
-  return `You are a Guesser-Assistant working for the ${currentTeam.toUpperCase()} team in a game of Codenames.
+  return `Codenames Guesser. The clue is a hint — pick which board words it connects to.
 
-You will be given:
-• A clue: "${clueWord}"
-• A number: ${clueNumber}
-• A list of candidate words (with their prior confidence levels and brief reasons) derived from the pre-filter step:
+Example:
+Clue: "fruit" for 2
+Board words: 1. ROCKET 2. APPLE 3. MOON 4. CHERRY 5. HAMMER
+Answer: {"ranked":[{"word":"APPLE","score":0.95,"reason":"apple is a fruit"},{"word":"CHERRY","score":0.9,"reason":"cherry is a fruit"},{"word":"MOON","score":0.05,"reason":"no link to fruit"},{"word":"ROCKET","score":0.02,"reason":"no link"},{"word":"HAMMER","score":0.01,"reason":"no link"}]}
 
-${candidatesText}
+Now your turn.
+Clue: "${clueWord}" for ${clueNumber}
+Board words:
+${wordList}
 
-Your job:
-Evaluate how strongly each candidate word connects to the clue in the broader context (board state, overlap, risk). Then produce a ranked list of all candidate words sorted from strongest to weakest.
+IMPORTANT: Only use words from the numbered list above. "${clueWord}" is the clue, NOT a board word.
 
-Output Format
-
-Your final answer must be a single JSON object:
-
-\`\`\`json
-{
-  "ranked": [
-    {
-      "word": "WORD1",
-      "score": 0.8,
-      "reason": "Short explanation of the connection"
-    },
-    {
-      "word": "WORD2",
-      "score": 0.6,
-      "reason": "Short explanation of the connection"
-    }
-    // … include every candidate word exactly once
-  ]
-}
-\`\`\`
-
-• The list must include every word from the candidate list exactly once.
-• Items must be sorted from highest score to lowest.
-• Score should be between 0.0 and 1.0
-• Do not include any extra text outside the JSON object.
-
-Use the clue and the candidate words (with their prior confidence & reasons) to produce the ranked JSON described above.`;
+Answer:`;
 };
 
 /**
- * Run ranking on pre-filtered candidates
+ * Run ranking on all remaining words
  */
 export const runRanking = async (
   llm: LocalLLMService,
@@ -89,10 +67,19 @@ export const runRanking = async (
 ): Promise<RankedWord[]> => {
   const prompt = buildRankingPrompt(input);
 
-  // Log the prompt if callback provided
   if (onPromptGenerated) {
     await onPromptGenerated(prompt);
   }
+
+  // Build set of valid board words for hallucination filtering
+  const validWords = new Set(
+    input.candidates.map((c) => c.word.toUpperCase()),
+  );
+
+  // Map for normalising casing back to original board words
+  const wordCaseMap = new Map(
+    input.candidates.map((c) => [c.word.toUpperCase(), c.word]),
+  );
 
   let attempts = 0;
   const maxAttempts = 5;
@@ -101,18 +88,49 @@ export const runRanking = async (
     attempts++;
 
     try {
-      const result = await llm.generateJSON<RankingOutput>(prompt);
+      const result = await llm.generateJSON<RankingOutput>(prompt, {
+        temperature: 0.45,
+        top_k: 40,
+      });
 
-      // Validate ranked array
       if (!result.ranked || !Array.isArray(result.ranked) || result.ranked.length === 0) {
+        console.log("[AI-DEBUG] Ranker attempt", attempts, "- empty ranked array");
         continue;
       }
 
-      // Sort by score descending
-      result.ranked.sort((a, b) => b.score - a.score);
+      // Filter to only valid board words with proper fields
+      const validEntries = result.ranked.filter((r) => {
+        if (typeof r.word !== "string" || typeof r.score !== "number" || typeof r.reason !== "string") {
+          return false;
+        }
+        if (r.score < 0 || r.score > 1) {
+          return false;
+        }
+        // CRITICAL: reject words that aren't on the board
+        if (!validWords.has(r.word.toUpperCase())) {
+          console.log("[AI-DEBUG] Ranker filtered hallucinated word:", r.word);
+          return false;
+        }
+        return true;
+      });
 
-      return result.ranked;
+      if (validEntries.length === 0) {
+        console.log("[AI-DEBUG] Ranker attempt", attempts, "- no valid board words in response");
+        continue;
+      }
+
+      // Normalise casing to match original board words
+      for (const entry of validEntries) {
+        entry.word = wordCaseMap.get(entry.word.toUpperCase()) || entry.word;
+      }
+
+      validEntries.sort((a, b) => b.score - a.score);
+
+      console.log("[AI-DEBUG] Ranker accepted:", validEntries.map(r => `${r.word}=${r.score}`).join(", "));
+
+      return validEntries;
     } catch (error) {
+      console.log("[AI-DEBUG] Ranker attempt", attempts, "- parse error");
       if (attempts >= maxAttempts) {
         throw error;
       }

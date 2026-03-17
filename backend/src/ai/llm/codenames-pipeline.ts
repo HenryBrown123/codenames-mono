@@ -1,15 +1,13 @@
 /**
  * CODENAMES AI PIPELINE
  *
- * Orchestrates the spymaster and guesser roles using a two-stage approach:
+ * Orchestrates the spymaster and guesser roles:
  * - Spymaster: Generates clues for team words
- * - Guesser Stage 1: Pre-filters words by confidence level
- * - Guesser Stage 2: Ranks filtered candidates
+ * - Guesser: Ranks all remaining words against the clue in a single LLM call
  */
 
 import type { LocalLLMService } from "./local-llm.service";
 import { runSpymasterPipeline, type SpymasterInput, type SpymasterOutput } from "./spymaster";
-import { runPreFilter } from "./guesser-prefilter";
 import { runRanking, type RankingInput } from "./guesser-ranker";
 
 /**
@@ -20,7 +18,7 @@ export type { PreFilterInput, PreFilterOutput } from "./guesser-prefilter";
 export type { RankingInput, RankedWord, RankingOutput } from "./guesser-ranker";
 
 /**
- * Guesser Input (for the complete two-stage pipeline)
+ * Guesser Input
  */
 export type GuesserInput = {
   currentTeam: string;
@@ -33,29 +31,31 @@ export type GuesserInput = {
 };
 
 /**
- * Guesser Output (final decision)
+ * Guesser Output
  */
 export type GuesserDecision = {
   action: "guess" | "stop";
   word?: string;
   confidence: number;
   reason: string;
-  rankedList?: Array<{ word: string; score: number; reason: string }>; // Full ranked list
+  rankedList?: Array<{ word: string; score: number; reason: string }>;
 };
 
 /**
  * Create the complete Codenames AI pipeline
  */
 export const createCodenamesPipeline = (llm: LocalLLMService) => {
-  /**
-   * Run the spymaster pipeline
-   */
   const runSpymaster = async (input: SpymasterInput): Promise<SpymasterOutput> => {
     return runSpymasterPipeline(llm, input);
   };
 
   /**
-   * Run the complete two-stage guesser pipeline
+   * Single-stage guesser: rank all remaining words directly, always guess the best one.
+   *
+   * The previous two-stage approach (prefilter → ranker) was too aggressive with
+   * small local models — the prefilter would kill good words with a binary "no link"
+   * verdict before the ranker ever saw them, and the confidence threshold would then
+   * refuse to guess even when there were decent matches.
    */
   const runGuesser = async (input: GuesserInput): Promise<GuesserDecision> => {
     if (input.remainingWords.length === 0) {
@@ -66,44 +66,43 @@ export const createCodenamesPipeline = (llm: LocalLLMService) => {
       };
     }
 
-    // STAGE 1: Pre-filter all remaining words
-    const candidates = await runPreFilter(
-      llm,
-      input.clueWord,
-      input.remainingWords,
-      input.onPrefilterComplete,
-      input.onWordEvaluated,
-      input.onPromptGenerated,
-    );
+    // Build dummy candidates so the ranker input type is satisfied.
+    // These don't carry any prefilter scoring — the ranker prompt
+    // now ignores link_confidence and just works from the word list.
+    const allWords = input.remainingWords.map((word) => ({
+      word,
+      link_confidence: "unscored" as const,
+      reason: "",
+    }));
 
-    if (candidates.length === 0) {
-      return {
-        action: "stop",
-        confidence: 0,
-        reason: "No words passed pre-filter",
-      };
+    // Fire the prefilter callback so the UI layer doesn't break
+    if (input.onPrefilterComplete) {
+      await input.onPrefilterComplete(allWords as any);
     }
 
-    // STAGE 2: Rank the filtered candidates
+    // Single LLM call: rank every remaining word against the clue
     const ranked = await runRanking(
       llm,
       {
         currentTeam: input.currentTeam,
         clueWord: input.clueWord,
         clueNumber: input.clueNumber,
-        candidates,
+        candidates: allWords as any,
       },
       input.onPromptGenerated,
     );
 
     const topChoice = ranked[0];
 
+    console.log("[AI-DEBUG] Ranker results:", ranked.map(r => `${r.word}=${r.score}`).join(", "));
+
+    // Always guess. The Spymaster gave a clue — there is always a best match.
     return {
       action: "guess",
       word: topChoice.word,
       confidence: topChoice.score,
       reason: topChoice.reason,
-      rankedList: ranked, // Include full ranked list
+      rankedList: ranked,
     };
   };
 
