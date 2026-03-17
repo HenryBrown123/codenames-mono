@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient, UseMutationResult } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
-import api from "@frontend/lib/api";
+import api from "@frontend/api";
 
 interface TriggerAiMoveApiResponse {
   success: boolean;
