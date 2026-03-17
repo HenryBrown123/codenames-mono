@@ -44,6 +44,7 @@ export type AIModuleDependencies = {
     ollamaUrl: string;
     model: string;
     temperature: number;
+    numCtx: number;
   };
   giveClue: GiveClueService;
   makeGuess: MakeGuessService;
