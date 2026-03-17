@@ -103,7 +103,8 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 const authHandlers = authMiddleware(env.JWT_SECRET, appLogger);
 const httpLoggerHandler = httpLoggerMiddleware({
   enabled: env.LOG_HTTP_REQUESTS,
-  verbose: env.LOG_CONSOLE_LEVEL === "http",
+  verbose: env.LOG_HTTP_VERBOSE,
+  toConsole: env.LOG_HTTP_TO_CONSOLE,
 });
 
 // Initialize auth feature with JWT options
@@ -145,6 +146,7 @@ const ai = initializeAI({
     ollamaUrl: env.LLM_URL,
     model: env.LLM_MODEL,
     temperature: env.LLM_TEMPERATURE,
+    numCtx: env.LLM_NUM_CTX,
   },
   giveClue: giveClueService,
   makeGuess: makeGuessService,

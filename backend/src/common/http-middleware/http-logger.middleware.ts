@@ -10,6 +10,7 @@ export interface TrackedRequest extends Request {
 type HttpLoggerConfig = {
   enabled: boolean;
   verbose: boolean;
+  toConsole: boolean;
 };
 
 /**
@@ -68,11 +69,15 @@ export const httpLoggerMiddleware = (config: HttpLoggerConfig) => (logger: AppLo
     const reqId = req.id;
 
     const level = config.verbose ? "http" : "info";
+    const fileOnly = !config.toConsole;
 
     httpLogger[level]("request_received", {
-      reqId,
-      userId: req.auth?.user?.id,
-      request: config.verbose ? extractRequestMetaVerbose(req) : extractRequestMetaMinimal(req),
+      fileOnly,
+      meta: {
+        reqId,
+        userId: req.auth?.user?.id,
+        request: config.verbose ? extractRequestMetaVerbose(req) : extractRequestMetaMinimal(req),
+      },
     });
 
     let responseBody: unknown;
@@ -91,13 +96,16 @@ export const httpLoggerMiddleware = (config: HttpLoggerConfig) => (logger: AppLo
         res.statusCode >= 500 ? "error" : res.statusCode >= 400 ? "warn" : level;
 
       httpLogger[responseLevel]("request_completed", {
-        reqId,
-        userId: req.auth?.user?.id,
-        durationMs,
-        request: extractRequestMetaMinimal(req),
-        response: config.verbose
-          ? extractResponseMetaVerbose(res, responseBody)
-          : extractResponseMetaMinimal(res),
+        fileOnly,
+        meta: {
+          reqId,
+          userId: req.auth?.user?.id,
+          durationMs,
+          request: extractRequestMetaMinimal(req),
+          response: config.verbose
+            ? extractResponseMetaVerbose(res, responseBody)
+            : extractResponseMetaMinimal(res),
+        },
       });
     });
 

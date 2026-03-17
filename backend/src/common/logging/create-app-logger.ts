@@ -32,6 +32,11 @@ export type LogScope = {
 
 export type LogMeta = Record<string, unknown>;
 
+export type LogOptions = {
+  meta?: LogMeta;
+  fileOnly?: boolean; // When true, log only to file, not console
+};
+
 // ============================================================================
 // Formats
 // ============================================================================
@@ -115,24 +120,34 @@ export class LoggerBuilder {
 export class AppLogger {
   constructor(private readonly logger: winston.Logger) {}
 
-  info(message: string, meta?: LogMeta) {
-    this.logger.info(message, meta ? { meta } : undefined);
+  private logWithOptions(level: LogLevel, message: string, options?: LogMeta | LogOptions) {
+    // Support both old API (meta object) and new API (options with meta and fileOnly)
+    if (options && "fileOnly" in options) {
+      const { meta, fileOnly } = options;
+      this.logger[level](message, { meta, fileOnly });
+    } else {
+      this.logger[level](message, options ? { meta: options } : undefined);
+    }
   }
 
-  warn(message: string, meta?: LogMeta) {
-    this.logger.warn(message, meta ? { meta } : undefined);
+  info(message: string, options?: LogMeta | LogOptions) {
+    this.logWithOptions("info", message, options);
   }
 
-  error(message: string, meta?: LogMeta) {
-    this.logger.error(message, meta ? { meta } : undefined);
+  warn(message: string, options?: LogMeta | LogOptions) {
+    this.logWithOptions("warn", message, options);
   }
 
-  debug(message: string, meta?: LogMeta) {
-    this.logger.debug(message, meta ? { meta } : undefined);
+  error(message: string, options?: LogMeta | LogOptions) {
+    this.logWithOptions("error", message, options);
   }
 
-  http(message: string, meta?: LogMeta) {
-    this.logger.http(message, meta ? { meta } : undefined);
+  debug(message: string, options?: LogMeta | LogOptions) {
+    this.logWithOptions("debug", message, options);
+  }
+
+  http(message: string, options?: LogMeta | LogOptions) {
+    this.logWithOptions("http", message, options);
   }
 
   /**
@@ -168,14 +183,18 @@ export const createAppLogger = (config: AppLoggerConfig): AppLogger => {
   ];
 
   if (config.consoleLevel !== "silent") {
-    console.log(`[logger] Creating console transport with level: ${config.consoleLevel}`);
-
     transports.push(
       new winston.transports.Console({
         level: config.consoleLevel,
         format: winston.format.combine(
           winston.format.timestamp(),
           winston.format.colorize(),
+          // Filter out http level logs and fileOnly logs from console
+          winston.format((info) => {
+            if (info.level === "http") return false;
+            if (info.fileOnly) return false;
+            return info;
+          })(),
           consoleFormat,
         ),
       }),

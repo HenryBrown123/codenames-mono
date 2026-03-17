@@ -86,8 +86,20 @@ const EnvSchema = z.object({
   LLM_URL: z.string().url("Invalid LLM_URL").default("http://localhost:11434"),
   LLM_MODEL: z.string().min(1, "LLM_MODEL must not be empty").default("qwen2.5:14b"),
   LLM_TEMPERATURE: z.string().transform(Number).default("0.7"),
+  LLM_NUM_CTX: z.string().transform(Number).default("4096"),
   LOG_FILE_LEVEL: z.enum(["debug", "info", "warn", "error", "http"]).default("info"),
   LOG_CONSOLE_LEVEL: z.enum(["debug", "info", "warn", "error", "http", "silent"]).default("info"),
   LOG_FILE_PATH: z.string().default("./logs/app.info"),
-  LOG_HTTP_REQUESTS: z.coerce.boolean().default(false),
+  LOG_HTTP_REQUESTS: z
+    .string()
+    .transform((val) => val === "true")
+    .default("false"),
+  LOG_HTTP_VERBOSE: z
+    .string()
+    .transform((val) => val === "true")
+    .default("false"),
+  LOG_HTTP_TO_CONSOLE: z
+    .string()
+    .transform((val) => val === "true")
+    .default("true"),
 });
