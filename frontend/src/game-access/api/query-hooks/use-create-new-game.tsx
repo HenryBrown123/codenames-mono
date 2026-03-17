@@ -1,6 +1,6 @@
 import { useMutation, UseMutationResult } from "@tanstack/react-query";
 import { createNewGame, GameCreatedResult } from "../endpoints/create-new-game";
-import { GameType, GameFormat } from "@frontend/shared-types/domain-types";
+import type { GameType, GameFormat } from "@frontend/shared-types";
 
 interface CreateGameInput {
   gameType: GameType;
