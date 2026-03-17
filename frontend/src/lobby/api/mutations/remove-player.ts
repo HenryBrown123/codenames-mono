@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
-import api from "@frontend/lib/api";
+import api from "@frontend/api";
 import { LobbyData } from "../queries/use-lobby-query";
 
 interface RemovePlayerResponse {
