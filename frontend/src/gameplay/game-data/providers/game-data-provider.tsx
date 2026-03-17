@@ -1,7 +1,7 @@
 import { useContext, createContext, ReactNode } from "react";
 import { useGameDataQuery } from "../queries/use-game-query";
 import { GameData } from "@frontend/shared-types";
-import { useGameRoom, useWebSocketInvalidation } from "@frontend/lib/websocket";
+import { useGameRoom, useWebSocketInvalidation } from "@frontend/websocket";
 
 export interface GameDataContextValue {
   gameData: GameData | undefined;

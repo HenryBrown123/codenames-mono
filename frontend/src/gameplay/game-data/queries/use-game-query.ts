@@ -1,7 +1,15 @@
 import { useQuery, UseQueryResult, keepPreviousData } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
-import api from "@frontend/lib/api";
-import { GameData } from "@frontend/shared-types/domain-types";
+import api from "@frontend/api";
+import type { GameData, Round, PlayerContext } from "@frontend/shared-types";
+import {
+  assertGameState,
+  assertGameFormat,
+  assertGameType,
+  assertRoundState,
+  assertPlayerRole,
+  assertTurnStatus,
+} from "@frontend/shared-types";
 import { usePlayerContext } from "../providers/player-context-provider";
 
 interface GameStateApiResponse {
@@ -58,14 +66,56 @@ interface GameStateApiResponse {
   };
 }
 
+/**
+ * Transforms the raw API response into typed GameData.
+ * Assertions run at the boundary — if the backend sends invalid enum
+ * values, this throws immediately. Catch it in tests, not in prod.
+ */
 function transformApiResponseToGameData(apiResponse: GameStateApiResponse): GameData {
   const game = apiResponse.data.game;
 
+  assertGameState(game.status);
+  assertGameType(game.gameType);
+  assertGameFormat(game.gameFormat);
+
+  let currentRound: Round | null = null;
+  if (game.currentRound) {
+    assertRoundState(game.currentRound.status);
+    currentRound = {
+      roundNumber: game.currentRound.roundNumber,
+      status: game.currentRound.status,
+      winningTeamName: game.currentRound.winningTeamName,
+      cards: game.currentRound.cards,
+      turns: game.currentRound.turns.map((turn) => {
+        assertTurnStatus(turn.status);
+        return {
+          id: turn.id,
+          teamName: turn.teamName,
+          status: turn.status,
+          guessesRemaining: turn.guessesRemaining,
+          clue: turn.clue,
+          guesses: turn.guesses,
+        };
+      }),
+    };
+  }
+
+  let playerContext: PlayerContext | null = null;
+  if (game.playerContext) {
+    assertPlayerRole(game.playerContext.role);
+    playerContext = {
+      publicId: game.playerContext.publicId,
+      playerName: game.playerContext.playerName,
+      teamName: game.playerContext.teamName,
+      role: game.playerContext.role,
+    };
+  }
+
   return {
     publicId: game.publicId,
-    status: game.status as any, // Will be validated by backend
-    gameType: game.gameType as any, // Will be validated by backend
-    gameFormat: game.gameFormat as any, // Will be validated by backend
+    status: game.status,
+    gameType: game.gameType,
+    gameFormat: game.gameFormat,
     createdAt: new Date(game.createdAt),
     teams: game.teams.map((team) => ({
       name: team.name,
@@ -76,35 +126,8 @@ function transformApiResponseToGameData(apiResponse: GameStateApiResponse): Game
         isActive: player.isActive,
       })),
     })),
-    currentRound: game.currentRound
-      ? {
-          roundNumber: game.currentRound.roundNumber,
-          status: game.currentRound.status as any, // Will be validated by backend
-          cards: game.currentRound.cards.map((card) => ({
-            word: card.word,
-            selected: card.selected,
-            teamName: card.teamName,
-            cardType: card.cardType,
-          })),
-          winningTeamName: game.currentRound.winningTeamName,
-          turns: game.currentRound.turns.map((turn) => ({
-            id: turn.id,
-            teamName: turn.teamName,
-            status: turn.status,
-            guessesRemaining: turn.guessesRemaining,
-            clue: turn.clue,
-            guesses: turn.guesses,
-          })),
-        }
-      : null,
-    playerContext: game.playerContext
-      ? {
-          publicId: game.playerContext.publicId,
-          playerName: game.playerContext.playerName,
-          teamName: game.playerContext.teamName,
-          role: game.playerContext.role as any, // Will be validated by backend
-        }
-      : null,
+    currentRound,
+    playerContext,
   };
 }
 

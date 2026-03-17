@@ -1,4 +1,8 @@
-import type { AnimationDefinition } from '../../animations/animation-types';
+/** Animation definition for Web Animations API */
+export interface AnimationDefinition {
+  keyframes: Keyframe[];
+  options: KeyframeAnimationOptions;
+}
 
 /**
  * Deal animation for card container
