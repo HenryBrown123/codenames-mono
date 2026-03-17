@@ -4,7 +4,7 @@ import {
   UseMutationResult,
 } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
-import api from "@frontend/lib/api";
+import api from "@frontend/api";
 import { usePlayerContext } from "../../game-data/providers/player-context-provider";
 
 interface EndTurnApiResponse {

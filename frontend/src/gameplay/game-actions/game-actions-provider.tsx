@@ -1,29 +1,31 @@
-import { createContext, useState, useCallback, useContext, ReactNode } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useGiveClueMutation, useMakeGuessMutation, useEndTurnMutation } from "./api";
+import { ReactNode } from "react";
 import styles from "./game-actions-provider.module.css";
 import {
-  useCreateRoundMutation,
-  useStartRoundMutation,
-  useDealCardsMutation,
-} from "../round-management";
-import { useGameDataRequired, usePlayerContext } from "../game-data/providers";
-import { useTurn } from "../game-data/providers";
+  TurnActionsProvider,
+  useTurnActions,
+  type TurnActionsContextValue,
+  type TurnActionName,
+  type TurnActionState,
+} from "./turn-actions";
+import {
+  RoundActionsProvider,
+  useRoundActions,
+  type RoundActionsContextValue,
+  type RoundActionName,
+  type RoundActionState,
+} from "./round-actions";
 
-export type ActionName =
-  | "giveClue"
-  | "makeGuess"
-  | "createRound"
-  | "startRound"
-  | "dealCards"
-  | "endTurn";
+/** All action names (union of turn and round) */
+export type ActionName = TurnActionName | RoundActionName;
 
+/** Combined action state */
 export interface ActionState {
   name: ActionName | null;
   status: "idle" | "loading" | "success" | "error";
   error?: Error | null;
 }
 
+/** Legacy combined context value for backwards compatibility */
 export interface GameActionsContextValue {
   actionState: ActionState;
   resetActionState: () => void;
@@ -35,191 +37,44 @@ export interface GameActionsContextValue {
   endTurn: () => void;
 }
 
-export const GameActionsContext = createContext<GameActionsContextValue | undefined>(undefined);
-
-const initialState: ActionState = {
-  name: null,
-  status: "idle",
-  error: null,
-};
-
 interface GameActionsProviderProps {
   children: ReactNode;
 }
 
+/**
+ * Composes TurnActionsProvider and RoundActionsProvider.
+ * Also renders error UI when either provider has an error.
+ */
 export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
-  const [actionState, setActionState] = useState<ActionState>(initialState);
-
-  const { gameData, gameId } = useGameDataRequired();
-  const { currentPlayerId } = usePlayerContext();
-  const { setLastActionTurnId } = useTurn();
-  const queryClient = useQueryClient();
-
-  const giveClueMutation = useGiveClueMutation(gameId);
-  const makeGuessMutation = useMakeGuessMutation(gameId);
-  const createRoundMutation = useCreateRoundMutation(gameId);
-  const startRoundMutation = useStartRoundMutation(gameId);
-  const dealCardsMutation = useDealCardsMutation(gameId);
-  const endTurnMutation = useEndTurnMutation(gameId);
-
-  const resetActionState = useCallback(() => {
-    setActionState(initialState);
-  }, []);
-
-  // Invalidate game data after local action for immediate UI update.
-  // Remote players get updates via WebSocket → useWebSocketInvalidation.
-  const invalidateGameData = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ["gameData"] });
-    queryClient.invalidateQueries({ queryKey: ["turn"] });
-    queryClient.invalidateQueries({ queryKey: ["game", gameId, "ai", "status"] });
-  }, [queryClient, gameId]);
-
-  const makeGuess = useCallback(
-    async (word: string) => {
-      if (!gameData.currentRound) return;
-
-      const roundNumber = gameData.currentRound.roundNumber;
-      setActionState({ name: "makeGuess", status: "loading", error: null });
-
-      makeGuessMutation.mutate(
-        { cardWord: word, roundNumber },
-        {
-          onSuccess: (res) => {
-            setLastActionTurnId(res.turn.id);
-            setActionState({ name: "makeGuess", status: "success", error: null });
-            invalidateGameData();
-          },
-          onError: (error) => {
-            console.error("Failed to make guess:", error);
-            setActionState({ name: "makeGuess", status: "error", error });
-          },
-        },
-      );
-    },
-    [makeGuessMutation, gameData.currentRound, setLastActionTurnId, invalidateGameData],
+  return (
+    <RoundActionsProvider>
+      <TurnActionsProvider>
+        <GameActionsErrorBoundary>{children}</GameActionsErrorBoundary>
+      </TurnActionsProvider>
+    </RoundActionsProvider>
   );
+};
 
-  const giveClue = useCallback(
-    (word: string, count: number) => {
-      if (!gameData.currentRound) return;
+/** Inner component that can access both contexts for error handling */
+const GameActionsErrorBoundary = ({ children }: { children: ReactNode }) => {
+  const turnActions = useTurnActions();
+  const roundActions = useRoundActions();
 
-      const roundNumber = gameData.currentRound.roundNumber;
-      setActionState({ name: "giveClue", status: "loading", error: null });
+  const errorState =
+    turnActions.actionState.status === "error"
+      ? turnActions.actionState
+      : roundActions.actionState.status === "error"
+        ? roundActions.actionState
+        : null;
 
-      giveClueMutation.mutate(
-        { word, targetCardCount: count, roundNumber },
-        {
-          onSuccess: (res) => {
-            setLastActionTurnId(res.turn.id);
-            setActionState({ name: "giveClue", status: "success", error: null });
-            invalidateGameData();
-          },
-          onError: (error) => {
-            console.error("Failed to give clue:", error);
-            setActionState({ name: "giveClue", status: "error", error });
-          },
-        },
-      );
-    },
-    [giveClueMutation, gameData.currentRound, setLastActionTurnId, invalidateGameData],
-  );
-
-  const createRound = useCallback(() => {
-    setActionState({ name: "createRound", status: "loading", error: null });
-
-    createRoundMutation.mutate(undefined, {
-      onSuccess: () => {
-        setActionState({ name: "createRound", status: "success", error: null });
-        invalidateGameData();
-      },
-      onError: (error) => {
-        console.error("Failed to create round:", error);
-        setActionState({ name: "createRound", status: "error", error });
-      },
-    });
-  }, [createRoundMutation, invalidateGameData]);
-
-  const startRound = useCallback(() => {
-    if (!gameData.currentRound) return;
-
-    const roundNumber = gameData.currentRound.roundNumber;
-    setActionState({ name: "startRound", status: "loading", error: null });
-
-    startRoundMutation.mutate(
-      { roundNumber },
-      {
-        onSuccess: () => {
-          setActionState({ name: "startRound", status: "success", error: null });
-          invalidateGameData();
-        },
-        onError: (error) => {
-          console.error("Failed to start round:", error);
-          setActionState({ name: "startRound", status: "error", error });
-        },
-      },
-    );
-  }, [startRoundMutation, gameData.currentRound, invalidateGameData]);
-
-  const dealCards = useCallback(
-    async (redeal: boolean = false): Promise<void> => {
-      if (!gameData.currentRound) throw new Error("No active round");
-
-      const roundNumber = gameData.currentRound.roundNumber;
-      setActionState({ name: "dealCards", status: "loading", error: null });
-
-      try {
-        await dealCardsMutation.mutateAsync({ roundNumber, redeal });
-        setActionState({ name: "dealCards", status: "success", error: null });
-        invalidateGameData();
-      } catch (error) {
-        console.error("Failed to deal cards:", error);
-        setActionState({ name: "dealCards", status: "error", error: error as Error });
-        throw error;
-      }
-    },
-    [dealCardsMutation, gameData.currentRound, invalidateGameData],
-  );
-
-  const endTurn = useCallback(() => {
-    if (!gameData.currentRound) return;
-
-    const roundNumber = gameData.currentRound.roundNumber;
-    setActionState({ name: "endTurn", status: "loading", error: null });
-
-    endTurnMutation.mutate(
-      { roundNumber },
-      {
-        onSuccess: () => {
-          setActionState({ name: "endTurn", status: "success", error: null });
-          invalidateGameData();
-        },
-        onError: (error) => {
-          console.error("Failed to end turn:", error);
-          setActionState({ name: "endTurn", status: "error", error });
-        },
-      },
-    );
-  }, [endTurnMutation, gameData.currentRound, invalidateGameData]);
-
-  const value: GameActionsContextValue = {
-    actionState,
-    resetActionState,
-    giveClue,
-    makeGuess,
-    createRound,
-    startRound,
-    dealCards,
-    endTurn,
-  };
-
-  if (actionState.status === "error") {
+  if (errorState) {
     return (
       <div className={styles.errorContainer}>
         <div className={styles.errorBackdrop} />
         <div className={styles.errorCard}>
           <h2 className={styles.errorTitle}>Action Failed</h2>
           <p className={styles.errorMessage}>
-            {actionState.error?.message || "Something went wrong. This might be a temporary issue."}
+            {errorState.error?.message || "Something went wrong. This might be a temporary issue."}
           </p>
           <button className={styles.reloadButton} onClick={() => window.location.reload()}>
             Reload Game
@@ -229,13 +84,47 @@ export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
     );
   }
 
-  return <GameActionsContext.Provider value={value}>{children}</GameActionsContext.Provider>;
+  return <>{children}</>;
 };
 
+/**
+ * Facade hook that combines turn and round actions.
+ * Use useTurnActions or useRoundActions for more specific access.
+ */
 export const useGameActions = (): GameActionsContextValue => {
-  const context = useContext(GameActionsContext);
-  if (context === undefined) {
-    throw new Error("useGameActions must be used within GameActionsProvider");
-  }
-  return context;
+  const turnActions = useTurnActions();
+  const roundActions = useRoundActions();
+
+  // Combine action states - prefer the one that's active
+  const actionState: ActionState =
+    turnActions.actionState.status !== "idle"
+      ? turnActions.actionState
+      : roundActions.actionState;
+
+  const resetActionState = () => {
+    turnActions.resetActionState();
+    roundActions.resetActionState();
+  };
+
+  return {
+    actionState,
+    resetActionState,
+    giveClue: turnActions.giveClue,
+    makeGuess: turnActions.makeGuess,
+    endTurn: turnActions.endTurn,
+    createRound: roundActions.createRound,
+    startRound: roundActions.startRound,
+    dealCards: roundActions.dealCards,
+  };
+};
+
+// Re-export split contexts and hooks
+export { useTurnActions, useRoundActions };
+export type {
+  TurnActionsContextValue,
+  TurnActionName,
+  TurnActionState,
+  RoundActionsContextValue,
+  RoundActionName,
+  RoundActionState,
 };
