@@ -1,27 +1,38 @@
 import React from "react";
+import { getTeamConfig } from "@frontend/shared-types";
 import styles from "../lobby.module.css";
 
 /**
  * Team card displaying player list with optional drag-drop support and footer slot
  */
 
-export interface TeamTileViewProps {
+/** Display state for the team tile */
+export interface TeamTileData {
   teamName: string;
-  teamColor: string;
   playerCount: number;
   maxPlayers?: number;
-  children: React.ReactNode; // Player list
-  footer?: React.ReactNode; // Add player input (single-device)
   emptyMessage?: string;
   isDragOver?: boolean;
+}
+
+/** Drag-drop handlers for team tile (single-device mode only) */
+export interface TeamTileHandlers {
   onDragOver?: (e: React.DragEvent) => void;
   onDragLeave?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
 }
 
+/** Composition slots for team tile content */
+export interface TeamTileSlots {
+  children: React.ReactNode;
+  footer?: React.ReactNode;
+}
+
+/** Full props for the team tile */
+export type TeamTileViewProps = TeamTileData & TeamTileHandlers & TeamTileSlots;
+
 export const TeamTileView: React.FC<TeamTileViewProps> = ({
   teamName,
-  teamColor,
   playerCount,
   maxPlayers = 6,
   children,
@@ -32,7 +43,8 @@ export const TeamTileView: React.FC<TeamTileViewProps> = ({
   onDragLeave,
   onDrop,
 }) => {
-  const displayName = teamName === "Team Red" ? "RED OPERATIVES" : "BLUE OPERATIVES";
+  const config = getTeamConfig(teamName);
+  const teamColor = config.cssVar;
 
   return (
     <div
@@ -48,7 +60,7 @@ export const TeamTileView: React.FC<TeamTileViewProps> = ({
           className={styles.teamName}
           style={{ "--team-color": teamColor } as React.CSSProperties}
         >
-          {displayName}
+          {config.displayName}
           <span className={styles.playerCount}>
             {playerCount}/{maxPlayers}
           </span>

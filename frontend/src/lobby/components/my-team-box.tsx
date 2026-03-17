@@ -1,6 +1,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TeamSymbol } from "../team-symbol";
+import { getTeamConfig, getOppositeTeam, type TeamName } from "@frontend/shared-types";
 import styles from "../lobby.module.css";
 
 /**
@@ -17,18 +18,21 @@ const TIMINGS = {
 
 const EASING = [0.4, 0, 0.2, 1] as const;
 
-const TEAM_COLORS = {
-  "Team Red": "var(--color-team-red, #ff0040)",
-  "Team Blue": "var(--color-team-blue, #00d4ff)",
-};
-
-export interface MyTeamBoxViewProps {
-  teamName: "Team Red" | "Team Blue";
+/** Display state for the current player's team assignment box */
+export interface MyTeamBoxData {
+  teamName: TeamName;
   playerName: string;
   playersNeeded: number;
-  onSwitchTeam: () => void;
-  disabled?: boolean;
+  disabled: boolean;
 }
+
+/** Callback for switching to the other team */
+export interface MyTeamBoxHandlers {
+  onSwitchTeam: () => void;
+}
+
+/** Full props for the team assignment box */
+export type MyTeamBoxViewProps = MyTeamBoxData & MyTeamBoxHandlers;
 
 export const MyTeamBoxView: React.FC<MyTeamBoxViewProps> = ({
   teamName,
@@ -37,9 +41,10 @@ export const MyTeamBoxView: React.FC<MyTeamBoxViewProps> = ({
   onSwitchTeam,
   disabled = false,
 }) => {
-  const teamColor = TEAM_COLORS[teamName];
-  const otherTeamName = teamName === "Team Red" ? "Team Blue" : "Team Red";
-  const otherTeamColor = TEAM_COLORS[otherTeamName];
+  const teamConfig = getTeamConfig(teamName);
+  const teamColor = teamConfig.cssVar;
+  const otherTeamName = getOppositeTeam(teamName);
+  const otherTeamColor = otherTeamName ? getTeamConfig(otherTeamName).cssVar : "#6b7280";
 
   return (
     <motion.div
@@ -74,7 +79,7 @@ export const MyTeamBoxView: React.FC<MyTeamBoxViewProps> = ({
           />
           <div className={styles.teamInfoSection}>
             <div className={styles.teamName} style={{ color: teamColor }}>
-              {teamName === "Team Red" ? "TEAM RED" : "TEAM BLUE"}
+              {teamConfig.shortName}
             </div>
             <div className={styles.playerLabel}>{playerName}</div>
           </div>
@@ -114,13 +119,15 @@ export const MyTeamBoxView: React.FC<MyTeamBoxViewProps> = ({
             ease: EASING,
           }}
         >
-          <TeamSymbol
-            teamName={otherTeamName}
-            teamColor={otherTeamColor}
-            className={styles.switchSymbol}
-            onClick={disabled ? undefined : onSwitchTeam}
-            isButton={!disabled}
-          />
+          {otherTeamName && (
+            <TeamSymbol
+              teamName={otherTeamName}
+              teamColor={otherTeamColor}
+              className={styles.switchSymbol}
+              onClick={disabled ? undefined : onSwitchTeam}
+              isButton={!disabled}
+            />
+          )}
         </motion.div>
       </AnimatePresence>
     </motion.div>
