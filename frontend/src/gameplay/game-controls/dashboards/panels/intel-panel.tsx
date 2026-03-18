@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTurn, useGameDataRequired } from "../../../game-data/providers";
-import { useGameActions } from "../../../game-actions";
 import { TerminalSection } from "../shared";
 import { CodeWordInput } from "./codemaster-input";
+import { useIntelState } from "./use-intel-state";
 import styles from "./intel-panel.module.css";
 
 // Animation constants matching lobby team symbol
@@ -28,6 +27,7 @@ export interface IntelPanelViewProps {
   clueNumber?: number;
   guesses: GuessDisplay[];
   guessesRemaining: number;
+  maxSlots?: number;
   // Navigation props
   canGoBack?: boolean;
   canGoForward?: boolean;
@@ -44,7 +44,7 @@ export interface IntelPanelViewProps {
  * Get team symbol and color based on team name.
  * Shared by header and guess outcome display.
  */
-const getTeamStyle = (
+export const getTeamStyle = (
   teamName: string,
 ): { symbol: string; color: string; rotate: boolean } => {
   const teamLower = teamName.toLowerCase();
@@ -55,7 +55,7 @@ const getTeamStyle = (
   return { symbol: "○", color: "#888888", rotate: false };
 };
 
-const getOutcomeSymbol = (
+export const getOutcomeSymbol = (
   outcome: GuessDisplay["outcome"],
   currentTeam: string,
 ): { symbol: string; color: string; rotate: boolean } => {
@@ -74,7 +74,7 @@ const getOutcomeSymbol = (
     case "BYSTANDER_CARD":
       return { symbol: "○", color: "#888888", rotate: false };
     case "ASSASSIN_CARD":
-      return { symbol: "△", color: "#ffcc00", rotate: false };
+      return { symbol: "☠", color: "#ffcc00", rotate: false };
     default:
       return { symbol: "?", color: "#888888", rotate: false };
   }
@@ -87,6 +87,7 @@ export const IntelPanelView: React.FC<IntelPanelViewProps> = ({
   clueNumber,
   guesses,
   guessesRemaining,
+  maxSlots = 3,
   canGoBack = false,
   canGoForward = false,
   onGoBack,
@@ -143,27 +144,33 @@ export const IntelPanelView: React.FC<IntelPanelViewProps> = ({
             <div className={styles.guessesDivider} />
 
             <div className={styles.guessesSection}>
-              {guesses.length === 0 ? (
-                <div className={styles.awaitingIntel}>AWAITING OPERATIVES</div>
-              ) : (
-                <div className={styles.guessList}>
-                  {guesses.map((guess, index) => {
-                    const { symbol, color, rotate } = getOutcomeSymbol(guess.outcome, teamName);
-                    const symbolStyle = rotate
-                      ? { display: "inline-block" as const, transform: "rotate(45deg)" }
-                      : undefined;
-                    return (
-                      <div key={index} className={styles.guessRow}>
-                        <span className={styles.guessWord}>{guess.word}</span>
-                        <span className={styles.guessDots} />
-                        <span className={styles.guessSymbol} style={{ color }}>
-                          <span style={symbolStyle}>{symbol}</span>
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              <div className={styles.guessList}>
+                {/* Real guesses */}
+                {guesses.map((guess, index) => {
+                  const { symbol, color, rotate } = getOutcomeSymbol(guess.outcome, teamName);
+                  const symbolStyle = rotate
+                    ? { display: "inline-block" as const, transform: "rotate(45deg)" }
+                    : undefined;
+                  return (
+                    <div key={index} className={styles.guessRow}>
+                      <span className={styles.guessWord}>{guess.word}</span>
+                      <span className={styles.guessDots} />
+                      <span className={styles.guessSymbol} style={{ color }}>
+                        <span style={symbolStyle}>{symbol}</span>
+                      </span>
+                    </div>
+                  );
+                })}
+
+                {/* Ghost rows — pad up to maxSlots so the box never shrinks */}
+                {Array.from({ length: Math.max(0, maxSlots - guesses.length) }).map((_, i) => (
+                  <div key={`ghost-${i}`} className={`${styles.guessRow} ${styles.guessRowGhost}`}>
+                    <span className={styles.guessWord}>· · · · ·</span>
+                    <span className={styles.guessDots} />
+                    <span className={styles.guessSymbol}>·</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </>
         )}
@@ -191,79 +198,6 @@ export const IntelPanelView: React.FC<IntelPanelViewProps> = ({
 };
 
 export const IntelPanel: React.FC = () => {
-  const { historicTurns } = useTurn();
-  const { gameData } = useGameDataRequired();
-  const { giveClue, actionState } = useGameActions();
-
-  // Navigation state - default to latest turn
-  const [selectedIndex, setSelectedIndex] = useState(() => Math.max(0, historicTurns.length - 1));
-
-  // Auto-update selected index when new turns appear
-  useEffect(() => {
-    if (historicTurns.length > 0) {
-      setSelectedIndex(historicTurns.length - 1);
-    }
-  }, [historicTurns.length]);
-
-  // Get the selected turn (full TurnData from historicTurns)
-  const selectedTurn = historicTurns[selectedIndex];
-  const isViewingLatest = selectedIndex === historicTurns.length - 1;
-  const isHistorical = !isViewingLatest || selectedTurn?.status === "COMPLETED";
-
-  // Navigation handlers
-  const canGoBack = selectedIndex > 0;
-  const canGoForward = selectedIndex < historicTurns.length - 1;
-  const handleGoBack = () => setSelectedIndex((i) => Math.max(0, i - 1));
-  const handleGoForward = () => setSelectedIndex((i) => Math.min(historicTurns.length - 1, i + 1));
-
-  const teamName = selectedTurn?.teamName || "";
-
-  // Determine if current player is codemaster on active team without a clue
-  // Only allow input when viewing the latest active turn
-  const playerRole = gameData.playerContext?.role;
-  const playerTeam = gameData.playerContext?.teamName;
-  const isCodemaster = playerRole === "CODEMASTER";
-  const isActiveTeam = playerTeam === selectedTurn?.teamName;
-  const hasClue = !!selectedTurn?.clue;
-  const isCodemasterGivingClue =
-    isCodemaster &&
-    isActiveTeam &&
-    !hasClue &&
-    isViewingLatest &&
-    selectedTurn?.status === "ACTIVE";
-
-  // Build guesses array from prevGuesses + lastGuess
-  const allGuesses: GuessDisplay[] = [
-    ...(selectedTurn?.prevGuesses || []).map((g) => ({
-      word: g.cardWord,
-      outcome: g.outcome as GuessDisplay["outcome"],
-    })),
-    ...(selectedTurn?.lastGuess
-      ? [
-          {
-            word: selectedTurn.lastGuess.cardWord,
-            outcome: selectedTurn.lastGuess.outcome as GuessDisplay["outcome"],
-          },
-        ]
-      : []),
-  ];
-
-  return (
-    <IntelPanelView
-      teamName={teamName}
-      hasClue={hasClue}
-      canGoBack={canGoBack}
-      canGoForward={canGoForward}
-      onGoBack={handleGoBack}
-      onGoForward={handleGoForward}
-      isHistorical={isHistorical}
-      clueWord={selectedTurn?.clue?.word}
-      clueNumber={selectedTurn?.clue?.number}
-      guesses={allGuesses}
-      guessesRemaining={selectedTurn?.guessesRemaining ?? 0}
-      isCodemasterGivingClue={isCodemasterGivingClue}
-      isLoading={actionState.status === "loading"}
-      onSubmitClue={giveClue}
-    />
-  );
+  const intel = useIntelState();
+  return <IntelPanelView {...intel} />;
 };

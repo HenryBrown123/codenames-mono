@@ -240,6 +240,11 @@
   line-height: 1;
 }
 
+.guessRowGhost {
+  opacity: 0.15;
+  pointer-events: none;
+}
+
 /* Remaining section */
 .remainingSection {
   display: flex;
