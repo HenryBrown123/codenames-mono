@@ -45,6 +45,9 @@ export const isRoundComplete = (ctx: VisibilityContext): boolean => ctx.roundSta
 export const isRoundInProgress = (ctx: VisibilityContext): boolean =>
   ctx.roundStatus === "IN_PROGRESS";
 
+export const isRoundActive = (ctx: VisibilityContext): boolean =>
+  ctx.roundStatus === "IN_PROGRESS" || ctx.roundStatus === "COMPLETED";
+
 export const canDealCards = (ctx: VisibilityContext): boolean => isInLobby(ctx) && !ctx.hasCards;
 
 export const canStartRound = (ctx: VisibilityContext): boolean => isInLobby(ctx) && ctx.hasCards;

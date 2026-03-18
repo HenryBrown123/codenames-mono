@@ -6,7 +6,7 @@ import {
   isRoundComplete,
   isInLobby,
   isAiActive,
-  isRoundInProgress,
+  isRoundActive,
   canStartNextTurn,
 } from "./rules";
 import {
@@ -31,7 +31,7 @@ export const GAME_PANELS: PanelSlots = {
 
   middle: [
     { id: "lobby-actions", component: LobbyActionsPanel, shouldRender: isInLobby },
-    { id: "intel", component: IntelPanel, shouldRender: isRoundInProgress },
+    { id: "intel", component: IntelPanel, shouldRender: isRoundActive },
     { id: "next-turn", component: NextTurnPanel, shouldRender: canStartNextTurn },
     { id: "ar-toggle", component: ARTogglePanel, shouldRender: isCodemaster },
     { id: "ai-status", component: AIStatusPanel, shouldRender: isAiActive },
