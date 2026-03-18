@@ -643,10 +643,13 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   │   │   └── overlays
 │       │   │   └── view-mode
 │       │   ├── game-controls
+│       │   │   ├── condensed-dashboard
 │       │   │   ├── dashboards
 │       │   │   │   ├── config
 │       │   │   │   ├── panels
 │       │   │   │   └── shared
+│       │   │   ├── landscape-dashboard
+│       │   │   ├── portrait-dashboard
 │       │   │   └── settings
 │       │   ├── game-data
 │       │   │   ├── events
@@ -679,7 +682,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-118 directories
+121 directories
 ```
 
 ## Getting Started
