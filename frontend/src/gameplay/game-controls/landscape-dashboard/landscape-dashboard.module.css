@@ -1,0 +1,93 @@
+@keyframes hackerPulse {
+  0%, 100% {
+    border-color: rgba(0, 255, 136, 0.3);
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.2),
+                inset 0 0 10px rgba(0, 255, 136, 0.05);
+  }
+  50% {
+    border-color: rgba(0, 255, 136, 0.6);
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.4),
+                inset 0 0 20px rgba(0, 255, 136, 0.1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 0.7; }
+}
+
+/* Sidebar shell — fills the grid cell assigned by game-scene */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  background: linear-gradient(
+    120deg,
+    rgba(10, 16, 14, 0.76) 65%,
+    rgba(20, 20, 30, 0.7) 100%
+  );
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 255, 136, 0.015) 2px,
+    rgba(0, 255, 136, 0.015) 4px
+  );
+  border-right: 1px solid var(--color-primary);
+  box-shadow: 0 0 20px 0 rgba(64, 255, 166, 0.1);
+  backdrop-filter: blur(10px);
+  animation: hackerPulse 3s ease-in-out infinite;
+}
+
+/* Scrollable panel area */
+.inner {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 8px;
+  padding: 0.75rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 136, 0.4) transparent;
+}
+
+.inner::-webkit-scrollbar       { width: 3px; }
+.inner::-webkit-scrollbar-track { background: transparent; }
+.inner::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 136, 0.4);
+  border-radius: 2px;
+}
+
+/* More breathing room on larger screens */
+@media (min-width: 769px) and (orientation: landscape) {
+  .inner {
+    gap: 12px;
+    padding: 1.25rem;
+  }
+}
+
+/* Pins the bottom PanelRenderer slot (action buttons) to the bottom */
+.bottomSlot {
+  margin-top: auto;
+}
+
+/* Refetch pulse dot */
+.refetchIndicator {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  opacity: 0.6;
+  animation: pulse 2s ease-in-out infinite;
+  z-index: 10;
+}
