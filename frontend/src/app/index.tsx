@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+// import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { WebSocketProvider } from "@frontend/websocket";
 import AppRoutes from "./routes/app-routes";
 import "../style/global.css";
@@ -227,7 +227,7 @@ const App: React.FC = () => {
             />
           )}
         </div>
-        <ReactQueryDevtools initialIsOpen={false} />
+{/* <ReactQueryDevtools initialIsOpen={false} /> */}
       </WebSocketProvider>
     </QueryClientProvider>
   );
