@@ -258,19 +258,17 @@
 .middleSection {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  height: 100%;
-  gap: 20px;
-
-  /* CONSTRAINT FIX - Key for flex items to shrink */
-  width: 100%;
-  max-width: 100%;
+  flex: 1;           /* take all remaining space after header panel */
+  min-height: 0;     /* allow shrinking inside flex parent */
   min-width: 0;
-  overflow: hidden;
+  width: 100%;
+  gap: 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .middleSection .terminalSection {
-  flex: 0 0 auto; /* Dynamic height based on content */
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
 }

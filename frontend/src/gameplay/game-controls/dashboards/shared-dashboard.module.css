@@ -236,12 +236,13 @@
   }
 }
 
-/* Desktop: Show desktop layout */
-@media (min-width: 769px) and (orientation: landscape) {
-  /* Game over dashboard uses dashboardContainer on all screen sizes */
-  /* Other dashboards use desktopContainer pattern */
-  .desktopContainer {  
-    display: contents;
+/* Show panels in ALL landscape orientations */
+@media (orientation: landscape) {
+  .desktopContainer {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
   }
 }
 
