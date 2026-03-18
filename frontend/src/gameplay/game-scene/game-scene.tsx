@@ -1,12 +1,12 @@
 import React, { useState, useCallback } from "react";
-import { useGameDataRequired, useTurn } from "../game-data/providers";
+import { useGameDataRequired } from "../game-data/providers";
 import { useVisibilityContext } from "../game-controls/dashboards/config/context";
 import { isCodebreakerGuessing, isRoundComplete } from "../game-controls/dashboards/config/rules";
 import { useGameActions } from "../game-actions";
-import { deriveMessage } from "./derive-message";
 import { GameBoard } from "../game-board/boards/game-board";
-import { GameDashboard } from "../game-controls/dashboards";
-import { GameInstructions } from "../shared/game-instructions";
+import { LandscapeDashboard } from "../game-controls/landscape-dashboard";
+import { PortraitDashboard } from "../game-controls/portrait-dashboard";
+import { TeamHeaderPanel } from "../game-controls/dashboards/panels";
 import { ActionButton } from "../shared/components";
 import { CodeWordInput } from "../game-controls/dashboards";
 import { GameOverOverlay } from "../game-over";
@@ -18,12 +18,10 @@ import styles from "./game-scene.module.css";
  */
 export const GameScene: React.FC = () => {
   const { gameData, isPending, isError, error, refetch, isFetching } = useGameDataRequired();
-  const { activeTurn } = useTurn();
   const ctx = useVisibilityContext();
   const { makeGuess, giveClue, actionState } = useGameActions();
 
   const [showCluePanel, setShowCluePanel] = useState(false);
-  const [showInstructions, setShowInstructions] = useState(false);
 
   // --- Derive board handlers from visibility context ---
   const isGuessing = isCodebreakerGuessing(ctx);
@@ -43,9 +41,6 @@ export const GameScene: React.FC = () => {
     [isGuessing, isLoading],
   );
 
-  // --- Derive message ---
-  const messageText = deriveMessage(ctx, ctx.lastCompletedTurn, activeTurn ?? null);
-
   // --- Loading / error states ---
   if (isPending && !gameData) {
     return (
@@ -53,7 +48,8 @@ export const GameScene: React.FC = () => {
         <div className={styles.boardArea}>
           <GameBoard />
         </div>
-        <div className={styles.controlArea} />
+        <div className={styles.portraitControlArea} />
+        <div className={styles.landscapeControlArea} />
       </div>
     );
   }
@@ -82,21 +78,23 @@ export const GameScene: React.FC = () => {
       {roundComplete && <GameOverOverlay />}
 
       <div className={styles.gameSceneContainer}>
+        {/* Portrait banner — CSS hides this in landscape */}
+        <div className={styles.portraitBanner}>
+          <TeamHeaderPanel hideDivider />
+        </div>
+
         <div className={styles.boardArea}>
           <GameBoard onCardClick={handleCardClick} canInteract={canInteract} />
         </div>
 
-        <div className={styles.controlArea}>
-          {isFetching && <div className={styles.refetchIndicator} />}
-
-          <GameDashboard key={roundComplete ? "game-over" : `${ctx.role}-dashboard`} />
+        {/* Portrait strip — CSS hides this in landscape */}
+        <div className={styles.portraitControlArea}>
+          <PortraitDashboard onOpenClueInput={() => setShowCluePanel(true)} />
         </div>
 
-        <div className={styles.instructionsOverlay} data-visible={showInstructions}>
-          <GameInstructions messageText={messageText} />
-          <button className={styles.closeButton} onClick={() => setShowInstructions(false)}>
-            ×
-          </button>
+        {/* Landscape sidebar — CSS hides this in portrait */}
+        <div className={styles.landscapeControlArea}>
+          <LandscapeDashboard isFetching={isFetching} />
         </div>
 
         <div className={styles.clueOverlay} data-visible={showCluePanel}>
@@ -129,10 +127,7 @@ export const GameScene: React.FC = () => {
           </div>
         </div>
 
-        <button className={styles.helpButton} onClick={() => setShowInstructions(true)}>
-          ?
-        </button>
-      </div>
+        </div>
     </>
   );
 };
