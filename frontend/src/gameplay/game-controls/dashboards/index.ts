@@ -1,5 +1,6 @@
-// New config-driven dashboard
-export { GameDashboard } from "./game-dashboard";
+// Shared dashboard state hook
+export { useDashboardState } from "./use-dashboard-state";
+export type { DashboardState } from "./use-dashboard-state";
 
 // Panel config exports
 export * from "./config";
