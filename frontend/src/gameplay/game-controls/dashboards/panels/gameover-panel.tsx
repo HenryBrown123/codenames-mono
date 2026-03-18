@@ -9,75 +9,87 @@ import styles from "./gameover-panel.module.css";
  * End-of-game panel with winner announcement and play again option
  */
 
+interface TeamCardStats {
+  name: string;
+  selected: number;
+  total: number;
+  isWinner: boolean;
+}
+
 export interface GameoverPanelViewProps {
-  winnerName?: string;
-  winnerScore?: number;
-  loserName?: string;
-  loserScore?: number;
-  totalTurns: number;
-  totalCardsRevealed: number;
+  winnerStats: TeamCardStats;
+  loserStats: TeamCardStats;
+  assassinSelected: boolean;
   isLoading: boolean;
   onNewGame: () => void;
 }
 
 export const GameoverPanelView: React.FC<GameoverPanelViewProps> = ({
-  winnerName,
-  winnerScore,
-  loserName,
-  loserScore,
-  totalTurns,
-  totalCardsRevealed,
+  winnerStats,
+  loserStats,
+  assassinSelected,
   isLoading,
   onNewGame,
 }) => (
   <TerminalSection>
-      <TerminalCommand>MISSION COMPLETE</TerminalCommand>
+    <TerminalCommand>MISSION COMPLETE</TerminalCommand>
 
-      <div className={styles.scoreComparison}>
-        <div className={styles.teamScore}>
-          <div className={styles.teamName}>{winnerName?.toUpperCase()}</div>
-          <div className={`${styles.score} ${styles.winner}`}>{winnerScore}</div>
-        </div>
-        <div className={styles.scoreDivider}>—</div>
-        <div className={styles.teamScore}>
-          <div className={styles.teamName}>{loserName?.toUpperCase()}</div>
-          <div className={styles.score}>{loserScore}</div>
-        </div>
+    {assassinSelected && (
+      <div className={styles.assassinAlert}>
+        <span className={styles.assassinIcon}>☠</span>
+        <span>ASSASSIN SELECTED</span>
       </div>
+    )}
 
-      <div className={styles.secondaryStats}>
-        <div className={styles.miniStat}>
-          <span>{totalTurns}</span> TURNS
-        </div>
-        <div className={styles.miniStat}>
-          <span>{totalCardsRevealed}</span> / 25 REVEALED
-        </div>
+    <div className={styles.scoreComparison}>
+      <div className={styles.teamScore}>
+        <div className={styles.teamName}>{winnerStats.name.toUpperCase()}</div>
+        <div className={`${styles.score} ${styles.winner}`}>{winnerStats.selected}</div>
       </div>
+      <div className={styles.scoreDivider}>—</div>
+      <div className={styles.teamScore}>
+        <div className={styles.teamName}>{loserStats.name.toUpperCase()}</div>
+        <div className={styles.score}>{loserStats.selected}</div>
+      </div>
+    </div>
 
-      <ActionButton onClick={onNewGame} text="NEW MISSION" enabled={!isLoading} />
-    </TerminalSection>
+    <ActionButton onClick={onNewGame} text="NEW MISSION" enabled={!isLoading} />
+  </TerminalSection>
 );
 
 export const GameoverPanel: React.FC = () => {
   const { gameData } = useGameDataRequired();
   const { createRound, actionState } = useGameActions();
 
+  const cards = gameData.currentRound?.cards || [];
   const winningTeamName = gameData.currentRound?.winningTeamName;
   const teams = gameData.teams || [];
   const winningTeam = teams.find((t) => t.name === winningTeamName);
   const losingTeam = teams.find((t) => t.name !== winningTeamName);
 
-  const totalTurns = gameData.currentRound?.turns?.length || 0;
-  const totalCardsRevealed = gameData.currentRound?.cards?.filter((c) => c.selected).length || 0;
+  // Check if assassin was selected
+  const assassinSelected = cards.some((c) => c.cardType === "ASSASSIN" && c.selected);
+
+  // Count cards per team
+  const getTeamCardStats = (teamName: string | undefined, isWinner: boolean): TeamCardStats => {
+    const teamCards = cards.filter((c) => c.teamName === teamName);
+    const selectedCards = teamCards.filter((c) => c.selected);
+    return {
+      name: teamName || "TEAM",
+      selected: selectedCards.length,
+      total: teamCards.length,
+      isWinner,
+    };
+  };
+
+  const winnerStats = getTeamCardStats(winningTeam?.name, true);
+  const loserStats = getTeamCardStats(losingTeam?.name, false);
 
   return (
     <GameoverPanelView
-      winnerName={winningTeam?.name}
-      winnerScore={winningTeam?.score}
-      loserName={losingTeam?.name}
-      loserScore={losingTeam?.score}
-      totalTurns={totalTurns}
-      totalCardsRevealed={totalCardsRevealed}
+      winnerStats={winnerStats}
+      loserStats={loserStats}
+      assassinSelected={assassinSelected}
       isLoading={actionState.status === "loading"}
       onNewGame={createRound}
     />
