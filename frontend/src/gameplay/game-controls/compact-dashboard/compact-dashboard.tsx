@@ -4,13 +4,13 @@ import { useDashboardState } from "../dashboards/use-dashboard-state";
 import { useIntelState } from "../dashboards/panels/use-intel-state";
 import { useViewMode } from "../../game-board/view-mode/view-mode-context";
 import { getTeamStyle, getOutcomeSymbol } from "../dashboards/panels/intel-panel";
-import styles from "./condensed-dashboard.module.css";
+import styles from "./compact-dashboard.module.css";
 
 // Animation constants matching landscape intel panel
 const TEAM_SWITCH_DURATION = 0.3;
 const EASING = [0.4, 0, 0.2, 1] as const;
 
-interface CondensedDashboardProps {
+interface CompactDashboardProps {
   /** Opens the codemaster clue input overlay */
   onOpenClueInput: () => void;
 }
@@ -19,9 +19,9 @@ interface CondensedDashboardProps {
  * Compact vertical dashboard for constrained viewports.
  * Three sections: intel header | intel display | footer (AR + action)
  * Shows a simplified status panel for non-gameplay states (lobby, game over).
- * Used by PortraitDashboard — can be reused anywhere a condensed view is needed.
+ * Used by DesktopScene (portrait) and MobileScene (landscape).
  */
-export const CondensedDashboard: React.FC<CondensedDashboardProps> = ({ onOpenClueInput }) => {
+export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueInput }) => {
   const s = useDashboardState();
   const intel = useIntelState();
   const { viewMode, toggleSpymasterViewMode } = useViewMode();
