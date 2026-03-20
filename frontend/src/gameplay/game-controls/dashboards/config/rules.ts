@@ -62,7 +62,11 @@ export const isAiActive = (ctx: VisibilityContext): boolean =>
 // === Turn control rules ===
 
 export const canStartNextTurn = (ctx: VisibilityContext): boolean =>
-  isRoundInProgress(ctx) && hasRole(ctx) && !ctx.hasActiveTurn;
+  isRoundInProgress(ctx) &&
+  hasRole(ctx) &&
+  !ctx.hasActiveTurn &&
+  ctx.hasRound;        // guards against the loading gap where hasActiveTurn is
+                       // momentarily false before first data resolves
 
 // === Utility ===
 

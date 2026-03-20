@@ -46,3 +46,13 @@ export const GAME_PANELS: PanelSlots = {
     },
   ],
 };
+
+/**
+ * Panel config for mobile portrait drawer.
+ * No header slot — TeamHeaderPanel is rendered by the drawer chrome instead.
+ */
+export const MOBILE_DRAWER_PANELS: PanelSlots = {
+  header: [],   // suppressed — drawer chrome owns the header
+  middle: GAME_PANELS.middle,
+  bottom: GAME_PANELS.bottom,
+};
