@@ -15,7 +15,7 @@ import { useStartTurnMutation } from "../../game-actions/api/use-start-turn";
 
 /**
  * Single source of derived dashboard state.
- * Both PortraitDashboard and LandscapeDashboard read from here.
+ * Both CompactDashboard and StackedDashboard read from here.
  * No raw game data or action hooks should appear in dashboard components directly.
  */
 export const useDashboardState = () => {

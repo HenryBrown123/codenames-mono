@@ -5,7 +5,7 @@ import type { GuessDisplay } from "./intel-panel";
 
 /**
  * Shared intel navigation state.
- * Used by IntelPanel (landscape) and CondensedDashboard (portrait/condensed).
+ * Used by IntelPanel (stacked) and CompactDashboard.
  */
 export const useIntelState = () => {
   const { historicTurns } = useTurn();
