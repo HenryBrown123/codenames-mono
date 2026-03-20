@@ -643,20 +643,22 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   │   │   └── overlays
 │       │   │   └── view-mode
 │       │   ├── game-controls
-│       │   │   ├── condensed-dashboard
+│       │   │   ├── compact-dashboard
 │       │   │   ├── dashboards
 │       │   │   │   ├── config
 │       │   │   │   ├── panels
 │       │   │   │   └── shared
-│       │   │   ├── landscape-dashboard
-│       │   │   ├── portrait-dashboard
-│       │   │   └── settings
+│       │   │   ├── settings
+│       │   │   └── stacked-dashboard
 │       │   ├── game-data
 │       │   │   ├── events
 │       │   │   ├── providers
 │       │   │   └── queries
 │       │   ├── game-over
 │       │   ├── game-scene
+│       │   │   ├── desktop-scene
+│       │   │   ├── mobile-scene
+│       │   │   └── windowed-scene
 │       │   ├── round-management
 │       │   │   └── api
 │       │   └── shared
@@ -682,7 +684,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-121 directories
+123 directories
 ```
 
 ## Getting Started
