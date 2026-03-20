@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useGameDataRequired } from "../../../game-data/providers";
-import { TerminalSection, TerminalDivider } from "../shared";
+import { TerminalSection } from "../shared";
 import styles from "./team-header-panel.module.css";
 
 /**
@@ -12,7 +12,6 @@ export interface TeamHeaderPanelViewProps {
   teamName: string;
   role: string;
   playerName?: string;
-  hideDivider?: boolean;
 }
 
 /**
@@ -31,7 +30,6 @@ export const TeamHeaderPanelView: React.FC<TeamHeaderPanelViewProps> = ({
   teamName,
   role,
   playerName,
-  hideDivider,
 }) => {
   // Derive symbol styling from teamName
   const { symbol, color, rotate } = getTeamStyle(teamName);
@@ -68,16 +66,11 @@ export const TeamHeaderPanelView: React.FC<TeamHeaderPanelViewProps> = ({
           <div className={styles.teamRole}>{role}</div>
         </div>
       </div>
-      {!hideDivider && <TerminalDivider />}
     </TerminalSection>
   );
 };
 
-export interface TeamHeaderPanelProps {
-  hideDivider?: boolean;
-}
-
-export const TeamHeaderPanel: React.FC<TeamHeaderPanelProps> = ({ hideDivider }) => {
+export const TeamHeaderPanel: React.FC = () => {
   const { gameData } = useGameDataRequired();
 
   return (
@@ -85,7 +78,6 @@ export const TeamHeaderPanel: React.FC<TeamHeaderPanelProps> = ({ hideDivider })
       teamName={gameData.playerContext?.teamName || ""}
       role={gameData.playerContext?.role || "SPECTATOR"}
       playerName={gameData.playerContext?.playerName}
-      hideDivider={hideDivider}
     />
   );
 };
