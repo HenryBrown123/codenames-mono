@@ -119,6 +119,15 @@
 .navBtn:hover:not(:disabled) { background: rgba(0, 255, 136, 0.12); }
 .navBtn:disabled { opacity: 0.25; cursor: not-allowed; }
 
+/* ── Clue input centered (floats in middle of dashboard) ── */
+.clueInputCenter {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+
 /* ── Intel box ── */
 .intelBox {
   flex-shrink: 0;
@@ -226,52 +235,15 @@
 
 .ghost { opacity: 0.15; pointer-events: none; }
 
-/* ── AI section ── */
+/* ── AI section wrapper ── */
 .aiSection {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+  margin-top: 6px;
   flex-shrink: 0;
 }
 
-.aiSectionHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 2px;
-}
-
-.aiSectionLabel {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--color-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  text-shadow: 0 0 7px rgba(0, 255, 136, 0.5);
-}
-
-/* Status dot — solid when ready, blinks when thinking */
-.aiDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(0, 255, 136, 0.5);
-  flex-shrink: 0;
-  transition: background 0.2s;
-}
-
-.aiDotThinking {
-  background: var(--color-primary);
-  animation: dotBlink 1s ease-in-out infinite;
-}
-
-@keyframes dotBlink {
-  0%, 100% { opacity: 1; box-shadow: 0 0 6px rgba(0, 255, 136, 0.6); }
-  50%       { opacity: 0.3; box-shadow: none; }
-}
-
+/* ── AI box ── */
 .aiBox {
+  position: relative;
   padding: 10px 12px;
   background: rgba(0, 0, 0, 0.7);
   border: 1.5px solid rgba(0, 255, 136, 0.4);
@@ -279,7 +251,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 48px;
+  min-height: 44px;
+}
+
+/* Dot positioned in top-right corner of the box */
+.aiDotCorner {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  opacity: 0.85;
 }
 
 .aiThinkingText {

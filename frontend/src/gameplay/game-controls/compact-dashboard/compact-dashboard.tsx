@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDashboardState } from "../dashboards/use-dashboard-state";
 import { useIntelState } from "../dashboards/panels/use-intel-state";
 import { useGameDataRequired } from "../../game-data/providers";
 import { useAiStatus, useTriggerAiMove } from "../../../ai/api";
 import { getTeamStyle, getOutcomeSymbol } from "../dashboards/panels/intel-panel";
+import { StatusDot } from "../../shared/components";
+import { CompactClueInput } from "./compact-clue-input";
 import styles from "./compact-dashboard.module.css";
 
 const TEAM_SWITCH_DURATION = 0.3;
@@ -25,7 +27,7 @@ interface CompactDashboardProps {
  *
  * Used by DesktopScene (portrait), WindowedScene, and MobileScene.
  */
-export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueInput }) => {
+export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueInput: _onOpenClueInput }) => {
   const s = useDashboardState();
   const intel = useIntelState();
 
@@ -35,6 +37,27 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
 
   const isAiThinking = (aiStatus?.thinking || triggerAi.isPending) ?? false;
   const canTriggerAi = (aiStatus?.available && !isAiThinking) ?? false;
+
+  // Inline clue input state
+  const [clueWord, setClueWord] = useState("");
+  const [clueCount, setClueCount] = useState(1);
+  const [clueError, setClueError] = useState("");
+
+  const handleTransmit = () => {
+    const cards = gameData.currentRound?.cards ?? [];
+    if (!clueWord.trim()) {
+      setClueError("INTEL REQUIRED");
+      return;
+    }
+    if (cards.some((c) => c.word.toLowerCase() === clueWord.toLowerCase())) {
+      setClueError("CANNOT USE BOARD WORD");
+      return;
+    }
+    setClueError("");
+    s.giveClue(clueWord, clueCount);
+    setClueWord("");
+    setClueCount(1);
+  };
 
   const ghostCount = Math.max(0, intel.maxSlots - intel.guesses.length);
   const { symbol, color, rotate } = getTeamStyle(intel.teamName);
@@ -48,10 +71,10 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
       return (
         <button
           className={styles.primaryBtn}
-          onClick={onOpenClueInput}
-          disabled={isAiThinking}
+          onClick={handleTransmit}
+          disabled={!clueWord.trim() || isAiThinking || s.isLoading}
         >
-          TRANSMIT
+          {s.isLoading ? "..." : "TRANSMIT"}
         </button>
       );
     if (s.isInLobby && s.lobbyAction)
@@ -163,60 +186,69 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
         </div>
       </div>
 
-      {/* ── Intel box ── */}
-      <div className={`${styles.intelBox} ${intel.isHistorical ? styles.historical : ""}`}>
-        {!intel.hasClue ? (
-          <div className={styles.awaiting}>
-            {s.isCodemasterGivingClue ? "YOUR TURN TO TRANSMIT" : "AWAITING INTEL"}
-          </div>
-        ) : (
-          <>
-            <div className={styles.clueRow}>
-              <span className={styles.clueWord}>"{intel.clueWord}"</span>
-              <span className={styles.clueNumber}>: {intel.clueNumber}</span>
-            </div>
-            <div className={styles.divider} />
-            <div className={styles.guessList}>
-              {intel.guesses.map((guess, i) => {
-                const { symbol: gs, color: gc, rotate: gr } = getOutcomeSymbol(
-                  guess.outcome, intel.teamName
-                );
-                const gsStyle = gr
-                  ? { display: "inline-block" as const, transform: "rotate(45deg)" }
-                  : undefined;
-                return (
-                  <div key={i} className={styles.guessRow}>
-                    <span className={styles.guessWord}>{guess.word}</span>
+      {/* ── Clue input (floats centered when codemaster giving clue) ── */}
+      {!intel.hasClue && s.isCodemasterGivingClue ? (
+        <div className={styles.clueInputCenter}>
+          <CompactClueInput
+            word={clueWord}
+            count={clueCount}
+            error={clueError}
+            isLoading={s.isLoading}
+            onWordChange={(w) => { setClueWord(w); setClueError(""); }}
+            onCountChange={setClueCount}
+            onSubmit={handleTransmit}
+          />
+        </div>
+      ) : (
+        /* ── Intel box ── */
+        <div className={`${styles.intelBox} ${intel.isHistorical ? styles.historical : ""}`}>
+          {!intel.hasClue ? (
+            <div className={styles.awaiting}>AWAITING INTEL</div>
+          ) : (
+            <>
+              <div className={styles.clueRow}>
+                <span className={styles.clueWord}>"{intel.clueWord}"</span>
+                <span className={styles.clueNumber}>: {intel.clueNumber}</span>
+              </div>
+              <div className={styles.divider} />
+              <div className={styles.guessList}>
+                {intel.guesses.map((guess, i) => {
+                  const { symbol: gs, color: gc, rotate: gr } = getOutcomeSymbol(
+                    guess.outcome, intel.teamName
+                  );
+                  const gsStyle = gr
+                    ? { display: "inline-block" as const, transform: "rotate(45deg)" }
+                    : undefined;
+                  return (
+                    <div key={i} className={styles.guessRow}>
+                      <span className={styles.guessWord}>{guess.word}</span>
+                      <span className={styles.guessDots} />
+                      <span style={{ color: gc }}><span style={gsStyle}>{gs}</span></span>
+                    </div>
+                  );
+                })}
+                {Array.from({ length: ghostCount }).map((_, i) => (
+                  <div key={`ghost-${i}`} className={`${styles.guessRow} ${styles.ghost}`}>
+                    <span className={styles.guessWord}>· · · · ·</span>
                     <span className={styles.guessDots} />
-                    <span style={{ color: gc }}><span style={gsStyle}>{gs}</span></span>
+                    <span>·</span>
                   </div>
-                );
-              })}
-              {Array.from({ length: ghostCount }).map((_, i) => (
-                <div key={`ghost-${i}`} className={`${styles.guessRow} ${styles.ghost}`}>
-                  <span className={styles.guessWord}>· · · · ·</span>
-                  <span className={styles.guessDots} />
-                  <span>·</span>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {/* ── AI section (only when AI is in the game) ── */}
       {s.isAiActive && (
         <div className={styles.aiSection}>
-          <div className={styles.aiSectionHeader}>
-            <span className={styles.aiSectionLabel}>AI</span>
-            <div
-              className={`${styles.aiDot} ${isAiThinking ? styles.aiDotThinking : ""}`}
-              aria-label={isAiThinking ? "AI thinking" : "AI ready"}
-            />
-          </div>
           <div className={styles.aiBox}>
+            <div className={styles.aiDotCorner}>
+              <StatusDot active={canTriggerAi || isAiThinking} thinking={isAiThinking} />
+            </div>
             {isAiThinking ? (
-              <span className={styles.aiThinkingText}>Thinking of a card...</span>
+              <span className={styles.aiThinkingText}>Thinking...</span>
             ) : canTriggerAi ? (
               <button
                 className={styles.triggerBtn}
