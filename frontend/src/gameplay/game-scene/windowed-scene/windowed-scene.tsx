@@ -2,7 +2,7 @@ import React, { useState, useCallback } from "react";
 import { useVisibilityContext } from "../../game-controls/dashboards/config/context";
 import { isCodebreakerGuessing, isRoundComplete } from "../../game-controls/dashboards/config/rules";
 import { useGameActions } from "../../game-actions";
-import { GameBoard } from "../../game-board/boards/game-board";
+import { GameBoard, ArFab } from "../../game-board/boards";
 import { CompactDashboard } from "../../game-controls/compact-dashboard";
 import { TeamHeaderPanel } from "../../game-controls/dashboards/panels";
 import { GameOverOverlay } from "../../game-over";
@@ -59,6 +59,9 @@ export const WindowedScene: React.FC<WindowedSceneProps> = ({ isFetching }) => {
 
         <div className={styles.board}>
           <GameBoard onCardClick={handleCardClick} canInteract={canInteract} />
+          <div className={styles.arFabSlot}>
+            <ArFab />
+          </div>
         </div>
 
         <div className={styles.compactArea}>

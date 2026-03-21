@@ -32,6 +32,13 @@
   justify-content: center;
 }
 
+.arFabSlot {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  z-index: 10;
+}
+
 .compactArea {
   grid-area: compact;
   display: flex;
