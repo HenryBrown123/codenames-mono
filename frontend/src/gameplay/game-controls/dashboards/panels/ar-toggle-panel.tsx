@@ -1,10 +1,9 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useViewMode } from "../../../game-board/view-mode/view-mode-context";
 import {
   TerminalSection,
   TerminalCommand,
   SpyGogglesContainer,
-  SpyGogglesText,
   SpyGogglesSwitchRow,
   SpyGogglesDot,
   SpySwitch,
@@ -39,20 +38,7 @@ export const ARTogglePanelView: React.FC<ARTogglePanelViewProps> = ({ isARMode, 
 
 export const ARTogglePanel: React.FC = () => {
   const { viewMode, toggleSpymasterViewMode } = useViewMode();
-
   const isARMode = viewMode === "spymaster";
-
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if ((e.altKey || e.metaKey) && e.key === "a") {
-        e.preventDefault();
-        toggleSpymasterViewMode();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyPress);
-    return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [toggleSpymasterViewMode]);
 
   return <ARTogglePanelView isARMode={isARMode} onToggle={toggleSpymasterViewMode} />;
 };
