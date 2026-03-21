@@ -2,11 +2,14 @@ import React, { useState, useCallback } from "react";
 import { useVisibilityContext } from "../../game-controls/dashboards/config/context";
 import { isCodebreakerGuessing, isRoundComplete } from "../../game-controls/dashboards/config/rules";
 import { useGameActions } from "../../game-actions";
+import { useGameDataRequired } from "../../game-data";
 import { GameBoard } from "../../game-board/boards/game-board";
+import { ArFab } from "../../game-board/boards/ar-fab";
 import { CompactDashboard } from "../../game-controls/compact-dashboard";
 import { TeamHeaderPanel } from "../../game-controls/dashboards/panels";
 import { GameOverOverlay } from "../../game-over";
 import { CodeWordInput } from "../../game-controls/dashboards";
+import { useGameEventCallback } from "../../../websocket/use-game-event-callback";
 import styles from "./mobile-scene.module.css";
 
 interface MobileSceneProps {
@@ -26,6 +29,7 @@ interface MobileSceneProps {
 export const MobileScene: React.FC<MobileSceneProps> = () => {
   const ctx = useVisibilityContext();
   const { makeGuess, giveClue, actionState } = useGameActions();
+  const { gameData } = useGameDataRequired();
 
   const [portraitOpen, setPortraitOpen] = useState(false);
   const [landscapeOpen, setLandscapeOpen] = useState(false);
@@ -34,6 +38,14 @@ export const MobileScene: React.FC<MobileSceneProps> = () => {
   const isGuessing = isCodebreakerGuessing(ctx);
   const isLoading = ctx.isActionLoading;
   const roundComplete = isRoundComplete(ctx);
+
+  // Auto-open drawers when game events occur
+  const openDrawers = useCallback(() => {
+    setPortraitOpen(true);
+    setLandscapeOpen(true);
+  }, []);
+
+  useGameEventCallback(gameData.publicId, openDrawers);
 
   const handleCardClick = useCallback(
     (word: string) => { if (!isLoading && isGuessing) makeGuess(word); },
@@ -59,6 +71,9 @@ export const MobileScene: React.FC<MobileSceneProps> = () => {
         {/* Board always fills the scene */}
         <div className={styles.board}>
           <GameBoard onCardClick={handleCardClick} canInteract={canInteract} />
+          <div className={styles.arFabSlot}>
+            <ArFab />
+          </div>
         </div>
 
         {/* ── PORTRAIT ── */}

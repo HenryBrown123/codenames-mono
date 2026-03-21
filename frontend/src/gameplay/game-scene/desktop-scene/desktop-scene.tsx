@@ -3,6 +3,7 @@ import { useVisibilityContext } from "../../game-controls/dashboards/config/cont
 import { isCodebreakerGuessing, isRoundComplete } from "../../game-controls/dashboards/config/rules";
 import { useGameActions } from "../../game-actions";
 import { GameBoard } from "../../game-board/boards/game-board";
+import { ArFab } from "../../game-board/boards/ar-fab";
 import { StackedDashboard } from "../../game-controls/stacked-dashboard";
 import { CompactDashboard } from "../../game-controls/compact-dashboard";
 import { TeamHeaderPanel } from "../../game-controls/dashboards/panels";
@@ -60,6 +61,9 @@ export const DesktopScene: React.FC<DesktopSceneProps> = ({ isFetching }) => {
 
         <div className={styles.board}>
           <GameBoard onCardClick={handleCardClick} canInteract={canInteract} />
+          <div className={styles.arFabSlot}>
+            <ArFab />
+          </div>
         </div>
 
         {/* Portrait only — CompactDashboard bottom strip */}

@@ -16,6 +16,15 @@
   padding: 0.75rem;
 }
 
+/* AR FAB — always visible on mobile (compact dashboard always active) */
+/* env(safe-area-inset-bottom) keeps it above iPhone home indicator */
+.arFabSlot {
+  position: absolute;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  right: 14px;
+  z-index: 10;
+}
+
 /* ── Portrait elements ── */
 .portraitHandle {
   position: fixed;
@@ -66,7 +75,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 32px 1rem 32px 32px;
+  padding: 16px 1rem 16px 20px;
   flex-shrink: 0;
   border-bottom: 1px solid rgba(0, 255, 136, 0.12);
 }
@@ -150,7 +159,7 @@
   .landscapeOverlay[data-open="true"] { transform: translateX(0); }
 
   .landscapeHeader {
-    padding: 32px 1rem 32px 32px;
+    padding: 16px 1rem 16px 20px;
     flex-shrink: 0;
     border-bottom: 1px solid rgba(0, 255, 136, 0.12);
   }
