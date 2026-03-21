@@ -7,6 +7,7 @@ import { dealCardVariants } from "../boards/dealing-board";
 import { SpymasterOverlay, GameOverOverlay } from "./overlays";
 import { ARCorners } from "./overlays/shared-components";
 import { FloatingWord } from "./floating-word";
+import { useDisplayType } from "../../game-scene/use-display-type";
 import styles from "./game-card.module.css";
 
 /**
@@ -18,14 +19,14 @@ const CardFace = memo(() => {
 });
 CardFace.displayName = "CardFace";
 
-const CoverCard = memo<{ teamType: string; variant: CardVisibilityState; cardIndex: number }>(
-  ({ teamType, variant, cardIndex }) => {
+const CoverCard = memo<{ teamType: string; variant: CardVisibilityState; cardIndex: number; isMobile: boolean }>(
+  ({ teamType, variant, cardIndex, isMobile }) => {
     const shouldShow = variant === "flipped" || variant === "gameOverSelected";
 
     // Generate a consistent random rotation based on card index
-    // Range: 2 to 5 degrees, randomly positive or negative
+    // Mobile: 0.5-1.5 degrees, Desktop: 2-5 degrees
     const randomValue = ((cardIndex * 37) % 101) / 100; // 0 to 1
-    const magnitude = 2 + randomValue * 3; // 2 to 5 degrees
+    const magnitude = isMobile ? 0.5 + randomValue * 1 : 2 + randomValue * 3;
     const direction = (cardIndex * 17) % 2 === 0 ? 1 : -1; // Randomly flip sign
     const finalRotation = magnitude * direction;
 
@@ -117,6 +118,8 @@ export const GameCard = memo<GameCardProps>(({ card, cardIndex, onClick, display
   const teamType = getTeamType(card);
   const cardColor = getCardColor(card);
   const [isHovered, setIsHovered] = useState(false);
+  const displayType = useDisplayType();
+  const isMobile = displayType === "mobile";
 
   const variant = deriveCardVariant(displayOptions, card.selected);
   const isClickable =
@@ -147,7 +150,7 @@ export const GameCard = memo<GameCardProps>(({ card, cardIndex, onClick, display
         <FloatingWord word={card.word} variant={variant} />
 
         {/* Cover card - always rendered, animates in when flipped/selected */}
-        <CoverCard teamType={teamType} variant={variant} cardIndex={cardIndex} />
+        <CoverCard teamType={teamType} variant={variant} cardIndex={cardIndex} isMobile={isMobile} />
 
         {/* Overlays - just backgrounds and decorations, no word management */}
         <AnimatePresence mode="wait">
