@@ -1,0 +1,37 @@
+.fab {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.12s ease;
+}
+
+.fab:active { transform: scale(0.88); }
+
+/* Off — barely there */
+.off {
+  background: rgba(0, 0, 0, 0.55);
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.off:hover {
+  border-color: rgba(255, 255, 255, 0.32);
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* On — green ring */
+.on {
+  background: rgba(0, 255, 136, 0.10);
+  border: 1.5px solid #00ff88;
+  color: #00ff88;
+}
+
+.on:hover { background: rgba(0, 255, 136, 0.18); }
+
+.icon { display: block; flex-shrink: 0; }
