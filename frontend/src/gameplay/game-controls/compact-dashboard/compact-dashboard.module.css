@@ -1,16 +1,16 @@
-/* Outer panel — fills its parent container, can grow for extra slots */
+/* ── Outer panel ── */
 .panel {
   display: flex;
   flex-direction: column;
   width: 100%;
   min-height: 100%;
   padding: 12px 16px 10px;
-  gap: 10px;
+  gap: 8px;
   overflow: hidden;
   box-sizing: border-box;
 }
 
-/* ── Simple state (lobby / game over) ── */
+/* ── Lobby simple state ── */
 .simpleState {
   display: flex;
   flex: 1;
@@ -29,16 +29,24 @@
   letter-spacing: 0.1em;
 }
 
-/* ── Intel header ── */
-.intelHeader {
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 0 2px;
+}
+
+.headerLeft {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
-  padding: 0 12px;
+  min-width: 0;
 }
 
-.intelTitle {
+.headerLabel {
   font-family: "JetBrains Mono", monospace;
   font-size: 0.8rem;
   font-weight: 700;
@@ -46,6 +54,43 @@
   text-transform: uppercase;
   letter-spacing: 0.15em;
   text-shadow: 0 0 7px rgba(0, 255, 136, 0.5);
+  flex-shrink: 0;
+}
+
+.teamSymbol {
+  font-size: 1rem;
+  line-height: 1;
+  font-family: "JetBrains Mono", monospace;
+  flex-shrink: 0;
+}
+
+.scoreInline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.scoreTeam {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.scoreTeam[data-winner="true"] {
+  color: var(--color-primary);
+  text-shadow: 0 0 6px rgba(0, 255, 136, 0.4);
+}
+
+.scoreDash {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
 }
 
 .navGroup {
@@ -71,33 +116,17 @@
   font-family: "JetBrains Mono", monospace;
 }
 
-.navBtn:hover:not(:disabled) {
-  background: rgba(0, 255, 136, 0.12);
-}
+.navBtn:hover:not(:disabled) { background: rgba(0, 255, 136, 0.12); }
+.navBtn:disabled { opacity: 0.25; cursor: not-allowed; }
 
-.navBtn:disabled {
-  opacity: 0.25;
-  cursor: not-allowed;
-}
-
-.teamSymbol {
-  margin-left: auto;
-  font-size: 1rem;
-  line-height: 1;
-  font-family: "JetBrains Mono", monospace;
-}
-
-/* ── Intel display box ── */
-.intelDisplay {
-  flex: 1;
-  min-height: 0;
+/* ── Intel box ── */
+.intelBox {
+  flex-shrink: 0;
   padding: 10px 12px;
   background: rgba(0, 0, 0, 0.7);
   border: 1.5px solid var(--color-primary);
   border-radius: 6px;
-  box-shadow:
-    0 0 12px rgba(0, 255, 136, 0.2),
-    inset 0 0 8px rgba(0, 255, 136, 0.04);
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.2), inset 0 0 8px rgba(0, 255, 136, 0.04);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -105,7 +134,7 @@
   transition: opacity 0.2s, border-color 0.2s;
 }
 
-.intelDisplay.historical {
+.intelBox.historical {
   opacity: 0.65;
   border-color: rgba(0, 255, 136, 0.35);
   box-shadow: 0 0 6px rgba(0, 255, 136, 0.1);
@@ -195,157 +224,136 @@
   min-width: 8px;
 }
 
-.ghost {
-  opacity: 0.15;
-  pointer-events: none;
-}
+.ghost { opacity: 0.15; pointer-events: none; }
 
-/* ── Footer: left slot + action button (center) + nav arrows (right) ── */
-.footer {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
-  padding: 4px 12px 0;
-}
-
-/* Left slot — AR toggle or empty */
-.footerLeft {
+/* ── AI section ── */
+.aiSection {
   display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-
-/* Right slot — nav arrows */
-.footerRight {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-/* Inline AR toggle — condensed to fit one line */
-.arInline {
-  display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 5px;
   flex-shrink: 0;
 }
 
-.arDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #355e4b;
-  transition: background 0.2s, box-shadow 0.2s;
-  flex-shrink: 0;
+.aiSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2px;
 }
 
-.arDot[data-active="true"] {
-  background: #00ff88;
-  box-shadow: 0 0 8px rgba(0, 255, 136, 0.6);
-}
-
-.arLabel {
+.aiSectionLabel {
   font-family: "JetBrains Mono", monospace;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  color: rgba(0, 255, 136, 0.55);
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  text-shadow: 0 0 7px rgba(0, 255, 136, 0.5);
+}
+
+/* Status dot — solid when ready, blinks when thinking */
+.aiDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(0, 255, 136, 0.5);
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.aiDotThinking {
+  background: var(--color-primary);
+  animation: dotBlink 1s ease-in-out infinite;
+}
+
+@keyframes dotBlink {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px rgba(0, 255, 136, 0.6); }
+  50%       { opacity: 0.3; box-shadow: none; }
+}
+
+.aiBox {
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1.5px solid rgba(0, 255, 136, 0.4);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+}
+
+.aiThinkingText {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  color: rgba(0, 255, 136, 0.7);
+  letter-spacing: 0.06em;
+  font-style: italic;
+}
+
+.aiIdleText {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.75rem;
+  color: rgba(0, 255, 136, 0.3);
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
 
-.arSwitch {
-  position: relative;
-  display: inline-block;
-  width: 32px;
-  height: 18px;
-  border-radius: 10px;
-  background: #1a2521;
-  border: 1px solid rgba(0, 255, 136, 0.45);
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.arSwitch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.arSlider {
-  position: absolute;
-  inset: 0;
-  border-radius: 10px;
-  transition: background 0.15s;
-}
-
-.arSlider::before {
-  content: "";
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  left: 2px;
-  top: 2px;
-  border-radius: 50%;
-  background: rgba(0, 255, 136, 0.5);
-  box-shadow: 0 0 4px rgba(0, 255, 136, 0.3);
-  transition: transform 0.2s, background 0.2s;
-}
-
-.arSwitch input:checked + .arSlider::before {
-  transform: translateX(14px);
-  background: #00ff88;
-  box-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
-}
-
-.arStatus {
+.triggerBtn {
   font-family: "JetBrains Mono", monospace;
-  font-size: 0.7rem;
-  color: #555;
-  transition: color 0.2s;
-  letter-spacing: 0.05em;
-}
-
-.arStatus[data-active="true"] {
-  color: #00ff88;
+  font-size: 0.8rem;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.45rem 1rem;
+  border-radius: 5px;
+  border: 1px solid rgba(0, 255, 136, 0.5);
+  background: transparent;
+  color: rgba(0, 255, 136, 0.75);
+  cursor: pointer;
+  transition: all 0.15s;
 }
 
-/* Action button — centered in footer (middle grid column) */
-.footerAction {
-  display: flex;
-  justify-content: center;
+.triggerBtn:hover {
+  background: rgba(0, 255, 136, 0.08);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
-.actionBtn {
+/* Spacer pushes footer to bottom */
+.spacer {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Footer: single full-width button ── */
+.footer {
+  flex-shrink: 0;
+  padding: 2px 0 0;
+}
+
+.primaryBtn {
+  width: 100%;
   font-family: "JetBrains Mono", monospace;
   font-size: 0.85rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  padding: 0.6rem 1.25rem;
-  min-height: 40px;
+  padding: 0.65rem 1rem;
+  min-height: 42px;
   border-radius: 6px;
   border: 1px solid var(--color-primary);
   background: transparent;
   color: var(--color-primary);
   cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
+  transition: all 0.18s ease;
   position: relative;
   overflow: hidden;
 }
 
-/* Data stream background effect */
-.actionBtn::before {
+.primaryBtn::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: repeating-linear-gradient(
     0deg,
     transparent 0,
@@ -356,50 +364,18 @@
   pointer-events: none;
 }
 
-.actionBtn:disabled {
-  opacity: 0.5;
+.primaryBtn:disabled {
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-.actionBtn:hover:not(:disabled) {
+.primaryBtn:hover:not(:disabled) {
   background: var(--color-primary);
   color: #000;
-  box-shadow:
-    0 0 15px rgba(0, 255, 136, 0.4),
-    inset 0 0 15px rgba(0, 255, 136, 0.1);
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.4), inset 0 0 15px rgba(0, 255, 136, 0.1);
   transform: translateY(-1px);
 }
 
-.actionBtn:active:not(:disabled) {
+.primaryBtn:active:not(:disabled) {
   transform: translateY(0);
-}
-
-/* Round over score summary — inline in footer left slot */
-.scoreInline {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.scoreTeam {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.4);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-}
-
-.scoreTeam[data-winner="true"] {
-  color: var(--color-primary);
-  text-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
-}
-
-.scoreDash {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.2);
-  flex-shrink: 0;
 }
