@@ -23,13 +23,13 @@
   flex: 1;
   padding: 0.5rem 1rem;
   font-size: var(--dashboard-text-btn-sm);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #00ff88;
-  background: rgba(0, 255, 136, 0.08);
-  border: 1.5px solid rgba(0, 255, 136, 0.6);
+  color: var(--color-primary);
+  background: var(--bg-highlight);
+  border: 1.5px solid rgba(82, 214, 138, 0.6);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -38,7 +38,7 @@
 
 .thinkingText {
   font-size: var(--dashboard-text-p);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   color: rgba(255, 255, 255, 0.6);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -47,9 +47,9 @@
 }
 
 .triggerButton:hover:not(:disabled) {
-  background: rgba(0, 255, 136, 0.15);
-  border-color: #00ff88;
-  box-shadow: 0 0 12px rgba(0, 255, 136, 0.3);
+  background: rgba(82, 214, 138, 0.15);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 12px rgba(82, 214, 138, 0.3);
 }
 
 .triggerButton:active:not(:disabled) {

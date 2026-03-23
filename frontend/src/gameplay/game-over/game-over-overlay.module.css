@@ -68,7 +68,7 @@
 }
 
 .statusLine {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.7);
   margin-bottom: 1rem;
@@ -82,7 +82,7 @@
 }
 
 .winner {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: clamp(1.5rem, 5vw, 2.5rem);
   font-weight: 900;
   color: var(--winning-color, #00ff88);
@@ -104,7 +104,7 @@
 }
 
 .debriefHeader {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.85rem;
   color: var(--winning-color, #00ff88);
   text-transform: uppercase;
@@ -123,7 +123,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.9rem;
 }
 
@@ -142,7 +142,7 @@
 
 /* Terminal Header */
 .terminalHeader {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 1rem;
   color: var(--winning-color, #00ff88);
   text-transform: uppercase;
@@ -158,7 +158,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--bg-section);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
   padding: 1.5rem 1rem;
@@ -171,7 +171,7 @@
 }
 
 .teamName {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.6);
   text-transform: uppercase;
@@ -181,7 +181,7 @@
 }
 
 .score {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 3rem;
   font-weight: 900;
   line-height: 1;
@@ -210,10 +210,10 @@
 
 .miniStat {
   padding: 0.75rem 1.25rem;
-  background: rgba(0, 255, 136, 0.08);
-  border: 1px solid rgba(0, 255, 136, 0.25);
+  background: var(--bg-highlight);
+  border: var(--border-subtle);
   border-radius: 4px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.7);
   text-transform: uppercase;

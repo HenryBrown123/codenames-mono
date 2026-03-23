@@ -38,7 +38,7 @@
   padding: 0.3rem 0.5rem;
   width: 100%;
   max-width: 100%; /* CHANGE from 500px to 100% */
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
   box-sizing: border-box;
 }
@@ -68,7 +68,7 @@
   font-size: 1.5rem; /* smaller font */
   font-weight: 700;
   color: var(--color-primary, #00ff88);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .numberButton {

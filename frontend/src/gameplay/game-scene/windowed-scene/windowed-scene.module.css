@@ -1,5 +1,5 @@
 .scene {
-  width: 100vw;
+  width: 100%;
   height: 100vh;
   height: 100dvh;
   display: grid;
@@ -15,9 +15,9 @@
 
 .banner {
   grid-area: banner;
-  padding: 32px 16px 16px;
+  padding: 10px 14px;
   min-height: 0;
-  border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+  border-bottom: var(--border-dim);
 }
 
 .board {
@@ -43,23 +43,17 @@
   grid-area: compact;
   display: flex;
   flex-direction: column;
-  min-height: 180px;
-  max-height: 280px;
   min-width: 0;
   overflow: hidden;
-  border-top: 1px solid rgba(0, 255, 136, 0.25);
-  background: linear-gradient(
-    120deg,
-    rgba(10, 16, 14, 0.95) 65%,
-    rgba(20, 20, 30, 0.9) 100%
-  );
+  border-top: var(--border-dim);
+  background: var(--bg-panel);
 }
 
 /* Clue overlay */
 .clueOverlay {
   position: fixed;
   inset: 0;
-  background: linear-gradient(135deg, rgba(10,10,15,0.98), rgba(26,26,46,0.98));
+  background: var(--bg-overlay);
   backdrop-filter: blur(20px);
   transform: translateY(100%);
   transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
@@ -95,14 +89,14 @@
   width: 44px; height: 44px;
   border-radius: 50%;
   background: transparent;
-  border: 1px solid var(--color-primary);
+  border: var(--border-strong);
   color: var(--color-primary);
   font-size: 1.5rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .clueContent {

@@ -81,7 +81,7 @@
   max-width: 700px;
   padding: 35px;
   background: linear-gradient(120deg, rgba(10, 16, 14, 0.95) 65%, rgba(20, 20, 30, 0.9) 100%);
-  border: 1px solid var(--color-primary);
+  border: var(--border-strong);
   border-radius: 8px;
   box-shadow: 0 0 24px 0 rgba(64, 255, 166, 0.14);
   position: relative;
@@ -111,7 +111,7 @@
   text-align: center;
   margin-bottom: 30px;
   padding-bottom: 15px;
-  border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+  border-bottom: var(--border-dim);
 }
 
 .title {
@@ -121,7 +121,7 @@
   text-transform: uppercase;
   letter-spacing: 8px;
   margin-bottom: 8px;
-  font-family: "JetBrains Mono", "Courier New", monospace;
+  font-family: var(--font-mono);
   animation: glitchAnimation 4s ease-in-out infinite;
 }
 
@@ -130,7 +130,7 @@
   font-size: 0.95rem;
   opacity: 0.7;
   letter-spacing: 2px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .terminalBox {
@@ -156,7 +156,7 @@
   color: var(--color-primary);
   font-size: 1.5rem;
   font-weight: bold;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .sectionTitle {
@@ -164,7 +164,7 @@
   font-size: 1.2rem;
   font-weight: bold;
   letter-spacing: 2px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   text-transform: uppercase;
 }
 
@@ -207,14 +207,14 @@
   font-size: 1.05rem;
   font-weight: bold;
   letter-spacing: 1px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   text-transform: uppercase;
 }
 
 .buttonDesc {
   color: rgba(255, 255, 255, 0.6);
   font-size: 0.85rem;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .divider {
@@ -243,13 +243,13 @@
 .errorPrompt {
   color: #ff0040;
   font-weight: bold;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 1rem;
 }
 
 .errorText {
   color: rgba(255, 100, 100, 0.9);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.95rem;
 }
 

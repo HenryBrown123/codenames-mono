@@ -8,7 +8,7 @@
   gap: 0.75rem;
   margin-bottom: 10px;
   padding-bottom: 10px;
-  border-bottom: 1px solid rgba(0, 255, 136, 0.5);
+  border-bottom: var(--border-normal);
 }
 
 .title {
@@ -29,22 +29,22 @@
 .triggerButton {
   padding: 0.5rem 1rem;
   font-size: var(--dashboard-text-btn-sm);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #00ff88;
-  background: rgba(0, 255, 136, 0.08);
-  border: 1.5px solid rgba(0, 255, 136, 0.6);
+  color: var(--color-primary);
+  background: var(--bg-highlight);
+  border: var(--border-normal);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .triggerButton:hover {
-  background: rgba(0, 255, 136, 0.15);
-  border-color: #00ff88;
-  box-shadow: 0 0 12px rgba(0, 255, 136, 0.3);
+  background: var(--bg-highlight);
+  border-color: var(--color-primary);
+  box-shadow: var(--glow-box-sm);
 }
 
 .triggerButton:active {

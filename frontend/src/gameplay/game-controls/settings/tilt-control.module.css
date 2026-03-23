@@ -17,7 +17,7 @@
 
 .label {
   color: var(--color-primary, #00ff88);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.9rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -32,7 +32,7 @@
 
 .value {
   color: rgba(255, 255, 255, 0.7);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.9rem;
   min-width: 35px;
   text-align: right;

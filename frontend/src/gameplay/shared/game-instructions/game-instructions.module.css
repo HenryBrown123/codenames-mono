@@ -35,7 +35,7 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  font-family: "JetBrains Mono", "Courier New", monospace;
+  font-family: var(--font-mono);
 }
 
 /**
@@ -49,7 +49,7 @@
   word-wrap: break-word;
   font-weight: 500;
   line-height: 1.3;
-  font-family: "JetBrains Mono", "Courier New", monospace;
+  font-family: var(--font-mono);
   animation: glitchPulse 4s ease-in-out infinite;
 
   /* Mobile text sizing handled by parent container */

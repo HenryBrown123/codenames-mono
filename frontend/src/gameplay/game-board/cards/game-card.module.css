@@ -412,11 +412,12 @@
 
 /* ===== SCAN GRID ===== */
 .scanGrid {
+  --scan-color: rgba(82, 214, 138, 0.15); /* overridden by JS when theme changes */
   position: absolute;
   inset: 4px;
   background-image:
-    repeating-linear-gradient(0deg, transparent 0, transparent 9px, rgba(0, 255, 136, 0.15) 10px),
-    repeating-linear-gradient(90deg, transparent 0, transparent 9px, rgba(0, 255, 136, 0.15) 10px);
+    repeating-linear-gradient(0deg, transparent 0, transparent 9px, var(--scan-color) 10px),
+    repeating-linear-gradient(90deg, transparent 0, transparent 9px, var(--scan-color) 10px);
   border-radius: 4px;
   opacity: 0.8;
   animation: gridPulse 2s ease-in-out infinite;
@@ -558,17 +559,17 @@
   position: absolute;
   width: 20px;
   height: 20px;
-  border: 2px solid #00ff88;
+  border: 2px solid var(--color-primary);
   border-radius: 4px;
   opacity: 1;
-  filter: drop-shadow(0 0 10px #00ff88);
+  filter: drop-shadow(0 0 6px var(--color-primary));
   animation: cornerBlink 2s ease-in-out infinite;
 }
 
 .cardContainer[data-current-team="true"] .cardARCorner {
   opacity: 1;
-  border-color: #00ff88;
-  filter: drop-shadow(0 0 10px #00ff88);
+  border-color: var(--color-primary);
+  filter: drop-shadow(0 0 6px var(--color-primary));
 }
 
 @media (prefers-reduced-motion: no-preference) {

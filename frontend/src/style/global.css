@@ -2,26 +2,29 @@
 
 * {
   box-sizing: border-box;
-  font-family: 'Courier New', monospace;
+  font-family: var(--font-mono);
 }
 
 /* Mobile viewport fixes - Critical for Android Chrome */
 html {
   height: 100%;
   height: -webkit-fill-available; /* Chrome mobile fix */
+  overflow: hidden;
 }
 
 body {
   /* Mobile viewport bug fixes */
   margin: 0;
   padding: 0;
-  min-height: 100vh;
-  min-height: 100dvh; /* Dynamic viewport height */
-  min-height: -webkit-fill-available; /* WebKit/Chrome mobile fix */
-  
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height */
+  height: -webkit-fill-available; /* WebKit/Chrome mobile fix */
+  overflow: hidden;
+
   color: var(--color-text);
-  background: radial-gradient(ellipse at top, #1a1a2e 0%, #0a0a0f 100%);
+  background: var(--color-background);
   position: relative;
+  font-variation-settings: "ROND" 80, "wght" 500;
 }
 
 /* Mobile browser-specific fixes */
@@ -36,8 +39,8 @@ body::before {
     0deg,
     transparent,
     transparent 2px,
-    rgba(0, 255, 0, 0.03) 2px,
-    rgba(0, 255, 0, 0.03) 4px
+    var(--bg-highlight) 2px,
+    var(--bg-highlight) 4px
   );
   pointer-events: none;
   z-index: 1;
@@ -45,15 +48,16 @@ body::before {
 
 /* Force mobile browsers to respect viewport */
 #root {
-  min-height: 100vh;
-  min-height: 100dvh;
-  min-height: -webkit-fill-available;
+  height: 100vh;
+  height: 100dvh;
+  height: -webkit-fill-available;
+  overflow: hidden;
 }
 
 @media (max-width: 768px) {
   body {
     /* Additional mobile-specific fixes */
-    overflow-x: hidden;
+    overflow: hidden;
     -webkit-overflow-scrolling: touch;
   }
 }

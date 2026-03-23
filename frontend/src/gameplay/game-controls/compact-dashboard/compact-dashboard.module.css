@@ -3,30 +3,33 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  min-height: 100%;
-  padding: 12px 16px 10px;
-  gap: 8px;
+  height: 100%;
+  padding: 12px 16px 20px;
   overflow: hidden;
   box-sizing: border-box;
 }
 
-/* ── Lobby simple state ── */
-.simpleState {
-  display: flex;
+/* ── Content area: header pinned top, rest spreads ── */
+.content {
   flex: 1;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 0 4px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 0;
 }
 
-.simpleLabel {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--color-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+/* Spacer between intel and AI to push AI down */
+.contentSpacer {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Lobby buttons (centered) ── */
+.lobbyButtons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
 
 /* ── Header ── */
@@ -47,7 +50,7 @@
 }
 
 .headerLabel {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--color-primary);
@@ -60,7 +63,7 @@
 .teamSymbol {
   font-size: 1rem;
   line-height: 1;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   flex-shrink: 0;
 }
 
@@ -72,7 +75,7 @@
 }
 
 .scoreTeam {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.72rem;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.35);
@@ -87,7 +90,7 @@
 }
 
 .scoreDash {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.72rem;
   color: rgba(255, 255, 255, 0.2);
   flex-shrink: 0;
@@ -101,7 +104,7 @@
 
 .navBtn {
   background: transparent;
-  border: 1px solid rgba(0, 255, 136, 0.35);
+  border: var(--border-subtle);
   color: var(--color-primary);
   font-size: 0.8rem;
   width: 28px;
@@ -113,10 +116,10 @@
   justify-content: center;
   padding: 0;
   transition: background 0.15s;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
 }
 
-.navBtn:hover:not(:disabled) { background: rgba(0, 255, 136, 0.12); }
+.navBtn:hover:not(:disabled) { background: var(--bg-highlight); }
 .navBtn:disabled { opacity: 0.25; cursor: not-allowed; }
 
 /* ── Clue input centered (floats in middle of dashboard) ── */
@@ -126,57 +129,47 @@
   align-items: center;
   justify-content: center;
   padding: 12px;
+  min-width: 0;
 }
 
-/* ── Intel box ── */
+/* Cap the inner CompactClueInput to match intel max-width */
+.clueInputCenter > * {
+  width: 100%;
+  max-width: 280px;
+  min-width: 0;
+}
+
+/* ── Intel section (unboxed, minimal) ── */
 .intelBox {
   flex-shrink: 0;
-  padding: 10px 12px;
-  background: rgba(0, 0, 0, 0.7);
-  border: 1.5px solid var(--color-primary);
-  border-radius: 6px;
-  box-shadow: 0 0 12px rgba(0, 255, 136, 0.2), inset 0 0 8px rgba(0, 255, 136, 0.04);
+  width: 100%;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 4px 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  overflow: hidden;
-  transition: opacity 0.2s, border-color 0.2s;
+  overflow: visible;
+  transition: opacity 0.2s;
 }
 
 .intelBox.historical {
-  opacity: 0.65;
-  border-color: rgba(0, 255, 136, 0.35);
-  box-shadow: 0 0 6px rgba(0, 255, 136, 0.1);
-}
-
-.awaiting {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #ffaa00;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  border: 1px solid #ffaa00;
-  border-radius: 6px;
-  padding: 8px 12px;
-  text-align: center;
+  opacity: 0.5;
 }
 
 .clueRow {
   display: flex;
   align-items: baseline;
-  gap: 3px;
-  padding-bottom: 2px;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 0 4px;
   flex-shrink: 0;
 }
 
 .clueWord {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 1rem;
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
   font-weight: 900;
   color: var(--color-primary);
   text-transform: uppercase;
@@ -185,10 +178,23 @@
 }
 
 .clueNumber {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 1rem;
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
   font-weight: 900;
   color: var(--color-primary);
+}
+
+.awaitingText {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: rgba(255, 170, 0, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.5rem 1.2rem;
+  border: 1px solid rgba(255, 170, 0, 0.5);
+  border-radius: 6px;
+  background: transparent;
 }
 
 .divider {
@@ -215,8 +221,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.8rem;
+  overflow: visible;
 }
 
 .guessWord {
@@ -235,43 +242,23 @@
 
 .ghost { opacity: 0.15; pointer-events: none; }
 
-/* ── AI section wrapper ── */
+/* ── AI section (unboxed, inline) ── */
 .aiSection {
-  margin-top: 6px;
   flex-shrink: 0;
-}
-
-/* ── AI box ── */
-.aiBox {
-  position: relative;
-  padding: 10px 12px;
-  background: rgba(0, 0, 0, 0.7);
-  border: 1.5px solid rgba(0, 255, 136, 0.4);
-  border-radius: 6px;
+  padding: 0;
   display: flex;
-  align-items: center;
   justify-content: center;
-  min-height: 44px;
 }
 
-/* Dot positioned in top-right corner of the box */
-.aiDotCorner {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  opacity: 0.85;
-}
-
-.aiThinkingText {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.8rem;
-  color: rgba(0, 255, 136, 0.7);
-  letter-spacing: 0.06em;
-  font-style: italic;
+.aiBox {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
 }
 
 .aiIdleText {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.75rem;
   color: rgba(0, 255, 136, 0.3);
   text-transform: uppercase;
@@ -279,41 +266,45 @@
 }
 
 .triggerBtn {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  padding: 0.45rem 1rem;
+  padding: 0.4rem 0.9rem;
+  border: var(--border-normal);
   border-radius: 5px;
-  border: 1px solid rgba(0, 255, 136, 0.5);
   background: transparent;
-  color: rgba(0, 255, 136, 0.75);
+  color: var(--color-primary);
+  opacity: 0.7;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: border-color 0.15s, color 0.15s, background 0.15s, opacity 0.15s;
+  white-space: nowrap;
 }
 
-.triggerBtn:hover {
-  background: rgba(0, 255, 136, 0.08);
+.triggerBtn:hover:not(:disabled) {
   border-color: var(--color-primary);
   color: var(--color-primary);
+  background: var(--bg-highlight);
+  opacity: 1;
 }
 
-/* Spacer pushes footer to bottom */
-.spacer {
-  flex: 1;
-  min-height: 0;
+.triggerBtn:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
-/* ── Footer: single full-width button ── */
+/* ── Footer: centred button, pinned to bottom ── */
 .footer {
   flex-shrink: 0;
   padding: 2px 0 0;
+  display: flex;
+  justify-content: center;
 }
 
 .primaryBtn {
-  width: 100%;
-  font-family: "JetBrains Mono", monospace;
+  width: 180px;
+  font-family: var(--font-mono);
   font-size: 0.85rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -321,13 +312,14 @@
   padding: 0.65rem 1rem;
   min-height: 42px;
   border-radius: 6px;
-  border: 1px solid var(--color-primary);
+  border: var(--border-strong);
   background: transparent;
   color: var(--color-primary);
   cursor: pointer;
   transition: all 0.18s ease;
   position: relative;
   overflow: hidden;
+  text-align: center;
 }
 
 .primaryBtn::before {
@@ -352,7 +344,7 @@
 .primaryBtn:hover:not(:disabled) {
   background: var(--color-primary);
   color: #000;
-  box-shadow: 0 0 15px rgba(0, 255, 136, 0.4), inset 0 0 15px rgba(0, 255, 136, 0.1);
+  box-shadow: var(--glow-box-sm);
   transform: translateY(-1px);
 }
 

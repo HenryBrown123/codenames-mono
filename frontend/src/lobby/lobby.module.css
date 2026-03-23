@@ -72,7 +72,7 @@
   height: 95vh;
   padding: 1.5rem;
   background: linear-gradient(120deg, rgba(10, 16, 14, 0.76) 65%, rgba(20, 20, 30, 0.7) 100%);
-  border: 1px solid var(--color-primary);
+  border: var(--border-strong);
   border-radius: 8px;
   box-shadow: 0 0 24px 0 rgba(64, 255, 166, 0.14);
   display: flex;
@@ -109,7 +109,7 @@
   letter-spacing: 6px;
   margin-bottom: 8px;
   opacity: 0.9;
-  font-family: "JetBrains Mono", "Courier New", monospace;
+  font-family: var(--font-mono);
   animation: glitchAnimation 4s ease-in-out infinite;
 }
 
@@ -118,7 +118,7 @@
   font-size: 1.2rem;
   opacity: 0.7;
   letter-spacing: 2px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .teamSwitcher {
@@ -140,7 +140,7 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
   color: rgba(255, 255, 255, 0.6);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 1rem;
   font-weight: bold;
   letter-spacing: 2px;
@@ -221,7 +221,7 @@
   letter-spacing: 3px;
   opacity: 0.9;
   color: var(--team-color);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   display: flex;
   align-items: baseline;
   gap: 0.75rem;
@@ -240,7 +240,7 @@
   flex-direction: column;
   gap: 4px;
   margin-top: 0.5rem;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 1rem;
   min-height: 0;
   overflow-y: auto;
@@ -279,7 +279,7 @@
 }
 
 .playerTile:hover {
-  background: rgba(0, 255, 136, 0.08);
+  background: var(--bg-highlight);
   border-color: rgba(0, 255, 136, 0.3);
   transform: translateX(4px);
   box-shadow: 0 2px 8px rgba(0, 255, 136, 0.15);
@@ -321,7 +321,7 @@
   padding: 0.25rem 0.5rem;
   border-radius: 2px;
   flex: 1;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .editableInput:focus {
@@ -377,7 +377,7 @@
   border-radius: 2px;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .removeButton:hover:not(:disabled) {
@@ -408,7 +408,7 @@
   border: 1px solid var(--color-primary, #00ff88);
   border-radius: 3px;
   color: var(--color-primary, #00ff88);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 1rem;
   transition: all 0.2s ease;
 }
@@ -430,7 +430,7 @@
   color: #0a0a0f;
   border: none;
   padding: 0.5rem 1rem;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.875rem;
   font-weight: bold;
   cursor: pointer;
@@ -462,7 +462,7 @@
   display: block;
   border: 2px solid var(--start-border, #6b7280);
   border-radius: 3px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   box-shadow: var(--start-shadow, none);
   text-shadow: var(--start-text-shadow, none);
   font-weight: 900;
@@ -505,7 +505,7 @@
   background: rgba(239, 68, 68, 0.1);
   border-radius: 4px;
   border: 1px solid rgba(239, 68, 68, 0.3);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
 }
 /* Multi-Device Lobby Styles */
 
@@ -548,7 +548,7 @@
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .joinTeamButton:hover:not(:disabled) {
@@ -598,7 +598,7 @@
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .copyLinkButton:hover {
@@ -696,7 +696,7 @@
   gap: 1rem;
   padding: 1rem;
   margin-bottom: 1.5rem;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--bg-section);
   border: 2px solid;
   border-color: var(--team-color, rgba(255, 255, 255, 0.15));
   border-radius: 4px;

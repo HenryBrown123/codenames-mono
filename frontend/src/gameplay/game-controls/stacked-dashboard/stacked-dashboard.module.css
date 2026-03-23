@@ -1,3 +1,5 @@
+/* TODO: hackerPulse uses hardcoded rgba(0,255,136,...) — consider removing
+   this animation entirely as it's an AI-vibe tell, or accept it stays fixed */
 @keyframes hackerPulse {
   0%, 100% {
     border-color: rgba(0, 255, 136, 0.3);
@@ -26,20 +28,16 @@
   min-width: 0;
   overflow: hidden;
   position: relative;
-  background: linear-gradient(
-    120deg,
-    rgba(10, 16, 14, 0.76) 65%,
-    rgba(20, 20, 30, 0.7) 100%
-  );
+  background: var(--bg-panel);
   background-image: repeating-linear-gradient(
     0deg,
     transparent,
     transparent 2px,
-    rgba(0, 255, 136, 0.015) 2px,
-    rgba(0, 255, 136, 0.015) 4px
+    var(--scan-color) 2px,
+    var(--scan-color) 4px
   );
   border-right: 1px solid var(--color-primary);
-  box-shadow: 0 0 20px 0 rgba(64, 255, 166, 0.1);
+  box-shadow: var(--glow-box-sm);
   backdrop-filter: blur(10px);
   animation: hackerPulse 3s ease-in-out infinite;
 }
@@ -55,13 +53,13 @@
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 255, 136, 0.4) transparent;
+  scrollbar-color: var(--bg-scrollbar) transparent;
 }
 
 .inner::-webkit-scrollbar       { width: 3px; }
 .inner::-webkit-scrollbar-track { background: transparent; }
 .inner::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 136, 0.4);
+  background: var(--bg-scrollbar);
   border-radius: 2px;
 }
 
@@ -77,13 +75,7 @@
 .headerDivider {
   width: 100%;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(0, 255, 136, 0.4) 30%,
-    rgba(0, 255, 136, 0.4) 70%,
-    transparent 100%
-  );
+  background: rgba(82, 214, 138, 0.20);
   flex-shrink: 0;
   margin: 0.25rem 0;
 }

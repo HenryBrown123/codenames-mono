@@ -1,6 +1,6 @@
 /* ── Scene: board always fullscreen ── */
 .scene {
-  width: 100vw;
+  width: 100%;
   height: 100vh;
   height: 100dvh;
   position: relative;
@@ -28,25 +28,31 @@
 /* ── Portrait elements ── */
 .portraitHandle {
   position: fixed;
-  bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+  bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 80px; height: 32px;
-  background: rgba(10, 14, 12, 0.85);
-  border: 1px solid rgba(0, 255, 136, 0.3);
-  border-radius: 16px;
+  width: 80px;
+  height: 32px;
+  border-radius: 16px 16px 0 0;
+  background: var(--bg-panel-tinted);
+  border: var(--border-dim);
+  border-bottom: none;
+  color: var(--color-primary);
+  font-size: 1rem;
+  font-family: var(--font-mono);
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
   z-index: 10;
   backdrop-filter: blur(10px);
 }
 
 .handlePip {
-  width: 32px; height: 3px;
-  border-radius: 2px;
-  background: rgba(0, 255, 136, 0.5);
+  width: 32px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--color-primary);
 }
 
 .portraitDrawer {
@@ -59,11 +65,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(
-    180deg,
-    rgba(10, 16, 14, 0.99) 0%,
-    rgba(10, 16, 14, 0.97) 100%
-  );
+  background: var(--bg-overlay);
   border-top: none;                 /* no top border — full screen */
   box-shadow: none;
   padding-bottom: env(safe-area-inset-bottom);
@@ -74,25 +76,41 @@
 .drawerHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 16px 1rem 16px 20px;
+  justify-content: center;
+  position: relative;
+  padding: 12px 14px;
   flex-shrink: 0;
-  border-bottom: 1px solid rgba(0, 255, 136, 0.12);
+  border-bottom: var(--border-dim);
+}
+
+.drawerIdentity {
+  display: flex;
+  justify-content: center;
 }
 
 .drawerClose {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  background: transparent;
-  border: 1px solid rgba(0, 255, 136, 0.35);
-  color: var(--color-primary);
-  font-size: 1.2rem;
-  font-family: "JetBrains Mono", monospace;
-  cursor: pointer;
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 1.2rem;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.drawerClose:hover {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .drawerContent {
@@ -117,12 +135,12 @@
     transform: translateY(-50%);
     width: 32px; height: 80px;
     border-radius: 0 16px 16px 0;
-    background: rgba(10, 14, 12, 0.85);
-    border: 1px solid rgba(0, 255, 136, 0.3);
+    background: var(--bg-panel-tinted);
+    border: var(--border-dim);
     border-left: none;
     color: var(--color-primary);
     font-size: 1rem;
-    font-family: "JetBrains Mono", monospace;
+    font-family: var(--font-mono);
     cursor: pointer;
     align-items: center;
     justify-content: center;
@@ -133,8 +151,8 @@
 
   /* When open: tab moves to right edge of overlay */
   .landscapeTab[data-open="true"] {
-    left: min(85vw, 360px);
-    background: rgba(10, 14, 12, 0.85);
+    left: calc(100% - 32px);
+    background: var(--bg-panel-tinted);
   }
 
   .landscapeOverlay {
@@ -142,16 +160,11 @@
     flex-direction: column;
     position: fixed;
     top: 0; left: 0; bottom: 0;
-    width: 85vw;
-    max-width: 360px;
+    width: calc(100% - 32px);
     transform: translateX(-100%);
     transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
     z-index: 90;
-    background: linear-gradient(
-      120deg,
-      rgba(10, 16, 14, 0.98) 65%,
-      rgba(20, 20, 30, 0.95) 100%
-    );
+    background: var(--bg-panel);
     border-right: 1px solid var(--color-primary);
     box-shadow: 10px 0 40px rgba(0, 0, 0, 0.5);
   }
@@ -159,9 +172,9 @@
   .landscapeOverlay[data-open="true"] { transform: translateX(0); }
 
   .landscapeHeader {
-    padding: 16px 1rem 16px 20px;
+    padding: 10px 14px;
     flex-shrink: 0;
-    border-bottom: 1px solid rgba(0, 255, 136, 0.12);
+    border-bottom: var(--border-dim);
   }
 
   .landscapeContent {
@@ -175,7 +188,7 @@
 .clueOverlay {
   position: fixed;
   inset: 0;
-  background: linear-gradient(135deg, rgba(10,10,15,0.98), rgba(26,26,46,0.98));
+  background: var(--bg-overlay);
   backdrop-filter: blur(20px);
   transform: translateY(100%);
   transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
@@ -211,14 +224,14 @@
   width: 44px; height: 44px;
   border-radius: 50%;
   background: transparent;
-  border: 1px solid var(--color-primary);
+  border: var(--border-strong);
   color: var(--color-primary);
   font-size: 1.5rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .clueContent {
