@@ -21,16 +21,16 @@ export const hasRole = (ctx: VisibilityContext): boolean =>
 // === State-based rules ===
 
 export const isCodemasterGivingClue = (ctx: VisibilityContext): boolean =>
-  ctx.role === "CODEMASTER" && ctx.isActiveTeam && !ctx.hasClue;
+  ctx.hasActiveTurn && ctx.role === "CODEMASTER" && ctx.isActiveTeam && !ctx.hasClue;
 
 export const isCodemasterObserving = (ctx: VisibilityContext): boolean =>
-  ctx.role === "CODEMASTER" && (!ctx.isActiveTeam || ctx.hasClue);
+  ctx.role === "CODEMASTER" && (!ctx.hasActiveTurn || !ctx.isActiveTeam || ctx.hasClue);
 
 export const isCodebreakerGuessing = (ctx: VisibilityContext): boolean =>
-  ctx.role === "CODEBREAKER" && ctx.isActiveTeam && ctx.hasClue && ctx.guessesRemaining > 0;
+  ctx.hasActiveTurn && ctx.role === "CODEBREAKER" && ctx.isActiveTeam && ctx.hasClue && ctx.guessesRemaining > 0;
 
 export const isCodebreakerObserving = (ctx: VisibilityContext): boolean =>
-  ctx.role === "CODEBREAKER" && (!ctx.isActiveTeam || !ctx.hasClue || ctx.guessesRemaining === 0);
+  ctx.role === "CODEBREAKER" && (!ctx.hasActiveTurn || !ctx.isActiveTeam || !ctx.hasClue || ctx.guessesRemaining === 0);
 
 export const isObserving = (ctx: VisibilityContext): boolean =>
   isSpectator(ctx) || isCodemasterObserving(ctx) || isCodebreakerObserving(ctx);

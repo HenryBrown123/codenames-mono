@@ -17,7 +17,7 @@ import {
   CodebreakerActionsPanel,
   LobbyActionsPanel,
   GameoverPanel,
-  NextTurnPanel,
+  StartTurnPanel,
 } from "../panels";
 
 /**
@@ -30,19 +30,23 @@ export const GAME_PANELS: PanelSlots = {
   header: [{ id: "team-header", component: TeamHeaderPanel, shouldRender: hasRole }],
 
   middle: [
-    { id: "lobby-actions", component: LobbyActionsPanel, shouldRender: isInLobby },
     { id: "intel", component: IntelPanel, shouldRender: isRoundActive },
-    { id: "next-turn", component: NextTurnPanel, shouldRender: canStartNextTurn },
     { id: "ar-toggle", component: ARTogglePanel, shouldRender: isCodemaster },
     { id: "ai-status", component: AIStatusPanel, shouldRender: isAiActive },
     { id: "gameover", component: GameoverPanel, shouldRender: isRoundComplete },
   ],
 
   bottom: [
+    { id: "lobby-actions", component: LobbyActionsPanel, shouldRender: isInLobby },
     {
       id: "codebreaker-actions",
       component: CodebreakerActionsPanel,
       shouldRender: isCodebreakerGuessing,
+    },
+    {
+      id: "start-turn",
+      component: StartTurnPanel,
+      shouldRender: canStartNextTurn,
     },
   ],
 };

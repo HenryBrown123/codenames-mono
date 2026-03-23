@@ -22,5 +22,5 @@ export type { LobbyActionsPanelViewProps } from "./lobby-actions-panel";
 export { GameoverPanel, GameoverPanelView } from "./gameover-panel";
 export type { GameoverPanelViewProps } from "./gameover-panel";
 
-export { NextTurnPanel, NextTurnPanelView } from "./next-turn-panel";
-export type { NextTurnPanelViewProps } from "./next-turn-panel";
+export { StartTurnPanel, StartTurnPanelView } from "./start-turn-panel";
+export type { StartTurnPanelViewProps } from "./start-turn-panel";

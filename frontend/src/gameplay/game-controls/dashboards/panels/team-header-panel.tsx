@@ -1,17 +1,16 @@
 import React from "react";
-import { motion } from "framer-motion";
 import { useGameDataRequired } from "../../../game-data/providers";
-import { TerminalSection } from "../shared";
 import styles from "./team-header-panel.module.css";
 
 /**
- * Team header with symbol and turn indicator
+ * Ghost header — minimal identity row
  */
 
 export interface TeamHeaderPanelViewProps {
   teamName: string;
   role: string;
   playerName?: string;
+  variant?: "default" | "compact";
 }
 
 /**
@@ -30,47 +29,43 @@ export const TeamHeaderPanelView: React.FC<TeamHeaderPanelViewProps> = ({
   teamName,
   role,
   playerName,
+  variant = "default",
 }) => {
-  // Derive symbol styling from teamName
   const { symbol, color, rotate } = getTeamStyle(teamName);
   const symbolStyle = rotate
     ? { display: "inline-block" as const, transform: "rotate(45deg)" }
     : undefined;
 
-  return (
-    <TerminalSection borderless>
-      <div className={styles.headerRow}>
-        <motion.div
-          className={styles.symbolContainer}
-          animate={{ opacity: [0.7, 1, 0.7] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <div className={styles.symbolShadow}>
-            <span style={symbolStyle}>{symbol}</span>
-          </div>
-          <div
-            className={styles.symbolLED}
-            style={{ color: color, textShadow: `0 0 8px ${color}` }}
-          >
-            <span style={symbolStyle}>{symbol}</span>
-          </div>
-          <div className={styles.symbolGlow} style={{ textShadow: `0 0 4px ${color}` }}>
-            <span style={symbolStyle}>{symbol}</span>
-          </div>
-        </motion.div>
-
-        <div className={styles.teamInfo}>
-          <div className={styles.teamTitle}>
-            <span className={styles.teamName}>{playerName || "AGENT"}</span>
-          </div>
-          <div className={styles.teamRole}>{role}</div>
-        </div>
+  if (variant === "compact") {
+    return (
+      <div className={styles.compactRow}>
+        <span className={styles.compactName}>{playerName || "AGENT"}</span>
+        <span className={styles.compactSymbol} style={{ color }} aria-hidden>
+          <span style={symbolStyle}>{symbol}</span>
+        </span>
+        <span className={styles.compactRole}>{role}</span>
       </div>
-    </TerminalSection>
+    );
+  }
+
+  return (
+    <div className={styles.ghostRow}>
+      <span className={styles.playerName}>{playerName || "AGENT"}</span>
+      <div className={styles.roleGroup}>
+        <span className={styles.symbol} style={{ color }} aria-hidden>
+          <span style={symbolStyle}>{symbol}</span>
+        </span>
+        <span className={styles.role}>{role}</span>
+      </div>
+    </div>
   );
 };
 
-export const TeamHeaderPanel: React.FC = () => {
+interface TeamHeaderPanelProps {
+  variant?: "default" | "compact";
+}
+
+export const TeamHeaderPanel: React.FC<TeamHeaderPanelProps> = ({ variant }) => {
   const { gameData } = useGameDataRequired();
 
   return (
@@ -78,6 +73,7 @@ export const TeamHeaderPanel: React.FC = () => {
       teamName={gameData.playerContext?.teamName || ""}
       role={gameData.playerContext?.role || "SPECTATOR"}
       playerName={gameData.playerContext?.playerName}
+      variant={variant}
     />
   );
 };
