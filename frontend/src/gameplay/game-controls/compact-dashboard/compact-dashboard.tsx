@@ -120,13 +120,33 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
     return null;
   })();
 
-  // ── Lobby: simplified layout ──
+  // ── Lobby: centered buttons ──
   if (s.isInLobby) {
     return (
       <div className={styles.panel}>
-        <div className={styles.simpleState}>
-          <span className={styles.simpleLabel}>LOBBY</span>
-          {primaryButton}
+        <div className={styles.content}>
+          <div className={styles.contentSpacer} />
+          <div className={styles.lobbyButtons}>
+            {s.lobbyAction && (
+              <button
+                className={styles.primaryBtn}
+                onClick={s.lobbyAction.handler}
+                disabled={s.isLoading}
+              >
+                {s.lobbyAction.label}
+              </button>
+            )}
+            {s.lobbyAction?.canRedeal && (
+              <button
+                className={styles.primaryBtn}
+                onClick={s.lobbyAction.redealHandler}
+                disabled={s.isLoading}
+              >
+                REDEAL
+              </button>
+            )}
+          </div>
+          <div className={styles.contentSpacer} />
         </div>
       </div>
     );
@@ -134,145 +154,182 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
 
   return (
     <div className={styles.panel}>
+      {/* ── Content: distributes space evenly ── */}
+      <div className={styles.content}>
+        {/* ── Header ── */}
+        <div className={styles.header}>
+          <div className={styles.headerLeft}>
+            <span className={styles.headerLabel}>INTEL</span>
 
-      {/* ── Header ── */}
-      <div className={styles.header}>
-        <div className={styles.headerLeft}>
-          <span className={styles.headerLabel}>INTEL</span>
-
-          <AnimatePresence mode="wait">
-            <motion.span
-              key={intel.teamName}
-              className={styles.teamSymbol}
-              style={{ color }}
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              exit={{ scale: 0, rotate: 180 }}
-              transition={{ duration: TEAM_SWITCH_DURATION, ease: EASING }}
-            >
-              <span style={symbolStyle}>{symbol}</span>
-            </motion.span>
-          </AnimatePresence>
-
-          {s.isRoundComplete && s.gameOverData && (
-            <div className={styles.scoreInline}>
-              <span
-                className={styles.scoreTeam}
-                data-winner={s.gameOverData.winnerName === s.teamName}
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={intel.teamName}
+                className={styles.teamSymbol}
+                style={{ color }}
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                exit={{ scale: 0, rotate: 180 }}
+                transition={{ duration: TEAM_SWITCH_DURATION, ease: EASING }}
               >
-                {s.gameOverData.winnerName?.toUpperCase()} {s.gameOverData.winnerScore}
-              </span>
-              <span className={styles.scoreDash}>—</span>
-              <span className={styles.scoreTeam}>
-                {s.gameOverData.loserName?.toUpperCase()} {s.gameOverData.loserScore}
-              </span>
-            </div>
-          )}
-        </div>
+                <span style={symbolStyle}>{symbol}</span>
+              </motion.span>
+            </AnimatePresence>
 
-        <div className={styles.navGroup}>
-          <button
-            className={styles.navBtn}
-            onClick={intel.onGoBack}
-            disabled={!intel.canGoBack}
-            aria-label="Previous turn"
-          >◁</button>
-          <button
-            className={styles.navBtn}
-            onClick={intel.onGoForward}
-            disabled={!intel.canGoForward}
-            aria-label="Next turn"
-          >▷</button>
-        </div>
-      </div>
-
-      {/* ── Clue input (floats centered when codemaster giving clue) ── */}
-      {!intel.hasClue && s.isCodemasterGivingClue ? (
-        <div className={styles.clueInputCenter}>
-          <CompactClueInput
-            word={clueWord}
-            count={clueCount}
-            error={clueError}
-            isLoading={s.isLoading}
-            onWordChange={(w) => { setClueWord(w); setClueError(""); }}
-            onCountChange={setClueCount}
-            onSubmit={handleTransmit}
-          />
-        </div>
-      ) : (
-        /* ── Intel box ── */
-        <div className={`${styles.intelBox} ${intel.isHistorical ? styles.historical : ""}`}>
-          {!intel.hasClue ? (
-            <div className={styles.awaiting}>AWAITING INTEL</div>
-          ) : (
-            <>
-              <div className={styles.clueRow}>
-                <span className={styles.clueWord}>"{intel.clueWord}"</span>
-                <span className={styles.clueNumber}>: {intel.clueNumber}</span>
+            {s.isRoundComplete && s.gameOverData && (
+              <div className={styles.scoreInline}>
+                <span
+                  className={styles.scoreTeam}
+                  data-winner={s.gameOverData.winnerName === s.teamName}
+                >
+                  {s.gameOverData.winnerName?.toUpperCase()} {s.gameOverData.winnerScore}
+                </span>
+                <span className={styles.scoreDash}>—</span>
+                <span className={styles.scoreTeam}>
+                  {s.gameOverData.loserName?.toUpperCase()} {s.gameOverData.loserScore}
+                </span>
               </div>
-              <div className={styles.divider} />
-              <div className={styles.guessList}>
-                {intel.guesses.map((guess, i) => {
-                  const { symbol: gs, color: gc, rotate: gr } = getOutcomeSymbol(
-                    guess.outcome, intel.teamName
-                  );
-                  const gsStyle = gr
-                    ? { display: "inline-block" as const, transform: "rotate(45deg)" }
-                    : undefined;
-                  return (
-                    <div key={i} className={styles.guessRow}>
-                      <span className={styles.guessWord}>{guess.word}</span>
-                      <span className={styles.guessDots} />
-                      <span style={{ color: gc }}><span style={gsStyle}>{gs}</span></span>
-                    </div>
-                  );
-                })}
-                {Array.from({ length: ghostCount }).map((_, i) => (
-                  <div key={`ghost-${i}`} className={`${styles.guessRow} ${styles.ghost}`}>
-                    <span className={styles.guessWord}>· · · · ·</span>
-                    <span className={styles.guessDots} />
-                    <span>·</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* ── AI section (only when AI is in the game) ── */}
-      {s.isAiActive && (
-        <div className={styles.aiSection}>
-          <div className={styles.aiBox}>
-            <div className={styles.aiDotCorner}>
-              <StatusDot active={canTriggerAi || isAiThinking} thinking={isAiThinking} />
-            </div>
-            {isAiThinking ? (
-              <span className={styles.aiThinkingText}>Thinking...</span>
-            ) : canTriggerAi ? (
-              <button
-                className={styles.triggerBtn}
-                onClick={() => triggerAi.mutate()}
-              >
-                TRIGGER AI
-              </button>
-            ) : (
-              <span className={styles.aiIdleText}>STANDING BY</span>
             )}
           </div>
+
+          <div className={styles.navGroup}>
+            <button
+              className={styles.navBtn}
+              onClick={intel.onGoBack}
+              disabled={!intel.canGoBack}
+              aria-label="Previous turn"
+            >◁</button>
+            <button
+              className={styles.navBtn}
+              onClick={intel.onGoForward}
+              disabled={!intel.canGoForward}
+              aria-label="Next turn"
+            >▷</button>
+          </div>
         </div>
-      )}
 
-      {/* Spacer pushes footer to bottom */}
-      <div className={styles.spacer} />
+        {/* ── Clue input (floats centered when codemaster giving clue) ── */}
+        {!intel.hasClue && s.isCodemasterGivingClue ? (
+          /* ── Codemaster: label + clue input ── */
+          <>
+            <div className={styles.intelBox}>
+              <div className={styles.clueRow}>
+                <span className={styles.awaitingText}>INTEL REQUIRED</span>
+              </div>
+            </div>
+            <div className={styles.clueInputCenter}>
+              <CompactClueInput
+                word={clueWord}
+                count={clueCount}
+                error={clueError}
+                isLoading={s.isLoading}
+                onWordChange={(w) => { setClueWord(w); setClueError(""); }}
+                onCountChange={setClueCount}
+                onSubmit={handleTransmit}
+              />
+            </div>
+          </>
+        ) : !intel.hasClue ? (
+          /* ── No clue yet: show waiting state + AI trigger ── */
+          <>
+            <div className={styles.intelBox}>
+              <div className={styles.clueRow}>
+                <span className={styles.awaitingText}>
+                  {s.role === "CODEBREAKER" ? "INTEL REQUIRED" : "AWAITING INTEL"}
+                </span>
+              </div>
+            </div>
+            {s.isAiActive && (
+              <>
+                <div className={styles.contentSpacer} />
+                <div className={styles.aiSection}>
+                  <div className={styles.aiBox}>
+                    {isAiThinking ? (
+                      <>
+                        <button className={styles.triggerBtn} disabled>
+                          THINKING...
+                        </button>
+                        <StatusDot active thinking />
+                      </>
+                    ) : canTriggerAi ? (
+                      <>
+                        <button className={styles.triggerBtn} onClick={() => triggerAi.mutate()}>
+                          TRIGGER AI
+                        </button>
+                        <StatusDot active thinking={false} />
+                      </>
+                    ) : (
+                      <>
+                        <span className={styles.aiIdleText}>STANDING BY</span>
+                        <StatusDot active={false} thinking={false} />
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className={styles.contentSpacer} />
+              </>
+            )}
+          </>
+        ) : (
+          /* ── Intel box ── */
+          <div className={`${styles.intelBox} ${intel.isHistorical ? styles.historical : ""}`}>
+            <div className={styles.clueRow}>
+              <span className={styles.clueWord}>"{intel.clueWord}"</span>
+              <span className={styles.clueNumber}>: {intel.clueNumber}</span>
+            </div>
+            <div className={styles.divider} />
+            <div className={styles.guessList}>
+              {intel.guesses.map((guess, i) => {
+                const { symbol: gs, color: gc, rotate: gr } = getOutcomeSymbol(guess.outcome, intel.teamName);
+                const gsStyle = gr ? { display: "inline-block" as const, transform: "rotate(45deg)" } : undefined;
+                return (
+                  <div key={i} className={styles.guessRow}>
+                    <span className={styles.guessWord}>{guess.word}</span>
+                    <span className={styles.guessDots} />
+                    <span style={{ color: gc }}><span style={gsStyle}>{gs}</span></span>
+                  </div>
+                );
+              })}
+              {Array.from({ length: ghostCount }).map((_, i) => (
+                <div key={`ghost-${i}`} className={`${styles.guessRow} ${styles.ghost}`}>
+                  <span className={styles.guessWord}>· · · · ·</span>
+                  <span className={styles.guessDots} />
+                  <span>·</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-      {/* ── Footer: single full-width primary button ── */}
+        {/* Spacer pushes AI section down (only when clue exists) */}
+        <div className={styles.contentSpacer} />
+
+        {/* ── AI section: only shown once a clue is active ── */}
+        {s.isAiActive && intel.hasClue && (
+          <div className={styles.aiSection}>
+            <div className={styles.aiBox}>
+              {isAiThinking ? (
+                <button className={styles.triggerBtn} disabled>
+                  THINKING...
+                </button>
+              ) : canTriggerAi ? (
+                <button className={styles.triggerBtn} onClick={() => triggerAi.mutate()}>
+                  TRIGGER AI
+                </button>
+              ) : (
+                <span className={styles.aiIdleText}>STANDING BY</span>
+              )}
+              <StatusDot active={canTriggerAi || isAiThinking} thinking={isAiThinking} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Footer: pinned to bottom ── */}
       {primaryButton && (
         <div className={styles.footer}>
           {primaryButton}
         </div>
       )}
-
     </div>
   );
 };
