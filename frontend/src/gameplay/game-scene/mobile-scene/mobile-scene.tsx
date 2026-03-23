@@ -88,7 +88,9 @@ export const MobileScene: React.FC<MobileSceneProps> = () => {
 
         <div className={styles.portraitDrawer} data-open={portraitOpen}>
           <div className={styles.drawerHeader}>
-            <TeamHeaderPanel />
+            <div className={styles.drawerIdentity}>
+              <TeamHeaderPanel variant="compact" />
+            </div>
             <button className={styles.drawerClose} onClick={() => setPortraitOpen(false)}>
               ×
             </button>
