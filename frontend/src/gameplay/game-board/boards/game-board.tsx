@@ -1,4 +1,5 @@
 import { memo, useMemo } from "react";
+import { AnimatePresence } from "framer-motion";
 import { useGameDataRequired } from "../../game-data/providers";
 import { useViewMode } from "../view-mode/view-mode-context";
 import { useDealAnimation, type DealInitialState } from "../deal-animation-context";
@@ -123,11 +124,13 @@ export const GameBoardView = memo<GameBoardViewProps>(({
       {/* Layer 2 — spymaster board, clipped inside the AR circle    */}
       {/* Mounts when AR activates — animates in from circle(0%)     */}
       {/* Cards skip dealing animation (initialState="none") so they appear instantly */}
-      {showARHUD && (
-        <ARCircleOverlay isOn={showARHUD}>
-          <CardGrid {...sharedProps} initialState="visible" />
-        </ARCircleOverlay>
-      )}
+      <AnimatePresence>
+        {showARHUD && (
+          <ARCircleOverlay>
+            <CardGrid {...sharedProps} initialState="visible" />
+          </ARCircleOverlay>
+        )}
+      </AnimatePresence>
 
     </div>
   );

@@ -25,7 +25,7 @@
   min-height: 0;
   min-width: 0;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   padding: 0.5rem;
   display: flex;
   align-items: center;
@@ -49,6 +49,8 @@
   overflow: hidden;
   border-top: var(--border-dim);
   background: var(--bg-panel);
+  position: relative;
+  z-index: calc(var(--z-spymaster-ar-hud) + 1);
 }
 
 /* Clue overlay */
