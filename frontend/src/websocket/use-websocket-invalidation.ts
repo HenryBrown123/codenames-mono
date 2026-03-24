@@ -3,12 +3,41 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useWebSocket } from "./websocket-context";
 import { WebSocketEvent, EventPayload } from "./websocket-events.types";
 
+/** All events that should trigger a full query cache invalidation. */
+const INVALIDATION_EVENTS = [
+  // Lobby events
+  WebSocketEvent.PLAYER_JOINED,
+  WebSocketEvent.PLAYER_LEFT,
+  WebSocketEvent.PLAYER_UPDATED,
+  WebSocketEvent.GAME_STARTED,
+  // Round events
+  WebSocketEvent.ROUND_CREATED,
+  WebSocketEvent.ROUND_STARTED,
+  WebSocketEvent.CARDS_DEALT,
+  WebSocketEvent.ROUND_ENDED,
+  // Turn events
+  WebSocketEvent.TURN_STARTED,
+  WebSocketEvent.CLUE_GIVEN,
+  WebSocketEvent.GUESS_MADE,
+  WebSocketEvent.TURN_ENDED,
+  // Game events
+  WebSocketEvent.GAME_ENDED,
+  WebSocketEvent.GAME_UPDATED,
+  // AI events
+  WebSocketEvent.AI_PIPELINE_STARTED,
+  WebSocketEvent.AI_PIPELINE_STAGE,
+  WebSocketEvent.AI_PIPELINE_COMPLETE,
+  WebSocketEvent.AI_PIPELINE_FAILED,
+  // Chat events
+  WebSocketEvent.GAME_MESSAGE_CREATED,
+] as const;
+
 /**
  * Hook to handle WebSocket events and invalidate React Query cache
  *
  * @param gameId - The game ID to listen for events on (null to not listen)
  */
-export const useWebSocketInvalidation = (gameId: string | null) => {
+export const useWebSocketInvalidation = (gameId: string | null): void => {
   const { socket, isConnected } = useWebSocket();
   const queryClient = useQueryClient();
 
@@ -19,156 +48,23 @@ export const useWebSocketInvalidation = (gameId: string | null) => {
 
     console.log(`Setting up WebSocket event listeners for game: ${gameId}`);
 
-    // Helper to invalidate ALL queries (for now - can narrow down later)
     const invalidateAllQueries = () => {
       console.log(`Invalidating ALL queries for game: ${gameId}`);
       queryClient.invalidateQueries();
     };
 
-    // Lobby events
-    const handlePlayerJoined = (payload: EventPayload) => {
-      console.log("Player joined event received:", payload);
-      invalidateAllQueries();
-    };
+    const handlers = INVALIDATION_EVENTS.map((event) => {
+      const handler = (payload: EventPayload) => {
+        console.log(`${event} event received:`, payload);
+        invalidateAllQueries();
+      };
+      socket.on(event, handler);
+      return { event, handler };
+    });
 
-    const handlePlayerLeft = (payload: EventPayload) => {
-      console.log("Player left event received:", payload);
-      invalidateAllQueries();
-    };
-
-    const handlePlayerUpdated = (payload: EventPayload) => {
-      console.log("Player updated event received:", payload);
-      invalidateAllQueries();
-    };
-
-    const handleGameStarted = (payload: EventPayload) => {
-      console.log("Game started event received:", payload);
-      invalidateAllQueries();
-    };
-
-    // Round events
-    const handleRoundCreated = (payload: EventPayload) => {
-      console.log("Round created event received:", payload);
-      invalidateAllQueries();
-    };
-
-    const handleRoundStarted = (payload: EventPayload) => {
-      console.log("Round started event received:", payload);
-      invalidateAllQueries();
-    };
-
-    const handleCardsDealt = (payload: EventPayload) => {
-      console.log("Cards dealt event received:", payload);
-      invalidateAllQueries();
-    };
-
-    const handleRoundEnded = (payload: EventPayload) => {
-      console.log("Round ended event received:", payload);
-      invalidateAllQueries();
-    };
-
-    // Turn events
-    const handleTurnStarted = (payload: EventPayload) => {
-      console.log("Turn started event received:", payload);
-      invalidateAllQueries();
-    };
-
-    const handleClueGiven = (payload: EventPayload) => {
-      console.log("Clue given event received:", payload);
-      invalidateAllQueries();
-    };
-
-    const handleGuessMade = (payload: EventPayload) => {
-      console.log("Guess made event received:", payload);
-      invalidateAllQueries();
-    };
-
-    const handleTurnEnded = (payload: EventPayload) => {
-      console.log("Turn ended event received:", payload);
-      invalidateAllQueries();
-    };
-
-    // Game events
-    const handleGameEnded = (payload: EventPayload) => {
-      console.log("Game ended event received:", payload);
-      invalidateAllQueries();
-    };
-
-    const handleGameUpdated = (payload: EventPayload) => {
-      console.log("Game updated event received:", payload);
-      invalidateAllQueries();
-    };
-
-    // AI events
-    const handleAIPipelineStarted = (payload: EventPayload) => {
-      console.log("AI pipeline started event received:", payload);
-      invalidateAllQueries();
-    };
-
-    const handleAIPipelineStage = (payload: EventPayload) => {
-      console.log("AI pipeline stage event received:", payload);
-      invalidateAllQueries();
-    };
-
-    const handleAIPipelineComplete = (payload: EventPayload) => {
-      console.log("AI pipeline complete event received:", payload);
-      invalidateAllQueries();
-    };
-
-    const handleAIPipelineFailed = (payload: EventPayload) => {
-      console.log("AI pipeline failed event received:", payload);
-      invalidateAllQueries();
-    };
-
-    // Chat events
-    const handleGameMessageCreated = (payload: EventPayload) => {
-      console.log("Game message created event received:", payload);
-      invalidateAllQueries();
-    };
-
-    // Register all event listeners
-    socket.on(WebSocketEvent.PLAYER_JOINED, handlePlayerJoined);
-    socket.on(WebSocketEvent.PLAYER_LEFT, handlePlayerLeft);
-    socket.on(WebSocketEvent.PLAYER_UPDATED, handlePlayerUpdated);
-    socket.on(WebSocketEvent.GAME_STARTED, handleGameStarted);
-    socket.on(WebSocketEvent.ROUND_CREATED, handleRoundCreated);
-    socket.on(WebSocketEvent.ROUND_STARTED, handleRoundStarted);
-    socket.on(WebSocketEvent.CARDS_DEALT, handleCardsDealt);
-    socket.on(WebSocketEvent.ROUND_ENDED, handleRoundEnded);
-    socket.on(WebSocketEvent.TURN_STARTED, handleTurnStarted);
-    socket.on(WebSocketEvent.CLUE_GIVEN, handleClueGiven);
-    socket.on(WebSocketEvent.GUESS_MADE, handleGuessMade);
-    socket.on(WebSocketEvent.TURN_ENDED, handleTurnEnded);
-    socket.on(WebSocketEvent.GAME_ENDED, handleGameEnded);
-    socket.on(WebSocketEvent.GAME_UPDATED, handleGameUpdated);
-    socket.on(WebSocketEvent.AI_PIPELINE_STARTED, handleAIPipelineStarted);
-    socket.on(WebSocketEvent.AI_PIPELINE_STAGE, handleAIPipelineStage);
-    socket.on(WebSocketEvent.AI_PIPELINE_COMPLETE, handleAIPipelineComplete);
-    socket.on(WebSocketEvent.AI_PIPELINE_FAILED, handleAIPipelineFailed);
-    socket.on(WebSocketEvent.GAME_MESSAGE_CREATED, handleGameMessageCreated);
-
-    // Cleanup: remove all event listeners
     return () => {
       console.log(`Removing WebSocket event listeners for game: ${gameId}`);
-      socket.off(WebSocketEvent.PLAYER_JOINED, handlePlayerJoined);
-      socket.off(WebSocketEvent.PLAYER_LEFT, handlePlayerLeft);
-      socket.off(WebSocketEvent.PLAYER_UPDATED, handlePlayerUpdated);
-      socket.off(WebSocketEvent.GAME_STARTED, handleGameStarted);
-      socket.off(WebSocketEvent.ROUND_CREATED, handleRoundCreated);
-      socket.off(WebSocketEvent.ROUND_STARTED, handleRoundStarted);
-      socket.off(WebSocketEvent.CARDS_DEALT, handleCardsDealt);
-      socket.off(WebSocketEvent.ROUND_ENDED, handleRoundEnded);
-      socket.off(WebSocketEvent.TURN_STARTED, handleTurnStarted);
-      socket.off(WebSocketEvent.CLUE_GIVEN, handleClueGiven);
-      socket.off(WebSocketEvent.GUESS_MADE, handleGuessMade);
-      socket.off(WebSocketEvent.TURN_ENDED, handleTurnEnded);
-      socket.off(WebSocketEvent.GAME_ENDED, handleGameEnded);
-      socket.off(WebSocketEvent.GAME_UPDATED, handleGameUpdated);
-      socket.off(WebSocketEvent.AI_PIPELINE_STARTED, handleAIPipelineStarted);
-      socket.off(WebSocketEvent.AI_PIPELINE_STAGE, handleAIPipelineStage);
-      socket.off(WebSocketEvent.AI_PIPELINE_COMPLETE, handleAIPipelineComplete);
-      socket.off(WebSocketEvent.AI_PIPELINE_FAILED, handleAIPipelineFailed);
-      socket.off(WebSocketEvent.GAME_MESSAGE_CREATED, handleGameMessageCreated);
+      handlers.forEach(({ event, handler }) => socket.off(event, handler));
     };
   }, [socket, isConnected, gameId, queryClient]);
 };
