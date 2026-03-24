@@ -283,10 +283,40 @@
   }
 }
 
+/* ===== CARD LABEL CONTAINER ===== */
+.cardLabelContainer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 35;
+  pointer-events: none;
+  padding: 0.5rem;
+}
+
+/* ===== HOVER OVERLAY ===== */
+.hoverOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+}
+
 /* ===== COVER CARD ===== */
+/* Cover card positioning layer */
+.coverCardPositioning {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+}
+
+.coverCardPositioning[data-visible="false"] {
+  pointer-events: none;
+}
+
 /* Cover card slides in from top to cover the card when selected/flipped */
 .coverCard {
-  /* Position and motion set via inline styles in component */
   /* Dark metallic gun metal base - universal across all teams */
   background: linear-gradient(145deg, rgb(85, 92, 100), rgb(60, 65, 70), rgb(40, 45, 50));
   border-radius: 6px;
@@ -334,6 +364,22 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
+}
+
+/* ===== CENTERED BOTTOM POSITIONING ===== */
+.centeredBottom {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.symbolPosition {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.5rem;
 }
 
 /* ===== OUTLINE PULSE ===== */
@@ -647,10 +693,6 @@
     border-radius: 8px;
   }
 
-  .spymasterSymbol {
-    font-size: 7rem;
-  }
-
   .teamSymbol {
     font-size: 3.5rem;
   }
@@ -679,10 +721,6 @@
 
   .revealOverlay {
     border-radius: 12px;
-  }
-
-  .spymasterSymbol {
-    font-size: 8rem;
   }
 
   .teamSymbol {

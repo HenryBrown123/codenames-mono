@@ -1,4 +1,4 @@
-import { memo } from "react";
+import React, { memo } from "react";
 import { motion } from "framer-motion";
 import { OverlayVariants } from "../card-types";
 import styles from "../game-card.module.css";
@@ -115,21 +115,16 @@ export const TeamColorFilter = () => (
 );
 
 export const OverlayWord = memo<{ word: string }>(({ word }) => (
-  <motion.span className={styles.cardWord} variants={contentFadeVariants}>
-    {word}
-  </motion.span>
+  <motion.div className={styles.cardLabelContainer} variants={contentFadeVariants}>
+    <span className={styles.cardWord}>{word}</span>
+  </motion.div>
 ));
 OverlayWord.displayName = "OverlayWord";
 
 export const TeamBadge = memo<{ teamType: string }>(({ teamType }) => (
   <motion.div
     variants={sharedOverlayVariants}
-    style={{
-      position: "absolute",
-      bottom: "8px",
-      left: "50%",
-      transform: "translateX(-50%)",
-    }}
+    className={styles.centeredBottom}
   >
     <div className={styles.teamBadge}>{teamType.toUpperCase()}</div>
   </motion.div>
@@ -139,14 +134,7 @@ TeamBadge.displayName = "TeamBadge";
 export const TeamSymbol = memo(() => (
   <motion.div
     variants={sharedOverlayVariants}
-    className={styles.spymasterSymbol}
-    style={{
-      position: "absolute",
-      bottom: "8px",
-      left: "50%",
-      transform: "translateX(-50%)",
-      fontSize: "1.5rem",
-    }}
+    className={`${styles.spymasterSymbol} ${styles.symbolPosition}`}
   />
 ));
 TeamSymbol.displayName = "TeamSymbol";

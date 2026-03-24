@@ -8,6 +8,7 @@ import { SpymasterOverlay, GameOverOverlay } from "./overlays";
 import { ARCorners } from "./overlays/shared-components";
 import { FloatingWord } from "./floating-word";
 import { useDisplayType } from "../../game-scene/use-display-type";
+import { TeamSymbolIcon } from "../../../shared/team-symbol-icon";
 import styles from "./game-card.module.css";
 
 /**
@@ -32,7 +33,8 @@ const CoverCard = memo<{ teamType: string; variant: CardVisibilityState; cardInd
 
     return (
       <motion.div
-        className={styles.coverCard}
+        className={`${styles.coverCard} ${styles.coverCardPositioning}`}
+        data-visible={shouldShow}
         initial={
           shouldShow
             ? { x: 0, y: 0, rotate: finalRotation, opacity: 1, scale: 1 }
@@ -56,12 +58,6 @@ const CoverCard = memo<{ teamType: string; variant: CardVisibilityState; cardInd
           stiffness: 260,
           mass: 1.2,
         }}
-        style={{
-          position: "absolute",
-          inset: 0,
-          zIndex: 40, // Above word (35) and overlays (30)
-          pointerEvents: shouldShow ? "auto" : "none", // Don't block clicks when hidden
-        }}
       >
         {/* Team symbol with embossed effect - clean layers */}
         {(() => {
@@ -76,27 +72,24 @@ const CoverCard = memo<{ teamType: string; variant: CardVisibilityState; cardInd
             char: "●",
             rotate: false,
           };
-          const symbolStyle = config.rotate
-            ? { display: "inline-block", transform: "rotate(45deg)" }
-            : undefined;
 
           return (
             <>
               {/* Embossed depression - dark shadow */}
               <div className={styles.symbolShadow}>
-                <span style={symbolStyle}>{config.char}</span>
+                <TeamSymbolIcon symbol={config.char} rotate={config.rotate} />
               </div>
               {/* Crisp LED symbol */}
               <div className={styles.symbolLED}>
-                <span style={symbolStyle}>{config.char}</span>
+                <TeamSymbolIcon symbol={config.char} rotate={config.rotate} />
               </div>
               {/* Subtle inner glow */}
               <div className={styles.symbolGlow}>
-                <span style={symbolStyle}>{config.char}</span>
+                <TeamSymbolIcon symbol={config.char} rotate={config.rotate} />
               </div>
               {/* Highlight edge */}
               <div className={styles.symbolHighlight}>
-                <span style={symbolStyle}>{config.char}</span>
+                <TeamSymbolIcon symbol={config.char} rotate={config.rotate} />
               </div>
             </>
           );
@@ -186,12 +179,7 @@ export const GameCard = memo<GameCardProps>(({ card, cardIndex, onClick, display
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            style={{
-              position: "absolute",
-              inset: 0,
-              zIndex: 50,
-              pointerEvents: "none",
-            }}
+            className={styles.hoverOverlay}
           >
             <ARCorners />
           </motion.div>

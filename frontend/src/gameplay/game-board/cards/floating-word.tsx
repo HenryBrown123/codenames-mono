@@ -20,18 +20,11 @@ export const FloatingWord = memo<FloatingWordProps>(({ word, variant }) => {
       variants={{
         normal: { opacity: 1 },
         flipped: { opacity: 0 },
+        revealed: { opacity: 0 },
+        gameOver: { opacity: 0 },
         gameOverSelected: { opacity: 0, transition: { duration: 0.3 } },
       }}
-      style={{
-        position: "absolute",
-        inset: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 35,
-        pointerEvents: "none",
-        padding: "0.5rem",
-      }}
+      className={styles.cardLabelContainer}
     >
       <span className={styles.cardWord}>{word}</span>
     </motion.div>
