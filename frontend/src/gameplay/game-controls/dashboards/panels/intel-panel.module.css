@@ -57,6 +57,7 @@
 /* Team symbol in header */
 .teamSymbol {
   font-size: 1.1rem;
+  color: var(--symbol-color);
 }
 
 /* Intel display container */

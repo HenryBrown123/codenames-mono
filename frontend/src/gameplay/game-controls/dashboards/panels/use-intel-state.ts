@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import { useTurn, useGameDataRequired } from "../../../game-data/providers";
 import { useGameActions } from "../../../game-actions";
-import type { GuessDisplay } from "./intel-panel";
+import type { GuessDisplay, IntelPanelViewProps } from "./intel-panel";
+
+/** Return type of useIntelState — satisfies IntelPanelViewProps for direct spreading. */
+export type IntelState = IntelPanelViewProps;
 
 /**
  * Shared intel navigation state.
  * Used by IntelPanel (stacked) and CompactDashboard.
  */
-export const useIntelState = () => {
+export const useIntelState = (): IntelState => {
   const { historicTurns } = useTurn();
   const { gameData } = useGameDataRequired();
   const { giveClue, actionState } = useGameActions();
@@ -28,8 +31,8 @@ export const useIntelState = () => {
 
   const canGoBack = selectedIndex > 0;
   const canGoForward = selectedIndex < historicTurns.length - 1;
-  const onGoBack = () => setSelectedIndex((i) => Math.max(0, i - 1));
-  const onGoForward = () => setSelectedIndex((i) => Math.min(historicTurns.length - 1, i + 1));
+  const onGoBack = (): void => setSelectedIndex((i) => Math.max(0, i - 1));
+  const onGoForward = (): void => setSelectedIndex((i) => Math.min(historicTurns.length - 1, i + 1));
 
   const teamName = selectedTurn?.teamName ?? "";
   const hasClue = !!selectedTurn?.clue;
@@ -66,11 +69,8 @@ export const useIntelState = () => {
     3
   );
 
-  return {
+  const base = {
     teamName,
-    hasClue,
-    clueWord: selectedTurn?.clue?.word,
-    clueNumber: selectedTurn?.clue?.number,
     guesses,
     guessesRemaining: selectedTurn?.guessesRemaining ?? 0,
     canGoBack,
@@ -78,9 +78,31 @@ export const useIntelState = () => {
     onGoBack,
     onGoForward,
     isHistorical,
-    isCodemasterGivingClue,
-    isLoading: actionState.status === "loading",
-    onSubmitClue: giveClue,
     maxSlots,
+  };
+
+  if (hasClue) {
+    return {
+      ...base,
+      hasClue: true as const,
+      clueWord: selectedTurn!.clue!.word,
+      clueNumber: selectedTurn!.clue!.number,
+    };
+  }
+
+  if (isCodemasterGivingClue) {
+    return {
+      ...base,
+      hasClue: false as const,
+      isCodemasterGivingClue: true as const,
+      isLoading: actionState.status === "loading",
+      onSubmitClue: giveClue,
+    };
+  }
+
+  return {
+    ...base,
+    hasClue: false as const,
+    isCodemasterGivingClue: false as const,
   };
 };

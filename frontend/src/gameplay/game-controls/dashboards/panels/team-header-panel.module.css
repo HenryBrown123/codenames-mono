@@ -37,6 +37,66 @@
   align-items: center;
 }
 
+/* ── Symbol layers ── */
+.symbolContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.symbolShadow {
+  position: absolute;
+  font-size: 2rem;
+  color: transparent;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.symbolLED {
+  font-size: 2rem;
+  color: var(--symbol-color);
+}
+
+.symbolGlow {
+  position: absolute;
+  font-size: 2rem;
+  color: transparent;
+}
+
+.teamInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.teamTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.teamName {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.teamRole {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.teamDivider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 2px 0;
+}
+
 /* ── Compact variant (mobile drawer) ── */
 .compactRow {
   display: flex;

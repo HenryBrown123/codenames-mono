@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { TerminalSection } from "../shared";
 import { CodeWordInput } from "./codemaster-input";
 import { useIntelState } from "./use-intel-state";
+import { TeamSymbolIcon } from "../../../../shared/team-symbol-icon";
 import styles from "./intel-panel.module.css";
 
 // Animation constants matching lobby team symbol
@@ -20,25 +21,47 @@ export interface GuessDisplay {
   outcome: "CORRECT_TEAM_CARD" | "OTHER_TEAM_CARD" | "BYSTANDER_CARD" | "ASSASSIN_CARD";
 }
 
-export interface IntelPanelViewProps {
+/** Shared props across all intel panel variants. */
+interface IntelPanelBaseProps {
   teamName: string;
-  hasClue: boolean;
-  clueWord?: string;
-  clueNumber?: number;
   guesses: GuessDisplay[];
   guessesRemaining: number;
   maxSlots?: number;
-  // Navigation props
+  // Navigation
   canGoBack?: boolean;
   canGoForward?: boolean;
   onGoBack?: () => void;
   onGoForward?: () => void;
   isHistorical?: boolean;
-  // Codemaster input props (optional - for when no clue)
-  isCodemasterGivingClue?: boolean;
-  isLoading?: boolean;
-  onSubmitClue?: (word: string, count: number) => void;
 }
+
+/** Clue is visible — show the word, number, and guesses. */
+interface IntelPanelWithClueProps extends IntelPanelBaseProps {
+  hasClue: true;
+  clueWord: string;
+  clueNumber: number;
+}
+
+/** Codemaster is actively giving a clue — show the input form. */
+interface IntelPanelCodemasterInputProps extends IntelPanelBaseProps {
+  hasClue: false;
+  isCodemasterGivingClue: true;
+  isLoading?: boolean;
+  onSubmitClue: (word: string, count: number) => void;
+}
+
+/** Waiting for a clue — show "AWAITING INTEL". */
+interface IntelPanelAwaitingProps extends IntelPanelBaseProps {
+  hasClue: false;
+  isCodemasterGivingClue?: false;
+  isLoading?: boolean;
+  onSubmitClue?: undefined;
+}
+
+export type IntelPanelViewProps =
+  | IntelPanelWithClueProps
+  | IntelPanelCodemasterInputProps
+  | IntelPanelAwaitingProps;
 
 /**
  * Get team symbol and color based on team name.
@@ -80,28 +103,21 @@ export const getOutcomeSymbol = (
   }
 };
 
-export const IntelPanelView: React.FC<IntelPanelViewProps> = ({
-  teamName,
-  hasClue,
-  clueWord,
-  clueNumber,
-  guesses,
-  guessesRemaining,
-  maxSlots = 3,
-  canGoBack = false,
-  canGoForward = false,
-  onGoBack,
-  onGoForward,
-  isHistorical = false,
-  isCodemasterGivingClue = false,
-  isLoading = false,
-  onSubmitClue,
-}) => {
+export const IntelPanelView: React.FC<IntelPanelViewProps> = (props) => {
+  const {
+    teamName,
+    hasClue,
+    guesses,
+    guessesRemaining,
+    maxSlots = 3,
+    canGoBack = false,
+    canGoForward = false,
+    onGoBack,
+    onGoForward,
+    isHistorical = false,
+  } = props;
   // Derive symbol styling from teamName
   const { symbol: teamSymbol, color: teamColor, rotate } = getTeamStyle(teamName);
-  const teamSymbolStyle = rotate
-    ? { display: "inline-block" as const, transform: "rotate(45deg)" }
-    : undefined;
 
   return (
     <TerminalSection>
@@ -111,25 +127,25 @@ export const IntelPanelView: React.FC<IntelPanelViewProps> = ({
           <motion.span
             key={teamName}
             className={styles.teamSymbol}
-            style={{ color: teamColor }}
+            style={{ "--symbol-color": teamColor } as React.CSSProperties}
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             exit={{ scale: 0, rotate: 180 }}
             transition={{ duration: TEAM_SWITCH_DURATION, ease: EASING }}
           >
-            <span style={teamSymbolStyle}>{teamSymbol}</span>
+            <TeamSymbolIcon symbol={teamSymbol} rotate={rotate} />
           </motion.span>
         </AnimatePresence>
       </div>
       <div className={`${styles.intelDisplay} ${isHistorical ? styles.historical : ""}`}>
         {!hasClue ? (
-          isCodemasterGivingClue && onSubmitClue ? (
+          props.isCodemasterGivingClue && props.onSubmitClue ? (
             <CodeWordInput
               codeWord=""
               numberOfCards={null}
               isEditable={true}
-              isLoading={isLoading}
-              onSubmit={onSubmitClue}
+              isLoading={props.isLoading ?? false}
+              onSubmit={props.onSubmitClue}
             />
           ) : (
             <div className={styles.awaitingIntel}>AWAITING INTEL</div>
@@ -137,8 +153,8 @@ export const IntelPanelView: React.FC<IntelPanelViewProps> = ({
         ) : (
           <>
             <div className={styles.clueSection}>
-              <span className={styles.clueWord}>"{clueWord}"</span>
-              <span className={styles.clueNumber}>: {clueNumber}</span>
+              <span className={styles.clueWord}>"{props.clueWord}"</span>
+              <span className={styles.clueNumber}>: {props.clueNumber}</span>
             </div>
 
             <div className={styles.guessesDivider} />
@@ -148,15 +164,12 @@ export const IntelPanelView: React.FC<IntelPanelViewProps> = ({
                 {/* Real guesses */}
                 {guesses.map((guess, index) => {
                   const { symbol, color, rotate } = getOutcomeSymbol(guess.outcome, teamName);
-                  const symbolStyle = rotate
-                    ? { display: "inline-block" as const, transform: "rotate(45deg)" }
-                    : undefined;
                   return (
                     <div key={index} className={styles.guessRow}>
                       <span className={styles.guessWord}>{guess.word}</span>
                       <span className={styles.guessDots} />
-                      <span className={styles.guessSymbol} style={{ color }}>
-                        <span style={symbolStyle}>{symbol}</span>
+                      <span className={styles.guessSymbol}>
+                        <TeamSymbolIcon symbol={symbol} rotate={rotate} color={color} />
                       </span>
                     </div>
                   );

@@ -31,11 +31,11 @@ export const TeamSymbolHeader: React.FC<TeamSymbolHeaderProps> = ({
       <div className={styles.symbolShadow}>{symbol}</div>
       <div
         className={styles.symbolLED}
-        style={{ color: color, textShadow: `0 0 8px ${color}` }}
+        style={{ "--symbol-color": color } as React.CSSProperties}
       >
         {symbol}
       </div>
-      <div className={styles.symbolGlow} style={{ textShadow: `0 0 4px ${color}` }}>
+      <div className={styles.symbolGlow}>
         {symbol}
       </div>
     </motion.div>
