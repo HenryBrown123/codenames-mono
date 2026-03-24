@@ -66,7 +66,7 @@ export const MyTeamBoxView: React.FC<MyTeamBoxViewProps> = ({
       <AnimatePresence mode="wait">
         <motion.div
           key={`team-content-${teamName}`}
-          style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}
+          className={styles.teamContentRow}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -78,7 +78,7 @@ export const MyTeamBoxView: React.FC<MyTeamBoxViewProps> = ({
             className={styles.bigTeamSymbol}
           />
           <div className={styles.teamInfoSection}>
-            <div className={styles.teamName} style={{ color: teamColor }}>
+            <div className={styles.teamName} style={{ "--symbol-color": teamColor } as React.CSSProperties}>
               {teamConfig.shortName}
             </div>
             <div className={styles.playerLabel}>{playerName}</div>

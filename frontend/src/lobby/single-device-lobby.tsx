@@ -143,6 +143,7 @@ export const SingleDeviceLobby: React.FC<SingleDeviceLobbyProps> = ({ gameId, lo
           <PlayerTileView
             key={player.publicId}
             playerName={player.name}
+            interactive
             isDraggable
             isDragging={drag.isDragging(player.publicId)}
             isEditing={editing.isEditing(player.publicId)}

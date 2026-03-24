@@ -42,7 +42,7 @@ export const JoinAreaView: React.FC<JoinAreaViewProps> = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
-        style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
+        className={styles.joinContent}
       >
         <h2 className={styles.joinTitle}>Join the Mission</h2>
         <input

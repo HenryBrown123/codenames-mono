@@ -164,13 +164,19 @@
   flex-shrink: 0;
 }
 
+.teamContentRow {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
 .teamName {
   font-size: 1.1rem;
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 3px;
   opacity: 0.9;
-  color: var(--team-color);
+  color: var(--symbol-color, var(--team-color));
   font-family: var(--font-mono);
   display: flex;
   align-items: baseline;
@@ -462,6 +468,12 @@
   border-radius: var(--radius-md);
   margin-bottom: 1.5rem;
   flex-shrink: 0;
+}
+
+.joinContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .joinTitle {

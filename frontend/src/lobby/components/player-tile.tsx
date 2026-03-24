@@ -3,12 +3,23 @@ import { GripVertical, Edit2 } from "lucide-react";
 import styles from "../lobby.module.css";
 
 /**
- * Individual player row - read-only in multi-device, draggable/editable in single-device
+ * Individual player row - read-only in multi-device, draggable/editable in single-device.
+ *
+ * Use `interactive: true` for single-device mode (drag, edit, remove).
+ * Omit or set `interactive` to false for multi-device read-only mode.
  */
 
-export interface PlayerTileViewProps {
+interface PlayerTileBaseProps {
   playerName: string;
   isCurrentUser?: boolean;
+}
+
+interface PlayerTileReadOnlyProps extends PlayerTileBaseProps {
+  interactive?: false;
+}
+
+interface PlayerTileInteractiveProps extends PlayerTileBaseProps {
+  interactive: true;
   isDraggable?: boolean;
   isDragging?: boolean;
   isEditing?: boolean;
@@ -16,36 +27,20 @@ export interface PlayerTileViewProps {
   onEditChange?: (value: string) => void;
   onEditSave?: () => void;
   onEditCancel?: () => void;
-  onEditStart?: () => void;
-  onRemove?: () => void;
+  onEditStart: () => void;
+  onRemove: () => void;
   onDragStart?: (e: React.DragEvent) => void;
   onDragEnd?: () => void;
   disabled?: boolean;
 }
 
-export const PlayerTileView: React.FC<PlayerTileViewProps> = ({
-  playerName,
-  isCurrentUser,
-  isDraggable = false,
-  isDragging = false,
-  isEditing = false,
-  editValue = "",
-  onEditChange,
-  onEditSave,
-  onEditCancel,
-  onEditStart,
-  onRemove,
-  onDragStart,
-  onDragEnd,
-  disabled = false,
-}) => {
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") onEditSave?.();
-    if (e.key === "Escape") onEditCancel?.();
-  };
+export type PlayerTileViewProps = PlayerTileReadOnlyProps | PlayerTileInteractiveProps;
 
-  // Multi-device mode: simple read-only tile
-  if (!isDraggable && !onEditStart && !onRemove) {
+export const PlayerTileView: React.FC<PlayerTileViewProps> = (props) => {
+  const { playerName, isCurrentUser } = props;
+
+  // Read-only mode (multi-device)
+  if (!props.interactive) {
     return (
       <div className={styles.playerTile}>
         <span className={styles.playerName}>{playerName}</span>
@@ -54,7 +49,27 @@ export const PlayerTileView: React.FC<PlayerTileViewProps> = ({
     );
   }
 
-  // Single-device mode: full interactive tile
+  // Interactive mode (single-device) — destructure interactive-only props
+  const {
+    isDraggable = false,
+    isDragging = false,
+    isEditing = false,
+    editValue = "",
+    onEditChange,
+    onEditSave,
+    onEditCancel,
+    onEditStart,
+    onRemove,
+    onDragStart,
+    onDragEnd,
+    disabled = false,
+  } = props;
+
+  const handleKeyDown = (e: React.KeyboardEvent): void => {
+    if (e.key === "Enter") onEditSave?.();
+    if (e.key === "Escape") onEditCancel?.();
+  };
+
   return (
     <div
       className={styles.playerTile}
@@ -78,30 +93,24 @@ export const PlayerTileView: React.FC<PlayerTileViewProps> = ({
         <span className={styles.playerName}>{playerName}</span>
       )}
 
-      {(onEditStart || onRemove) && (
-        <div className={styles.playerActions}>
-          {onEditStart && (
-            <button
-              className={styles.editButton}
-              onClick={onEditStart}
-              disabled={disabled}
-              title="Edit name"
-            >
-              <Edit2 size={14} />
-            </button>
-          )}
-          {onRemove && (
-            <button
-              className={styles.removeButton}
-              onClick={onRemove}
-              disabled={disabled}
-              title="Remove player"
-            >
-              ×
-            </button>
-          )}
-        </div>
-      )}
+      <div className={styles.playerActions}>
+        <button
+          className={styles.editButton}
+          onClick={onEditStart}
+          disabled={disabled}
+          title="Edit name"
+        >
+          <Edit2 size={14} />
+        </button>
+        <button
+          className={styles.removeButton}
+          onClick={onRemove}
+          disabled={disabled}
+          title="Remove player"
+        >
+          ×
+        </button>
+      </div>
     </div>
   );
 };
