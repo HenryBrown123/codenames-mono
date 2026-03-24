@@ -5,10 +5,22 @@ import styles from "./ui-settings-dashboard.module.css";
  * Settings panel for UI customization options
  */
 
-/** Preset terminal colours (7×2 grid) */
+/** Preset terminal colours — softer pastel palette */
 const TERMINAL_COLOURS = [
-  "#00ff88", "#52d68a", "#00ffcc", "#00ffff", "#ff00aa", "#ffaa00", "#ff6600",
-  "#ff4444", "#aaaaff", "#aa88ff", "#88aaff", "#ffffff", "#cccccc", "#888888",
+  { hex: "#7fffd4", name: "Aquamarine" },
+  { hex: "#67e8f9", name: "Sky cyan" },
+  { hex: "#5eead4", name: "Dusted teal" },
+  { hex: "#86efac", name: "Soft mint" },
+  { hex: "#52d68a", name: "Mid green" },
+  { hex: "#bef264", name: "Washed lime" },
+  { hex: "#d9f99d", name: "Pale lime" },
+  { hex: "#a3e4b8", name: "Mint mist" },
+  { hex: "#fde68a", name: "Soft amber" },
+  { hex: "#fdba74", name: "Washed peach" },
+  { hex: "#fb7185", name: "Washed rose" },
+  { hex: "#f0abfc", name: "Soft violet" },
+  { hex: "#c084fc", name: "Dusted lavender" },
+  { hex: "#93c5fd", name: "Soft sky" },
 ];
 
 export const DEFAULT_TERMINAL_COLOUR = "#52d68a";
@@ -32,6 +44,7 @@ export function applyTerminalColour(hex: string): void {
 
   // Primary colour
   root.style.setProperty("--color-primary", hex);
+  root.style.setProperty("--primary-rgb", `${r}, ${g}, ${b}`);
 
   // Border tokens
   root.style.setProperty("--border-dim", `1px solid rgba(${r}, ${g}, ${b}, 0.14)`);
@@ -48,9 +61,8 @@ export function applyTerminalColour(hex: string): void {
   // Background tokens
   root.style.setProperty("--bg-highlight", `rgba(${r}, ${g}, ${b}, 0.06)`);
 
-  // Scrollbar and scanline tokens (track primary colour)
+  // Scrollbar (tracks primary colour)
   root.style.setProperty("--bg-scrollbar", `rgba(${r}, ${g}, ${b}, 0.35)`);
-  root.style.setProperty("--scan-color", `rgba(${r}, ${g}, ${b}, 0.015)`);
   // Note: --bg-panel, --bg-panel-tinted, --bg-overlay don't need updating
   // — they are near-black and colour-neutral intentionally
 }
@@ -187,16 +199,17 @@ export const UISettingsDashboard: React.FC<UISettingsDashboardProps> = ({
 
           {/* Terminal Colour Section */}
           <div className={styles.settingsSection}>
-            <h4 className={styles.sectionTitle}>Terminal Colour</h4>
+            <h4 className={styles.sectionTitle}>Theme Colour</h4>
             <div className={styles.colourGrid}>
-              {TERMINAL_COLOURS.map((colour) => (
+              {TERMINAL_COLOURS.map((c) => (
                 <button
-                  key={colour}
+                  key={c.hex}
                   className={styles.colourSwatch}
-                  style={{ backgroundColor: colour }}
-                  data-selected={terminalColour === colour}
-                  onClick={() => onTerminalColourChange(colour)}
-                  aria-label={`Select colour ${colour}`}
+                  style={{ backgroundColor: c.hex }}
+                  data-selected={terminalColour === c.hex}
+                  onClick={() => onTerminalColourChange(c.hex)}
+                  title={c.name}
+                  aria-label={`Select colour ${c.name}`}
                 />
               ))}
             </div>

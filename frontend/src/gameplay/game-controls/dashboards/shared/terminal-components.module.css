@@ -108,7 +108,7 @@
 .terminalMessageBlock {
   background: var(--bg-highlight);
   border: 1.5px solid #ff6200;
-  box-shadow: 0 0 12px 1px rgba(0, 255, 136, 0.11);
+  box-shadow: var(--glow-clue);
   border-radius: 8px;
   color: var(--color-primary);
   font-family: var(--font-mono);
@@ -166,8 +166,7 @@
 .terminalDivider {
   width: 100%;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, var(--color-primary) 50%, transparent 100%);
-  opacity: 0.3;
+  background: rgba(82, 214, 138, 0.20);
   margin: 1.25rem 0;
 }
 
@@ -313,7 +312,7 @@
 }
 
 .spyGogglesDot[data-active="false"] {
-  background: #355e4b;
+  background: rgba(82, 214, 138, 0.20);
   box-shadow: none;
 }
 
@@ -359,8 +358,8 @@
   left: 2.5px;
   bottom: 1.7px;
   border-radius: 50%;
-  background: rgba(0, 255, 136, 0.5);
-  box-shadow: 0 0 7px 0px rgba(0, 255, 136, 0.5);
+  background: var(--bg-highlight);
+  box-shadow: var(--glow-box-sm);
   transition:
     transform 0.23s,
     box-shadow 0.23s,
@@ -368,7 +367,7 @@
 }
 
 .spySwitch input:checked + .spySlider {
-  background: linear-gradient(90deg, rgba(0, 255, 136, 0.5) 0%, transparent 80%);
+  background: linear-gradient(90deg, var(--bg-highlight) 0%, transparent 80%);
 }
 
 .spySwitch input:checked + .spySlider::before {

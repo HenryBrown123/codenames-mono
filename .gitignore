@@ -78,3 +78,7 @@ FRONTEND_REFACTOR.md
 frontend/src/gameplay/game-board/boards/refactor.md
 .DS_Store
 .clinerules
+compact_dashboard.excalidraw
+.gitignore
+display_views.excalidraw
+.claude/settings.local.json

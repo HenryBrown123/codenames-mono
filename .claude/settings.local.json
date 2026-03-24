@@ -78,7 +78,8 @@
       "Bash(test:*)",
       "Bash(docker-compose:*)",
       "Bash(docker exec:*)",
-      "Bash(xargs kill:*)"
+      "Bash(xargs kill:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []

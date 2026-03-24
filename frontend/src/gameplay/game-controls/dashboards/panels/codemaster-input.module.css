@@ -1,14 +1,11 @@
-/* Codemaster Input Styles */
-
 .container {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
   width: 100%;
-  max-width: 100%; /* Ensure it doesn't exceed parent */
+  max-width: 100%;
   box-sizing: border-box;
-  position: relative;
 }
 
 .inputContainer {
@@ -17,104 +14,93 @@
   align-items: center;
   gap: 1rem;
   width: 100%;
-  max-width: 100%;
   padding: 0.5rem 0;
-  background: transparent;
-  position: relative;
   box-sizing: border-box;
 }
-
 
 .codeWordInputField {
   background: transparent;
   border: none;
-  border-bottom: 2px solid var(--color-primary, #ffc800);
-  color: var(--color-primary, #00ff88);
-  font-size: 2rem; /* reduced font size */
-  font-weight: 900;
+  border-bottom: var(--border-subtle);
+  color: var(--color-primary);
+  font-size: 2rem;
+  font-weight: 700;
   text-align: center;
   text-transform: uppercase;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.1em;
   padding: 0.3rem 0.5rem;
   width: 100%;
-  max-width: 100%; /* CHANGE from 500px to 100% */
   font-family: var(--font-mono);
-  text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+  font-variation-settings: var(--font-variation-heavy);
+  text-shadow: none;
+  outline: none;
+  transition: border-color 0.15s;
   box-sizing: border-box;
 }
 
-.codeWordInputField[data-error="true"] {
-  border-bottom-color: #ff4f4f;
-}
-
 .codeWordInputField::placeholder {
-  color: rgba(0, 255, 136, 0.3);
-  text-transform: none;
+  color: var(--color-primary);
+  opacity: 0.3;
+  font-weight: 400;
   letter-spacing: 0.05em;
 }
 
-.codeWordInputField:focus {
-  outline: none;
-  border-bottom-color: #fff;
-  text-shadow:
-    0 0 25px rgba(0, 255, 136, 0.8),
-    0 0 50px rgba(0, 255, 136, 0.4);
+.codeWordInputField:focus { border-color: var(--color-primary); }
+
+.codeWordInputField[data-error="true"] {
+  border-color: var(--color-warning);
+  color: var(--color-warning);
 }
+
+.codeWordInputField:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .numberInput {
   display: flex;
   align-items: center;
-  gap: 0.75rem; /* reduced gap */
-  font-size: 1.5rem; /* smaller font */
-  font-weight: 700;
-  color: var(--color-primary, #00ff88);
+  gap: 0.75rem;
   font-family: var(--font-mono);
+  font-variation-settings: var(--font-variation-heavy);
+  color: var(--color-primary);
 }
 
 .numberButton {
-  width: 40px; /* reduced size */
+  width: 40px;
   height: 40px;
-  border: 2px solid var(--color-primary, #00ff88);
+  border: var(--border-subtle);
   background: transparent;
-  color: var(--color-primary, #00ff88);
+  color: var(--color-primary);
   font-size: 1.25rem;
-  font-weight: 900;
+  font-family: var(--font-mono);
   cursor: pointer;
   border-radius: 50%;
-  transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.15s, border-color 0.15s;
 }
 
 .numberButton:hover:not(:disabled) {
-  background: var(--color-primary, #00ff88);
-  color: #000;
-  transform: scale(1.1);
+  background: var(--bg-highlight);
+  border-color: var(--color-primary);
 }
 
-.numberButton:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
+.numberButton:active:not(:disabled) { transform: scale(0.95); }
+.numberButton:disabled { opacity: 0.3; cursor: not-allowed; }
 
 .numberDisplay {
-  font-size: 2rem; /* smaller display */
-  font-weight: 900;
+  font-size: 2rem;
+  font-weight: 700;
   min-width: 40px;
   text-align: center;
-  text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+  color: var(--color-primary);
+  font-family: var(--font-mono);
+  font-variation-settings: var(--font-variation-heavy);
+  text-shadow: none;
 }
 
-/* For desktop, reduce font size to fit better */
 @media (min-width: 769px) and (orientation: landscape) {
-  .codeWordInputField {
-    font-size: 1.5rem;
-    letter-spacing: 0.1em;
-  }
-
-  .numberInput {
-    font-size: 1.25rem;
-  }
-
-  .numberDisplay {
-    font-size: 1.5rem;
-  }
+  .codeWordInputField { font-size: 1.5rem; letter-spacing: 0.08em; }
+  .numberDisplay      { font-size: 1.5rem; }
+  .numberButton       { width: 34px; height: 34px; font-size: 1rem; }
 }

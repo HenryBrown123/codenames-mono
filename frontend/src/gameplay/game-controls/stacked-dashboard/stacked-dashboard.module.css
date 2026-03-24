@@ -29,13 +29,6 @@
   overflow: hidden;
   position: relative;
   background: var(--bg-panel);
-  background-image: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    var(--scan-color) 2px,
-    var(--scan-color) 4px
-  );
   border-right: 1px solid var(--color-primary);
   box-shadow: var(--glow-box-sm);
   backdrop-filter: blur(10px);

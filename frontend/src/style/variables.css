@@ -1,13 +1,17 @@
 :root {
   /* ── Typography ── */
-  --font-mono: "Doto", "JetBrains Mono", "Courier New", monospace;
+  --font-mono:            "Doto", "JetBrains Mono", "Courier New", monospace;
+  --font-variation:       "ROND" 80, "wght" 500;   /* default body weight */
+  --font-variation-heavy: "ROND" 80, "wght" 700;   /* labels, headings, buttons */
 
   /* ── Primary theme — user-overridable at runtime via JS ── */
   --color-primary:    #52d68a;
+  --primary-rgb:      82, 214, 138;
   --color-accent:     #ff0080;
   --color-background: rgb(13, 13, 13);
   --color-text:       white;
   --color-text-muted: rgba(255, 255, 255, 0.7);
+  --color-warning:    rgba(255, 170, 0, 0.85);
 
   /* ── Border tokens ── */
   --border-dim:    1px solid rgba(82, 214, 138, 0.14);
@@ -30,7 +34,6 @@
   --bg-panel-tinted:  rgba(10, 14, 12, 0.92);   /* slight warm tint, used by drawers/overlays */
   --bg-overlay:       rgba(8, 10, 8, 0.98);     /* near-opaque overlay (clue input, drawers) */
   --bg-scrollbar:     rgba(82, 214, 138, 0.35); /* scrollbar thumb — tracks primary */
-  --scan-color:       rgba(82, 214, 138, 0.015);/* sidebar scanline tint — very subtle */
 
   /* Dashboard typography */
   --dashboard-text-h1: 1.1rem;

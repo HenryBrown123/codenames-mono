@@ -24,26 +24,7 @@ body {
   color: var(--color-text);
   background: var(--color-background);
   position: relative;
-  font-variation-settings: "ROND" 80, "wght" 500;
-}
-
-/* Mobile browser-specific fixes */
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    var(--bg-highlight) 2px,
-    var(--bg-highlight) 4px
-  );
-  pointer-events: none;
-  z-index: 1;
+  font-variation-settings: var(--font-variation);
 }
 
 /* Force mobile browsers to respect viewport */
