@@ -57,7 +57,7 @@ export const DealingBoard = memo<DealingBoardProps>(
         key={wordsKey}
         className={className}
         variants={dealBoardVariants}
-        initial={initialState === "hidden" ? "hidden" : false}
+        initial={initialState === "hidden" ? "hidden" : "visible"}
         animate={animateState}
       >
         {children}

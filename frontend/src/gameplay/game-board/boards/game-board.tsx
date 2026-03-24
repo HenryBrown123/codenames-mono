@@ -8,6 +8,7 @@ import { EmptyCard } from "./board-layout";
 import { DealingBoard } from "./dealing-board";
 import { ARCircleOverlay } from "./ar-circle-overlay";
 import { type SceneState } from "../cards/card-animation-variants";
+import type { Card } from "../../../shared-types";
 import styles from "./board-layout.module.css";
 
 /**
@@ -15,14 +16,14 @@ import styles from "./board-layout.module.css";
  * No hooks, no context access. Pure presentation.
  */
 export interface GameBoardViewProps {
-  cards: any[];
+  cards: Card[];
   wordsKey: string;
   initialState: DealInitialState;
   animateState: SceneState;
   currentTeamName?: string;
   viewMode: string;
   isRoundComplete: boolean;
-  canInteract: (card: any) => boolean;
+  canInteract: (card: Card) => boolean;
   onCardClick: (word: string) => void;
   showARHUD: boolean;
 }
@@ -114,7 +115,7 @@ export const GameBoardView = memo<GameBoardViewProps>(({
       Without this, ARCircleOverlay's inset:0 anchors to .board's padding edge,
       offsetting the spymaster grid from the plain grid by the padding amount.
     */
-    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+    <div className={styles.boardRelativeWrapper}>
 
       {/* Layer 1 — plain board, always visible outside the AR circle */}
       <CardGrid {...sharedProps} viewMode="normal" />
@@ -139,7 +140,7 @@ GameBoardView.displayName = "GameBoardView";
  */
 export interface GameBoardProps {
   onCardClick?: (word: string) => void;
-  canInteract?: (card: any) => boolean;
+  canInteract?: (card: Card) => boolean;
 }
 
 const noop = () => {};
@@ -160,7 +161,7 @@ export const GameBoard = memo<GameBoardProps>(({
   const showARHUD       = viewMode === "spymaster";
 
   const wordsKey = useMemo(
-    () => cards.map((c: any) => c.word).sort().join(","),
+    () => cards.map((c) => c.word).sort().join(","),
     [cards],
   );
 
