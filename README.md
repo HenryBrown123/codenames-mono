@@ -673,6 +673,7 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   │   └── queries
 │       │   ├── components
 │       │   └── hooks
+│       ├── shared
 │       ├── shared-types
 │       ├── style
 │       ├── types
@@ -684,7 +685,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-123 directories
+124 directories
 ```
 
 ## Getting Started
