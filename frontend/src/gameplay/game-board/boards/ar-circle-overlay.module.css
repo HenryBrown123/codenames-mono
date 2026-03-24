@@ -1,0 +1,60 @@
+@import '../../../style/variables.css';
+@import '../../../style/animations.css';
+
+/*
+  --ar-vignette-rgb  Teal/cyan, intentionally offset from --color-primary
+                     so the lens reads as a cooler colour temperature at the rim.
+*/
+.root {
+  --ar-vignette-rgb: 0, 240, 200;
+
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--z-spymaster-ar-hud);
+}
+
+/* clip-path lives here — children clip for free                   */
+/* pointer-events restored so cards remain clickable when AR is on */
+.clipLayer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: clip-path;
+  pointer-events: auto;
+}
+
+/* Teal hue vignette — transparent centre, teal at rim             */
+/* Overflows the circle but clip-path cuts it off for free         */
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at center,
+    transparent                          0%,
+    transparent                          40%,
+    rgba(var(--ar-vignette-rgb), 0.012)  55%,
+    rgba(var(--ar-vignette-rgb), 0.035)  65%,
+    rgba(var(--ar-vignette-rgb), 0.070)  75%,
+    rgba(var(--ar-vignette-rgb), 0.084)  85%
+  );
+}
+
+/* Diagonal glare sweep — glareAnimation defined in animations.css */
+.glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    transparent                      0%,
+    rgba(var(--primary-rgb), 0.03)  45%,
+    rgba(var(--primary-rgb), 0.055) 50%,
+    transparent                     55%
+  );
+  animation: glareAnimation 8s ease-in-out infinite;
+}
+

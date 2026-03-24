@@ -183,3 +183,9 @@
       -2px 0 var(--color-primary);
   }
 }
+
+/* AR glare sweep — diagonal light pass used by ARCircleOverlay */
+@keyframes glareAnimation {
+  0%, 100% { transform: translateX(-100%) translateY(-100%); }
+  50%       { transform: translateX(100%)  translateY(100%);  }
+}
