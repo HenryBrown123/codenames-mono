@@ -2,6 +2,7 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDashboardState } from "../dashboards/use-dashboard-state";
 import { getTeamStyle } from "../dashboards/panels/intel-panel";
+import { TeamSymbolIcon } from "../../../shared/team-symbol-icon";
 import styles from "./player-banner.module.css";
 
 // Animation constants
@@ -20,9 +21,6 @@ export const PlayerBanner: React.FC = () => {
   if (!s.hasRole) return null;
 
   const { symbol, color, rotate } = getTeamStyle(s.teamName);
-  const symbolStyle = rotate
-    ? { display: "inline-block" as const, transform: "rotate(45deg)" }
-    : undefined;
 
   return (
     <div className={styles.banner}>
@@ -30,19 +28,19 @@ export const PlayerBanner: React.FC = () => {
         <motion.span
           key={s.teamName}
           className={styles.teamSymbol}
-          style={{ color }}
+          style={{ "--symbol-color": color } as React.CSSProperties}
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
           exit={{ scale: 0, rotate: 180 }}
           transition={{ duration: SYMBOL_SWITCH_DURATION, ease: EASING }}
         >
-          <span style={symbolStyle}>{symbol}</span>
+          <TeamSymbolIcon symbol={symbol} rotate={rotate} />
         </motion.span>
       </AnimatePresence>
 
       <div className={styles.identity}>
         <span className={styles.playerName}>{s.playerName || "AGENT"}</span>
-        <span className={styles.roleBadge} style={{ borderColor: color, color }}>
+        <span className={styles.roleBadge} style={{ "--symbol-color": color } as React.CSSProperties}>
           {s.role}
         </span>
       </div>

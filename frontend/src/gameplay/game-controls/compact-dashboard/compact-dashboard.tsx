@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDashboardState } from "../dashboards/use-dashboard-state";
 import { useIntelState } from "../dashboards/panels/use-intel-state";
 import { useGameDataRequired } from "../../game-data/providers";
 import { useAiStatus, useTriggerAiMove } from "../../../ai/api";
 import { getTeamStyle, getOutcomeSymbol } from "../dashboards/panels/intel-panel";
+import { TeamSymbolIcon } from "../../../shared/team-symbol-icon";
 import { StatusDot } from "../../shared/components";
 import { CompactClueInput } from "./compact-clue-input";
+import { useClueInput } from "./use-clue-input";
 import styles from "./compact-dashboard.module.css";
 
 const TEAM_SWITCH_DURATION = 0.3;
@@ -38,32 +40,16 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
   const isAiThinking = (aiStatus?.thinking || triggerAi.isPending) ?? false;
   const canTriggerAi = (aiStatus?.available && !isAiThinking) ?? false;
 
-  // Inline clue input state
-  const [clueWord, setClueWord] = useState("");
-  const [clueCount, setClueCount] = useState(1);
-  const [clueError, setClueError] = useState("");
+  const clue = useClueInput(gameData.currentRound?.cards ?? []);
 
-  const handleTransmit = () => {
-    const cards = gameData.currentRound?.cards ?? [];
-    if (!clueWord.trim()) {
-      setClueError("INTEL REQUIRED");
-      return;
-    }
-    if (cards.some((c) => c.word.toLowerCase() === clueWord.toLowerCase())) {
-      setClueError("CANNOT USE BOARD WORD");
-      return;
-    }
-    setClueError("");
-    s.giveClue(clueWord, clueCount);
-    setClueWord("");
-    setClueCount(1);
+  const handleTransmit = (): void => {
+    if (!clue.validate()) return;
+    s.giveClue(clue.word, clue.count);
+    clue.reset();
   };
 
-  const ghostCount = Math.max(0, intel.maxSlots - intel.guesses.length);
+  const ghostCount = Math.max(0, (intel.maxSlots ?? 3) - intel.guesses.length);
   const { symbol, color, rotate } = getTeamStyle(intel.teamName);
-  const symbolStyle = rotate
-    ? { display: "inline-block" as const, transform: "rotate(45deg)" }
-    : undefined;
 
   // Single primary action — disabled (not hidden) when AI is thinking
   const primaryButton = (() => {
@@ -72,7 +58,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
         <button
           className={styles.primaryBtn}
           onClick={handleTransmit}
-          disabled={!clueWord.trim() || isAiThinking || s.isLoading}
+          disabled={!clue.word.trim() || isAiThinking || s.isLoading}
         >
           {s.isLoading ? "..." : "TRANSMIT"}
         </button>
@@ -165,13 +151,13 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
               <motion.span
                 key={intel.teamName}
                 className={styles.teamSymbol}
-                style={{ color }}
+                style={{ "--symbol-color": color } as React.CSSProperties}
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
                 exit={{ scale: 0, rotate: 180 }}
                 transition={{ duration: TEAM_SWITCH_DURATION, ease: EASING }}
               >
-                <span style={symbolStyle}>{symbol}</span>
+                <TeamSymbolIcon symbol={symbol} rotate={rotate} />
               </motion.span>
             </AnimatePresence>
 
@@ -218,60 +204,28 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
             </div>
             <div className={styles.clueInputCenter}>
               <CompactClueInput
-                word={clueWord}
-                count={clueCount}
-                error={clueError}
+                word={clue.word}
+                count={clue.count}
+                error={clue.error}
                 isLoading={s.isLoading}
-                onWordChange={(w) => { setClueWord(w); setClueError(""); }}
-                onCountChange={setClueCount}
+                onWordChange={clue.setWord}
+                onCountChange={clue.setCount}
                 onSubmit={handleTransmit}
               />
             </div>
           </>
         ) : !intel.hasClue ? (
           /* ── No clue yet: show waiting state + AI trigger ── */
-          <>
-            <div className={styles.intelBox}>
-              <div className={styles.clueRow}>
-                <span className={styles.awaitingText}>
-                  {s.role === "CODEBREAKER" ? "INTEL REQUIRED" : "AWAITING INTEL"}
-                </span>
-              </div>
+          <div className={styles.awaitingCenter}>
+            <div className={styles.controlRow}>
+              <span className={styles.awaitingText}>
+                {s.role === "CODEBREAKER" ? "INTEL REQUIRED" : "AWAITING INTEL"}
+              </span>
             </div>
-            {s.isAiActive && (
-              <>
-                <div className={styles.contentSpacer} />
-                <div className={styles.aiSection}>
-                  <div className={styles.aiBox}>
-                    {isAiThinking ? (
-                      <>
-                        <button className={styles.triggerBtn} disabled>
-                          THINKING...
-                        </button>
-                        <StatusDot active thinking />
-                      </>
-                    ) : canTriggerAi ? (
-                      <>
-                        <button className={styles.triggerBtn} onClick={() => triggerAi.mutate()}>
-                          TRIGGER AI
-                        </button>
-                        <StatusDot active thinking={false} />
-                      </>
-                    ) : (
-                      <>
-                        <span className={styles.aiIdleText}>STANDING BY</span>
-                        <StatusDot active={false} thinking={false} />
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div className={styles.contentSpacer} />
-              </>
-            )}
-          </>
-        ) : (
+          </div>
+        ) : intel.hasClue ? (
           /* ── Intel box ── */
-          <div className={`${styles.intelBox} ${intel.isHistorical ? styles.historical : ""}`}>
+          <div className={styles.intelBox}>
             <div className={styles.clueRow}>
               <span className={styles.clueWord}>"{intel.clueWord}"</span>
               <span className={styles.clueNumber}>: {intel.clueNumber}</span>
@@ -280,12 +234,11 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
             <div className={styles.guessList}>
               {intel.guesses.map((guess, i) => {
                 const { symbol: gs, color: gc, rotate: gr } = getOutcomeSymbol(guess.outcome, intel.teamName);
-                const gsStyle = gr ? { display: "inline-block" as const, transform: "rotate(45deg)" } : undefined;
                 return (
                   <div key={i} className={styles.guessRow}>
                     <span className={styles.guessWord}>{guess.word}</span>
                     <span className={styles.guessDots} />
-                    <span style={{ color: gc }}><span style={gsStyle}>{gs}</span></span>
+                    <TeamSymbolIcon symbol={gs} rotate={gr} color={gc} />
                   </div>
                 );
               })}
@@ -298,38 +251,39 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
               ))}
             </div>
           </div>
-        )}
+        ) : null}
 
-        {/* Spacer pushes AI section down (only when clue exists) */}
-        <div className={styles.contentSpacer} />
-
-        {/* ── AI section: only shown once a clue is active ── */}
-        {s.isAiActive && intel.hasClue && (
-          <div className={styles.aiSection}>
-            <div className={styles.aiBox}>
-              {isAiThinking ? (
-                <button className={styles.triggerBtn} disabled>
-                  THINKING...
-                </button>
-              ) : canTriggerAi ? (
-                <button className={styles.triggerBtn} onClick={() => triggerAi.mutate()}>
-                  TRIGGER AI
-                </button>
-              ) : (
-                <span className={styles.aiIdleText}>STANDING BY</span>
-              )}
-              <StatusDot active={canTriggerAi || isAiThinking} thinking={isAiThinking} />
-            </div>
-          </div>
-        )}
       </div>
 
       {/* ── Footer: pinned to bottom ── */}
-      {primaryButton && (
-        <div className={styles.footer}>
-          {primaryButton}
-        </div>
-      )}
+      <div className={styles.footer}>
+        {primaryButton ? (
+          primaryButton
+        ) : s.isAiActive ? (
+          <div className={styles.controlRow}>
+            {isAiThinking ? (
+              <>
+                <button className={styles.triggerBtn} disabled>
+                  THINKING...
+                </button>
+                <span className={styles.controlRowDot}><StatusDot active thinking /></span>
+              </>
+            ) : canTriggerAi ? (
+              <>
+                <button className={styles.triggerBtn} onClick={() => triggerAi.mutate()}>
+                  TRIGGER AI
+                </button>
+                <span className={styles.controlRowDot}><StatusDot active thinking={false} /></span>
+              </>
+            ) : (
+              <>
+                <span className={styles.aiIdleText}>STANDING BY</span>
+                <span className={styles.controlRowDot}><StatusDot active={false} thinking={false} /></span>
+              </>
+            )}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 };

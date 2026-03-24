@@ -65,6 +65,7 @@
   line-height: 1;
   font-family: var(--font-mono);
   flex-shrink: 0;
+  color: var(--symbol-color);
 }
 
 .scoreInline {
@@ -185,8 +186,9 @@
 }
 
 .awaitingText {
+  flex: 1;
   font-family: var(--font-mono);
-  font-size: 0.9rem;
+  font-size: var(--dashboard-text-btn);
   font-weight: 700;
   color: rgba(255, 170, 0, 0.8);
   text-transform: uppercase;
@@ -195,6 +197,7 @@
   border: 1px solid rgba(255, 170, 0, 0.5);
   border-radius: 6px;
   background: transparent;
+  text-align: center;
 }
 
 .divider {
@@ -242,32 +245,44 @@
 
 .ghost { opacity: 0.15; pointer-events: none; }
 
-/* ── AI section (unboxed, inline) ── */
-.aiSection {
-  flex-shrink: 0;
-  padding: 0;
+.awaitingCenter {
+  flex: 1;
   display: flex;
+  align-items: center;
   justify-content: center;
 }
 
-.aiBox {
-  display: inline-flex;
+/* ── Shared width wrapper for awaiting text + AI trigger ── */
+.controlRow {
+  position: relative;
+  width: 100%;
+  max-width: 280px;
+  margin: 4px auto;
+  display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0;
+}
+
+.controlRowDot {
+  position: absolute;
+  right: -28px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .aiIdleText {
+  flex: 1;
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: rgba(0, 255, 136, 0.3);
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  text-align: center;
 }
 
 .triggerBtn {
+  flex: 1;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: var(--dashboard-text-btn);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -280,6 +295,7 @@
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s, background 0.15s, opacity 0.15s;
   white-space: nowrap;
+  text-align: center;
 }
 
 .triggerBtn:hover:not(:disabled) {
