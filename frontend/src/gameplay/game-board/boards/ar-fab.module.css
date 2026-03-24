@@ -27,11 +27,11 @@
 
 /* On — green ring */
 .on {
-  background: rgba(0, 255, 136, 0.10);
-  border: 1.5px solid #00ff88;
-  color: #00ff88;
+  background: rgba(82, 214, 138, 0.10);
+  border: 1.5px solid var(--color-primary);
+  color: var(--color-primary);
 }
 
-.on:hover { background: rgba(0, 255, 136, 0.18); }
+.on:hover { background: rgba(82, 214, 138, 0.18); }
 
 .icon { display: block; flex-shrink: 0; }

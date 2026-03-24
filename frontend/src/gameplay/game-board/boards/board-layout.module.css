@@ -1,5 +1,12 @@
 @import "../../../style/variables.css";
 
+/* Relative wrapper for AR overlay positioning */
+.boardRelativeWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 /* Board wrapper - fills parent space */
 .boardWrapper {
   width: 100%;
