@@ -35,6 +35,15 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.skeletonGrid {
+  opacity: 0.5;
+}
+
+.skeletonCard {
+  animation: pulse 2s ease-in-out infinite;
+  animation-delay: var(--skeleton-delay, 0s);
+}
+
 .errorContainer {
   display: flex;
   flex-direction: column;

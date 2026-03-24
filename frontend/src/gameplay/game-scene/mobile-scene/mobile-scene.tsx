@@ -2,6 +2,7 @@ import React, { useState, useCallback } from "react";
 import { useVisibilityContext } from "../../game-controls/dashboards/config/context";
 import { isCodebreakerGuessing, isRoundComplete } from "../../game-controls/dashboards/config/rules";
 import { useGameActions } from "../../game-actions";
+import type { Card } from "../../../shared-types";
 import { useGameDataRequired } from "../../game-data";
 import { GameBoard } from "../../game-board/boards/game-board";
 import { ArFab } from "../../game-board/boards/ar-fab";
@@ -53,7 +54,7 @@ export const MobileScene: React.FC<MobileSceneProps> = () => {
   );
 
   const canInteract = useCallback(
-    (card: any) => isGuessing && !isLoading && !card.selected,
+    (card: Card) => isGuessing && !isLoading && !card.selected,
     [isGuessing, isLoading],
   );
 

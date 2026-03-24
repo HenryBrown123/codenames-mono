@@ -1,0 +1,17 @@
+.loadingState {
+  width: 100vw;
+  height: 100dvh;
+  background: var(--color-background);
+}
+
+.errorState {
+  width: 100vw;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  background: var(--color-background);
+  gap: 1rem;
+}

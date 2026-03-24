@@ -2,6 +2,7 @@ import React, { useState, useCallback } from "react";
 import { useVisibilityContext } from "../../game-controls/dashboards/config/context";
 import { isCodebreakerGuessing, isRoundComplete } from "../../game-controls/dashboards/config/rules";
 import { useGameActions } from "../../game-actions";
+import type { Card } from "../../../shared-types";
 import { GameBoard, ArFab } from "../../game-board/boards";
 import { CompactDashboard } from "../../game-controls/compact-dashboard";
 import { TeamHeaderPanel } from "../../game-controls/dashboards/panels";
@@ -38,7 +39,7 @@ export const WindowedScene: React.FC<WindowedSceneProps> = ({ isFetching }) => {
   );
 
   const canInteract = useCallback(
-    (card: any) => isGuessing && !isLoading && !card.selected,
+    (card: Card) => isGuessing && !isLoading && !card.selected,
     [isGuessing, isLoading],
   );
 

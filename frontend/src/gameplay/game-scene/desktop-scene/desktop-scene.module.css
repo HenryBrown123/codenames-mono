@@ -46,7 +46,7 @@
   grid-area: compact;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  min-height: 25dvh;
   min-width: 0;
   overflow: hidden;
   border-top: var(--border-dim);
@@ -60,7 +60,7 @@
   position: absolute;
   bottom: 14px;
   right: 14px;
-  z-index: 10;
+  z-index: var(--z-fixed-buttons);
 }
 
 /* ── Landscape ── */

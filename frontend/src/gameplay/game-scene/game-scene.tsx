@@ -6,6 +6,7 @@ import { WindowedScene } from "./windowed-scene";
 import { MobileScene } from "./mobile-scene";
 import { useDisplayType } from "./use-display-type";
 import { assertNever } from "../../utils/assert-never";
+import styles from "./game-scene.module.css";
 
 /**
  * Top-level game scene.
@@ -23,17 +24,12 @@ export const GameScene: React.FC = () => {
   const displayType = useDisplayType();
 
   if (isPending && !gameData) {
-    return <div style={{ width: "100vw", height: "100dvh", background: "var(--color-background)" }} />;
+    return <div className={styles.loadingState} />;
   }
 
   if (isError) {
     return (
-      <div style={{
-        width: "100vw", height: "100dvh",
-        display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center",
-        color: "white", background: "var(--color-background)", gap: "1rem",
-      }}>
+      <div className={styles.errorState}>
         <h2>Failed to load game</h2>
         <p>{error?.message || "Unknown error"}</p>
         <ActionButton onClick={refetch} text="Retry" enabled={true} />

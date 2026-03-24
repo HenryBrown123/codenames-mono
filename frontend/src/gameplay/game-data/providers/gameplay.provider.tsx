@@ -40,15 +40,12 @@ const ActiveGameProviders = ({ gameId, children }: GameplayProviderProps) => {
   if (!gameData) {
     return (
       <div className={styles.loadingContainer}>
-        <div className={styles.boardGrid} style={{ opacity: 0.5 }}>
+        <div className={`${styles.boardGrid} ${styles.skeletonGrid}`}>
           {Array.from({ length: 25 }).map((_, i) => (
             <div
               key={`skeleton-${i}`}
-              className={styles.emptyCard}
-              style={{
-                animation: `pulse 2s ease-in-out infinite`,
-                animationDelay: `${i * 0.05}s`,
-              }}
+              className={`${styles.emptyCard} ${styles.skeletonCard}`}
+              style={{ "--skeleton-delay": `${i * 0.05}s` } as React.CSSProperties}
             />
           ))}
         </div>
