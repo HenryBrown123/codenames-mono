@@ -30,6 +30,12 @@ const boxVariants = {
     y: 0,
     transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] as const },
   },
+  shrinkToDot: {
+    opacity: 0,
+    scale: 0,
+    borderRadius: "50%",
+    transition: { duration: 0.45, ease: [0.4, 0, 0.2, 1] as const },
+  },
   exit: {
     opacity: 0,
     scale: 0.95,
@@ -54,6 +60,7 @@ const dotVariants = {
 export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) => {
   const navigate = useNavigate();
   const [inputPlayerName, setInputPlayerName] = useState("");
+  const [isStarting, setIsStarting] = useState(false);
 
   const { data: lobbyData, isLoading: initialLoading, error: queryError } = useLobbyQuery(gameId);
   const { data: currentUser } = useCurrentUser();
@@ -98,7 +105,10 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
   const handleStartGame = () => {
     if (!canStartGame) return;
     ops.startGame.mutate(undefined, {
-      onSuccess: () => navigate(`/game/${gameId}`),
+      onSuccess: () => {
+        setIsStarting(true);
+        setTimeout(() => navigate(`/game/${gameId}`), 500);
+      },
     });
   };
 
@@ -117,7 +127,7 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
         className={styles.mainContent}
         variants={boxVariants}
         initial="initial"
-        animate="animate"
+        animate={isStarting ? "shrinkToDot" : "animate"}
         exit="exit"
       >
         <LobbyHeaderView

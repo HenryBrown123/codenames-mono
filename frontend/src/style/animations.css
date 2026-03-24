@@ -126,16 +126,16 @@
   100% {
     opacity: 0.8;
     text-shadow:
-      0 0 20px #ffff00,
-      0 0 40px #ffff00,
-      0 0 60px #ff0000;
+      0 0 20px var(--color-assassin),
+      0 0 40px var(--color-assassin),
+      0 0 60px var(--color-team-red);
   }
   50% {
     opacity: 1;
     text-shadow:
-      0 0 30px #ffff00,
-      0 0 60px #ffff00,
-      0 0 80px #ff0000;
+      0 0 30px var(--color-assassin),
+      0 0 60px var(--color-assassin),
+      0 0 80px var(--color-team-red);
   }
 }
 
@@ -144,45 +144,26 @@
   0%,
   100% {
     opacity: 1;
-    filter: drop-shadow(0 0 15px #00ff88) drop-shadow(0 0 30px #00ff88);
-    border-color: #00ff88;
+    filter: drop-shadow(0 0 15px var(--color-team-green)) drop-shadow(0 0 30px var(--color-team-green));
+    border-color: var(--color-team-green);
   }
   25% {
     opacity: 0.2;
-    filter: drop-shadow(0 0 5px #00ff88) drop-shadow(0 0 10px #00ff88);
-    border-color: rgba(0, 255, 136, 0.5);
+    filter: drop-shadow(0 0 5px var(--color-team-green)) drop-shadow(0 0 10px var(--color-team-green));
+    border-color: rgba(var(--primary-rgb), 0.5);
   }
   50% {
     opacity: 0.8;
-    filter: drop-shadow(0 0 12px #00ff88) drop-shadow(0 0 25px #00ff88);
-    border-color: #00ff88;
+    filter: drop-shadow(0 0 12px var(--color-team-green)) drop-shadow(0 0 25px var(--color-team-green));
+    border-color: var(--color-team-green);
   }
   75% {
     opacity: 0.1;
-    filter: drop-shadow(0 0 3px #00ff88) drop-shadow(0 0 8px #00ff88);
-    border-color: rgba(0, 255, 136, 0.3);
+    filter: drop-shadow(0 0 3px var(--color-team-green)) drop-shadow(0 0 8px var(--color-team-green));
+    border-color: rgba(var(--primary-rgb), 0.3);
   }
 }
 
-/* Terminal glitch effect */
-@keyframes glitch {
-  0%,
-  100% {
-    text-shadow:
-      0 0 2px var(--color-primary),
-      0 0 4px var(--color-primary);
-  }
-  25% {
-    text-shadow:
-      -2px 0 var(--color-accent),
-      2px 0 var(--color-team-blue);
-  }
-  50% {
-    text-shadow:
-      2px 0 var(--color-accent),
-      -2px 0 var(--color-primary);
-  }
-}
 
 /* AR glare sweep — diagonal light pass used by ARCircleOverlay */
 @keyframes glareAnimation {

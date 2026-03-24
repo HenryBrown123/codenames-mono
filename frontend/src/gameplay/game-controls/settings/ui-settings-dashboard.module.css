@@ -23,7 +23,6 @@
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  backdrop-filter: blur(10px);
   transition: all 0.3s ease;
   box-shadow: 
     0 4px 12px rgba(0, 0, 0, 0.3),
@@ -68,7 +67,6 @@
   background: rgba(10, 10, 15, 0.98);
   border: var(--border-heavy);
   border-radius: 16px;
-  backdrop-filter: blur(15px);
   opacity: 0;
   visibility: hidden;
   transform: translateY(-10px) scale(0.95);

@@ -1,37 +1,5 @@
 @import '../../style/variables.css';
 
-@keyframes glitchAnimation {
-  0%, 100% {
-    text-shadow: 
-      0 0 2px var(--color-primary, #00ff88),
-      0 0 4px var(--color-primary, #00ff88);
-  }
-  25% {
-    text-shadow: 
-      -2px 0 var(--color-accent, #ff0080),
-      2px 0 var(--color-team-blue, #00d4ff);
-  }
-  50% {
-    text-shadow: 
-      2px 0 var(--color-accent, #ff0080),
-      -2px 0 var(--color-primary, #00ff88);
-  }
-  75% {
-    text-shadow: 
-      0 0 2px var(--color-team-blue, #00d4ff),
-      0 0 4px var(--color-team-blue, #00d4ff);
-  }
-}
-
-@keyframes scanlineAnimation {
-  0% {
-    transform: translateY(-100%);
-  }
-  100% {
-    transform: translateY(100%);
-  }
-}
-
 @keyframes dotBlink {
   0%, 49% {
     opacity: 1;
@@ -80,32 +48,15 @@
   width: 100%;
   max-width: 700px;
   padding: 35px;
-  background: linear-gradient(120deg, rgba(10, 16, 14, 0.95) 65%, rgba(20, 20, 30, 0.9) 100%);
+  background: var(--bg-container-solid);
   border: var(--border-strong);
-  border-radius: 8px;
-  box-shadow: 0 0 24px 0 rgba(64, 255, 166, 0.14);
+  border-radius: var(--radius-md);
+  box-shadow: var(--glow-box-sm);
   position: relative;
   overflow: hidden;
   z-index: 10;
 }
 
-.mainContent::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(0, 255, 136, 0.8) 50%,
-    transparent 100%
-  );
-  animation: scanlineAnimation 4s linear infinite;
-  pointer-events: none;
-  z-index: 1;
-}
 
 .header {
   text-align: center;
@@ -122,7 +73,6 @@
   letter-spacing: 8px;
   margin-bottom: 8px;
   font-family: var(--font-mono);
-  animation: glitchAnimation 4s ease-in-out infinite;
 }
 
 .subtitle {
@@ -134,11 +84,10 @@
 }
 
 .terminalBox {
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(0, 255, 136, 0.3);
-  border-radius: 4px;
+  background: var(--bg-section);
+  border: var(--border-subtle);
+  border-radius: var(--radius-sm);
   padding: 25px;
-  box-shadow: inset 0 0 20px rgba(0, 255, 136, 0.05);
 }
 
 .section {
@@ -176,8 +125,8 @@
 }
 
 .optionButton {
-  background: rgba(0, 255, 136, 0.05);
-  border: 1px solid rgba(0, 255, 136, 0.3);
+  background: var(--bg-highlight);
+  border: var(--border-subtle);
   border-radius: 4px;
   padding: 18px 15px;
   cursor: pointer;
@@ -190,16 +139,14 @@
 }
 
 .optionButton:hover {
-  background: rgba(0, 255, 136, 0.1);
+  background: rgba(var(--primary-rgb), 0.1);
   border-color: var(--color-primary);
-  box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
   transform: translateY(-2px);
 }
 
 .optionButton.selected {
-  background: rgba(0, 255, 136, 0.15);
+  background: rgba(var(--primary-rgb), 0.15);
   border-color: var(--color-primary);
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
 }
 
 .buttonLabel {
@@ -219,7 +166,7 @@
 
 .divider {
   border: none;
-  border-bottom: 1px solid rgba(0, 255, 136, 0.15);
+  border-bottom: var(--border-dim);
   margin: 25px 0;
 }
 

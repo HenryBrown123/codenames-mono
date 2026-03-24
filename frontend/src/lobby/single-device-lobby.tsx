@@ -32,6 +32,12 @@ const boxVariants = {
     y: 0,
     transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] as const },
   },
+  shrinkToDot: {
+    opacity: 0,
+    scale: 0,
+    borderRadius: "50%",
+    transition: { duration: 0.45, ease: [0.4, 0, 0.2, 1] as const },
+  },
   exit: {
     opacity: 0,
     scale: 0.95,
@@ -43,6 +49,7 @@ const boxVariants = {
 export const SingleDeviceLobby: React.FC<SingleDeviceLobbyProps> = ({ gameId, lobbyData }) => {
   const navigate = useNavigate();
   const [activeTeam, setActiveTeam] = useState<"Team Red" | "Team Blue">("Team Red");
+  const [isStarting, setIsStarting] = useState(false);
 
   const { ops, isPending: isLoading, error } = useLobbyMutations(gameId);
   const drag = useDragState();
@@ -89,7 +96,11 @@ export const SingleDeviceLobby: React.FC<SingleDeviceLobbyProps> = ({ gameId, lo
     if (!canStartGame) return;
 
     ops.startGame.mutate(undefined, {
-      onSuccess: () => navigate(`/game/${gameId}`),
+      onSuccess: () => {
+        setIsStarting(true);
+        // Navigate after shrink-to-dot animation completes
+        setTimeout(() => navigate(`/game/${gameId}`), 500);
+      },
     });
   };
 
@@ -159,7 +170,7 @@ export const SingleDeviceLobby: React.FC<SingleDeviceLobbyProps> = ({ gameId, lo
         className={styles.mainContent}
         variants={boxVariants}
         initial="initial"
-        animate="animate"
+        animate={isStarting ? "shrinkToDot" : "animate"}
         exit="exit"
       >
         <LobbyHeaderView

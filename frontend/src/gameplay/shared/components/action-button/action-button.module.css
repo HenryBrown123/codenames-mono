@@ -1,14 +1,4 @@
 @import '../../../../style/variables.css';
-@import '../../../../style/animations.css';
-
-@keyframes dataStream {
-  0% {
-    background-position: 0 0;
-  }
-  100% {
-    background-position: 0 -100%;
-  }
-}
 
 .button {
   font-family: var(--font-mono);
@@ -18,83 +8,35 @@
   border: var(--border-strong);
   color: var(--color-primary);
   background: transparent;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  overflow: hidden;
   position: relative;
   outline: none;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   transition: all 0.2s ease;
-  
-  /* Glitch effect on enabled buttons */
-  animation: glitch 4s infinite;
 }
 
 .button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
-  animation: none;
 }
 
 /* Validation states */
 .button[data-validation="warning"] {
-  border-color: #ffaa00;
-  color: #ffaa00;
-}
-
-.button[data-validation="warning"]::before {
-  background: repeating-linear-gradient(
-    0deg,
-    transparent 0,
-    transparent 2px,
-    rgba(255, 170, 0, 0.03) 2px,
-    rgba(255, 170, 0, 0.03) 4px
-  );
+  border-color: var(--color-warning);
+  color: var(--color-warning);
 }
 
 .button[data-validation="error"] {
-  border-color: #ff4444;
-  color: #ff4444;
-}
-
-.button[data-validation="error"]::before {
-  background: repeating-linear-gradient(
-    0deg,
-    transparent 0,
-    transparent 2px,
-    rgba(255, 68, 68, 0.03) 2px,
-    rgba(255, 68, 68, 0.03) 4px
-  );
-}
-
-/* Data stream background effect */
-.button::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent 0,
-    transparent 2px,
-    rgba(0, 255, 136, 0.03) 2px,
-    rgba(0, 255, 136, 0.03) 4px
-  );
-  animation: dataStream 10s linear infinite;
-  pointer-events: none;
+  border-color: var(--color-error);
+  color: var(--color-error);
 }
 
 .button:hover:not(:disabled) {
   background-color: var(--color-primary);
-  color: #000;
-  box-shadow: 
-    0 0 20px rgba(0, 255, 136, 0.5),
-    inset 0 0 20px rgba(0, 255, 136, 0.1);
+  color: var(--color-background);
   transform: translateY(-2px);
-  animation: none;
 }
 
 .button:active:not(:disabled) {

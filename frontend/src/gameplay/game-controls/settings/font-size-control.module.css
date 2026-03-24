@@ -7,7 +7,6 @@
   border: var(--border-heavy);
   border-radius: 12px;
   padding: 1rem;
-  backdrop-filter: blur(10px);
   z-index: var(--z-fixed-buttons);
   display: flex;
   gap: 1rem;

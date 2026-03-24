@@ -42,13 +42,38 @@
   --dashboard-text-btn: 0.875rem;
   --dashboard-text-btn-sm: 0.75rem;
 
-  /* Team colors */
+  /* ── Semantic colors ── */
+  --color-error:   #ff4444;
+  --color-success: #52d68a;
+
+  /* ── Team colors ── */
   --color-team-red: #ff0040;
   --color-team-blue: #00d4ff;
   --color-team-green: #00ff88;
   --color-neutral: #888888;
   --color-assassin: #ffff00;
-  
+  --color-assassin-bg: #0a0a0a;
+
+  /* ── Card colors — physical card palette ── */
+  --color-card-base:   #f4f1e8;
+  --color-card-light:  #e8e5dc;
+  --color-card-mid:    #ebe7dc;
+  --color-card-border: #d4d1c8;
+  --color-card-text:   #2a2a3e;
+
+  /* ── Menu / sidebar ── */
+  --color-menu-bg:   rgb(22, 24, 27);
+  --color-menu-text: #e0e0e0;
+
+  /* ── Surface / container backgrounds ── */
+  --bg-container:    linear-gradient(120deg, rgba(10, 16, 14, 0.76) 65%, rgba(20, 20, 30, 0.7) 100%);
+  --bg-container-solid: rgba(10, 16, 14, 0.95);
+
+  /* ── Border radius scale ── */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
   /* Z-index scale from Z_INDEX constant */
   --z-base: 0;
   --z-card-base: 1;

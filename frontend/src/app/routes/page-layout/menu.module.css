@@ -1,3 +1,5 @@
+@import '../../../style/variables.css';
+
 /* Burger Menu Styles */
 .burgerMenu {
   position: absolute;
@@ -15,7 +17,7 @@
 .burgerLine {
   width: 30px;
   height: 3px;
-  background-color: #2f2e2e;
+  background-color: var(--color-text-muted);
   transition: all 0.3s ease;
 }
 
@@ -23,7 +25,7 @@
 .burgerMenu[data-open="true"] .burgerLine:nth-child(1) {
   transform: rotate(45deg);
   transform-origin: 5% 50%;
-  background-color: #dbd2d2;
+  background-color: var(--color-text);
 }
 
 .burgerMenu[data-open="true"] .burgerLine:nth-child(2) {
@@ -33,7 +35,7 @@
 .burgerMenu[data-open="true"] .burgerLine:nth-child(3) {
   transform: rotate(-45deg);
   transform-origin: 5% 50%;
-  background-color: #dbd2d2;
+  background-color: var(--color-text);
 }
 
 /* Sidebar Styles */
@@ -43,7 +45,7 @@
   left: 0;
   width: 250px;
   min-height: 100%;
-  background-color: #1d2023;
+  background-color: var(--color-menu-bg);
   transform: translateX(-100%);
   transition: transform 0.3s ease;
   display: flex;
@@ -62,7 +64,7 @@
   font-size: 24px;
   font-weight: bold;
   text-align: left;
-  color: #ffffff;
+  color: var(--color-text);
 }
 
 .menuList {
@@ -76,20 +78,20 @@
   cursor: pointer;
   padding: 12px;
   font-size: 18px;
-  color: #e0e0e0;
-  border-radius: 8px;
+  color: var(--color-menu-text);
+  border-radius: var(--radius-md);
   transition:
     background-color 0.2s ease-in-out,
     color 0.2s ease-in-out;
 }
 
 .menuItem:hover {
-  background-color: #333;
-  color: #fff;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--color-text);
 }
 
 .notInGame {
-  color: #e0e0e0;
+  color: var(--color-menu-text);
 }
 
 /* Overlay Styles */

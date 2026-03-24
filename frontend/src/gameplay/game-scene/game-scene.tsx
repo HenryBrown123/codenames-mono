@@ -23,7 +23,7 @@ export const GameScene: React.FC = () => {
   const displayType = useDisplayType();
 
   if (isPending && !gameData) {
-    return <div style={{ width: "100vw", height: "100dvh", background: "#0a0a0f" }} />;
+    return <div style={{ width: "100vw", height: "100dvh", background: "var(--color-background)" }} />;
   }
 
   if (isError) {
@@ -32,7 +32,7 @@ export const GameScene: React.FC = () => {
         width: "100vw", height: "100dvh",
         display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center",
-        color: "white", background: "#0a0a0f", gap: "1rem",
+        color: "white", background: "var(--color-background)", gap: "1rem",
       }}>
         <h2>Failed to load game</h2>
         <p>{error?.message || "Unknown error"}</p>

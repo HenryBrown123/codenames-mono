@@ -25,14 +25,14 @@
 @keyframes cornerBlink {
   0%,
   100% {
-    border: 1.5px solid #ff6200;
+    border: 1.5px solid var(--color-warning);
   }
   25%,
   75% {
-    border: 1.5px solid #ff62007e;
+    border: 1.5px solid rgba(255, 170, 0, 0.5);
   }
   50% {
-    border: 1.5px solid #ff6200a1;
+    border: 1.5px solid rgba(255, 170, 0, 0.65);
   }
 }
 
@@ -48,7 +48,6 @@
   padding: 15px;
   background: var(--bg-highlight);
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.04);
-  backdrop-filter: blur(1px);
   transition:
     border-color 0.7s,
     background 0.7s;
@@ -107,7 +106,7 @@
 
 .terminalMessageBlock {
   background: var(--bg-highlight);
-  border: 1.5px solid #ff6200;
+  border: 1.5px solid var(--color-warning);
   box-shadow: var(--glow-clue);
   border-radius: 8px;
   color: var(--color-primary);
@@ -154,19 +153,19 @@
 }
 
 .terminalStatus[data-type="warning"] {
-  background: rgba(255, 255, 0, 0.1);
-  border-left-color: #ffff00;
+  background: rgba(255, 170, 0, 0.1);
+  border-left-color: var(--color-warning);
 }
 
 .terminalStatus[data-type="error"] {
-  background: rgba(255, 0, 0, 0.1);
-  border-left-color: #ff0040;
+  background: rgba(255, 68, 68, 0.1);
+  border-left-color: var(--color-error);
 }
 
 .terminalDivider {
   width: 100%;
   height: 1px;
-  background: rgba(82, 214, 138, 0.20);
+  background: rgba(var(--primary-rgb), 0.20);
   margin: 1.25rem 0;
 }
 
@@ -176,7 +175,7 @@
   min-width: 0;
   flex-direction: column;
   gap: 1rem;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--bg-section);
   border-top: var(--border-dim);
 }
 
@@ -194,7 +193,7 @@
   min-width: 0;
   flex-direction: column;
   gap: 1.25rem;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--bg-section);
   border-top: var(--border-dim);
 }
 
@@ -235,7 +234,7 @@
 }
 
 .arStatusBar[data-active="false"]::before {
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .terminalCursor {
@@ -280,7 +279,7 @@
 
 .spyGogglesText {
   margin: 0 0 15px 0;
-  color: #b5dbcc;
+  color: var(--color-text-muted);
   font-size: var(--dashboard-text-p);
   text-align: left;
   line-height: 1.4;
@@ -312,7 +311,7 @@
 }
 
 .spyGogglesDot[data-active="false"] {
-  background: rgba(82, 214, 138, 0.20);
+  background: rgba(var(--primary-rgb), 0.20);
   box-shadow: none;
 }
 
@@ -397,7 +396,7 @@
 
 .spyStatus[data-active="false"] {
   font-weight: normal;
-  color: #555;
+  color: var(--color-text-muted);
   opacity: 0.7;
 }
 
