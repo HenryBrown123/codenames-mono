@@ -92,13 +92,13 @@ const pulseVariants: OverlayVariants = {
 const teamColorFilterVariants: OverlayVariants = {
   hidden: {
     opacity: 0,
-    transition: { duration: 0.15 },
+    transition: { duration: 0 },
   },
   normal: { opacity: 1 },
   flipped: { opacity: 1 },
   revealed: {
     opacity: 1,
-    transition: { delay: 0.16, duration: 0.4 },
+    transition: { duration: 0 },
   },
   gameOver: {
     opacity: 1,

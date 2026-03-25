@@ -1,5 +1,5 @@
-import { memo, useMemo } from "react";
-import { AnimatePresence } from "framer-motion";
+import { memo, useMemo, useCallback } from "react";
+import type { ViewMode } from "../view-mode/view-mode-context";
 import { useGameDataRequired } from "../../game-data/providers";
 import { useViewMode } from "../view-mode/view-mode-context";
 import { useDealAnimation, type DealInitialState } from "../deal-animation-context";
@@ -27,6 +27,9 @@ export interface GameBoardViewProps {
   canInteract: (card: Card) => boolean;
   onCardClick: (word: string) => void;
   showARHUD: boolean;
+  /** Whether the user has the spymaster role (can see AR overlay). */
+  isSpymaster: boolean;
+  onAROpenChange: (open: boolean) => void;
 }
 
 /**
@@ -35,7 +38,7 @@ export interface GameBoardViewProps {
  *  - once as the plain base layer (viewMode="normal")
  *  - once as the spymaster layer inside ARCircleOverlay (viewMode=viewMode)
  */
-const CardGrid = memo<Omit<GameBoardViewProps, "showARHUD">>(({
+const CardGrid = memo<Omit<GameBoardViewProps, "showARHUD" | "isSpymaster" | "onAROpenChange">>(({
   cards,
   wordsKey,
   initialState,
@@ -96,6 +99,8 @@ export const GameBoardView = memo<GameBoardViewProps>(({
   canInteract,
   onCardClick,
   showARHUD,
+  isSpymaster,
+  onAROpenChange,
 }) => {
   const sharedProps = {
     cards,
@@ -113,24 +118,19 @@ export const GameBoardView = memo<GameBoardViewProps>(({
     /*
       position: relative wrapper gives ARCircleOverlay a containing block
       that matches the plain CardGrid exactly (flex item, inside .board padding).
-      Without this, ARCircleOverlay's inset:0 anchors to .board's padding edge,
-      offsetting the spymaster grid from the plain grid by the padding amount.
     */
     <div className={styles.boardRelativeWrapper}>
 
       {/* Layer 1 — plain board, always visible outside the AR circle */}
       <CardGrid {...sharedProps} viewMode="normal" />
 
-      {/* Layer 2 — spymaster board, clipped inside the AR circle    */}
-      {/* Mounts when AR activates — animates in from circle(0%)     */}
-      {/* Cards skip dealing animation (initialState="none") so they appear instantly */}
-      <AnimatePresence>
-        {showARHUD && (
-          <ARCircleOverlay>
-            <CardGrid {...sharedProps} initialState="visible" />
-          </ARCircleOverlay>
-        )}
-      </AnimatePresence>
+      {/* Layer 2 — spymaster board, clipped inside the draggable AR lens */}
+      {/* Always mounted when spymaster — drag + toggle control position  */}
+      {isSpymaster && (
+        <ARCircleOverlay isOpen={showARHUD} onOpenChange={onAROpenChange}>
+          <CardGrid {...sharedProps} viewMode="spymaster" initialState="visible" />
+        </ARCircleOverlay>
+      )}
 
     </div>
   );
@@ -154,7 +154,7 @@ export const GameBoard = memo<GameBoardProps>(({
   canInteract = noInteract,
 }) => {
   const { gameData }     = useGameDataRequired();
-  const { viewMode }     = useViewMode();
+  const { viewMode, setViewMode } = useViewMode();
   const { initialState } = useDealAnimation();
 
   const cards           = gameData.currentRound?.cards || [];
@@ -162,10 +162,16 @@ export const GameBoard = memo<GameBoardProps>(({
   const isRoundComplete = gameData.currentRound?.status === "COMPLETED";
   const animateState: SceneState = isRoundComplete ? "gameOverReveal" : "visible";
   const showARHUD       = viewMode === "spymaster";
+  const isSpymaster     = gameData.playerContext?.role === "CODEMASTER";
 
   const wordsKey = useMemo(
     () => cards.map((c) => c.word).sort().join(","),
     [cards],
+  );
+
+  const handleAROpenChange = useCallback(
+    (open: boolean) => setViewMode(open ? "spymaster" : "normal" as ViewMode),
+    [setViewMode],
   );
 
   return (
@@ -180,6 +186,8 @@ export const GameBoard = memo<GameBoardProps>(({
       canInteract={canInteract}
       onCardClick={onCardClick}
       showARHUD={showARHUD}
+      isSpymaster={!!isSpymaster}
+      onAROpenChange={handleAROpenChange}
     />
   );
 });

@@ -196,13 +196,13 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
         {/* ── Clue input (floats centered when codemaster giving clue) ── */}
         {!intel.hasClue && s.isCodemasterGivingClue ? (
           /* ── Codemaster: label + clue input ── */
-          <>
+          <div className={styles.clueInputCenter}>
             <div className={styles.intelBox}>
               <div className={styles.clueRow}>
                 <span className={styles.awaitingText}>INTEL REQUIRED</span>
               </div>
             </div>
-            <div className={styles.clueInputCenter}>
+            <div className={styles.intelBox}>
               <CompactClueInput
                 word={clue.word}
                 count={clue.count}
@@ -213,7 +213,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
                 onSubmit={handleTransmit}
               />
             </div>
-          </>
+          </div>
         ) : !intel.hasClue ? (
           /* ── No clue yet: show waiting state + AI trigger ── */
           <div className={styles.awaitingCenter}>
