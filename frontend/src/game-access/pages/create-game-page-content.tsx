@@ -3,6 +3,7 @@ import { useCreateNewGame } from "@frontend/game-access/api/query-hooks/use-crea
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ActionButton } from "@frontend/gameplay/shared/components";
+import { ARToggleSwitch } from "@frontend/gameplay/game-controls/dashboards/panels/ar-toggle-switch";
 import { GAME_TYPE, GAME_FORMAT, GameType, GameFormat } from "@codenames/shared/types";
 import styles from "./create-game-page-content.module.css";
 
@@ -63,13 +64,11 @@ export const CreateGamePageView: React.FC<CreateGamePageViewProps> = ({
             >
               <div className={styles.header}>
                 <h1 className={styles.title}>NEW GAME</h1>
-                <div className={styles.subtitle}>Configure game parameters</div>
               </div>
 
               <div className={styles.terminalBox}>
                 <div className={styles.section}>
                   <div className={styles.sectionHeader}>
-                    <span className={styles.prompt}>{">"}</span>
                     <span className={styles.sectionTitle}>GAME TYPE</span>
                   </div>
                   <div className={styles.buttonGroup}>
@@ -96,56 +95,15 @@ export const CreateGamePageView: React.FC<CreateGamePageViewProps> = ({
 
                 <div className={styles.divider} />
 
-                <div className={styles.section}>
-                  <div className={styles.sectionHeader}>
-                    <span className={styles.prompt}>{">"}</span>
-                    <span className={styles.sectionTitle}>GAME FORMAT</span>
-                  </div>
-                  <div className={styles.buttonGroup}>
-                    <button
-                      className={`${styles.optionButton} ${
-                        gameFormat === GAME_FORMAT.QUICK ? styles.selected : ""
-                      }`}
-                      onClick={() => onGameFormatChange(GAME_FORMAT.QUICK)}
-                    >
-                      <span className={styles.buttonLabel}>QUICK</span>
-                      <span className={styles.buttonDesc}>Single round</span>
-                    </button>
-                    <button
-                      className={`${styles.optionButton} ${
-                        gameFormat === GAME_FORMAT.BEST_OF_THREE ? styles.selected : ""
-                      }`}
-                      onClick={() => onGameFormatChange(GAME_FORMAT.BEST_OF_THREE)}
-                    >
-                      <span className={styles.buttonLabel}>BEST OF 3</span>
-                      <span className={styles.buttonDesc}>First to 2 wins</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className={styles.divider} />
-
-                <div className={styles.section}>
-                  <div className={styles.sectionHeader}>
-                    <span className={styles.prompt}>{">"}</span>
+                <div className={styles.aiSection}>
+                  <div>
                     <span className={styles.sectionTitle}>AI MODE</span>
+                    <div className={styles.aiDesc}>Empty slots filled with AI players</div>
                   </div>
-                  <div className={styles.buttonGroup}>
-                    <button
-                      className={`${styles.optionButton} ${!aiMode ? styles.selected : ""}`}
-                      onClick={() => onAiModeChange(false)}
-                    >
-                      <span className={styles.buttonLabel}>OFF</span>
-                      <span className={styles.buttonDesc}>Players only</span>
-                    </button>
-                    <button
-                      className={`${styles.optionButton} ${aiMode ? styles.selected : ""}`}
-                      onClick={() => onAiModeChange(true)}
-                    >
-                      <span className={styles.buttonLabel}>ON</span>
-                      <span className={styles.buttonDesc}>Auto-fill with AI bots</span>
-                    </button>
-                  </div>
+                  <ARToggleSwitch
+                    active={aiMode}
+                    onChange={() => onAiModeChange(!aiMode)}
+                  />
                 </div>
 
                 <div className={styles.actionSection}>
