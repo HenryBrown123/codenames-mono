@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useGameDataRequired } from "../game-data/providers";
+import { useDealAnimation } from "../game-board/deal-animation-context";
 import { ActionButton } from "../shared/components";
 import { DesktopScene } from "./desktop-scene";
 import { WindowedScene } from "./windowed-scene";
@@ -22,6 +23,17 @@ import styles from "./game-scene.module.css";
 export const GameScene: React.FC = () => {
   const { gameData, isPending, isError, error, refetch, isFetching } = useGameDataRequired();
   const displayType = useDisplayType();
+  const { resetDeal } = useDealAnimation();
+
+  // When displayType changes, the scene component swaps (unmount/remount).
+  // Reset deal state so cards appear instantly — no re-deal animation.
+  const prevDisplay = useRef(displayType);
+  useEffect(() => {
+    if (prevDisplay.current !== displayType) {
+      prevDisplay.current = displayType;
+      resetDeal();
+    }
+  }, [displayType, resetDeal]);
 
   if (isPending && !gameData) {
     return <div className={styles.loadingState} />;
