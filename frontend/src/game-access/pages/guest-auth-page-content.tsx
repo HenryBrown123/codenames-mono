@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { useCreateGuestSession } from "@frontend/game-access/api/query-hooks/use-guest-session";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ActionButton } from "@frontend/gameplay/shared/components";
+import ActionButton from "@frontend/gameplay/shared/components/action-button/action-button";
 import styles from "./guest-auth-page-content.module.css";
 
 /**
- * Guest authentication form for joining games
+ * Guest authentication — minimal, clean.
+ * Styled to match the in-game intel panel aesthetic.
  */
 
 export interface GuestAuthPageViewProps {
@@ -50,28 +51,23 @@ export const GuestAuthPageView: React.FC<GuestAuthPageViewProps> = ({
             >
               <div className={styles.header}>
                 <h1 className={styles.title}>SYSTEM ACCESS</h1>
-                <div className={styles.subtitle}>CODENAMES PROTOCOL v4.0</div>
               </div>
 
-              <div className={styles.terminalBox}>
-                <div className={styles.terminalHeader}>
-                  <span className={styles.terminalPrompt}>{">"}</span>
-                  <span className={styles.terminalText}>AUTHENTICATION REQUIRED</span>
+              <div className={styles.body}>
+                <div className={styles.controlRow}>
+                  <div className={styles.statusBox}>
+                    SECURE CONNECTION REQUIRED
+                  </div>
                 </div>
 
-                <div className={styles.messageBox}>
-                  <p className={styles.message}>
-                    Welcome, Operative. Before accessing the mission briefing, we need to
-                    establish a secure guest session. This ensures your intel remains intact
-                    throughout the operation.
-                  </p>
+                <div className={styles.controlRow}>
+                  <ActionButton
+                    text="CONNECT"
+                    onClick={onCreateSession}
+                    enabled={!isExiting}
+                    className={styles.fullWidthBtn}
+                  />
                 </div>
-
-                <ActionButton
-                  onClick={onCreateSession}
-                  enabled={!isExiting}
-                  text="ESTABLISH CONNECTION"
-                />
 
                 {error && (
                   <div className={styles.errorBox}>
