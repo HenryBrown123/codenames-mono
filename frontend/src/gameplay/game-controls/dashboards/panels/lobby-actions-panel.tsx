@@ -2,6 +2,7 @@ import React from "react";
 import { useGameDataRequired } from "../../../game-data/providers";
 import { useGameActions } from "../../../game-actions";
 import { useDealAnimation } from "../../../game-board/deal-animation-context";
+import { useViewMode } from "../../../game-board/view-mode/view-mode-context";
 import { ActionButton } from "../../../shared/components";
 import { TerminalSection } from "../shared";
 import styles from "./lobby-actions-panel.module.css";
@@ -37,6 +38,7 @@ export const LobbyActionsPanel: React.FC = () => {
   const { gameData } = useGameDataRequired();
   const { createRound, startRound, dealCards, actionState } = useGameActions();
   const { triggerDeal } = useDealAnimation();
+  const { setViewMode } = useViewMode();
 
   const isLoading = actionState.status === "loading";
 
@@ -70,6 +72,7 @@ export const LobbyActionsPanel: React.FC = () => {
 
   const handleRedeal = async () => {
     try {
+      setViewMode("normal");
       triggerDeal();
       await dealCards(true);
     } catch (error) {

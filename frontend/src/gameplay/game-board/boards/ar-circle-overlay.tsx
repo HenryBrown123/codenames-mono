@@ -12,7 +12,7 @@ import styles from "./ar-circle-overlay.module.css";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const CIRCLE_RADIUS_DESKTOP = 750;
+const CIRCLE_RADIUS_DESKTOP = 850;
 const CIRCLE_RADIUS_MOBILE = 1500;
 /** Must match --ar-bleed in ar-circle-overlay.module.css */
 const BLEED_PX = 500;
@@ -53,6 +53,8 @@ function computePositions(
   displayType: string,
   overlayWidth: number,
   overlayHeight: number,
+  /** FAB button center in overlay-space (measured at runtime). */
+  fabCenter?: { x: number; y: number },
 ): Positions {
   if (displayType === "desktop") {
     const radius = CIRCLE_RADIUS_DESKTOP;
@@ -69,17 +71,19 @@ function computePositions(
     };
   }
 
-  // Windowed & mobile: radius expands from the board's bottom-right corner.
-  // Center pinned at bottom-right; radius grows from 0 → maxRadius.
-  // maxRadius = distance from bottom-right to top-left (board diagonal).
-  const boardW = overlayWidth - 2 * BLEED_PX;
-  const boardH = overlayHeight - 2 * BLEED_PX;
-  const maxRadius = Math.ceil(Math.sqrt(boardW ** 2 + boardH ** 2));
+  // Windowed & mobile: radius expands from the AR FAB dot.
+  // Use measured FAB center for pixel-perfect alignment, with fallback.
+  const fallbackX = overlayWidth - BLEED_PX - 38;
+  const fallbackY = overlayHeight - BLEED_PX - 38;
+  const fabCx = fabCenter ? Math.round(fabCenter.x) : fallbackX;
+  const fabCy = fabCenter ? Math.round(fabCenter.y) : fallbackY;
+  // maxRadius must reach the furthest corner from the FAB center
+  const maxRadius = Math.ceil(Math.sqrt(fabCx ** 2 + fabCy ** 2));
   return {
     mode: "expand",
     maxRadius,
-    cx: overlayWidth - BLEED_PX,
-    cy: overlayHeight - BLEED_PX,
+    cx: fabCx,
+    cy: fabCy,
     dragZoneCorner: "bottomRight",
   };
 }
@@ -120,10 +124,21 @@ export const ARCircleOverlay = memo<ARCircleOverlayProps>(({ children, isOpen, o
     if (!node) return;
 
     const measure = () => {
-      const { width, height } = node.getBoundingClientRect();
-      if (width > 0 && height > 0) {
-        setPositions(computePositions(displayType, width, height));
+      const overlayRect = node.getBoundingClientRect();
+      if (overlayRect.width <= 0 || overlayRect.height <= 0) return;
+
+      // Find the FAB button and compute its center relative to the overlay
+      const fab = document.querySelector("[data-ar-fab]");
+      let fabCenter: { x: number; y: number } | undefined;
+      if (fab) {
+        const fabRect = fab.getBoundingClientRect();
+        fabCenter = {
+          x: fabRect.left + fabRect.width / 2 - overlayRect.left,
+          y: fabRect.top + fabRect.height / 2 - overlayRect.top,
+        };
       }
+
+      setPositions(computePositions(displayType, overlayRect.width, overlayRect.height, fabCenter));
     };
 
     measure();
@@ -347,21 +362,31 @@ const ExpandLens = memo<ExpandLensProps>(({ positions, isOpen, onOpenChange, chi
   }, [r, maxRadius, isOpen]);
 
   // ── Animation helpers ─────────────────────────────────────────────────
+  // Signal the FAB dot when animation completes so it can start blinking
+  const setFabAnimating = useCallback((animating: boolean) => {
+    const fab = document.querySelector("[data-ar-fab]");
+    if (fab) fab.setAttribute("data-ar-animating", String(animating));
+  }, []);
+
   /** Snap with initial velocity (px/s) for momentum — gives the "push" feel. */
   const snapTo = useCallback(
     (open: boolean, velocity = 0) => {
-      animate(r, open ? maxRadius : 0, { ...SPRING_SNAP, velocity });
+      setFabAnimating(true);
+      const anim = animate(r, open ? maxRadius : 0, { ...SPRING_SNAP, velocity });
+      anim.then(() => setFabAnimating(false));
       onOpenChange(open);
     },
-    [r, maxRadius, onOpenChange],
+    [r, maxRadius, onOpenChange, setFabAnimating],
   );
 
   const toggleTo = useCallback(
     (open: boolean) => {
-      animate(r, open ? maxRadius : 0, SPRING_TOGGLE);
+      setFabAnimating(true);
+      const anim = animate(r, open ? maxRadius : 0, SPRING_TOGGLE);
+      anim.then(() => setFabAnimating(false));
       onOpenChange(open);
     },
-    [r, maxRadius, onOpenChange],
+    [r, maxRadius, onOpenChange, setFabAnimating],
   );
 
   // ── Sync with external toggle ─────────────────────────────────────────
