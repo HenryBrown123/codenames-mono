@@ -1,0 +1,40 @@
+@import '../../../../style/variables.css';
+
+.input {
+  width: 100%;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  border-bottom: var(--border-normal);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 0;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.input::placeholder {
+  color: var(--color-primary);
+  opacity: 0.3;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+}
+
+.input[data-error] {
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
