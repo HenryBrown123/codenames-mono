@@ -31,7 +31,7 @@ export const GAME_PANELS: PanelSlots = {
 
   middle: [
     { id: "intel", component: IntelPanel, shouldRender: isRoundActive },
-    { id: "ar-toggle", component: ARTogglePanel, shouldRender: isCodemaster },
+    { id: "ar-toggle", component: ARTogglePanel, shouldRender: (ctx) => isCodemaster(ctx) && !isRoundComplete(ctx) },
     { id: "ai-status", component: AIStatusPanel, shouldRender: isAiActive },
     { id: "gameover", component: GameoverPanel, shouldRender: isRoundComplete },
   ],

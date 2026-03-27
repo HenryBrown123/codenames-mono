@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from "react";
+import { TerminalInput } from "@frontend/gameplay/shared/components";
 import styles from "./compact-clue-input.module.css";
 
 interface CompactClueInputProps {
@@ -47,17 +48,15 @@ export const CompactClueInput: React.FC<CompactClueInputProps> = ({
   return (
     <div className={styles.container}>
       <div className={styles.inputRow}>
-        <input
+        <TerminalInput
           ref={inputRef}
-          type="text"
           value={word}
           onChange={(e) => onWordChange(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={isLoading}
           placeholder="CODEWORD"
           autoComplete="off"
-          className={styles.wordInput}
-          data-error={!!error}
+          error={!!error}
         />
         <div className={styles.countGroup}>
           <button

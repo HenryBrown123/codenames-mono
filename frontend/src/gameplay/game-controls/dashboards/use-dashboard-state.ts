@@ -11,6 +11,7 @@ import {
 import { useGameActions } from "../../game-actions";
 import { useGameDataRequired } from "../../game-data/providers";
 import { useDealAnimation } from "../../game-board/deal-animation-context";
+import { useViewMode } from "../../game-board/view-mode/view-mode-context";
 import { useStartTurnMutation } from "../../game-actions/api/use-start-turn";
 
 /**
@@ -23,6 +24,7 @@ export const useDashboardState = () => {
   const { gameData } = useGameDataRequired();
   const { endTurn, createRound, startRound, dealCards, giveClue, actionState } = useGameActions();
   const { triggerDeal } = useDealAnimation();
+  const { setViewMode } = useViewMode();
 
   const roundNumber = gameData.currentRound?.roundNumber ?? 1;
   const startTurnMutation = useStartTurnMutation(gameData.publicId);
@@ -49,7 +51,7 @@ export const useDashboardState = () => {
       triggerDeal(); createRound();
     },
     canRedeal:     ctx.hasRound && ctx.hasCards,
-    redealHandler: async () => { triggerDeal(); await dealCards(true); },
+    redealHandler: async () => { setViewMode("normal"); triggerDeal(); await dealCards(true); },
   } : null;
 
   // Game over data — only populated when round is complete

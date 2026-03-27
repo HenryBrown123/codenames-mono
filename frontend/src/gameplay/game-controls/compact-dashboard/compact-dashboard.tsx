@@ -7,6 +7,7 @@ import { useAiStatus, useTriggerAiMove } from "../../../ai/api";
 import { getTeamStyle, getOutcomeSymbol } from "../dashboards/panels/intel-panel";
 import { TeamSymbolIcon } from "../../../shared/team-symbol-icon";
 import { StatusDot } from "../../shared/components";
+import { CompactButton } from "@frontend/gameplay/shared/components";
 import { CompactClueInput } from "./compact-clue-input";
 import { useClueInput } from "./use-clue-input";
 import styles from "./compact-dashboard.module.css";
@@ -55,53 +56,43 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
   const primaryButton = (() => {
     if (s.isCodemasterGivingClue)
       return (
-        <button
-          className={styles.primaryBtn}
+        <CompactButton
+          text={s.isLoading ? "..." : "TRANSMIT"}
           onClick={handleTransmit}
-          disabled={!clue.word.trim() || isAiThinking || s.isLoading}
-        >
-          {s.isLoading ? "..." : "TRANSMIT"}
-        </button>
+          enabled={!!(clue.word.trim()) && !isAiThinking && !s.isLoading}
+        />
       );
     if (s.isInLobby && s.lobbyAction)
       return (
-        <button
-          className={styles.primaryBtn}
+        <CompactButton
+          text={s.isLoading ? "..." : s.lobbyAction.label}
           onClick={s.lobbyAction.handler}
-          disabled={s.isLoading}
-        >
-          {s.isLoading ? "..." : s.lobbyAction.label}
-        </button>
+          enabled={!s.isLoading}
+        />
       );
     if (s.isCodebreakerGuessing)
       return (
-        <button
-          className={styles.primaryBtn}
+        <CompactButton
+          text={s.isLoading ? "..." : "END TURN"}
           onClick={s.endTurn}
-          disabled={s.isLoading || isAiThinking}
-        >
-          {s.isLoading ? "..." : "END TURN"}
-        </button>
+          enabled={!s.isLoading && !isAiThinking}
+        />
       );
     if (s.canStartNextTurn)
       return (
-        <button
-          className={styles.primaryBtn}
+        <CompactButton
+          text={s.startNextTurn.isPending ? "..." : "NEXT TURN"}
           onClick={s.startNextTurn.handler}
-          disabled={s.startNextTurn.isPending}
-        >
-          {s.startNextTurn.isPending ? "..." : "NEXT TURN"}
-        </button>
+          enabled={!s.startNextTurn.isPending}
+        />
       );
     if (s.isRoundComplete && s.gameOverData)
       return (
-        <button
-          className={styles.primaryBtn}
+        <CompactButton
+          text={s.isLoading ? "..." : "NEW GAME"}
           onClick={s.gameOverData.newGame}
-          disabled={s.isLoading}
-        >
-          {s.isLoading ? "..." : "NEW GAME"}
-        </button>
+          enabled={!s.isLoading}
+        />
       );
     return null;
   })();
@@ -114,22 +105,18 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
           <div className={styles.contentSpacer} />
           <div className={styles.lobbyButtons}>
             {s.lobbyAction && (
-              <button
-                className={styles.primaryBtn}
+              <CompactButton
+                text={s.lobbyAction.label}
                 onClick={s.lobbyAction.handler}
-                disabled={s.isLoading}
-              >
-                {s.lobbyAction.label}
-              </button>
+                enabled={!s.isLoading}
+              />
             )}
             {s.lobbyAction?.canRedeal && (
-              <button
-                className={styles.primaryBtn}
+              <CompactButton
+                text="REDEAL"
                 onClick={s.lobbyAction.redealHandler}
-                disabled={s.isLoading}
-              >
-                REDEAL
-              </button>
+                enabled={!s.isLoading}
+              />
             )}
           </div>
           <div className={styles.contentSpacer} />
@@ -161,20 +148,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
               </motion.span>
             </AnimatePresence>
 
-            {s.isRoundComplete && s.gameOverData && (
-              <div className={styles.scoreInline}>
-                <span
-                  className={styles.scoreTeam}
-                  data-winner={s.gameOverData.winnerName === s.teamName}
-                >
-                  {s.gameOverData.winnerName?.toUpperCase()} {s.gameOverData.winnerScore}
-                </span>
-                <span className={styles.scoreDash}>—</span>
-                <span className={styles.scoreTeam}>
-                  {s.gameOverData.loserName?.toUpperCase()} {s.gameOverData.loserScore}
-                </span>
-              </div>
-            )}
+            {/* Score now shown in scoreBox below intel, not in header */}
           </div>
 
           <div className={styles.navGroup}>
@@ -224,34 +198,53 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
             </div>
           </div>
         ) : intel.hasClue ? (
-          /* ── Intel box ── */
-          <div className={styles.intelBox}>
-            <div className={styles.clueRow}>
-              <span className={styles.clueWord}>"{intel.clueWord}"</span>
-              <span className={styles.clueNumber}>: {intel.clueNumber}</span>
+          /* ── Intel box + awaiting input ── */
+          <>
+            <div className={styles.intelBox}>
+              <div className={styles.clueRow}>
+                <span className={styles.clueWord}>"{intel.clueWord}"</span>
+                <span className={styles.clueNumber}>: {intel.clueNumber}</span>
+              </div>
+              <div className={styles.divider} />
+              <div className={styles.guessList}>
+                {intel.guesses.map((guess, i) => {
+                  const { symbol: gs, color: gc, rotate: gr } = getOutcomeSymbol(guess.outcome, intel.teamName);
+                  return (
+                    <div key={i} className={styles.guessRow}>
+                      <span className={styles.guessWord}>{guess.word}</span>
+                      <span className={styles.guessDots} />
+                      <TeamSymbolIcon symbol={gs} rotate={gr} color={gc} />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            <div className={styles.divider} />
-            <div className={styles.guessList}>
-              {intel.guesses.map((guess, i) => {
-                const { symbol: gs, color: gc, rotate: gr } = getOutcomeSymbol(guess.outcome, intel.teamName);
-                return (
-                  <div key={i} className={styles.guessRow}>
-                    <span className={styles.guessWord}>{guess.word}</span>
-                    <span className={styles.guessDots} />
-                    <TeamSymbolIcon symbol={gs} rotate={gr} color={gc} />
-                  </div>
-                );
-              })}
-              {Array.from({ length: ghostCount }).map((_, i) => (
-                <div key={`ghost-${i}`} className={`${styles.guessRow} ${styles.ghost}`}>
-                  <span className={styles.guessWord}>· · · · ·</span>
-                  <span className={styles.guessDots} />
-                  <span>·</span>
+            {ghostCount > 0 && intel.guesses.length === 0 && (
+              <div className={styles.awaitingCenter}>
+                <div className={styles.controlRow}>
+                  <span className={styles.awaitingText}>AWAITING INPUT</span>
                 </div>
-              ))}
+              </div>
+            )}
+          </>
+        ) : null}
+
+        {/* ── Score comparison (game-over) ── */}
+        {s.isRoundComplete && s.gameOverData && (
+          <div className={styles.scoreBox}>
+            <div className={styles.scoreBoxTeam}>
+              <div className={styles.scoreBoxName}>{s.gameOverData.winnerName?.toUpperCase()}</div>
+              <div className={`${styles.scoreBoxValue} ${styles.scoreWinner}`}>
+                {s.gameOverData.winnerScore}
+              </div>
+            </div>
+            <div className={styles.scoreBoxDivider}>—</div>
+            <div className={styles.scoreBoxTeam}>
+              <div className={styles.scoreBoxName}>{s.gameOverData.loserName?.toUpperCase()}</div>
+              <div className={styles.scoreBoxValue}>{s.gameOverData.loserScore}</div>
             </div>
           </div>
-        ) : null}
+        )}
 
       </div>
 

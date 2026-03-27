@@ -30,44 +30,6 @@
   min-width: 28px;
 }
 
-.wordInput {
-  width: 100%;
-  min-width: 0;
-  background: transparent;
-  border: none;
-  border-bottom: var(--border-normal);
-  font-family: var(--font-mono);
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--color-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 4px 0;
-  outline: none;
-  transition: border-color 0.15s;
-  box-sizing: border-box;
-}
-
-.wordInput::placeholder {
-  color: var(--color-primary);
-  opacity: 0.3;
-  font-weight: 400;
-}
-
-.wordInput:focus {
-  border-color: var(--color-primary);
-}
-
-.wordInput[data-error="true"] {
-  border-color: var(--color-warning);
-  color: var(--color-warning);
-}
-
-.wordInput:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .countGroup {
   display: flex;
   align-items: center;
