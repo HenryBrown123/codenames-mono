@@ -122,7 +122,7 @@
   margin-top: 0.5rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 480px) {
   .teamsGrid {
     display: none;
   }
@@ -133,7 +133,11 @@
   margin: 20px 0 50px 0;
 }
 
-@media (max-width: 768px) {
+.teamsGridMobile > * + * {
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 480px) {
   .teamsGridMobile {
     display: block;
   }
@@ -355,28 +359,7 @@
   flex-shrink: 0;
 }
 
-.addInput {
-  flex: 1;
-  padding: 0.5rem 0.75rem;
-  background-color: var(--bg-highlight);
-  border: 1px solid var(--color-primary, #00ff88);
-  border-radius: 3px;
-  color: var(--color-primary, #00ff88);
-  font-family: var(--font-mono);
-  font-size: 1rem;
-  transition: all 0.2s ease;
-}
-
-.addInput::placeholder {
-  color: var(--color-primary, #00ff88);
-  opacity: 0.6;
-  font-size: 1rem;
-}
-
-.addInput:focus {
-  outline: none;
-  background-color: rgba(var(--primary-rgb), 0.1);
-}
+/* .addInput removed — now uses shared TerminalInput component */
 
 .addButton {
   background-color: var(--team-color);
@@ -405,44 +388,11 @@
   cursor: not-allowed;
 }
 
-.startButton {
-  background: var(--start-bg, #6b7280);
-  color: #000;
-  padding: 1rem 3rem;
-  font-size: 1.5rem;
+.startButtonWrapper {
   margin: 1.5rem auto 0;
-  display: block;
-  border: 2px solid var(--start-border, #6b7280);
-  border-radius: 3px;
-  font-family: var(--font-mono);
-  box-shadow: var(--start-shadow, none);
-  text-shadow: var(--start-text-shadow, none);
-  font-weight: 900;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  cursor: var(--start-cursor, not-allowed);
-  transition: all 0.3s ease;
-  opacity: var(--start-opacity, 0.7);
+  display: flex;
+  justify-content: center;
   flex-shrink: 0;
-}
-
-.startButton[data-can-start="true"] {
-  --start-bg: var(--color-primary, #00ff88);
-  --start-border: var(--color-primary, #00ff88);
-  --start-shadow: var(--glow-box-sm);
-  --start-text-shadow: none;
-  --start-cursor: pointer;
-  --start-opacity: 1;
-}
-
-.startButton[data-can-start="true"]:hover:not(:disabled) {
-  background: var(--color-text);
-  color: var(--color-background);
-  transform: scale(1.05);
-}
-
-.startButton:disabled {
-  cursor: not-allowed;
 }
 
 .errorMessage {
@@ -462,10 +412,7 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 1rem;
-  background: var(--bg-highlight);
-  border: var(--border-subtle);
-  border-radius: var(--radius-md);
+  padding: 1rem 0;
   margin-bottom: 1.5rem;
   flex-shrink: 0;
 }
@@ -473,16 +420,13 @@
 .joinContent {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 1.5rem;
 }
 
-.joinTitle {
-  font-size: 1.2rem;
-  color: var(--color-primary, #00ff88);
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin: 0;
+.joinInputWrapper {
+  width: 100%;
+  max-width: 360px;
 }
 
 .teamButtonsGrid {
@@ -592,9 +536,35 @@
 
 .emptyTeamMessage {
   color: var(--color-text-muted);
-  font-style: italic;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
   text-align: center;
   padding: 1rem;
+  opacity: 0.4;
+}
+
+/* ── Orange waiting box — matches .awaitingText from compact dashboard ── */
+.awaitingBox {
+  font-family: var(--font-mono);
+  font-size: var(--dashboard-text-btn, 0.8rem);
+  font-weight: 700;
+  color: rgba(255, 170, 0, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.5rem 1.2rem;
+  border: 1px solid rgba(255, 170, 0, 0.5);
+  border-radius: 6px;
+  text-align: center;
+}
+
+.readyMessage {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-align: center;
 }
 
 /* Compact header for joined users */
@@ -640,9 +610,9 @@
 
 /* Change team button */
 .myTeamBox {
-  display: grid;
-  grid-template-columns: minmax(200px, 1fr) auto minmax(200px, 1fr);
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 1rem;
   padding: 1rem;
   margin-bottom: 1.5rem;
@@ -673,8 +643,7 @@
   flex-direction: column;
   gap: 0.25rem;
   text-align: center;
-  justify-self: center;
-  grid-column: 2;
+  flex: 1;
 }
 
 .switchButtonContainer {

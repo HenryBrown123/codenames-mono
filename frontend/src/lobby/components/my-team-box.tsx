@@ -24,6 +24,7 @@ export interface MyTeamBoxData {
   playerName: string;
   playersNeeded: number;
   disabled: boolean;
+  aiMode?: boolean;
 }
 
 /** Callback for switching to the other team */
@@ -40,6 +41,7 @@ export const MyTeamBoxView: React.FC<MyTeamBoxViewProps> = ({
   playersNeeded,
   onSwitchTeam,
   disabled = false,
+  aiMode = false,
 }) => {
   const teamConfig = getTeamConfig(teamName);
   const teamColor = teamConfig.cssVar;
@@ -86,25 +88,28 @@ export const MyTeamBoxView: React.FC<MyTeamBoxViewProps> = ({
         </motion.div>
       </AnimatePresence>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key="status-section"
-          className={styles.statusSection}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{
-            duration: TIMINGS.CONTENT_FADE,
-            delay: TIMINGS.CONTENT_DELAY_SHORT,
-            ease: EASING,
-          }}
-        >
-          <div className={styles.waitingMessage}>Waiting for other players to join...</div>
-          <div className={styles.playerCount}>
-            {playersNeeded > 0 ? `${playersNeeded} more players required` : "Ready to start!"}
-          </div>
-        </motion.div>
-      </AnimatePresence>
+      {!aiMode && (
+        <AnimatePresence mode="wait">
+          <motion.div
+            key="status-section"
+            className={styles.statusSection}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: TIMINGS.CONTENT_FADE,
+              delay: TIMINGS.CONTENT_DELAY_SHORT,
+              ease: EASING,
+            }}
+          >
+            {playersNeeded > 0 ? (
+              <div className={styles.awaitingBox}>WAITING FOR OPERATIVES</div>
+            ) : (
+              <div className={styles.readyMessage}>Ready to start!</div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      )}
 
       <AnimatePresence mode="wait">
         <motion.div

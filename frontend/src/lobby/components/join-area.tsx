@@ -1,6 +1,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getTeamConfig } from "@frontend/shared-types";
+import { TerminalInput } from "@frontend/gameplay/shared/components";
 import styles from "../lobby.module.css";
 
 /**
@@ -44,15 +45,15 @@ export const JoinAreaView: React.FC<JoinAreaViewProps> = ({
         transition={{ duration: 0.3 }}
         className={styles.joinContent}
       >
-        <h2 className={styles.joinTitle}>Join the Mission</h2>
-        <input
-          className={styles.addInput}
-          placeholder="Enter your operative name..."
-          value={playerName}
-          onChange={(e) => onPlayerNameChange(e.target.value)}
-          disabled={disabled}
-          autoFocus
-        />
+        <div className={styles.joinInputWrapper}>
+          <TerminalInput
+            placeholder="ENTER OPERATIVE NAME"
+            value={playerName}
+            onChange={(e) => onPlayerNameChange(e.target.value)}
+            disabled={disabled}
+            autoFocus
+          />
+        </div>
 
         <div className={styles.teamButtonsGrid}>
           <motion.button
