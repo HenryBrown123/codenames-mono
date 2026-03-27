@@ -8,6 +8,7 @@ import {
   LobbyHeaderView,
   StartButtonView,
   TeamsGridView,
+  TeamsGridMobileView,
   TeamTileView,
   PlayerTileView,
   JoinAreaView,
@@ -144,6 +145,7 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
             playersNeeded={playersNeeded}
             onSwitchTeam={handleTeamToggle}
             disabled={isLoading}
+            aiMode={lobbyData.aiMode}
           />
         )}
 
@@ -167,14 +169,14 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
           </motion.div>
         )}
 
-        {/* Teams Display */}
-        <TeamsGridView>
-          {lobbyData.teams?.map((team) => (
+        {/* Teams Display — desktop grid + mobile stacked */}
+        {(() => {
+          const teamTiles = lobbyData.teams?.map((team) => (
             <TeamTileView
               key={team.name}
               teamName={team.name}
               playerCount={team.players?.length ?? 0}
-              emptyMessage="No operatives yet..."
+              emptyMessage="<EMPTY>"
             >
               {team.players?.map((player) => (
                 <PlayerTileView
@@ -184,8 +186,14 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
                 />
               ))}
             </TeamTileView>
-          ))}
-        </TeamsGridView>
+          ));
+          return (
+            <>
+              <TeamsGridView>{teamTiles}</TeamsGridView>
+              <TeamsGridMobileView>{teamTiles}</TeamsGridMobileView>
+            </>
+          );
+        })()}
 
         <StartButtonView canStart={canStartGame} isLoading={isLoading} onClick={handleStartGame} />
 

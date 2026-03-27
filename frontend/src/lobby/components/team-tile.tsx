@@ -1,5 +1,6 @@
 import React from "react";
 import { getTeamConfig } from "@frontend/shared-types";
+import { TeamSymbolIcon } from "../../shared/team-symbol-icon";
 import styles from "../lobby.module.css";
 
 /**
@@ -58,9 +59,10 @@ export const TeamTileView: React.FC<TeamTileViewProps> = ({
       <div className={styles.teamHeader}>
         <h2
           className={styles.teamName}
-          style={{ "--team-color": teamColor } as React.CSSProperties}
+          style={{ "--team-color": teamColor, "--symbol-color": teamColor } as React.CSSProperties}
         >
-          {config.displayName}
+          <TeamSymbolIcon symbol={config.symbol} rotate={config.symbolRotate} />
+          {config.shortName}
           <span className={styles.playerCount}>
             {playerCount}/{maxPlayers}
           </span>
