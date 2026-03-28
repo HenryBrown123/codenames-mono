@@ -2,7 +2,7 @@ import React from "react";
 import { useGameDataRequired } from "../../../game-data/providers";
 import { useGameActions } from "../../../game-actions";
 import { ActionButton } from "../../../shared/components";
-import { TerminalSection, TerminalCommand } from "../shared";
+import { TerminalSection, TerminalCommand, ScoreComparison } from "../shared";
 import styles from "./gameover-panel.module.css";
 
 /**
@@ -41,17 +41,12 @@ export const GameoverPanelView: React.FC<GameoverPanelViewProps> = ({
       </div>
     )}
 
-    <div className={styles.scoreComparison}>
-      <div className={styles.teamScore}>
-        <div className={styles.teamName}>{winnerStats.name.toUpperCase()}</div>
-        <div className={`${styles.score} ${styles.winner}`}>{winnerStats.selected}</div>
-      </div>
-      <div className={styles.scoreDivider}>—</div>
-      <div className={styles.teamScore}>
-        <div className={styles.teamName}>{loserStats.name.toUpperCase()}</div>
-        <div className={styles.score}>{loserStats.selected}</div>
-      </div>
-    </div>
+    <ScoreComparison
+      winnerName={winnerStats.name}
+      winnerScore={winnerStats.selected}
+      loserName={loserStats.name}
+      loserScore={loserStats.selected}
+    />
 
     <ActionButton onClick={onNewGame} text="NEW MISSION" enabled={!isLoading} />
   </TerminalSection>

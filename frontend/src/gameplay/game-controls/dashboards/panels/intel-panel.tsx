@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TerminalSection, AwaitingLabel, carouselVariants, CAROUSEL_TRANSITION, useCarouselSwipe } from "../shared";
+import { TerminalSection, carouselVariants, CAROUSEL_TRANSITION, useCarouselSwipe, IntelContent } from "../shared";
 import { useIntelState } from "./use-intel-state";
 import { TeamSymbolIcon } from "../../../../shared/team-symbol-icon";
 import { CircleButton } from "@frontend/gameplay/shared/components";
@@ -156,47 +156,14 @@ export const IntelPanelView: React.FC<IntelPanelViewProps> = (props) => {
             transition={CAROUSEL_TRANSITION}
           >
             <div className={`${styles.intelDisplay} ${isHistorical ? styles.historical : ""}`}>
-              {!hasClue ? (
-                <div className={styles.awaitingCenter}><AwaitingLabel>INTEL REQUIRED</AwaitingLabel></div>
-              ) : (
-                <>
-                  <div className={styles.clueSection}>
-                    <span className={styles.clueWord}>"{props.clueWord}"</span>
-                    <span className={styles.clueNumber}>: {props.clueNumber}</span>
-                  </div>
-
-                  <div className={styles.guessesDivider} />
-
-                  <div className={styles.guessesSection}>
-                    <div className={styles.guessList}>
-                      {guesses.map((guess, index) => {
-                        const { symbol, color, rotate } = getOutcomeSymbol(guess.outcome, teamName);
-                        return (
-                          <div key={index} className={styles.guessRow}>
-                            <span className={styles.guessWord}>{guess.word}</span>
-                            <span className={styles.guessDots} />
-                            <span className={styles.guessSymbol}>
-                              <TeamSymbolIcon symbol={symbol} rotate={rotate} color={color} />
-                            </span>
-                          </div>
-                        );
-                      })}
-
-                      {guesses.length > 0 && Array.from({ length: Math.max(0, maxSlots - guesses.length) }).map((_, i) => (
-                        <div key={`ghost-${i}`} className={`${styles.guessRow} ${styles.guessRowGhost}`}>
-                          <span className={styles.guessWord}>· · · · ·</span>
-                          <span className={styles.guessDots} />
-                          <span className={styles.guessSymbol}>·</span>
-                        </div>
-                      ))}
-
-                      {guesses.length === 0 && (
-                        <AwaitingLabel>AWAITING INPUT</AwaitingLabel>
-                      )}
-                    </div>
-                  </div>
-                </>
-              )}
+              <IntelContent
+                hasClue={hasClue}
+                clueWord={hasClue ? props.clueWord : undefined}
+                clueNumber={hasClue ? props.clueNumber : undefined}
+                guesses={guesses}
+                maxSlots={maxSlots}
+                teamName={teamName}
+              />
             </div>
           </motion.div>
         </AnimatePresence>

@@ -4,11 +4,11 @@ import { useDashboardState } from "../dashboards/use-dashboard-state";
 import { useIntelState } from "../dashboards/panels/use-intel-state";
 import { useGameDataRequired } from "../../game-data/providers";
 import { useAiStatus, useTriggerAiMove } from "../../../ai/api";
-import { getTeamStyle, getOutcomeSymbol } from "../dashboards/panels/intel-panel";
+import { getTeamStyle } from "../dashboards/panels/intel-panel";
 import { TeamSymbolIcon } from "../../../shared/team-symbol-icon";
 import { StatusDot, CircleButton } from "../../shared/components";
 import { ActionButton } from "@frontend/gameplay/shared/components";
-import { AwaitingLabel, carouselVariants, CAROUSEL_TRANSITION, useCarouselSwipe } from "../dashboards/shared";
+import { AwaitingLabel, carouselVariants, CAROUSEL_TRANSITION, useCarouselSwipe, IntelContent, ScoreComparison } from "../dashboards/shared";
 import { CompactClueInput } from "./compact-clue-input";
 import { useClueInput } from "./use-clue-input";
 import styles from "./compact-dashboard.module.css";
@@ -50,7 +50,6 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
     clue.reset();
   };
 
-  const ghostCount = Math.max(0, (intel.maxSlots ?? 3) - intel.guesses.length);
   const { symbol, color, rotate } = getTeamStyle(intel.teamName);
 
   // Single primary action — disabled (not hidden) when AI is thinking
@@ -189,78 +188,43 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
             >
               {!intel.hasClue && s.isCodemasterGivingClue ? (
                 <div className={styles.clueInputCenter}>
-                  <div className={styles.intelBox}>
-                    <div className={styles.clueRow}>
-                      <AwaitingLabel>INTEL REQUIRED</AwaitingLabel>
-                    </div>
-                  </div>
-                  <div className={styles.intelBox}>
-                    <CompactClueInput
-                      word={clue.word}
-                      count={clue.count}
-                      error={clue.error}
-                      isLoading={s.isLoading}
-                      onWordChange={clue.setWord}
-                      onCountChange={clue.setCount}
-                      onSubmit={handleTransmit}
-                    />
-                  </div>
+                  <AwaitingLabel>INTEL REQUIRED</AwaitingLabel>
+                  <CompactClueInput
+                    word={clue.word}
+                    count={clue.count}
+                    error={clue.error}
+                    isLoading={s.isLoading}
+                    onWordChange={clue.setWord}
+                    onCountChange={clue.setCount}
+                    onSubmit={handleTransmit}
+                  />
                 </div>
-              ) : !intel.hasClue ? (
-                <div className={styles.clueInputCenter}>
-                  <div className={styles.controlRow}>
-                    <AwaitingLabel>INTEL REQUIRED</AwaitingLabel>
-                  </div>
+              ) : (
+                <div className={styles.intelBox}>
+                  <IntelContent
+                    hasClue={intel.hasClue}
+                    clueWord={intel.clueWord}
+                    clueNumber={intel.clueNumber}
+                    guesses={intel.guesses}
+                    maxSlots={intel.maxSlots}
+                    teamName={intel.teamName}
+                    showGhostRows={false}
+                  />
                 </div>
-              ) : intel.hasClue ? (
-                <>
-                  <div className={styles.intelBox}>
-                    <div className={styles.clueRow}>
-                      <span className={styles.clueWord}>"{intel.clueWord}"</span>
-                      <span className={styles.clueNumber}>: {intel.clueNumber}</span>
-                    </div>
-                    <div className={styles.divider} />
-                    <div className={styles.guessList}>
-                      {intel.guesses.map((guess, i) => {
-                        const { symbol: gs, color: gc, rotate: gr } = getOutcomeSymbol(guess.outcome, intel.teamName);
-                        return (
-                          <div key={i} className={styles.guessRow}>
-                            <span className={styles.guessWord}>{guess.word}</span>
-                            <span className={styles.guessDots} />
-                            <TeamSymbolIcon symbol={gs} rotate={gr} color={gc} />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  {ghostCount > 0 && intel.guesses.length === 0 && (
-                    <div className={styles.clueInputCenter}>
-                      <div className={styles.controlRow}>
-                        <AwaitingLabel>AWAITING INPUT</AwaitingLabel>
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : null}
+              )}
             </motion.div>
           </AnimatePresence>
         </motion.div>
 
         {/* ── Score comparison (game-over) ── */}
         {s.isRoundComplete && s.gameOverData && (
-          <div className={styles.scoreBox}>
-            <div className={styles.scoreBoxTeam}>
-              <div className={styles.scoreBoxName}>{s.gameOverData.winnerName?.toUpperCase()}</div>
-              <div className={`${styles.scoreBoxValue} ${styles.scoreWinner}`}>
-                {s.gameOverData.winnerScore}
-              </div>
-            </div>
-            <div className={styles.scoreBoxDivider}>—</div>
-            <div className={styles.scoreBoxTeam}>
-              <div className={styles.scoreBoxName}>{s.gameOverData.loserName?.toUpperCase()}</div>
-              <div className={styles.scoreBoxValue}>{s.gameOverData.loserScore}</div>
-            </div>
-          </div>
+          <ScoreComparison
+            winnerName={s.gameOverData.winnerName ?? ""}
+            winnerScore={s.gameOverData.winnerScore}
+            loserName={s.gameOverData.loserName ?? ""}
+            loserScore={s.gameOverData.loserScore}
+            className={styles.scoreBox}
+          />
         )}
 
       </div>
