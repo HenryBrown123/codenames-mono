@@ -36,12 +36,12 @@
 .mainContent {
   width: 100%;
   max-width: 1400px;
-  height: 95vh;
+  min-height: 30vh;
   padding: 1.5rem;
   background: var(--bg-container);
-  border: var(--border-strong);
+  border: var(--border-normal);
   border-radius: var(--radius-md);
-  box-shadow: var(--glow-box-sm);
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -64,11 +64,11 @@
   text-transform: uppercase;
   letter-spacing: 6px;
   margin-bottom: 8px;
-  opacity: 0.9;
-  font-family: var(--font-mono);}
+  font-family: var(--font-mono);
+}
 
 .gameInfo {
-  color: var(--color-team-blue);
+  color: var(--color-text-muted);
   font-size: 1.2rem;
   opacity: 0.7;
   letter-spacing: 2px;
@@ -117,8 +117,6 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
-  flex: 1;
-  min-height: 0;
   margin-top: 0.5rem;
 }
 
@@ -151,8 +149,7 @@
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
+  min-height: 20vh;
 }
 
 .teamTile[data-drag-over="true"] {

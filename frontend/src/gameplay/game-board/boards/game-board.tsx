@@ -77,7 +77,7 @@ const CardGrid = memo<Omit<GameBoardViewProps, "showARHUD" | "isSpymaster" | "on
         })}
       </DealingBoard>
     ) : (
-      <div className={styles.boardGrid}>
+      <div className={styles.boardGrid} style={{ opacity: initialState === "hidden" ? 0 : 1 }}>
         {Array.from({ length: 25 }).map((_, i) => (
           <EmptyCard key={`empty-${i}`} />
         ))}

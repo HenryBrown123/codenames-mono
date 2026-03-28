@@ -44,13 +44,10 @@
 
 .terminalSection {
   border: var(--border-normal);
-  border-radius: 6px;
+  border-radius: var(--radius-panel);
   padding: 15px;
-  background: var(--bg-highlight);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.04);
-  transition:
-    border-color 0.7s,
-    background 0.7s;
+  background: var(--bg-panel);
+  transition: background 0.7s;
 
   /* Make it a flex container */
   display: flex;
@@ -94,24 +91,23 @@
 .terminalCommand {
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 10px;
+  letter-spacing: 2px;
+  margin-bottom: var(--panel-header-gap);
   color: var(--color-primary);
   font-size: var(--dashboard-text-h1);
   text-shadow: var(--glow-score);
-  border-bottom: var(--border-normal);
-  padding-bottom: 10px;
-  letter-spacing: 2px;
+  border-bottom: var(--border-dim);
+  padding-bottom: var(--panel-header-gap);
 }
 
 .terminalMessageBlock {
   background: var(--bg-highlight);
   border: 1.5px solid var(--color-warning);
   box-shadow: var(--glow-clue);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--color-primary);
   font-family: var(--font-mono);
-  font-size: 1.08rem;
+  font-size: var(--dashboard-text-h1);
   padding: 1.1rem 1.5rem 1.1rem 2.5rem;
   margin: 1rem 0 1.5rem 0;
   position: relative;
@@ -127,7 +123,7 @@
   left: 1.1rem;
   color: var(--color-primary);
   opacity: 0.5;
-  font-size: 1.08rem;
+  font-size: var(--dashboard-text-h1);
   font-family: inherit;
 }
 
@@ -140,8 +136,8 @@
 .terminalStatus {
   padding: 1rem 1.5rem;
   margin: 1rem 0;
-  border-radius: 8px;
-  font-size: 1.1rem;
+  border-radius: var(--radius-md);
+  font-size: var(--dashboard-text-h1);
   line-height: 1.5;
   background: var(--bg-highlight);
   border-left: 4px solid var(--color-primary);
@@ -153,12 +149,12 @@
 }
 
 .terminalStatus[data-type="warning"] {
-  background: rgba(255, 170, 0, 0.1);
+  background: var(--bg-warning);
   border-left-color: var(--color-warning);
 }
 
 .terminalStatus[data-type="error"] {
-  background: rgba(255, 68, 68, 0.1);
+  background: var(--bg-error);
   border-left-color: var(--color-error);
 }
 
@@ -203,9 +199,9 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  font-size: var(--dashboard-text-p);
+  border: var(--border-muted);
   transition: all 0.3s ease;
 }
 
@@ -219,7 +215,7 @@
 
 .arStatusBar[data-active="false"] {
   background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-muted);
 }
 
 .arStatusBar::before {
@@ -246,6 +242,22 @@
   animation: cursorBlink 1s infinite;
 }
 
+/* Shared awaiting label — orange bordered status box */
+.awaitingLabel {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: var(--dashboard-text-btn);
+  font-weight: 700;
+  color: var(--color-warning);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-align: center;
+  padding: 0.5rem 1.2rem;
+  border: var(--border-warning);
+  border-radius: var(--radius-panel);
+  background: transparent;
+}
+
 .terminalToggleRow {
   display: flex;
   align-items: center;
@@ -256,8 +268,9 @@
 .middleSection {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   flex: 1;           /* take all remaining space after header panel */
-  min-height: 0;     /* allow shrinking inside flex parent */
+  min-height: 50%;   /* ensure panels spread across at least half the dashboard */
   min-width: 0;
   width: 100%;
   gap: 12px;
@@ -315,67 +328,6 @@
   box-shadow: none;
 }
 
-.spySwitch {
-  position: relative;
-  display: inline-block;
-  width: 48px;
-  height: 28px;
-  border-radius: 16px;
-  background: var(--bg-panel-tinted);
-  border: var(--border-normal);
-  box-shadow: var(--glow-box-sm);
-  vertical-align: middle;
-  transition:
-    background 0.18s,
-    border-color 0.18s;
-  cursor: pointer;
-}
-
-.spySwitch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.spySlider {
-  position: absolute;
-  cursor: pointer;
-  border-radius: 16px;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: transparent;
-  transition: background 0.13s;
-}
-
-.spySlider::before {
-  position: absolute;
-  content: "";
-  height: 22px;
-  width: 22px;
-  left: 2.5px;
-  bottom: 1.7px;
-  border-radius: 50%;
-  background: var(--bg-highlight);
-  box-shadow: var(--glow-box-sm);
-  transition:
-    transform 0.23s,
-    box-shadow 0.23s,
-    background 0.23s;
-}
-
-.spySwitch input:checked + .spySlider {
-  background: linear-gradient(90deg, var(--bg-highlight) 0%, transparent 80%);
-}
-
-.spySwitch input:checked + .spySlider::before {
-  transform: translateX(20px);
-  background: var(--color-primary);
-  box-shadow:
-    var(--glow-box-sm),
-    0 0 0 1px rgba(255, 255, 255, 0.6) inset;
-}
 
 .spyStatus {
   font-size: 1em;

@@ -31,9 +31,9 @@
   max-width: 700px;
   padding: 35px;
   background: var(--bg-container-solid);
-  border: var(--border-strong);
+  border: var(--border-normal);
   border-radius: var(--radius-md);
-  box-shadow: var(--glow-box-sm);
+  box-shadow: none;
   position: relative;
   overflow: hidden;
   z-index: 10;

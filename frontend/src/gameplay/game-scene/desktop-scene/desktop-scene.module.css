@@ -82,7 +82,7 @@
     flex-direction: column;
     min-height: 0;
     min-width: 0;
-    overflow: hidden;
+    overflow: visible;
     position: relative;
     z-index: calc(var(--z-spymaster-ar-hud) + 1);
   }

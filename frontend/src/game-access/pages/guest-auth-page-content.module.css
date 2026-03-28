@@ -32,9 +32,9 @@
   max-width: 480px;
   padding: 40px;
   background: var(--bg-container-solid);
-  border: var(--border-strong);
+  border: var(--border-normal);
   border-radius: var(--radius-md);
-  box-shadow: var(--glow-box-sm);
+  box-shadow: none;
   position: relative;
   overflow: hidden;
   z-index: 10;
@@ -50,7 +50,7 @@
 .title {
   font-size: 1.6rem;
   font-weight: bold;
-  color: var(--color-primary);
+  color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 6px;
   margin: 0;

@@ -34,6 +34,14 @@
   color: var(--color-warning);
 }
 
+.input[data-preserve-case] {
+  text-transform: none;
+}
+
+.input[data-preserve-case]::placeholder {
+  text-transform: uppercase;
+}
+
 .input:disabled {
   opacity: 0.5;
   cursor: not-allowed;

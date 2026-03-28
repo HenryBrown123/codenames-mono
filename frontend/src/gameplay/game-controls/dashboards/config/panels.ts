@@ -2,6 +2,7 @@ import { PanelSlots } from "./types";
 import {
   hasRole,
   isCodemaster,
+  isCodemasterGivingClue,
   isCodebreakerGuessing,
   isRoundComplete,
   isInLobby,
@@ -14,6 +15,7 @@ import {
   ARTogglePanel,
   IntelPanel,
   AIStatusPanel,
+  ClueInputPanel,
   CodebreakerActionsPanel,
   LobbyActionsPanel,
   GameoverPanel,
@@ -24,13 +26,14 @@ import {
  * Panel configuration - reads like requirements.
  * "AR toggle shows when isCodemaster"
  * "Intel shows when round is in progress (always visible during gameplay)"
- * Note: Codemaster input is now integrated into the Intel panel
+ * "Clue input shows as its own panel when codemaster needs to give a clue"
  */
 export const GAME_PANELS: PanelSlots = {
   header: [{ id: "team-header", component: TeamHeaderPanel, shouldRender: hasRole }],
 
   middle: [
     { id: "intel", component: IntelPanel, shouldRender: isRoundActive },
+    { id: "clue-input", component: ClueInputPanel, shouldRender: isCodemasterGivingClue },
     { id: "ar-toggle", component: ARTogglePanel, shouldRender: (ctx) => isCodemaster(ctx) && !isRoundComplete(ctx) },
     { id: "ai-status", component: AIStatusPanel, shouldRender: isAiActive },
     { id: "gameover", component: GameoverPanel, shouldRender: isRoundComplete },

@@ -6,8 +6,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 8px;
-  padding-bottom: 8px;
+  margin-bottom: var(--panel-header-gap);
+  padding-bottom: var(--panel-header-gap);
   border-bottom: var(--border-dim);
 }
 
@@ -29,19 +29,20 @@
 }
 
 .navArrow {
+  width: 40px;
+  height: 40px;
+  border: var(--border-subtle);
   background: transparent;
-  border: var(--border-normal);
   color: var(--color-primary);
-  font-size: 1rem;
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
+  font-size: 1.25rem;
+  font-family: var(--font-mono);
   cursor: pointer;
-  transition: all 0.2s ease;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
+  transition: all 0.2s ease;
 }
 
 .navArrow:hover:not(:disabled) {
@@ -49,15 +50,22 @@
   border-color: var(--color-primary);
 }
 
-.navArrow:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
+.navArrow:active:not(:disabled) { transform: scale(0.95); }
+.navArrow:disabled { opacity: 0.3; cursor: not-allowed; }
 
 /* Team symbol in header */
 .teamSymbol {
   font-size: 1.1rem;
   color: var(--symbol-color);
+}
+
+/* Swipe zone — contains intel carousel */
+.swipeZone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* Intel display container */
@@ -67,33 +75,19 @@
   gap: 0.5rem;
   width: 100%;
   flex: 1;
-  padding: 0.75rem 1rem;
-  background: transparent;
-  border: var(--border-subtle);
-  border-radius: 6px;
+  min-height: 12rem;
   box-sizing: border-box;
-  transition: opacity 0.2s ease, border-color 0.2s ease;
+  transition: opacity 0.2s ease;
 }
 
-/* Historical turn - dimmed appearance */
+/* Historical turn - same appearance as current */
 .intelDisplay.historical {
-  opacity: 0.5;
-  border-color: rgba(82, 214, 138, 0.14);
+  opacity: 1;
 }
 
-/* Awaiting intel box */
-.awaitingIntel {
-  font-family: var(--font-mono);
-  font-size: 1rem;
-  font-weight: 700;
-  color: rgba(255, 170, 0, 0.8);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  text-align: center;
-  padding: 0.6rem 1.5rem;
-  border: 1px solid rgba(255, 170, 0, 0.5);
-  border-radius: 6px;
-  background: transparent;
+/* Awaiting intel — vertically centered in the display area */
+.awaitingCenter {
+  margin: auto 0;
 }
 
 /* Clue section */
@@ -107,37 +101,34 @@
 
 .clueWord {
   font-family: var(--font-mono);
-  font-size: 1.15rem;
+  font-size: var(--dashboard-text-clue);
   font-weight: 900;
-  color: var(--color-primary, #00ff88);
+  color: var(--color-primary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  text-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
+  text-shadow: var(--glow-score);
 }
 
 .clueNumber {
   font-family: var(--font-mono);
-  font-size: 1.15rem;
+  font-size: var(--dashboard-text-clue);
   font-weight: 900;
-  color: var(--color-primary, #00ff88);
+  color: var(--color-primary);
 }
 
 /* Divider between clue and guesses */
 .guessesDivider {
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(0, 255, 136, 0.3) 30%,
-    rgba(0, 255, 136, 0.3) 70%,
-    transparent 100%
-  );
+  background: rgba(var(--primary-rgb), 0.14);
 }
 
 /* Guesses section */
 .guessesSection {
   flex: 1;
   min-height: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .guessList {
@@ -151,11 +142,12 @@
   align-items: center;
   gap: 0.5rem;
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: var(--dashboard-text-p);
 }
 
 .guessWord {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--color-text);
+  opacity: 0.9;
   text-transform: uppercase;
   font-weight: 600;
   letter-spacing: 0.05em;
@@ -163,7 +155,8 @@
 
 .guessDots {
   flex: 1;
-  border-bottom: 1px dotted rgba(255, 255, 255, 0.2);
+  border-bottom: 1px dotted var(--color-text-muted);
+  opacity: 0.3;
   min-width: 1rem;
 }
 
@@ -188,15 +181,15 @@
 }
 
 .remainingLabel {
-  color: var(--color-text-muted, rgba(255, 255, 255, 0.6));
+  color: var(--color-text-muted);
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: var(--dashboard-text-small);
   text-transform: lowercase;
 }
 
 .remainingCount {
-  color: var(--color-primary, #00ff88);
+  color: var(--color-primary);
   font-family: var(--font-mono);
-  font-size: 0.9rem;
+  font-size: var(--dashboard-text-p);
   font-weight: bold;
 }

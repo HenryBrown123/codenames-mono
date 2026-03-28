@@ -341,15 +341,21 @@
 }
 
 
-/* Special assassin card styling */
+/* Assassin card - dark background, muted yellow border */
 .cardContainer[data-team="assassin"] .coverCard {
-  background: #0a0a0a;
-  border: 3px solid #ffff00;
-  box-shadow:
-    0 0 30px rgba(255, 255, 0, 0.8),
-    0 0 60px rgba(255, 255, 0, 0.4),
-    inset 0 0 30px rgba(255, 255, 0, 0.1);
-  overflow: visible; /* Allow glow to extend beyond card */
+  background: var(--color-assassin-bg);
+  border: 2px solid color-mix(in srgb, var(--color-assassin) 50%, black);
+}
+
+/* Assassin skull — skip glow/blur layers, just show clean symbol */
+.cardContainer[data-team="assassin"] .symbolGlow,
+.cardContainer[data-team="assassin"] .symbolHighlight,
+.cardContainer[data-team="assassin"] .symbolShadow {
+  display: none;
+}
+
+.cardContainer[data-team="assassin"] .symbolLED {
+  color: color-mix(in srgb, var(--color-assassin) 50%, black);
 }
 
 /* ===== REVEAL OVERLAY ===== */
@@ -411,14 +417,15 @@
   border-radius: 6px;
 }
 
-/* Special assassin gradient */
+/* Assassin team color filter - dark gradient, muted yellow border */
 .cardContainer[data-team="assassin"] .teamColorFilter {
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 50%, #0a0a0a 100%);
-  opacity: 0.95;
-  border-color: #ffff00;
-  box-shadow:
-    inset 0 0 40px rgba(255, 255, 0, 0.2),
-    0 0 30px #ffff00;
+  background: linear-gradient(
+    135deg,
+    var(--color-assassin-bg) 0%,
+    #1a0000 50%,
+    var(--color-assassin-bg) 100%
+  );
+  border-color: color-mix(in srgb, var(--color-assassin) 50%, black);
 }
 
 /* ===== SCAN GRID ===== */
@@ -434,12 +441,6 @@
   animation: gridPulse 2s ease-in-out infinite;
 }
 
-/* Assassin gets danger-yellow scan grid */
-.cardContainer[data-team="assassin"] .scanGrid {
-  background-image:
-    repeating-linear-gradient(0deg, transparent 0, transparent 9px, rgba(255, 255, 0, 0.2) 10px),
-    repeating-linear-gradient(90deg, transparent 0, transparent 9px, rgba(255, 255, 0, 0.2) 10px);
-}
 
 /* ===== TEAM BADGE ===== */
 .teamBadge {
@@ -471,28 +472,11 @@
   }
 }
 
-/* Special assassin badge */
+/* Assassin badge - toned down, uses standard badge shadow */
 .cardContainer[data-team="assassin"] .teamBadge {
-  background: #ffff00;
-  color: #000;
-  border-color: #ff0000;
-  box-shadow:
-    0 0 20px #ffff00,
-    0 0 40px #ff0000;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .cardContainer[data-team="assassin"] .teamBadge {
-    animation: assassinReveal 2s ease-out forwards;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cardContainer[data-team="assassin"] .teamBadge {
-    opacity: 0.9;
-    filter: brightness(1.1);
-    box-shadow: 0 0 25px rgba(255, 255, 0, 0.5);
-  }
+  background: var(--color-assassin-bg);
+  color: var(--team-color);
+  border-color: var(--team-color);
 }
 
 /* ===== SPYMASTER SYMBOL ===== */
@@ -520,6 +504,10 @@
   content: "■";
 }
 
+.cardContainer[data-team="assassin"] .spymasterSymbol {
+  color: color-mix(in srgb, var(--color-assassin) 50%, black);
+}
+
 .cardContainer[data-team="assassin"] .spymasterSymbol::before {
   content: "☠";
   font-size: 2rem;
@@ -530,31 +518,6 @@
   font-size: 2rem;
 }
 
-/* Assassin symbol - maximum visibility and danger */
-.cardContainer[data-team="assassin"] .spymasterSymbol {
-  color: rgba(255, 255, 0, 0.3);
-  text-shadow:
-    0 0 30px #ffff00,
-    0 0 60px #ffff00,
-    0 0 90px #ff0000;
-  filter: drop-shadow(0 0 30px #ffff00);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .cardContainer[data-team="assassin"] .spymasterSymbol {
-    animation: dangerPulse 1s ease-in-out infinite;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cardContainer[data-team="assassin"] .spymasterSymbol {
-    opacity: 1;
-    text-shadow:
-      0 0 30px #ffff00,
-      0 0 60px #ffff00,
-      0 0 80px #ff0000;
-  }
-}
 
 /* ===== AR CORNERS ===== */
 .cardARCorners {
@@ -570,17 +533,13 @@
   position: absolute;
   width: 20px;
   height: 20px;
-  border: 2px solid var(--color-primary);
-  border-radius: 4px;
-  opacity: 1;
-  filter: drop-shadow(0 0 6px var(--color-primary));
+  border: 2px solid var(--color-ar-corner);
+  border-radius: 0;
   animation: cornerBlink 2s ease-in-out infinite;
 }
 
 .cardContainer[data-current-team="true"] .cardARCorner {
-  opacity: 1;
-  border-color: var(--color-primary);
-  filter: drop-shadow(0 0 6px var(--color-primary));
+  border-color: var(--color-ar-corner);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -595,6 +554,7 @@
   left: 0;
   border-right: none;
   border-bottom: none;
+  border-top-left-radius: 2px;
 }
 
 .cardARCorner[data-position="tr"] {
@@ -602,6 +562,7 @@
   right: 0;
   border-left: none;
   border-bottom: none;
+  border-top-right-radius: 2px;
 }
 
 .cardARCorner[data-position="bl"] {
@@ -609,6 +570,7 @@
   left: 0;
   border-right: none;
   border-top: none;
+  border-bottom-left-radius: 2px;
 }
 
 .cardARCorner[data-position="br"] {
@@ -616,6 +578,7 @@
   right: 0;
   border-left: none;
   border-top: none;
+  border-bottom-right-radius: 2px;
 }
 
 /* ===== TEAM SYMBOL ===== */

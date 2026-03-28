@@ -51,6 +51,7 @@ export const JoinAreaView: React.FC<JoinAreaViewProps> = ({
             value={playerName}
             onChange={(e) => onPlayerNameChange(e.target.value)}
             disabled={disabled}
+            preserveCase
             autoFocus
           />
         </div>

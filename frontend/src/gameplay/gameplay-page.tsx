@@ -1,4 +1,5 @@
 import React from "react";
+import { useLocation } from "react-router-dom";
 import { GameplayProvider } from "./game-data/providers";
 import { DealAnimationProvider } from "./game-board/deal-animation-context";
 import { GameScene } from "./game-scene";
@@ -11,12 +12,17 @@ export interface GameplayProps {
   gameId: string;
 }
 
-export const Gameplay: React.FC<GameplayProps> = ({ gameId }) => (
-  <GameplayProvider gameId={gameId}>
-    <DealAnimationProvider>
-      <GameScene />
-    </DealAnimationProvider>
-  </GameplayProvider>
-);
+export const Gameplay: React.FC<GameplayProps> = ({ gameId }) => {
+  const location = useLocation();
+  const fromLobby = !!(location.state as { fromLobby?: boolean })?.fromLobby;
+
+  return (
+    <GameplayProvider gameId={gameId}>
+      <DealAnimationProvider defaultState={fromLobby ? "hidden" : "visible"}>
+        <GameScene />
+      </DealAnimationProvider>
+    </GameplayProvider>
+  );
+};
 
 export { Gameplay as GameplayPageContent };

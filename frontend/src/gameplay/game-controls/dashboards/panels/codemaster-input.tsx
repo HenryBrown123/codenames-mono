@@ -80,8 +80,8 @@ export function CodeWordInput({
   const getButtonState = (): { text: string; validation?: ButtonValidation } => {
     if (isLoading) return { text: "TRANSMITTING..." };
     if (hasError) return { text: errorMessage, validation: BUTTON_VALIDATION.ERROR };
-    if (isEmpty) return { text: "INTEL REQUIRED", validation: BUTTON_VALIDATION.WARNING };
-    return { text: "SUBMIT INTEL", validation: BUTTON_VALIDATION.OK };
+    if (isEmpty) return { text: "ENTER CODEWORD", validation: BUTTON_VALIDATION.WARNING };
+    return { text: "SUBMIT", validation: BUTTON_VALIDATION.OK };
   };
 
   const buttonState = getButtonState();
@@ -123,9 +123,9 @@ export function CodeWordInput({
       {isEditable && (
         <ActionButton
           onClick={validateAndSubmit}
-          text={buttonState.text}
+          text={isEmpty ? "SUBMIT" : buttonState.text}
           enabled={canSubmit}
-          validation={buttonState.validation}
+          validation={isEmpty ? undefined : buttonState.validation}
         />
       )}
     </div>

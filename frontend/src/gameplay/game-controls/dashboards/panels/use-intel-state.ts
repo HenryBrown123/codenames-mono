@@ -1,10 +1,27 @@
 import { useState, useEffect } from "react";
 import { useTurn, useGameDataRequired } from "../../../game-data/providers";
 import { useGameActions } from "../../../game-actions";
-import type { GuessDisplay, IntelPanelViewProps } from "./intel-panel";
+import type { GuessDisplay } from "./intel-panel";
 
-/** Return type of useIntelState — satisfies IntelPanelViewProps for direct spreading. */
-export type IntelState = IntelPanelViewProps;
+/** Full intel state — used by CompactDashboard which needs codemaster fields too. */
+export interface IntelState {
+  teamName: string;
+  guesses: GuessDisplay[];
+  guessesRemaining: number;
+  maxSlots: number;
+  selectedIndex: number;
+  canGoBack: boolean;
+  canGoForward: boolean;
+  onGoBack: () => void;
+  onGoForward: () => void;
+  isHistorical: boolean;
+  hasClue: boolean;
+  clueWord?: string;
+  clueNumber?: number;
+  isCodemasterGivingClue: boolean;
+  isLoading: boolean;
+  onSubmitClue?: (word: string, count: number) => void;
+}
 
 /**
  * Shared intel navigation state.
@@ -69,40 +86,22 @@ export const useIntelState = (): IntelState => {
     3
   );
 
-  const base = {
+  return {
     teamName,
     guesses,
     guessesRemaining: selectedTurn?.guessesRemaining ?? 0,
+    selectedIndex,
     canGoBack,
     canGoForward,
     onGoBack,
     onGoForward,
     isHistorical,
     maxSlots,
-  };
-
-  if (hasClue) {
-    return {
-      ...base,
-      hasClue: true as const,
-      clueWord: selectedTurn!.clue!.word,
-      clueNumber: selectedTurn!.clue!.number,
-    };
-  }
-
-  if (isCodemasterGivingClue) {
-    return {
-      ...base,
-      hasClue: false as const,
-      isCodemasterGivingClue: true as const,
-      isLoading: actionState.status === "loading",
-      onSubmitClue: giveClue,
-    };
-  }
-
-  return {
-    ...base,
-    hasClue: false as const,
-    isCodemasterGivingClue: false as const,
+    hasClue,
+    clueWord: hasClue ? selectedTurn!.clue!.word : undefined,
+    clueNumber: hasClue ? selectedTurn!.clue!.number : undefined,
+    isCodemasterGivingClue,
+    isLoading: actionState.status === "loading",
+    onSubmitClue: isCodemasterGivingClue ? giveClue : undefined,
   };
 };

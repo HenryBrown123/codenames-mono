@@ -14,8 +14,8 @@ interface DealAnimationContextValue {
 
 const DealAnimationContext = createContext<DealAnimationContextValue | null>(null);
 
-export const DealAnimationProvider = ({ children }: { children: ReactNode }) => {
-  const [initialState, setInitialState] = useState<DealInitialState>("visible");
+export const DealAnimationProvider = ({ children, defaultState = "visible" as DealInitialState }: { children: ReactNode; defaultState?: DealInitialState }) => {
+  const [initialState, setInitialState] = useState<DealInitialState>(defaultState);
 
   const triggerDeal = useCallback(() => {
     setInitialState("hidden");

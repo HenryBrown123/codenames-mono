@@ -4,8 +4,8 @@
   z-index: 9999;
   background: linear-gradient(
     135deg,
-    var(--flash-color) 0%,
-    color-mix(in srgb, var(--flash-color) 70%, black) 100%
+    color-mix(in srgb, var(--flash-color) 70%, black) 0%,
+    color-mix(in srgb, var(--flash-color) 50%, black) 100%
   );
   display: flex;
   align-items: center;
@@ -32,10 +32,7 @@
   color: white;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  text-shadow:
-    0 0 30px rgba(255, 255, 255, 0.8),
-    0 0 60px rgba(255, 255, 255, 0.6),
-    0 0 90px rgba(255, 255, 255, 0.4);
+  text-shadow: none;
   margin: 1rem 0;
   line-height: 1;
 }

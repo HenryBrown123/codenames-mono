@@ -7,18 +7,19 @@
 
 .playerName {
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: var(--dashboard-text-player-header);
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--color-text-muted);
   letter-spacing: 0.1em;
   line-height: 1;
 }
 
 .role {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: var(--dashboard-text-player-header);
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--color-text-muted);
+  opacity: 0.65;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   line-height: 1;
@@ -77,23 +78,25 @@
 
 .teamName {
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: var(--dashboard-text-player-header);
   font-weight: 700;
   letter-spacing: 0.15em;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-muted);
 }
 
 .teamRole {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: var(--dashboard-text-player-header);
+  color: var(--color-text-muted);
+  opacity: 0.55;
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
 
 .teamDivider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-text-muted);
+  opacity: 0.15;
   margin: 2px 0;
 }
 
@@ -108,9 +111,10 @@
 
 .compactName {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: var(--dashboard-text-player-header);
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--color-text-muted);
+  opacity: 0.65;
   letter-spacing: 0.08em;
   line-height: 1;
   text-transform: uppercase;
@@ -126,9 +130,10 @@
 
 .compactRole {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: var(--dashboard-text-player-header);
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--color-text-muted);
+  opacity: 0.65;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   line-height: 1;

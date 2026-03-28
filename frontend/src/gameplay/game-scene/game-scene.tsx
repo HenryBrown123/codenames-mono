@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useGameDataRequired } from "../game-data/providers";
 import { useDealAnimation } from "../game-board/deal-animation-context";
 import { ActionButton } from "../shared/components";
@@ -23,7 +24,23 @@ import styles from "./game-scene.module.css";
 export const GameScene: React.FC = () => {
   const { gameData, isPending, isError, error, refetch, isFetching } = useGameDataRequired();
   const displayType = useDisplayType();
-  const { resetDeal } = useDealAnimation();
+  const { resetDeal, triggerDeal } = useDealAnimation();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const fromLobbyRef = useRef(!!(location.state as { fromLobby?: boolean })?.fromLobby);
+  const fromLobby = fromLobbyRef.current;
+  const [showDashboard, setShowDashboard] = useState(!fromLobby);
+
+  // From lobby: show dashboard after deal animation finishes, then reset deal state
+  useEffect(() => {
+    if (!fromLobby) return;
+    navigate(location.pathname, { replace: true, state: {} });
+    const timer = setTimeout(() => {
+      setShowDashboard(true);
+      resetDeal();
+    }, 1800);
+    return () => clearTimeout(timer);
+  }, []);
 
   // When displayType changes, the scene component swaps (unmount/remount).
   // Reset deal state so cards appear instantly — no re-deal animation.
@@ -51,7 +68,7 @@ export const GameScene: React.FC = () => {
 
   switch (displayType) {
     case "desktop":
-      return <DesktopScene isFetching={isFetching} />;
+      return <DesktopScene isFetching={isFetching} showDashboard={showDashboard} />;
     case "windowed":
       return <WindowedScene isFetching={isFetching} />;
     case "mobile":

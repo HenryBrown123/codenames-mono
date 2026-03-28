@@ -2,6 +2,19 @@ import React from "react";
 import { motion } from "framer-motion";
 import styles from "./terminal-components.module.css";
 
+/** Shared swipe/carousel constants */
+export const SWIPE_THRESHOLD = 50; // px drag distance
+export const VELOCITY_THRESHOLD = 500; // px/s
+
+/** Shared carousel slide variants for AnimatePresence */
+export const carouselVariants = {
+  enter: (dir: number) => ({ x: dir < 0 ? 100 : -100, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir: number) => ({ x: dir < 0 ? -100 : 100, opacity: 0 }),
+};
+
+export const CAROUSEL_TRANSITION = { duration: 0.15, ease: [0.4, 0, 0.2, 1] as const };
+
 /**
  * Simple wrapper for mobile view compatibility
  */
@@ -106,6 +119,14 @@ export const ARStatusBar: React.FC<ARStatusBarProps> = ({ children, active }) =>
 
 export const TerminalCursor: React.FC = () => <span className={styles.terminalCursor} />;
 
+/**
+ * Awaiting status label — orange bordered box used across dashboards.
+ * e.g. "INTEL REQUIRED", "AWAITING INPUT"
+ */
+export const AwaitingLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className={styles.awaitingLabel}>{children}</div>
+);
+
 export const TerminalToggleRow: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className={styles.terminalToggleRow}>{children}</div>
 );
@@ -173,15 +194,6 @@ export const SpyGogglesDot: React.FC<SpyGogglesDotProps> = ({ active }) => (
   <span className={styles.spyGogglesDot} data-active={active} />
 );
 
-interface SpySwitchProps {
-  children: React.ReactNode;
-}
-
-export const SpySwitch: React.FC<SpySwitchProps> = ({ children }) => (
-  <label className={styles.spySwitch}>{children}</label>
-);
-
-export const SpySlider: React.FC = () => <span className={styles.spySlider} />;
 
 interface SpyStatusProps {
   children: React.ReactNode;

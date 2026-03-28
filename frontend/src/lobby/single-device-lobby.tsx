@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import styles from "./lobby.module.css";
 import { useLobbyMutations, type LobbyData } from "@frontend/lobby/api";
 import { getTeamConfig } from "@frontend/shared-types";
@@ -167,12 +167,23 @@ export const SingleDeviceLobby: React.FC<SingleDeviceLobbyProps> = ({ gameId, lo
 
   return (
     <div className={styles.container}>
+      <AnimatePresence mode="wait">
+        {isStarting ? (
+          <motion.div
+            key="loading-dot"
+            className={styles.loadingDot}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1, transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] as const } }}
+            exit={{ opacity: 0, scale: 0, transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] as const } }}
+          />
+        ) : (
       <motion.div
+        key="lobby-content"
         className={styles.mainContent}
         variants={boxVariants}
         initial="initial"
-        animate={isStarting ? "shrinkToDot" : "animate"}
-        exit="exit"
+        animate="animate"
+        exit="shrinkToDot"
       >
         <LobbyHeaderView
           title="OPERATIVE CONTROL"
@@ -208,6 +219,8 @@ export const SingleDeviceLobby: React.FC<SingleDeviceLobbyProps> = ({ gameId, lo
 
         {error && <div className={styles.errorMessage}>{error}</div>}
       </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

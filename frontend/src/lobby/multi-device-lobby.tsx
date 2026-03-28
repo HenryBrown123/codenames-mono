@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import styles from "./lobby.module.css";
+import api from "@frontend/api";
 import { useLobbyQuery, useLobbyMutations } from "@frontend/lobby/api";
 import { useCurrentUser } from "@frontend/auth/use-current-user";
 import {
@@ -103,14 +104,20 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
     ops.addPlayer.mutate({ playerName: inputPlayerName, teamName });
   };
 
-  const handleStartGame = () => {
+  const handleStartGame = async () => {
     if (!canStartGame) return;
-    ops.startGame.mutate(undefined, {
-      onSuccess: () => {
-        setIsStarting(true);
-        setTimeout(() => navigate(`/game/${gameId}`), 500);
-      },
-    });
+    setIsStarting(true);
+    try {
+      // 1. Start the game (sets status to IN_PROGRESS)
+      await ops.startGame.mutateAsync(undefined);
+      // 2. Create round (backend deals cards + assigns roles in one transaction)
+      await api.post(`/games/${gameId}/rounds`);
+      // 3. Navigate — player sees dealt cards with START ROUND / REDEAL
+      setTimeout(() => navigate(`/game/${gameId}`, { state: { fromLobby: true } }), 800);
+    } catch (error) {
+      console.error("Failed to start game:", error);
+      setIsStarting(false);
+    }
   };
 
   const handleTeamToggle = () => {
@@ -124,12 +131,24 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
 
   return (
     <div className={styles.container}>
+      <AnimatePresence mode="wait">
+        {isStarting ? (
+          <motion.div
+            key="loading-dot"
+            className={styles.loadingDot}
+            variants={dotVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+          />
+        ) : (
       <motion.div
+        key="lobby-content"
         className={styles.mainContent}
         variants={boxVariants}
         initial="initial"
-        animate={isStarting ? "shrinkToDot" : "animate"}
-        exit="exit"
+        animate="animate"
+        exit="shrinkToDot"
       >
         <LobbyHeaderView
           title="OPERATION LOBBY"
@@ -199,6 +218,8 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
 
         {error && <div className={styles.errorMessage}>{error}</div>}
       </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

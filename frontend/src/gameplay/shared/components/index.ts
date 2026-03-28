@@ -7,3 +7,4 @@ export { TerminalInput } from './terminal-input';
 export type { TerminalInputProps } from './terminal-input';
 export { CompactButton } from './compact-button';
 export type { CompactButtonProps } from './compact-button';
+export { ToggleSwitch } from './toggle-switch';

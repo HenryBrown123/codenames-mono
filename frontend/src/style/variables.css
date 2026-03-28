@@ -7,18 +7,20 @@
   /* ── Primary theme — user-overridable at runtime via JS ── */
   --color-primary:    #52d68a;
   --primary-rgb:      82, 214, 138;
-  --color-accent:     #ff0080;
   --color-background: rgb(13, 13, 13);
   --color-text:       white;
   --color-text-muted: rgba(255, 255, 255, 0.7);
   --color-warning:    rgba(255, 170, 0, 0.85);
+  --color-ar-corner:  rgba(82, 214, 138, 0.4);
 
   /* ── Border tokens ── */
-  --border-dim:    1px solid rgba(82, 214, 138, 0.14);
-  --border-subtle: 1px solid rgba(82, 214, 138, 0.24);
-  --border-normal: 1px solid rgba(82, 214, 138, 0.35);
-  --border-strong: 1px solid #52d68a;
-  --border-heavy:  2px solid #52d68a;
+  --border-dim:     1px solid rgba(82, 214, 138, 0.14);
+  --border-subtle:  1px solid rgba(82, 214, 138, 0.24);
+  --border-normal:  1px solid rgba(82, 214, 138, 0.35);
+  --border-strong:  1px solid #52d68a;
+  --border-heavy:   2px solid #52d68a;
+  --border-warning: 1px solid rgba(255, 170, 0, 0.5);
+  --border-muted:   1px solid rgba(255, 255, 255, 0.12);
 
   /* ── Glow tokens — flat-first, only score/clue get glow ── */
   --glow-score:  0 0 8px rgba(82, 214, 138, 0.25);
@@ -28,23 +30,30 @@
   /* ── Background tokens ── */
   --bg-highlight: rgba(82, 214, 138, 0.06);
   --bg-section:   rgba(0, 0, 0, 0.40);
+  --bg-warning:   rgba(255, 170, 0, 0.1);
+  --bg-error:     rgba(255, 68, 68, 0.1);
 
   /* ── Panel backgrounds — tinted dark surfaces ── */
   --bg-panel:         rgba(10, 10, 10, 0.85);   /* base dark panel, no tint */
+  --bg-panel-raised:  rgba(40, 45, 50, 0.5);    /* cover card dark, 50% opacity */
   --bg-panel-tinted:  rgba(10, 14, 12, 0.92);   /* slight warm tint, used by drawers/overlays */
   --bg-overlay:       rgba(8, 10, 8, 0.98);     /* near-opaque overlay (clue input, drawers) */
   --bg-scrollbar:     rgba(82, 214, 138, 0.35); /* scrollbar thumb — tracks primary */
 
   /* Dashboard typography */
   --dashboard-text-h1: 1.1rem;
-  --dashboard-text-p: 0.875rem;
-  --dashboard-text-small: 0.75rem;
+  --dashboard-text-clue: 1.15rem;
+  --dashboard-text-player-header: 1.15rem;
+  --dashboard-text-p: 1rem;
+  --dashboard-text-small: 0.8rem;
   --dashboard-text-btn: 0.875rem;
   --dashboard-text-btn-sm: 0.75rem;
 
+  /* ── Panel layout tokens ── */
+  --panel-header-gap: 10px;
+
   /* ── Semantic colors ── */
   --color-error:   #ff4444;
-  --color-success: #52d68a;
 
   /* ── Team colors ── */
   --color-team-red: #ff0040;
@@ -54,44 +63,26 @@
   --color-assassin: #ffff00;
   --color-assassin-bg: #0a0a0a;
 
-  /* ── Card colors — physical card palette ── */
-  --color-card-base:   #f4f1e8;
-  --color-card-light:  #e8e5dc;
-  --color-card-mid:    #ebe7dc;
-  --color-card-border: #d4d1c8;
-  --color-card-text:   #2a2a3e;
-
   /* ── Menu / sidebar ── */
   --color-menu-bg:   rgb(22, 24, 27);
   --color-menu-text: #e0e0e0;
 
   /* ── Surface / container backgrounds ── */
   --bg-container:    linear-gradient(120deg, rgba(10, 16, 14, 0.76) 65%, rgba(20, 20, 30, 0.7) 100%);
-  --bg-container-solid: rgba(10, 16, 14, 0.95);
+  --bg-container-solid: rgba(20, 32, 28, 0.92);
 
   /* ── Border radius scale ── */
   --radius-sm: 4px;
+  --radius-panel: 6px;
   --radius-md: 8px;
-  --radius-lg: 12px;
 
-  /* Z-index scale from Z_INDEX constant */
+  /* Z-index scale */
   --z-base: 0;
   --z-card-base: 1;
-  --z-card-texture: 2;
-  --z-card-word: 3;
   --z-card-ripple: 5;
-  --z-card-covered: 10;
-  --z-card-animating: 15;
   --z-spymaster-ar-grid: 20;
-  --z-spymaster-ar-border: 25;
   --z-spymaster-ar-overlay: 30;
   --z-spymaster-ar-hud: 50;
   --z-fixed-buttons: 100;
-  --z-dashboard: 100;
-  --z-instructions-panel: 200;
-  --z-instructions-backdrop: 199;
-  --z-modal-backdrop: 900;
-  --z-modal-content: 1000;
-  --z-toast: 1100;
-  --z-critical: 9999;
+  --z-index-toast: 1100;
 }

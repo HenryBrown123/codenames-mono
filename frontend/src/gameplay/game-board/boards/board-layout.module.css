@@ -37,13 +37,13 @@
   /* NO aspect-ratio - let cards be as wide as possible */
 }
 
-/* Empty card for loading/skeleton states */
+/* Empty card for loading/skeleton states — invisible but preserves grid layout */
 .emptyCard {
   width: 100%;
   height: 100%;
-  background-color: rgba(27, 9, 9, 0.25);
+  background-color: transparent;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.123);
+  border: none;
 }
 
 /* Tablet */

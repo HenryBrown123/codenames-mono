@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import { useCreateNewGame } from "@frontend/game-access/api/query-hooks/use-create-new-game";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ActionButton } from "@frontend/gameplay/shared/components";
-import { ARToggleSwitch } from "@frontend/gameplay/game-controls/dashboards/panels/ar-toggle-switch";
+import { ActionButton, ToggleSwitch } from "@frontend/gameplay/shared/components";
 import { GAME_TYPE, GAME_FORMAT, GameType, GameFormat } from "@codenames/shared/types";
 import styles from "./create-game-page-content.module.css";
 
@@ -100,7 +99,7 @@ export const CreateGamePageView: React.FC<CreateGamePageViewProps> = ({
                     <span className={styles.sectionTitle}>AI MODE</span>
                     <div className={styles.aiDesc}>Empty slots filled with AI players</div>
                   </div>
-                  <ARToggleSwitch
+                  <ToggleSwitch
                     active={aiMode}
                     onChange={() => onAiModeChange(!aiMode)}
                   />

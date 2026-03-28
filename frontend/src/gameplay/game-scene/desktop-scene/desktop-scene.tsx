@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useVisibilityContext } from "../../game-controls/dashboards/config/context";
 import { isCodebreakerGuessing, isRoundComplete } from "../../game-controls/dashboards/config/rules";
 import { useGameActions } from "../../game-actions";
@@ -12,8 +13,26 @@ import { GameOverOverlay } from "../../game-over";
 import { CodeWordInput } from "../../game-controls/dashboards";
 import styles from "./desktop-scene.module.css";
 
+const dashboardExpandVariants = {
+  hidden: {
+    scale: 0,
+    opacity: 0,
+    borderRadius: "50%",
+  },
+  visible: {
+    scale: 1,
+    opacity: 1,
+    borderRadius: "var(--radius-md)",
+    transition: {
+      duration: 0.5,
+      ease: [0.34, 1.56, 0.64, 1],
+    },
+  },
+};
+
 interface DesktopSceneProps {
   isFetching: boolean;
+  showDashboard?: boolean;
 }
 
 /**
@@ -25,7 +44,7 @@ interface DesktopSceneProps {
  * Pure CSS orientation queries within this scene — no JS orientation detection.
  * Only ever mounted when DisplayType === "desktop".
  */
-export const DesktopScene: React.FC<DesktopSceneProps> = ({ isFetching }) => {
+export const DesktopScene: React.FC<DesktopSceneProps> = ({ isFetching, showDashboard = true }) => {
   const ctx = useVisibilityContext();
   const { makeGuess, giveClue, actionState } = useGameActions();
   const [showCluePanel, setShowCluePanel] = useState(false);
@@ -56,9 +75,14 @@ export const DesktopScene: React.FC<DesktopSceneProps> = ({ isFetching }) => {
       <div className={styles.scene}>
 
         {/* Portrait only — hidden in landscape via CSS */}
-        <div className={styles.banner}>
+        <motion.div
+          className={styles.banner}
+          variants={dashboardExpandVariants}
+          initial={showDashboard ? "visible" : "hidden"}
+          animate="visible"
+        >
           <TeamHeaderPanel />
-        </div>
+        </motion.div>
 
         <div className={styles.board}>
           <GameBoard onCardClick={handleCardClick} canInteract={canInteract} />
@@ -68,14 +92,25 @@ export const DesktopScene: React.FC<DesktopSceneProps> = ({ isFetching }) => {
         </div>
 
         {/* Portrait only — CompactDashboard bottom strip */}
-        <div className={styles.compactArea}>
+        <motion.div
+          className={styles.compactArea}
+          variants={dashboardExpandVariants}
+          initial={showDashboard ? "visible" : "hidden"}
+          animate="visible"
+        >
           <CompactDashboard onOpenClueInput={() => setShowCluePanel(true)} />
-        </div>
+        </motion.div>
 
         {/* Landscape only — StackedDashboard sidebar */}
-        <div className={styles.stackedArea}>
+        <motion.div
+          className={styles.stackedArea}
+          variants={dashboardExpandVariants}
+          initial={showDashboard ? "visible" : "hidden"}
+          animate="visible"
+          style={{ overflow: "hidden" }}
+        >
           <StackedDashboard isFetching={isFetching} instanceId="desktop" />
-        </div>
+        </motion.div>
 
         {/* Clue input overlay */}
         <div className={styles.clueOverlay} data-visible={showCluePanel}>

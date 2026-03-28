@@ -1,5 +1,5 @@
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { useDashboardState } from "../dashboards/use-dashboard-state";
 import { useIntelState } from "../dashboards/panels/use-intel-state";
 import { useGameDataRequired } from "../../game-data/providers";
@@ -8,6 +8,7 @@ import { getTeamStyle, getOutcomeSymbol } from "../dashboards/panels/intel-panel
 import { TeamSymbolIcon } from "../../../shared/team-symbol-icon";
 import { StatusDot } from "../../shared/components";
 import { CompactButton } from "@frontend/gameplay/shared/components";
+import { AwaitingLabel, SWIPE_THRESHOLD, VELOCITY_THRESHOLD, carouselVariants, CAROUSEL_TRANSITION } from "../dashboards/shared";
 import { CompactClueInput } from "./compact-clue-input";
 import { useClueInput } from "./use-clue-input";
 import styles from "./compact-dashboard.module.css";
@@ -97,6 +98,25 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
     return null;
   })();
 
+  // Swipe direction tracking for carousel animation — must be before any early returns
+  const [swipeDirection, setSwipeDirection] = React.useState(0); // -1 = left, 1 = right
+  const handleDragEnd = (_: unknown, info: PanInfo) => {
+    const swipedLeft = info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -VELOCITY_THRESHOLD;
+    const swipedRight = info.offset.x > SWIPE_THRESHOLD || info.velocity.x > VELOCITY_THRESHOLD;
+
+    if (swipedLeft && intel.canGoForward) {
+      setSwipeDirection(-1);
+      intel.onGoForward();
+    } else if (swipedRight && intel.canGoBack) {
+      setSwipeDirection(1);
+      intel.onGoBack();
+    }
+  };
+
+  // Also track direction from button clicks
+  const handleGoBack = () => { setSwipeDirection(1); intel.onGoBack(); };
+  const handleGoForward = () => { setSwipeDirection(-1); intel.onGoForward(); };
+
   // ── Lobby: centered buttons ──
   if (s.isInLobby) {
     return (
@@ -154,80 +174,98 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
           <div className={styles.navGroup}>
             <button
               className={styles.navBtn}
-              onClick={intel.onGoBack}
+              onClick={handleGoBack}
               disabled={!intel.canGoBack}
               aria-label="Previous turn"
-            >◁</button>
+            >{"<"}</button>
             <button
               className={styles.navBtn}
-              onClick={intel.onGoForward}
+              onClick={handleGoForward}
               disabled={!intel.canGoForward}
               aria-label="Next turn"
-            >▷</button>
+            >{">"}</button>
           </div>
         </div>
 
-        {/* ── Clue input (floats centered when codemaster giving clue) ── */}
-        {!intel.hasClue && s.isCodemasterGivingClue ? (
-          /* ── Codemaster: label + clue input ── */
-          <div className={styles.clueInputCenter}>
-            <div className={styles.intelBox}>
-              <div className={styles.clueRow}>
-                <span className={styles.awaitingText}>INTEL REQUIRED</span>
-              </div>
-            </div>
-            <div className={styles.intelBox}>
-              <CompactClueInput
-                word={clue.word}
-                count={clue.count}
-                error={clue.error}
-                isLoading={s.isLoading}
-                onWordChange={clue.setWord}
-                onCountChange={clue.setCount}
-                onSubmit={handleTransmit}
-              />
-            </div>
-          </div>
-        ) : !intel.hasClue ? (
-          /* ── No clue yet: show waiting state + AI trigger ── */
-          <div className={styles.awaitingCenter}>
-            <div className={styles.controlRow}>
-              <span className={styles.awaitingText}>
-                {s.role === "CODEBREAKER" ? "INTEL REQUIRED" : "AWAITING INTEL"}
-              </span>
-            </div>
-          </div>
-        ) : intel.hasClue ? (
-          /* ── Intel box + awaiting input ── */
-          <>
-            <div className={styles.intelBox}>
-              <div className={styles.clueRow}>
-                <span className={styles.clueWord}>"{intel.clueWord}"</span>
-                <span className={styles.clueNumber}>: {intel.clueNumber}</span>
-              </div>
-              <div className={styles.divider} />
-              <div className={styles.guessList}>
-                {intel.guesses.map((guess, i) => {
-                  const { symbol: gs, color: gc, rotate: gr } = getOutcomeSymbol(guess.outcome, intel.teamName);
-                  return (
-                    <div key={i} className={styles.guessRow}>
-                      <span className={styles.guessWord}>{guess.word}</span>
-                      <span className={styles.guessDots} />
-                      <TeamSymbolIcon symbol={gs} rotate={gr} color={gc} />
+        {/* ── Swipeable intel carousel ── */}
+        <motion.div
+          className={styles.swipeZone}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.15}
+          dragMomentum={false}
+          onDragEnd={handleDragEnd}
+          style={{ touchAction: "pan-y" }}
+        >
+          <AnimatePresence mode="wait" initial={false} custom={swipeDirection}>
+            <motion.div
+              key={intel.selectedIndex}
+              custom={swipeDirection}
+              variants={carouselVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={CAROUSEL_TRANSITION}
+              style={{ flex: 1, display: "flex", flexDirection: "column" }}
+            >
+              {!intel.hasClue && s.isCodemasterGivingClue ? (
+                <div className={styles.clueInputCenter}>
+                  <div className={styles.intelBox}>
+                    <div className={styles.clueRow}>
+                      <AwaitingLabel>INTEL REQUIRED</AwaitingLabel>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-            {ghostCount > 0 && intel.guesses.length === 0 && (
-              <div className={styles.awaitingCenter}>
-                <div className={styles.controlRow}>
-                  <span className={styles.awaitingText}>AWAITING INPUT</span>
+                  </div>
+                  <div className={styles.intelBox}>
+                    <CompactClueInput
+                      word={clue.word}
+                      count={clue.count}
+                      error={clue.error}
+                      isLoading={s.isLoading}
+                      onWordChange={clue.setWord}
+                      onCountChange={clue.setCount}
+                      onSubmit={handleTransmit}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
-          </>
-        ) : null}
+              ) : !intel.hasClue ? (
+                <div className={styles.clueInputCenter}>
+                  <div className={styles.controlRow}>
+                    <AwaitingLabel>INTEL REQUIRED</AwaitingLabel>
+                  </div>
+                </div>
+              ) : intel.hasClue ? (
+                <>
+                  <div className={styles.intelBox}>
+                    <div className={styles.clueRow}>
+                      <span className={styles.clueWord}>"{intel.clueWord}"</span>
+                      <span className={styles.clueNumber}>: {intel.clueNumber}</span>
+                    </div>
+                    <div className={styles.divider} />
+                    <div className={styles.guessList}>
+                      {intel.guesses.map((guess, i) => {
+                        const { symbol: gs, color: gc, rotate: gr } = getOutcomeSymbol(guess.outcome, intel.teamName);
+                        return (
+                          <div key={i} className={styles.guessRow}>
+                            <span className={styles.guessWord}>{guess.word}</span>
+                            <span className={styles.guessDots} />
+                            <TeamSymbolIcon symbol={gs} rotate={gr} color={gc} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  {ghostCount > 0 && intel.guesses.length === 0 && (
+                    <div className={styles.clueInputCenter}>
+                      <div className={styles.controlRow}>
+                        <AwaitingLabel>AWAITING INPUT</AwaitingLabel>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : null}
+            </motion.div>
+          </AnimatePresence>
+        </motion.div>
 
         {/* ── Score comparison (game-over) ── */}
         {s.isRoundComplete && s.gameOverData && (

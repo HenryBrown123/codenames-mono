@@ -30,18 +30,17 @@
 }
 
 .emptyCard {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: transparent;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: none;
 }
 
 .skeletonGrid {
-  opacity: 0.5;
+  opacity: 0;
 }
 
 .skeletonCard {
-  animation: pulse 2s ease-in-out infinite;
-  animation-delay: var(--skeleton-delay, 0s);
+  animation: none;
 }
 
 .errorContainer {

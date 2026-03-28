@@ -32,6 +32,20 @@
   gap: 12px;
 }
 
+/* ── Swipe zone — contains the intel carousel ── */
+.swipeZone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.swipeZone:active {
+  cursor: grabbing;
+}
+
 /* ── Header ── */
 .header {
   display: flex;
@@ -110,17 +124,18 @@
   font-size: 0.8rem;
   width: 28px;
   height: 28px;
-  border-radius: 4px;
+  border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  transition: background 0.15s;
+  transition: all 0.2s ease;
   font-family: var(--font-mono);
 }
 
-.navBtn:hover:not(:disabled) { background: var(--bg-highlight); }
+.navBtn:hover:not(:disabled) { background: var(--bg-highlight); border-color: var(--color-primary); }
+.navBtn:active:not(:disabled) { transform: scale(0.95); }
 .navBtn:disabled { opacity: 0.25; cursor: not-allowed; }
 
 /* ── Clue input centered (floats in middle of dashboard) ── */
@@ -180,31 +195,11 @@
   color: var(--color-primary);
 }
 
-.awaitingText {
-  flex: 1;
-  font-family: var(--font-mono);
-  font-size: var(--dashboard-text-btn);
-  font-weight: 700;
-  color: rgba(255, 170, 0, 0.8);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 0.5rem 1.2rem;
-  border: 1px solid rgba(255, 170, 0, 0.5);
-  border-radius: 6px;
-  background: transparent;
-  text-align: center;
-}
 
 .divider {
   height: 1px;
   flex-shrink: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(0, 255, 136, 0.3) 30%,
-    rgba(0, 255, 136, 0.3) 70%,
-    transparent 100%
-  );
+  background: rgba(var(--primary-rgb), 0.14);
 }
 
 .guessList {

@@ -1,7 +1,6 @@
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { TerminalSection } from "../shared";
-import { CodeWordInput } from "./codemaster-input";
+import { motion, AnimatePresence, type PanInfo } from "framer-motion";
+import { TerminalSection, AwaitingLabel, SWIPE_THRESHOLD, VELOCITY_THRESHOLD, carouselVariants, CAROUSEL_TRANSITION } from "../shared";
 import { useIntelState } from "./use-intel-state";
 import { TeamSymbolIcon } from "../../../../shared/team-symbol-icon";
 import styles from "./intel-panel.module.css";
@@ -27,6 +26,7 @@ interface IntelPanelBaseProps {
   guesses: GuessDisplay[];
   guessesRemaining: number;
   maxSlots?: number;
+  selectedIndex: number;
   // Navigation
   canGoBack?: boolean;
   canGoForward?: boolean;
@@ -42,25 +42,13 @@ interface IntelPanelWithClueProps extends IntelPanelBaseProps {
   clueNumber: number;
 }
 
-/** Codemaster is actively giving a clue — show the input form. */
-interface IntelPanelCodemasterInputProps extends IntelPanelBaseProps {
-  hasClue: false;
-  isCodemasterGivingClue: true;
-  isLoading?: boolean;
-  onSubmitClue: (word: string, count: number) => void;
-}
-
 /** Waiting for a clue — show "AWAITING INTEL". */
 interface IntelPanelAwaitingProps extends IntelPanelBaseProps {
   hasClue: false;
-  isCodemasterGivingClue?: false;
-  isLoading?: boolean;
-  onSubmitClue?: undefined;
 }
 
 export type IntelPanelViewProps =
   | IntelPanelWithClueProps
-  | IntelPanelCodemasterInputProps
   | IntelPanelAwaitingProps;
 
 /**
@@ -110,12 +98,31 @@ export const IntelPanelView: React.FC<IntelPanelViewProps> = (props) => {
     guesses,
     guessesRemaining,
     maxSlots = 3,
+    selectedIndex,
     canGoBack = false,
     canGoForward = false,
     onGoBack,
     onGoForward,
     isHistorical = false,
   } = props;
+
+  const [swipeDirection, setSwipeDirection] = React.useState(0);
+
+  const handleDragEnd = (_: unknown, info: PanInfo) => {
+    const swipedLeft = info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -VELOCITY_THRESHOLD;
+    const swipedRight = info.offset.x > SWIPE_THRESHOLD || info.velocity.x > VELOCITY_THRESHOLD;
+    if (swipedLeft && canGoForward && onGoForward) {
+      setSwipeDirection(-1);
+      onGoForward();
+    } else if (swipedRight && canGoBack && onGoBack) {
+      setSwipeDirection(1);
+      onGoBack();
+    }
+  };
+
+  const handleGoBack = () => { setSwipeDirection(1); onGoBack?.(); };
+  const handleGoForward = () => { setSwipeDirection(-1); onGoForward?.(); };
+
   // Derive symbol styling from teamName
   const { symbol: teamSymbol, color: teamColor, rotate } = getTeamStyle(teamName);
 
@@ -137,73 +144,89 @@ export const IntelPanelView: React.FC<IntelPanelViewProps> = (props) => {
           </motion.span>
         </AnimatePresence>
       </div>
-      <div className={`${styles.intelDisplay} ${isHistorical ? styles.historical : ""}`}>
-        {!hasClue ? (
-          props.isCodemasterGivingClue && props.onSubmitClue ? (
-            <CodeWordInput
-              codeWord=""
-              numberOfCards={null}
-              isEditable={true}
-              isLoading={props.isLoading ?? false}
-              onSubmit={props.onSubmitClue}
-            />
-          ) : (
-            <div className={styles.awaitingIntel}>AWAITING INTEL</div>
-          )
-        ) : (
-          <>
-            <div className={styles.clueSection}>
-              <span className={styles.clueWord}>"{props.clueWord}"</span>
-              <span className={styles.clueNumber}>: {props.clueNumber}</span>
-            </div>
 
-            <div className={styles.guessesDivider} />
-
-            <div className={styles.guessesSection}>
-              <div className={styles.guessList}>
-                {/* Real guesses */}
-                {guesses.map((guess, index) => {
-                  const { symbol, color, rotate } = getOutcomeSymbol(guess.outcome, teamName);
-                  return (
-                    <div key={index} className={styles.guessRow}>
-                      <span className={styles.guessWord}>{guess.word}</span>
-                      <span className={styles.guessDots} />
-                      <span className={styles.guessSymbol}>
-                        <TeamSymbolIcon symbol={symbol} rotate={rotate} color={color} />
-                      </span>
-                    </div>
-                  );
-                })}
-
-                {/* Ghost rows — pad up to maxSlots so the box never shrinks */}
-                {Array.from({ length: Math.max(0, maxSlots - guesses.length) }).map((_, i) => (
-                  <div key={`ghost-${i}`} className={`${styles.guessRow} ${styles.guessRowGhost}`}>
-                    <span className={styles.guessWord}>· · · · ·</span>
-                    <span className={styles.guessDots} />
-                    <span className={styles.guessSymbol}>·</span>
+      <motion.div
+        className={styles.swipeZone}
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.15}
+        dragMomentum={false}
+        onDragEnd={handleDragEnd}
+        style={{ touchAction: "pan-y" }}
+      >
+        <AnimatePresence mode="wait" initial={false} custom={swipeDirection}>
+          <motion.div
+            key={selectedIndex}
+            custom={swipeDirection}
+            variants={carouselVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={CAROUSEL_TRANSITION}
+          >
+            <div className={`${styles.intelDisplay} ${isHistorical ? styles.historical : ""}`}>
+              {!hasClue ? (
+                <div className={styles.awaitingCenter}><AwaitingLabel>INTEL REQUIRED</AwaitingLabel></div>
+              ) : (
+                <>
+                  <div className={styles.clueSection}>
+                    <span className={styles.clueWord}>"{props.clueWord}"</span>
+                    <span className={styles.clueNumber}>: {props.clueNumber}</span>
                   </div>
-                ))}
-              </div>
+
+                  <div className={styles.guessesDivider} />
+
+                  <div className={styles.guessesSection}>
+                    <div className={styles.guessList}>
+                      {guesses.map((guess, index) => {
+                        const { symbol, color, rotate } = getOutcomeSymbol(guess.outcome, teamName);
+                        return (
+                          <div key={index} className={styles.guessRow}>
+                            <span className={styles.guessWord}>{guess.word}</span>
+                            <span className={styles.guessDots} />
+                            <span className={styles.guessSymbol}>
+                              <TeamSymbolIcon symbol={symbol} rotate={rotate} color={color} />
+                            </span>
+                          </div>
+                        );
+                      })}
+
+                      {guesses.length > 0 && Array.from({ length: Math.max(0, maxSlots - guesses.length) }).map((_, i) => (
+                        <div key={`ghost-${i}`} className={`${styles.guessRow} ${styles.guessRowGhost}`}>
+                          <span className={styles.guessWord}>· · · · ·</span>
+                          <span className={styles.guessDots} />
+                          <span className={styles.guessSymbol}>·</span>
+                        </div>
+                      ))}
+
+                      {guesses.length === 0 && (
+                        <AwaitingLabel>AWAITING INPUT</AwaitingLabel>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
-          </>
-        )}
-      </div>
+          </motion.div>
+        </AnimatePresence>
+      </motion.div>
+
       <div className={styles.navGroup}>
         <button
           className={styles.navArrow}
-          onClick={onGoBack}
+          onClick={handleGoBack}
           disabled={!canGoBack}
           aria-label="Previous turn"
         >
-          ◁
+          {"<"}
         </button>
         <button
           className={styles.navArrow}
-          onClick={onGoForward}
+          onClick={handleGoForward}
           disabled={!canGoForward}
           aria-label="Next turn"
         >
-          ▷
+          {">"}
         </button>
       </div>
     </TerminalSection>
@@ -212,5 +235,18 @@ export const IntelPanelView: React.FC<IntelPanelViewProps> = (props) => {
 
 export const IntelPanel: React.FC = () => {
   const intel = useIntelState();
-  return <IntelPanelView {...intel} />;
+
+  const viewProps: IntelPanelViewProps = intel.hasClue
+    ? {
+        ...intel,
+        hasClue: true as const,
+        clueWord: intel.clueWord!,
+        clueNumber: intel.clueNumber!,
+      }
+    : {
+        ...intel,
+        hasClue: false as const,
+      };
+
+  return <IntelPanelView {...viewProps} />;
 };

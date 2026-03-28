@@ -561,133 +561,134 @@ Frontend and backend extend these base types with their specific requirements.
 
 ```
 .
-|-- backend
-|   `-- src
-|       |-- ai
-|       |   |-- ai-move
-|       |   |   |-- get-status
-|       |   |   `-- trigger-move
-|       |   |-- ai-player
-|       |   |-- events
-|       |   |-- llm
-|       |   `-- strategy
-|       |-- auth
-|       |   |-- create-guest-session
-|       |   `-- errors
-|       |-- chat
-|       |   |-- get-messages
-|       |   `-- submit-message
-|       |-- common
-|       |   |-- config
-|       |   |-- data
-|       |   |   |-- decks
-|       |   |   `-- enums
-|       |   |-- data-access
-|       |   |   `-- repositories
-|       |   |-- db
-|       |   |-- http-middleware
-|       |   |-- logging
-|       |   |-- state
-|       |   `-- websocket
-|       |-- gameplay
-|       |   |-- end-turn
-|       |   |-- errors
-|       |   |-- get-events
-|       |   |-- get-game
-|       |   |-- get-players
-|       |   |-- get-turn
-|       |   |-- give-clue
-|       |   |-- make-guess
-|       |   `-- start-turn
-|       |-- lobby
-|       |   |-- add-players
-|       |   |-- assign-roles
-|       |   |-- deal-cards
-|       |   |-- errors
-|       |   |-- modify-players
-|       |   |-- new-round
-|       |   |-- remove-players
-|       |   |-- start-game
-|       |   |-- start-round
-|       |   `-- state
-|       |-- setup
-|       |   |-- create-new-game
-|       |   `-- errors
-|       `-- users
-|-- frontend
-|   |-- public
-|   `-- src
-|       |-- ai
-|       |   |-- api
-|       |   `-- components
-|       |-- api
-|       |-- app
-|       |   `-- routes
-|       |       `-- page-layout
-|       |-- auth
-|       |-- chat
-|       |   |-- api
-|       |   `-- components
-|       |-- game-access
-|       |   |-- api
-|       |   |   |-- endpoints
-|       |   |   `-- query-hooks
-|       |   `-- pages
-|       |-- gameplay
-|       |   |-- device-mode
-|       |   |-- game-actions
-|       |   |   `-- api
-|       |   |-- game-board
-|       |   |   |-- boards
-|       |   |   |-- cards
-|       |   |   |   `-- overlays
-|       |   |   `-- view-mode
-|       |   |-- game-controls
-|       |   |   |-- compact-dashboard
-|       |   |   |-- dashboards
-|       |   |   |   |-- config
-|       |   |   |   |-- panels
-|       |   |   |   `-- shared
-|       |   |   |-- settings
-|       |   |   `-- stacked-dashboard
-|       |   |-- game-data
-|       |   |   |-- events
-|       |   |   |-- providers
-|       |   |   `-- queries
-|       |   |-- game-over
-|       |   |-- game-scene
-|       |   |   |-- desktop-scene
-|       |   |   |-- mobile-scene
-|       |   |   `-- windowed-scene
-|       |   |-- round-management
-|       |   |   `-- api
-|       |   `-- shared
-|       |       |-- components
-|       |       |   |-- action-button
-|       |       |   |-- compact-button
-|       |       |   |-- error-message
-|       |       |   |-- loading-spinner
-|       |       |   `-- terminal-input
-|       |       `-- game-instructions
-|       |-- lobby
-|       |   |-- api
-|       |   |   |-- mutations
-|       |   |   `-- queries
-|       |   |-- components
-|       |   `-- hooks
-|       |-- shared
-|       |-- shared-types
-|       |-- style
-|       |-- types
-|       |-- utils
-|       `-- websocket
-`-- shared
-    `-- src
-        |-- api
-        |   `-- modules
-        `-- types
+├── backend
+│   └── src
+│       ├── ai
+│       │   ├── ai-move
+│       │   │   ├── get-status
+│       │   │   └── trigger-move
+│       │   ├── ai-player
+│       │   ├── events
+│       │   ├── llm
+│       │   └── strategy
+│       ├── auth
+│       │   ├── create-guest-session
+│       │   └── errors
+│       ├── chat
+│       │   ├── get-messages
+│       │   └── submit-message
+│       ├── common
+│       │   ├── config
+│       │   ├── data
+│       │   │   ├── decks
+│       │   │   └── enums
+│       │   ├── data-access
+│       │   │   └── repositories
+│       │   ├── db
+│       │   ├── http-middleware
+│       │   ├── logging
+│       │   ├── state
+│       │   └── websocket
+│       ├── gameplay
+│       │   ├── end-turn
+│       │   ├── errors
+│       │   ├── get-events
+│       │   ├── get-game
+│       │   ├── get-players
+│       │   ├── get-turn
+│       │   ├── give-clue
+│       │   ├── make-guess
+│       │   └── start-turn
+│       ├── lobby
+│       │   ├── add-players
+│       │   ├── assign-roles
+│       │   ├── deal-cards
+│       │   ├── errors
+│       │   ├── modify-players
+│       │   ├── new-round
+│       │   ├── remove-players
+│       │   ├── start-game
+│       │   ├── start-round
+│       │   └── state
+│       ├── setup
+│       │   ├── create-new-game
+│       │   └── errors
+│       └── users
+├── frontend
+│   ├── public
+│   └── src
+│       ├── ai
+│       │   ├── api
+│       │   └── components
+│       ├── api
+│       ├── app
+│       │   └── routes
+│       │       └── page-layout
+│       ├── auth
+│       ├── chat
+│       │   ├── api
+│       │   └── components
+│       ├── game-access
+│       │   ├── api
+│       │   │   ├── endpoints
+│       │   │   └── query-hooks
+│       │   └── pages
+│       ├── gameplay
+│       │   ├── device-mode
+│       │   ├── game-actions
+│       │   │   └── api
+│       │   ├── game-board
+│       │   │   ├── boards
+│       │   │   ├── cards
+│       │   │   │   └── overlays
+│       │   │   └── view-mode
+│       │   ├── game-controls
+│       │   │   ├── compact-dashboard
+│       │   │   ├── dashboards
+│       │   │   │   ├── config
+│       │   │   │   ├── panels
+│       │   │   │   └── shared
+│       │   │   ├── settings
+│       │   │   └── stacked-dashboard
+│       │   ├── game-data
+│       │   │   ├── events
+│       │   │   ├── providers
+│       │   │   └── queries
+│       │   ├── game-over
+│       │   ├── game-scene
+│       │   │   ├── desktop-scene
+│       │   │   ├── mobile-scene
+│       │   │   └── windowed-scene
+│       │   ├── round-management
+│       │   │   └── api
+│       │   └── shared
+│       │       ├── components
+│       │       │   ├── action-button
+│       │       │   ├── compact-button
+│       │       │   ├── error-message
+│       │       │   ├── loading-spinner
+│       │       │   ├── terminal-input
+│       │       │   └── toggle-switch
+│       │       └── game-instructions
+│       ├── lobby
+│       │   ├── api
+│       │   │   ├── mutations
+│       │   │   └── queries
+│       │   ├── components
+│       │   └── hooks
+│       ├── shared
+│       ├── shared-types
+│       ├── style
+│       ├── types
+│       ├── utils
+│       └── websocket
+└── shared
+    └── src
+        ├── api
+        │   └── modules
+        └── types
 
-126 directories
+127 directories
 ```
 
 ## Getting Started

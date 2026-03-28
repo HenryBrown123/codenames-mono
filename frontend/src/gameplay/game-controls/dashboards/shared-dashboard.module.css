@@ -33,9 +33,9 @@
  * Used for all dashboard sections
  */
 .dashboardSection {
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--bg-section);
   border: var(--border-normal);
-  border-radius: 6px;
+  border-radius: var(--radius-panel);
   padding: 0.625rem 0.75rem;
   width: 100%;
   box-sizing: border-box;
@@ -45,17 +45,15 @@
  * Info display pattern (clues, status, lobby codes, etc)
  */
 .infoDisplay {
-  background: rgba(0, 0, 0, 0.8);
+  background: var(--bg-panel);
   border: var(--border-heavy);
-  border-radius: 6px;
+  border-radius: var(--radius-panel);
   padding: 0.75rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow:
-    0 0 20px rgba(0, 255, 136, 0.3),
-    inset 0 0 15px rgba(0, 255, 136, 0.05);
+  box-shadow: var(--glow-box-sm);
   width: 100%;
   box-sizing: border-box;
 }
@@ -64,27 +62,27 @@
  * Primary action button (filled)
  */
 .primaryAction {
-  background: var(--color-primary, #00ff88);
-  color: var(--color-background, #0a0a0f);
+  background: var(--color-primary);
+  color: var(--color-background);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   padding: 0.625rem 1.5rem;
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: var(--dashboard-text-btn);
   text-transform: uppercase;
   cursor: pointer;
   transition: all 0.2s;
   width: 100%;
   letter-spacing: 0.05em;
-  box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+  box-shadow: var(--glow-score);
   min-height: 44px; /* Touch target */
 }
 
 .primaryAction:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-primary, #00ff88) 90%, white);
+  background: color-mix(in srgb, var(--color-primary) 90%, white);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
+  box-shadow: var(--glow-box-sm);
 }
 
 .primaryAction:active:not(:disabled) {
@@ -102,13 +100,13 @@
  */
 .secondaryAction {
   background: transparent;
-  color: var(--color-primary, #00ff88);
-  border: 1px solid var(--color-primary, #00ff88);
-  border-radius: 4px;
+  color: var(--color-primary);
+  border: var(--border-strong);
+  border-radius: var(--radius-sm);
   padding: 0.625rem 1.5rem;
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: var(--dashboard-text-btn);
   text-transform: uppercase;
   cursor: pointer;
   transition: all 0.2s;
@@ -118,10 +116,10 @@
 }
 
 .secondaryAction:hover:not(:disabled) {
-  background: var(--color-primary, #00ff88);
-  color: var(--color-background, #0a0a0f);
+  background: var(--color-primary);
+  color: var(--color-background);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+  box-shadow: var(--glow-box-sm);
 }
 
 .secondaryAction:active:not(:disabled) {
@@ -138,24 +136,25 @@
  * Common text styles for dashboard content
  */
 .dashboardText {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--color-text);
+  opacity: 0.9;
   font-family: var(--font-mono);
   text-align: center;
 }
 
 .dashboardTitle {
-  font-size: 1.2rem;
+  font-size: var(--dashboard-text-h1);
   font-weight: 700;
-  color: var(--color-primary, #00ff88);
+  color: var(--color-primary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 0.5rem;
 }
 
 .dashboardSubtitle {
-  font-size: 0.9rem;
+  font-size: var(--dashboard-text-p);
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
@@ -163,7 +162,7 @@
 .dashboardValue {
   font-size: 1.4rem;
   font-weight: 900;
-  color: var(--color-primary, #00ff88);
+  color: var(--color-primary);
   letter-spacing: 0.1em;
 }
 
@@ -250,7 +249,7 @@
 .terminalHeader {
   font-family: var(--font-mono);
   font-size: 1rem;
-  color: var(--color-primary, #00ff88);
+  color: var(--color-primary);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: 0.75rem;
@@ -264,8 +263,8 @@
   justify-content: space-between;
   gap: 1rem;
   background: var(--bg-section);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
+  border: var(--border-muted);
+  border-radius: var(--radius-md);
   padding: 1.5rem 1rem;
   margin: 1rem 0;
 }
@@ -277,8 +276,8 @@
 
 .teamName {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--dashboard-text-small);
+  color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: 0.75rem;
@@ -290,17 +289,18 @@
   font-size: 3rem;
   font-weight: 900;
   line-height: 1;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-muted);
 }
 
 .score.winner {
-  color: var(--color-primary, #00ff88);
-  text-shadow: 0 0 20px var(--color-primary, #00ff88);
+  color: var(--color-primary);
+  text-shadow: 0 0 20px var(--color-primary);
 }
 
 .scoreDivider {
   font-size: 2rem;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--color-text-muted);
+  opacity: 0.4;
   font-weight: 300;
 }
 
@@ -316,17 +316,17 @@
   padding: 0.75rem 1rem;
   background: var(--bg-highlight);
   border: var(--border-dim);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: var(--dashboard-text-p);
+  color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   text-align: center;
 }
 
 .miniStat span {
-  color: var(--color-primary, #00ff88);
+  color: var(--color-primary);
   font-weight: 700;
   margin-right: 0.25rem;
 }

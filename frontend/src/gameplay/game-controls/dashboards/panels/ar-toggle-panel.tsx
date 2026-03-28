@@ -1,14 +1,12 @@
 import React from "react";
 import { useViewMode } from "../../../game-board/view-mode/view-mode-context";
+import { ToggleSwitch } from "@frontend/gameplay/shared/components";
 import {
   TerminalSection,
   TerminalCommand,
   SpyGogglesContainer,
   SpyGogglesSwitchRow,
   SpyGogglesDot,
-  SpySwitch,
-  SpySlider,
-  SpyStatus,
 } from "../shared";
 
 /**
@@ -26,11 +24,7 @@ export const ARTogglePanelView: React.FC<ARTogglePanelViewProps> = ({ isARMode, 
     <SpyGogglesContainer>
       <SpyGogglesSwitchRow>
         <SpyGogglesDot active={isARMode} />
-        <SpySwitch>
-          <input type="checkbox" checked={isARMode} onChange={onToggle} />
-          <SpySlider />
-        </SpySwitch>
-        <SpyStatus active={isARMode}>{isARMode ? "ON" : "OFF"}</SpyStatus>
+        <ToggleSwitch active={isARMode} onChange={onToggle} />
       </SpyGogglesSwitchRow>
     </SpyGogglesContainer>
   </TerminalSection>

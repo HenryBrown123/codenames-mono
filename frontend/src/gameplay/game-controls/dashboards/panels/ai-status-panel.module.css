@@ -6,9 +6,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 10px;
-  padding-bottom: 10px;
-  border-bottom: var(--border-normal);
+  margin-bottom: var(--panel-header-gap);
+  padding-bottom: var(--panel-header-gap);
+  border-bottom: var(--border-dim);
 }
 
 .title {
@@ -16,8 +16,8 @@
   text-transform: uppercase;
   letter-spacing: 2px;
   color: var(--color-primary);
-  font-size: var(--dashboard-text-h1);
-  text-shadow: 0 0 7px rgba(0, 255, 136, 0.5);
+  font-size: var(--dashboard-text-p);
+  text-shadow: var(--glow-score);
 }
 
 .body {
