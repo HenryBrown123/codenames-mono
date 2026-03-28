@@ -2,6 +2,7 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TeamSymbol } from "../team-symbol";
 import { getTeamConfig, getOppositeTeam, type TeamName } from "@frontend/shared-types";
+import { AwaitingLabel } from "@frontend/gameplay/shared/components";
 import styles from "../lobby.module.css";
 
 /**
@@ -103,7 +104,7 @@ export const MyTeamBoxView: React.FC<MyTeamBoxViewProps> = ({
             }}
           >
             {playersNeeded > 0 ? (
-              <div className={styles.awaitingBox}>WAITING FOR OPERATIVES</div>
+              <AwaitingLabel>WAITING FOR OPERATIVES</AwaitingLabel>
             ) : (
               <div className={styles.readyMessage}>Ready to start!</div>
             )}

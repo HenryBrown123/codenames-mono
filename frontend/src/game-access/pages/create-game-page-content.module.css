@@ -153,29 +153,6 @@
   justify-content: center;
 }
 
-.errorBox {
-  margin-top: 20px;
-  padding: 15px 20px;
-  background: rgba(255, 64, 64, 0.1);
-  border: 1px solid rgba(255, 64, 64, 0.3);
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.errorPrompt {
-  color: #ff0040;
-  font-weight: bold;
-  font-family: var(--font-mono);
-  font-size: 1rem;
-}
-
-.errorText {
-  color: rgba(255, 100, 100, 0.9);
-  font-family: var(--font-mono);
-  font-size: 0.95rem;
-}
 
 @media (max-width: 768px) {
   .mainContent {

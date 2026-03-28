@@ -540,19 +540,6 @@
   opacity: 0.4;
 }
 
-/* ── Orange waiting box — matches .awaitingText from compact dashboard ── */
-.awaitingBox {
-  font-family: var(--font-mono);
-  font-size: var(--dashboard-text-btn, 0.8rem);
-  font-weight: 700;
-  color: rgba(255, 170, 0, 0.8);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 0.5rem 1.2rem;
-  border: 1px solid rgba(255, 170, 0, 0.5);
-  border-radius: 6px;
-  text-align: center;
-}
 
 .readyMessage {
   font-family: var(--font-mono);

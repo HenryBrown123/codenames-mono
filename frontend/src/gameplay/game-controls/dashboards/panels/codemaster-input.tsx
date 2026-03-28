@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ActionButton, BUTTON_VALIDATION, type ButtonValidation } from "../../../shared/components";
+import { ActionButton, BUTTON_VALIDATION, type ButtonValidation, CircleButton } from "../../../shared/components";
 import { useGameDataRequired } from "../../../game-data/providers";
 import { Card } from "@frontend/shared-types";
 import styles from "./codemaster-input.module.css";
@@ -102,21 +102,9 @@ export function CodeWordInput({
           className={styles.codeWordInputField}
         />
         <div className={styles.numberInput}>
-          <button
-            className={styles.numberButton}
-            onClick={decrement}
-            disabled={!isEditable || isLoading || inputNumberOfCards <= 1}
-          >
-            -
-          </button>
+          <CircleButton onClick={decrement} disabled={!isEditable || isLoading || inputNumberOfCards <= 1}>-</CircleButton>
           <div className={styles.numberDisplay}>{inputNumberOfCards}</div>
-          <button
-            className={styles.numberButton}
-            onClick={increment}
-            disabled={!isEditable || isLoading || inputNumberOfCards >= 9}
-          >
-            +
-          </button>
+          <CircleButton onClick={increment} disabled={!isEditable || isLoading || inputNumberOfCards >= 9}>+</CircleButton>
         </div>
       </div>
 

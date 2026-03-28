@@ -1,17 +1,6 @@
 @import "../../../../style/variables.css";
 @import "../../../../style/animations.css";
 
-@keyframes cursorBlink {
-  0%,
-  50% {
-    opacity: 1;
-  }
-  51%,
-  100% {
-    opacity: 0;
-  }
-}
-
 @keyframes spyDotBlink {
   0%,
   100% {
@@ -20,26 +9,6 @@
   50% {
     filter: brightness(1.45);
   }
-}
-
-@keyframes cornerBlink {
-  0%,
-  100% {
-    border: 1.5px solid var(--color-warning);
-  }
-  25%,
-  75% {
-    border: 1.5px solid rgba(255, 170, 0, 0.5);
-  }
-  50% {
-    border: 1.5px solid rgba(255, 170, 0, 0.65);
-  }
-}
-
-.terminalContent {
-  color: var(--color-primary);
-  font-size: 1rem;
-  line-height: 1.4;
 }
 
 .terminalSection {
@@ -57,7 +26,7 @@
   width: 100%;
   max-width: 100%;
   min-width: 0; /* Allow shrinking */
-  overflow: visible; /* Change from hidden to visible */
+  overflow: visible;
   box-sizing: border-box;
 }
 
@@ -67,25 +36,6 @@
   box-shadow: none;
   backdrop-filter: none;
   padding: 0;
-}
-
-.terminalPrompt {
-  display: flex;
-  min-width: 0;
-  align-items: flex-start;
-  gap: 0.5rem;
-  font-size: 1rem;
-}
-
-.terminalPrompt::before {
-  content: ">";
-  opacity: 0.5;
-  flex-shrink: 0;
-}
-
-.terminalOutput {
-  opacity: 0.9;
-  font-size: var(--dashboard-text-p);
 }
 
 .terminalCommand {
@@ -100,170 +50,6 @@
   padding-bottom: var(--panel-header-gap);
 }
 
-.terminalMessageBlock {
-  background: var(--bg-highlight);
-  border: 1.5px solid var(--color-warning);
-  box-shadow: var(--glow-clue);
-  border-radius: var(--radius-md);
-  color: var(--color-primary);
-  font-family: var(--font-mono);
-  font-size: var(--dashboard-text-h1);
-  padding: 1.1rem 1.5rem 1.1rem 2.5rem;
-  margin: 1rem 0 1.5rem 0;
-  position: relative;
-  text-shadow: var(--glow-score), var(--glow-clue);
-  white-space: pre-line;
-  overflow-x: auto;
-}
-
-.terminalMessageBlock::before {
-  content: ">";
-  position: absolute;
-  top: 1.15rem;
-  left: 1.1rem;
-  color: var(--color-primary);
-  opacity: 0.5;
-  font-size: var(--dashboard-text-h1);
-  font-family: inherit;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .terminalMessageBlock {
-    animation: cornerBlink 2s ease-in-out infinite;
-  }
-}
-
-.terminalStatus {
-  padding: 1rem 1.5rem;
-  margin: 1rem 0;
-  border-radius: var(--radius-md);
-  font-size: var(--dashboard-text-h1);
-  line-height: 1.5;
-  background: var(--bg-highlight);
-  border-left: 4px solid var(--color-primary);
-}
-
-.terminalStatus[data-type="success"] {
-  background: var(--bg-highlight);
-  border-left-color: var(--color-primary);
-}
-
-.terminalStatus[data-type="warning"] {
-  background: var(--bg-warning);
-  border-left-color: var(--color-warning);
-}
-
-.terminalStatus[data-type="error"] {
-  background: var(--bg-error);
-  border-left-color: var(--color-error);
-}
-
-.terminalDivider {
-  width: 100%;
-  height: 1px;
-  background: rgba(var(--primary-rgb), 0.20);
-  margin: 1.25rem 0;
-}
-
-.terminalActions {
-  padding: 1rem 1.5rem 1.5rem;
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 1rem;
-  background: var(--bg-section);
-  border-top: var(--border-dim);
-}
-
-.terminalHeader {
-  display: flex;
-  min-width: 0;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.compactTerminalActions {
-  padding: 1rem 1.5rem 1.5rem;
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 1.25rem;
-  background: var(--bg-section);
-  border-top: var(--border-dim);
-}
-
-.arStatusBar {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-md);
-  font-size: var(--dashboard-text-p);
-  border: var(--border-muted);
-  transition: all 0.3s ease;
-}
-
-.arStatusBar[data-active="true"] {
-  background: var(--bg-highlight);
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-  border-style: solid;
-  border-width: 1px;
-}
-
-.arStatusBar[data-active="false"] {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--color-text-muted);
-}
-
-.arStatusBar::before {
-  content: "●";
-  font-size: 1.2rem;
-  text-shadow: none;
-}
-
-.arStatusBar[data-active="true"]::before {
-  color: var(--color-primary);
-  text-shadow: 0 0 8px currentColor;
-}
-
-.arStatusBar[data-active="false"]::before {
-  color: var(--color-text-muted);
-}
-
-.terminalCursor {
-  display: inline-block;
-  width: 10px;
-  height: 1.4em;
-  background: var(--color-primary);
-  margin-left: 4px;
-  animation: cursorBlink 1s infinite;
-}
-
-/* Shared awaiting label — orange bordered status box */
-.awaitingLabel {
-  flex: 1;
-  font-family: var(--font-mono);
-  font-size: var(--dashboard-text-btn);
-  font-weight: 700;
-  color: var(--color-warning);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  text-align: center;
-  padding: 0.5rem 1.2rem;
-  border: var(--border-warning);
-  border-radius: var(--radius-panel);
-  background: transparent;
-}
-
-.terminalToggleRow {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 0.75rem 0;
-}
 
 .middleSection {
   display: flex;
@@ -288,14 +74,6 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-}
-
-.spyGogglesText {
-  margin: 0 0 15px 0;
-  color: var(--color-text-muted);
-  font-size: var(--dashboard-text-p);
-  text-align: left;
-  line-height: 1.4;
 }
 
 .spyGogglesSwitchRow {
@@ -328,34 +106,8 @@
   box-shadow: none;
 }
 
-
-.spyStatus {
-  font-size: 1em;
-  letter-spacing: 1.1px;
-  margin-left: 14px;
-  min-width: 52px;
-  text-align: left;
-  transition:
-    color 0.2s,
-    opacity 0.2s;
-}
-
-.spyStatus[data-active="true"] {
-  font-weight: bold;
-  color: var(--color-primary);
-  opacity: 0.97;
-}
-
-.spyStatus[data-active="false"] {
-  font-weight: normal;
-  color: var(--color-text-muted);
-  opacity: 0.7;
-}
-
 /* Ensure all content respects container width */
 .terminalCommand,
-.terminalOutput,
-.terminalPrompt,
 .spyGogglesContainer {
   width: 100%;
   max-width: 100%;
@@ -366,16 +118,7 @@
 
 /* Ensure the bottom section (ACTION) doesn't cut off */
 .terminalSection:last-child {
-  overflow: visible; /* Allow content to be fully visible */
-}
-
-.centeredContent {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: 1rem;
+  overflow: visible;
 }
 
 /* PlayerInfoLayout - Special layout for team header with symbol */

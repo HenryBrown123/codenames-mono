@@ -1,5 +1,5 @@
 import React from "react";
-import { CompactButton } from "@frontend/gameplay/shared/components";
+import { ActionButton } from "@frontend/gameplay/shared/components";
 import styles from "../lobby.module.css";
 
 /**
@@ -18,7 +18,8 @@ export const StartButtonView: React.FC<StartButtonViewProps> = ({
   onClick,
 }) => (
   <div className={styles.startButtonWrapper}>
-    <CompactButton
+    <ActionButton
+      size="sm"
       text="START"
       onClick={onClick}
       enabled={canStart && !isLoading}

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useCreateGuestSession } from "@frontend/game-access/api/query-hooks/use-guest-session";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import ActionButton from "@frontend/gameplay/shared/components/action-button/action-button";
+import { ActionButton, AwaitingLabel, ErrorBox } from "@frontend/gameplay/shared/components";
 import styles from "./guest-auth-page-content.module.css";
 
 /**
@@ -55,9 +55,7 @@ export const GuestAuthPageView: React.FC<GuestAuthPageViewProps> = ({
 
               <div className={styles.body}>
                 <div className={styles.controlRow}>
-                  <div className={styles.statusBox}>
-                    SECURE CONNECTION REQUIRED
-                  </div>
+                  <AwaitingLabel>SECURE CONNECTION REQUIRED</AwaitingLabel>
                 </div>
 
                 <div className={styles.controlRow}>
@@ -69,12 +67,7 @@ export const GuestAuthPageView: React.FC<GuestAuthPageViewProps> = ({
                   />
                 </div>
 
-                {error && (
-                  <div className={styles.errorBox}>
-                    <span className={styles.errorPrompt}>ERROR:</span>
-                    <span className={styles.errorText}>{error}</span>
-                  </div>
-                )}
+                {error && <ErrorBox message={error} />}
               </div>
             </motion.div>
           </AnimatePresence>

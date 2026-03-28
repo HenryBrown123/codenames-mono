@@ -117,26 +117,6 @@
   flex-shrink: 0;
 }
 
-.navBtn {
-  background: transparent;
-  border: var(--border-subtle);
-  color: var(--color-primary);
-  font-size: 0.8rem;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  transition: all 0.2s ease;
-  font-family: var(--font-mono);
-}
-
-.navBtn:hover:not(:disabled) { background: var(--bg-highlight); border-color: var(--color-primary); }
-.navBtn:active:not(:disabled) { transform: scale(0.95); }
-.navBtn:disabled { opacity: 0.25; cursor: not-allowed; }
 
 /* ── Clue input centered (floats in middle of dashboard) ── */
 .clueInputCenter {

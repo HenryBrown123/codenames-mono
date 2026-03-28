@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react";
-import { TerminalInput } from "@frontend/gameplay/shared/components";
+import { TerminalInput, CircleButton } from "@frontend/gameplay/shared/components";
 import styles from "./compact-clue-input.module.css";
 
 interface CompactClueInputProps {
@@ -59,23 +59,9 @@ export const CompactClueInput: React.FC<CompactClueInputProps> = ({
           error={!!error}
         />
         <div className={styles.countGroup}>
-          <button
-            className={styles.countBtn}
-            onClick={decrement}
-            disabled={isLoading || count <= 1}
-            aria-label="Decrease count"
-          >
-            −
-          </button>
+          <CircleButton size="sm" onClick={decrement} disabled={isLoading || count <= 1} aria-label="Decrease count">−</CircleButton>
           <span className={styles.countValue}>{count}</span>
-          <button
-            className={styles.countBtn}
-            onClick={increment}
-            disabled={isLoading || count >= 9}
-            aria-label="Increase count"
-          >
-            +
-          </button>
+          <CircleButton size="sm" onClick={increment} disabled={isLoading || count >= 9} aria-label="Increase count">+</CircleButton>
         </div>
       </div>
       {error && <div className={styles.error}>{error}</div>}

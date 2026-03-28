@@ -1,9 +1,6 @@
 import React from "react";
 import styles from "./action-button.module.css";
 
-/**
- * Validation status for button styling
- */
 export const BUTTON_VALIDATION = {
   OK: "ok",
   WARNING: "warning",
@@ -12,15 +9,16 @@ export const BUTTON_VALIDATION = {
 
 export type ButtonValidation = (typeof BUTTON_VALIDATION)[keyof typeof BUTTON_VALIDATION];
 
-/**
- * Primary action button with validation states
- */
 type ButtonProp = {
   text?: string;
   enabled?: boolean;
   onClick: () => void;
   className?: string;
   validation?: ButtonValidation;
+  /** "sm" = fixed 180px compact button with scanline overlay */
+  size?: "default" | "sm";
+  /** Stretch to fill parent width (only applies to size="sm") */
+  fullWidth?: boolean;
 };
 
 const ActionButton: React.FC<ButtonProp> = ({
@@ -29,9 +27,11 @@ const ActionButton: React.FC<ButtonProp> = ({
   onClick,
   className,
   validation,
+  size = "default",
+  fullWidth = false,
 }) => (
   <button
-    className={`${styles.button} ${className || ""}`}
+    className={`${styles.button} ${size === "sm" ? styles.sm : ""} ${fullWidth ? styles.fullWidth : ""} ${className || ""}`}
     onClick={enabled ? onClick : undefined}
     disabled={!enabled}
     data-validation={validation}

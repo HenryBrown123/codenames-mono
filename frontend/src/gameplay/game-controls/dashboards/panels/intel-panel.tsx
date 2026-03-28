@@ -1,8 +1,9 @@
 import React from "react";
-import { motion, AnimatePresence, type PanInfo } from "framer-motion";
-import { TerminalSection, AwaitingLabel, SWIPE_THRESHOLD, VELOCITY_THRESHOLD, carouselVariants, CAROUSEL_TRANSITION } from "../shared";
+import { motion, AnimatePresence } from "framer-motion";
+import { TerminalSection, AwaitingLabel, carouselVariants, CAROUSEL_TRANSITION, useCarouselSwipe } from "../shared";
 import { useIntelState } from "./use-intel-state";
 import { TeamSymbolIcon } from "../../../../shared/team-symbol-icon";
+import { CircleButton } from "@frontend/gameplay/shared/components";
 import styles from "./intel-panel.module.css";
 
 // Animation constants matching lobby team symbol
@@ -106,22 +107,12 @@ export const IntelPanelView: React.FC<IntelPanelViewProps> = (props) => {
     isHistorical = false,
   } = props;
 
-  const [swipeDirection, setSwipeDirection] = React.useState(0);
-
-  const handleDragEnd = (_: unknown, info: PanInfo) => {
-    const swipedLeft = info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -VELOCITY_THRESHOLD;
-    const swipedRight = info.offset.x > SWIPE_THRESHOLD || info.velocity.x > VELOCITY_THRESHOLD;
-    if (swipedLeft && canGoForward && onGoForward) {
-      setSwipeDirection(-1);
-      onGoForward();
-    } else if (swipedRight && canGoBack && onGoBack) {
-      setSwipeDirection(1);
-      onGoBack();
-    }
-  };
-
-  const handleGoBack = () => { setSwipeDirection(1); onGoBack?.(); };
-  const handleGoForward = () => { setSwipeDirection(-1); onGoForward?.(); };
+  const { swipeDirection, handleDragEnd, handleGoBack, handleGoForward } = useCarouselSwipe({
+    canGoBack,
+    canGoForward,
+    onGoBack: onGoBack ?? (() => {}),
+    onGoForward: onGoForward ?? (() => {}),
+  });
 
   // Derive symbol styling from teamName
   const { symbol: teamSymbol, color: teamColor, rotate } = getTeamStyle(teamName);
@@ -212,22 +203,8 @@ export const IntelPanelView: React.FC<IntelPanelViewProps> = (props) => {
       </motion.div>
 
       <div className={styles.navGroup}>
-        <button
-          className={styles.navArrow}
-          onClick={handleGoBack}
-          disabled={!canGoBack}
-          aria-label="Previous turn"
-        >
-          {"<"}
-        </button>
-        <button
-          className={styles.navArrow}
-          onClick={handleGoForward}
-          disabled={!canGoForward}
-          aria-label="Next turn"
-        >
-          {">"}
-        </button>
+        <CircleButton onClick={handleGoBack} disabled={!canGoBack} aria-label="Previous turn">{"<"}</CircleButton>
+        <CircleButton onClick={handleGoForward} disabled={!canGoForward} aria-label="Next turn">{">"}</CircleButton>
       </div>
     </TerminalSection>
   );

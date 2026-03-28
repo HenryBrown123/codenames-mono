@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useCreateNewGame } from "@frontend/game-access/api/query-hooks/use-create-new-game";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ActionButton, ToggleSwitch } from "@frontend/gameplay/shared/components";
+import { ActionButton, ErrorBox, ToggleSwitch } from "@frontend/gameplay/shared/components";
 import { GAME_TYPE, GAME_FORMAT, GameType, GameFormat } from "@codenames/shared/types";
 import styles from "./create-game-page-content.module.css";
 
@@ -109,12 +109,7 @@ export const CreateGamePageView: React.FC<CreateGamePageViewProps> = ({
                   <ActionButton onClick={onCreateGame} enabled={!isExiting} text="CREATE GAME" />
                 </div>
 
-                {error && (
-                  <div className={styles.errorBox}>
-                    <span className={styles.errorPrompt}>ERROR:</span>
-                    <span className={styles.errorText}>{error}</span>
-                  </div>
-                )}
+                {error && <ErrorBox message={error} />}
               </div>
             </motion.div>
           </AnimatePresence>

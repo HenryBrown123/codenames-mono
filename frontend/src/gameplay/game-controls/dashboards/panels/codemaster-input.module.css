@@ -64,30 +64,6 @@
   color: var(--color-primary);
 }
 
-.numberButton {
-  width: 40px;
-  height: 40px;
-  border: var(--border-subtle);
-  background: transparent;
-  color: var(--color-primary);
-  font-size: 1.25rem;
-  font-family: var(--font-mono);
-  cursor: pointer;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.numberButton:hover:not(:disabled) {
-  background: var(--bg-highlight);
-  border-color: var(--color-primary);
-}
-
-.numberButton:active:not(:disabled) { transform: scale(0.95); }
-.numberButton:disabled { opacity: 0.3; cursor: not-allowed; }
 
 .numberDisplay {
   font-size: 2rem;
@@ -103,5 +79,4 @@
 @media (min-width: 769px) and (orientation: landscape) {
   .codeWordInputField { font-size: 1.5rem; letter-spacing: 0.08em; }
   .numberDisplay      { font-size: 1.5rem; }
-  .numberButton       { width: 34px; height: 34px; font-size: 1rem; }
 }

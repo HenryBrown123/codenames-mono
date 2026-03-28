@@ -1,14 +1,14 @@
 import React from "react";
-import { motion, AnimatePresence, type PanInfo } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useDashboardState } from "../dashboards/use-dashboard-state";
 import { useIntelState } from "../dashboards/panels/use-intel-state";
 import { useGameDataRequired } from "../../game-data/providers";
 import { useAiStatus, useTriggerAiMove } from "../../../ai/api";
 import { getTeamStyle, getOutcomeSymbol } from "../dashboards/panels/intel-panel";
 import { TeamSymbolIcon } from "../../../shared/team-symbol-icon";
-import { StatusDot } from "../../shared/components";
-import { CompactButton } from "@frontend/gameplay/shared/components";
-import { AwaitingLabel, SWIPE_THRESHOLD, VELOCITY_THRESHOLD, carouselVariants, CAROUSEL_TRANSITION } from "../dashboards/shared";
+import { StatusDot, CircleButton } from "../../shared/components";
+import { ActionButton } from "@frontend/gameplay/shared/components";
+import { AwaitingLabel, carouselVariants, CAROUSEL_TRANSITION, useCarouselSwipe } from "../dashboards/shared";
 import { CompactClueInput } from "./compact-clue-input";
 import { useClueInput } from "./use-clue-input";
 import styles from "./compact-dashboard.module.css";
@@ -57,7 +57,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
   const primaryButton = (() => {
     if (s.isCodemasterGivingClue)
       return (
-        <CompactButton
+        <ActionButton size="sm"
           text={s.isLoading ? "..." : "TRANSMIT"}
           onClick={handleTransmit}
           enabled={!!(clue.word.trim()) && !isAiThinking && !s.isLoading}
@@ -65,7 +65,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
       );
     if (s.isInLobby && s.lobbyAction)
       return (
-        <CompactButton
+        <ActionButton size="sm"
           text={s.isLoading ? "..." : s.lobbyAction.label}
           onClick={s.lobbyAction.handler}
           enabled={!s.isLoading}
@@ -73,7 +73,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
       );
     if (s.isCodebreakerGuessing)
       return (
-        <CompactButton
+        <ActionButton size="sm"
           text={s.isLoading ? "..." : "END TURN"}
           onClick={s.endTurn}
           enabled={!s.isLoading && !isAiThinking}
@@ -81,7 +81,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
       );
     if (s.canStartNextTurn)
       return (
-        <CompactButton
+        <ActionButton size="sm"
           text={s.startNextTurn.isPending ? "..." : "NEXT TURN"}
           onClick={s.startNextTurn.handler}
           enabled={!s.startNextTurn.isPending}
@@ -89,7 +89,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
       );
     if (s.isRoundComplete && s.gameOverData)
       return (
-        <CompactButton
+        <ActionButton size="sm"
           text={s.isLoading ? "..." : "NEW GAME"}
           onClick={s.gameOverData.newGame}
           enabled={!s.isLoading}
@@ -98,24 +98,13 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
     return null;
   })();
 
-  // Swipe direction tracking for carousel animation — must be before any early returns
-  const [swipeDirection, setSwipeDirection] = React.useState(0); // -1 = left, 1 = right
-  const handleDragEnd = (_: unknown, info: PanInfo) => {
-    const swipedLeft = info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -VELOCITY_THRESHOLD;
-    const swipedRight = info.offset.x > SWIPE_THRESHOLD || info.velocity.x > VELOCITY_THRESHOLD;
-
-    if (swipedLeft && intel.canGoForward) {
-      setSwipeDirection(-1);
-      intel.onGoForward();
-    } else if (swipedRight && intel.canGoBack) {
-      setSwipeDirection(1);
-      intel.onGoBack();
-    }
-  };
-
-  // Also track direction from button clicks
-  const handleGoBack = () => { setSwipeDirection(1); intel.onGoBack(); };
-  const handleGoForward = () => { setSwipeDirection(-1); intel.onGoForward(); };
+  // Carousel swipe navigation — must be before any early returns
+  const { swipeDirection, handleDragEnd, handleGoBack, handleGoForward } = useCarouselSwipe({
+    canGoBack: intel.canGoBack,
+    canGoForward: intel.canGoForward,
+    onGoBack: intel.onGoBack,
+    onGoForward: intel.onGoForward,
+  });
 
   // ── Lobby: centered buttons ──
   if (s.isInLobby) {
@@ -125,14 +114,14 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
           <div className={styles.contentSpacer} />
           <div className={styles.lobbyButtons}>
             {s.lobbyAction && (
-              <CompactButton
+              <ActionButton size="sm"
                 text={s.lobbyAction.label}
                 onClick={s.lobbyAction.handler}
                 enabled={!s.isLoading}
               />
             )}
             {s.lobbyAction?.canRedeal && (
-              <CompactButton
+              <ActionButton size="sm"
                 text="REDEAL"
                 onClick={s.lobbyAction.redealHandler}
                 enabled={!s.isLoading}
@@ -172,18 +161,8 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
           </div>
 
           <div className={styles.navGroup}>
-            <button
-              className={styles.navBtn}
-              onClick={handleGoBack}
-              disabled={!intel.canGoBack}
-              aria-label="Previous turn"
-            >{"<"}</button>
-            <button
-              className={styles.navBtn}
-              onClick={handleGoForward}
-              disabled={!intel.canGoForward}
-              aria-label="Next turn"
-            >{">"}</button>
+            <CircleButton size="sm" onClick={handleGoBack} disabled={!intel.canGoBack} aria-label="Previous turn">{"<"}</CircleButton>
+            <CircleButton size="sm" onClick={handleGoForward} disabled={!intel.canGoForward} aria-label="Next turn">{">"}</CircleButton>
           </div>
         </div>
 
