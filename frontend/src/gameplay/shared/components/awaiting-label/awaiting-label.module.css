@@ -1,7 +1,6 @@
 @import '../../../../style/variables.css';
 
 .awaitingLabel {
-  flex: 1;
   font-family: var(--font-mono);
   font-size: var(--dashboard-text-btn);
   font-weight: 700;
