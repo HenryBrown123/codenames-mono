@@ -19,7 +19,7 @@ export const PlayerBanner: React.FC = () => {
     return (
       <div className={styles.banner}>
         <div className={styles.identity}>
-          <span className={styles.playerName}>AI AGENT</span>
+          <span className={styles.playerName}>WAITING</span>
         </div>
       </div>
     );

@@ -63,7 +63,7 @@ export const TeamHeaderPanel: React.FC<TeamHeaderPanelProps> = ({ variant }) => 
       <TeamHeaderPanelView
         teamName=""
         role=""
-        playerName="AI AGENT"
+        playerName="WAITING"
         variant={variant}
       />
     );
