@@ -1,11 +1,14 @@
 import React from "react";
 import { useGameDataRequired } from "../../../game-data/providers";
+import { useAiStatus } from "@frontend/ai/api";
+import { AwaitingLabel } from "@frontend/gameplay/shared/components";
 import { getTeamStyle } from "./intel-panel";
 import { TeamSymbolIcon } from "../../../../shared/team-symbol-icon";
 import styles from "./team-header-panel.module.css";
 
 /**
- * Ghost header — minimal identity row
+ * Ghost header — minimal identity row.
+ * Shows "AI IS THINKING..." during AI turns in single-device mode.
  */
 
 export interface TeamHeaderPanelViewProps {
@@ -54,6 +57,15 @@ interface TeamHeaderPanelProps {
 
 export const TeamHeaderPanel: React.FC<TeamHeaderPanelProps> = ({ variant }) => {
   const { gameData } = useGameDataRequired();
+  const { data: aiStatus } = useAiStatus(gameData.publicId);
+
+  if (aiStatus?.thinking) {
+    return (
+      <div className={styles.ghostRow}>
+        <AwaitingLabel>AI IS THINKING...</AwaitingLabel>
+      </div>
+    );
+  }
 
   return (
     <TeamHeaderPanelView

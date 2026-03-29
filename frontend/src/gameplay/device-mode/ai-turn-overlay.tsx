@@ -1,15 +1,16 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getTeamConfig } from "@frontend/shared-types";
-import { ActionButton, AwaitingLabel, pageContainerStyles } from "@frontend/gameplay/shared/components";
+import { ActionButton, pageContainerStyles } from "@frontend/gameplay/shared/components";
 import { useAiStatus, useTriggerAiMove } from "@frontend/ai/api";
 import { usePlayersQuery } from "../game-data/queries";
 import type { GameData } from "@frontend/shared-types";
 import styles from "./device-handoff-overlay.module.css";
 
 /**
- * Full-screen overlay shown during AI sub-turns in single-device mode.
- * Replaces the device handoff — no passing required, just trigger the AI.
+ * Handoff-style overlay shown when it's the AI's turn.
+ * User presses EXECUTE to trigger the AI move, then the overlay closes
+ * and the header switches to "AI IS THINKING..." mode.
  */
 
 const EASE = [0.4, 0, 0.2, 1] as const;
@@ -23,16 +24,24 @@ export const AiTurnOverlay: React.FC<AiTurnOverlayProps> = ({ gameData }) => {
   const { data: players } = usePlayersQuery(gameData.publicId);
   const triggerMove = useTriggerAiMove(gameData.publicId);
 
-  const isThinking = aiStatus?.thinking || triggerMove.isPending;
-  const isVisible = aiStatus?.available || isThinking;
+  // Local visibility — dismissed immediately on EXECUTE, resets when available flips true again
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    if (aiStatus?.available) setVisible(true);
+  }, [aiStatus?.available]);
 
   const activePlayer = players?.find((p) => p.status === "ACTIVE");
   const teamConfig = activePlayer ? getTeamConfig(activePlayer.teamName) : null;
   const isSpymaster = activePlayer?.role === "CODEMASTER";
 
+  const handleExecute = () => {
+    triggerMove.mutate();
+    setVisible(false);
+  };
+
   return (
     <AnimatePresence>
-      {isVisible && (
+      {visible && (
         <motion.div
           className={styles.overlayContainer}
           initial={{ opacity: 0 }}
@@ -62,34 +71,12 @@ export const AiTurnOverlay: React.FC<AiTurnOverlayProps> = ({ gameData }) => {
               </div>
             )}
 
-            <AnimatePresence mode="wait">
-              {isThinking ? (
-                <motion.div
-                  key="thinking"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <AwaitingLabel>AI IS THINKING...</AwaitingLabel>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="trigger"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <ActionButton
-                    text="TRIGGER AI"
-                    onClick={() => triggerMove.mutate()}
-                    enabled={!isThinking}
-                    fullWidth
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <ActionButton
+              text="EXECUTE"
+              onClick={handleExecute}
+              enabled={!triggerMove.isPending}
+              fullWidth
+            />
           </motion.div>
         </motion.div>
       )}

@@ -1,23 +1,33 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDashboardState } from "../dashboards/use-dashboard-state";
+import { useGameDataRequired } from "../../game-data/providers";
+import { useAiStatus } from "@frontend/ai/api";
 import { getTeamStyle } from "../dashboards/panels/intel-panel";
 import { TeamSymbolIcon } from "../../../shared/team-symbol-icon";
+import { AwaitingLabel } from "@frontend/gameplay/shared/components";
 import styles from "./player-banner.module.css";
 
-// Animation constants
 const SYMBOL_SWITCH_DURATION = 0.3;
 const EASING = [0.4, 0, 0.2, 1] as const;
 
 /**
  * Full-width banner showing player identity.
- * Team symbol on left, player name and role on right.
- * Used in portrait mode at the top of the control area.
+ * In single-device mode during an AI turn, shows "AI IS THINKING..." instead.
  */
 export const PlayerBanner: React.FC = () => {
   const s = useDashboardState();
+  const { gameData } = useGameDataRequired();
+  const { data: aiStatus } = useAiStatus(gameData.publicId);
 
-  // Don't render if no role assigned
+  if (aiStatus?.thinking) {
+    return (
+      <div className={styles.banner}>
+        <AwaitingLabel>AI IS THINKING...</AwaitingLabel>
+      </div>
+    );
+  }
+
   if (!s.hasRole) return null;
 
   const { symbol, color, rotate } = getTeamStyle(s.teamName);

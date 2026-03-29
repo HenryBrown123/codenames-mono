@@ -14,9 +14,10 @@ interface DeviceModeManagerProps {
 /**
  * Manages single-device handoff flow.
  *
- * When no current player is set and a round is in progress, shows an overlay:
- * - AI turn  → AiTurnOverlay (trigger button / thinking state, no device passing)
- * - Human turn → DeviceHandoffOverlay (pass the device to the next player)
+ * Three states when a handoff is needed:
+ *   available  → AiTurnOverlay: "AI TURN" card, EXECUTE triggers the move
+ *   thinking   → no overlay; header shows "AI IS THINKING..." instead
+ *   neither    → DeviceHandoffOverlay: pass the device to the next human player
  */
 export const DeviceModeManager: React.FC<DeviceModeManagerProps> = ({ children, gameData }) => {
   const { currentPlayerId, setCurrentPlayerId } = usePlayerContext();
@@ -35,20 +36,18 @@ export const DeviceModeManager: React.FC<DeviceModeManagerProps> = ({ children, 
     (gameData.playerContext?.role || PLAYER_ROLE.NONE) === PLAYER_ROLE.NONE &&
     !currentPlayerId;
 
-  const isAiTurn = aiStatus?.available || aiStatus?.thinking;
-
   const handleHandoffComplete = useCallback(
-    (playerId: string) => {
-      setCurrentPlayerId(playerId);
-    },
+    (playerId: string) => setCurrentPlayerId(playerId),
     [setCurrentPlayerId],
   );
 
   return (
     <>
       {children}
-      {requiresHandoff && isAiTurn && <AiTurnOverlay gameData={gameData} />}
-      {requiresHandoff && !isAiTurn && (
+      {requiresHandoff && aiStatus?.available && (
+        <AiTurnOverlay gameData={gameData} />
+      )}
+      {requiresHandoff && !aiStatus?.available && !aiStatus?.thinking && (
         <DeviceHandoffOverlay gameData={gameData} onContinue={handleHandoffComplete} />
       )}
     </>
