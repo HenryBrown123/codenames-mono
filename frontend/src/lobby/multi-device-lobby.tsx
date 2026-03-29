@@ -4,6 +4,7 @@ import styles from "./lobby.module.css";
 import api from "@frontend/api";
 import { useLobbyQuery, useLobbyMutations } from "@frontend/lobby/api";
 import { useCurrentUser } from "@frontend/auth/use-current-user";
+import { useDragState } from "./hooks";
 import {
   LobbyHeaderView,
   StartButtonView,
@@ -12,7 +13,6 @@ import {
   TeamTileView,
   PlayerTileView,
   JoinAreaView,
-  MyTeamBoxView,
 } from "./components";
 
 interface MultiDeviceLobbyProps {
@@ -20,27 +20,13 @@ interface MultiDeviceLobbyProps {
   onStart: () => void;
 }
 
-const boxVariants = {
-  initial: { opacity: 0, scale: 0.8 },
-  animate: {
-    opacity: 1,
-    scale: 1,
-    y: 0,
-    transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] as const },
-  },
-  exit: {
-    opacity: 0,
-    scale: 0.95,
-    transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] as const },
-  },
-};
-
 export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId, onStart }) => {
   const [inputPlayerName, setInputPlayerName] = useState("");
 
   const { data: lobbyData, isLoading: initialLoading, error: queryError } = useLobbyQuery(gameId);
   const { data: currentUser } = useCurrentUser();
   const { ops, isPending: isLoading, error: mutationError } = useLobbyMutations(gameId);
+  const drag = useDragState();
 
   const error = queryError?.message || mutationError;
 
@@ -49,15 +35,12 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId, onSt
   }
 
   const hasJoined = !!lobbyData?.playerContext;
-  const myPlayerName = lobbyData?.playerContext?.playerName;
-  const myTeamName = lobbyData?.playerContext?.teamName as "Team Red" | "Team Blue" | undefined;
 
   const totalPlayers =
     lobbyData.teams?.reduce((sum, team) => sum + (team.players?.length ?? 0), 0) ?? 0;
   const canStartGame =
     lobbyData.aiMode ||
     (totalPlayers >= 4 && lobbyData.teams?.every((team) => (team.players?.length ?? 0) >= 2));
-  const playersNeeded = Math.max(0, 4 - totalPlayers);
 
   const handleJoinTeam = (teamName: string) => {
     if (!inputPlayerName.trim() || hasJoined) return;
@@ -70,19 +53,47 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId, onSt
       await ops.startGame.mutateAsync(undefined);
       await api.post(`/games/${gameId}/rounds`);
       onStart();
-    } catch (error) {
-      console.error("Failed to start game:", error);
+    } catch (err) {
+      console.error("Failed to start game:", err);
     }
   };
 
-  const handleTeamToggle = () => {
-    if (!lobbyData?.playerContext) return;
-    const newTeamName = myTeamName === "Team Red" ? "Team Blue" : "Team Red";
-    ops.movePlayerToTeam.mutate({
-      playerId: lobbyData.playerContext.publicId,
-      newTeamName,
-    });
+  const handleDrop = (e: React.DragEvent, toTeam: string) => {
+    const result = drag.onDrop(e, toTeam);
+    if (!result) return;
+    ops.movePlayerToTeam.mutate(
+      { playerId: result.player.publicId, newTeamName: result.toTeam },
+      { onSettled: () => drag.reset() },
+    );
   };
+
+  const teamTiles = lobbyData.teams?.map((team) => (
+    <TeamTileView
+      key={team.name}
+      teamName={team.name}
+      playerCount={team.players?.length ?? 0}
+      emptyMessage="<EMPTY>"
+      isDragOver={drag.isDragOver(team.name)}
+      onDragOver={(e) => drag.onDragOver(e, team.name)}
+      onDragLeave={drag.onDragLeave}
+      onDrop={(e) => handleDrop(e, team.name)}
+    >
+      {team.players?.map((player) => {
+        const isMyPlayer = currentUser?.userId === player.userId;
+        return (
+          <PlayerTileView
+            key={player.publicId}
+            playerName={player.name}
+            isCurrentUser={isMyPlayer}
+            isDraggable={isMyPlayer && !isLoading}
+            isDragging={drag.isDragging(player.publicId)}
+            onDragStart={(e) => drag.onDragStart(e, player, team.name)}
+            onDragEnd={drag.onDragEnd}
+          />
+        );
+      })}
+    </TeamTileView>
+  ));
 
   return (
     <div className={styles.lobbyCard}>
@@ -92,60 +103,28 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId, onSt
         playerCount={totalPlayers}
       />
 
-      {hasJoined && myTeamName && myPlayerName && (
-        <MyTeamBoxView
-          teamName={myTeamName}
-          playerName={myPlayerName}
-          playersNeeded={playersNeeded}
-          onSwitchTeam={handleTeamToggle}
-          disabled={isLoading}
-          aiMode={lobbyData.aiMode}
-        />
-      )}
-
       {!hasJoined && (
-        <motion.div
-          layoutId="player-control-container"
-          className={styles.joinArea}
-          variants={boxVariants}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-        >
-          <JoinAreaView
-            playerName={inputPlayerName}
-            onPlayerNameChange={setInputPlayerName}
-            onJoinRed={() => handleJoinTeam("Team Red")}
-            onJoinBlue={() => handleJoinTeam("Team Blue")}
-            disabled={isLoading}
-          />
-        </motion.div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key="join-content"
+            className={styles.joinArea}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1, transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] as const } }}
+            exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] as const } }}
+          >
+            <JoinAreaView
+              playerName={inputPlayerName}
+              onPlayerNameChange={setInputPlayerName}
+              onJoinRed={() => handleJoinTeam("Team Red")}
+              onJoinBlue={() => handleJoinTeam("Team Blue")}
+              disabled={isLoading}
+            />
+          </motion.div>
+        </AnimatePresence>
       )}
 
-      {(() => {
-        const teamTiles = lobbyData.teams?.map((team) => (
-          <TeamTileView
-            key={team.name}
-            teamName={team.name}
-            playerCount={team.players?.length ?? 0}
-            emptyMessage="<EMPTY>"
-          >
-            {team.players?.map((player) => (
-              <PlayerTileView
-                key={player.publicId}
-                playerName={player.name}
-                isCurrentUser={currentUser?.userId === player.userId}
-              />
-            ))}
-          </TeamTileView>
-        ));
-        return (
-          <>
-            <TeamsGridView>{teamTiles}</TeamsGridView>
-            <TeamsGridMobileView>{teamTiles}</TeamsGridMobileView>
-          </>
-        );
-      })()}
+      <TeamsGridView>{teamTiles}</TeamsGridView>
+      <TeamsGridMobileView>{teamTiles}</TeamsGridMobileView>
 
       <StartButtonView canStart={canStartGame} isLoading={isLoading} onClick={handleStartGame} />
 

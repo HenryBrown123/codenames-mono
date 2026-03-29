@@ -3,15 +3,20 @@ import { GripVertical, Edit2 } from "lucide-react";
 import styles from "../lobby.module.css";
 
 /**
- * Individual player row - read-only in multi-device, draggable/editable in single-device.
+ * Individual player row.
  *
- * Use `interactive: true` for single-device mode (drag, edit, remove).
- * Omit or set `interactive` to false for multi-device read-only mode.
+ * Drag is available on any tile via base props (isDraggable).
+ * Use `interactive: true` for full edit/remove controls (single-device mode).
+ * In multi-device mode, pass isDraggable for just the current user's tile.
  */
 
 interface PlayerTileBaseProps {
   playerName: string;
   isCurrentUser?: boolean;
+  isDraggable?: boolean;
+  isDragging?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragEnd?: () => void;
 }
 
 interface PlayerTileReadOnlyProps extends PlayerTileBaseProps {
@@ -20,8 +25,6 @@ interface PlayerTileReadOnlyProps extends PlayerTileBaseProps {
 
 interface PlayerTileInteractiveProps extends PlayerTileBaseProps {
   interactive: true;
-  isDraggable?: boolean;
-  isDragging?: boolean;
   isEditing?: boolean;
   editValue?: string;
   onEditChange?: (value: string) => void;
@@ -29,30 +32,39 @@ interface PlayerTileInteractiveProps extends PlayerTileBaseProps {
   onEditCancel?: () => void;
   onEditStart: () => void;
   onRemove: () => void;
-  onDragStart?: (e: React.DragEvent) => void;
-  onDragEnd?: () => void;
   disabled?: boolean;
 }
 
 export type PlayerTileViewProps = PlayerTileReadOnlyProps | PlayerTileInteractiveProps;
 
 export const PlayerTileView: React.FC<PlayerTileViewProps> = (props) => {
-  const { playerName, isCurrentUser } = props;
+  const {
+    playerName,
+    isCurrentUser,
+    isDraggable = false,
+    isDragging = false,
+    onDragStart,
+    onDragEnd,
+  } = props;
 
-  // Read-only mode (multi-device)
+  const dragProps = {
+    draggable: isDraggable,
+    "data-dragging": isDragging,
+    onDragStart,
+    onDragEnd,
+  };
+
   if (!props.interactive) {
     return (
-      <div className={styles.playerTile}>
+      <div className={styles.playerTile} {...dragProps}>
+        {isDraggable && <GripVertical className={styles.dragHandle} size={16} />}
         <span className={styles.playerName}>{playerName}</span>
         {isCurrentUser && <span className={styles.youBadge}>(You)</span>}
       </div>
     );
   }
 
-  // Interactive mode (single-device) — destructure interactive-only props
   const {
-    isDraggable = false,
-    isDragging = false,
     isEditing = false,
     editValue = "",
     onEditChange,
@@ -60,8 +72,6 @@ export const PlayerTileView: React.FC<PlayerTileViewProps> = (props) => {
     onEditCancel,
     onEditStart,
     onRemove,
-    onDragStart,
-    onDragEnd,
     disabled = false,
   } = props;
 
@@ -71,13 +81,7 @@ export const PlayerTileView: React.FC<PlayerTileViewProps> = (props) => {
   };
 
   return (
-    <div
-      className={styles.playerTile}
-      draggable={isDraggable}
-      data-dragging={isDragging}
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
-    >
+    <div className={styles.playerTile} {...dragProps}>
       {isDraggable && <GripVertical className={styles.dragHandle} size={16} />}
 
       {isEditing ? (

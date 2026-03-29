@@ -1,9 +1,6 @@
 import React from "react";
+import { TerminalInput } from "@frontend/gameplay/shared/components";
 import styles from "../lobby.module.css";
-
-/**
- * Text input with add button for adding players to a team (single-device mode)
- */
 
 export interface AddPlayerInputViewProps {
   value: string;
@@ -20,7 +17,7 @@ export const AddPlayerInputView: React.FC<AddPlayerInputViewProps> = ({
   onSubmit,
   teamColor,
   disabled = false,
-  placeholder = "Enter operative name...",
+  placeholder = "ENTER OPERATIVE NAME",
 }) => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") onSubmit();
@@ -28,13 +25,13 @@ export const AddPlayerInputView: React.FC<AddPlayerInputViewProps> = ({
 
   return (
     <div className={styles.addPlayerArea}>
-      <input
-        className={styles.addInput}
+      <TerminalInput
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
         disabled={disabled}
+        preserveCase
       />
       <button
         className={styles.addButton}
