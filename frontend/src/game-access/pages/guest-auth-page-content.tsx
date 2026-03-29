@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useCreateGuestSession } from "@frontend/game-access/api/query-hooks/use-guest-session";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ActionButton, AwaitingLabel, ErrorBox } from "@frontend/gameplay/shared/components";
+import { ActionButton, AwaitingLabel, ErrorBox, PageContainer, pageContainerStyles } from "@frontend/gameplay/shared/components";
 import styles from "./guest-auth-page-content.module.css";
 
 /**
@@ -21,13 +21,14 @@ export const GuestAuthPageView: React.FC<GuestAuthPageViewProps> = ({
   error,
   onCreateSession,
 }) => (
-  <div className={styles.container}>
+  <PageContainer>
     <AnimatePresence mode="wait">
       {!isExiting && (
         <motion.div key="page-content" exit={{ opacity: 1 }}>
           <AnimatePresence propagate>
             <motion.div
-              className={styles.mainContent}
+              className={pageContainerStyles.card}
+              style={{ maxWidth: 480 }}
               initial={{ opacity: 0, scale: 0.8, y: 20 }}
               animate={{
                 opacity: 1,
@@ -86,7 +87,7 @@ export const GuestAuthPageView: React.FC<GuestAuthPageViewProps> = ({
         </motion.div>
       )}
     </AnimatePresence>
-  </div>
+  </PageContainer>
 );
 
 export const GuestAuthPageContent: React.FC = () => {

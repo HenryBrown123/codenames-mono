@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useCreateNewGame } from "@frontend/game-access/api/query-hooks/use-create-new-game";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ActionButton, ErrorBox, ToggleSwitch } from "@frontend/gameplay/shared/components";
+import { ActionButton, ErrorBox, ToggleSwitch, PageContainer, pageContainerStyles } from "@frontend/gameplay/shared/components";
 import { GAME_TYPE, GAME_FORMAT, GameType, GameFormat } from "@codenames/shared/types";
 import styles from "./create-game-page-content.module.css";
 
@@ -33,13 +33,13 @@ export const CreateGamePageView: React.FC<CreateGamePageViewProps> = ({
   onAiModeChange,
   onCreateGame,
 }) => (
-  <div className={styles.container}>
+  <PageContainer>
     <AnimatePresence mode="wait">
       {!isExiting && (
         <motion.div key="page-content" exit={{ opacity: 1 }}>
           <AnimatePresence propagate>
             <motion.div
-              className={styles.mainContent}
+              className={pageContainerStyles.card}
               initial={{ opacity: 0, scale: 0.8, y: 20 }}
               animate={{
                 opacity: 1,
@@ -128,7 +128,7 @@ export const CreateGamePageView: React.FC<CreateGamePageViewProps> = ({
         </motion.div>
       )}
     </AnimatePresence>
-  </div>
+  </PageContainer>
 );
 
 const CreateGamePageContent: React.FC = () => {

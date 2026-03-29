@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { PageContainer, pageContainerStyles } from "@frontend/gameplay/shared/components";
 import styles from "./lobby.module.css";
 import api from "@frontend/api";
 import { useLobbyQuery, useLobbyMutations } from "@frontend/lobby/api";
@@ -72,7 +73,7 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
 
   if (initialLoading || !lobbyData) {
     return (
-      <div className={styles.container}>
+      <PageContainer>
         <AnimatePresence mode="wait">
           <motion.div
             key="loading"
@@ -83,7 +84,7 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
             exit="exit"
           />
         </AnimatePresence>
-      </div>
+      </PageContainer>
     );
   }
 
@@ -130,7 +131,7 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
   };
 
   return (
-    <div className={styles.container}>
+    <PageContainer>
       <AnimatePresence mode="wait">
         {isStarting ? (
           <motion.div
@@ -144,7 +145,7 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
         ) : (
       <motion.div
         key="lobby-content"
-        className={styles.mainContent}
+        className={`${pageContainerStyles.card} ${styles.lobbyCard}`}
         variants={boxVariants}
         initial="initial"
         animate="animate"
@@ -220,7 +221,7 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
       </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </PageContainer>
   );
 };
 

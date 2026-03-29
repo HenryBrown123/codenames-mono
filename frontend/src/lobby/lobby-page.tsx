@@ -1,5 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { PageContainer } from "@frontend/gameplay/shared/components";
 import styles from "./lobby.module.css";
 import { useLobbyQuery } from "@frontend/lobby/api";
 import { SingleDeviceLobby } from "./single-device-lobby";
@@ -32,7 +33,7 @@ export const LobbyInterface: React.FC<LobbyPageProps> = ({ gameId }) => {
 
   if (isLoading || !lobbyData) {
     return (
-      <div className={styles.container}>
+      <PageContainer>
         <AnimatePresence mode="wait">
           <motion.div
             key="loading"
@@ -43,7 +44,7 @@ export const LobbyInterface: React.FC<LobbyPageProps> = ({ gameId }) => {
             exit="exit"
           />
         </AnimatePresence>
-      </div>
+      </PageContainer>
     );
   }
   if (lobbyData.gameType === "MULTI_DEVICE") {

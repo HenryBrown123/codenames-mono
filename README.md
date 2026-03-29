@@ -667,6 +667,7 @@ Frontend and backend extend these base types with their specific requirements.
 |       |       |   |-- awaiting-label
 |       |       |   |-- circle-button
 |       |       |   |-- error-box
+|       |       |   |-- page-container
 |       |       |   |-- terminal-input
 |       |       |   `-- toggle-switch
 |       |       `-- game-instructions
@@ -688,7 +689,7 @@ Frontend and backend extend these base types with their specific requirements.
         |   `-- modules
         `-- types
 
-127 directories
+128 directories
 ```
 
 ## Getting Started

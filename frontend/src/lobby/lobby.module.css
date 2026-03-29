@@ -1,27 +1,14 @@
 @import "../style/variables.css";
+@import "../style/animations.css";
 
-@keyframes dotBlink {
-  0%,
-  49% {
-    opacity: 1;
-  }
-  50%,
-  100% {
-    opacity: 0.3;
-  }
-}
-
-.container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+/* Lobby card overrides on top of shared PageCard */
+.lobbyCard {
+  max-width: 1400px;
+  min-height: 30vh;
+  padding: 1.5rem;
+  background: var(--bg-container);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  overflow: hidden;
+  flex-direction: column;
 }
 
 .loadingDot {
@@ -31,21 +18,6 @@
   background: var(--color-primary, #00ff88);
   box-shadow: 0 0 20px var(--color-primary, #00ff88);
   animation: dotBlink 1s ease-in-out infinite;
-}
-
-.mainContent {
-  width: 100%;
-  max-width: 1400px;
-  min-height: 30vh;
-  padding: 1.5rem;
-  background: var(--bg-container);
-  border: var(--border-normal);
-  border-radius: var(--radius-md);
-  box-shadow: none;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
 }
 
 

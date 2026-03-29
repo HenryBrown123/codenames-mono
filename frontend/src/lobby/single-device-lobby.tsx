@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { PageContainer, pageContainerStyles } from "@frontend/gameplay/shared/components";
 import styles from "./lobby.module.css";
 import { useLobbyMutations, type LobbyData } from "@frontend/lobby/api";
 import { getTeamConfig } from "@frontend/shared-types";
@@ -166,7 +167,7 @@ export const SingleDeviceLobby: React.FC<SingleDeviceLobbyProps> = ({ gameId, lo
   const mobileFilteredTeams = teamsToRender.filter((team) => team.name === activeTeam);
 
   return (
-    <div className={styles.container}>
+    <PageContainer>
       <AnimatePresence mode="wait">
         {isStarting ? (
           <motion.div
@@ -179,7 +180,7 @@ export const SingleDeviceLobby: React.FC<SingleDeviceLobbyProps> = ({ gameId, lo
         ) : (
       <motion.div
         key="lobby-content"
-        className={styles.mainContent}
+        className={`${pageContainerStyles.card} ${styles.lobbyCard}`}
         variants={boxVariants}
         initial="initial"
         animate="animate"
@@ -221,7 +222,7 @@ export const SingleDeviceLobby: React.FC<SingleDeviceLobbyProps> = ({ gameId, lo
       </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </PageContainer>
   );
 };
 
