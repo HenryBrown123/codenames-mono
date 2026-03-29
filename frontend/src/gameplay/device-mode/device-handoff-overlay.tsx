@@ -1,87 +1,77 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { PlayerRole, PLAYER_ROLE } from "@codenames/shared/types";
 import { GameData } from "@frontend/shared-types";
+import { getTeamConfig } from "@frontend/shared-types";
+import { ActionButton } from "@frontend/gameplay/shared/components";
+import { pageContainerStyles } from "@frontend/gameplay/shared/components";
 import { usePlayersQuery } from "../game-data/queries";
-import { FaLeaf } from "react-icons/fa";
 import styles from "./device-handoff-overlay.module.css";
 
 /**
  * Overlay prompting device handoff between players
  */
 
-const getTeamSymbol = (teamName: string) => {
-  const team = teamName.toLowerCase();
-  if (team.includes("red")) return "★";
-  if (team.includes("blue")) return "♦";
-  if (team.includes("green")) return <FaLeaf />;
-  return "●";
-};
-
-const getTeamColor = (teamName: string) => {
-  const team = teamName.toLowerCase();
-  if (team.includes("red")) return "var(--color-team-red, #ff0040)";
-  if (team.includes("blue")) return "var(--color-team-blue, #00d4ff)";
-  if (team.includes("green")) return "var(--color-primary, #00ff88)";
-  return "var(--color-neutral, #888888)";
-};
+const EASE = [0.4, 0, 0.2, 1] as const;
 
 export interface DeviceHandoffOverlayViewProps {
-  isExiting: boolean;
   displayName: string;
   teamColor: string;
   targetRole: PlayerRole;
   targetTeam: string;
   isReady: boolean;
   onContinue: () => void;
-  onAnimationEnd: () => void;
 }
 
 export const DeviceHandoffOverlayView: React.FC<DeviceHandoffOverlayViewProps> = ({
-  isExiting,
   displayName,
   teamColor,
   targetRole,
   targetTeam,
   isReady,
   onContinue,
-  onAnimationEnd,
-}) => (
-  <div
-    className={styles.overlayContainer}
-    data-exiting={isExiting}
-    onAnimationEnd={onAnimationEnd}
-  >
-    <div className={styles.backgroundBlur} />
-    <div className={styles.handoffCard}>
-      <h1 className={styles.title}>DEVICE HANDOFF</h1>
+}) => {
+  const teamConfig = getTeamConfig(targetTeam);
 
-      <div
-        className={styles.playerInfo}
-        style={{ "--team-color": teamColor } as React.CSSProperties}
-      >
-        <div className={styles.playerName}>{displayName}</div>
-        {targetRole === PLAYER_ROLE.CODEMASTER && (
-          <div className={styles.roleLabel}>
-            {getTeamSymbol(targetTeam)} {targetTeam} Spymaster
-          </div>
-        )}
-        {targetRole === PLAYER_ROLE.CODEBREAKER && (
-          <div className={styles.roleLabel}>
-            {getTeamSymbol(targetTeam)} {targetTeam}
-          </div>
-        )}
-      </div>
+  return (
+    <motion.div
+      className={styles.overlayContainer}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1, transition: { duration: 0.3, ease: EASE } }}
+      exit={{ opacity: 0, transition: { duration: 0.4, ease: EASE } }}
+    >
+      <div className={styles.backgroundBlur} />
 
-      <button
-        className={styles.continueButton}
-        onClick={onContinue}
-        disabled={!isReady}
+      <motion.div
+        className={pageContainerStyles.card}
+        style={{ maxWidth: 480 }}
+        initial={{ scale: 0.85, y: 16 }}
+        animate={{ scale: 1, y: 0, transition: { duration: 0.35, ease: EASE } }}
+        exit={{ scale: 0, transition: { duration: 0.4, ease: EASE } }}
       >
-        {isReady ? "EXECUTE" : "LOADING..."}
-      </button>
-    </div>
-  </div>
-);
+        <h1 className={styles.title}>DEVICE HANDOFF</h1>
+
+        <div
+          className={styles.playerInfo}
+          style={{ "--team-color": teamColor } as React.CSSProperties}
+        >
+          <div className={styles.playerName}>{displayName}</div>
+          <div className={styles.roleLabel}>
+            {teamConfig.symbol} {targetTeam}
+            {targetRole === PLAYER_ROLE.CODEMASTER && " · Spymaster"}
+          </div>
+        </div>
+
+        <ActionButton
+          text={isReady ? "EXECUTE" : "LOADING..."}
+          enabled={isReady}
+          onClick={onContinue}
+          fullWidth
+        />
+      </motion.div>
+    </motion.div>
+  );
+};
 
 interface DeviceHandoffOverlayProps {
   gameData: GameData;
@@ -92,7 +82,7 @@ export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
   gameData,
   onContinue,
 }) => {
-  const [isExiting, setIsExiting] = useState(false);
+  const [visible, setVisible] = useState(true);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   const { data: players } = usePlayersQuery(gameData.publicId);
@@ -101,7 +91,7 @@ export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
   const isReady = !!nextPlayer;
   const targetRole = nextPlayer?.role || PLAYER_ROLE.NONE;
   const targetTeam = nextPlayer?.teamName || "Team";
-  const teamColor = getTeamColor(targetTeam);
+  const teamConfig = getTeamConfig(targetTeam);
   const displayName = nextPlayer
     ? targetRole === PLAYER_ROLE.CODEMASTER
       ? nextPlayer.name
@@ -111,26 +101,26 @@ export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
   const handleContinueClick = () => {
     if (nextPlayer) {
       setSelectedPlayerId(nextPlayer.publicId);
-      setIsExiting(true);
+      setVisible(false);
     }
   };
 
-  const handleAnimationEnd = () => {
-    if (isExiting && selectedPlayerId) {
-      onContinue(selectedPlayerId);
-    }
+  const handleExitComplete = () => {
+    if (selectedPlayerId) onContinue(selectedPlayerId);
   };
 
   return (
-    <DeviceHandoffOverlayView
-      isExiting={isExiting}
-      displayName={displayName}
-      teamColor={teamColor}
-      targetRole={targetRole}
-      targetTeam={targetTeam}
-      isReady={isReady}
-      onContinue={handleContinueClick}
-      onAnimationEnd={handleAnimationEnd}
-    />
+    <AnimatePresence onExitComplete={handleExitComplete}>
+      {visible && (
+        <DeviceHandoffOverlayView
+          displayName={displayName}
+          teamColor={teamConfig.cssVar}
+          targetRole={targetRole}
+          targetTeam={targetTeam}
+          isReady={isReady}
+          onContinue={handleContinueClick}
+        />
+      )}
+    </AnimatePresence>
   );
 };
