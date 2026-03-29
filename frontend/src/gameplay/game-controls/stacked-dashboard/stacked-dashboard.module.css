@@ -31,7 +31,7 @@
   padding: 36px 20px 20px;
   justify-content: space-evenly;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: clip;
   scrollbar-width: thin;
   scrollbar-color: var(--bg-scrollbar) transparent;
 }

@@ -56,7 +56,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
   const primaryButton = (() => {
     if (s.isCodemasterGivingClue)
       return (
-        <ActionButton size="sm"
+        <ActionButton size="sm" fullWidth
           text={s.isLoading ? "..." : "TRANSMIT"}
           onClick={handleTransmit}
           enabled={!!(clue.word.trim()) && !isAiThinking && !s.isLoading}
@@ -64,7 +64,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
       );
     if (s.isInLobby && s.lobbyAction)
       return (
-        <ActionButton size="sm"
+        <ActionButton size="sm" fullWidth
           text={s.isLoading ? "..." : s.lobbyAction.label}
           onClick={s.lobbyAction.handler}
           enabled={!s.isLoading}
@@ -72,7 +72,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
       );
     if (s.isCodebreakerGuessing)
       return (
-        <ActionButton size="sm"
+        <ActionButton size="sm" fullWidth
           text={s.isLoading ? "..." : "END TURN"}
           onClick={s.endTurn}
           enabled={!s.isLoading && !isAiThinking}
@@ -80,7 +80,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
       );
     if (s.canStartNextTurn)
       return (
-        <ActionButton size="sm"
+        <ActionButton size="sm" fullWidth
           text={s.startNextTurn.isPending ? "..." : "NEXT TURN"}
           onClick={s.startNextTurn.handler}
           enabled={!s.startNextTurn.isPending}
@@ -88,7 +88,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
       );
     if (s.isRoundComplete && s.gameOverData)
       return (
-        <ActionButton size="sm"
+        <ActionButton size="sm" fullWidth
           text={s.isLoading ? "..." : "NEW GAME"}
           onClick={s.gameOverData.newGame}
           enabled={!s.isLoading}
@@ -188,16 +188,20 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
             >
               {!intel.hasClue && s.isCodemasterGivingClue ? (
                 <div className={styles.clueInputCenter}>
-                  <AwaitingLabel>INTEL REQUIRED</AwaitingLabel>
-                  <CompactClueInput
-                    word={clue.word}
-                    count={clue.count}
-                    error={clue.error}
-                    isLoading={s.isLoading}
-                    onWordChange={clue.setWord}
-                    onCountChange={clue.setCount}
-                    onSubmit={handleTransmit}
-                  />
+                  <div className={styles.fixedWidthWrapper}>
+                    <AwaitingLabel>INTEL REQUIRED</AwaitingLabel>
+                  </div>
+                  <div className={styles.fixedWidthWrapper}>
+                    <CompactClueInput
+                      word={clue.word}
+                      count={clue.count}
+                      error={clue.error}
+                      isLoading={s.isLoading}
+                      onWordChange={clue.setWord}
+                      onCountChange={clue.setCount}
+                      onSubmit={handleTransmit}
+                    />
+                  </div>
                 </div>
               ) : (
                 <div className={styles.intelBox}>
@@ -232,9 +236,9 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
       {/* ── Footer: pinned to bottom ── */}
       <div className={styles.footer}>
         {primaryButton ? (
-          primaryButton
+          <div className={styles.fixedWidthWrapper}>{primaryButton}</div>
         ) : s.isAiActive ? (
-          <div className={styles.controlRow}>
+          <div className={`${styles.controlRow} ${styles.fixedWidthWrapper}`}>
             {isAiThinking ? (
               <>
                 <button className={styles.triggerBtn} disabled>
