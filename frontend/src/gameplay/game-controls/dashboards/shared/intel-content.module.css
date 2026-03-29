@@ -1,14 +1,13 @@
 @import "../../../../style/variables.css";
 
-/* Awaiting intel — vertically centered */
 .awaitingCenter {
   flex: 1;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   justify-content: center;
 }
 
-/* Clue section */
 .clueSection {
   display: flex;
   align-items: baseline;
@@ -34,13 +33,11 @@
   color: var(--color-primary);
 }
 
-/* Divider between clue and guesses */
 .divider {
   height: 1px;
   background: rgba(var(--primary-rgb), 0.14);
 }
 
-/* Guesses section */
 .guessesSection {
   flex: 1;
   min-height: 3rem;

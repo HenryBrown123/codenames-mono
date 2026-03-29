@@ -622,8 +622,9 @@ Frontend and backend extend these base types with their specific requirements.
 |       |   `-- components
 |       |-- api
 |       |-- app
-|       |   `-- routes
-|       |       `-- page-layout
+|       |   |-- routes
+|       |   |   `-- page-layout
+|       |   `-- scene-flow
 |       |-- auth
 |       |-- chat
 |       |   |-- api
@@ -689,7 +690,7 @@ Frontend and backend extend these base types with their specific requirements.
         |   `-- modules
         `-- types
 
-128 directories
+129 directories
 ```
 
 ## Getting Started

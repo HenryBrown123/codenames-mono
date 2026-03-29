@@ -105,7 +105,6 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
     onGoForward: intel.onGoForward,
   });
 
-  // ── Lobby: centered buttons ──
   if (s.isInLobby) {
     return (
       <div className={styles.panel}>
@@ -135,9 +134,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
 
   return (
     <div className={styles.panel}>
-      {/* ── Content: distributes space evenly ── */}
       <div className={styles.content}>
-        {/* ── Header ── */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <span className={styles.headerLabel}>INTEL</span>
@@ -165,7 +162,6 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
           </div>
         </div>
 
-        {/* ── Swipeable intel carousel ── */}
         <motion.div
           className={styles.swipeZone}
           drag="x"
@@ -203,6 +199,20 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
                     />
                   </div>
                 </div>
+              ) : !intel.hasClue ? (
+                <div className={styles.intelBoxCentered}>
+                  <div className={styles.fixedWidthWrapper}>
+                    <IntelContent
+                      hasClue={intel.hasClue}
+                      clueWord={intel.clueWord}
+                      clueNumber={intel.clueNumber}
+                      guesses={intel.guesses}
+                      maxSlots={intel.maxSlots}
+                      teamName={intel.teamName}
+                      showGhostRows={false}
+                    />
+                  </div>
+                </div>
               ) : (
                 <div className={styles.intelBox}>
                   <IntelContent
@@ -220,7 +230,6 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
           </AnimatePresence>
         </motion.div>
 
-        {/* ── Score comparison (game-over) ── */}
         {s.isRoundComplete && s.gameOverData && (
           <ScoreComparison
             winnerName={s.gameOverData.winnerName ?? ""}
@@ -233,12 +242,11 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
 
       </div>
 
-      {/* ── Footer: pinned to bottom ── */}
       <div className={styles.footer}>
         {primaryButton ? (
           <div className={styles.fixedWidthWrapper}>{primaryButton}</div>
         ) : s.isAiActive ? (
-          <div className={`${styles.controlRow} ${styles.fixedWidthWrapper}`}>
+          <div className={styles.fixedWidthWrapper} style={{ position: "relative" }}>
             {isAiThinking ? (
               <>
                 <button className={styles.triggerBtn} disabled>

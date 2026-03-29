@@ -1,30 +1,14 @@
 import React from "react";
-import { Routes, Route, BrowserRouter as Router, useLocation } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
+import { Routes, Route, BrowserRouter as Router } from "react-router-dom";
 import { GameplayRoute } from "./gameplay-route";
-import { CreateGameRoute } from "./new-game-route";
-import { GuestAuthRoute } from "./guest-auth-route";
-import { LobbyRoute } from "./lobby-route";
-
-const AnimatedRoutes = () => {
-  const location = useLocation();
-
-  return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/game/:gameId/lobby" element={<LobbyRoute />} />
-        <Route path="/game/:gameId" element={<GameplayRoute />} />
-        <Route path="/create-game" element={<CreateGameRoute />} />
-        <Route path="/auth/guest" element={<GuestAuthRoute />} />
-        <Route path="*" element={<div>404 - Page Not Found</div>} />
-      </Routes>
-    </AnimatePresence>
-  );
-};
+import { PreGameFlow } from "../scene-flow";
 
 const AppRoutes = () => (
   <Router>
-    <AnimatedRoutes />
+    <Routes>
+      <Route path="/game/:gameId" element={<GameplayRoute />} />
+      <Route path="*" element={<PreGameFlow />} />
+    </Routes>
   </Router>
 );
 

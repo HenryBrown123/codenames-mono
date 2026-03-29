@@ -38,7 +38,6 @@
   align-items: center;
 }
 
-/* ── Symbol layers ── */
 .symbolContainer {
   position: relative;
   display: flex;
@@ -100,7 +99,6 @@
   margin: 2px 0;
 }
 
-/* ── Compact variant (mobile drawer) ── */
 .compactRow {
   display: flex;
   align-items: center;

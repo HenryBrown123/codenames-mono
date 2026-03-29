@@ -1,4 +1,3 @@
-/* ── Portrait (base) ── */
 .scene {
   width: 100%;
   height: 100vh;
@@ -65,7 +64,6 @@
   z-index: var(--z-fixed-buttons);
 }
 
-/* ── Landscape ── */
 @media (orientation: landscape) {
   .scene {
     grid-template-areas: "stacked board";
@@ -104,7 +102,6 @@
   .board  { padding: 1.5rem; }
 }
 
-/* ── Clue overlay ── */
 .clueOverlay {
   position: fixed;
   inset: 0;

@@ -1,4 +1,3 @@
-/* ── Outer panel ── */
 .panel {
   display: flex;
   flex-direction: column;
@@ -9,22 +8,18 @@
   box-sizing: border-box;
 }
 
-/* ── Content area: header pinned top, rest spreads ── */
 .content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
   min-height: 0;
 }
 
-/* Spacer between intel and AI to push AI down */
 .contentSpacer {
   flex: 1;
   min-height: 0;
 }
 
-/* ── Lobby buttons (centered) ── */
 .lobbyButtons {
   display: flex;
   flex-direction: column;
@@ -32,7 +27,6 @@
   gap: 12px;
 }
 
-/* ── Swipe zone — contains the intel carousel ── */
 .swipeZone {
   flex: 1;
   display: flex;
@@ -46,7 +40,6 @@
   cursor: grabbing;
 }
 
-/* ── Header ── */
 .header {
   display: flex;
   align-items: center;
@@ -82,15 +75,12 @@
   color: var(--symbol-color);
 }
 
-
 .navGroup {
   display: flex;
   gap: 4px;
   flex-shrink: 0;
 }
 
-
-/* ── Clue input centered (floats in middle of dashboard) ── */
 .clueInputCenter {
   flex: 1;
   display: flex;
@@ -102,18 +92,17 @@
   width: 100%;
 }
 
-/* Shared fixed-width wrapper for compact dashboard content */
 .fixedWidthWrapper {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   max-width: 340px;
+  margin: 0 auto;
 }
 
-/* ── Intel content wrapper ── */
 .intelBox {
-  flex-shrink: 0;
+  flex: 1;
   width: 100%;
   max-width: 480px;
   margin-left: auto;
@@ -125,20 +114,16 @@
   overflow: visible;
 }
 
-/* ── Score comparison (game-over) override ── */
+.intelBoxCentered {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .scoreBox {
   max-width: 480px;
   margin: 8px auto 0;
-}
-
-/* ── Shared width wrapper for awaiting text + AI trigger ── */
-.controlRow {
-  position: relative;
-  width: 100%;
-  max-width: 280px;
-  margin: 4px auto;
-  display: flex;
-  align-items: center;
 }
 
 .controlRowDot {
@@ -189,11 +174,9 @@
   cursor: default;
 }
 
-/* ── Footer: centred button, pinned to bottom ── */
 .footer {
   flex-shrink: 0;
   padding: 2px 0 0;
   display: flex;
   justify-content: center;
 }
-

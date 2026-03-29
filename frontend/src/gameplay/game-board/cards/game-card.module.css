@@ -1,29 +1,23 @@
-/* Import shared variables and animations */
 @import "../../../style/variables.css";
 @import "../../../style/animations.css";
 
-/* Option 1: Barlow Condensed - Best overall */
 @import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&display=swap");
 
-/* ===== CONTAINER ===== */
 .cardContainer {
-  /* Card fills its grid cell */
   width: 100%;
   height: 100%;
   position: relative;
   box-sizing: border-box;
   z-index: var(--z-base);
   contain: layout style;
-  overflow: visible; /* Allow AR corners to extend beyond bounds */
+  overflow: visible;
 
   /* Default to visible - CRITICAL for WAAPI with fill: 'forwards' */
   opacity: 1;
   transform: translateY(0) rotate(0deg);
 }
 
-/* State-based styling (not animation triggers) - Motion controls transitions */
 .cardContainer[data-state="hidden"] {
-  /* Motion controls actual animation, this is just for direct state jumps */
   opacity: 0;
   pointer-events: none;
 }
@@ -34,12 +28,10 @@
 }
 
 .cardContainer[data-state="revealed"] {
-  /* Revealed cards stay visible */
   opacity: 1;
   pointer-events: auto;
 }
 
-/* Team color mapping via data attributes */
 .cardContainer[data-team="red"] {
   --team-color: var(--color-team-red);
 }
@@ -60,17 +52,6 @@
   --team-color: var(--color-team-green);
 }
 
-/* Hide base card text when spymaster overlay is active to prevent overlap */
-/* REMOVED: Now controlled by Framer Motion in WordCard component */
-/* .cardContainer:has(.spymasterOverlay) .normalCard .cardWord {
-  opacity: 0;
-} */
-
-/* ===== REMOVED CSS ANIMATIONS ===== */
-/* All animations now handled by Framer Motion via state machine */
-/* No more CSS @keyframes or data-animation attributes */
-
-/* ===== NORMAL CARD (Beige) ===== */
 .normalCard {
   position: absolute;
   inset: 0;
@@ -87,20 +68,14 @@
     box-shadow 0.3s;
   overflow: hidden;
   transform: translateZ(0);
-
-  /* Enhanced realistic shadows */
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.1),
     0 2px 4px rgba(0, 0, 0, 0.08),
     0 4px 8px rgba(0, 0, 0, 0.06),
     inset 0 1px 0 rgba(255, 255, 255, 0.5),
     inset 0 -1px 2px rgba(0, 0, 0, 0.05);
-
-  /* 3D flip support */
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-
-  /* Typography */
   color: #2a2a3e;
   font-family: sans-serif;
   font-size: clamp(0.8rem, 2.5vw, 1.1rem);
@@ -109,7 +84,6 @@
   letter-spacing: 0.05em;
 }
 
-/* Edge highlight gradient - creates subtle 3D bevel effect */
 .normalCard::before {
   content: "";
   position: absolute;
@@ -125,7 +99,6 @@
   pointer-events: none;
 }
 
-/* Paper texture overlay - noise only, no scanlines */
 .normalCard::after {
   content: "";
   position: absolute;
@@ -138,17 +111,14 @@
   z-index: 1;
 }
 
-/* Non-clickable state */
 .cardContainer[data-clickable="false"] .normalCard {
   cursor: default;
 }
 
-/* Touch feedback - subtle press in */
 .cardContainer[data-clickable="true"] .normalCard:active {
   transform: scale(0.98);
 }
 
-/* ===== RIPPLE EFFECT ===== */
 .ripple {
   position: absolute;
   top: 50%;
@@ -170,47 +140,37 @@
   opacity: 0.3;
 }
 
-/* ===== TEXT SIZING - BEST PRACTICES ===== */
-
-/* Base word styling - applies to all */
 .cardWord {
   background: rgba(255, 255, 255, 0.88);
   color: #222;
   border-radius: 4px;
-  padding: 0; /* No padding on mobile */
+  padding: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
   font-family: "Barlow Condensed", sans-serif;
   font-weight: 300;
   text-transform: uppercase;
   text-align: center;
-  letter-spacing: 0; /* No letter spacing on small screens */
+  letter-spacing: 0;
   position: relative;
-  z-index: 10; /* Above background filters */
-  /* Allow breaking long words while keeping hyphenation */
-  word-break: break-word; /* Allows breaking but respects hyphenation */
+  z-index: 10;
+  word-break: break-word;
   word-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
-  -webkit-hyphens: auto; /* Safari support */
-  -ms-hyphens: auto; /* IE/Edge support */
-
-  /* Removed transition - now controlled by Framer Motion */
+  -webkit-hyphens: auto;
+  -ms-hyphens: auto;
   text-shadow: none;
   white-space: normal;
   line-height: 1.2;
   text-align: center;
-
-  /* Remove all existing font-size declarations */
 }
 
-/* Add letter spacing for wider screens */
 @media (min-width: 400px) {
   .cardWord {
     letter-spacing: 0.02em;
   }
 }
 
-/* Add padding back for larger screens */
 @media (min-width: 481px) {
   .cardWord {
     padding: 0.2em 0.4em;
@@ -219,20 +179,18 @@
   }
 }
 
-/* Semantic size classes - Fixed sizing */
 .textNormal {
   font-size: 14px;
 }
 
 .textLong {
-  font-size: 12px; /* Smaller on mobile for better fit */
+  font-size: 12px;
 }
 
 .textExtraLong {
-  font-size: 12px; /* Smaller on mobile for better fit */
+  font-size: 12px;
 }
 
-/* Match normal text size on wider screens */
 @media (min-width: 400px) {
   .textLong,
   .textExtraLong {
@@ -240,40 +198,31 @@
   }
 }
 
-/* Desktop: Override all text sizes to 18px */
 @media (min-width: 769px) {
   .textNormal,
   .textLong,
   .textExtraLong {
-    font-size: 18px; /* Fixed 18px for desktop */
+    font-size: 18px;
   }
 }
 
-/* Dynamic font sizes - no responsive overrides needed */
-
-/* ===== ACCESSIBILITY ENHANCEMENTS ===== */
-
-/* High contrast mode adjustments */
 @media (prefers-contrast: high) {
   .cardWord {
     font-weight: 900;
     letter-spacing: 0.05em;
-    /* Ensure minimum sizes are larger */
   }
 
   .textExtraLong {
-    font-size: 1rem; /* Never below 16px in high contrast */
+    font-size: 1rem;
   }
 }
 
-/* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   .cardWord {
     transition: none !important;
   }
 }
 
-/* Print styles */
 @media print {
   .cardWord {
     font-size: 12pt !important;
@@ -283,7 +232,6 @@
   }
 }
 
-/* ===== CARD LABEL CONTAINER ===== */
 .cardLabelContainer {
   position: absolute;
   inset: 0;
@@ -295,7 +243,6 @@
   padding: 0.5rem;
 }
 
-/* ===== HOVER OVERLAY ===== */
 .hoverOverlay {
   position: absolute;
   inset: 0;
@@ -303,8 +250,6 @@
   pointer-events: none;
 }
 
-/* ===== COVER CARD ===== */
-/* Cover card positioning layer */
 .coverCardPositioning {
   position: absolute;
   inset: 0;
@@ -315,33 +260,26 @@
   pointer-events: none;
 }
 
-/* Cover card slides in from top to cover the card when selected/flipped */
 .coverCard {
-  /* Dark metallic gun metal base - universal across all teams */
   background: linear-gradient(145deg, rgb(85, 92, 100), rgb(60, 65, 70), rgb(40, 45, 50));
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 1.5px solid var(--team-color);
-  overflow: visible; /* Allow glow effects to extend */
-
-  /* Subtle 3D thickness effect - team colored edges */
+  overflow: visible;
   box-shadow:
-    /* Card edge layers - team colored thickness */
     0 1px 0 var(--team-color),
     0 2px 0 var(--team-color),
     0 3px 0 var(--team-color),
-    /* Soft shadows for depth */ 0 4px 2px rgba(0, 0, 0, 0.15),
+    0 4px 2px rgba(0, 0, 0, 0.15),
     0 6px 4px rgba(0, 0, 0, 0.1),
     0 8px 8px rgba(0, 0, 0, 0.08),
     0 12px 12px rgba(0, 0, 0, 0.05),
-    /* Inset highlights for glossy finish */ inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
     inset 0 -1px 2px rgba(0, 0, 0, 0.1);
 }
 
-
-/* Assassin card - dark background, muted yellow border */
 .cardContainer[data-team="assassin"] .coverCard {
   background: var(--color-assassin-bg);
   border: 2px solid color-mix(in srgb, var(--color-assassin) 50%, black);
@@ -358,7 +296,6 @@
   color: color-mix(in srgb, var(--color-assassin) 50%, black);
 }
 
-/* ===== REVEAL OVERLAY ===== */
 .revealOverlay {
   position: absolute;
   inset: 0;
@@ -372,7 +309,6 @@
   flex-direction: column;
 }
 
-/* ===== CENTERED BOTTOM POSITIONING ===== */
 .centeredBottom {
   position: absolute;
   bottom: 8px;
@@ -388,7 +324,6 @@
   font-size: 1.5rem;
 }
 
-/* ===== OUTLINE PULSE ===== */
 .outlinePulse {
   position: absolute;
   inset: -4px;
@@ -400,7 +335,6 @@
     inset 0 0 15px var(--team-color);
 }
 
-/* ===== TEAM COLOR FILTER ===== */
 .teamColorFilter {
   position: absolute;
   inset: 0;
@@ -417,7 +351,6 @@
   border-radius: 6px;
 }
 
-/* Assassin team color filter - dark gradient, muted yellow border */
 .cardContainer[data-team="assassin"] .teamColorFilter {
   background: linear-gradient(
     135deg,
@@ -428,9 +361,8 @@
   border-color: color-mix(in srgb, var(--color-assassin) 50%, black);
 }
 
-/* ===== SCAN GRID ===== */
 .scanGrid {
-  --scan-color: rgba(82, 214, 138, 0.15); /* overridden by JS when theme changes */
+  --scan-color: rgba(82, 214, 138, 0.15);
   position: absolute;
   inset: 4px;
   background-image:
@@ -441,10 +373,8 @@
   animation: gridPulse 2s ease-in-out infinite;
 }
 
-
-/* ===== TEAM BADGE ===== */
 .teamBadge {
-  display: none; /* Mobile-first: hidden */
+  display: none;
 }
 
 @media (min-width: 769px) {
@@ -472,14 +402,12 @@
   }
 }
 
-/* Assassin badge - toned down, uses standard badge shadow */
 .cardContainer[data-team="assassin"] .teamBadge {
   background: var(--color-assassin-bg);
   color: var(--team-color);
   border-color: var(--team-color);
 }
 
-/* ===== SPYMASTER SYMBOL ===== */
 .spymasterSymbol {
   position: absolute;
   font-size: 1.5rem;
@@ -493,15 +421,14 @@
   pointer-events: none;
 }
 
-/* Team symbols - rotated square for red (diamond), regular square for blue */
 .cardContainer[data-team="red"] .spymasterSymbol::before {
-  content: "■";
+  content: "\25A0";
   display: inline-block;
   transform: rotate(45deg);
 }
 
 .cardContainer[data-team="blue"] .spymasterSymbol::before {
-  content: "■";
+  content: "\25A0";
 }
 
 .cardContainer[data-team="assassin"] .spymasterSymbol {
@@ -509,17 +436,15 @@
 }
 
 .cardContainer[data-team="assassin"] .spymasterSymbol::before {
-  content: "☠";
+  content: "\2620";
   font-size: 2rem;
 }
 
 .cardContainer[data-team="neutral"] .spymasterSymbol::before {
-  content: "●";
+  content: "\25CF";
   font-size: 2rem;
 }
 
-
-/* ===== AR CORNERS ===== */
 .cardARCorners {
   position: absolute;
   inset: -3px;
@@ -548,7 +473,6 @@
   }
 }
 
-/* Corner positions */
 .cardARCorner[data-position="tl"] {
   top: 0;
   left: 0;
@@ -581,7 +505,6 @@
   border-bottom-right-radius: 2px;
 }
 
-/* ===== TEAM SYMBOL ===== */
 /* Inset/debossed shadow - light at top, dark at bottom for pressed-in effect */
 .symbolShadow {
   position: absolute;
@@ -597,7 +520,6 @@
   pointer-events: none;
 }
 
-/* Crisp LED symbol - sharp outline */
 .symbolLED {
   position: absolute;
   font-size: 3rem;
@@ -612,7 +534,6 @@
   -webkit-font-smoothing: antialiased;
 }
 
-/* Subtle inner glow for LED effect */
 .symbolGlow {
   position: absolute;
   font-size: 3rem;
@@ -627,7 +548,6 @@
   pointer-events: none;
 }
 
-/* Highlight edge - subtle top/left light */
 .symbolHighlight {
   position: absolute;
   font-size: 3rem;
@@ -639,7 +559,6 @@
   pointer-events: none;
 }
 
-/* ===== RESPONSIVE DESIGN ===== */
 @media (min-width: 481px) {
   .normalCard {
     border-radius: 8px;

@@ -3,12 +3,9 @@
 
 /* Lobby card overrides on top of shared PageCard */
 .lobbyCard {
-  max-width: 1400px;
-  min-height: 30vh;
-  padding: 1.5rem;
-  background: var(--bg-container-solid);
   display: flex;
   flex-direction: column;
+  min-height: 30vh;
 }
 
 .loadingDot {
