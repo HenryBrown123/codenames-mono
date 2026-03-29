@@ -79,9 +79,10 @@ export const useDashboardState = () => {
 
   return {
     // Identity
-    teamName:   ctx.teamName ?? "",
-    role:       ctx.role,
-    playerName: ctx.playerName ?? "",
+    teamName:       ctx.teamName ?? "",
+    activeTeamName: ctx.activeTeamName ?? "",
+    role:           ctx.role,
+    playerName:     ctx.playerName ?? "",
     teamColor,
 
     // State flags — derived once, consumed everywhere

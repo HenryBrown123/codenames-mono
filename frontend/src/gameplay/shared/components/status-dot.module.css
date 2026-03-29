@@ -13,7 +13,7 @@
 .statusDot[data-active="true"] {
   background: #00ff88;
   box-shadow: 0 0 18px 2px rgba(0, 255, 136, 0.5);
-  animation: statusDotGlow 1.25s infinite alternate;
+  animation: statusDotGlow 2s infinite alternate;
 }
 
 .statusDot[data-active="false"] {

@@ -3,6 +3,7 @@ import { useGameDataRequired } from "../../../game-data/providers";
 import { useVisibilityContext } from "../config/context";
 import { getTeamStyle } from "./intel-panel";
 import { TeamSymbolIcon } from "../../../../shared/team-symbol-icon";
+import { StatusDot } from "@frontend/gameplay/shared/components";
 import styles from "./team-header-panel.module.css";
 
 /**
@@ -59,13 +60,14 @@ export const TeamHeaderPanel: React.FC<TeamHeaderPanelProps> = ({ variant }) => 
   const ctx = useVisibilityContext();
 
   if (ctx.aiThinking) {
+    const { symbol, color, rotate } = getTeamStyle(ctx.activeTeamName ?? "");
     return (
-      <TeamHeaderPanelView
-        teamName=""
-        role=""
-        playerName="WAITING"
-        variant={variant}
-      />
+      <div className={styles.ghostRow}>
+        <span className={styles.symbol} style={{ "--symbol-color": color } as React.CSSProperties}>
+          <TeamSymbolIcon symbol={symbol} rotate={rotate} color={color} />
+        </span>
+        <StatusDot active={true} thinking={false} />
+      </div>
     );
   }
 
