@@ -1,5 +1,5 @@
 import React, { useCallback, ReactNode, useEffect } from "react";
-import { usePlayerContext } from "../game-data/providers";
+import { usePlayerContext, useTurn } from "../game-data/providers";
 import { GameData } from "@frontend/shared-types";
 import { PLAYER_ROLE } from "@codenames/shared/types";
 import { useAiStatus } from "@frontend/ai/api";
@@ -22,6 +22,7 @@ interface DeviceModeManagerProps {
 export const DeviceModeManager: React.FC<DeviceModeManagerProps> = ({ children, gameData }) => {
   const { currentPlayerId, setCurrentPlayerId } = usePlayerContext();
   const { data: aiStatus } = useAiStatus(gameData.publicId);
+  const { activeTurn } = useTurn();
 
   // In multi-device mode, sync currentPlayerId from playerContext
   const publicId = gameData.playerContext?.publicId;
@@ -30,6 +31,16 @@ export const DeviceModeManager: React.FC<DeviceModeManagerProps> = ({ children, 
       setCurrentPlayerId(publicId);
     }
   }, [publicId, currentPlayerId, setCurrentPlayerId]);
+
+  // In single-device mode, clear currentPlayerId when the active turn changes
+  // so the next handoff fires for the incoming player
+  const activeTurnId = activeTurn?.id;
+  useEffect(() => {
+    if (!gameData.playerContext && currentPlayerId) {
+      setCurrentPlayerId(null);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTurnId]);
 
   const requiresHandoff =
     gameData.currentRound?.status === "IN_PROGRESS" &&
