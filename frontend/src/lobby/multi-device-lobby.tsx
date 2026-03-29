@@ -132,6 +132,7 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId }) =>
 
   return (
     <PageContainer>
+      <div className={pageContainerStyles.backgroundDot} />
       <AnimatePresence mode="wait">
         {isStarting ? (
           <motion.div

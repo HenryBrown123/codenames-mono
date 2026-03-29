@@ -26,6 +26,20 @@
   z-index: 10;
 }
 
+/* Solid dot behind the card — visible when card shrinks away */
+.backgroundDot {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-primary, #00ff88);
+  box-shadow: 0 0 20px var(--color-primary, #00ff88);
+  pointer-events: none;
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 1rem;

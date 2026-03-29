@@ -74,7 +74,7 @@ export const GuestAuthPageView: React.FC<GuestAuthPageViewProps> = ({
           </AnimatePresence>
           <motion.div
             key="exit-dot"
-            className={styles.backgroundDot}
+            className={pageContainerStyles.backgroundDot}
             initial={{ opacity: 0 }}
             exit={{
               opacity: 1,

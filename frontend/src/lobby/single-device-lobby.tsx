@@ -168,6 +168,7 @@ export const SingleDeviceLobby: React.FC<SingleDeviceLobbyProps> = ({ gameId, lo
 
   return (
     <PageContainer>
+      <div className={pageContainerStyles.backgroundDot} />
       <AnimatePresence mode="wait">
         {isStarting ? (
           <motion.div

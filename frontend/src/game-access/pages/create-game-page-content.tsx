@@ -115,7 +115,7 @@ export const CreateGamePageView: React.FC<CreateGamePageViewProps> = ({
           </AnimatePresence>
           <motion.div
             key="exit-dot"
-            className={styles.backgroundDot}
+            className={pageContainerStyles.backgroundDot}
             initial={{ opacity: 0 }}
             exit={{
               opacity: 1,
