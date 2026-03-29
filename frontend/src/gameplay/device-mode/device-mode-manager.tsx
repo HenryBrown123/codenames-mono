@@ -47,7 +47,7 @@ export const DeviceModeManager: React.FC<DeviceModeManagerProps> = ({ children, 
       {requiresHandoff && aiStatus?.available && (
         <AiTurnOverlay gameData={gameData} />
       )}
-      {requiresHandoff && !aiStatus?.available && !aiStatus?.thinking && (
+      {requiresHandoff && aiStatus !== undefined && !aiStatus.available && !aiStatus.thinking && (
         <DeviceHandoffOverlay gameData={gameData} onContinue={handleHandoffComplete} />
       )}
     </>

@@ -1,11 +1,8 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDashboardState } from "../dashboards/use-dashboard-state";
-import { useGameDataRequired } from "../../game-data/providers";
-import { useAiStatus } from "@frontend/ai/api";
 import { getTeamStyle } from "../dashboards/panels/intel-panel";
 import { TeamSymbolIcon } from "../../../shared/team-symbol-icon";
-import { AwaitingLabel } from "@frontend/gameplay/shared/components";
 import styles from "./player-banner.module.css";
 
 const SYMBOL_SWITCH_DURATION = 0.3;
@@ -13,17 +10,17 @@ const EASING = [0.4, 0, 0.2, 1] as const;
 
 /**
  * Full-width banner showing player identity.
- * In single-device mode during an AI turn, shows "AI IS THINKING..." instead.
+ * Shows a neutral placeholder during AI turns (no team/player context).
  */
 export const PlayerBanner: React.FC = () => {
   const s = useDashboardState();
-  const { gameData } = useGameDataRequired();
-  const { data: aiStatus } = useAiStatus(gameData.publicId);
 
-  if (aiStatus?.thinking) {
+  if (s.isAiActive) {
     return (
       <div className={styles.banner}>
-        <AwaitingLabel>AI IS THINKING...</AwaitingLabel>
+        <div className={styles.identity}>
+          <span className={styles.playerName}>AI AGENT</span>
+        </div>
       </div>
     );
   }
