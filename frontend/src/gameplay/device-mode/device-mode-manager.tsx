@@ -2,7 +2,9 @@ import React, { useCallback, ReactNode, useEffect } from "react";
 import { usePlayerContext } from "../game-data/providers";
 import { GameData } from "@frontend/shared-types";
 import { PLAYER_ROLE } from "@codenames/shared/types";
+import { useAiStatus } from "@frontend/ai/api";
 import { DeviceHandoffOverlay } from "./device-handoff-overlay";
+import { AiTurnOverlay } from "./ai-turn-overlay";
 
 interface DeviceModeManagerProps {
   children: ReactNode;
@@ -10,15 +12,17 @@ interface DeviceModeManagerProps {
 }
 
 /**
- * Device Mode Manager
+ * Manages single-device handoff flow.
  *
- * Handles single-device handoff flow.
- * No longer wraps children in PlayerSceneProvider — UI is derived from server data.
+ * When no current player is set and a round is in progress, shows an overlay:
+ * - AI turn  → AiTurnOverlay (trigger button / thinking state, no device passing)
+ * - Human turn → DeviceHandoffOverlay (pass the device to the next player)
  */
 export const DeviceModeManager: React.FC<DeviceModeManagerProps> = ({ children, gameData }) => {
   const { currentPlayerId, setCurrentPlayerId } = usePlayerContext();
+  const { data: aiStatus } = useAiStatus(gameData.publicId);
 
-  // In multi-device mode, sync currentPlayerId with publicId from playerContext
+  // In multi-device mode, sync currentPlayerId from playerContext
   const publicId = gameData.playerContext?.publicId;
   useEffect(() => {
     if (publicId && currentPlayerId !== publicId) {
@@ -31,6 +35,8 @@ export const DeviceModeManager: React.FC<DeviceModeManagerProps> = ({ children, 
     (gameData.playerContext?.role || PLAYER_ROLE.NONE) === PLAYER_ROLE.NONE &&
     !currentPlayerId;
 
+  const isAiTurn = aiStatus?.available || aiStatus?.thinking;
+
   const handleHandoffComplete = useCallback(
     (playerId: string) => {
       setCurrentPlayerId(playerId);
@@ -41,7 +47,8 @@ export const DeviceModeManager: React.FC<DeviceModeManagerProps> = ({ children, 
   return (
     <>
       {children}
-      {requiresHandoff && (
+      {requiresHandoff && isAiTurn && <AiTurnOverlay gameData={gameData} />}
+      {requiresHandoff && !isAiTurn && (
         <DeviceHandoffOverlay gameData={gameData} onContinue={handleHandoffComplete} />
       )}
     </>
