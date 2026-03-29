@@ -684,13 +684,14 @@ Frontend and backend extend these base types with their specific requirements.
 |       |-- types
 |       |-- utils
 |       `-- websocket
+|-- icons
 `-- shared
     `-- src
         |-- api
         |   `-- modules
         `-- types
 
-129 directories
+130 directories
 ```
 
 ## Getting Started
