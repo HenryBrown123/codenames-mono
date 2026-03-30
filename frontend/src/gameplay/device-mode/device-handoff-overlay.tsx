@@ -6,6 +6,7 @@ import { getTeamConfig } from "@frontend/shared-types";
 import { ActionButton } from "@frontend/gameplay/shared/components";
 import { pageContainerStyles } from "@frontend/gameplay/shared/components";
 import { usePlayersQuery } from "../game-data/queries";
+import { useTurn } from "../game-data/providers";
 import styles from "./device-handoff-overlay.module.css";
 
 /**
@@ -86,8 +87,18 @@ export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   const { data: players } = usePlayersQuery(gameData.publicId);
+  const { activeTurn } = useTurn();
 
-  const nextPlayer = players?.find((p) => p.status === "ACTIVE");
+  // Derive the next player from the active turn rather than player.status,
+  // since single-device mode doesn't update player status flags.
+  // No clue yet → Codemaster phase; clue present → Codebreaker phase.
+  const activeTeamName = activeTurn?.teamName;
+  const nextRole = activeTurn?.clue ? PLAYER_ROLE.CODEBREAKER : PLAYER_ROLE.CODEMASTER;
+  const nextPlayer = activeTeamName
+    ? players?.find((p) => p.teamName === activeTeamName && p.role === nextRole) ??
+      players?.find((p) => p.teamName === activeTeamName)
+    : players?.find((p) => p.status === "ACTIVE");
+
   const isReady = !!nextPlayer;
   const targetRole = nextPlayer?.role || PLAYER_ROLE.NONE;
   const targetTeam = nextPlayer?.teamName || "Team";

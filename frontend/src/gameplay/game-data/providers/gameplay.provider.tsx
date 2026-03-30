@@ -7,6 +7,7 @@ import { DeviceModeManager } from "../../device-mode";
 import { ActionButton } from "../../shared/components/action-button";
 import { GameData } from "@frontend/shared-types";
 import { ViewModeProvider } from "../../game-board/view-mode";
+import { TrackedAnimationProvider } from "../../game-board/tracked-animation-context";
 import styles from "./gameplay.module.css";
 
 interface GameplayProviderProps {
@@ -65,9 +66,11 @@ const ActiveGameProviders = ({ gameId, children }: GameplayProviderProps) => {
 
   return (
     <TurnDataProvider>
-      <GameplaySceneProvider gameId={gameId} gameData={gameData}>
-        <GameActionsProvider>{children}</GameActionsProvider>
-      </GameplaySceneProvider>
+      <TrackedAnimationProvider>
+        <GameplaySceneProvider gameId={gameId} gameData={gameData}>
+          <GameActionsProvider>{children}</GameActionsProvider>
+        </GameplaySceneProvider>
+      </TrackedAnimationProvider>
     </TurnDataProvider>
   );
 };

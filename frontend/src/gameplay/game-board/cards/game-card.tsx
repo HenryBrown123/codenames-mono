@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@frontend/shared-types";
 import { getTeamType, getCardColor } from "./card-utils";
@@ -9,6 +9,7 @@ import { ARCorners } from "./overlays/shared-components";
 import { FloatingWord } from "./floating-word";
 import { useDisplayType } from "../../game-scene/use-display-type";
 import { TeamSymbolIcon } from "../../../shared/team-symbol-icon";
+import { useTrackedAnimation } from "../tracked-animation-context";
 import styles from "./game-card.module.css";
 
 /**
@@ -23,6 +24,9 @@ CardFace.displayName = "CardFace";
 const CoverCard = memo<{ teamType: string; variant: CardVisibilityState; cardIndex: number; isMobile: boolean }>(
   ({ teamType, variant, cardIndex, isMobile }) => {
     const shouldShow = variant === "flipped" || variant === "gameOverSelected";
+    const { onTrackedAnimationStart, onTrackedAnimationEnd } = useTrackedAnimation();
+    // Skip the initial mount animation cycle — only track genuine post-mount flips
+    const firstRendered = useRef(false);
 
     // Generate a consistent random rotation based on card index
     // Mobile: 0.5-1.5 degrees, Desktop: 2-5 degrees
@@ -57,6 +61,14 @@ const CoverCard = memo<{ teamType: string; variant: CardVisibilityState; cardInd
           damping: 25,
           stiffness: 260,
           mass: 1.2,
+        }}
+        onAnimationStart={() => {
+          if (!firstRendered.current) return;
+          if (shouldShow) onTrackedAnimationStart();
+        }}
+        onAnimationComplete={() => {
+          if (!firstRendered.current) { firstRendered.current = true; return; }
+          if (shouldShow) onTrackedAnimationEnd();
         }}
       >
         {/* Team symbol with embossed effect - clean layers */}

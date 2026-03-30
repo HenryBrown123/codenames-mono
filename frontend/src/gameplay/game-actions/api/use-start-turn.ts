@@ -21,6 +21,8 @@ interface StartTurnApiResponse {
 
 interface StartTurnInput {
   roundNumber: number;
+  /** Override the player ID — used when currentPlayerId isn't set (e.g. auto-advancing after an AI turn). */
+  playerId?: string;
 }
 
 /**
@@ -34,14 +36,15 @@ export const useStartTurnMutation = (
   const { currentPlayerId } = usePlayerContext();
 
   return useMutation({
-    mutationFn: async ({ roundNumber }) => {
-      if (!currentPlayerId) {
+    mutationFn: async ({ roundNumber, playerId: playerIdOverride }) => {
+      const id = playerIdOverride ?? currentPlayerId;
+      if (!id) {
         throw new Error("Player ID is required to start turn");
       }
 
       const response: AxiosResponse<StartTurnApiResponse> = await api.post(
         `/games/${gameId}/rounds/${roundNumber}/turns`,
-        { playerId: currentPlayerId }
+        { playerId: id }
       );
 
       if (!response.data.success) {
