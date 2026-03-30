@@ -1,17 +1,27 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useCreateGuestSession } from "@frontend/game-access/api/query-hooks/use-guest-session";
-import { useCreateNewGame } from "@frontend/game-access/api/query-hooks/use-create-new-game";
-import { GuestAuthView } from "@frontend/game-access/pages/guest-auth-page-content";
-import { CreateGameView } from "@frontend/game-access/pages/create-game-page-content";
+import { AuthScene } from "@frontend/game-access/pages/auth-scene";
+import { SetupScene } from "@frontend/game-access/pages/setup-scene";
 import { LobbyScene } from "@frontend/lobby/lobby-scene";
 import { SceneCard } from "./scene-card";
 import styles from "./pre-game-flow.module.css";
 
+/**
+ * Manages the pre-game journey: auth → setup → lobby → gameplay.
+ *
+ * Pure plumbing — each scene owns its own API calls and side effects.
+ * This component only handles step sequencing, transitions, and navigation.
+ */
+
 type Step = "auth" | "setup" | "lobby";
 
 const STEPS: Step[] = ["auth", "setup", "lobby"];
+
+interface SceneConfig {
+  maxWidth?: number;
+  render: () => React.ReactNode;
+}
 
 export const PreGameFlow: React.FC = () => {
   const navigate = useNavigate();
@@ -20,110 +30,33 @@ export const PreGameFlow: React.FC = () => {
   const [exiting, setExiting] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Error state per step
-  const [error, setError] = useState<string | null>(null);
-
-  // API hooks
-  const { mutate: createGuestSession } = useCreateGuestSession();
-  const { mutate: createNewGame } = useCreateNewGame();
-
-  // Ref to hold the callback that runs after exit animation completes
-  const onExitCompleteRef = useRef<(() => void) | null>(null);
-
-  const advance = useCallback((afterExit?: () => void) => {
-    onExitCompleteRef.current = afterExit ?? null;
-    setExiting(true);
-    setError(null);
-  }, []);
+  const advance = useCallback(() => setExiting(true), []);
 
   const handleExitComplete = useCallback(() => {
-    if (onExitCompleteRef.current) {
-      onExitCompleteRef.current();
-      onExitCompleteRef.current = null;
-      return;
-    }
-
-    // Default: move to next step
     const nextIndex = STEPS.indexOf(step) + 1;
     if (nextIndex < STEPS.length) {
       setStep(STEPS[nextIndex]);
       setExiting(false);
-    }
-  }, [step]);
-
-  const handleConnect = useCallback(() => {
-    advance(() => {
-      createGuestSession(undefined, {
-        onSuccess: () => {
-          setStep("setup");
-          setExiting(false);
-        },
-        onError: () => {
-          // Go back to auth with error
-          setExiting(false);
-          setError("Failed to create a guest session. Please try again.");
-        },
-      });
-    });
-  }, [advance, createGuestSession]);
-
-  const handleGameCreated = useCallback(
-    (gameType: string, gameFormat: string, aiMode: boolean) => {
-      advance(() => {
-        createNewGame(
-          { gameType: gameType as any, gameFormat: gameFormat as any, aiMode },
-          {
-            onSuccess: (newGameData) => {
-              setGameId(newGameData.publicId);
-              setStep("lobby");
-              setExiting(false);
-            },
-            onError: (err) => {
-              console.error("Game creation error:", err);
-              setExiting(false);
-              setError("Failed to create a new game. Please try again.");
-            },
-          },
-        );
-      });
-    },
-    [advance, createNewGame],
-  );
-
-  const handleGameStart = useCallback(() => {
-    // Lobby handles its own API calls (startGame + create round)
-    // then calls this to exit the flow
-    advance(() => {
+    } else {
       navigate(`/game/${gameId}`, { state: { fromLobby: true } });
-    });
-  }, [advance, navigate, gameId]);
+    }
+  }, [step, navigate, gameId]);
 
   const handleLobbyLoading = useCallback((isLoading: boolean) => {
     setLoading(isLoading);
   }, []);
 
-  interface SceneConfig {
-    maxWidth?: number;
-    render: () => React.ReactNode;
-  }
-
   const scenes: Record<Step, SceneConfig> = {
     auth: {
       maxWidth: 480,
       render: () => (
-        <GuestAuthView
-          onConnect={handleConnect}
-          error={error}
-        />
+        <AuthScene onComplete={advance} />
       ),
     },
     setup: {
       maxWidth: 700,
       render: () => (
-        <CreateGameView
-          onCreateGame={handleGameCreated}
-          error={error}
-        />
+        <SetupScene onComplete={(id) => { setGameId(id); advance(); }} />
       ),
     },
     lobby: {
@@ -131,7 +64,7 @@ export const PreGameFlow: React.FC = () => {
       render: () => (
         <LobbyScene
           gameId={gameId!}
-          onStart={handleGameStart}
+          onStart={advance}
           onLoading={handleLobbyLoading}
         />
       ),

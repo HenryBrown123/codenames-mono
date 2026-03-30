@@ -1,2 +1,2 @@
-export * from "./create-game-page-content";
-export * from "./guest-auth-page-content";
+export { AuthScene } from "./auth-scene";
+export { SetupScene } from "./setup-scene";

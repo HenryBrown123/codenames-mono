@@ -1,5 +1,6 @@
 import axios from "axios";
 
+// todo: add to to .env
 const api = axios.create({
   baseURL: "http://localhost:3000/api",
   withCredentials: true, // Ensures cookies are sent with requests
