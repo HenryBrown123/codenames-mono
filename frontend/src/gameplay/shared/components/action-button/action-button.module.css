@@ -45,13 +45,16 @@
 
 /* Compact size variant */
 .sm {
-  width: 180px;
   font-size: 0.85rem;
   padding: 0.65rem 1rem;
   min-height: 42px;
   border-radius: 6px;
   text-align: center;
   overflow: hidden;
+}
+
+.sm:not(.fullWidth) {
+  width: 180px;
 }
 
 .sm::before {

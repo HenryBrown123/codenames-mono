@@ -110,21 +110,23 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
       <div className={styles.panel}>
         <div className={styles.content}>
           <div className={styles.contentSpacer} />
-          <div className={styles.lobbyButtons}>
-            {s.lobbyAction && (
-              <ActionButton size="sm"
-                text={s.lobbyAction.label}
-                onClick={s.lobbyAction.handler}
-                enabled={!s.isLoading}
-              />
-            )}
-            {s.lobbyAction?.canRedeal && (
-              <ActionButton size="sm"
-                text="REDEAL"
-                onClick={s.lobbyAction.redealHandler}
-                enabled={!s.isLoading}
-              />
-            )}
+          <div className={styles.fixedWidthWrapper}>
+            <div className={styles.lobbyButtons}>
+              {s.lobbyAction && (
+                <ActionButton size="sm" fullWidth
+                  text={s.lobbyAction.label}
+                  onClick={s.lobbyAction.handler}
+                  enabled={!s.isLoading}
+                />
+              )}
+              {s.lobbyAction?.canRedeal && (
+                <ActionButton size="sm" fullWidth
+                  text="REDEAL"
+                  onClick={s.lobbyAction.redealHandler}
+                  enabled={!s.isLoading}
+                />
+              )}
+            </div>
           </div>
           <div className={styles.contentSpacer} />
         </div>
@@ -214,7 +216,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
                   </div>
                 </div>
               ) : (
-                <div className={styles.intelBox}>
+                <div className={`${styles.fixedWidthWrapper} ${styles.intelBox}`}>
                   <IntelContent
                     hasClue={intel.hasClue}
                     clueWord={intel.clueWord}
