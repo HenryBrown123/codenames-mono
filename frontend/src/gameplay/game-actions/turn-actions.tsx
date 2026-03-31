@@ -1,8 +1,9 @@
 import { createContext, useState, useCallback, useContext, ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useGiveClueMutation, useMakeGuessMutation, useEndTurnMutation } from "./api";
+import { useGiveClueMutation, useMakeGuessMutation, useEndTurnMutation, useStartTurnMutation } from "./api";
 import { useGameDataRequired } from "../game-data/providers";
 import { useTurn } from "../game-data/providers";
+import { usePlayersQuery } from "../game-data/queries";
 
 /** Turn action names */
 export type TurnActionName = "giveClue" | "makeGuess" | "endTurn";
@@ -53,6 +54,8 @@ export const TurnActionsProvider = ({ children }: TurnActionsProviderProps) => {
   const giveClueMutation = useGiveClueMutation(gameId);
   const makeGuessMutation = useMakeGuessMutation(gameId);
   const endTurnMutation = useEndTurnMutation(gameId);
+  const startTurnMutation = useStartTurnMutation(gameId);
+  const { data: players } = usePlayersQuery(gameId);
 
   const resetActionState = useCallback(() => {
     setActionState(initialState);
@@ -126,6 +129,12 @@ export const TurnActionsProvider = ({ children }: TurnActionsProviderProps) => {
         onSuccess: () => {
           setActionState({ name: "endTurn", status: "success", error: null });
           invalidateGameData();
+
+          // Immediately start the next turn — works in both single and multi-device mode.
+          const anyPlayer = players?.find((p) => p.publicId);
+          if (anyPlayer) {
+            startTurnMutation.mutate({ roundNumber, playerId: anyPlayer.publicId });
+          }
         },
         onError: (error) => {
           console.error("Failed to end turn:", error);
@@ -133,7 +142,7 @@ export const TurnActionsProvider = ({ children }: TurnActionsProviderProps) => {
         },
       },
     );
-  }, [endTurnMutation, gameData.currentRound, invalidateGameData]);
+  }, [endTurnMutation, startTurnMutation, gameData.currentRound, players, invalidateGameData]);
 
   const value: TurnActionsContextValue = {
     actionState,

@@ -1,11 +1,10 @@
-import React, { useCallback, ReactNode, useEffect, useRef } from "react";
+import React, { useCallback, ReactNode, useEffect, useRef, useState } from "react";
 import { usePlayerContext, useTurn } from "../game-data/providers";
 import { GameData } from "@frontend/shared-types";
 import { PLAYER_ROLE } from "@codenames/shared/types";
 import { useAiStatus } from "@frontend/ai/api";
 import { usePlayersQuery } from "../game-data/queries";
 import { useStartTurnMutation } from "../game-actions/api/use-start-turn";
-import { useTrackedAnimation } from "../game-board/tracked-animation-context";
 import { DeviceHandoffOverlay } from "./device-handoff-overlay";
 import { AiTurnOverlay } from "./ai-turn-overlay";
 
@@ -29,7 +28,6 @@ export const DeviceModeManager: React.FC<DeviceModeManagerProps> = ({ children, 
   const { data: players } = usePlayersQuery(gameData.publicId);
   const startTurn = useStartTurnMutation(gameData.publicId);
   const wasThinking = useRef(false);
-  const { isAnimating } = useTrackedAnimation();
 
   // In multi-device mode, sync currentPlayerId from playerContext
   const publicId = gameData.playerContext?.publicId;
@@ -72,26 +70,19 @@ export const DeviceModeManager: React.FC<DeviceModeManagerProps> = ({ children, 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTurnId, activeTurnStatus]);
 
-  // Auto-advance to the next turn when a human turn completes in single-device mode.
-  // (AI turns are handled by the aiThinking effect above.)
-  useEffect(() => {
-    if (activeTurnStatus !== "COMPLETED") return;
-    if (gameData.playerContext) return; // multi-device: not our job
-    if (aiThinking) return; // AI finishing will handle this via the aiThinking effect
-    if (!gameData.currentRound || gameData.currentRound.status !== "IN_PROGRESS") return;
-    if (startTurn.isPending) return;
-
-    const anyPlayer = players?.find((p) => p.publicId);
-    if (!anyPlayer) return;
-
-    startTurn.mutate({ roundNumber: gameData.currentRound.roundNumber, playerId: anyPlayer.publicId });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTurnStatus]);
-
   const requiresHandoff =
     gameData.currentRound?.status === "IN_PROGRESS" &&
     (gameData.playerContext?.role || PLAYER_ROLE.NONE) === PLAYER_ROLE.NONE &&
     !currentPlayerId;
+
+  // Delay showing the handoff overlay to let card animations settle first.
+  const HANDOFF_DELAY_MS = 1_000;
+  const [handoffReady, setHandoffReady] = useState(false);
+  useEffect(() => {
+    if (!requiresHandoff) { setHandoffReady(false); return; }
+    const t = setTimeout(() => setHandoffReady(true), HANDOFF_DELAY_MS);
+    return () => clearTimeout(t);
+  }, [requiresHandoff]);
 
   const handleHandoffComplete = useCallback(
     (playerId: string) => setCurrentPlayerId(playerId),
@@ -101,10 +92,10 @@ export const DeviceModeManager: React.FC<DeviceModeManagerProps> = ({ children, 
   return (
     <>
       {children}
-      {requiresHandoff && !isAnimating && aiStatus?.available && (
+      {handoffReady && aiStatus?.available && (
         <AiTurnOverlay gameData={gameData} />
       )}
-      {requiresHandoff && !isAnimating && aiStatus !== undefined && !aiStatus.available && !aiStatus.thinking && (
+      {handoffReady && !aiStatus?.available && !aiStatus?.thinking && (
         <DeviceHandoffOverlay gameData={gameData} onContinue={handleHandoffComplete} />
       )}
     </>
