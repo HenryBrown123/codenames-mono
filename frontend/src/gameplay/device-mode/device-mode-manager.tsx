@@ -47,7 +47,9 @@ export const DeviceModeManager: React.FC<DeviceModeManagerProps> = ({ children, 
 
     if (!justFinished) return;
     if (gameData.playerContext) return; // multi-device: human handles this
-    if (activeTurn?.status === "ACTIVE") return; // turn still running
+    // Note: no bail on activeTurn?.status === "ACTIVE" — that reads stale React Query cache.
+    // By the time the 2s poll detects thinking:false, the server has already completed the turn.
+    // Let startTurn hit the API directly; the server is the source of truth.
     if (startTurn.isPending) return;
 
     const anyPlayer = players?.find((p) => p.publicId);
@@ -58,17 +60,20 @@ export const DeviceModeManager: React.FC<DeviceModeManagerProps> = ({ children, 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aiThinking]);
 
-  // In single-device mode, clear currentPlayerId when the active turn changes OR completes.
+  // In single-device mode, clear currentPlayerId when the active turn changes, completes,
+  // or gains a clue (codemaster → codebreaker phase transition within the same turn).
   // TurnDataProvider falls back to the last turn's ID even after it completes, so watching
   // activeTurnId alone misses the END TURN case — we must also watch status.
+  // hasClue catches the mid-turn handoff: codemaster gives clue → AI/human codebreaker takes over.
   const activeTurnId = activeTurn?.id;
   const activeTurnStatus = activeTurn?.status;
+  const hasClue = !!activeTurn?.clue;
   useEffect(() => {
     if (!gameData.playerContext && currentPlayerId) {
       setCurrentPlayerId(null);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTurnId, activeTurnStatus]);
+  }, [activeTurnId, activeTurnStatus, hasClue]);
 
   const requiresHandoff =
     gameData.currentRound?.status === "IN_PROGRESS" &&
