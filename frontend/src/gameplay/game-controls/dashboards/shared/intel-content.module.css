@@ -85,3 +85,13 @@
   opacity: 0.15;
   pointer-events: none;
 }
+
+@media (max-height: 799px) {
+  .clueWord, .clueNumber { font-size: 1rem; }
+  .guessRow { font-size: 0.875rem; }
+}
+
+@media (max-height: 660px) {
+  .clueWord, .clueNumber { font-size: 0.875rem; }
+  .guessRow { font-size: 0.8rem; }
+}

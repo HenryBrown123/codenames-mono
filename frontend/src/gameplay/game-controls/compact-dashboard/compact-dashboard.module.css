@@ -8,6 +8,14 @@
   box-sizing: border-box;
 }
 
+@media (max-height: 720px) {
+  .panel { padding: 8px 16px 14px; }
+}
+
+@media (max-height: 660px) {
+  .panel { padding: 6px 16px 10px; }
+}
+
 .content {
   flex: 1;
   display: flex;
