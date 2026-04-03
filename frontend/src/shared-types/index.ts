@@ -9,7 +9,7 @@ export { assertPlayerRole } from "./player";
 export type { Card, CardType } from "./card";
 export { assertCardType } from "./card";
 
-export type { Clue, Guess, GuessOutcome, Turn, TurnData, TurnStatus } from "./turn";
+export type { TurnPhase, Clue, Guess, GuessOutcome, Turn, TurnData, TurnStatus } from "./turn";
 export { assertTurnStatus, assertGuessOutcome } from "./turn";
 
 export type { Round, RoundState } from "./round";

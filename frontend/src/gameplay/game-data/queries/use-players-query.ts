@@ -8,6 +8,7 @@ export interface Player {
   teamName: string;
   role: "CODEMASTER" | "CODEBREAKER" | "SPECTATOR" | "NONE";
   status: "ACTIVE" | "WAITING";
+  isAi: boolean;
 }
 
 interface PlayersApiResponse {

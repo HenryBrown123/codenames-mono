@@ -1,5 +1,8 @@
 import { TurnStateProvider, ProviderTurnData } from "@backend/common/state/turn-state.provider";
 import { TurnsFinder, RoundId, TurnResult } from "@backend/common/data-access/repositories/turns.repository";
+import { PlayerFinderAll, RoundId as PlayerRoundId } from "@backend/common/data-access/repositories/players.repository";
+import { TurnPhase, Player } from "@backend/common/state/gameplay-state.types";
+import { computeTurnPhase } from "@backend/common/state/gameplay-state.helpers";
 
 /**
  * API response turn data (sanitized - no internal IDs)
@@ -29,6 +32,7 @@ export interface ApiTurnData {
     outcome: string | null;
     createdAt: Date;
   }[];
+  active: TurnPhase | null;
 }
 
 export interface GetTurnResponse {
@@ -43,7 +47,7 @@ export type GetTurnService = (
 /**
  * Transform a turn result from repository to API format
  */
-const transformTurnToApi = (turn: TurnResult): ApiTurnData => {
+const transformTurnToApi = (turn: TurnResult, players: Player[]): ApiTurnData => {
   const guesses = turn.guesses.map((g) => ({
     cardWord: g.cardWord,
     playerName: g.playerName,
@@ -72,13 +76,14 @@ const transformTurnToApi = (turn: TurnResult): ApiTurnData => {
     hasGuesses,
     lastGuess,
     prevGuesses,
+    active: computeTurnPhase(turn, players),
   };
 };
 
 /**
  * Transform provider turn data to API format
  */
-const transformProviderTurnToApi = (turnData: ProviderTurnData): ApiTurnData => ({
+const transformProviderTurnToApi = (turnData: ProviderTurnData, active: TurnPhase | null): ApiTurnData => ({
   id: turnData.publicId,
   teamName: turnData.teamName,
   status: turnData.status,
@@ -89,32 +94,37 @@ const transformProviderTurnToApi = (turnData: ProviderTurnData): ApiTurnData => 
   hasGuesses: turnData.hasGuesses,
   lastGuess: turnData.lastGuess,
   prevGuesses: turnData.prevGuesses,
+  active,
 });
 
 export interface GetTurnServiceDeps {
   getTurnState: TurnStateProvider;
   getTurnsByRoundId: TurnsFinder<RoundId>;
+  findPlayersByRoundId: PlayerFinderAll<PlayerRoundId>;
 }
 
 /**
  * Service for fetching turn data with historic turns for API response
  */
 export const getTurnService =
-  ({ getTurnState, getTurnsByRoundId }: GetTurnServiceDeps): GetTurnService =>
+  ({ getTurnState, getTurnsByRoundId, findPlayersByRoundId }: GetTurnServiceDeps): GetTurnService =>
   async (publicTurnId) => {
-    // Get turn data with computed fields from provider
     const turnData = await getTurnState(publicTurnId);
 
     if (!turnData) {
       return null;
     }
 
-    // Fetch all turns for the same round
-    const allTurns = await getTurnsByRoundId(turnData._roundId);
+    const [allTurns, players] = await Promise.all([
+      getTurnsByRoundId(turnData._roundId),
+      findPlayersByRoundId(turnData._roundId),
+    ]);
 
-    // Transform to API format
-    const turn = transformProviderTurnToApi(turnData);
-    const historicTurns = allTurns.map(transformTurnToApi);
+    const matchingTurn = allTurns.find((t) => t.publicId === turnData.publicId);
+    const active = matchingTurn ? computeTurnPhase(matchingTurn, players) : null;
+
+    const turn = transformProviderTurnToApi(turnData, active);
+    const historicTurns = allTurns.map((t) => transformTurnToApi(t, players));
 
     return {
       turn,

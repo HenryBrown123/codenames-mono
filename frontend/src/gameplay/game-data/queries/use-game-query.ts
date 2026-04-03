@@ -1,7 +1,7 @@
 import { useQuery, UseQueryResult, keepPreviousData } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/api";
-import type { GameData, Round, PlayerContext } from "@frontend/shared-types";
+import type { GameData, Round, PlayerContext, TurnPhase } from "@frontend/shared-types";
 import {
   assertGameState,
   assertGameFormat,
@@ -10,7 +10,7 @@ import {
   assertPlayerRole,
   assertTurnStatus,
 } from "@frontend/shared-types";
-import { usePlayerContext } from "../providers/player-context-provider";
+import { usePlayerSession } from "../providers/active-game-session-provider";
 
 interface GameStateApiResponse {
   success: boolean;
@@ -54,6 +54,12 @@ interface GameStateApiResponse {
             playerName: string;
             outcome: string | null;
           }>;
+          active: {
+            teamName: string;
+            role: string;
+            isAi: boolean;
+            playerName: string | null;
+          } | null;
         }>;
       } | null;
       playerContext: {
@@ -88,6 +94,16 @@ function transformApiResponseToGameData(apiResponse: GameStateApiResponse): Game
       cards: game.currentRound.cards,
       turns: game.currentRound.turns.map((turn) => {
         assertTurnStatus(turn.status);
+        const active: TurnPhase | null = (() => {
+          if (!turn.active) return null;
+          assertPlayerRole(turn.active.role);
+          return {
+            teamName: turn.active.teamName,
+            role: turn.active.role,
+            isAi: turn.active.isAi,
+            playerName: turn.active.playerName,
+          };
+        })();
         return {
           id: turn.id,
           teamName: turn.teamName,
@@ -95,6 +111,7 @@ function transformApiResponseToGameData(apiResponse: GameStateApiResponse): Game
           guessesRemaining: turn.guessesRemaining,
           clue: turn.clue,
           guesses: turn.guesses,
+          active,
         };
       }),
     };
@@ -131,36 +148,39 @@ function transformApiResponseToGameData(apiResponse: GameStateApiResponse): Game
   };
 }
 
-const fetchGame = async (gameId: string, playerId?: string): Promise<GameData> => {
+const fetchGame = async (
+  gameId: string,
+  perspective?: { role: string },
+): Promise<GameData> => {
   const response: AxiosResponse<GameStateApiResponse> = await api.get(`/games/${gameId}`, {
-    params: playerId ? { playerId } : undefined,
+    params: perspective ? { role: perspective.role } : undefined,
   });
 
   if (!response.data.success) {
     throw new Error("Failed to fetch game data");
   }
 
-  console.log(response.data.data.game);
-
   return transformApiResponseToGameData(response.data);
 };
 
 /**
  * Fetches and caches game state data.
+ * Single-device: sends ?role=X after handoff so backend returns that role's perspective.
+ * Multi-device: no param — backend resolves perspective from JWT userId.
  */
 export const useGameDataQuery = (gameId: string | null): UseQueryResult<GameData, Error> => {
-  const { currentPlayerId } = usePlayerContext();
+  const { claimedRole } = usePlayerSession();
 
   return useQuery<GameData>({
-    queryKey: ["gameData", gameId, currentPlayerId], // null playerId is valid for cache key
+    queryKey: ["gameData", gameId, claimedRole],
     queryFn: () => {
       if (!gameId) {
         throw new Error("Game ID is required");
       }
-      // Pass undefined if no playerId - backend returns NONE role view
-      return fetchGame(gameId, currentPlayerId || undefined);
+      const perspective = claimedRole ? { role: claimedRole } : undefined;
+      return fetchGame(gameId, perspective);
     },
-    enabled: !!gameId, // Don't wait for playerId - run with null to get NONE role
+    enabled: !!gameId,
     refetchOnWindowFocus: true,
     staleTime: 0,
     placeholderData: keepPreviousData,

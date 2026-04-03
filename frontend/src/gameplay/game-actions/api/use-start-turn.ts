@@ -5,7 +5,9 @@ import {
 } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/api";
-import { usePlayerContext } from "../../game-data/providers/player-context-provider";
+import { GAME_TYPE } from "@codenames/shared/types";
+import { usePlayerSession } from "../../game-data/providers/active-game-session-provider";
+import { useGameDataRequired } from "../../game-data/providers";
 
 interface StartTurnApiResponse {
   success: boolean;
@@ -21,8 +23,6 @@ interface StartTurnApiResponse {
 
 interface StartTurnInput {
   roundNumber: number;
-  /** Override the player ID — used when currentPlayerId isn't set (e.g. auto-advancing after an AI turn). */
-  playerId?: string;
 }
 
 /**
@@ -33,18 +33,20 @@ export const useStartTurnMutation = (
   gameId: string,
 ): UseMutationResult<void, Error, StartTurnInput> => {
   const queryClient = useQueryClient();
-  const { currentPlayerId } = usePlayerContext();
+  const { claimedRole } = usePlayerSession();
+  const { gameData } = useGameDataRequired();
+
+  const isSingleDevice = gameData.gameType === GAME_TYPE.SINGLE_DEVICE;
 
   return useMutation({
-    mutationFn: async ({ roundNumber, playerId: playerIdOverride }) => {
-      const id = playerIdOverride ?? currentPlayerId;
-      if (!id) {
-        throw new Error("Player ID is required to start turn");
-      }
+    mutationFn: async ({ roundNumber }) => {
+      const body = isSingleDevice
+        ? { role: claimedRole }
+        : { playerId: gameData.playerContext!.publicId };
 
       const response: AxiosResponse<StartTurnApiResponse> = await api.post(
         `/games/${gameId}/rounds/${roundNumber}/turns`,
-        { playerId: id }
+        body,
       );
 
       if (!response.data.success) {
@@ -52,9 +54,7 @@ export const useStartTurnMutation = (
       }
     },
     onSuccess: async () => {
-      // Invalidate all game-related queries to refresh UI
       await queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
-      // Also invalidate turn queries as a new turn was created
       await queryClient.invalidateQueries({ queryKey: ["turn"] });
     },
   });

@@ -1,43 +1,28 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getTeamConfig } from "@frontend/shared-types";
+import type { TurnPhase } from "@frontend/shared-types";
 import { ActionButton, pageContainerStyles } from "@frontend/gameplay/shared/components";
-import { useAiStatus, useTriggerAiMove } from "@frontend/ai/api";
-import { usePlayersQuery } from "../game-data/queries";
-import type { GameData } from "@frontend/shared-types";
 import styles from "./device-handoff-overlay.module.css";
 
 /**
- * Handoff-style overlay shown when it's the AI's turn.
- * User presses EXECUTE to trigger the AI move, then the overlay closes
- * and the header switches to "AI IS THINKING..." mode.
+ * Shown when it's an AI turn (same team, no handoff needed).
+ * Prompts the user to pass the device so the team can trigger their AI
+ * from the dashboard — no auto-trigger here.
  */
 
 const EASE = [0.4, 0, 0.2, 1] as const;
 
 interface AiTurnOverlayProps {
-  gameData: GameData;
+  active: TurnPhase;
+  onPass: () => void;
 }
 
-export const AiTurnOverlay: React.FC<AiTurnOverlayProps> = ({ gameData }) => {
-  const { data: aiStatus } = useAiStatus(gameData.publicId);
-  const { data: players } = usePlayersQuery(gameData.publicId);
-  const triggerMove = useTriggerAiMove(gameData.publicId);
-
-  // Local visibility — dismissed immediately on EXECUTE, resets when available flips true again
+export const AiTurnOverlay: React.FC<AiTurnOverlayProps> = ({ active, onPass }) => {
   const [visible, setVisible] = useState(true);
-  useEffect(() => {
-    if (aiStatus?.available) setVisible(true);
-  }, [aiStatus?.available]);
 
-  const activePlayer = players?.find((p) => p.status === "ACTIVE");
-  const teamConfig = activePlayer ? getTeamConfig(activePlayer.teamName) : null;
-  const isSpymaster = activePlayer?.role === "CODEMASTER";
-
-  const handleExecute = () => {
-    triggerMove.mutate();
-    setVisible(false);
-  };
+  const teamConfig = getTeamConfig(active.teamName);
+  const roleLabel = active.role === "CODEMASTER" ? "Spymaster" : "Operatives";
 
   return (
     <AnimatePresence>
@@ -59,22 +44,24 @@ export const AiTurnOverlay: React.FC<AiTurnOverlayProps> = ({ gameData }) => {
           >
             <h1 className={styles.title}>AI TURN</h1>
 
-            {teamConfig && activePlayer && (
-              <div
-                className={styles.playerInfo}
-                style={{ "--team-color": teamConfig.cssVar } as React.CSSProperties}
-              >
-                <div className={styles.playerName}>{activePlayer.teamName}</div>
-                <div className={styles.roleLabel}>
-                  {teamConfig.symbol} {isSpymaster ? "Spymaster" : "Operatives"}
-                </div>
+            <div
+              className={styles.playerInfo}
+              style={{ "--team-color": teamConfig.cssVar } as React.CSSProperties}
+            >
+              <div className={styles.playerName}>{active.teamName}</div>
+              <div className={styles.roleLabel}>
+                {teamConfig.symbol} {roleLabel} · AI Agent
               </div>
-            )}
+            </div>
+
+            <p className={styles.subtitle}>
+              Pass to the {active.teamName} team to trigger their AI agent.
+            </p>
 
             <ActionButton
-              text="EXECUTE"
-              onClick={handleExecute}
-              enabled={!triggerMove.isPending}
+              text="PASS"
+              enabled={true}
+              onClick={() => { onPass(); setVisible(false); }}
               fullWidth
             />
           </motion.div>

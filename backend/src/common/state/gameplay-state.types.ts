@@ -66,6 +66,18 @@ export const clueSchema = z.object({
 });
 
 /**
+ * Schema for the active phase on a turn.
+ * Describes WHAT is active (a role on a team), not a specific player.
+ * - playerName is set for CODEMASTER (one person), null for CODEBREAKER (group).
+ */
+export const turnPhaseSchema = z.object({
+  teamName: z.string(),
+  role: z.enum([PLAYER_ROLE.CODEMASTER, PLAYER_ROLE.CODEBREAKER]),
+  isAi: z.boolean(),
+  playerName: z.string().nullable(),
+});
+
+/**
  * Schema for validating turn data
  */
 export const turnSchema = z.object({
@@ -80,6 +92,7 @@ export const turnSchema = z.object({
   completedAt: z.date().nullable(),
   clue: clueSchema.optional(),
   guesses: z.array(guessSchema).default([]),
+  active: turnPhaseSchema.nullable().optional(),
 });
 
 /**
@@ -168,6 +181,7 @@ export type Card = z.infer<typeof cardSchema>;
 export type Guess = z.infer<typeof guessSchema>;
 export type Clue = z.infer<typeof clueSchema>;
 export type Turn = z.infer<typeof turnSchema>;
+export type TurnPhase = z.infer<typeof turnPhaseSchema>;
 export type Round = z.infer<typeof roundSchema>;
 export type PlayerContext = z.infer<typeof playerContextSchema>;
 export type CurrentRound = z.infer<typeof currentRoundSchema>;

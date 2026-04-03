@@ -2,27 +2,42 @@ import {
   ClueCreator,
   TurnGuessUpdater,
 } from "@backend/common/data-access/repositories/turns.repository";
-import { GiveClueValidGameState } from "./give-clue.rules";
+import type { GiveClueValidGameState, validate, validateClueWord } from "./give-clue.rules";
+import type { GameAggregate } from "@backend/common/state/gameplay-state.types";
 import { complexProperties } from "@backend/common/state/gameplay-state.helpers";
-import { UnexpectedGameplayError } from "../errors/gameplay.errors";
+import { UnexpectedGameplayError, GameplayValidationError } from "../errors/gameplay.errors";
 
 /**
- * Factory function that creates a clue giving action with repository dependencies
+ * Factory function that creates a self-validating clue giving action.
+ * Receives raw GameAggregate, validates internally, then executes.
  */
 export const giveClueToTurn = (
   createClue: ClueCreator,
   updateTurnGuesses: TurnGuessUpdater,
+  validateGiveClue: typeof validate,
+  validateClueWordFn: typeof validateClueWord,
 ) => {
-  /**
-   * Gives a clue for the current turn in a pre-validated game state
-   * Handles both clue creation AND setting appropriate guess allowance
-   */
   return async (
-    gameState: GiveClueValidGameState,
+    gameState: GameAggregate,
     word: string,
     targetCardCount: number,
   ) => {
-    const currentTurn = complexProperties.getCurrentTurn(gameState);
+    // 1. Validate clue word against board
+    const clueWordResult = validateClueWordFn(gameState, word);
+    if (!clueWordResult.valid) {
+      throw new GameplayValidationError("clue word", [
+        { path: "word", message: clueWordResult.error! },
+      ]);
+    }
+
+    // 2. Validate game state (role, turn, team)
+    const validation = validateGiveClue(gameState);
+    if (!validation.valid) {
+      throw new GameplayValidationError("give clue", validation.errors);
+    }
+
+    // 3. Execute
+    const currentTurn = complexProperties.getCurrentTurn(validation.data);
     if (!currentTurn) {
       throw new UnexpectedGameplayError("No active turn found");
     }
@@ -31,7 +46,7 @@ export const giveClueToTurn = (
 
     const allowedGuesses = targetCardCount + 1;
 
-    const unselectedCards = gameState.currentRound.cards.filter(
+    const unselectedCards = (validation.data as GameAggregate).currentRound!.cards.filter(
       (card) => !card.selected,
     );
     if (allowedGuesses > unselectedCards.length) {
@@ -40,7 +55,6 @@ export const giveClueToTurn = (
       );
     }
 
-    // Update guess allowance as part of the domain action
     const updatedTurn = await updateTurnGuesses(
       currentTurn._id,
       allowedGuesses,

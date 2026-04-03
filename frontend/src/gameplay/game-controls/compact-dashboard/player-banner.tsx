@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useDashboardState } from "../dashboards/use-dashboard-state";
 import { getTeamStyle } from "../dashboards/panels/intel-panel";
 import { TeamSymbolIcon } from "../../../shared/team-symbol-icon";
-import { StatusDot } from "@frontend/gameplay/shared/components";
 import styles from "./player-banner.module.css";
 
 const SYMBOL_SWITCH_DURATION = 0.3;
@@ -16,7 +15,7 @@ const EASING = [0.4, 0, 0.2, 1] as const;
 export const PlayerBanner: React.FC = () => {
   const s = useDashboardState();
 
-  if (s.isAiActive) {
+  if (s.isAiSession) {
     const { symbol, color, rotate } = getTeamStyle(s.activeTeamName);
     return (
       <div className={styles.banner}>
@@ -24,7 +23,7 @@ export const PlayerBanner: React.FC = () => {
           <TeamSymbolIcon symbol={symbol} rotate={rotate} />
         </span>
         <div className={styles.identity}>
-          <StatusDot active={true} thinking={false} />
+          <span className={styles.playerName}>[AI TURN]</span>
         </div>
       </div>
     );

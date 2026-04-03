@@ -128,7 +128,7 @@ initializeUsers(app, dbInstance, {
 });
 const setup = initializeGameSetup(app, dbInstance, authHandlers);
 const lobby = initializeLobby(app, dbInstance, authHandlers);
-const { giveClueService, makeGuessService, endTurnService, getGameState } = initializeGameplay(
+const { giveClueService, makeGuessService, endTurnService, getGameState, loadGameData } = initializeGameplay(
   app,
   dbInstance,
   authHandlers,
@@ -152,6 +152,7 @@ const ai = initializeAI({
   makeGuess: makeGuessService,
   endTurn: endTurnService,
   getGameState,
+  loadGameData,
 });
 
 // Initialize chat feature

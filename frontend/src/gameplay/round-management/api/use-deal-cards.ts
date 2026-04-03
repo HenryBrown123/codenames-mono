@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient, UseMutationResult } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/api";
-import { usePlayerContext } from "../../game-data/providers/player-context-provider";
+import { useGameDataRequired } from "../../game-data/providers";
 
 interface DealCardsApiResponse {
   success: boolean;
@@ -27,13 +27,13 @@ export const useDealCardsMutation = (
   gameId: string,
 ): UseMutationResult<DealCardsApiResponse["data"], Error, DealCardsInput> => {
   const queryClient = useQueryClient();
-  const { currentPlayerId } = usePlayerContext();
+  const { gameData } = useGameDataRequired();
 
   return useMutation({
     mutationFn: async ({ roundNumber, redeal = false }) => {
       const response: AxiosResponse<DealCardsApiResponse> = await api.post(
         `/games/${gameId}/rounds/${roundNumber}/deal`,
-        { redeal, playerId: currentPlayerId },
+        { redeal, playerId: gameData.playerContext?.publicId ?? null },
       );
 
       if (!response.data.success) {

@@ -3,6 +3,8 @@ import { useGameDataRequired } from "../../../game-data/providers";
 import { useGameActions } from "../../../game-actions";
 import { useDealAnimation } from "../../../game-board/deal-animation-context";
 import { useViewMode } from "../../../game-board/view-mode/view-mode-context";
+import { useVisibilityContext } from "../config/context";
+import { canRedeal } from "../config/rules";
 import { ActionButton } from "../../../shared/components";
 import { TerminalSection } from "../shared";
 import styles from "./lobby-actions-panel.module.css";
@@ -39,6 +41,7 @@ export const LobbyActionsPanel: React.FC = () => {
   const { createRound, startRound, dealCards, actionState } = useGameActions();
   const { triggerDeal } = useDealAnimation();
   const { setViewMode } = useViewMode();
+  const ctx = useVisibilityContext();
 
   const isLoading = actionState.status === "loading";
 
@@ -46,7 +49,7 @@ export const LobbyActionsPanel: React.FC = () => {
   const hasCards = (gameData.currentRound?.cards?.length ?? 0) > 0;
   const isSetup = gameData.currentRound?.status === "SETUP";
 
-  const canRedeal = isSetup && hasCards;
+  const showRedeal = canRedeal(ctx);
 
   const handlePrimaryAction = async () => {
     if (isSetup && hasCards) {
@@ -99,7 +102,7 @@ export const LobbyActionsPanel: React.FC = () => {
   return (
     <LobbyActionsPanelView
       buttonText={getButtonText()}
-      canRedeal={canRedeal}
+      canRedeal={showRedeal}
       isLoading={isLoading}
       onPrimaryAction={handlePrimaryAction}
       onRedeal={handleRedeal}

@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import { useGameDataRequired, useTurn } from "../../../game-data/providers";
 import { useGameActions } from "../../../game-actions";
 import { useAiStatus } from "@frontend/ai/api";
-import type { TurnData } from "@frontend/shared-types";
+import { usePlayerSession } from "../../../game-data/providers/active-game-session-provider";
+import type { TurnData, TurnPhase } from "@frontend/shared-types";
 
 export interface VisibilityContext {
   // Player info
@@ -32,6 +33,10 @@ export interface VisibilityContext {
   // AI state
   aiAvailable: boolean;
   aiThinking: boolean;
+
+  // Active phase from server
+  active: TurnPhase | null;
+  isAiSession: boolean;
 }
 
 /**
@@ -43,6 +48,7 @@ export const useVisibilityContext = (): VisibilityContext => {
   const { activeTurn, historicTurns } = useTurn();
   const { actionState } = useGameActions();
   const { data: aiStatus } = useAiStatus(gameData.publicId);
+  const { isAiClaimed } = usePlayerSession();
 
   return useMemo(() => {
     const role = (gameData.playerContext?.role ?? "NONE") as VisibilityContext["role"];
@@ -56,6 +62,18 @@ export const useVisibilityContext = (): VisibilityContext => {
     // Last completed turn for "what happened" context between turns
     const lastCompletedTurn =
       historicTurns.filter((t) => t.status === "COMPLETED").at(-1) ?? null;
+
+    // Active phase — prefer the detailed turn query; fall back to the game
+    // data's embedded turn entry in case the turn endpoint returns active:null
+    // during the codemaster phase (before they have acted).
+    const activeFromGameData =
+      (gameData.currentRound?.turns ?? []).find((t) => t.status === "ACTIVE")?.active ?? null;
+    const active = activeTurn?.active ?? activeFromGameData;
+
+    // isAiClaimed is the authoritative signal: set when the user clicks PASS
+    // on the AI overlay, cleared when a human handoff is accepted. Covers the
+    // case where the backend returns active:null during the AI codemaster phase.
+    const isAiSession = isAiClaimed || active?.isAi === true;
 
     const ctx = {
       role,
@@ -74,15 +92,9 @@ export const useVisibilityContext = (): VisibilityContext => {
       isActionLoading: actionState.status === "loading",
       aiAvailable: aiStatus?.available ?? false,
       aiThinking: aiStatus?.thinking ?? false,
+      active,
+      isAiSession,
     };
-
-    console.debug("[AI] VisibilityContext:", {
-      roundStatus: ctx.roundStatus,
-      hasActiveTurn: ctx.hasActiveTurn,
-      aiAvailable: ctx.aiAvailable,
-      aiThinking: ctx.aiThinking,
-      isAiActive: ctx.roundStatus === "IN_PROGRESS" && ctx.hasActiveTurn && (ctx.aiAvailable || ctx.aiThinking),
-    });
 
     return ctx;
   }, [
@@ -93,5 +105,6 @@ export const useVisibilityContext = (): VisibilityContext => {
     historicTurns,
     actionState.status,
     aiStatus,
+    isAiClaimed,
   ]);
 };

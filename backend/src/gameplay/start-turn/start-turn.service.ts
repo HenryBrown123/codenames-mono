@@ -3,60 +3,42 @@
  * Creates a new turn for the next team after previous turn has ended
  */
 
-import type { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
-import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
-import type { GameplayOperations } from "../gameplay-actions";
+import type { GameplayHandler } from "../gameplay-actions";
 import type { AppLogger } from "@backend/common/logging";
+import { PLAYER_ROLE } from "@codenames/shared/types";
 import { GameplayValidationError } from "../errors/gameplay.errors";
 import { GameEventsEmitter } from "@backend/common/websocket";
+import type { GameAggregate } from "@backend/common/state/gameplay-state.types";
 
-export type StartTurnService = (input: {
-  gameId: string;
-  roundNumber: number;
-  userId: number;
-  playerId: string;
-}) => Promise<StartTurnResult>;
+export type StartTurnInput = {
+  gameState: GameAggregate;
+};
+
+export type StartTurnService = (input: StartTurnInput) => Promise<StartTurnResult>;
 
 export type StartTurnResult =
   | { success: true; data: { turn: { id: string; teamName: string; status: string } } }
   | { success: false; error: string };
 
 export type StartTurnDependencies = {
-  getGameState: GameplayStateProvider;
-  gameplayHandler: TransactionalHandler<GameplayOperations>;
+  gameplayHandler: GameplayHandler;
 };
 
 export const createStartTurnService =
   (logger: AppLogger) =>
   (deps: StartTurnDependencies): StartTurnService => {
-    const { getGameState, gameplayHandler } = deps;
+    const { gameplayHandler } = deps;
 
     return async (input) => {
-      const { gameId, roundNumber, userId, playerId } = input;
-      const log = logger.for({}).withMeta({ gameId, userId }).create();
-      log.info(`startTurn called: ${JSON.stringify(input)}`);
+      const { gameState } = input;
+      const log = logger.for({}).withMeta({ gameId: gameState.public_id }).create();
+      log.info(`startTurn called`);
 
       try {
-        // Get current game state
-        const gameState = await getGameState(gameId, userId, playerId);
-
-        if (gameState.status !== "found") {
-          log.warn(`startTurn failed: ${gameState.status}`);
-          return {
-            success: false,
-            error: `Game state error: ${gameState.status}`,
-          };
-        }
-
-        const currentRound = gameState.data.currentRound;
+        const currentRound = gameState.currentRound;
         if (!currentRound) {
           log.warn("startTurn failed: no active round");
           return { success: false, error: "No active round" };
-        }
-
-        if (currentRound.number !== roundNumber) {
-          log.warn(`startTurn failed: round mismatch (requested=${roundNumber}, current=${currentRound.number})`);
-          return { success: false, error: "Round number mismatch" };
         }
 
         if (currentRound.status !== "IN_PROGRESS") {
@@ -84,8 +66,8 @@ export const createStartTurnService =
         }
 
         // Find the other team (switch teams)
-        const lastTeamId = gameState.data.teams.find((t) => t.teamName === lastTurn.teamName)?._id;
-        const nextTeam = gameState.data.teams.find((t) => t._id !== lastTeamId);
+        const lastTeamId = gameState.teams.find((t) => t.teamName === lastTurn.teamName)?._id;
+        const nextTeam = gameState.teams.find((t) => t._id !== lastTeamId);
 
         if (!nextTeam) {
           log.warn("startTurn failed: could not find next team");
@@ -94,14 +76,18 @@ export const createStartTurnService =
 
         // Create the new turn
         let newTurnPublicId: string = "";
-        await gameplayHandler(async (ops) => {
-          const freshGameState = await ops.getCurrentGameState(gameId, userId);
-          const newTurn = await ops.startTurn(freshGameState, currentRound._id, nextTeam._id);
+        await gameplayHandler(gameState, async (ops) => {
+          const { newTurn } = await ops.startTurn(currentRound._id, nextTeam._id);
           newTurnPublicId = newTurn.publicId;
         });
 
-        // Emit WebSocket event for real-time updates
-        GameEventsEmitter.turnStarted(gameId, roundNumber, newTurnPublicId);
+        // Find the codemaster on the next team
+        const nextCM = currentRound.players.find(
+          (p) => p._teamId === nextTeam._id && p.role === PLAYER_ROLE.CODEMASTER,
+        );
+
+        // Emit WebSocket event
+        GameEventsEmitter.turnStarted(gameState.public_id, currentRound.number, newTurnPublicId, nextCM?.publicId);
 
         log.info(`startTurn success: new turn for team ${nextTeam.teamName}`);
         return {

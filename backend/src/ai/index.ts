@@ -17,6 +17,7 @@ import type { GiveClueService } from "@backend/gameplay/give-clue/give-clue.serv
 import type { MakeGuessService } from "@backend/gameplay/make-guess/make-guess.service";
 import type { EndTurnService } from "@backend/gameplay/end-turn/end-turn.service";
 import type { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
+import type { GameDataLoader } from "@backend/common/state/game-data-loader";
 import {
   createRun,
   findRunningByGameId,
@@ -50,6 +51,7 @@ export type AIModuleDependencies = {
   makeGuess: MakeGuessService;
   endTurn: EndTurnService;
   getGameState: GameplayStateProvider;
+  loadGameData: GameDataLoader;
 };
 
 /**
@@ -67,6 +69,7 @@ export const initialize = (dependencies: AIModuleDependencies) => {
     makeGuess,
     endTurn,
     getGameState,
+    loadGameData,
   } = dependencies;
 
   const logger = appLogger.for({ feature: "ai" }).withMeta({ model: llmConfig.model }).create();
@@ -77,7 +80,7 @@ export const initialize = (dependencies: AIModuleDependencies) => {
     giveClue,
     makeGuess,
     endTurn,
-    getGameState,
+    loadGameData,
     createPipelineRun: createRun(db),
     findRunningPipeline: findRunningByGameId(db),
     updatePipelineStatus: updateRunStatus(db),

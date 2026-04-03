@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { GameDataProvider, useGameData } from "./game-data-provider";
 import { TurnDataProvider } from "./turn-data-provider";
 import { GameActionsProvider } from "../../game-actions/game-actions-provider";
-import { PlayerProvider } from "./player-context-provider";
+import { ActiveGameSessionProvider } from "./active-game-session-provider";
 import { DeviceModeManager } from "../../device-mode";
 import { ActionButton } from "../../shared/components/action-button";
 import { GameData } from "@frontend/shared-types";
@@ -23,11 +23,11 @@ interface GameplayProviderProps {
 export const GameplayProvider = ({ gameId, children }: GameplayProviderProps) => {
   return (
     <ViewModeProvider>
-      <PlayerProvider>
+      <ActiveGameSessionProvider>
         <GameDataProvider gameId={gameId}>
           <ActiveGameProviders gameId={gameId}>{children}</ActiveGameProviders>
         </GameDataProvider>
-      </PlayerProvider>
+      </ActiveGameSessionProvider>
     </ViewModeProvider>
   );
 };

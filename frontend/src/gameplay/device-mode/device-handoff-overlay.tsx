@@ -1,38 +1,39 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { PlayerRole, PLAYER_ROLE } from "@codenames/shared/types";
-import { GameData } from "@frontend/shared-types";
+import React from "react";
+import { motion } from "framer-motion";
+import { PLAYER_ROLE } from "@codenames/shared/types";
 import { getTeamConfig } from "@frontend/shared-types";
+import type { TurnPhase } from "@frontend/shared-types";
 import { ActionButton } from "@frontend/gameplay/shared/components";
 import { pageContainerStyles } from "@frontend/gameplay/shared/components";
-import { usePlayersQuery } from "../game-data/queries";
-import { useTurn } from "../game-data/providers";
 import styles from "./device-handoff-overlay.module.css";
-
-/**
- * Overlay prompting device handoff between players
- */
 
 const EASE = [0.4, 0, 0.2, 1] as const;
 
-export interface DeviceHandoffOverlayViewProps {
-  displayName: string;
-  teamColor: string;
-  targetRole: PlayerRole;
-  targetTeam: string;
-  isReady: boolean;
-  onContinue: () => void;
+interface DeviceHandoffOverlayProps {
+  active: TurnPhase;
+  onAccept: () => void;
 }
 
-export const DeviceHandoffOverlayView: React.FC<DeviceHandoffOverlayViewProps> = ({
-  displayName,
-  teamColor,
-  targetRole,
-  targetTeam,
-  isReady,
-  onContinue,
+/**
+ * Overlay prompting device handoff between players.
+ *
+ * Intentionally has NO internal visible/AnimatePresence logic.
+ * The parent (DeviceModeManager) wraps this in AnimatePresence so
+ * mounting/unmounting is driven purely by the handoffRequired flag.
+ * onAccept is called immediately on button click — never on exit
+ * animation complete — so it can't fire accidentally due to a
+ * parent-driven unmount.
+ */
+export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
+  active,
+  onAccept,
 }) => {
-  const teamConfig = getTeamConfig(targetTeam);
+  const teamConfig = getTeamConfig(active.teamName);
+  const displayName = active.isAi
+    ? active.teamName
+    : active.role === PLAYER_ROLE.CODEMASTER
+      ? (active.playerName ?? active.teamName)
+      : `${active.teamName} Operatives`;
 
   return (
     <motion.div
@@ -54,19 +55,19 @@ export const DeviceHandoffOverlayView: React.FC<DeviceHandoffOverlayViewProps> =
 
         <div
           className={styles.playerInfo}
-          style={{ "--team-color": teamColor } as React.CSSProperties}
+          style={{ "--team-color": teamConfig.cssVar } as React.CSSProperties}
         >
           <div className={styles.playerName}>{displayName}</div>
           <div className={styles.roleLabel}>
-            {teamConfig.symbol} {targetTeam}
-            {targetRole === PLAYER_ROLE.CODEMASTER && " · Spymaster"}
+            {teamConfig.symbol} {active.teamName}
+            {active.role === PLAYER_ROLE.CODEMASTER && " · Spymaster"}
           </div>
         </div>
 
         <ActionButton
-          text={isReady ? "EXECUTE" : "LOADING..."}
-          enabled={isReady}
-          onClick={onContinue}
+          text="EXECUTE"
+          enabled={true}
+          onClick={onAccept}
           fullWidth
         />
       </motion.div>
@@ -74,64 +75,4 @@ export const DeviceHandoffOverlayView: React.FC<DeviceHandoffOverlayViewProps> =
   );
 };
 
-interface DeviceHandoffOverlayProps {
-  gameData: GameData;
-  onContinue: (playerId: string) => void;
-}
-
-export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
-  gameData,
-  onContinue,
-}) => {
-  const [visible, setVisible] = useState(true);
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
-
-  const { data: players } = usePlayersQuery(gameData.publicId);
-  const { activeTurn } = useTurn();
-
-  // Derive the next player from the active turn rather than player.status,
-  // since single-device mode doesn't update player status flags.
-  // No clue yet → Codemaster phase; clue present → Codebreaker phase.
-  const activeTeamName = activeTurn?.teamName;
-  const nextRole = activeTurn?.clue ? PLAYER_ROLE.CODEBREAKER : PLAYER_ROLE.CODEMASTER;
-  const nextPlayer = activeTeamName
-    ? players?.find((p) => p.teamName === activeTeamName && p.role === nextRole) ??
-      players?.find((p) => p.teamName === activeTeamName)
-    : players?.find((p) => p.status === "ACTIVE");
-
-  const isReady = !!nextPlayer;
-  const targetRole = nextPlayer?.role || PLAYER_ROLE.NONE;
-  const targetTeam = nextPlayer?.teamName || "Team";
-  const teamConfig = getTeamConfig(targetTeam);
-  const displayName = nextPlayer
-    ? targetRole === PLAYER_ROLE.CODEMASTER
-      ? nextPlayer.name
-      : `${targetTeam} Operatives`
-    : "LOADING...";
-
-  const handleContinueClick = () => {
-    if (nextPlayer) {
-      setSelectedPlayerId(nextPlayer.publicId);
-      setVisible(false);
-    }
-  };
-
-  const handleExitComplete = () => {
-    if (selectedPlayerId) onContinue(selectedPlayerId);
-  };
-
-  return (
-    <AnimatePresence onExitComplete={handleExitComplete}>
-      {visible && (
-        <DeviceHandoffOverlayView
-          displayName={displayName}
-          teamColor={teamConfig.cssVar}
-          targetRole={targetRole}
-          targetTeam={targetTeam}
-          isReady={isReady}
-          onContinue={handleContinueClick}
-        />
-      )}
-    </AnimatePresence>
-  );
-};
+export { DeviceHandoffOverlay as DeviceHandoffOverlayView };

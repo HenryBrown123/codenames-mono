@@ -17,13 +17,13 @@ export const hasRole = (ctx: VisibilityContext): boolean =>
   ctx.role !== "NONE" && ctx.teamName !== undefined;
 
 export const isCodemasterGivingClue = (ctx: VisibilityContext): boolean =>
-  ctx.hasActiveTurn && ctx.role === "CODEMASTER" && ctx.isActiveTeam && !ctx.hasClue;
+  !ctx.isAiSession && ctx.hasActiveTurn && ctx.role === "CODEMASTER" && ctx.isActiveTeam && !ctx.hasClue;
 
 export const isCodemasterObserving = (ctx: VisibilityContext): boolean =>
   ctx.role === "CODEMASTER" && (!ctx.hasActiveTurn || !ctx.isActiveTeam || ctx.hasClue);
 
 export const isCodebreakerGuessing = (ctx: VisibilityContext): boolean =>
-  ctx.hasActiveTurn && ctx.role === "CODEBREAKER" && ctx.isActiveTeam && ctx.hasClue && ctx.guessesRemaining > 0;
+  !ctx.isAiSession && ctx.hasActiveTurn && ctx.role === "CODEBREAKER" && ctx.isActiveTeam && ctx.hasClue && ctx.guessesRemaining > 0;
 
 export const isCodebreakerObserving = (ctx: VisibilityContext): boolean =>
   ctx.role === "CODEBREAKER" && (!ctx.hasActiveTurn || !ctx.isActiveTeam || !ctx.hasClue || ctx.guessesRemaining === 0);
@@ -57,6 +57,14 @@ export const canStartNextTurn = (ctx: VisibilityContext): boolean =>
   !ctx.hasActiveTurn &&
   ctx.hasRound;        // guards against the loading gap where hasActiveTurn is
                        // momentarily false before first data resolves
+
+/**
+ * AR (spymaster enhanced vision) toggle is only relevant for a human codemaster
+ * during an active round. Hidden during AI turns — the AI doesn't need the lens,
+ * and showing it while the AI is playing would be confusing.
+ */
+export const canUseArToggle = (ctx: VisibilityContext): boolean =>
+  !ctx.isAiSession && isCodemaster(ctx) && isRoundInProgress(ctx);
 
 export const always = (_ctx: VisibilityContext): boolean => true;
 

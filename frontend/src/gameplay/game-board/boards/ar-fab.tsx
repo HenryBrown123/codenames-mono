@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useViewMode } from "../view-mode/view-mode-context";
 import { useVisibilityContext } from "../../game-controls/dashboards/config/context";
-import { isCodemaster, isRoundComplete } from "../../game-controls/dashboards/config/rules";
+import { canUseArToggle } from "../../game-controls/dashboards/config/rules";
 import styles from "./ar-fab.module.css";
 
 /**
@@ -28,7 +28,7 @@ export const ArFab: React.FC = () => {
     return () => window.removeEventListener("keydown", handler);
   }, [toggleSpymasterViewMode]);
 
-  if (!isCodemaster(ctx) || isRoundComplete(ctx)) return null;
+  if (!canUseArToggle(ctx)) return null;
 
   return (
     <button

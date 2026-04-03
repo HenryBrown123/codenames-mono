@@ -1,22 +1,16 @@
-import type { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
 import type { TurnStateProvider } from "@backend/common/state/turn-state.provider";
-import type { GameplayValidationError } from "@backend/common/state/gameplay-state.validation";
-import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
-import type { GameplayOperations } from "../gameplay-actions";
+import type { GameplayHandler } from "../gameplay-actions";
 import type { AppLogger } from "@backend/common/logging";
-import { complexProperties } from "@backend/common/state/gameplay-state.helpers";
+import { computeTurnPhase } from "@backend/common/state/gameplay-state.helpers";
+import { TurnPhase, GameAggregate, Player } from "@backend/common/state/gameplay-state.types";
 import { GameEventsEmitter } from "@backend/common/websocket";
-
-import { validateClueWord, validate as checkClueGivingRules } from "./give-clue.rules";
+import { GameplayValidationError } from "../errors/gameplay.errors";
 
 /**
  * Input parameters for giving a clue
  */
 export type GiveClueInput = {
-  gameId: string;
-  roundNumber: number;
-  userId: number;
-  playerId: string;
+  gameState: GameAggregate;
   word: string;
   targetCardCount: number;
 };
@@ -49,6 +43,7 @@ export type CompleteTurnData = {
     outcome: string | null;
     createdAt: Date;
   }[];
+  active: TurnPhase | null;
 };
 
 /**
@@ -69,12 +64,7 @@ export type GiveClueSuccess = {
 export const GIVE_CLUE_ERROR = {
   INVALID_GAME_STATE: "invalid-game-state",
   INVALID_CLUE_WORD: "invalid-clue-word",
-  GAME_NOT_FOUND: "game-not-found",
-  USER_NOT_PLAYER: "user-not-player",
-  PLAYER_NOT_FOUND: "player-not-found",
-  PLAYER_NOT_IN_GAME: "player-not-in-game",
   ROUND_NOT_FOUND: "round-not-found",
-  ROUND_NOT_CURRENT: "round-not-current",
 } as const;
 
 /**
@@ -84,7 +74,7 @@ export type GiveClueFailure =
   | {
       status: typeof GIVE_CLUE_ERROR.INVALID_GAME_STATE;
       currentState: string;
-      validationErrors: GameplayValidationError[];
+      validationErrors: any[];
     }
   | {
       status: typeof GIVE_CLUE_ERROR.INVALID_CLUE_WORD;
@@ -92,31 +82,7 @@ export type GiveClueFailure =
       reason: string;
     }
   | {
-      status: typeof GIVE_CLUE_ERROR.GAME_NOT_FOUND;
-      gameId: string;
-    }
-  | {
-      status: typeof GIVE_CLUE_ERROR.USER_NOT_PLAYER;
-      gameId: string;
-      userId: number;
-    }
-  | {
-      status: typeof GIVE_CLUE_ERROR.PLAYER_NOT_FOUND;
-      playerId: string;
-    }
-  | {
-      status: typeof GIVE_CLUE_ERROR.PLAYER_NOT_IN_GAME;
-      playerId: string;
-      gameId: string;
-    }
-  | {
       status: typeof GIVE_CLUE_ERROR.ROUND_NOT_FOUND;
-      roundNumber: number;
-    }
-  | {
-      status: typeof GIVE_CLUE_ERROR.ROUND_NOT_CURRENT;
-      requestedRound: number;
-      currentRound: number;
     };
 
 /**
@@ -130,8 +96,7 @@ export type GiveClueResult =
  * Dependencies required by the give clue service
  */
 export type GiveClueDependencies = {
-  getGameState: GameplayStateProvider;
-  gameplayHandler: TransactionalHandler<GameplayOperations>;
+  gameplayHandler: GameplayHandler;
   getTurnState: TurnStateProvider;
 };
 
@@ -142,11 +107,20 @@ export const giveClueService = (logger: AppLogger) => (dependencies: GiveClueDep
   /**
    * Helper to get complete turn data for API response
    */
-  const getCompleteTurnData = async (turnPublicId: string): Promise<CompleteTurnData> => {
+  const getCompleteTurnData = async (
+    turnPublicId: string,
+    players: Pick<Player, "publicName" | "teamName" | "_teamId" | "role" | "isAi">[],
+  ): Promise<CompleteTurnData> => {
     const turnData = await dependencies.getTurnState(turnPublicId);
     if (!turnData) {
       throw new Error(`Failed to fetch turn data for ${turnPublicId}`);
     }
+
+    const turnForPhase = {
+      status: turnData.status,
+      _teamId: players.find((p) => p.teamName === turnData.teamName)?._teamId ?? 0,
+      clue: turnData.clue,
+    };
 
     return {
       id: turnData.publicId,
@@ -159,154 +133,83 @@ export const giveClueService = (logger: AppLogger) => (dependencies: GiveClueDep
       hasGuesses: turnData.hasGuesses,
       lastGuess: turnData.lastGuess,
       prevGuesses: turnData.prevGuesses,
+      active: computeTurnPhase(turnForPhase, players),
     };
   };
 
   return async (input: GiveClueInput): Promise<GiveClueResult> => {
-    const log = logger.for({}).withMeta({ gameId: input.gameId, userId: input.userId }).create();
-    log.info(`giveClue called: ${JSON.stringify(input)}`);
+    const { gameState, word, targetCardCount } = input;
+    const log = logger.for({}).withMeta({ gameId: gameState.public_id }).create();
+    log.info(`giveClue called: word=${word}, count=${targetCardCount}`);
 
-    const result = await dependencies.getGameState(input.gameId, input.userId, input.playerId);
-
-    if (result.status === "game-not-found") {
-      log.warn(`giveClue failed: game not found`);
-      return {
-        success: false,
-        error: {
-          status: GIVE_CLUE_ERROR.GAME_NOT_FOUND,
-          gameId: input.gameId,
-        },
-      };
-    }
-
-    if (result.status === "user-not-player") {
-      log.warn(`giveClue failed: user not player`);
-      return {
-        success: false,
-        error: {
-          status: GIVE_CLUE_ERROR.USER_NOT_PLAYER,
-          gameId: input.gameId,
-          userId: input.userId,
-        },
-      };
-    }
-
-    if (result.status === "player-not-found") {
-      log.warn(`giveClue failed: player not found`);
-      return {
-        success: false,
-        error: {
-          status: GIVE_CLUE_ERROR.PLAYER_NOT_FOUND,
-          playerId: input.playerId,
-        },
-      };
-    }
-
-    if (result.status === "player-not-in-game") {
-      log.warn(`giveClue failed: player not in game`);
-      return {
-        success: false,
-        error: {
-          status: GIVE_CLUE_ERROR.PLAYER_NOT_IN_GAME,
-          playerId: input.playerId,
-          gameId: input.gameId,
-        },
-      };
-    }
-
-    if (result.status === "user-not-authorized") {
-      log.warn(`giveClue failed: user not authorized`);
-      return {
-        success: false,
-        error: {
-          status: GIVE_CLUE_ERROR.USER_NOT_PLAYER,
-          gameId: input.gameId,
-          userId: input.userId,
-        },
-      };
-    }
-
-    // result.status === 'found' (all other cases handled above)
-    const gameData = result.data;
-
-    if (!gameData.currentRound) {
+    if (!gameState.currentRound) {
       log.warn(`giveClue failed: round not found`);
       return {
         success: false,
-        error: {
-          status: GIVE_CLUE_ERROR.ROUND_NOT_FOUND,
-          roundNumber: input.roundNumber,
-        },
+        error: { status: GIVE_CLUE_ERROR.ROUND_NOT_FOUND },
       };
     }
 
-    if (gameData.currentRound.number !== input.roundNumber) {
-      log.warn(`giveClue failed: round mismatch (requested=${input.roundNumber}, current=${gameData.currentRound.number})`);
+    try {
+      const operationResult = await dependencies.gameplayHandler(gameState, async (ops) => {
+        return await ops.giveClue(word, targetCardCount);
+      });
+
+      // Fetch complete turn data after transaction completes
+      const currentTurn = gameState.currentRound.turns?.find((t) => t.status === "ACTIVE");
+      const roundPlayers = gameState.currentRound?.players ?? [];
+      const completeTurnData = await getCompleteTurnData(
+        currentTurn?.publicId ?? "",
+        roundPlayers,
+      );
+
+      // Emit WebSocket event
+      GameEventsEmitter.clueGiven(
+        gameState.public_id,
+        gameState.currentRound.number,
+        currentTurn?.publicId ?? "",
+        gameState.playerContext?.publicId ?? "",
+      );
+
+      log.info(`giveClue success: word=${word}, count=${targetCardCount}`);
       return {
-        success: false,
-        error: {
-          status: GIVE_CLUE_ERROR.ROUND_NOT_CURRENT,
-          requestedRound: input.roundNumber,
-          currentRound: gameData.currentRound.number,
+        success: true,
+        data: {
+          clue: {
+            word: operationResult.clue.word,
+            targetCardCount: operationResult.clue.number,
+            createdAt: operationResult.clue.createdAt,
+          },
+          turn: completeTurnData,
         },
       };
+    } catch (error) {
+      if (error instanceof GameplayValidationError) {
+        // Check if it's a clue word validation error
+        if (error.message.startsWith("Cannot clue word:")) {
+          log.warn(`giveClue failed: invalid clue word`);
+          return {
+            success: false,
+            error: {
+              status: GIVE_CLUE_ERROR.INVALID_CLUE_WORD,
+              word,
+              reason: error.message,
+            },
+          };
+        }
+
+        log.warn(`giveClue failed: invalid game state`);
+        return {
+          success: false,
+          error: {
+            status: GIVE_CLUE_ERROR.INVALID_GAME_STATE,
+            currentState: gameState.status,
+            validationErrors: [],
+          },
+        };
+      }
+      throw error;
     }
-
-    const clueWordValidation = validateClueWord(gameData, input.word);
-    if (!clueWordValidation.valid) {
-      log.warn(`giveClue failed: invalid clue word (${clueWordValidation.error})`);
-      return {
-        success: false,
-        error: {
-          status: GIVE_CLUE_ERROR.INVALID_CLUE_WORD,
-          word: input.word,
-          reason: clueWordValidation.error!,
-        },
-      };
-    }
-
-    const validationResult = checkClueGivingRules(gameData);
-
-    if (!validationResult.valid) {
-      log.warn(`giveClue failed: invalid game state (${gameData.status})`);
-      return {
-        success: false,
-        error: {
-          status: GIVE_CLUE_ERROR.INVALID_GAME_STATE,
-          currentState: gameData.status,
-          validationErrors: validationResult.errors,
-        },
-      };
-    }
-
-    const operationResult = await dependencies.gameplayHandler(async (ops) => {
-      return await ops.giveClue(validationResult.data, input.word, input.targetCardCount);
-    });
-
-    // ← CRITICAL FIX: Fetch complete turn data after transaction completes
-    const currentTurn = complexProperties.getCurrentTurnOrThrow(gameData);
-    const completeTurnData = await getCompleteTurnData(currentTurn.publicId);
-
-    // Emit WebSocket event for real-time multiplayer updates
-    GameEventsEmitter.clueGiven(
-      input.gameId,
-      input.roundNumber,
-      currentTurn.publicId,
-      input.playerId,
-    );
-
-    log.info(`giveClue success: word=${input.word}, count=${input.targetCardCount}`);
-    return {
-      success: true,
-      data: {
-        clue: {
-          word: operationResult.clue.word,
-          targetCardCount: operationResult.clue.number,
-          createdAt: operationResult.clue.createdAt,
-        },
-        turn: completeTurnData,
-      },
-    };
   };
 };
 

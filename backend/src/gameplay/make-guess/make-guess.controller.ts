@@ -2,243 +2,120 @@ import type { Response, NextFunction } from "express";
 import type { Request } from "express-jwt";
 import type { MakeGuessService } from "./make-guess.service";
 import type { AppLogger } from "@backend/common/logging";
+import type { ResolveGameplayContext } from "../shared/resolve-gameplay-context";
+import { contextErrorToHttp } from "../shared/resolve-gameplay-context";
+import type { GameDataLoader } from "@backend/common/state/game-data-loader";
+import { PLAYER_ROLE, GAME_TYPE } from "@codenames/shared/types";
 import { z } from "zod";
 
-/**
- * Request validation schema for making guesses
- */
-export const makeGuessRequestSchema = z.object({
-  params: z.object({
-    gameId: z.string().min(1, "Game ID is required"),
-    roundNumber: z
-      .string()
-      .transform(Number)
-      .refine((n) => n > 0, "Round number must be positive"),
-  }),
-  auth: z.object({
-    userId: z.number().int().positive("User ID must be a positive integer"),
-  }),
-  body: z.object({
-    playerId: z.string().min(1, "Player ID is required"),
-    cardWord: z
-      .string()
-      .min(1, "Card word is required")
-      .max(50, "Card word too long"),
-  }),
+const paramsSchema = z.object({
+  gameId: z.string().min(1),
+  roundNumber: z.string().transform(Number).refine((n) => n > 0),
 });
 
-/**
- * Type definition for validated request
- */
-export type ValidatedMakeGuessRequest = z.infer<typeof makeGuessRequestSchema>;
-
-/**
- * Updated response schema with complete turn data
- */
-export const makeGuessResponseSchema = z.object({
-  success: z.boolean(),
-  data: z.object({
-    guess: z.object({
-      cardWord: z.string(),
-      outcome: z.string(),
-      createdAt: z.date(),
-    }),
-    turn: z.object({
-      id: z.string(),
-      teamName: z.string(),
-      status: z.enum(["ACTIVE", "COMPLETED"]),
-      guessesRemaining: z.number(),
-      createdAt: z.date(),
-      completedAt: z.date().nullable().optional(),
-      clue: z
-        .object({
-          word: z.string(),
-          number: z.number(),
-          createdAt: z.date(),
-        })
-        .optional(),
-      hasGuesses: z.boolean(),
-      lastGuess: z
-        .object({
-          cardWord: z.string(),
-          playerName: z.string(),
-          outcome: z.string().nullable(),
-          createdAt: z.date(),
-        })
-        .optional(),
-      prevGuesses: z.array(
-        z.object({
-          cardWord: z.string(),
-          playerName: z.string(),
-          outcome: z.string().nullable(),
-          createdAt: z.date(),
-        }),
-      ),
-    }),
-  }),
+const authSchema = z.object({
+  userId: z.number().int().positive(),
 });
 
-/**
- * Type definition for error response
- */
-export type MakeGuessErrorResponse = {
-  success: false;
-  error: string;
-  details?: {
-    code: string;
-    validationErrors?: { path: string; message: string }[];
-  };
-};
+const singleDeviceBody = z.object({
+  role: z.enum([PLAYER_ROLE.CODEMASTER, PLAYER_ROLE.CODEBREAKER]),
+  cardWord: z.string().min(1).max(50),
+});
 
-/**
- * Type definition for make guess response
- */
-export type MakeGuessResponse = z.infer<typeof makeGuessResponseSchema>;
+const multiDeviceBody = z.object({
+  playerId: z.string().min(1),
+  cardWord: z.string().min(1).max(50),
+});
 
-/**
- * Dependencies required by the make guess controller
- */
 export type Dependencies = {
   makeGuess: MakeGuessService;
+  resolveContext: ResolveGameplayContext;
+  loadGameData: GameDataLoader;
 };
 
-/**
- * Creates a controller for handling guess making
- */
-export const makeGuessController = (logger: AppLogger) => ({ makeGuess }: Dependencies) => {
-  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const log = logger.for({}).withMeta({ endpoint: "POST /games/:gameId/rounds/:roundNumber/guesses" }).create();
+export const makeGuessController = (logger: AppLogger) => (deps: Dependencies) => {
+  return async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const log = logger.for({}).withMeta({ endpoint: "POST /guesses" }).create();
 
     try {
-      const validationResult = makeGuessRequestSchema.safeParse({
-        params: req.params,
-        auth: req.auth,
-        body: req.body,
-      });
+      const paramsResult = paramsSchema.safeParse(req.params);
+      const authResult = authSchema.safeParse(req.auth);
+      if (!paramsResult.success || !authResult.success) {
+        res.status(400).json({ success: false, error: "Invalid request parameters" });
+        return;
+      }
+      const { gameId, roundNumber } = paramsResult.data;
+      const { userId } = authResult.data;
 
-      if (!validationResult.success) {
-        log.warn("Request validation failed");
-        res.status(400).json({
-          success: false,
-          error: "Invalid request parameters",
-          details: {
-            code: "validation-error",
-            validationErrors: validationResult.error.errors.map((err) => ({
-              path: err.path.join("."),
-              message: err.message,
-            })),
-          },
-        });
+      const rawGameState = await deps.loadGameData(gameId);
+      if (!rawGameState) {
+        res.status(404).json({ success: false, error: "Game not found" });
         return;
       }
 
-      const { params, auth, body } = validationResult.data;
-      log.info(`Request: ${JSON.stringify({ ...params, ...auth, ...body })}`);
+      if (rawGameState.currentRound && rawGameState.currentRound.number !== roundNumber) {
+        res.status(409).json({ success: false, error: "Round is not current" });
+        return;
+      }
 
-      const result = await makeGuess({
-        gameId: params.gameId,
-        roundNumber: params.roundNumber,
-        userId: auth.userId,
-        playerId: body.playerId,
-        cardWord: body.cardWord,
+      let contextResult;
+      let cardWord: string;
+
+      if (rawGameState.game_type === GAME_TYPE.SINGLE_DEVICE) {
+        const bodyResult = singleDeviceBody.safeParse(req.body);
+        if (!bodyResult.success) {
+          res.status(400).json({ success: false, error: "Invalid request body" });
+          return;
+        }
+        cardWord = bodyResult.data.cardWord;
+        contextResult = await deps.resolveContext.fromRole(gameId, userId, bodyResult.data.role);
+      } else {
+        const bodyResult = multiDeviceBody.safeParse(req.body);
+        if (!bodyResult.success) {
+          res.status(400).json({ success: false, error: "Invalid request body" });
+          return;
+        }
+        cardWord = bodyResult.data.cardWord;
+        contextResult = await deps.resolveContext.fromPlayerId(gameId, userId, bodyResult.data.playerId);
+      }
+
+      if (!contextResult.success) {
+        const httpError = contextErrorToHttp(contextResult.error);
+        res.status(httpError.status).json({ success: false, ...httpError.body });
+        return;
+      }
+
+      const result = await deps.makeGuess({
+        gameState: contextResult.gameState,
+        cardWord,
       });
 
       if (!result.success) {
         log.warn(`Response: ${result.error.status}`);
-        // Handle specific error types with appropriate HTTP status codes
         switch (result.error.status) {
-          case "game-not-found":
-            res.status(404).json({
-              success: false,
-              error: "Game not found",
-              details: { code: result.error.status },
-            });
-            return;
-
-          case "user-not-player":
-            res.status(403).json({
-              success: false,
-              error: "You are not authorized to act as this player",
-              details: { code: result.error.status },
-            });
-            return;
-
-          case "player-not-found":
-            res.status(404).json({
-              success: false,
-              error: "Player not found",
-              details: { code: result.error.status },
-            });
-            return;
-
-          case "player-not-in-game":
-            res.status(400).json({
-              success: false,
-              error: "Player is not in this game",
-              details: { code: result.error.status },
-            });
-            return;
-
           case "round-not-found":
-            res.status(404).json({
-              success: false,
-              error: "Round not found",
-              details: { code: result.error.status },
-            });
+            res.status(404).json({ success: false, error: "Round not found" });
             return;
-
           case "round-not-current":
-            res.status(409).json({
-              success: false,
-              error: "Round is not current",
-              details: { code: result.error.status },
-            });
+            res.status(409).json({ success: false, error: "Round is not current" });
             return;
-
           case "invalid-game-state":
-            res.status(409).json({
-              success: false,
-              error: "Invalid game state for making guess",
-              details: {
-                code: result.error.status,
-                validationErrors: result.error.validationErrors,
-              },
-            });
+            res.status(409).json({ success: false, error: "Invalid game state for making guess" });
             return;
-
           case "invalid-card":
-            res.status(400).json({
-              success: false,
-              error: "Invalid card selection",
-              details: { code: result.error.status },
-            });
+            res.status(400).json({ success: false, error: "Invalid card selection" });
             return;
-
           default:
-            res.status(500).json({
-              success: false,
-              error: "Unknown error occurred",
-              details: { code: "unknown-error" },
-            });
+            res.status(500).json({ success: false, error: "Unknown error" });
             return;
         }
       }
 
       log.info(`Response: 200 OK, outcome=${result.data.guess.outcome}`);
-      res.status(200).json({
-        success: true,
-        data: {
-          guess: result.data.guess,
-          turn: result.data.turn,
-        },
-      });
+      res.status(200).json({ success: true, data: result.data });
     } catch (error) {
       logger.error("Error in makeGuess controller", { error: error instanceof Error ? error.message : String(error) });
-      res.status(500).json({
-        success: false,
-        error: "Internal server error",
-        details: { code: "internal-error" },
-      });
+      res.status(500).json({ success: false, error: "Internal server error" });
     }
   };
 };

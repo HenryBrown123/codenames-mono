@@ -7,6 +7,7 @@ import {
   ROUND_STATE,
   GAME_STATE,
   PLAYER_ROLE,
+  TURN_STATUS,
 } from "./shared.constants";
 
 export type Team = (typeof CARD_TYPE)[keyof typeof CARD_TYPE];
@@ -20,6 +21,7 @@ export type GameState = (typeof GAME_STATE)[keyof typeof GAME_STATE];
 export type RoundState = (typeof ROUND_STATE)[keyof typeof ROUND_STATE];
 
 export type PlayerRole = (typeof PLAYER_ROLE)[keyof typeof PLAYER_ROLE];
+export type TurnStatus = (typeof TURN_STATUS)[keyof typeof TURN_STATUS];
 
 export interface Player {
   id: number;

@@ -95,6 +95,7 @@ export const useDashboardState = () => {
     canStartNextTurn:       canStartNextTurn(ctx),
     isCodemaster:           isCodemaster(ctx),
     isAiActive:             isAiActive(ctx),
+    isAiSession:            ctx.isAiSession,
     isActiveTeam:           ctx.isActiveTeam,
     hasClue:                ctx.hasClue,
 

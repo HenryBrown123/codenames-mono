@@ -33,8 +33,8 @@ export const initialize = (
 ) => {
   const logger = appLogger.for({ feature: "gameplay" }).create();
   // State "providers"
-  const { provider: getGameState } = gameplayState(db);
-  const { provider: getTurnState, getTurnsByRoundId } = turnState(db);
+  const { provider: getGameState, loader: loadGameData } = gameplayState(db);
+  const { provider: getTurnState, getTurnsByRoundId, findPlayersByRoundId } = turnState(db);
 
   // Gameplay actions
   const { handler: gameplayHandler } = gameplayActions(db);
@@ -43,6 +43,7 @@ export const initialize = (
 
   const { controller: getGameController } = getGame(logger)({
     getGameState,
+    loadGameData,
   });
 
   const { controller: getPlayersController } = getPlayers(logger)({
@@ -58,27 +59,32 @@ export const initialize = (
     getGameState,
     gameplayHandler,
     getTurnState,
+    loadGameData,
   });
 
   const { controller: makeGuessController, service: makeGuessService } = makeGuess(logger)({
     getGameState,
     gameplayHandler,
     getTurnState,
+    loadGameData,
   });
 
   const { controller: getTurnController } = getTurn(logger)({
     getTurnState,
     getTurnsByRoundId,
+    findPlayersByRoundId,
   });
 
   const { controller: endTurnController, service: endTurnService } = endTurn(logger)({
     getGameState,
     gameplayHandler,
+    loadGameData,
   });
 
   const { controller: startTurnController, service: startTurnService } = startTurn(logger)({
     getGameState,
     gameplayHandler,
+    loadGameData,
   });
 
   // Routes setup
@@ -110,5 +116,6 @@ export const initialize = (
     endTurnService,
     startTurnService,
     getGameState,
+    loadGameData,
   };
 };

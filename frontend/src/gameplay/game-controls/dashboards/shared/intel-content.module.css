@@ -86,10 +86,6 @@
   pointer-events: none;
 }
 
-@media (max-height: 799px) {
-  .guessRow { font-size: 0.75rem; }
-}
-
-@media (max-height: 660px) {
-  .guessRow { font-size: 0.7rem; }
+@media (max-height: 800px) {
+  .guessRow { font-size: var(--dashboard-text-p-sm); }
 }

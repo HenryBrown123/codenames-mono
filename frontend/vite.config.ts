@@ -34,4 +34,10 @@ export default defineConfig({
       "@test": "/test",
     },
   },
+  test: {
+    environment: "node",
+    globals: true,
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    exclude: ["test/**", "node_modules/**"],
+  },
 });

@@ -1,6 +1,10 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/api";
+import type { TurnData, TurnPhase } from "@frontend/shared-types";
+import { assertPlayerRole } from "@frontend/shared-types";
+
+export type { TurnData, TurnPhase };
 
 interface ApiTurn {
   id: string;
@@ -27,6 +31,12 @@ interface ApiTurn {
     outcome: string;
     createdAt: string;
   }>;
+  active: {
+    teamName: string;
+    role: string;
+    isAi: boolean;
+    playerName: string | null;
+  } | null;
 }
 
 interface TurnApiResponse {
@@ -38,36 +48,6 @@ interface TurnApiResponse {
 }
 
 /**
- * Detailed turn data with timestamps and full guess history.
- */
-export interface TurnData {
-  id: string;
-  teamName: string;
-  status: "ACTIVE" | "COMPLETED";
-  guessesRemaining: number;
-  createdAt: Date;
-  completedAt: Date | null;
-  clue: {
-    word: string;
-    number: number;
-    createdAt: Date;
-  } | null;
-  hasGuesses: boolean;
-  lastGuess: {
-    cardWord: string;
-    playerName: string;
-    outcome: string;
-    createdAt: Date;
-  } | null;
-  prevGuesses: Array<{
-    cardWord: string;
-    playerName: string;
-    outcome: string;
-    createdAt: Date;
-  }>;
-}
-
-/**
  * Response from turn query including historic turns
  */
 export interface TurnQueryResult {
@@ -76,6 +56,17 @@ export interface TurnQueryResult {
 }
 
 function transformApiTurn(apiTurn: ApiTurn): TurnData {
+  const active: TurnPhase | null = (() => {
+    if (!apiTurn.active) return null;
+    assertPlayerRole(apiTurn.active.role);
+    return {
+      teamName: apiTurn.active.teamName,
+      role: apiTurn.active.role,
+      isAi: apiTurn.active.isAi,
+      playerName: apiTurn.active.playerName,
+    };
+  })();
+
   return {
     id: apiTurn.id,
     teamName: apiTurn.teamName,
@@ -86,21 +77,22 @@ function transformApiTurn(apiTurn: ApiTurn): TurnData {
     clue: apiTurn.clue ? {
       word: apiTurn.clue.word,
       number: apiTurn.clue.number,
-      createdAt: new Date(apiTurn.clue.createdAt)
+      createdAt: new Date(apiTurn.clue.createdAt),
     } : null,
     hasGuesses: apiTurn.hasGuesses,
     lastGuess: apiTurn.lastGuess ? {
       cardWord: apiTurn.lastGuess.cardWord,
       playerName: apiTurn.lastGuess.playerName,
       outcome: apiTurn.lastGuess.outcome,
-      createdAt: new Date(apiTurn.lastGuess.createdAt)
+      createdAt: new Date(apiTurn.lastGuess.createdAt),
     } : null,
     prevGuesses: apiTurn.prevGuesses.map(guess => ({
       cardWord: guess.cardWord,
       playerName: guess.playerName,
       outcome: guess.outcome,
-      createdAt: new Date(guess.createdAt)
+      createdAt: new Date(guess.createdAt),
     })),
+    active,
   };
 }
 

@@ -1,9 +1,12 @@
 import { UnexpectedGameplayError } from "@backend/gameplay/errors/gameplay.errors";
+import { PLAYER_ROLE } from "@codenames/shared/types";
 import {
   GameAggregate,
   Round,
   HistoricalRound,
   Turn,
+  Player,
+  TurnPhase,
 } from "./gameplay-state.types";
 
 /**
@@ -122,3 +125,31 @@ export const complexProperties = {
     return otherTeam._id;
   },
 };
+
+/**
+ * Computes the active turn phase based on turn state and round players.
+ * - ACTIVE turn with no clue → CODEMASTER phase (playerName set)
+ * - ACTIVE turn with clue → CODEBREAKER phase (playerName null — it's a group)
+ * - COMPLETED turn → null
+ */
+export function computeTurnPhase(
+  turn: { status: string; _teamId: number; clue?: unknown },
+  players: Pick<Player, "publicName" | "teamName" | "_teamId" | "role" | "isAi">[],
+): TurnPhase | null {
+  if (turn.status !== "ACTIVE") return null;
+
+  const role = turn.clue ? PLAYER_ROLE.CODEBREAKER : PLAYER_ROLE.CODEMASTER;
+  const teamPlayers = players.filter(
+    (p) => p._teamId === turn._teamId && p.role === role,
+  );
+  if (teamPlayers.length === 0) return null;
+
+  const isAi = teamPlayers.some((p) => p.isAi);
+
+  return {
+    teamName: teamPlayers[0].teamName,
+    role: role as "CODEMASTER" | "CODEBREAKER",
+    isAi,
+    playerName: role === PLAYER_ROLE.CODEMASTER ? (teamPlayers[0].publicName ?? null) : null,
+  };
+}

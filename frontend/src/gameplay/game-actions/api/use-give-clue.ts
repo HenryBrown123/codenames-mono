@@ -4,9 +4,19 @@ import {
 } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/api";
-import { TurnData } from "../../game-data/queries/use-turn-query";
-import { usePlayerContext } from "../../game-data/providers/player-context-provider";
+import type { TurnData, TurnPhase } from "@frontend/shared-types";
+import { assertPlayerRole } from "@frontend/shared-types";
+import { GAME_TYPE } from "@codenames/shared/types";
+import { usePlayerSession } from "../../game-data/providers/active-game-session-provider";
+import { useGameDataRequired } from "../../game-data/providers";
 import { useViewMode } from "../../game-board/view-mode/view-mode-context";
+
+interface ApiTurnActive {
+  teamName: string;
+  role: string;
+  isAi: boolean;
+  playerName: string | null;
+}
 
 interface GiveClueApiResponse {
   success: boolean;
@@ -41,6 +51,7 @@ interface GiveClueApiResponse {
         outcome: string;
         createdAt: string;
       }>;
+      active: ApiTurnActive | null;
     };
   };
 }
@@ -57,13 +68,18 @@ export interface ClueGivenResult {
     number: number;
     createdAt: Date;
   };
-  turn: TurnData; // Uses rich TurnData from use-turn-query
+  turn: TurnData;
 }
 
+function transformActiveTurnPhase(raw: ApiTurnActive | null): TurnPhase | null {
+  if (!raw) return null;
+  assertPlayerRole(raw.role);
+  return { teamName: raw.teamName, role: raw.role, isAi: raw.isAi, playerName: raw.playerName };
+}
 
 function transformApiResponseToClueGivenResult(apiResponse: GiveClueApiResponse): ClueGivenResult {
   const { clue, turn } = apiResponse.data;
-  
+
   return {
     clue: {
       word: clue.word,
@@ -80,21 +96,22 @@ function transformApiResponseToClueGivenResult(apiResponse: GiveClueApiResponse)
       clue: turn.clue ? {
         word: turn.clue.word,
         number: turn.clue.number,
-        createdAt: new Date(turn.clue.createdAt)
+        createdAt: new Date(turn.clue.createdAt),
       } : null,
       hasGuesses: turn.hasGuesses,
       lastGuess: turn.lastGuess ? {
         cardWord: turn.lastGuess.cardWord,
         playerName: turn.lastGuess.playerName,
         outcome: turn.lastGuess.outcome,
-        createdAt: new Date(turn.lastGuess.createdAt)
+        createdAt: new Date(turn.lastGuess.createdAt),
       } : null,
       prevGuesses: turn.prevGuesses.map(guess => ({
         cardWord: guess.cardWord,
         playerName: guess.playerName,
         outcome: guess.outcome,
-        createdAt: new Date(guess.createdAt)
+        createdAt: new Date(guess.createdAt),
       })),
+      active: transformActiveTurnPhase(turn.active),
     },
   };
 }
@@ -105,22 +122,21 @@ function transformApiResponseToClueGivenResult(apiResponse: GiveClueApiResponse)
 export const useGiveClueMutation = (
   gameId: string,
 ): UseMutationResult<ClueGivenResult, Error, GiveClueInput> => {
-  const { currentPlayerId } = usePlayerContext();
+  const { claimedRole } = usePlayerSession();
+  const { gameData } = useGameDataRequired();
   const { setViewMode } = useViewMode();
+
+  const isSingleDevice = gameData.gameType === GAME_TYPE.SINGLE_DEVICE;
 
   return useMutation({
     mutationFn: async ({ word, targetCardCount, roundNumber }) => {
-      if (!currentPlayerId) {
-        throw new Error("Player ID is required to give clue");
-      }
+      const body = isSingleDevice
+        ? { role: claimedRole, word, targetCardCount }
+        : { playerId: gameData.playerContext!.publicId, word, targetCardCount };
 
       const response: AxiosResponse<GiveClueApiResponse> = await api.post(
         `/games/${gameId}/rounds/${roundNumber}/clues`,
-        {
-          word,
-          targetCardCount,
-          playerId: currentPlayerId
-        },
+        body,
       );
 
       if (!response.data.success) {

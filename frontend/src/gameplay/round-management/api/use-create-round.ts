@@ -5,7 +5,7 @@ import {
 } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/api";
-import { usePlayerContext } from "../../game-data/providers/player-context-provider";
+import { useGameDataRequired } from "../../game-data/providers";
 
 interface CreateRoundApiResponse {
   success: boolean;
@@ -24,13 +24,13 @@ export const useCreateRoundMutation = (
   gameId: string,
 ): UseMutationResult<void, Error, void> => {
   const queryClient = useQueryClient();
-  const { currentPlayerId } = usePlayerContext();
+  const { gameData } = useGameDataRequired();
 
   return useMutation({
     mutationFn: async () => {
       const response: AxiosResponse<CreateRoundApiResponse> = await api.post(
         `/games/${gameId}/rounds`,
-        { playerId: currentPlayerId}
+        { playerId: gameData.playerContext?.publicId ?? null }
       );
 
       if (!response.data.success) {

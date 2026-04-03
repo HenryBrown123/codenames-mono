@@ -1,6 +1,7 @@
 .panel {
   display: flex;
   flex-direction: column;
+  flex: 1;
   width: 100%;
   height: 100%;
   padding: 12px 16px 20px;
@@ -35,12 +36,24 @@
   gap: 12px;
 }
 
-.swipeZone {
+.centerGroup {
   flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  gap: 20px;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+
+.swipeZone {
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 25dvh;
+  overflow-x: hidden;
+  overflow-y: visible;
   cursor: grab;
 }
 
@@ -66,7 +79,7 @@
 
 .headerLabel {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: var(--dashboard-text-condensed);
   font-weight: 700;
   color: var(--color-primary);
   text-transform: uppercase;
@@ -76,7 +89,7 @@
 }
 
 .teamSymbol {
-  font-size: 1rem;
+  font-size: var(--dashboard-text-condensed);
   line-height: 1;
   font-family: var(--font-mono);
   flex-shrink: 0;
@@ -101,9 +114,11 @@
 }
 
 .fixedWidthWrapper {
+  position: relative;
   width: 100%;
-  max-width: 340px;
+  max-width: calc(340px + 38px);
   margin: 0 auto;
+  padding: 0 19px;
 }
 
 .intelBox {
@@ -124,12 +139,16 @@
 
 .scoreBox {
   max-width: 480px;
-  margin: 8px auto 0;
+  margin: 0 auto;
+  --score-font-size: var(--dashboard-text-condensed);
+  --score-label-font-size: var(--dashboard-text-condensed);
+  --score-divider-font-size: var(--dashboard-text-condensed);
 }
+
 
 .controlRowDot {
   position: absolute;
-  right: -28px;
+  right: 5px;
   top: 50%;
   transform: translateY(-50%);
 }
@@ -137,7 +156,7 @@
 .aiIdleText {
   width: 100%;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: var(--dashboard-text-condensed);
   color: rgba(0, 255, 136, 0.3);
   text-transform: uppercase;
   letter-spacing: 0.1em;

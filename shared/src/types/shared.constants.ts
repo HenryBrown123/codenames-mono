@@ -84,6 +84,14 @@ export const MAX_ROUNDS_BY_FORMAT = {
 } as const;
 
 /**
+ * Turn states
+ */
+export const TURN_STATUS = {
+  ACTIVE: "ACTIVE",
+  COMPLETED: "COMPLETED",
+} as const;
+
+/**
  * Player role enum
  */
 

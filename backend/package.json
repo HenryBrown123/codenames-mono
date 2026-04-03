@@ -9,7 +9,8 @@
     "build": "tsc --build",
     "start": "node dist/index.js",
     "dev:dbTypes": "npx kysely-codegen --out-file ./src/common/db/db.types.ts",
-    "db:setup": "psql -h localhost -U codenames -d codenames -f src/common/db/init.sql"
+    "db:setup": "psql -h localhost -U codenames -d codenames -f src/common/db/init.sql",
+    "test": "node --experimental-vm-modules ../node_modules/.bin/jest"
   },
   "jest": {
     "preset": "ts-jest/presets/default-esm",
@@ -24,6 +25,12 @@
           "useESM": true
         }
       ]
+    },
+    "moduleNameMapper": {
+      "^@backend/common/(.*)$": "<rootDir>/src/common/$1",
+      "^@backend/gameplay/(.*)$": "<rootDir>/src/gameplay/$1",
+      "^@backend/ai/(.*)$": "<rootDir>/src/ai/$1",
+      "^@codenames/shared/(.*)$": "<rootDir>/../shared/src/$1"
     }
   },
   "author": "Henry Brown",

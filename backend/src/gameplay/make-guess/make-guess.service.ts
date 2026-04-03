@@ -1,21 +1,19 @@
-import type { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
 import type { TurnStateProvider } from "@backend/common/state/turn-state.provider";
-import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
-import type { GameplayOperations } from "../gameplay-actions";
+import type { GameplayHandler, GameplayOperations } from "../gameplay-actions";
 import type { AppLogger } from "@backend/common/logging";
 import { CODEBREAKER_OUTCOME } from "@codenames/shared/types";
-import { complexProperties } from "@backend/common/state/gameplay-state.helpers";
-import { validateMakeGuess, winningConditions } from "./make-guess.rules";
+import { complexProperties, computeTurnPhase } from "@backend/common/state/gameplay-state.helpers";
+import { TurnPhase, GameAggregate, Player } from "@backend/common/state/gameplay-state.types";
+import { winningConditions } from "./make-guess.rules";
 import { GameEventsEmitter } from "@backend/common/websocket";
+import { GameplayValidationError } from "../errors/gameplay.errors";
+import { PLAYER_ROLE } from "@codenames/shared/types";
 
 /**
  * Input parameters for making a guess
  */
 export type MakeGuessInput = {
-  gameId: string;
-  roundNumber: number;
-  userId: number;
-  playerId: string;
+  gameState: GameAggregate;
   cardWord: string;
 };
 
@@ -47,6 +45,7 @@ export type CompleteTurnData = {
     outcome: string | null;
     createdAt: Date;
   }[];
+  active: TurnPhase | null;
 };
 
 /**
@@ -67,10 +66,6 @@ export type MakeGuessSuccess = {
 export const MAKE_GUESS_ERROR = {
   INVALID_GAME_STATE: "invalid-game-state",
   INVALID_CARD: "invalid-card",
-  GAME_NOT_FOUND: "game-not-found",
-  USER_NOT_PLAYER: "user-not-player",
-  PLAYER_NOT_FOUND: "player-not-found",
-  PLAYER_NOT_IN_GAME: "player-not-in-game",
   ROUND_NOT_FOUND: "round-not-found",
   ROUND_NOT_CURRENT: "round-not-current",
 } as const;
@@ -88,24 +83,6 @@ export type MakeGuessFailure =
       status: typeof MAKE_GUESS_ERROR.INVALID_CARD;
       cardWord: string;
       reason: string;
-    }
-  | {
-      status: typeof MAKE_GUESS_ERROR.GAME_NOT_FOUND;
-      gameId: string;
-    }
-  | {
-      status: typeof MAKE_GUESS_ERROR.USER_NOT_PLAYER;
-      gameId: string;
-      userId: number;
-    }
-  | {
-      status: typeof MAKE_GUESS_ERROR.PLAYER_NOT_FOUND;
-      playerId: string;
-    }
-  | {
-      status: typeof MAKE_GUESS_ERROR.PLAYER_NOT_IN_GAME;
-      playerId: string;
-      gameId: string;
     }
   | {
       status: typeof MAKE_GUESS_ERROR.ROUND_NOT_FOUND;
@@ -128,8 +105,7 @@ export type MakeGuessResult =
  * Dependencies required by the make guess service
  */
 export type MakeGuessDependencies = {
-  getGameState: GameplayStateProvider;
-  gameplayHandler: TransactionalHandler<GameplayOperations>;
+  gameplayHandler: GameplayHandler;
   getTurnState: TurnStateProvider;
 };
 
@@ -140,11 +116,20 @@ export const makeGuessService = (logger: AppLogger) => (dependencies: MakeGuessD
   /**
    * Helper to get complete turn data for API response
    */
-  const getCompleteTurnData = async (turnPublicId: string): Promise<CompleteTurnData> => {
+  const getCompleteTurnData = async (
+    turnPublicId: string,
+    players: Pick<Player, "publicName" | "teamName" | "_teamId" | "role" | "isAi">[],
+  ): Promise<CompleteTurnData> => {
     const turnData = await dependencies.getTurnState(turnPublicId);
     if (!turnData) {
       throw new Error(`Failed to fetch turn data for ${turnPublicId}`);
     }
+
+    const turnForPhase = {
+      status: turnData.status,
+      _teamId: players.find((p) => p.teamName === turnData.teamName)?._teamId ?? 0,
+      clue: turnData.clue,
+    };
 
     return {
       id: turnData.publicId,
@@ -157,284 +142,180 @@ export const makeGuessService = (logger: AppLogger) => (dependencies: MakeGuessD
       hasGuesses: turnData.hasGuesses,
       lastGuess: turnData.lastGuess,
       prevGuesses: turnData.prevGuesses,
+      active: computeTurnPhase(turnForPhase, players),
     };
   };
 
   /**
-   * Handles correct team card outcome
+   * Auto-start next turn for the opposing team within the transaction.
+   * Returns the new turn's public ID and the next codemaster's public ID for WS events.
    */
-  const handleCorrectTeamCard = async (
+  const autoStartNextTurn = async (
     ops: GameplayOperations,
-    guessResult: any,
-    input: MakeGuessInput,
-  ) => {
-    const gameState = await ops.getCurrentGameState(input.gameId, input.userId);
-    const otherTeamId = complexProperties.getOtherTeamId(gameState, guessResult.turn._teamId);
+    state: GameAggregate,
+    endedTurnTeamId: number,
+  ): Promise<{ publicId: string; activePlayerId?: string } | null> => {
+    const round = state.currentRound;
+    if (!round || round.status !== "IN_PROGRESS") return null;
 
-    const roundWinner = winningConditions.checkRoundWinner(
-      gameState.currentRound!.cards,
-      guessResult.turn._teamId,
-      otherTeamId,
+    const otherTeamId = complexProperties.getOtherTeamId(state, endedTurnTeamId);
+    const { newTurn } = await ops.startTurn(round._id, otherTeamId);
+
+    const nextCM = round.players.find(
+      (p) => p._teamId === otherTeamId && p.role === PLAYER_ROLE.CODEMASTER,
     );
 
-    if (roundWinner) {
-      await ops.endTurn(gameState, guessResult.turn._id);
-
-      const stateAfterTurnEnd = await ops.getCurrentGameState(input.gameId, input.userId);
-      await ops.endRound(stateAfterTurnEnd, stateAfterTurnEnd.currentRound!._id, roundWinner);
-
-      const updatedGameState = await ops.getCurrentGameState(input.gameId, input.userId);
-      const gameWinner = winningConditions.checkGameWinner(
-        updatedGameState.historicalRounds,
-        updatedGameState.game_format,
-      );
-      if (gameWinner) {
-        await ops.endGame(updatedGameState, gameWinner);
-      }
-    } else if (guessResult.turn.guessesRemaining === 0) {
-      await ops.endTurn(gameState, guessResult.turn._id);
-    }
-
-    return await ops.getCurrentGameState(input.gameId, input.userId);
-  };
-
-  /**
-   * Handles wrong team card outcome
-   */
-  const handleWrongTeamCard = async (
-    ops: GameplayOperations,
-    guessResult: any,
-    input: MakeGuessInput,
-  ) => {
-    const gameState = await ops.getCurrentGameState(input.gameId, input.userId);
-    await ops.endTurn(gameState, guessResult.turn._id);
-
-    const updatedGameState = await ops.getCurrentGameState(input.gameId, input.userId);
-    const otherTeamId = complexProperties.getOtherTeamId(
-      updatedGameState,
-      guessResult.turn._teamId,
-    );
-
-    const roundWinner = winningConditions.checkRoundWinner(
-      updatedGameState.currentRound!.cards,
-      guessResult.turn._teamId,
-      otherTeamId,
-    );
-
-    if (roundWinner) {
-      await ops.endRound(updatedGameState, updatedGameState.currentRound!._id, roundWinner);
-
-      const stateAfterRoundEnd = await ops.getCurrentGameState(input.gameId, input.userId);
-      const gameWinner = winningConditions.checkGameWinner(
-        stateAfterRoundEnd.historicalRounds,
-        stateAfterRoundEnd.game_format,
-      );
-      if (gameWinner) {
-        await ops.endGame(stateAfterRoundEnd, gameWinner);
-      }
-    }
-
-    return await ops.getCurrentGameState(input.gameId, input.userId);
-  };
-
-  /**
-   * Handles bystander card outcome
-   */
-  const handleBystanderCard = async (
-    ops: GameplayOperations,
-    guessResult: any,
-    input: MakeGuessInput,
-  ) => {
-    const gameState = await ops.getCurrentGameState(input.gameId, input.userId);
-    await ops.endTurn(gameState, guessResult.turn._id);
-
-    return await ops.getCurrentGameState(input.gameId, input.userId);
-  };
-
-  /**
-   * Handles assassin card outcome - other team wins immediately
-   */
-  const handleAssassinCard = async (
-    ops: GameplayOperations,
-    guessResult: any,
-    input: MakeGuessInput,
-  ) => {
-    const gameState = await ops.getCurrentGameState(input.gameId, input.userId);
-    await ops.endTurn(gameState, guessResult.turn._id);
-
-    const updatedGameState = await ops.getCurrentGameState(input.gameId, input.userId);
-    const otherTeamId = complexProperties.getOtherTeamId(
-      updatedGameState,
-      guessResult.turn._teamId,
-    );
-    await ops.endRound(updatedGameState, updatedGameState.currentRound!._id, otherTeamId);
-
-    const stateAfterRoundEnd = await ops.getCurrentGameState(input.gameId, input.userId);
-    const gameWinner = winningConditions.checkGameWinner(
-      stateAfterRoundEnd.historicalRounds,
-      stateAfterRoundEnd.game_format,
-    );
-    if (gameWinner) {
-      await ops.endGame(stateAfterRoundEnd, gameWinner);
-    }
-
-    return await ops.getCurrentGameState(input.gameId, input.userId);
+    return { publicId: newTurn.publicId, activePlayerId: nextCM?.publicId };
   };
 
   return async (input: MakeGuessInput): Promise<MakeGuessResult> => {
-    const log = logger.for({}).withMeta({ gameId: input.gameId, userId: input.userId }).create();
-    log.info(`makeGuess called: ${JSON.stringify(input)}`);
+    const { gameState, cardWord } = input;
+    const log = logger.for({}).withMeta({ gameId: gameState.public_id }).create();
+    log.info(`makeGuess called: cardWord=${cardWord}`);
 
-    const result = await dependencies.getGameState(input.gameId, input.userId, input.playerId);
-
-    if (result.status === "game-not-found") {
-      log.warn(`makeGuess failed: game not found`);
-      return {
-        success: false,
-        error: {
-          status: MAKE_GUESS_ERROR.GAME_NOT_FOUND,
-          gameId: input.gameId,
-        },
-      };
-    }
-
-    if (result.status === "user-not-player") {
-      log.warn(`makeGuess failed: user not player`);
-      return {
-        success: false,
-        error: {
-          status: MAKE_GUESS_ERROR.USER_NOT_PLAYER,
-          gameId: input.gameId,
-          userId: input.userId,
-        },
-      };
-    }
-
-    if (result.status === "player-not-found") {
-      log.warn(`makeGuess failed: player not found`);
-      return {
-        success: false,
-        error: {
-          status: MAKE_GUESS_ERROR.PLAYER_NOT_FOUND,
-          playerId: input.playerId,
-        },
-      };
-    }
-
-    if (result.status === "player-not-in-game") {
-      log.warn(`makeGuess failed: player not in game`);
-      return {
-        success: false,
-        error: {
-          status: MAKE_GUESS_ERROR.PLAYER_NOT_IN_GAME,
-          playerId: input.playerId,
-          gameId: input.gameId,
-        },
-      };
-    }
-
-    if (result.status === "user-not-authorized") {
-      log.warn(`makeGuess failed: user not authorized`);
-      return {
-        success: false,
-        error: {
-          status: MAKE_GUESS_ERROR.USER_NOT_PLAYER,
-          gameId: input.gameId,
-          userId: input.userId,
-        },
-      };
-    }
-
-    // result.status === 'found' (all other cases handled above)
-    const gameData = result.data;
-
-    // Validate round exists and is current
-    if (!gameData.currentRound) {
+    if (!gameState.currentRound) {
       log.warn(`makeGuess failed: round not found`);
       return {
         success: false,
-        error: {
-          status: MAKE_GUESS_ERROR.ROUND_NOT_FOUND,
-          roundNumber: input.roundNumber,
-        },
+        error: { status: MAKE_GUESS_ERROR.ROUND_NOT_FOUND, roundNumber: 0 },
       };
     }
 
-    if (gameData.currentRound.number !== input.roundNumber) {
-      log.warn(`makeGuess failed: round mismatch (requested=${input.roundNumber}, current=${gameData.currentRound.number})`);
-      return {
-        success: false,
-        error: {
-          status: MAKE_GUESS_ERROR.ROUND_NOT_CURRENT,
-          requestedRound: input.roundNumber,
-          currentRound: gameData.currentRound.number,
-        },
-      };
-    }
+    try {
+      // Execute within transaction — ops are game-scoped, no state passing needed
+      const operationResult = await dependencies.gameplayHandler(gameState, async (ops) => {
+        const { outcome, state, ...guessResult } = await ops.makeGuess(cardWord);
 
-    // Validate game state for making guess
-    const validationResult = validateMakeGuess(gameData);
-    if (!validationResult.valid) {
-      log.warn(`makeGuess failed: invalid game state (${gameData.status})`);
-      return {
-        success: false,
-        error: {
-          status: MAKE_GUESS_ERROR.INVALID_GAME_STATE,
-          currentState: gameData.status,
-          validationErrors: validationResult.errors,
-        },
-      };
-    }
+        let autoStarted: { publicId: string; activePlayerId?: string } | null = null;
 
-    // Execute within transaction
-    const operationResult = await dependencies.gameplayHandler(async (ops) => {
-      // Make the guess
-      const guessResult = await ops.makeGuess(validationResult.data, input.cardWord);
+        switch (outcome) {
+          case CODEBREAKER_OUTCOME.CORRECT_TEAM_CARD: {
+            const otherTeamId = complexProperties.getOtherTeamId(state, guessResult.turn._teamId);
+            const roundWinner = winningConditions.checkRoundWinner(
+              state.currentRound!.cards,
+              guessResult.turn._teamId,
+              otherTeamId,
+            );
 
-      // Handle outcome with appropriate game progression
-      switch (guessResult.outcome) {
-        case CODEBREAKER_OUTCOME.CORRECT_TEAM_CARD:
-          await handleCorrectTeamCard(ops, guessResult, input);
-          break;
-        case CODEBREAKER_OUTCOME.OTHER_TEAM_CARD:
-          await handleWrongTeamCard(ops, guessResult, input);
-          break;
-        case CODEBREAKER_OUTCOME.BYSTANDER_CARD:
-          await handleBystanderCard(ops, guessResult, input);
-          break;
-        case CODEBREAKER_OUTCOME.ASSASSIN_CARD:
-          await handleAssassinCard(ops, guessResult, input);
-          break;
-        default:
-          throw new Error(`Unknown outcome: ${guessResult.outcome}`);
+            if (roundWinner) {
+              const afterTurnEnd = await ops.endTurn(guessResult.turn._id);
+              const afterRoundEnd = await ops.endRound(afterTurnEnd.currentRound!._id, roundWinner);
+              const gameWinner = winningConditions.checkGameWinner(
+                afterRoundEnd.historicalRounds,
+                afterRoundEnd.game_format,
+              );
+              if (gameWinner) await ops.endGame(gameWinner);
+            } else if (guessResult.turn.guessesRemaining === 0) {
+              const afterTurnEnd = await ops.endTurn(guessResult.turn._id);
+              autoStarted = await autoStartNextTurn(ops, afterTurnEnd, guessResult.turn._teamId);
+            }
+            break;
+          }
+          case CODEBREAKER_OUTCOME.OTHER_TEAM_CARD: {
+            const afterTurnEnd = await ops.endTurn(guessResult.turn._id);
+            const otherTeamId = complexProperties.getOtherTeamId(afterTurnEnd, guessResult.turn._teamId);
+            const roundWinner = winningConditions.checkRoundWinner(
+              afterTurnEnd.currentRound!.cards,
+              guessResult.turn._teamId,
+              otherTeamId,
+            );
+
+            if (roundWinner) {
+              const afterRoundEnd = await ops.endRound(afterTurnEnd.currentRound!._id, roundWinner);
+              const gameWinner = winningConditions.checkGameWinner(
+                afterRoundEnd.historicalRounds,
+                afterRoundEnd.game_format,
+              );
+              if (gameWinner) await ops.endGame(gameWinner);
+            } else {
+              autoStarted = await autoStartNextTurn(ops, afterTurnEnd, guessResult.turn._teamId);
+            }
+            break;
+          }
+          case CODEBREAKER_OUTCOME.BYSTANDER_CARD: {
+            const afterTurnEnd = await ops.endTurn(guessResult.turn._id);
+            autoStarted = await autoStartNextTurn(ops, afterTurnEnd, guessResult.turn._teamId);
+            break;
+          }
+          case CODEBREAKER_OUTCOME.ASSASSIN_CARD: {
+            const afterTurnEnd = await ops.endTurn(guessResult.turn._id);
+            const otherTeamId = complexProperties.getOtherTeamId(afterTurnEnd, guessResult.turn._teamId);
+            const afterRoundEnd = await ops.endRound(afterTurnEnd.currentRound!._id, otherTeamId);
+            const gameWinner = winningConditions.checkGameWinner(
+              afterRoundEnd.historicalRounds,
+              afterRoundEnd.game_format,
+            );
+            if (gameWinner) await ops.endGame(gameWinner);
+            break;
+          }
+        }
+
+        return { guessResult: { ...guessResult, outcome }, autoStarted };
+      });
+
+      const currentTurn = complexProperties.getCurrentTurnOrThrow(gameState);
+      const roundPlayers = gameState.currentRound?.players ?? [];
+      const completeTurnData = await getCompleteTurnData(currentTurn.publicId, roundPlayers);
+
+      // Emit WebSocket events
+      GameEventsEmitter.guessMade(
+        gameState.public_id,
+        gameState.currentRound!.number,
+        currentTurn.publicId,
+        gameState.playerContext?.publicId ?? "",
+      );
+
+      if (completeTurnData.status === "COMPLETED") {
+        GameEventsEmitter.turnEnded(gameState.public_id, gameState.currentRound!.number, currentTurn.publicId);
+      }
+      if (operationResult.autoStarted) {
+        GameEventsEmitter.turnStarted(
+          gameState.public_id,
+          gameState.currentRound!.number,
+          operationResult.autoStarted.publicId,
+          operationResult.autoStarted.activePlayerId,
+        );
       }
 
-      return { guessResult };
-    });
-
-    const currentTurn = complexProperties.getCurrentTurnOrThrow(gameData);
-    const completeTurnData = await getCompleteTurnData(currentTurn.publicId);
-
-    // Emit WebSocket event for real-time multiplayer updates
-    GameEventsEmitter.guessMade(
-      input.gameId,
-      input.roundNumber,
-      currentTurn.publicId,
-      input.playerId,
-    );
-
-    log.info(`makeGuess success: cardWord=${input.cardWord}, outcome=${operationResult.guessResult.outcome}`);
-    return {
-      success: true,
-      data: {
-        guess: {
-          cardWord: input.cardWord,
-          outcome: operationResult.guessResult.outcome,
-          createdAt: operationResult.guessResult.createdAt,
+      log.info(`makeGuess success: cardWord=${cardWord}, outcome=${operationResult.guessResult.outcome}`);
+      return {
+        success: true,
+        data: {
+          guess: {
+            cardWord,
+            outcome: operationResult.guessResult.outcome,
+            createdAt: operationResult.guessResult.createdAt,
+          },
+          turn: completeTurnData,
         },
-        turn: completeTurnData,
-      },
-    };
+      };
+    } catch (error) {
+      if (error instanceof GameplayValidationError) {
+        // Check for card validation errors
+        if (error.message.includes("guess card:")) {
+          log.warn(`makeGuess failed: invalid card`);
+          return {
+            success: false,
+            error: {
+              status: MAKE_GUESS_ERROR.INVALID_CARD,
+              cardWord,
+              reason: error.message,
+            },
+          };
+        }
+
+        log.warn(`makeGuess failed: invalid game state (${gameState.status})`);
+        return {
+          success: false,
+          error: {
+            status: MAKE_GUESS_ERROR.INVALID_GAME_STATE,
+            currentState: gameState.status,
+            validationErrors: [],
+          },
+        };
+      }
+      throw error;
+    }
   };
 };
 

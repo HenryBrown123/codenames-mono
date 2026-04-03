@@ -3,6 +3,8 @@ import type { ViewMode } from "../view-mode/view-mode-context";
 import { useGameDataRequired } from "../../game-data/providers";
 import { useViewMode } from "../view-mode/view-mode-context";
 import { useDealAnimation, type DealInitialState } from "../deal-animation-context";
+import { useVisibilityContext } from "../../game-controls/dashboards/config/context";
+import { canUseArToggle, isRoundComplete as isRoundCompleteRule } from "../../game-controls/dashboards/config/rules";
 import { GameCard } from "../cards/game-card";
 import { deriveDisplayOptions } from "../cards/card-types";
 import { EmptyCard } from "./board-layout";
@@ -156,13 +158,14 @@ export const GameBoard = memo<GameBoardProps>(({
   const { gameData }     = useGameDataRequired();
   const { viewMode, setViewMode } = useViewMode();
   const { initialState } = useDealAnimation();
+  const ctx              = useVisibilityContext();
 
   const cards           = gameData.currentRound?.cards || [];
   const currentTeamName = gameData.playerContext?.teamName;
-  const isRoundComplete = gameData.currentRound?.status === "COMPLETED";
+  const isRoundComplete = isRoundCompleteRule(ctx);
   const animateState: SceneState = isRoundComplete ? "gameOverReveal" : "visible";
   const showARHUD       = viewMode === "spymaster";
-  const isSpymaster     = gameData.playerContext?.role === "CODEMASTER";
+  const isSpymaster     = canUseArToggle(ctx);
 
   const wordsKey = useMemo(
     () => cards.map((c) => c.word).sort().join(","),

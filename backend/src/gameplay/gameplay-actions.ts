@@ -1,10 +1,6 @@
 import { Kysely } from "kysely";
 import { DB } from "@backend/common/db/db.types";
-
-import {
-  createTransactionalHandler,
-  TransactionContext,
-} from "@backend/common/data-access/transaction-handler";
+import { TransactionContext } from "@backend/common/data-access/transaction-handler";
 
 import * as cardsRepository from "@backend/common/data-access/repositories/cards.repository";
 import * as turnRepository from "@backend/common/data-access/repositories/turns.repository";
@@ -14,71 +10,114 @@ import * as gameEventsRepository from "@backend/common/data-access/repositories/
 import * as giveClueActions from "./give-clue/give-clue.actions";
 import * as makeGuessActions from "./make-guess/make-guess.actions";
 import * as makeGuessRules from "./make-guess/make-guess.rules";
+import { validate as validateGiveClue, validateClueWord } from "./give-clue/give-clue.rules";
 
-
-import { gameplayState } from "@backend/common/state";
+import { gameDataLoader } from "@backend/common/state";
 import { UnexpectedGameplayError } from "./errors/gameplay.errors";
+import type { GameAggregate } from "@backend/common/state/gameplay-state.types";
 
 /**
- * Wrapper around gameplay state provider to throw if not found
+ * Creates game-scoped gameplay operations for use within a transaction.
+ *
+ * Ops know which game they operate on, reload state internally after mutations,
+ * and never require callers to pass state or remember to refresh.
  */
-const getGameStateOrThrow =
-  (trx: TransactionContext) => async (gameId: string, userId: number) => {
-    const game = await gameplayState(trx).provider(gameId, userId);
+export const gameplayOperations = (trx: TransactionContext, initialState: GameAggregate) => {
+  const gamePublicId = initialState.public_id;
+  const playerContext = initialState.playerContext;
 
-    if (game.status !== "found")
-      throw new UnexpectedGameplayError("Game not found");
+  const loader = gameDataLoader(trx);
 
-    return game.data;
+  /** Reloads game state within the transaction, preserving the original playerContext */
+  const reload = async (): Promise<GameAggregate> => {
+    const state = await loader(gamePublicId);
+    if (!state) throw new UnexpectedGameplayError("Game not found during reload");
+    return { ...state, playerContext };
   };
 
-/**
- * Creates gameplay operations for use within a transaction context
- */
-export const gameplayOperations = (trx: TransactionContext) => ({
-  /** codemaster moves */
-  giveClue: giveClueActions.giveClueToTurn(
+  // Build the underlying action functions
+  const giveClueAction = giveClueActions.giveClueToTurn(
     turnRepository.createClue(trx),
     turnRepository.updateTurnGuesses(trx),
-  ),
+    validateGiveClue,
+    validateClueWord,
+  );
 
-  /** codebreaker moves */
-  makeGuess: makeGuessActions.createMakeGuessAction({
+  const makeGuessAction = makeGuessActions.createMakeGuessAction({
     updateCards: cardsRepository.updateCards(trx),
     createGuess: turnRepository.createGuess(trx),
     updateTurnGuesses: turnRepository.updateTurnGuesses(trx),
     createEvent: gameEventsRepository.createEvent(trx),
     validateMakeGuess: makeGuessRules.validateMakeGuess,
-  }),
+  });
 
-  /** turn/round transitions */
-  endTurn: makeGuessActions.createEndTurnAction({
+  const endTurnAction = makeGuessActions.createEndTurnAction({
     updateTurnStatus: turnRepository.updateTurnStatus(trx),
     validateEndTurn: makeGuessRules.validateEndTurn,
-  }),
+  });
 
-  startTurn: makeGuessActions.createStartTurnAction({
+  const startTurnAction = makeGuessActions.createStartTurnAction({
     createTurn: turnRepository.createTurn(trx),
     validateStartTurn: makeGuessRules.validateStartTurn,
-  }),
+  });
 
-  endRound: makeGuessActions.createEndRoundAction({
+  const endRoundAction = makeGuessActions.createEndRoundAction({
     updateRoundStatus: roundsRepository.updateRoundStatus(trx),
     updateRoundWinner: roundsRepository.updateRoundWinner(trx),
     validateEndRound: makeGuessRules.validateEndRound,
-  }),
+  });
 
-  /** game completion */
-  endGame: async (gameState: any, winningTeamId: number) => {
-    makeGuessActions.createEndGameAction(gameRepository.updateGameStatus(trx))(
-      gameState,
-      winningTeamId,
-    );
-  },
+  const endGameAction = makeGuessActions.createEndGameAction(
+    gameRepository.updateGameStatus(trx),
+  );
 
-  /** queries */
-  getCurrentGameState: getGameStateOrThrow(trx),
-});
+  return {
+    /** Codemaster gives a clue. Reloads state, validates, executes, returns fresh state. */
+    giveClue: async (word: string, count: number) => {
+      const currentState = await reload();
+      const result = await giveClueAction(currentState, word, count);
+      const freshState = await reload();
+      return { ...result, state: freshState };
+    },
+
+    /** Codebreaker makes a guess. Reloads state, validates, executes, returns fresh state. */
+    makeGuess: async (cardWord: string) => {
+      const currentState = await reload();
+      const result = await makeGuessAction(currentState, cardWord);
+      const freshState = await reload();
+      return { ...result, state: freshState };
+    },
+
+    /** Ends the current turn. Returns fresh state. */
+    endTurn: async (turnId: number) => {
+      const state = await reload();
+      await endTurnAction(state, turnId);
+      return await reload();
+    },
+
+    /** Starts a new turn for a team. Returns fresh state + the new turn record. */
+    startTurn: async (roundId: number, teamId: number) => {
+      const state = await reload();
+      const newTurn = await startTurnAction(state, roundId, teamId);
+      const freshState = await reload();
+      return { newTurn, state: freshState };
+    },
+
+    /** Ends the current round with a winner. Returns fresh state. */
+    endRound: async (roundId: number, winningTeamId: number) => {
+      const state = await reload();
+      await endRoundAction(state, roundId, winningTeamId);
+      return await reload();
+    },
+
+    /** Ends the game. Returns fresh state. */
+    endGame: async (winningTeamId: number) => {
+      const state = await reload();
+      await endGameAction(state, winningTeamId);
+      return await reload();
+    },
+  };
+};
 
 /**
  * Type representing all operations available within gameplay transactions
@@ -86,10 +125,23 @@ export const gameplayOperations = (trx: TransactionContext) => ({
 export type GameplayOperations = ReturnType<typeof gameplayOperations>;
 
 /**
- * Creates gameplay action components with transactional handler
+ * Handler type: takes initial game state + operation function, runs in transaction.
+ */
+export type GameplayHandler = <R>(
+  initialState: GameAggregate,
+  operation: (ops: GameplayOperations) => Promise<R>,
+) => Promise<R>;
+
+/**
+ * Creates gameplay action components with game-scoped transactional handler
  */
 export const gameplayActions = (dbContext: Kysely<DB>) => {
-  return {
-    handler: createTransactionalHandler(dbContext, gameplayOperations),
+  const handler: GameplayHandler = async (initialState, operation) => {
+    return dbContext.transaction().execute(async (trx) => {
+      const ops = gameplayOperations(trx, initialState);
+      return operation(ops);
+    });
   };
+
+  return { handler };
 };

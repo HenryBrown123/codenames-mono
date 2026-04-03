@@ -5,7 +5,9 @@ import {
 } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/api";
-import { usePlayerContext } from "../../game-data/providers/player-context-provider";
+import { GAME_TYPE } from "@codenames/shared/types";
+import { usePlayerSession } from "../../game-data/providers/active-game-session-provider";
+import { useGameDataRequired } from "../../game-data/providers";
 
 interface EndTurnApiResponse {
   success: boolean;
@@ -30,17 +32,20 @@ export const useEndTurnMutation = (
   gameId: string,
 ): UseMutationResult<void, Error, EndTurnInput> => {
   const queryClient = useQueryClient();
-  const { currentPlayerId } = usePlayerContext();
+  const { claimedRole } = usePlayerSession();
+  const { gameData } = useGameDataRequired();
+
+  const isSingleDevice = gameData.gameType === GAME_TYPE.SINGLE_DEVICE;
 
   return useMutation({
     mutationFn: async ({ roundNumber }) => {
-      if (!currentPlayerId) {
-        throw new Error("Player ID is required to end turn");
-      }
+      const body = isSingleDevice
+        ? { role: claimedRole }
+        : { playerId: gameData.playerContext!.publicId };
 
       const response: AxiosResponse<EndTurnApiResponse> = await api.post(
         `/games/${gameId}/rounds/${roundNumber}/end-turn`,
-        { playerId: currentPlayerId }
+        body,
       );
 
       if (!response.data.success) {
@@ -48,9 +53,7 @@ export const useEndTurnMutation = (
       }
     },
     onSuccess: async () => {
-      // Invalidate all game-related queries to refresh UI
       await queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
-      // Also invalidate turn queries as the turn status changed
       await queryClient.invalidateQueries({ queryKey: ["turn"] });
     },
   });

@@ -12,6 +12,7 @@ import * as turnsRepository from "@backend/common/data-access/repositories/turns
 
 import { turnStateProvider } from "./turn-state.provider";
 import { gameplayStateProvider } from "./gameplay-state.provider";
+import { createGameDataLoader, type GameDataLoader } from "./game-data-loader";
 
 /**
  * Creates a turn state provider with the given database context
@@ -36,6 +37,7 @@ export const turnState = (dbContext: DbContext) => {
   return {
     provider: createTurnStateProvider(dbContext),
     getTurnsByRoundId: turnsRepository.getTurnsByRoundId(dbContext),
+    findPlayersByRoundId: playerRepository.findPlayersByRoundId(dbContext),
   };
 };
 
@@ -64,6 +66,23 @@ const createGameplayStateProvider = (
 
 
 /**
+ * Creates an auth-free game data loader with the given database context
+ */
+const createInternalGameDataLoader = (
+  dbContext: DbContext | TransactionContext,
+): GameDataLoader => {
+  return createGameDataLoader({
+    getGameById: gameRepository.findGameByPublicId(dbContext),
+    getTeams: teamsRepository.getTeamsByGameId(dbContext),
+    getCardsByRoundId: cardsRepository.getCardsByRoundId(dbContext),
+    getTurnsByRoundId: turnsRepository.getTurnsByRoundId(dbContext),
+    getPlayersByGameId: playerRepository.findPlayersByGameId(dbContext),
+    getLatestRound: roundsRepository.getLatestRound(dbContext),
+    getAllRounds: roundsRepository.getRoundsByGameId(dbContext),
+  });
+};
+
+/**
  * Creates gameplay state components with all repository dependencies pre-wired
  *
  * @param dbContext - Database connection or transaction context
@@ -72,5 +91,15 @@ const createGameplayStateProvider = (
 export const gameplayState = (dbContext: DbContext | TransactionContext) => {
   return {
     provider: createGameplayStateProvider(dbContext),
+    loader: createInternalGameDataLoader(dbContext),
   };
 };
+
+/**
+ * Convenience: returns just the auth-free game data loader
+ */
+export const gameDataLoader = (dbContext: DbContext | TransactionContext): GameDataLoader => {
+  return createInternalGameDataLoader(dbContext);
+};
+
+export type { GameDataLoader };

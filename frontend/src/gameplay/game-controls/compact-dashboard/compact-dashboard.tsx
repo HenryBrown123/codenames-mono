@@ -52,8 +52,9 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
 
   const { symbol, color, rotate } = getTeamStyle(intel.teamName);
 
-  // Single primary action — disabled (not hidden) when AI is thinking
+  // Single primary action — hidden when it's an AI turn (footer AI section takes over)
   const primaryButton = (() => {
+    if (s.isAiSession) return null;
     if (s.isCodemasterGivingClue)
       return (
         <ActionButton size="sm" fullWidth
@@ -75,7 +76,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
         <ActionButton size="sm" fullWidth
           text={s.isLoading ? "..." : "END TURN"}
           onClick={s.endTurn}
-          enabled={!s.isLoading && !isAiThinking}
+          enabled={!s.isLoading}
         />
       );
     if (s.canStartNextTurn)
@@ -164,46 +165,60 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
           </div>
         </div>
 
-        <motion.div
-          className={styles.swipeZone}
-          drag="x"
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.15}
-          dragMomentum={false}
-          onDragEnd={handleDragEnd}
-          style={{ touchAction: "pan-y" }}
-        >
-          <AnimatePresence mode="wait" initial={false} custom={swipeDirection}>
-            <motion.div
-              key={intel.selectedIndex}
-              custom={swipeDirection}
-              variants={carouselVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={CAROUSEL_TRANSITION}
-              style={{ flex: 1, display: "flex", flexDirection: "column" }}
-            >
-              {!intel.hasClue && s.isCodemasterGivingClue ? (
-                <div className={styles.clueInputCenter}>
-                  <div className={styles.fixedWidthWrapper}>
-                    <AwaitingLabel>INTEL REQUIRED</AwaitingLabel>
+        <div className={styles.centerGroup}>
+          <motion.div
+            className={styles.swipeZone}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.15}
+            dragMomentum={false}
+            onDragEnd={handleDragEnd}
+            style={{ touchAction: "pan-y" }}
+          >
+            <AnimatePresence mode="wait" initial={false} custom={swipeDirection}>
+              <motion.div
+                key={intel.selectedIndex}
+                custom={swipeDirection}
+                variants={carouselVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={CAROUSEL_TRANSITION}
+                style={{ display: "flex", flexDirection: "column" }}
+              >
+                {!intel.hasClue && s.isCodemasterGivingClue ? (
+                  <div className={styles.clueInputCenter}>
+                    <div className={styles.fixedWidthWrapper}>
+                      <AwaitingLabel>INTEL REQUIRED</AwaitingLabel>
+                    </div>
+                    <div className={styles.fixedWidthWrapper}>
+                      <CompactClueInput
+                        word={clue.word}
+                        count={clue.count}
+                        error={clue.error}
+                        isLoading={s.isLoading}
+                        onWordChange={clue.setWord}
+                        onCountChange={clue.setCount}
+                        onSubmit={handleTransmit}
+                      />
+                    </div>
                   </div>
-                  <div className={styles.fixedWidthWrapper}>
-                    <CompactClueInput
-                      word={clue.word}
-                      count={clue.count}
-                      error={clue.error}
-                      isLoading={s.isLoading}
-                      onWordChange={clue.setWord}
-                      onCountChange={clue.setCount}
-                      onSubmit={handleTransmit}
-                    />
+                ) : !intel.hasClue ? (
+                  <div className={styles.intelBoxCentered}>
+                    <div className={styles.fixedWidthWrapper}>
+                      <IntelContent
+                        hasClue={intel.hasClue}
+                        clueWord={intel.clueWord}
+                        clueNumber={intel.clueNumber}
+                        guesses={intel.guesses}
+                        maxSlots={intel.maxSlots}
+                        teamName={intel.teamName}
+                        showGhostRows={false}
+                      />
+                    </div>
                   </div>
-                </div>
-              ) : !intel.hasClue ? (
-                <div className={styles.intelBoxCentered}>
-                  <div className={styles.fixedWidthWrapper}>
+                ) : (
+                  <div className={`${styles.fixedWidthWrapper} ${styles.intelBox}`}>
                     <IntelContent
                       hasClue={intel.hasClue}
                       clueWord={intel.clueWord}
@@ -214,63 +229,51 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
                       showGhostRows={false}
                     />
                   </div>
-                </div>
-              ) : (
-                <div className={`${styles.fixedWidthWrapper} ${styles.intelBox}`}>
-                  <IntelContent
-                    hasClue={intel.hasClue}
-                    clueWord={intel.clueWord}
-                    clueNumber={intel.clueNumber}
-                    guesses={intel.guesses}
-                    maxSlots={intel.maxSlots}
-                    teamName={intel.teamName}
-                    showGhostRows={false}
-                  />
-                </div>
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </motion.div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </motion.div>
 
-        {s.isRoundComplete && s.gameOverData && (
-          <ScoreComparison
-            winnerName={s.gameOverData.winnerName ?? ""}
-            winnerScore={s.gameOverData.winnerScore}
-            loserName={s.gameOverData.loserName ?? ""}
-            loserScore={s.gameOverData.loserScore}
-            className={styles.scoreBox}
-          />
-        )}
+          {s.isRoundComplete && s.gameOverData && (
+            <ScoreComparison
+              winnerName={s.gameOverData.winnerName ?? ""}
+              winnerScore={s.gameOverData.winnerScore}
+              loserName={s.gameOverData.loserName ?? ""}
+              loserScore={s.gameOverData.loserScore}
+              className={styles.scoreBox}
+            />
+          )}
 
-      </div>
-
-      <div className={styles.footer}>
-        {primaryButton ? (
-          <div className={styles.fixedWidthWrapper}>{primaryButton}</div>
-        ) : s.isAiActive ? (
-          <div className={styles.fixedWidthWrapper} style={{ position: "relative" }}>
-            {isAiThinking ? (
-              <>
-                <button className={styles.triggerBtn} disabled>
-                  THINKING...
-                </button>
-                <span className={styles.controlRowDot}><StatusDot active thinking /></span>
-              </>
-            ) : canTriggerAi ? (
-              <>
-                <button className={styles.triggerBtn} onClick={() => triggerAi.mutate()}>
-                  TRIGGER AI
-                </button>
-                <span className={styles.controlRowDot}><StatusDot active thinking={false} /></span>
-              </>
-            ) : (
-              <>
-                <span className={styles.aiIdleText}>STANDING BY</span>
-                <span className={styles.controlRowDot}><StatusDot active={false} thinking={false} /></span>
-              </>
-            )}
+          <div className={styles.footer}>
+            {primaryButton ? (
+              <div className={styles.fixedWidthWrapper}>{primaryButton}</div>
+            ) : s.isAiActive ? (
+              <div className={styles.fixedWidthWrapper}>
+                {isAiThinking ? (
+                  <>
+                    <button className={styles.triggerBtn} disabled>
+                      THINKING...
+                    </button>
+                    <span className={styles.controlRowDot}><StatusDot active thinking /></span>
+                  </>
+                ) : canTriggerAi ? (
+                  <>
+                    <button className={styles.triggerBtn} onClick={() => triggerAi.mutate()}>
+                      TRIGGER AI
+                    </button>
+                    <span className={styles.controlRowDot}><StatusDot active thinking={false} /></span>
+                  </>
+                ) : (
+                  <>
+                    <span className={styles.aiIdleText}>STANDING BY</span>
+                    <span className={styles.controlRowDot}><StatusDot active={false} thinking={false} /></span>
+                  </>
+                )}
+              </div>
+            ) : null}
           </div>
-        ) : null}
+        </div>
+
       </div>
     </div>
   );

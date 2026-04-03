@@ -1,7 +1,6 @@
 import { PanelSlots } from "./types";
 import {
   hasRole,
-  isCodemaster,
   isCodemasterGivingClue,
   isCodebreakerGuessing,
   isRoundComplete,
@@ -9,6 +8,7 @@ import {
   isAiActive,
   isRoundActive,
   canStartNextTurn,
+  canUseArToggle,
 } from "./rules";
 import {
   TeamHeaderPanel,
@@ -34,7 +34,7 @@ export const GAME_PANELS: PanelSlots = {
   middle: [
     { id: "intel", component: IntelPanel, shouldRender: isRoundActive },
     { id: "clue-input", component: ClueInputPanel, shouldRender: isCodemasterGivingClue },
-    { id: "ar-toggle", component: ARTogglePanel, shouldRender: (ctx) => isCodemaster(ctx) && !isRoundComplete(ctx) },
+    { id: "ar-toggle", component: ARTogglePanel, shouldRender: canUseArToggle },
     { id: "ai-status", component: AIStatusPanel, shouldRender: isAiActive },
     { id: "gameover", component: GameoverPanel, shouldRender: isRoundComplete },
   ],
