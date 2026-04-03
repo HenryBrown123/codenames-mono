@@ -50,6 +50,14 @@
   --dashboard-text-small: 0.8rem;
   --dashboard-text-btn: 0.875rem;
   --dashboard-text-btn-sm: 0.75rem;
+  --dashboard-text-banner: 0.9rem;
+  --dashboard-text-badge: 0.65rem;
+
+  /* ── Status dot tokens ── */
+  --dot-size-sm: 10px;
+  --dot-offset-sm: -20px;
+  --dot-size-lg: 14px;
+  --dot-offset-lg: -30px;
 
   /* ── Panel layout tokens ── */
   --panel-header-gap: 10px;
@@ -89,3 +97,20 @@
   --z-index-toast: 1100;
 }
 
+@media (max-height: 720px) {
+  :root {
+    --dashboard-text-condensed: 0.95rem;
+    --dashboard-text-player-header: 0.95rem;
+    --dashboard-text-banner: 0.78rem;
+    --dashboard-text-badge: 0.58rem;
+  }
+}
+
+@media (max-height: 660px) {
+  :root {
+    --dashboard-text-condensed: 0.85rem;
+    --dashboard-text-player-header: 0.85rem;
+    --dashboard-text-banner: 0.72rem;
+    --dashboard-text-badge: 0.55rem;
+  }
+}

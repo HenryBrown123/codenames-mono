@@ -35,5 +35,13 @@
 .sm {
   width: 28px;
   height: 28px;
-  font-size: 0.9rem;
+  font-size: var(--dashboard-text-btn);
+}
+
+@media (max-height: 720px) {
+  .sm { width: 24px; height: 24px; font-size: var(--dashboard-text-small); }
+}
+
+@media (max-height: 660px) {
+  .sm { width: 22px; height: 22px; font-size: var(--dashboard-text-btn-sm); }
 }

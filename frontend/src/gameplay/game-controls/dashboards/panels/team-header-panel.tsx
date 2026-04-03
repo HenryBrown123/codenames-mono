@@ -29,10 +29,10 @@ export const TeamHeaderPanelView: React.FC<TeamHeaderPanelViewProps> = ({
     return (
       <div className={styles.compactRow}>
         <span className={styles.compactName}>{playerName || "AGENT"}</span>
+        <span className={styles.compactRole}>{role}</span>
         <span className={styles.compactSymbol} aria-hidden>
           <TeamSymbolIcon symbol={symbol} rotate={rotate} color={color} />
         </span>
-        <span className={styles.compactRole}>{role}</span>
       </div>
     );
   }
@@ -41,10 +41,10 @@ export const TeamHeaderPanelView: React.FC<TeamHeaderPanelViewProps> = ({
     <div className={styles.ghostRow}>
       <span className={styles.playerName}>{playerName || "AGENT"}</span>
       <div className={styles.roleGroup}>
+        <span className={styles.role}>{role}</span>
         <span className={styles.symbol} aria-hidden>
           <TeamSymbolIcon symbol={symbol} rotate={rotate} color={color} />
         </span>
-        <span className={styles.role}>{role}</span>
       </div>
     </div>
   );
@@ -62,7 +62,7 @@ export const TeamHeaderPanel: React.FC<TeamHeaderPanelProps> = ({ variant }) => 
       <TeamHeaderPanelView
         teamName={ctx.activeTeamName ?? ""}
         role={ctx.active?.role ?? ""}
-        playerName="[AI TURN]"
+        playerName="[AI]"
         variant={variant}
       />
     );

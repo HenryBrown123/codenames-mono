@@ -184,7 +184,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
                 animate="center"
                 exit="exit"
                 transition={CAROUSEL_TRANSITION}
-                style={{ display: "flex", flexDirection: "column" }}
+                style={{ display: "flex", flexDirection: "column", flex: 1 }}
               >
                 {!intel.hasClue && s.isCodemasterGivingClue ? (
                   <div className={styles.clueInputCenter}>

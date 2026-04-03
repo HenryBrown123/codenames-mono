@@ -52,6 +52,8 @@
   background: var(--bg-panel);
   position: relative;
   z-index: calc(var(--z-spymaster-ar-hud) + 1);
+  --dot-size: var(--dot-size-lg);
+  --dot-offset: var(--dot-offset-lg);
 }
 
 .stackedArea { display: none; }

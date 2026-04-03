@@ -19,12 +19,12 @@ export const PlayerBanner: React.FC = () => {
     const { symbol, color, rotate } = getTeamStyle(s.activeTeamName);
     return (
       <div className={styles.banner}>
+        <div className={styles.identity}>
+          <span className={styles.playerName}>[AI]</span>
+        </div>
         <span className={styles.teamSymbol} style={{ "--symbol-color": color } as React.CSSProperties}>
           <TeamSymbolIcon symbol={symbol} rotate={rotate} />
         </span>
-        <div className={styles.identity}>
-          <span className={styles.playerName}>[AI TURN]</span>
-        </div>
       </div>
     );
   }
@@ -35,6 +35,13 @@ export const PlayerBanner: React.FC = () => {
 
   return (
     <div className={styles.banner}>
+      <div className={styles.identity}>
+        <span className={styles.playerName}>{s.playerName || "AGENT"}</span>
+        <span className={styles.roleBadge} style={{ "--symbol-color": color } as React.CSSProperties}>
+          {s.role}
+        </span>
+      </div>
+
       <AnimatePresence mode="wait">
         <motion.span
           key={s.teamName}
@@ -48,13 +55,6 @@ export const PlayerBanner: React.FC = () => {
           <TeamSymbolIcon symbol={symbol} rotate={rotate} />
         </motion.span>
       </AnimatePresence>
-
-      <div className={styles.identity}>
-        <span className={styles.playerName}>{s.playerName || "AGENT"}</span>
-        <span className={styles.roleBadge} style={{ "--symbol-color": color } as React.CSSProperties}>
-          {s.role}
-        </span>
-      </div>
     </div>
   );
 };
