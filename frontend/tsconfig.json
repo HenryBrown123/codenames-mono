@@ -26,6 +26,7 @@
     },
     "outDir": "./dist"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "test/**/*"],
+  "exclude": ["node_modules", "dist", "test/mock-game-data.ts"],
   "references": [{ "path": "../shared" }]
 }

@@ -1,22 +1,29 @@
 import { describe, it, expect } from "vitest";
-import { needsHandoff } from "./device-mode.logic";
+import { needsHandoff } from "@frontend/gameplay/device-mode/device-mode.logic";
 import type { TurnPhase } from "@frontend/shared-types";
-import type { ClaimedPhase } from "../game-data/providers/active-game-session-provider";
+import type { ClaimedPhase } from "@frontend/gameplay/game-data/providers/active-game-session-provider";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 const humanPhase = (role: TurnPhase["role"], teamName: string): TurnPhase => ({
-  role, teamName, isAi: false, playerName: "Alice",
+  role,
+  teamName,
+  isAi: false,
+  playerName: "Alice",
 });
 
 const aiPhase = (role: TurnPhase["role"], teamName: string): TurnPhase => ({
-  role, teamName, isAi: true, playerName: null,
+  role,
+  teamName,
+  isAi: true,
+  playerName: null,
 });
 
 const claimed = (role: ClaimedPhase["role"], teamName: string): ClaimedPhase => ({
-  role, teamName,
+  role,
+  teamName,
 });
 
 // ---------------------------------------------------------------------------
@@ -26,7 +33,9 @@ const claimed = (role: ClaimedPhase["role"], teamName: string): ClaimedPhase => 
 describe("needsHandoff — multi-device", () => {
   it("false regardless of active turn", () => {
     expect(needsHandoff(humanPhase("CODEMASTER", "Red"), null, true)).toBe(false);
-    expect(needsHandoff(aiPhase("CODEMASTER", "Blue"), claimed("CODEMASTER", "Red"), true)).toBe(false);
+    expect(needsHandoff(aiPhase("CODEMASTER", "Blue"), claimed("CODEMASTER", "Red"), true)).toBe(
+      false,
+    );
   });
 
   it("false when active is null", () => {
@@ -51,21 +60,31 @@ describe("needsHandoff — no active turn", () => {
 
 describe("needsHandoff — human turns", () => {
   it("false when role AND team match what is claimed", () => {
-    expect(needsHandoff(humanPhase("CODEMASTER", "Red"), claimed("CODEMASTER", "Red"), false)).toBe(false);
-    expect(needsHandoff(humanPhase("CODEBREAKER", "Blue"), claimed("CODEBREAKER", "Blue"), false)).toBe(false);
+    expect(needsHandoff(humanPhase("CODEMASTER", "Red"), claimed("CODEMASTER", "Red"), false)).toBe(
+      false,
+    );
+    expect(
+      needsHandoff(humanPhase("CODEBREAKER", "Blue"), claimed("CODEBREAKER", "Blue"), false),
+    ).toBe(false);
   });
 
   it("true when role changes (same team)", () => {
-    expect(needsHandoff(humanPhase("CODEBREAKER", "Red"), claimed("CODEMASTER", "Red"), false)).toBe(true);
+    expect(
+      needsHandoff(humanPhase("CODEBREAKER", "Red"), claimed("CODEMASTER", "Red"), false),
+    ).toBe(true);
   });
 
   it("true when team changes (same role)", () => {
     // CODEMASTER for the other team — must hand off even though role is the same
-    expect(needsHandoff(humanPhase("CODEMASTER", "Blue"), claimed("CODEMASTER", "Red"), false)).toBe(true);
+    expect(
+      needsHandoff(humanPhase("CODEMASTER", "Blue"), claimed("CODEMASTER", "Red"), false),
+    ).toBe(true);
   });
 
   it("true when both role and team change", () => {
-    expect(needsHandoff(humanPhase("CODEBREAKER", "Blue"), claimed("CODEMASTER", "Red"), false)).toBe(true);
+    expect(
+      needsHandoff(humanPhase("CODEBREAKER", "Blue"), claimed("CODEMASTER", "Red"), false),
+    ).toBe(true);
   });
 
   it("true when nothing has been claimed yet", () => {
@@ -79,12 +98,18 @@ describe("needsHandoff — human turns", () => {
 
 describe("needsHandoff — AI turns", () => {
   it("false when AI team matches claimed team", () => {
-    expect(needsHandoff(aiPhase("CODEMASTER", "Red"), claimed("CODEMASTER", "Red"), false)).toBe(false);
+    expect(needsHandoff(aiPhase("CODEMASTER", "Red"), claimed("CODEMASTER", "Red"), false)).toBe(
+      false,
+    );
   });
 
   it("false when AI team differs from claimed team (AiTurnOverlay handles this, not handoff overlay)", () => {
-    expect(needsHandoff(aiPhase("CODEMASTER", "Blue"), claimed("CODEMASTER", "Red"), false)).toBe(false);
-    expect(needsHandoff(aiPhase("CODEBREAKER", "Blue"), claimed("CODEBREAKER", "Red"), false)).toBe(false);
+    expect(needsHandoff(aiPhase("CODEMASTER", "Blue"), claimed("CODEMASTER", "Red"), false)).toBe(
+      false,
+    );
+    expect(needsHandoff(aiPhase("CODEBREAKER", "Blue"), claimed("CODEBREAKER", "Red"), false)).toBe(
+      false,
+    );
   });
 
   it("false when nothing has been claimed yet (AiTurnOverlay shown immediately on refresh)", () => {
@@ -93,6 +118,8 @@ describe("needsHandoff — AI turns", () => {
   });
 
   it("false regardless of role on AI turn", () => {
-    expect(needsHandoff(aiPhase("CODEBREAKER", "Red"), claimed("CODEMASTER", "Red"), false)).toBe(false);
+    expect(needsHandoff(aiPhase("CODEBREAKER", "Red"), claimed("CODEMASTER", "Red"), false)).toBe(
+      false,
+    );
   });
 });

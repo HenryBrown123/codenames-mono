@@ -25,16 +25,17 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom",
+    include: ["test/**/*.test.ts", "test/**/*.test.tsx"],
     alias: {
       src: "/src",
       test: "/test",
       "@": "/src",
-      "@frontend/*": "/src/*",
+      "@frontend/": "/src/",
       "@game": "/src/gameplay",
       "@game-access": "/src/game-access",
       "@pages": "/src/pages",
       "@style": "/src/style",
-      "@codenames/shared/src-types": "/src/shared-types", // Add alias for style
+      "@codenames/shared/src-types": "/src/shared-types",
       "@test": "/test",
     },
     reporters: ["dot"],
