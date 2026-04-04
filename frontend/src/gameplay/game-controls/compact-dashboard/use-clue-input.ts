@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import type { Card } from "../../../shared-types";
+import { validateClueWord } from "./clue-validation";
 
 export interface ClueInputState {
   word: string;
@@ -28,12 +29,9 @@ export function useClueInput(cards: Card[]): ClueInputState {
   }, []);
 
   const validate = useCallback((): boolean => {
-    if (!word.trim()) {
-      setError("INTEL REQUIRED");
-      return false;
-    }
-    if (cards.some((c) => c.word.toLowerCase() === word.toLowerCase())) {
-      setError("CANNOT USE BOARD WORD");
+    const validationError = validateClueWord(word, cards);
+    if (validationError) {
+      setError(validationError);
       return false;
     }
     setError("");
