@@ -22,8 +22,13 @@
 .countGroup {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--count-btn-gap, 4px);
   flex-shrink: 0;
+}
+
+.countGroup button {
+  width: var(--count-btn-size, 28px);
+  height: var(--count-btn-size, 28px);
 }
 
 .countValue {

@@ -7,6 +7,8 @@
   --dot-size: var(--dot-size-sm);
   --dot-offset: var(--dot-offset-sm);
   --mobile-footer-bottom-pad: 20px;
+  --count-btn-size: 38px;
+  --count-btn-gap: 8px;
 }
 
 .board {
