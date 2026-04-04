@@ -1,7 +1,7 @@
 import { jest, describe, it, expect } from "@jest/globals";
-import { makeGuessService } from "../make-guess.service";
-import { buildGameAggregate, buildTurn } from "../../../__test-utils__/fixtures";
-import { GameplayValidationError } from "../../errors/gameplay.errors";
+import { makeGuessService } from "@backend/gameplay/make-guess/make-guess.service";
+import { buildGameAggregate, buildTurn } from "../../__test-utils__/fixtures";
+import { GameplayValidationError } from "@backend/gameplay/errors/gameplay.errors";
 
 jest.mock("@backend/common/websocket", () => ({
   GameEventsEmitter: {
@@ -17,25 +17,25 @@ describe("makeGuessService", () => {
     error: jest.fn(),
   } as any;
 
-  const mockTurnState = jest.fn();
+  const mockTurnState = jest.fn<(...args: any[]) => any>();
 
   const createService = (guessOutcome = "CORRECT_TEAM_CARD", handlerThrows: Error | null = null) => {
     const gameState = buildGameAggregate();
-    const gameplayHandler = jest.fn().mockImplementation(
+    const gameplayHandler = jest.fn<(...args: any[]) => any>().mockImplementation(
       async (_state: any, fn: any) => {
         if (handlerThrows) throw handlerThrows;
         return fn({
-          makeGuess: jest.fn().mockResolvedValue({
+          makeGuess: jest.fn<any>().mockResolvedValue({
             outcome: guessOutcome,
             card: { _id: 1, word: "APPLE" },
             guess: { _id: 1, createdAt: new Date() },
             turn: { _id: 1, _teamId: 1, guessesRemaining: 2 },
             state: gameState,
           }),
-          endTurn: jest.fn().mockResolvedValue(gameState),
-          startTurn: jest.fn().mockResolvedValue({ newTurn: { publicId: "new-turn-uuid" }, state: gameState }),
-          endRound: jest.fn().mockResolvedValue(gameState),
-          endGame: jest.fn().mockResolvedValue(gameState),
+          endTurn: jest.fn<any>().mockResolvedValue(gameState),
+          startTurn: jest.fn<any>().mockResolvedValue({ newTurn: { publicId: "new-turn-uuid" }, state: gameState }),
+          endRound: jest.fn<any>().mockResolvedValue(gameState),
+          endGame: jest.fn<any>().mockResolvedValue(gameState),
         });
       },
     );

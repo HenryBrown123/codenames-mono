@@ -1,6 +1,6 @@
 import { describe, it, expect } from "@jest/globals";
-import { computeTurnPhase } from "../gameplay-state.helpers";
-import { buildPlayer } from "../../../__test-utils__/fixtures";
+import { computeTurnPhase } from "@backend/common/state/gameplay-state.helpers";
+import { buildPlayer } from "../../__test-utils__/fixtures";
 
 describe("computeTurnPhase", () => {
   const redCM = buildPlayer({ _teamId: 1, teamName: "Red", role: "CODEMASTER", publicName: "Alice", isAi: false });

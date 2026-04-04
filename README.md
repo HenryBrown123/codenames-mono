@@ -563,7 +563,6 @@ Frontend and backend extend these base types with their specific requirements.
 .
 |-- backend
 |   `-- src
-|       |-- __test-utils__
 |       |-- ai
 |       |   |-- ai-move
 |       |   |   |-- get-status
@@ -589,24 +588,18 @@ Frontend and backend extend these base types with their specific requirements.
 |       |   |-- http-middleware
 |       |   |-- logging
 |       |   |-- state
-|       |   |   `-- __tests__
 |       |   `-- websocket
 |       |-- gameplay
 |       |   |-- end-turn
-|       |   |   `-- __tests__
 |       |   |-- errors
 |       |   |-- get-events
 |       |   |-- get-game
 |       |   |-- get-players
 |       |   |-- get-turn
 |       |   |-- give-clue
-|       |   |   `-- __tests__
 |       |   |-- make-guess
-|       |   |   `-- __tests__
 |       |   |-- shared
-|       |   |   `-- __tests__
 |       |   `-- start-turn
-|       |       `-- __tests__
 |       |-- lobby
 |       |   |-- add-players
 |       |   |-- assign-roles
@@ -699,7 +692,7 @@ Frontend and backend extend these base types with their specific requirements.
         |   `-- modules
         `-- types
 
-138 directories
+131 directories
 ```
 
 ## Getting Started

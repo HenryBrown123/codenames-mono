@@ -1,6 +1,6 @@
 import { jest, describe, it, expect } from "@jest/globals";
-import { createStartTurnService } from "../start-turn.service";
-import { buildGameAggregate, buildTurn } from "../../../__test-utils__/fixtures";
+import { createStartTurnService } from "@backend/gameplay/start-turn/start-turn.service";
+import { buildGameAggregate, buildTurn } from "../../__test-utils__/fixtures";
 
 jest.mock("@backend/common/websocket", () => ({
   GameEventsEmitter: {
@@ -15,10 +15,10 @@ describe("startTurnService", () => {
   } as any;
 
   const createService = () => {
-    const gameplayHandler = jest.fn().mockImplementation(
+    const gameplayHandler = jest.fn<(...args: any[]) => any>().mockImplementation(
       async (_state: any, fn: any) => {
         return fn({
-          startTurn: jest.fn().mockResolvedValue({ newTurn: { publicId: "new-turn-uuid" }, state: buildGameAggregate() }),
+          startTurn: jest.fn<any>().mockResolvedValue({ newTurn: { publicId: "new-turn-uuid" }, state: buildGameAggregate() }),
         });
       },
     );
@@ -48,7 +48,7 @@ describe("startTurnService", () => {
     const result = await service({ gameState });
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe("No active round");
+    if (!result.success) expect(result.error).toBe("No active round");
   });
 
   it("rejects when round not in progress", async () => {
@@ -59,7 +59,7 @@ describe("startTurnService", () => {
     const result = await service({ gameState });
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe("Round not in progress");
+    if (!result.success) expect(result.error).toBe("Round not in progress");
   });
 
   it("rejects when active turn already exists", async () => {
@@ -69,7 +69,7 @@ describe("startTurnService", () => {
     const result = await service({ gameState });
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe("Active turn already exists");
+    if (!result.success) expect(result.error).toBe("Active turn already exists");
   });
 
   it("rejects when previous turn not completed", async () => {
@@ -83,6 +83,6 @@ describe("startTurnService", () => {
     const result = await service({ gameState });
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe("No previous turn found");
+    if (!result.success) expect(result.error).toBe("No previous turn found");
   });
 });

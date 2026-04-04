@@ -11,7 +11,8 @@
       "@backend/test/*": ["test/*"],
       "@backend/common/*": ["src/common/*"],
       "@backend/gameplay/*": ["src/gameplay/*"],
-      "@backend/ai/*": ["src/ai/*"]
+      "@backend/ai/*": ["src/ai/*"],
+      "@backend/lobby/*": ["src/lobby/*"]
     }
   },
   "include": ["test/**/*", "src/**/*", "src/**/*.json"],

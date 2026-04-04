@@ -1,6 +1,6 @@
 import { describe, it, expect } from "@jest/globals";
-import { winningConditions } from "../make-guess.rules";
-import { buildCard } from "../../../__test-utils__/fixtures";
+import { winningConditions } from "@backend/gameplay/make-guess/make-guess.rules";
+import { buildCard } from "../../__test-utils__/fixtures";
 
 describe("winningConditions", () => {
   describe("checkRoundWinner", () => {

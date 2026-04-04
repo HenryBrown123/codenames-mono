@@ -15,6 +15,9 @@
   "jest": {
     "preset": "ts-jest/presets/default-esm",
     "testEnvironment": "node",
+    "roots": [
+      "<rootDir>/test"
+    ],
     "extensionsToTreatAsEsm": [
       ".ts"
     ],
@@ -29,6 +32,7 @@
     "moduleNameMapper": {
       "^@backend/common/(.*)$": "<rootDir>/src/common/$1",
       "^@backend/gameplay/(.*)$": "<rootDir>/src/gameplay/$1",
+      "^@backend/lobby/(.*)$": "<rootDir>/src/lobby/$1",
       "^@backend/ai/(.*)$": "<rootDir>/src/ai/$1",
       "^@codenames/shared/(.*)$": "<rootDir>/../shared/src/$1"
     }

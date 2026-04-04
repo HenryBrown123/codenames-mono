@@ -1,6 +1,6 @@
 import { jest, describe, it, expect } from "@jest/globals";
-import { createEndTurnService } from "../end-turn.service";
-import { buildGameAggregate, buildTurn } from "../../../__test-utils__/fixtures";
+import { createEndTurnService } from "@backend/gameplay/end-turn/end-turn.service";
+import { buildGameAggregate, buildTurn } from "../../__test-utils__/fixtures";
 
 jest.mock("@backend/common/websocket", () => ({
   GameEventsEmitter: {
@@ -16,12 +16,12 @@ describe("endTurnService", () => {
   } as any;
 
   const createService = () => {
-    const gameplayHandler = jest.fn().mockImplementation(
+    const gameplayHandler = jest.fn<(...args: any[]) => any>().mockImplementation(
       async (_state: any, fn: any) => {
         const gameState = buildGameAggregate();
         return fn({
-          endTurn: jest.fn().mockResolvedValue(gameState),
-          startTurn: jest.fn().mockResolvedValue({ newTurn: { publicId: "new-turn-uuid" }, state: gameState }),
+          endTurn: jest.fn<any>().mockResolvedValue(gameState),
+          startTurn: jest.fn<any>().mockResolvedValue({ newTurn: { publicId: "new-turn-uuid" }, state: gameState }),
         });
       },
     );
@@ -55,7 +55,7 @@ describe("endTurnService", () => {
     const result = await service({ gameState });
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe("Only codebreakers can end turn");
+    if (!result.success) expect(result.error).toBe("Only codebreakers can end turn");
   });
 
   it("rejects when no active round", async () => {
@@ -66,7 +66,7 @@ describe("endTurnService", () => {
     const result = await service({ gameState });
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe("No active round");
+    if (!result.success) expect(result.error).toBe("No active round");
   });
 
   it("rejects when turn already completed", async () => {
@@ -78,7 +78,7 @@ describe("endTurnService", () => {
     const result = await service({ gameState });
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe("Turn already completed");
+    if (!result.success) expect(result.error).toBe("Turn already completed");
   });
 
   it("rejects when no player context", async () => {
@@ -88,6 +88,6 @@ describe("endTurnService", () => {
     const result = await service({ gameState });
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe("Player not found");
+    if (!result.success) expect(result.error).toBe("Player not found");
   });
 });

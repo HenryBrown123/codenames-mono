@@ -1,8 +1,8 @@
 import { jest, describe, it, expect } from "@jest/globals";
-import { giveClueService } from "../give-clue.service";
-import { buildGameAggregate, buildTurn } from "../../../__test-utils__/fixtures";
-import type { GameAggregate } from "../../../common/state/gameplay-state.types";
-import { GameplayValidationError } from "../../errors/gameplay.errors";
+import { giveClueService } from "@backend/gameplay/give-clue/give-clue.service";
+import { buildGameAggregate, buildTurn } from "../../__test-utils__/fixtures";
+import type { GameAggregate } from "@backend/common/state/gameplay-state.types";
+import { GameplayValidationError } from "@backend/gameplay/errors/gameplay.errors";
 
 // Mock WebSocket events (fire-and-forget, don't need real implementation)
 jest.mock("@backend/common/websocket", () => ({
@@ -17,14 +17,14 @@ describe("giveClueService", () => {
     error: jest.fn(),
   } as any;
 
-  const mockTurnState = jest.fn();
+  const mockTurnState = jest.fn<(...args: any[]) => any>();
 
   const createService = (handlerResult: any = null, handlerThrows: Error | null = null) => {
-    const gameplayHandler = jest.fn().mockImplementation(
+    const gameplayHandler = jest.fn<(...args: any[]) => any>().mockImplementation(
       async (_state: any, fn: any) => {
         if (handlerThrows) throw handlerThrows;
         return fn({
-          giveClue: jest.fn().mockResolvedValue(handlerResult ?? {
+          giveClue: jest.fn<any>().mockResolvedValue(handlerResult ?? {
             clue: { word: "FRUIT", number: 2, createdAt: new Date() },
             turn: { _id: 1 },
             state: buildGameAggregate(),
