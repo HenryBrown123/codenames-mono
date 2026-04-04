@@ -68,7 +68,7 @@ Answer:`;
  * Catches plurals/conjugations (star→stars, break→breaking) but NOT
  * arbitrary substrings (art does NOT block "party").
  */
-const isWordFormOf = (clue: string, boardWords: string[]): boolean => {
+export const isWordFormOf = (clue: string, boardWords: string[]): boolean => {
   const clueLower = clue.toLowerCase();
   return boardWords.some((w) => {
     const wLower = w.toLowerCase();

@@ -107,7 +107,7 @@ const shuffleCards = <T>(items: T[]): T[] => {
  * - Bystander: 7 cards
  * Total: 25 cards
  */
-const allocateInitialCardTypes = (startingTeam: TeamId, otherTeam: TeamId): CardInfo[] => [
+export const allocateInitialCardTypes = (startingTeam: TeamId, otherTeam: TeamId): CardInfo[] => [
   ...Array(9).fill({ cardType: CARD_TYPE.TEAM, teamId: startingTeam }),
   ...Array(8).fill({ cardType: CARD_TYPE.TEAM, teamId: otherTeam }),
   { cardType: CARD_TYPE.ASSASSIN },

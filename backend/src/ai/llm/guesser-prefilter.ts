@@ -92,7 +92,7 @@ Output ONLY the JSON object, no extra text.`;
  * Validate a single pre-filter result has all required fields
  * and a valid link_confidence value
  */
-const isValidPreFilterResult = (r: unknown): r is PreFilterOutput => {
+export const isValidPreFilterResult = (r: unknown): r is PreFilterOutput => {
   if (!r || typeof r !== "object") return false;
   const obj = r as Record<string, unknown>;
   return (
