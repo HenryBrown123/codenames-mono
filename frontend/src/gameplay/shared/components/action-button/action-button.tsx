@@ -10,6 +10,7 @@ export const BUTTON_VALIDATION = {
 export type ButtonValidation = (typeof BUTTON_VALIDATION)[keyof typeof BUTTON_VALIDATION];
 
 type ButtonProp = {
+  id?: string;
   text?: string;
   enabled?: boolean;
   onClick: () => void;
@@ -22,6 +23,7 @@ type ButtonProp = {
 };
 
 const ActionButton: React.FC<ButtonProp> = ({
+  id,
   text = "EXECUTE",
   enabled = true,
   onClick,
@@ -31,6 +33,7 @@ const ActionButton: React.FC<ButtonProp> = ({
   fullWidth = false,
 }) => (
   <button
+    id={id}
     className={`${styles.button} ${size === "sm" ? styles.sm : ""} ${fullWidth ? styles.fullWidth : ""} ${className || ""}`}
     onClick={enabled ? onClick : undefined}
     disabled={!enabled}

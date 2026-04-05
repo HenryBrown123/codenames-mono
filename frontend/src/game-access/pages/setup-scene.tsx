@@ -40,6 +40,8 @@ export const SetupScene: React.FC<SetupSceneProps> = ({ onComplete }) => {
           </div>
           <div className={styles.buttonGroup}>
             <button
+              id="game-type-single"
+              aria-pressed={gameType === GAME_TYPE.SINGLE_DEVICE}
               className={`${styles.optionButton} ${gameType === GAME_TYPE.SINGLE_DEVICE ? styles.selected : ""}`}
               onClick={() => setGameType(GAME_TYPE.SINGLE_DEVICE)}
             >
@@ -47,6 +49,8 @@ export const SetupScene: React.FC<SetupSceneProps> = ({ onComplete }) => {
               <span className={styles.buttonDesc}>Pass & play on one device</span>
             </button>
             <button
+              id="game-type-multi"
+              aria-pressed={gameType === GAME_TYPE.MULTI_DEVICE}
               className={`${styles.optionButton} ${gameType === GAME_TYPE.MULTI_DEVICE ? styles.selected : ""}`}
               onClick={() => setGameType(GAME_TYPE.MULTI_DEVICE)}
             >
@@ -68,6 +72,7 @@ export const SetupScene: React.FC<SetupSceneProps> = ({ onComplete }) => {
 
         <div className={styles.actionSection}>
           <ActionButton
+            id="create-game-btn"
             onClick={handleCreate}
             enabled={!isPending}
             text={isPending ? "..." : "CREATE GAME"}

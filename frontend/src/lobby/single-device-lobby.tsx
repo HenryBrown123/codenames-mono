@@ -94,6 +94,7 @@ export const SingleDeviceLobby: React.FC<SingleDeviceLobbyProps> = ({
             onSubmit={() => handleQuickAdd(team.name)}
             teamColor={teamConfig.cssVar}
             disabled={isLoading}
+            idPrefix={`add-player-${team.name.toLowerCase().replace(/\s+/g, "-")}`}
           />
         }
       >

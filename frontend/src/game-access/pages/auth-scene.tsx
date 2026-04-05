@@ -29,6 +29,7 @@ export const AuthScene: React.FC<AuthSceneProps> = ({ onComplete }) => {
         </div>
         <div className={styles.controlRow}>
           <ActionButton
+            id="connect-btn"
             text={isPending ? "..." : "CONNECT"}
             onClick={handleConnect}
             enabled={!isPending}

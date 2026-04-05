@@ -20,6 +20,7 @@ export const StartTurnPanelView: React.FC<StartTurnPanelViewProps> = ({
 }) => (
   <TerminalSection>
     <ActionButton
+      id="next-turn-btn"
       onClick={onStartTurn}
       text={isLoading ? "PROCESSING..." : "NEXT TURN"}
       enabled={!isLoading}

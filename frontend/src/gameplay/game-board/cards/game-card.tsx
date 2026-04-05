@@ -136,6 +136,7 @@ export const GameCard = memo<GameCardProps>(({ card, cardIndex, onClick, display
     <motion.div variants={dealCardVariants}>
       <div
         className={styles.cardContainer}
+        aria-label={card.word}
         data-team={teamType}
         data-clickable={isClickable}
         data-current-team={isCurrentTeam}

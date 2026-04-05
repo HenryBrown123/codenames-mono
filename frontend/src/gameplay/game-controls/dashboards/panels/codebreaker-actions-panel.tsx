@@ -18,6 +18,7 @@ export const CodebreakerActionsPanelView: React.FC<CodebreakerActionsPanelViewPr
 }) => (
   <TerminalSection>
     <ActionButton
+      id="end-turn-btn"
       onClick={onEndTurn}
       text={isLoading ? "PROCESSING..." : "END TRANSMISSION"}
       enabled={!isLoading}

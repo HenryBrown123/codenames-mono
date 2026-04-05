@@ -9,6 +9,8 @@ export interface AddPlayerInputViewProps {
   teamColor: string;
   disabled?: boolean;
   placeholder?: string;
+  /** HTML id prefix for the input and button (e.g. "add-player-red") */
+  idPrefix?: string;
 }
 
 export const AddPlayerInputView: React.FC<AddPlayerInputViewProps> = ({
@@ -18,6 +20,7 @@ export const AddPlayerInputView: React.FC<AddPlayerInputViewProps> = ({
   teamColor,
   disabled = false,
   placeholder = "ENTER OPERATIVE NAME",
+  idPrefix,
 }) => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") onSubmit();
@@ -26,6 +29,7 @@ export const AddPlayerInputView: React.FC<AddPlayerInputViewProps> = ({
   return (
     <div className={styles.addPlayerArea}>
       <TerminalInput
+        id={idPrefix ? `${idPrefix}-input` : undefined}
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -34,6 +38,7 @@ export const AddPlayerInputView: React.FC<AddPlayerInputViewProps> = ({
         preserveCase
       />
       <button
+        id={idPrefix ? `${idPrefix}-btn` : undefined}
         className={styles.addButton}
         style={{ "--team-color": teamColor } as React.CSSProperties}
         onClick={onSubmit}

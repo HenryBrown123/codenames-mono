@@ -57,7 +57,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
     if (s.isAiSession) return null;
     if (s.isCodemasterGivingClue)
       return (
-        <ActionButton size="sm" fullWidth
+        <ActionButton id="submit-clue-btn" size="sm" fullWidth
           text={s.isLoading ? "..." : "TRANSMIT"}
           onClick={handleTransmit}
           enabled={!!(clue.word.trim()) && !isAiThinking && !s.isLoading}
@@ -65,7 +65,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
       );
     if (s.isInLobby && s.lobbyAction)
       return (
-        <ActionButton size="sm" fullWidth
+        <ActionButton id="lobby-action-btn" size="sm" fullWidth
           text={s.isLoading ? "..." : s.lobbyAction.label}
           onClick={s.lobbyAction.handler}
           enabled={!s.isLoading}
@@ -73,7 +73,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
       );
     if (s.isCodebreakerGuessing)
       return (
-        <ActionButton size="sm" fullWidth
+        <ActionButton id="end-turn-btn" size="sm" fullWidth
           text={s.isLoading ? "..." : "END TURN"}
           onClick={s.endTurn}
           enabled={!s.isLoading}
@@ -81,7 +81,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
       );
     if (s.canStartNextTurn)
       return (
-        <ActionButton size="sm" fullWidth
+        <ActionButton id="next-turn-btn" size="sm" fullWidth
           text={s.startNextTurn.isPending ? "..." : "NEXT TURN"}
           onClick={s.startNextTurn.handler}
           enabled={!s.startNextTurn.isPending}
@@ -114,14 +114,14 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
           <div className={styles.fixedWidthWrapper}>
             <div className={styles.lobbyButtons}>
               {s.lobbyAction && (
-                <ActionButton size="sm" fullWidth
+                <ActionButton id="lobby-action-btn" size="sm" fullWidth
                   text={s.lobbyAction.label}
                   onClick={s.lobbyAction.handler}
                   enabled={!s.isLoading}
                 />
               )}
               {s.lobbyAction?.canRedeal && (
-                <ActionButton size="sm" fullWidth
+                <ActionButton id="redeal-btn" size="sm" fullWidth
                   text="REDEAL"
                   onClick={s.lobbyAction.redealHandler}
                   enabled={!s.isLoading}

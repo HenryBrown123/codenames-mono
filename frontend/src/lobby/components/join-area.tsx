@@ -47,6 +47,7 @@ export const JoinAreaView: React.FC<JoinAreaViewProps> = ({
       >
         <div className={styles.joinInputWrapper}>
           <TerminalInput
+            id="join-name-input"
             placeholder="ENTER OPERATIVE NAME"
             value={playerName}
             onChange={(e) => onPlayerNameChange(e.target.value)}
@@ -58,6 +59,7 @@ export const JoinAreaView: React.FC<JoinAreaViewProps> = ({
 
         <div className={styles.teamButtonsGrid}>
           <motion.button
+            id="join-team-red"
             className={styles.joinTeamButton}
             style={{ "--team-color": redConfig.cssVar } as React.CSSProperties}
             onClick={onJoinRed}
@@ -68,6 +70,7 @@ export const JoinAreaView: React.FC<JoinAreaViewProps> = ({
             JOIN TEAM {redConfig.shortName}
           </motion.button>
           <motion.button
+            id="join-team-blue"
             className={styles.joinTeamButton}
             style={{ "--team-color": blueConfig.cssVar } as React.CSSProperties}
             onClick={onJoinBlue}

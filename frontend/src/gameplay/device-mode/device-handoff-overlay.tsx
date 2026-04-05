@@ -65,6 +65,7 @@ export const DeviceHandoffOverlay: React.FC<DeviceHandoffOverlayProps> = ({
         </div>
 
         <ActionButton
+          id="handoff-execute-btn"
           text="EXECUTE"
           enabled={true}
           onClick={onAccept}

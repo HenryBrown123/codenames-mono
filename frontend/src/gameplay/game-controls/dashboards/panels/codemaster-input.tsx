@@ -90,6 +90,7 @@ export function CodeWordInput({
     <div className={styles.container}>
       <div className={styles.inputContainer}>
         <input
+          id="clue-word-input"
           ref={textInputRef}
           type="text"
           value={inputCodeWord}
@@ -102,14 +103,15 @@ export function CodeWordInput({
           className={styles.codeWordInputField}
         />
         <div className={styles.numberInput}>
-          <CircleButton onClick={decrement} disabled={!isEditable || isLoading || inputNumberOfCards <= 1}>-</CircleButton>
-          <div className={styles.numberDisplay}>{inputNumberOfCards}</div>
-          <CircleButton onClick={increment} disabled={!isEditable || isLoading || inputNumberOfCards >= 9}>+</CircleButton>
+          <CircleButton onClick={decrement} disabled={!isEditable || isLoading || inputNumberOfCards <= 1} aria-label="Decrease clue count">-</CircleButton>
+          <div id="clue-number" className={styles.numberDisplay}>{inputNumberOfCards}</div>
+          <CircleButton onClick={increment} disabled={!isEditable || isLoading || inputNumberOfCards >= 9} aria-label="Increase clue count">+</CircleButton>
         </div>
       </div>
 
       {isEditable && (
         <ActionButton
+          id="submit-clue-btn"
           onClick={validateAndSubmit}
           text={isEmpty ? "SUBMIT" : buttonState.text}
           enabled={canSubmit}

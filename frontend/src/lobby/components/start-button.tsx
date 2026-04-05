@@ -19,6 +19,7 @@ export const StartButtonView: React.FC<StartButtonViewProps> = ({
 }) => (
   <div className={styles.startButtonWrapper}>
     <ActionButton
+      id="start-game-btn"
       size="sm"
       text="START"
       onClick={onClick}

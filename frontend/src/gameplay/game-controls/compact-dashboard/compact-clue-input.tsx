@@ -49,6 +49,7 @@ export const CompactClueInput: React.FC<CompactClueInputProps> = ({
     <div className={styles.container}>
       <div className={styles.inputRow}>
         <TerminalInput
+          id="clue-word-input"
           ref={inputRef}
           value={word}
           onChange={(e) => onWordChange(e.target.value)}

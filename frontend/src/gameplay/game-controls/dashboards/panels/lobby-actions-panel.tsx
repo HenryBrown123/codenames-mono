@@ -30,8 +30,8 @@ export const LobbyActionsPanelView: React.FC<LobbyActionsPanelViewProps> = ({
 }) => (
   <TerminalSection>
     <div className={styles.buttonGroup}>
-      <ActionButton onClick={onPrimaryAction} text={buttonText} enabled={!isLoading} />
-      {canRedeal && <ActionButton onClick={onRedeal} text="REDEAL CARDS" enabled={!isLoading} />}
+      <ActionButton id="lobby-action-btn" onClick={onPrimaryAction} text={buttonText} enabled={!isLoading} />
+      {canRedeal && <ActionButton id="redeal-btn" onClick={onRedeal} text="REDEAL CARDS" enabled={!isLoading} />}
     </div>
   </TerminalSection>
 );
