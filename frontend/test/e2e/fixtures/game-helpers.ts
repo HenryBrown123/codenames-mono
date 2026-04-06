@@ -8,7 +8,7 @@ export async function createGuestSession(request: APIRequestContext) {
   const body = await res.json();
   if (!body.success) throw new Error("Failed to create guest session");
 
-  // Extract auth cookie from response headers
+  /** Extract auth cookie from response headers */
   const setCookie = res.headers()["set-cookie"] ?? "";
   const authToken = setCookie.match(/authToken=([^;]+)/)?.[1];
   return {
@@ -209,10 +209,12 @@ export async function setupGameViaApi(
     { playerName: "Diana", teamName: "Team Blue" },
   ];
 
-  // For multi-device: creator must also be a player to perform game ops.
-  // Add creator as the first player, then add remaining 3 with new sessions.
+  /**
+   * For multi-device: creator must also be a player to perform game ops.
+   * Add creator as the first player, then add remaining 3 with new sessions.
+   */
   if (isMulti) {
-    // Creator joins as first player
+    /** Creator joins as first player */
     const res = await request.post(`${API}/games/${game.publicId}/players`, {
       headers: { cookie },
       data: players[0],
@@ -220,7 +222,7 @@ export async function setupGameViaApi(
     const body = await res.json();
     if (!body.success) throw new Error(`Failed to add creator player: ${JSON.stringify(body)}`);
 
-    // Remaining players each get their own session
+    /** Remaining players each get their own session */
     for (const player of players.slice(1)) {
       await addPlayerWithNewSession(request, game.publicId, player);
     }
@@ -232,7 +234,7 @@ export async function setupGameViaApi(
   await createRound(request, cookie, game.publicId); // auto-deals cards
   await startRound(request, cookie, game.publicId, 1);
 
-  // For single-device, pass role to get perspective. For multi-device, the server uses the auth token.
+  /** For single-device, pass role to get perspective. For multi-device, the server uses the auth token. */
   const stateOpts = isMulti ? {} : { role: "CODEMASTER" };
   const gameState = await getGameState(request, cookie, game.publicId, stateOpts);
   const playerId = gameState.playerContext?.publicId;

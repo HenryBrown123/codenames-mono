@@ -66,7 +66,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       reconnectionAttempts: Infinity,
     });
 
-    // Connection event handlers
+    /** Connection event handlers */
     newSocket.on(WebSocketEvent.CONNECTION, () => {
       console.log("WebSocket connected successfully");
       setStatus("connected");
@@ -120,13 +120,13 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     }
   }, []);
 
-  // Auto-connect on mount if enabled
+  /** Auto-connect on mount if enabled */
   useEffect(() => {
     if (autoConnect) {
       connect();
     }
 
-    // Cleanup on unmount
+    /** Cleanup on unmount */
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();

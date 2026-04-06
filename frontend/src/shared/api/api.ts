@@ -1,12 +1,12 @@
 import axios from "axios";
 
-// todo: add to to .env
+/** @todo add to .env */
 const api = axios.create({
   baseURL: "http://localhost:3000/api",
   withCredentials: true, // Ensures cookies are sent with requests
 });
 
-// Navigate to guest authorization page if 401 is returned
+/** Navigate to guest authorization page if 401 is returned */
 api.interceptors.response.use(
   (response) => response,
   (error) => {

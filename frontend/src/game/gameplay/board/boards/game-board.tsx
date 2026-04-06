@@ -123,11 +123,11 @@ export const GameBoardView = memo<GameBoardViewProps>(({
     */
     <div className={styles.boardRelativeWrapper}>
 
-      {/* Layer 1 — plain board, always visible outside the AR circle */}
+      {/** Layer 1 -- plain board, always visible outside the AR circle */}
       <CardGrid {...sharedProps} viewMode="normal" />
 
-      {/* Layer 2 — spymaster board, clipped inside the draggable AR lens */}
-      {/* Always mounted when spymaster — drag + toggle control position  */}
+      {/** Layer 2 -- spymaster board, clipped inside the draggable AR lens */}
+      {/** Always mounted when spymaster -- drag + toggle control position */}
       {isSpymaster && !isRoundComplete && (
         <ARCircleOverlay isOpen={showARHUD} onOpenChange={onAROpenChange}>
           <CardGrid {...sharedProps} viewMode="spymaster" initialState="visible" />
@@ -177,7 +177,7 @@ export const GameBoard = memo<GameBoardProps>(({
     [setViewMode],
   );
 
-  // Reset AR view when game ends so it doesn't persist into the next round
+  /** Reset AR view when game ends so it doesn't persist into the next round */
   useEffect(() => {
     if (isRoundComplete && viewMode === "spymaster") {
       setViewMode("normal" as ViewMode);

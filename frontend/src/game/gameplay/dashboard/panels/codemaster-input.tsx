@@ -41,7 +41,7 @@ export function CodeWordInput({
     setInputNumberOfCards(numberOfCards || 1);
   }, [codeWord, numberOfCards]);
 
-  // Clear error when input changes
+  /** Clear error when input changes */
   const handleInputChange = (value: string) => {
     setInputCodeWord(value);
     if (errorMessage) setErrorMessage("");
@@ -71,12 +71,12 @@ export function CodeWordInput({
   const decrement = () => setInputNumberOfCards((n) => Math.max(1, n - 1));
   const increment = () => setInputNumberOfCards((n) => Math.min(9, n + 1));
 
-  // Determine button state
+  /** Determine button state */
   const isEmpty = !inputCodeWord.trim();
   const hasError = errorMessage.length > 0;
   const canSubmit = !isEmpty && !hasError && !isLoading && isEditable;
 
-  // Button text and validation state
+  /** Button text and validation state */
   const getButtonState = (): { text: string; validation?: ButtonValidation } => {
     if (isLoading) return { text: "TRANSMITTING..." };
     if (hasError) return { text: errorMessage, validation: BUTTON_VALIDATION.ERROR };

@@ -5,30 +5,30 @@ import { WebSocketEvent, EventPayload } from "./websocket-events.types";
 
 /** All events that should trigger a full query cache invalidation. */
 const INVALIDATION_EVENTS = [
-  // Lobby events
+  /** Lobby events */
   WebSocketEvent.PLAYER_JOINED,
   WebSocketEvent.PLAYER_LEFT,
   WebSocketEvent.PLAYER_UPDATED,
   WebSocketEvent.GAME_STARTED,
-  // Round events
+  /** Round events */
   WebSocketEvent.ROUND_CREATED,
   WebSocketEvent.ROUND_STARTED,
   WebSocketEvent.CARDS_DEALT,
   WebSocketEvent.ROUND_ENDED,
-  // Turn events
+  /** Turn events */
   WebSocketEvent.TURN_STARTED,
   WebSocketEvent.CLUE_GIVEN,
   WebSocketEvent.GUESS_MADE,
   WebSocketEvent.TURN_ENDED,
-  // Game events
+  /** Game events */
   WebSocketEvent.GAME_ENDED,
   WebSocketEvent.GAME_UPDATED,
-  // AI events
+  /** AI events */
   WebSocketEvent.AI_PIPELINE_STARTED,
   WebSocketEvent.AI_PIPELINE_STAGE,
   WebSocketEvent.AI_PIPELINE_COMPLETE,
   WebSocketEvent.AI_PIPELINE_FAILED,
-  // Chat events
+  /** Chat events */
   WebSocketEvent.GAME_MESSAGE_CREATED,
 ] as const;
 

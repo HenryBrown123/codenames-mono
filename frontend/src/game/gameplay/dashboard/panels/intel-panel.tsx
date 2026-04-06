@@ -6,7 +6,7 @@ import { TeamSymbolIcon } from "@frontend/shared/components/team-symbol-icon";
 import { CircleButton } from "@frontend/game/gameplay/shared/components";
 import styles from "./intel-panel.module.css";
 
-// Animation constants matching lobby team symbol
+/** Animation constants matching lobby team symbol */
 const TEAM_SWITCH_DURATION = 0.3;
 const EASING = [0.4, 0, 0.2, 1] as const;
 
@@ -28,7 +28,7 @@ interface IntelPanelBaseProps {
   guessesRemaining: number;
   maxSlots?: number;
   selectedIndex: number;
-  // Navigation
+  /** Navigation */
   canGoBack?: boolean;
   canGoForward?: boolean;
   onGoBack?: () => void;
@@ -76,7 +76,7 @@ export const getOutcomeSymbol = (
       return getTeamStyle(currentTeam);
     }
     case "OTHER_TEAM_CARD": {
-      // Other team's color - opposite of current
+      /** Other team's color - opposite of current */
       const teamLower = currentTeam.toLowerCase();
       const isRed = teamLower === "red" || teamLower.includes("red");
       return isRed
@@ -114,7 +114,7 @@ export const IntelPanelView: React.FC<IntelPanelViewProps> = (props) => {
     onGoForward: onGoForward ?? (() => {}),
   });
 
-  // Derive symbol styling from teamName
+  /** Derive symbol styling from teamName */
   const { symbol: teamSymbol, color: teamColor, rotate } = getTeamStyle(teamName);
 
   return (

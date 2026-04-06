@@ -2,7 +2,7 @@
  * Event type definitions matching the server API response
  */
 
-// Base event structure shared by all events
+/** Base event structure shared by all events */
 export interface BaseEvent {
   id: string;              // Unique event ID (e.g., evt_001)
   gameId: string;          // Game this event belongs to
@@ -10,7 +10,7 @@ export interface BaseEvent {
   type: string;            // Event type discriminator
 }
 
-// Global events (affect all cards)
+/** Global events (affect all cards) */
 export interface DealEvent extends BaseEvent {
   type: 'deal';
   cardIds: number[];       // All card IDs that were dealt
@@ -29,7 +29,7 @@ export interface HideColorsEvent extends BaseEvent {
   playerId?: string;       // Who toggled back to normal view
 }
 
-// Card-specific events (cardId property indicates target)
+/** Card-specific events (cardId property indicates target) */
 export interface SelectEvent extends BaseEvent {
   type: 'select';
   cardId?: string;         // Which card was selected
@@ -39,10 +39,10 @@ export interface SelectEvent extends BaseEvent {
   outcome?: string;        // Outcome of the selection
 }
 
-// Union type of all possible events
+/** Union type of all possible events */
 export type GameEvent = DealEvent | RevealColorsEvent | HideColorsEvent | SelectEvent;
 
-// Type guard helpers
+/** Type guard helpers */
 export function isDealEvent(event: GameEvent): event is DealEvent {
   return event.type === 'deal';
 }

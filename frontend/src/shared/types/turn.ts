@@ -74,5 +74,5 @@ export function assertGuessOutcome(value: string): asserts value is GuessOutcome
   assertEnum<GuessOutcome>(value, validOutcomes, "GuessOutcome");
 }
 
-// Re-export PlayerRole for convenience
+/** Re-export PlayerRole for convenience */
 export type { PlayerRole };

@@ -15,7 +15,7 @@ interface TeamSymbolProps {
   isButton?: boolean;
 }
 
-// Match timing constants from multi-device-lobby
+/** Match timing constants from multi-device-lobby */
 const TEAM_SWITCH_DURATION = 0.3;
 const EASING = [0.4, 0, 0.2, 1] as const;
 

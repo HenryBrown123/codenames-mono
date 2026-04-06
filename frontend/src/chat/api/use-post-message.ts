@@ -40,7 +40,7 @@ export const usePostMessage = (
       return response.data.data.message;
     },
     onSuccess: async () => {
-      // Invalidate messages query to refetch
+      /** Invalidate messages query to refetch */
       await queryClient.invalidateQueries({ queryKey: ["game", gameId, "messages"] });
     },
   });

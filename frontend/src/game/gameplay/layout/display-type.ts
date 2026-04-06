@@ -14,9 +14,11 @@ export const getDisplayType = (): DisplayType => {
   const h = window.innerHeight;
   const shortEdge = Math.min(w, h);
 
-  // True desktop — enough room for sidebar + board without scrolling.
-  // Must be landscape (w > h) — portrait at the same resolution gets the
-  // condensed dashboard, so it should behave as "windowed".
+  /**
+   * True desktop -- enough room for sidebar + board without scrolling.
+   * Must be landscape (w > h) -- portrait at the same resolution gets the
+   * condensed dashboard, so it should behave as "windowed".
+   */
   if (
     w >= DISPLAY_BREAKPOINTS.DESKTOP_MIN_WIDTH &&
     h >= DISPLAY_BREAKPOINTS.DESKTOP_MIN_HEIGHT &&

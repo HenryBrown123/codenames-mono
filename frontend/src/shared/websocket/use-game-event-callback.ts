@@ -33,12 +33,12 @@ export const useGameEventCallback = (
       onGameEvent();
     };
 
-    // Register listeners for all trigger events
+    /** Register listeners for all trigger events */
     DRAWER_TRIGGER_EVENTS.forEach((event) => {
       socket.on(event, handleEvent);
     });
 
-    // Cleanup
+    /** Cleanup */
     return () => {
       DRAWER_TRIGGER_EVENTS.forEach((event) => {
         socket.off(event, handleEvent);

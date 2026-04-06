@@ -37,6 +37,8 @@ export type CardVisibilityState =
   | "gameOver"
   | "gameOverSelected";
 
-// Removed: cardStateVariants no longer needed
-// Card no longer uses 3D flip - CoverCard slides instead
-// Word opacity is handled by FloatingWord component
+/**
+ * Removed: cardStateVariants no longer needed.
+ * Card no longer uses 3D flip - CoverCard slides instead.
+ * Word opacity is handled by FloatingWord component.
+ */

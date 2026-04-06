@@ -13,14 +13,14 @@ test("clue and guess cycle via API", async ({ request }) => {
   );
   expect(teamCard).toBeDefined();
 
-  // Codemaster gives clue
+  /** Codemaster gives clue */
   await giveClue(request, cookie, gameId, 1, {
     word: "XYZZY",
     targetCardCount: 1,
     role: "CODEMASTER",
   });
 
-  // Codebreaker makes guess
+  /** Codebreaker makes guess */
   const guessResult = await makeGuess(request, cookie, gameId, 1, {
     cardWord: teamCard.word,
     role: "CODEBREAKER",
@@ -29,7 +29,7 @@ test("clue and guess cycle via API", async ({ request }) => {
   expect(guessResult.guess.outcome).toBe("CORRECT_TEAM_CARD");
   expect(guessResult.guess.cardWord).toBe(teamCard.word);
 
-  // Verify state
+  /** Verify state */
   const updated = await getGameState(request, cookie, gameId, { role: "CODEBREAKER" });
   const guessedCard = updated.currentRound.cards.find((c: any) => c.word === teamCard.word);
   expect(guessedCard.selected).toBe(true);

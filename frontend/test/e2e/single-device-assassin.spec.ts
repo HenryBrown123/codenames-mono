@@ -24,9 +24,9 @@ test("assassin card ends round immediately via API", async ({ request }) => {
     role: "CODEBREAKER",
   });
 
-  // Verify the outcome is ASSASSIN_CARD
+  /** Verify the outcome is ASSASSIN_CARD */
   expect(guessResult.guess.outcome).toBe("ASSASSIN_CARD");
-  // Turn should be completed
+  /** Turn should be completed */
   expect(guessResult.turn.status).toBe("COMPLETED");
 });
 
@@ -51,20 +51,20 @@ test("assassin card click in browser triggers guess", async ({ page, context, re
   await page.goto(`/game/${gameId}?role=CODEBREAKER`);
   await page.waitForTimeout(3000);
 
-  // Dismiss handoff overlay
+  /** Dismiss handoff overlay */
   const handoffBtn = page.locator("#handoff-execute-btn");
   if (await handoffBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
     await handoffBtn.click();
     await page.waitForTimeout(1000);
   }
 
-  // Click the assassin card
+  /** Click the assassin card */
   const assassinCardEl = page.locator(`[aria-label="${assassinCard.word}"]`);
   await expect(assassinCardEl).toBeVisible({ timeout: 10_000 });
   await assassinCardEl.click();
   await page.waitForTimeout(3000);
 
-  // Verify the card was selected (game may or may not show COMPLETED)
+  /** Verify the card was selected (game may or may not show COMPLETED) */
   const finalState = await getGameState(request, cookie, gameId, { role: "CODEBREAKER" });
   const selectedCard = finalState.currentRound?.cards?.find((c: any) => c.word === assassinCard.word);
   expect(selectedCard?.selected).toBe(true);

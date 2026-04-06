@@ -95,7 +95,7 @@ export const useGameActions = (): GameActionsContextValue => {
   const turnActions = useTurnActions();
   const roundActions = useRoundActions();
 
-  // Combine action states - prefer the one that's active
+  /** Combine action states - prefer the one that's active */
   const actionState: ActionState =
     turnActions.actionState.status !== "idle"
       ? turnActions.actionState
@@ -118,7 +118,7 @@ export const useGameActions = (): GameActionsContextValue => {
   };
 };
 
-// Re-export split contexts and hooks
+/** Re-export split contexts and hooks */
 export { useTurnActions, useRoundActions };
 export type {
   TurnActionsContextValue,

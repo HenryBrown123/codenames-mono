@@ -83,7 +83,7 @@ export const Menu: React.FC = () => {
   }, []);
 
   const handleChangeStage = (_newStage: PlayerRole) => {
-    // Dev tool - stage changing not implemented
+    /** Dev tool - stage changing not implemented */
   };
 
   return (

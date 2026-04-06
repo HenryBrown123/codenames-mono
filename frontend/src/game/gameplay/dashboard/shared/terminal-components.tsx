@@ -61,7 +61,7 @@ export const PlayerInfoLayout: React.FC<{ children?: React.ReactNode }> = ({ chi
   <div className={styles.playerInfoLayout}>{children}</div>
 );
 
-// Re-export from shared components for backward compatibility
+/** Re-export from shared components for backward compatibility */
 export { AwaitingLabel } from "@frontend/game/gameplay/shared/components";
 
 /**

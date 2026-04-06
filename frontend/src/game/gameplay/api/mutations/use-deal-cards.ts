@@ -50,7 +50,7 @@ export const useDealCardsMutation = (
         queryKey: ["gameData", gameId],
       });
 
-      // Invalidate events query to fetch new deal event
+      /** Invalidate events query to fetch new deal event */
       queryClient.invalidateQueries({ queryKey: ["game-events", gameId] });
 
       console.log("[Mutation Hook] Invalidation complete");

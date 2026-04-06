@@ -43,7 +43,7 @@ test("guess via API selects card visible to viewers", async ({ browser, request 
   );
   expect(teamCard).toBeDefined();
 
-  // Give clue and make guess via API
+  /** Give clue and make guess via API */
   await giveClue(request, cookie, gameId, 1, {
     word: "XYZZY",
     targetCardCount: 1,
@@ -54,25 +54,25 @@ test("guess via API selects card visible to viewers", async ({ browser, request 
     role: "CODEBREAKER",
   });
 
-  // Verify via API
+  /** Verify via API */
   const updated = await getGameState(request, cookie, gameId, { role: "CODEBREAKER" });
   const guessedCard = updated.currentRound.cards.find((c: any) => c.word === teamCard.word);
   expect(guessedCard.selected).toBe(true);
 
-  // Open a browser context and verify the card shows as selected
+  /** Open a browser context and verify the card shows as selected */
   const ctx = await browser.newContext();
   await setAuthCookie(ctx, token);
   const page = await ctx.newPage();
   await page.goto(`/game/${gameId}?role=CODEBREAKER`);
 
-  // Dismiss handoff if present
+  /** Dismiss handoff if present */
   const handoff = page.locator("#handoff-execute-btn");
   if (await handoff.isVisible({ timeout: 3000 }).catch(() => false)) {
     await handoff.click();
     await page.waitForTimeout(500);
   }
 
-  // The selected card should have a different visual state
+  /** The selected card should have a different visual state */
   const cardEl = page.locator(`[aria-label="${teamCard.word}"]`).first();
   await expect(cardEl).toBeVisible({ timeout: 10_000 });
 

@@ -25,11 +25,13 @@ const CoverCard = memo<{ teamType: string; variant: CardVisibilityState; cardInd
   ({ teamType, variant, cardIndex, isMobile }) => {
     const shouldShow = variant === "flipped" || variant === "gameOverSelected";
     const { onTrackedAnimationStart, onTrackedAnimationEnd } = useTrackedAnimation();
-    // Skip the initial mount animation cycle — only track genuine post-mount flips
+    /** Skip the initial mount animation cycle -- only track genuine post-mount flips */
     const firstRendered = useRef(false);
 
-    // Generate a consistent random rotation based on card index
-    // Mobile: 0.5-1.5 degrees, Desktop: 2-5 degrees
+    /**
+     * Generate a consistent random rotation based on card index.
+     * Mobile: 0.5-1.5 degrees, Desktop: 2-5 degrees.
+     */
     const randomValue = ((cardIndex * 37) % 101) / 100; // 0 to 1
     const magnitude = isMobile ? 0.5 + randomValue * 1 : 2 + randomValue * 3;
     const direction = (cardIndex * 17) % 2 === 0 ? 1 : -1; // Randomly flip sign
@@ -71,7 +73,7 @@ const CoverCard = memo<{ teamType: string; variant: CardVisibilityState; cardInd
           if (shouldShow) onTrackedAnimationEnd();
         }}
       >
-        {/* Team symbol with embossed effect - clean layers */}
+        {/** Team symbol with embossed effect - clean layers */}
         {(() => {
           const symbolConfig = {
             red: { char: "□", rotate: true },
@@ -87,19 +89,19 @@ const CoverCard = memo<{ teamType: string; variant: CardVisibilityState; cardInd
 
           return (
             <>
-              {/* Embossed depression - dark shadow */}
+              {/** Embossed depression - dark shadow */}
               <div className={styles.symbolShadow}>
                 <TeamSymbolIcon symbol={config.char} rotate={config.rotate} />
               </div>
-              {/* Crisp LED symbol */}
+              {/** Crisp LED symbol */}
               <div className={styles.symbolLED}>
                 <TeamSymbolIcon symbol={config.char} rotate={config.rotate} />
               </div>
-              {/* Subtle inner glow */}
+              {/** Subtle inner glow */}
               <div className={styles.symbolGlow}>
                 <TeamSymbolIcon symbol={config.char} rotate={config.rotate} />
               </div>
-              {/* Highlight edge */}
+              {/** Highlight edge */}
               <div className={styles.symbolHighlight}>
                 <TeamSymbolIcon symbol={config.char} rotate={config.rotate} />
               </div>
@@ -149,16 +151,16 @@ export const GameCard = memo<GameCardProps>(({ card, cardIndex, onClick, display
         onMouseEnter={() => isClickable && setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Base card - always visible */}
+        {/** Base card - always visible */}
         <CardFace />
 
-        {/* Floating word - always rendered, handles own visibility */}
+        {/** Floating word - always rendered, handles own visibility */}
         <FloatingWord word={card.word} variant={variant} />
 
-        {/* Cover card - always rendered, animates in when flipped/selected */}
+        {/** Cover card - always rendered, animates in when flipped/selected */}
         <CoverCard teamType={teamType} variant={variant} cardIndex={cardIndex} isMobile={isMobile} />
 
-        {/* Overlays - just backgrounds and decorations, no word management */}
+        {/** Overlays - just backgrounds and decorations, no word management */}
         <AnimatePresence mode="wait">
           {variant === "revealed" && (
             <SpymasterOverlay key="spymaster" card={card} isCurrentTeam={isCurrentTeam} />
@@ -168,7 +170,7 @@ export const GameCard = memo<GameCardProps>(({ card, cardIndex, onClick, display
           )}
         </AnimatePresence>
 
-        {/* Pulse effect for selected cards in game over */}
+        {/** Pulse effect for selected cards in game over */}
         {variant === "gameOverSelected" && (
           <motion.div
             className={styles.outlinePulse}
@@ -185,7 +187,7 @@ export const GameCard = memo<GameCardProps>(({ card, cardIndex, onClick, display
           />
         )}
 
-        {/* Hover selection effect - AR corners targeting */}
+        {/** Hover selection effect - AR corners targeting */}
         {isHovered && (
           <motion.div
             initial={{ opacity: 0 }}

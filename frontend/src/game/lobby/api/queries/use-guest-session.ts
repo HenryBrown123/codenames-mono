@@ -10,7 +10,7 @@ export const useCreateGuestSession = (): UseMutationResult<SessionCreatedResult,
     mutationFn: async () => {
       const result = await createGuestSession();
 
-      // Store username in localStorage for multi-device features
+      /** Store username in localStorage for multi-device features */
       localStorage.setItem("username", result.user.username);
 
       return result;

@@ -1,6 +1,6 @@
 import { Card } from "@frontend/shared/types";
 
-// Card colors - BRIGHTER for better visibility
+/** Card colors - BRIGHTER for better visibility */
 export const CARD_COLORS = {
   neutral: "#6b6b6b",      // Lighter neutral
   assassin: "#0a0a0a",     // Keep black
@@ -70,6 +70,6 @@ export const getTeamType = (card: Card): string => {
  */
 export const isYourTeam = (card: Card): boolean => {
   const team = card.teamName?.toLowerCase();
-  // For now, assume red team is "your team" - this should be dynamic
+  /** For now, assume red team is "your team" - this should be dynamic */
   return team?.includes("red") || false;
 };

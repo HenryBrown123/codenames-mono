@@ -19,7 +19,7 @@ export function needsHandoff(
 ): boolean {
   if (isMultiDevice || active === null) return false;
 
-  // AI turns are always handled by AiTurnOverlay — never the handoff overlay
+  /** AI turns are always handled by AiTurnOverlay — never the handoff overlay */
   if (active.isAi) return false;
 
   return active.role !== claimedPhase?.role || active.teamName !== claimedPhase?.teamName;

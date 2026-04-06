@@ -40,7 +40,7 @@ export const MobileScene: React.FC<MobileSceneProps> = () => {
   const isLoading = ctx.isActionLoading;
   const roundComplete = isRoundComplete(ctx);
 
-  // Auto-open drawers when game events occur
+  /** Auto-open drawers when game events occur */
   const openDrawers = useCallback(() => {
     setPortraitOpen(true);
     setLandscapeOpen(true);

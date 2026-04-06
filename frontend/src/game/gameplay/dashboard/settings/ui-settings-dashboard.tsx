@@ -42,33 +42,35 @@ export function applyTerminalColour(hex: string): void {
   const { r, g, b } = hexToRgb(hex);
   const root = document.documentElement;
 
-  // Primary colour
+  /** Primary colour */
   root.style.setProperty("--color-primary", hex);
   root.style.setProperty("--primary-rgb", `${r}, ${g}, ${b}`);
 
-  // Border tokens
+  /** Border tokens */
   root.style.setProperty("--border-dim", `1px solid rgba(${r}, ${g}, ${b}, 0.14)`);
   root.style.setProperty("--border-subtle", `1px solid rgba(${r}, ${g}, ${b}, 0.24)`);
   root.style.setProperty("--border-normal", `1px solid rgba(${r}, ${g}, ${b}, 0.35)`);
   root.style.setProperty("--border-strong", `1px solid ${hex}`);
   root.style.setProperty("--border-heavy", `2px solid ${hex}`);
 
-  // Glow tokens
+  /** Glow tokens */
   root.style.setProperty("--glow-score", `0 0 8px rgba(${r}, ${g}, ${b}, 0.25)`);
   root.style.setProperty("--glow-clue", `0 0 8px rgba(${r}, ${g}, ${b}, 0.11)`);
   root.style.setProperty("--glow-box-sm", `0 0 16px rgba(${r}, ${g}, ${b}, 0.20)`);
 
-  // Background tokens
+  /** Background tokens */
   root.style.setProperty("--bg-highlight", `rgba(${r}, ${g}, ${b}, 0.06)`);
 
-  // Scrollbar (tracks primary colour)
+  /** Scrollbar (tracks primary colour) */
   root.style.setProperty("--bg-scrollbar", `rgba(${r}, ${g}, ${b}, 0.35)`);
-  // Note: --bg-panel, --bg-panel-tinted, --bg-overlay don't need updating
-  // — they are near-black and colour-neutral intentionally
+  /**
+   * Note: --bg-panel, --bg-panel-tinted, --bg-overlay don't need updating
+   * -- they are near-black and colour-neutral intentionally
+   */
 }
 
 interface UISettingsDashboardProps {
-  // Font controls
+  /** Font controls */
   fontNormalSize: number;
   fontLongSize: number;
   fontThreshold: number;
@@ -76,11 +78,11 @@ interface UISettingsDashboardProps {
   onFontLongSizeChange: (size: number) => void;
   onFontThresholdChange: (threshold: number) => void;
 
-  // Tilt control
+  /** Tilt control */
   tiltValue: number;
   onTiltChange: (tilt: number) => void;
 
-  // Colour control
+  /** Colour control */
   terminalColour: string;
   onTerminalColourChange: (colour: string) => void;
 }
@@ -101,7 +103,7 @@ export const UISettingsDashboard: React.FC<UISettingsDashboardProps> = ({
 
   return (
     <div className={styles.settingsContainer}>
-      {/* Toggle Button */}
+      {/** Toggle Button */}
       <button
         className={styles.toggleButton}
         onClick={() => setIsExpanded(!isExpanded)}
@@ -111,7 +113,7 @@ export const UISettingsDashboard: React.FC<UISettingsDashboardProps> = ({
         <span className={styles.toggleText}>UI</span>
       </button>
 
-      {/* Settings Panel */}
+      {/** Settings Panel */}
       <div 
         className={styles.settingsPanel}
         data-expanded={isExpanded}
@@ -127,7 +129,7 @@ export const UISettingsDashboard: React.FC<UISettingsDashboardProps> = ({
         </div>
 
         <div className={styles.settingsGrid}>
-          {/* Font Size Section */}
+          {/** Font Size Section */}
           <div className={styles.settingsSection}>
             <h4 className={styles.sectionTitle}>Font Sizes</h4>
             
@@ -177,7 +179,7 @@ export const UISettingsDashboard: React.FC<UISettingsDashboardProps> = ({
             </div>
           </div>
 
-          {/* Board Controls Section */}
+          {/** Board Controls Section */}
           <div className={styles.settingsSection}>
             <h4 className={styles.sectionTitle}>Board Controls</h4>
 
@@ -197,7 +199,7 @@ export const UISettingsDashboard: React.FC<UISettingsDashboardProps> = ({
             </div>
           </div>
 
-          {/* Terminal Colour Section */}
+          {/** Terminal Colour Section */}
           <div className={styles.settingsSection}>
             <h4 className={styles.sectionTitle}>Theme Colour</h4>
             <div className={styles.colourGrid}>

@@ -29,7 +29,7 @@ export const CompactClueInput: React.FC<CompactClueInputProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Auto-focus on mount (desktop only)
+    /** Auto-focus on mount (desktop only) */
     const isMobile = window.matchMedia("(max-width: 768px)").matches;
     if (!isMobile && inputRef.current) {
       inputRef.current.focus();

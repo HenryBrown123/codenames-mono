@@ -31,7 +31,7 @@ export const GameScene: React.FC = () => {
   const fromLobby = fromLobbyRef.current;
   const [showDashboard, setShowDashboard] = useState(!fromLobby);
 
-  // From lobby: show dashboard after deal animation finishes, then reset deal state
+  /** From lobby: show dashboard after deal animation finishes, then reset deal state */
   useEffect(() => {
     if (!fromLobby) return;
     navigate(location.pathname, { replace: true, state: {} });
@@ -42,8 +42,10 @@ export const GameScene: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // When displayType changes, the scene component swaps (unmount/remount).
-  // Reset deal state so cards appear instantly — no re-deal animation.
+  /**
+   * When displayType changes, the scene component swaps (unmount/remount).
+   * Reset deal state so cards appear instantly — no re-deal animation.
+   */
   const prevDisplay = useRef(displayType);
   useEffect(() => {
     if (prevDisplay.current !== displayType) {

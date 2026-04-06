@@ -23,7 +23,7 @@ export const GameChatLogView: React.FC<GameChatLogViewProps> = ({
   const [displayedChars, setDisplayedChars] = useState(0);
   const prevMessageIdRef = useRef(messageId);
 
-  // Reset animation when message changes
+  /** Reset animation when message changes */
   useEffect(() => {
     if (messageId !== prevMessageIdRef.current) {
       setDisplayedChars(0);
@@ -31,7 +31,7 @@ export const GameChatLogView: React.FC<GameChatLogViewProps> = ({
     }
   }, [messageId]);
 
-  // Typewriter effect using requestAnimationFrame for smooth performance
+  /** Typewriter effect using requestAnimationFrame for smooth performance */
   useEffect(() => {
     if (displayedChars >= content.length) return;
 

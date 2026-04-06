@@ -10,7 +10,7 @@ import {
 import { useDisplayType } from "../../layout/use-display-type";
 import styles from "./ar-circle-overlay.module.css";
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+/** Constants */
 
 const CIRCLE_RADIUS_DESKTOP = 850;
 const CIRCLE_RADIUS_MOBILE = 1500;
@@ -20,13 +20,13 @@ const BLEED_PX = 500;
 /** Velocity threshold (px/s) — fast flick snaps even if < 50%. */
 const VELOCITY_THRESHOLD = 500;
 
-// ── Spring configs ────────────────────────────────────────────────────────────
+/** Spring configs */
 
 const SPRING_SNAP = { type: "spring" as const, stiffness: 300, damping: 30 };
 const SPRING_TOGGLE = { type: "spring" as const, stiffness: 80, damping: 20 };
 const SPRING_RETURN = { type: "spring" as const, stiffness: 200, damping: 25 };
 
-// ── Geometry ──────────────────────────────────────────────────────────────────
+/** Geometry */
 
 type DesktopPositions = {
   mode: "slide";
@@ -71,13 +71,15 @@ function computePositions(
     };
   }
 
-  // Windowed & mobile: radius expands from the AR FAB dot.
-  // Use measured FAB center for pixel-perfect alignment, with fallback.
+  /**
+   * Windowed & mobile: radius expands from the AR FAB dot.
+   * Use measured FAB center for pixel-perfect alignment, with fallback.
+   */
   const fallbackX = overlayWidth - BLEED_PX - 38;
   const fallbackY = overlayHeight - BLEED_PX - 38;
   const fabCx = fabCenter ? Math.round(fabCenter.x) : fallbackX;
   const fabCy = fabCenter ? Math.round(fabCenter.y) : fallbackY;
-  // maxRadius must reach the furthest corner from the FAB center
+  /** maxRadius must reach the furthest corner from the FAB center */
   const maxRadius = Math.ceil(Math.sqrt(fabCx ** 2 + fabCy ** 2));
   return {
     mode: "expand",
@@ -88,7 +90,7 @@ function computePositions(
   };
 }
 
-// ── Public component ──────────────────────────────────────────────────────────
+/** Public component */
 
 interface ARCircleOverlayProps {
   children: React.ReactNode;
@@ -110,7 +112,7 @@ export const ARCircleOverlay = memo<ARCircleOverlayProps>(({ children, isOpen, o
   const [positions, setPositions] = useState<Positions | null>(null);
   const measureRef = useRef<HTMLDivElement>(null);
 
-  // Ref callback — attaches to a persistent hidden div for measurement
+  /** Ref callback -- attaches to a persistent hidden div for measurement */
   const setMeasureRef = useCallback(
     (node: HTMLDivElement | null) => {
       (measureRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
@@ -118,7 +120,7 @@ export const ARCircleOverlay = memo<ARCircleOverlayProps>(({ children, isOpen, o
     [],
   );
 
-  // Measure on mount + resize via ResizeObserver
+  /** Measure on mount + resize via ResizeObserver */
   useEffect(() => {
     const node = measureRef.current;
     if (!node) return;
@@ -127,7 +129,7 @@ export const ARCircleOverlay = memo<ARCircleOverlayProps>(({ children, isOpen, o
       const overlayRect = node.getBoundingClientRect();
       if (overlayRect.width <= 0 || overlayRect.height <= 0) return;
 
-      // Find the FAB button and compute its center relative to the overlay
+      /** Find the FAB button and compute its center relative to the overlay */
       const fab = document.querySelector("[data-ar-fab]");
       let fabCenter: { x: number; y: number } | undefined;
       if (fab) {
@@ -148,7 +150,7 @@ export const ARCircleOverlay = memo<ARCircleOverlayProps>(({ children, isOpen, o
     return () => ro.disconnect();
   }, [displayType]);
 
-  // Always render a hidden measurement div — it tracks overlay size
+  /** Always render a hidden measurement div -- it tracks overlay size */
   const lens = positions
     ? positions.mode === "expand"
       ? <ExpandLens positions={positions} isOpen={isOpen} onOpenChange={onOpenChange}>{children}</ExpandLens>
@@ -157,7 +159,7 @@ export const ARCircleOverlay = memo<ARCircleOverlayProps>(({ children, isOpen, o
 
   return (
     <>
-      {/* Hidden measurement div — always mounted, tracks overlay size */}
+      {/** Hidden measurement div -- always mounted, tracks overlay size */}
       <div
         ref={setMeasureRef}
         className={styles.overlay}
@@ -170,7 +172,7 @@ export const ARCircleOverlay = memo<ARCircleOverlayProps>(({ children, isOpen, o
 
 ARCircleOverlay.displayName = "ARCircleOverlay";
 
-// ── Desktop: slide lens (position animates, radius fixed) ─────────────────────
+/** Desktop: slide lens (position animates, radius fixed) */
 
 interface SlideLensProps {
   positions: DesktopPositions;
@@ -186,7 +188,7 @@ const SlideLens = memo<SlideLensProps>(({ positions, isOpen, onOpenChange, child
   const cy = useMotionValue(isOpen ? endY : startY);
   const clipPath = useMotionTemplate`circle(${radius}px at ${cx}px ${cy}px)`;
 
-  // Keep motion values in sync when positions change (e.g. resize)
+  /** Keep motion values in sync when positions change (e.g. resize) */
   useEffect(() => {
     if (isOpen) {
       cx.set(endX);
@@ -197,7 +199,7 @@ const SlideLens = memo<SlideLensProps>(({ positions, isOpen, onOpenChange, child
     }
   }, [cx, cy, endX, endY, startX, startY, isOpen]);
 
-  // ── Drag zone → clip-path mapping (1:1 clamped) ────────────────────────
+  /** Drag zone -> clip-path mapping (1:1 clamped) */
   const dragX = useMotionValue(0);
   const dragY = useMotionValue(0);
 
@@ -231,7 +233,7 @@ const SlideLens = memo<SlideLensProps>(({ positions, isOpen, onOpenChange, child
     unsubY.current = null;
   }, []);
 
-  // ── Animation helpers ─────────────────────────────────────────────────
+  /** Animation helpers */
   const animateTo = useCallback(
     (open: boolean, spring: typeof SPRING_SNAP) => {
       stopDragSync();
@@ -247,14 +249,14 @@ const SlideLens = memo<SlideLensProps>(({ positions, isOpen, onOpenChange, child
   const snapTo = useCallback((open: boolean) => animateTo(open, SPRING_SNAP), [animateTo]);
   const toggleTo = useCallback((open: boolean) => animateTo(open, SPRING_TOGGLE), [animateTo]);
 
-  // ── Sync with external toggle ─────────────────────────────────────────
+  /** Sync with external toggle */
   const prevOpen = useRef(isOpen);
   if (prevOpen.current !== isOpen) {
     prevOpen.current = isOpen;
     toggleTo(isOpen);
   }
 
-  // ── Drag zone handlers ────────────────────────────────────────────────
+  /** Drag zone handlers */
   const handleDragStart = useCallback(() => startDragSync(), [startDragSync]);
 
   const handleDragEnd = useCallback(
@@ -277,7 +279,7 @@ const SlideLens = memo<SlideLensProps>(({ positions, isOpen, onOpenChange, child
     [cx, cy, dragX, dragY, startX, startY, dragTravelX, dragTravelY, snapTo, isOpen],
   );
 
-  // ── Freeform drag when open ───────────────────────────────────────────
+  /** Freeform drag when open */
   const freeDrag = useRef<{ px: number; py: number; cx0: number; cy0: number } | null>(null);
 
   const onPointerDown = useCallback(
@@ -341,7 +343,7 @@ const SlideLens = memo<SlideLensProps>(({ positions, isOpen, onOpenChange, child
 
 SlideLens.displayName = "SlideLens";
 
-// ── Mobile/windowed: expand lens (radius animates, center fixed) ──────────────
+/** Mobile/windowed: expand lens (radius animates, center fixed) */
 
 interface ExpandLensProps {
   positions: MobilePositions;
@@ -356,13 +358,13 @@ const ExpandLens = memo<ExpandLensProps>(({ positions, isOpen, onOpenChange, chi
   const r = useMotionValue(isOpen ? maxRadius : 0);
   const clipPath = useMotionTemplate`circle(${r}px at ${centerX}px ${centerY}px)`;
 
-  // Keep radius in sync when positions change (e.g. resize)
+  /** Keep radius in sync when positions change (e.g. resize) */
   useEffect(() => {
     r.set(isOpen ? maxRadius : 0);
   }, [r, maxRadius, isOpen]);
 
-  // ── Animation helpers ─────────────────────────────────────────────────
-  // Signal the FAB dot when animation completes so it can start blinking
+  /** Animation helpers */
+  /** Signal the FAB dot when animation completes so it can start blinking */
   const setFabAnimating = useCallback((animating: boolean) => {
     const fab = document.querySelector("[data-ar-fab]");
     if (fab) fab.setAttribute("data-ar-animating", String(animating));
@@ -389,19 +391,21 @@ const ExpandLens = memo<ExpandLensProps>(({ positions, isOpen, onOpenChange, chi
     [r, maxRadius, onOpenChange, setFabAnimating],
   );
 
-  // ── Sync with external toggle ─────────────────────────────────────────
+  /** Sync with external toggle */
   const prevOpen = useRef(isOpen);
   if (prevOpen.current !== isOpen) {
     prevOpen.current = isOpen;
     toggleTo(isOpen);
   }
 
-  // ── Pinned drag — radius = distance from finger to circle center ──────
-  // Works on both the overlay (when open) and the drag zone (when closed).
-  // The circle edge tracks your finger exactly.
+  /**
+   * Pinned drag -- radius = distance from finger to circle center.
+   * Works on both the overlay (when open) and the drag zone (when closed).
+   * The circle edge tracks your finger exactly.
+   */
   const overlayRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
-  // Velocity tracking — store last two radius samples with timestamps
+  /** Velocity tracking -- store last two radius samples with timestamps */
   const lastSamples = useRef<{ r: number; t: number }[]>([]);
 
   const getRadiusFromPointer = useCallback(
@@ -409,8 +413,10 @@ const ExpandLens = memo<ExpandLensProps>(({ positions, isOpen, onOpenChange, chi
       const el = overlayRef.current;
       if (!el) return 0;
       const rect = el.getBoundingClientRect();
-      // Touch layer is in board-space; centerX/centerY are in overlay-space.
-      // Convert by subtracting BLEED_PX offset.
+      /**
+       * Touch layer is in board-space; centerX/centerY are in overlay-space.
+       * Convert by subtracting BLEED_PX offset.
+       */
       const bx = clientX - rect.left;
       const by = clientY - rect.top;
       const cx = centerX - BLEED_PX;
@@ -425,7 +431,7 @@ const ExpandLens = memo<ExpandLensProps>(({ positions, isOpen, onOpenChange, chi
   const trackSample = useCallback((radius: number) => {
     const now = performance.now();
     lastSamples.current.push({ r: radius, t: now });
-    // Keep only last 3 samples
+    /** Keep only last 3 samples */
     if (lastSamples.current.length > 3) lastSamples.current.shift();
   }, []);
 
@@ -440,8 +446,10 @@ const ExpandLens = memo<ExpandLensProps>(({ positions, isOpen, onOpenChange, chi
     return (last.r - first.r) / dt;
   }, []);
 
-  // On pointer down: spring the radius toward the finger distance.
-  // Once caught up, switch to 1:1 direct tracking.
+  /**
+   * On pointer down: spring the radius toward the finger distance.
+   * Once caught up, switch to 1:1 direct tracking.
+   */
   const catchUpAnim = useRef<ReturnType<typeof animate> | null>(null);
   const caughtUp = useRef(false);
 
@@ -460,7 +468,7 @@ const ExpandLens = memo<ExpandLensProps>(({ positions, isOpen, onOpenChange, chi
         stiffness: 300,
         damping: 30,
         onUpdate: (v) => {
-          // Check if we've caught up to the current finger position
+          /** Check if we've caught up to the current finger position */
           if (Math.abs(v - fingerR) < 20) {
             caughtUp.current = true;
             catchUpAnim.current?.stop();
@@ -479,10 +487,10 @@ const ExpandLens = memo<ExpandLensProps>(({ positions, isOpen, onOpenChange, chi
       trackSample(fingerR);
 
       if (caughtUp.current) {
-        // Direct 1:1 tracking — pinned to finger
+        /** Direct 1:1 tracking -- pinned to finger */
         r.set(fingerR);
       } else {
-        // Still catching up — retarget the spring
+        /** Still catching up -- retarget the spring */
         catchUpAnim.current?.stop();
         catchUpAnim.current = animate(r, fingerR, {
           type: "spring",
@@ -508,12 +516,12 @@ const ExpandLens = memo<ExpandLensProps>(({ positions, isOpen, onOpenChange, chi
       const progress = maxRadius > 0 ? r.get() / maxRadius : 0;
       const velocity = getVelocity(); // px/s
 
-      // Fast flick overrides position threshold
+      /** Fast flick overrides position threshold */
       const shouldOpen = Math.abs(velocity) > VELOCITY_THRESHOLD
         ? velocity > 0 // positive = expanding = open
         : progress > 0.5;
 
-      // Pass velocity to spring — it'll coast before settling
+      /** Pass velocity to spring -- it'll coast before settling */
       snapTo(shouldOpen, velocity);
     },
     [r, maxRadius, snapTo, getVelocity],
@@ -521,7 +529,7 @@ const ExpandLens = memo<ExpandLensProps>(({ positions, isOpen, onOpenChange, chi
 
   return (
     <>
-      {/* Visual overlay — clipped to the circle */}
+      {/** Visual overlay -- clipped to the circle */}
       <motion.div
         className={styles.overlay}
         style={{ clipPath, pointerEvents: "none" }}
@@ -532,8 +540,10 @@ const ExpandLens = memo<ExpandLensProps>(({ positions, isOpen, onOpenChange, chi
         <div className={styles.glare} />
       </motion.div>
 
-      {/* Touch layer — covers entire board, always interactive, no clip-path.
-          overlayRef is here so getRadiusFromPointer uses correct coordinate space. */}
+      {/**
+        * Touch layer -- covers entire board, always interactive, no clip-path.
+        * overlayRef is here so getRadiusFromPointer uses correct coordinate space.
+        */}
       <div
         ref={overlayRef}
         className={styles.touchLayer}

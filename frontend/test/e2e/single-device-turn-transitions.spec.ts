@@ -16,36 +16,36 @@ test("bystander guess ends turn and switches to other team", async ({ page, cont
   const firstTurn = gameState.currentRound.turns?.[0];
   const firstTeam = firstTurn?.teamName;
 
-  // Give clue via API
+  /** Give clue via API */
   await giveClue(request, cookie, gameId, 1, {
     word: "XYZZY",
     targetCardCount: 1,
     role: "CODEMASTER",
   });
 
-  // Set API auth cookie in browser
+  /** Set API auth cookie in browser */
   const token = cookie.replace("authToken=", "");
   await setAuthCookie(context, token);
 
   await page.goto(`/game/${gameId}?role=CODEBREAKER`);
   await page.waitForTimeout(3000);
 
-  // Dismiss handoff if present
+  /** Dismiss handoff if present */
   const handoffBtn = page.locator("#handoff-execute-btn");
   if (await handoffBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
     await handoffBtn.click();
     await page.waitForTimeout(500);
   }
 
-  // Click the bystander card
+  /** Click the bystander card */
   const bystanderEl = page.locator(`[aria-label="${bystanderWord}"]`);
   await expect(bystanderEl).toBeVisible({ timeout: 10_000 });
   await bystanderEl.click();
 
-  // Wait for turn to end
+  /** Wait for turn to end */
   await page.waitForTimeout(3000);
 
-  // Verify via API that turn switched
+  /** Verify via API that turn switched */
   const updatedState = await getGameState(request, cookie, gameId);
   const turns = updatedState.currentRound.turns;
 

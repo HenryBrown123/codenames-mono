@@ -52,7 +52,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
 
   const { symbol, color, rotate } = getTeamStyle(intel.teamName);
 
-  // Single primary action — hidden when it's an AI turn (footer AI section takes over)
+  /** Single primary action -- hidden when it's an AI turn (footer AI section takes over) */
   const primaryButton = (() => {
     if (s.isAiSession) return null;
     if (s.isCodemasterGivingClue)
@@ -98,7 +98,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
     return null;
   })();
 
-  // Carousel swipe navigation — must be before any early returns
+  /** Carousel swipe navigation -- must be before any early returns */
   const { swipeDirection, handleDragEnd, handleGoBack, handleGoForward } = useCarouselSwipe({
     canGoBack: intel.canGoBack,
     canGoForward: intel.canGoForward,
@@ -156,7 +156,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
               </motion.span>
             </AnimatePresence>
 
-            {/* Score now shown in scoreBox below intel, not in header */}
+            {/** Score now shown in scoreBox below intel, not in header */}
           </div>
 
           <div className={styles.navGroup}>

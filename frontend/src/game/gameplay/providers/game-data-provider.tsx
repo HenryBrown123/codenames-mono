@@ -23,7 +23,7 @@ interface GameDataProviderProps {
 export const GameDataProvider = ({ children, gameId }: GameDataProviderProps) => {
   const gameDataQuery = useGameDataQuery(gameId);
 
-  // Enable real-time multiplayer updates via WebSocket
+  /** Enable real-time multiplayer updates via WebSocket */
   useGameRoom(gameId);
   useWebSocketInvalidation(gameId);
 

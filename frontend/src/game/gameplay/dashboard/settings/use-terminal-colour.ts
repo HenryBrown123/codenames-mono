@@ -13,7 +13,7 @@ export function useTerminalColour() {
     return localStorage.getItem(STORAGE_KEY) || DEFAULT_TERMINAL_COLOUR;
   });
 
-  // Apply colour on mount and whenever it changes
+  /** Apply colour on mount and whenever it changes */
   useEffect(() => {
     applyTerminalColour(terminalColour);
   }, [terminalColour]);

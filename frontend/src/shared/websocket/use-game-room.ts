@@ -17,23 +17,23 @@ export const useGameRoom = (gameId: string | null) => {
       return;
     }
 
-    // If we're already in this room, don't rejoin
+    /** If we're already in this room, don't rejoin */
     if (currentGameIdRef.current === gameId) {
       return;
     }
 
-    // Leave previous room if we were in one
+    /** Leave previous room if we were in one */
     if (currentGameIdRef.current) {
       console.log(`Leaving game room: ${currentGameIdRef.current}`);
       socket.emit(WebSocketEvent.LEAVE_GAME, currentGameIdRef.current);
     }
 
-    // Join new room
+    /** Join new room */
     console.log(`Joining game room: ${gameId}`);
     socket.emit(WebSocketEvent.JOIN_GAME, gameId);
     currentGameIdRef.current = gameId;
 
-    // Cleanup: leave room on unmount or when gameId changes
+    /** Cleanup: leave room on unmount or when gameId changes */
     return () => {
       if (currentGameIdRef.current) {
         console.log(`Leaving game room (cleanup): ${currentGameIdRef.current}`);

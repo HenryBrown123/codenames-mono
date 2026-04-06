@@ -13,7 +13,7 @@ interface GetCurrentUserResponse {
 }
 
 const fetchCurrentUser = async (): Promise<CurrentUser> => {
-  // Get username from localStorage (stored during guest login)
+  /** Get username from localStorage (stored during guest login) */
   const username = localStorage.getItem("username");
 
   if (!username) {

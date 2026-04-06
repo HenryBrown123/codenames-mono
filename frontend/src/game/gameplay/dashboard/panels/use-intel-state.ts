@@ -36,7 +36,7 @@ export const useIntelState = (): IntelState => {
     () => Math.max(0, historicTurns.length - 1)
   );
 
-  // Auto-advance to latest turn when new turns arrive
+  /** Auto-advance to latest turn when new turns arrive */
   useEffect(() => {
     if (historicTurns.length > 0) {
       setSelectedIndex(historicTurns.length - 1);
@@ -80,7 +80,7 @@ export const useIntelState = (): IntelState => {
       : []),
   ];
 
-  // Stable slot count — floor 3, only ever grows across all turns
+  /** Stable slot count -- floor 3, only ever grows across all turns */
   const maxSlots = historicTurns.reduce(
     (max, turn) => Math.max(max, turn.clue?.number ?? 0),
     3

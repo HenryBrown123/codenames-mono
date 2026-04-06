@@ -30,7 +30,7 @@ export const useDashboardState = () => {
   const startTurnMutation = useStartTurnMutation(gameData.publicId);
   const isLoading = actionState.status === "loading";
 
-  // Team colour derived once
+  /** Team colour derived once */
   const teamColor = (() => {
     const name = ctx.teamName?.toLowerCase() ?? "";
     if (name.includes("red"))  return "var(--color-team-red)";
@@ -38,7 +38,7 @@ export const useDashboardState = () => {
     return "var(--color-primary)";
   })();
 
-  // Lobby action: one handler + one label, fully encapsulated
+  /** Lobby action: one handler + one label, fully encapsulated */
   const lobbyAction = isInLobby(ctx) ? {
     label: (() => {
       if (!ctx.hasRound)               return "NEW ROUND";
@@ -54,7 +54,7 @@ export const useDashboardState = () => {
     redealHandler: async () => { setViewMode("normal"); triggerDeal(); await dealCards(true); },
   } : null;
 
-  // Game over data — only populated when round is complete
+  /** Game over data -- only populated when round is complete */
   const gameOverData = isRoundComplete(ctx) ? (() => {
     const teams = gameData.teams ?? [];
     const cards = gameData.currentRound?.cards ?? [];
@@ -62,7 +62,7 @@ export const useDashboardState = () => {
     const winner = teams.find(t => t.name === winningTeamName);
     const loser  = teams.find(t => t.name !== winningTeamName);
 
-    // Count selected cards per team (not team.score which is cumulative across rounds)
+    /** Count selected cards per team (not team.score which is cumulative across rounds) */
     const winnerCards = cards.filter(c => c.teamName === winner?.name && c.selected);
     const loserCards  = cards.filter(c => c.teamName === loser?.name && c.selected);
 
@@ -78,14 +78,14 @@ export const useDashboardState = () => {
   })() : null;
 
   return {
-    // Identity
+    /** Identity */
     teamName:       ctx.teamName ?? "",
     activeTeamName: ctx.activeTeamName ?? "",
     role:           ctx.role,
     playerName:     ctx.playerName ?? "",
     teamColor,
 
-    // State flags — derived once, consumed everywhere
+    /** State flags -- derived once, consumed everywhere */
     isLoading,
     hasRole:                ctx.role !== "NONE",
     isInLobby:              isInLobby(ctx),
@@ -99,12 +99,12 @@ export const useDashboardState = () => {
     isActiveTeam:           ctx.isActiveTeam,
     hasClue:                ctx.hasClue,
 
-    // Clue / turn info
+    /** Clue / turn info */
     clueWord:         ctx.activeTurn?.clue?.word,
     clueNumber:       ctx.activeTurn?.clue?.number,
     guessesRemaining: ctx.guessesRemaining,
 
-    // Fully encapsulated actions
+    /** Fully encapsulated actions */
     lobbyAction,
     gameOverData,
     endTurn,

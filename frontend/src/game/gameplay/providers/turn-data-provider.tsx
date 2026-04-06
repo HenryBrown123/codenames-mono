@@ -34,16 +34,22 @@ interface TurnDataProviderProps {
 export const TurnDataProvider = ({ children }: TurnDataProviderProps) => {
   const { gameData } = useGameData();
 
-  // Track the turn ID of recently executed actions to allow outcomes to be presented even
-  // after the active turn has changed.
+  /**
+   * Track the turn ID of recently executed actions to allow outcomes to be presented even
+   * after the active turn has changed.
+   */
   const [lastActionTurnId, setLastActionTurnId] = useState<string | null>(null);
 
-  // Auto-populate with current active turn ID if none is being tracked by last action
-  // Fall back to last turn in round (even if completed) to ensure historicTurns loads
+  /**
+   * Auto-populate with current active turn ID if none is being tracked by last action.
+   * Fall back to last turn in round (even if completed) to ensure historicTurns loads.
+   */
   const turns = gameData.currentRound?.turns ?? [];
 
-  // Auto-clear lastActionTurnId when that turn has completed
-  // This allows activeTurnId to fall through to the natural game state
+  /**
+   * Auto-clear lastActionTurnId when that turn has completed.
+   * This allows activeTurnId to fall through to the natural game state.
+   */
   if (lastActionTurnId) {
     const lastActionTurnStatus = turns.find((t) => t.id === lastActionTurnId)?.status;
     if (lastActionTurnStatus === "COMPLETED") {
@@ -57,10 +63,10 @@ export const TurnDataProvider = ({ children }: TurnDataProviderProps) => {
     turns[turns.length - 1]?.id ||
     null;
 
-  // Use the query hook to fetch turn data (includes historicTurns)
+  /** Use the query hook to fetch turn data (includes historicTurns) */
   const turnQuery = useTurnDataQuery(activeTurnId);
 
-  // Get historicTurns from query result (full TurnData[]), fall back to empty
+  /** Get historicTurns from query result (full TurnData[]), fall back to empty */
   const historicTurns: TurnData[] = turnQuery.data?.historicTurns ?? [];
 
   const contextValue: TurnContextType = {

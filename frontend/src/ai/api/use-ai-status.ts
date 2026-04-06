@@ -39,7 +39,7 @@ export const useAiStatus = (gameId: string): UseQueryResult<AiStatus, Error> => 
       return response.data.data;
     },
     refetchInterval: (query) => {
-      // Poll every 2 seconds if AI is thinking
+      /** Poll every 2 seconds if AI is thinking */
       const interval = query.state.data?.thinking ? 2000 : false;
       if (interval) {
         console.debug("[AI] Polling AI status (thinking=true)");

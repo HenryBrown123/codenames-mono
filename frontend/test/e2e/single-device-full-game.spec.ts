@@ -24,14 +24,14 @@ async function clickVisibleButton(page: Page, selector: string, timeout = 5000):
 test("complete single-device game from auth to game over", async ({ page }) => {
   await page.goto("/");
 
-  // ── Auth ──
+  /** Auth */
   await page.locator("#connect-btn").click();
 
-  // ── Setup ──
+  /** Setup */
   await expect(page.locator("#game-type-single")).toBeVisible();
   await page.locator("#create-game-btn").click();
 
-  // ── Lobby ──
+  /** Lobby */
   const startBtn = page.locator("#start-game-btn");
   await expect(startBtn).toBeVisible({ timeout: 10_000 });
 
@@ -79,26 +79,26 @@ test("complete single-device game from auth to game over", async ({ page }) => {
   await expect(startBtn).toBeEnabled({ timeout: 3000 });
   await startBtn.click();
 
-  // ── In-game lobby: Start Round (deal animation) then Start Round (begin) ──
+  /** In-game lobby: Start Round (deal animation) then Start Round (begin) */
   await page.waitForTimeout(2000);
   await clickDashboardButton(page, "#lobby-action-btn"); // triggers deal animation
   await page.waitForTimeout(2000);
   await clickDashboardButton(page, "#lobby-action-btn"); // actually starts round
   await page.waitForTimeout(1000);
 
-  // ── Gameplay loop ──
+  /** Gameplay loop */
   for (let turn = 0; turn < 20; turn++) {
     const gameOverVisible = await page.getByText("VICTORY").isVisible().catch(() => false);
     if (gameOverVisible) break;
 
-    // Handoff overlay (always above drawers)
+    /** Handoff overlay (always above drawers) */
     const handoffBtn = page.locator("#handoff-execute-btn");
     if (await handoffBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
       await handoffBtn.click();
       await page.waitForTimeout(500);
     }
 
-    // Codemaster: give clue
+    /** Codemaster: give clue */
     await openDashboardIfMobile(page);
     const clueInput = page.locator("#clue-word-input");
     const visibleClueInput = await (async () => {
@@ -110,19 +110,19 @@ test("complete single-device game from auth to game over", async ({ page }) => {
     })();
     if (visibleClueInput) {
       await visibleClueInput.fill("XYZZY");
-      // Submit via Enter key — works regardless of button location/viewport
+      /** Submit via Enter key -- works regardless of button location/viewport */
       await visibleClueInput.press("Enter");
       await page.waitForTimeout(1000);
       continue;
     }
 
-    // Codebreaker: click a card
+    /** Codebreaker: click a card */
     const clickableCard = page.locator("[data-clickable='true']").first();
     if (await clickableCard.isVisible({ timeout: 2000 }).catch(() => false)) {
       await clickableCard.click();
       await page.waitForTimeout(1500);
 
-      // End turn if visible
+      /** End turn if visible */
       await openDashboardIfMobile(page);
       const endTurnBtn = page.locator("#end-turn-btn");
       for (const btn of await endTurnBtn.all()) {
@@ -135,13 +135,13 @@ test("complete single-device game from auth to game over", async ({ page }) => {
       continue;
     }
 
-    // Next turn
+    /** Next turn */
     await openDashboardIfMobile(page);
     try {
       await clickVisibleButton(page, "#next-turn-btn", 1000);
       await page.waitForTimeout(500);
     } catch {
-      // no next turn button — wait
+      /** no next turn button -- wait */
     }
 
     await page.waitForTimeout(1000);

@@ -62,10 +62,10 @@ export const GameoverPanel: React.FC = () => {
   const winningTeam = teams.find((t) => t.name === winningTeamName);
   const losingTeam = teams.find((t) => t.name !== winningTeamName);
 
-  // Check if assassin was selected
+  /** Check if assassin was selected */
   const assassinSelected = cards.some((c) => c.cardType === "ASSASSIN" && c.selected);
 
-  // Count cards per team
+  /** Count cards per team */
   const getTeamCardStats = (teamName: string | undefined, isWinner: boolean): TeamCardStats => {
     const teamCards = cards.filter((c) => c.teamName === teamName);
     const selectedCards = teamCards.filter((c) => c.selected);

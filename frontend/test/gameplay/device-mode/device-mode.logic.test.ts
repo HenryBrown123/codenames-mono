@@ -3,9 +3,7 @@ import { needsHandoff } from "@frontend/game/gameplay/single-device/device-mode.
 import type { TurnPhase } from "@frontend/shared/types";
 import type { ClaimedPhase } from "@frontend/game/gameplay/providers/active-game-session-provider";
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+/** Helpers */
 
 const humanPhase = (role: TurnPhase["role"], teamName: string): TurnPhase => ({
   role,
@@ -26,9 +24,7 @@ const claimed = (role: ClaimedPhase["role"], teamName: string): ClaimedPhase => 
   teamName,
 });
 
-// ---------------------------------------------------------------------------
-// Multi-device — always false
-// ---------------------------------------------------------------------------
+/** Multi-device -- always false */
 
 describe("needsHandoff — multi-device", () => {
   it("false regardless of active turn", () => {
@@ -43,9 +39,7 @@ describe("needsHandoff — multi-device", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// No active turn (single-device)
-// ---------------------------------------------------------------------------
+/** No active turn (single-device) */
 
 describe("needsHandoff — no active turn", () => {
   it("false when active is null, claimed or not", () => {
@@ -54,9 +48,7 @@ describe("needsHandoff — no active turn", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Human turns (single-device)
-// ---------------------------------------------------------------------------
+/** Human turns (single-device) */
 
 describe("needsHandoff — human turns", () => {
   it("false when role AND team match what is claimed", () => {
@@ -75,7 +67,7 @@ describe("needsHandoff — human turns", () => {
   });
 
   it("true when team changes (same role)", () => {
-    // CODEMASTER for the other team — must hand off even though role is the same
+    /** CODEMASTER for the other team -- must hand off even though role is the same */
     expect(
       needsHandoff(humanPhase("CODEMASTER", "Blue"), claimed("CODEMASTER", "Red"), false),
     ).toBe(true);
@@ -92,9 +84,7 @@ describe("needsHandoff — human turns", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// AI turns (single-device) — always false; AiTurnOverlay handles AI handoffs
-// ---------------------------------------------------------------------------
+/** AI turns (single-device) -- always false; AiTurnOverlay handles AI handoffs */
 
 describe("needsHandoff — AI turns", () => {
   it("false when AI team matches claimed team", () => {

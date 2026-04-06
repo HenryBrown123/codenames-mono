@@ -127,7 +127,7 @@ export const TurnActionsProvider = ({ children }: TurnActionsProviderProps) => {
         onSuccess: () => {
           setActionState({ name: "endTurn", status: "success", error: null });
           invalidateGameData();
-          // Backend auto-starts the next turn — no manual startTurn call needed
+          /** Backend auto-starts the next turn -- no manual startTurn call needed */
         },
         onError: (error) => {
           console.error("Failed to end turn:", error);

@@ -7,12 +7,12 @@ import type { TurnData, TurnPhase } from "@frontend/shared/types";
 import { deriveVisibilityContext } from "./derive-visibility";
 
 export interface VisibilityContext {
-  // Player info
+  /** Player info */
   role: "CODEMASTER" | "CODEBREAKER" | "SPECTATOR" | "NONE";
   teamName: string | undefined;
   playerName: string | undefined;
 
-  // Turn state
+  /** Turn state */
   activeTeamName: string | undefined;
   isActiveTeam: boolean;
   hasClue: boolean;
@@ -20,22 +20,22 @@ export interface VisibilityContext {
   hasActiveTurn: boolean;
   activeTurn: TurnData | null;
 
-  // Between-turns context
+  /** Between-turns context */
   lastCompletedTurn: TurnData | null;
 
-  // Round state
+  /** Round state */
   roundStatus: "SETUP" | "IN_PROGRESS" | "COMPLETED" | null;
   hasCards: boolean;
   hasRound: boolean;
 
-  // Action state
+  /** Action state */
   isActionLoading: boolean;
 
-  // AI state
+  /** AI state */
   aiAvailable: boolean;
   aiThinking: boolean;
 
-  // Active phase from server
+  /** Active phase from server */
   active: TurnPhase | null;
   isAiSession: boolean;
 }

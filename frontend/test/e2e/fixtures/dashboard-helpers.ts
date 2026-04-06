@@ -33,14 +33,14 @@ export async function openDashboardIfMobile(page: Page): Promise<void> {
   const isPortrait = vp.height > vp.width;
 
   if (isPortrait) {
-    // Open portrait drawer via the handle button
+    /** Open portrait drawer via the handle button */
     const handle = page.locator("[aria-label='Open dashboard']");
     if (await handle.isVisible({ timeout: 2000 }).catch(() => false)) {
       await handle.click();
       await page.waitForTimeout(400); // drawer animation
     }
   } else {
-    // Open landscape overlay via the toggle tab
+    /** Open landscape overlay via the toggle tab */
     const tab = page.locator("[aria-label='Toggle dashboard']");
     if (await tab.isVisible({ timeout: 2000 }).catch(() => false)) {
       const isOpen = await tab.getAttribute("data-open");
@@ -81,15 +81,19 @@ export async function setAuthCookie(context: BrowserContext, token: string): Pro
  */
 export async function clickDashboardButton(page: Page, selector: string): Promise<void> {
   await openDashboardIfMobile(page);
-  // Multiple dashboard layouts may render simultaneously (CSS hides one),
-  // so filter to the visible instance.
-  // Multiple layouts render simultaneously (CSS hides one, or one is
-  // outside the viewport). Try each instance — click the one in viewport.
+  /**
+   * Multiple dashboard layouts may render simultaneously (CSS hides one),
+   * so filter to the visible instance.
+   * Multiple layouts render simultaneously (CSS hides one, or one is
+   * outside the viewport). Try each instance -- click the one in viewport.
+   */
   const allBtns = page.locator(selector);
   const count = await allBtns.count();
 
-  // Try each, last-to-first (compact dashboard is later in DOM and more
-  // likely to be in-viewport on tablet/mobile).
+  /**
+   * Try each, last-to-first (compact dashboard is later in DOM and more
+   * likely to be in-viewport on tablet/mobile).
+   */
   for (let i = count - 1; i >= 0; i--) {
     const btn = allBtns.nth(i);
     const visible = await btn.isVisible({ timeout: 500 }).catch(() => false);
@@ -107,7 +111,7 @@ export async function clickDashboardButton(page: Page, selector: string): Promis
     }
   }
 
-  // Last resort: find any visible one, scroll it in, and force click
+  /** Last resort: find any visible one, scroll it in, and force click */
   for (let i = count - 1; i >= 0; i--) {
     const btn = allBtns.nth(i);
     if (await btn.isVisible({ timeout: 200 }).catch(() => false)) {

@@ -35,9 +35,7 @@ export const DeviceModeManager: React.FC<DeviceModeManagerProps> = ({
   const active = activeTurn?.active ?? null;
   const isMultiDevice = gameData.gameType !== GAME_TYPE.SINGLE_DEVICE;
 
-  // ---------------------------------------------------------------------------
-  // Reset view mode whenever the active phase key changes (single-device only).
-  // ---------------------------------------------------------------------------
+  /** Reset view mode whenever the active phase key changes (single-device only). */
   const prevActiveKeyRef = useRef<string>("");
 
   useEffect(() => {
@@ -49,11 +47,11 @@ export const DeviceModeManager: React.FC<DeviceModeManagerProps> = ({
     }
   }, [isMultiDevice, active?.teamName, active?.role, setViewMode]);
 
-  // ---------------------------------------------------------------------------
-  // Derive what to show.
-  // AI overlay only appears when the AI is playing for a DIFFERENT team —
-  // same-team AI turns (e.g. human codemaster → AI codebreakers) are silent.
-  // ---------------------------------------------------------------------------
+  /**
+   * Derive what to show.
+   * AI overlay only appears when the AI is playing for a DIFFERENT team —
+   * same-team AI turns (e.g. human codemaster → AI codebreakers) are silent.
+   */
 
   const handoffRequired = needsHandoff(active, claimedPhase, isMultiDevice);
   const isAiTurn =
@@ -61,9 +59,7 @@ export const DeviceModeManager: React.FC<DeviceModeManagerProps> = ({
     active?.isAi === true &&
     active.teamName !== claimedPhase?.teamName;
 
-  // ---------------------------------------------------------------------------
-  // Handoff accept — claim the active role+team, reset view
-  // ---------------------------------------------------------------------------
+  /** Handoff accept — claim the active role+team, reset view */
 
   const handleHandoffAccept = useCallback(() => {
     if (active) {
@@ -73,10 +69,10 @@ export const DeviceModeManager: React.FC<DeviceModeManagerProps> = ({
     }
   }, [active, setClaimedPhase, setIsAiClaimed, setViewMode]);
 
-  // ---------------------------------------------------------------------------
-  // AI turn pass — record that this AI team now has the device so same-team
-  // follow-up AI turns don't re-show the overlay.
-  // ---------------------------------------------------------------------------
+  /**
+   * AI turn pass — record that this AI team now has the device so same-team
+   * follow-up AI turns don't re-show the overlay.
+   */
 
   const handleAiPass = useCallback(() => {
     if (active) {

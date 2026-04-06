@@ -48,7 +48,7 @@ interface DealingBoardProps {
   wordsKey: string;
 }
 
-// todo: refactor component.... DealingBoard should be a board that deals given a certain "initial" property
+/** @todo refactor component.... DealingBoard should be a board that deals given a certain "initial" property */
 
 export const DealingBoard = memo<DealingBoardProps>(
   ({ children, initialState, animateState, className, wordsKey }) => {

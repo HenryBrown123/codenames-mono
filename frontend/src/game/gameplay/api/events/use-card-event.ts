@@ -25,19 +25,19 @@ export const useCardEvent = (cardWord: string): string | null => {
       return null;
     }
 
-    // Find the first unprocessed event that affects this card
+    /** Find the first unprocessed event that affects this card */
     const unprocessedEvent = events.find((event) => {
-      // Skip if already processed
+      /** Skip if already processed */
       if (lastProcessedIdRef.current && event.id <= lastProcessedIdRef.current) {
         return false;
       }
 
-      // Global events affect all cards
+      /** Global events affect all cards */
       if (event.type === 'deal' || event.type === 'reveal_colors' || event.type === 'hide_colors') {
         return true;
       }
 
-      // Card-specific events: match by card word
+      /** Card-specific events: match by card word */
       if (event.type === 'select' && 'cardWord' in event) {
         return event.cardWord?.toLowerCase() === cardWord.toLowerCase();
       }
@@ -46,11 +46,13 @@ export const useCardEvent = (cardWord: string): string | null => {
     });
 
     if (unprocessedEvent) {
-      // Mark this event as processed
+      /** Mark this event as processed */
       lastProcessedIdRef.current = unprocessedEvent.id;
 
-      // Normalize event types to match animation system expectations
-      // Server uses 'select', 'deal', etc. - convert to match existing animation events
+      /**
+       * Normalize event types to match animation system expectations.
+       * Server uses 'select', 'deal', etc. - convert to match existing animation events.
+       */
       return unprocessedEvent.type.replace('_', '-'); // reveal_colors -> reveal-colors
     }
 

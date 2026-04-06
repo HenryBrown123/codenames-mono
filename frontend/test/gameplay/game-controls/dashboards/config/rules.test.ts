@@ -18,9 +18,7 @@ import {
 } from "@frontend/game/gameplay/dashboard/config/rules";
 import type { VisibilityContext } from "@frontend/game/gameplay/dashboard/config/context";
 
-// ---------------------------------------------------------------------------
-// Factory
-// ---------------------------------------------------------------------------
+/** Factory */
 
 const base: VisibilityContext = {
   role: "NONE",
@@ -48,9 +46,7 @@ const ctx = (overrides: Partial<VisibilityContext>): VisibilityContext => ({
   ...overrides,
 });
 
-// ---------------------------------------------------------------------------
-// Role identity
-// ---------------------------------------------------------------------------
+/** Role identity */
 
 describe("isCodemaster / isCodebreaker / isSpectator", () => {
   it("isCodemaster: true only for CODEMASTER role", () => {
@@ -77,9 +73,7 @@ describe("isCodemaster / isCodebreaker / isSpectator", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Codemaster giving clue
-// ---------------------------------------------------------------------------
+/** Codemaster giving clue */
 
 describe("isCodemasterGivingClue", () => {
   const givingClueCtx = ctx({
@@ -134,9 +128,7 @@ describe("isCodemasterObserving", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Codebreaker guessing
-// ---------------------------------------------------------------------------
+/** Codebreaker guessing */
 
 describe("isCodebreakerGuessing", () => {
   const guessingCtx = ctx({
@@ -188,9 +180,7 @@ describe("isCodebreakerObserving", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Lobby / round state
-// ---------------------------------------------------------------------------
+/** Lobby / round state */
 
 describe("isInLobby", () => {
   it("true when there is no round", () => {
@@ -236,9 +226,7 @@ describe("canDealCards / canStartRound", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// AI active
-// ---------------------------------------------------------------------------
+/** AI active */
 
 describe("isAiActive", () => {
   const inProgressCtx = ctx({ hasRound: true, roundStatus: "IN_PROGRESS", hasActiveTurn: true });
@@ -264,9 +252,7 @@ describe("isAiActive", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// canUseArToggle
-// ---------------------------------------------------------------------------
+/** canUseArToggle */
 
 describe("canUseArToggle", () => {
   const humanCodemasterInProgress = ctx({
@@ -302,9 +288,7 @@ describe("canUseArToggle", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// canStartNextTurn
-// ---------------------------------------------------------------------------
+/** canStartNextTurn */
 
 describe("canStartNextTurn", () => {
   const betweenTurnsCtx = ctx({

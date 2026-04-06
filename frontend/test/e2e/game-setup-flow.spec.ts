@@ -49,15 +49,15 @@ async function getVisible(page: Page, selector: string) {
 test("single-device setup: auth → settings → lobby → deal → redeal → start", async ({ page }) => {
   await page.goto("/");
 
-  // ── 1. Auth ──
+  /** Auth */
   await page.locator("#connect-btn").click();
 
-  // ── 2. Game settings ──
+  /** Game settings */
   await expect(page.locator("#game-type-single")).toBeVisible({ timeout: 5000 });
   await expect(page.locator("#game-type-single")).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("#game-type-multi")).toHaveAttribute("aria-pressed", "false");
 
-  // Toggle types and back
+  /** Toggle types and back */
   await page.locator("#game-type-multi").click();
   await expect(page.locator("#game-type-multi")).toHaveAttribute("aria-pressed", "true");
   await page.locator("#game-type-single").click();
@@ -65,7 +65,7 @@ test("single-device setup: auth → settings → lobby → deal → redeal → s
 
   await page.locator("#create-game-btn").click();
 
-  // ── 3. Lobby — add players ──
+  /** Lobby -- add players */
   await expect(page.locator("#start-game-btn")).toBeVisible({ timeout: 10_000 });
 
   await switchToTeamIfMobile(page, "Team Red");
@@ -90,33 +90,33 @@ test("single-device setup: auth → settings → lobby → deal → redeal → s
   (await getVisible(page, "#add-player-team-blue-btn")).click();
   await expect(blueInput).toHaveValue("", { timeout: 3000 });
 
-  // ── 4. Start game ──
+  /** Start game */
   const startBtn = page.locator("#start-game-btn");
   await expect(startBtn).toBeEnabled({ timeout: 3000 });
   await startBtn.click();
 
-  // ── 5. Click "Start Round" to trigger deal animation ──
+  /** Click "Start Round" to trigger deal animation */
   await page.waitForTimeout(2000);
   await clickVisibleButton(page, "#lobby-action-btn");
   await page.waitForTimeout(2000);
 
-  // ── 6. Verify 25 cards dealt ──
+  /** Verify 25 cards dealt */
   const cards = page.locator("[aria-label][data-team]");
   await expect(cards.first()).toBeVisible({ timeout: 5000 });
   expect(await cards.count()).toBe(25);
 
-  // ── 7. REDEAL ──
+  /** REDEAL */
   await clickVisibleButton(page, "#redeal-btn");
   await page.waitForTimeout(3000);
 
-  // Still 25 cards after redeal
+  /** Still 25 cards after redeal */
   expect(await cards.count()).toBe(25);
 
-  // ── 8. Start Round (actually starts gameplay) ──
+  /** Start Round (actually starts gameplay) */
   await clickVisibleButton(page, "#lobby-action-btn");
   await page.waitForTimeout(2000);
 
-  // ── 9. Verify gameplay started — handoff overlay should appear ──
+  /** Verify gameplay started -- handoff overlay should appear */
   await expect(page.locator("#handoff-execute-btn")).toBeVisible({ timeout: 10_000 });
 });
 
@@ -142,8 +142,10 @@ test("multi-device setup: two contexts view the same game", async ({ browser, re
   await expect(cardsA.first()).toBeVisible({ timeout: 15_000 });
   await expect(cardsB.first()).toBeVisible({ timeout: 15_000 });
 
-  // Multiple board layouts render simultaneously (CSS hides one),
-  // so count may be 25 or 50. Just verify at least 25 cards exist.
+  /**
+   * Multiple board layouts render simultaneously (CSS hides one),
+   * so count may be 25 or 50. Just verify at least 25 cards exist.
+   */
   expect(await cardsA.count()).toBeGreaterThanOrEqual(25);
   expect(await cardsB.count()).toBeGreaterThanOrEqual(25);
 
@@ -165,7 +167,7 @@ test("start button disabled until enough players", async ({ page }) => {
   await expect(startBtn).toBeVisible({ timeout: 10_000 });
   await expect(startBtn).toBeDisabled();
 
-  // 1 red player — not enough
+  /** 1 red player -- not enough */
   await switchToTeamIfMobile(page, "Team Red");
   const redInput2 = await getVisible(page, "#add-player-team-red-input");
   await redInput2.fill("Alice");
@@ -173,12 +175,12 @@ test("start button disabled until enough players", async ({ page }) => {
   await expect(redInput2).toHaveValue("", { timeout: 3000 });
   await expect(startBtn).toBeDisabled();
 
-  // 2nd red
+  /** 2nd red */
   await redInput2.fill("Bob");
   (await getVisible(page, "#add-player-team-red-btn")).click();
   await expect(redInput2).toHaveValue("", { timeout: 3000 });
 
-  // 2 blue
+  /** 2 blue */
   await switchToTeamIfMobile(page, "Team Blue");
   const blueInput2 = await getVisible(page, "#add-player-team-blue-input");
   await blueInput2.fill("Charlie");

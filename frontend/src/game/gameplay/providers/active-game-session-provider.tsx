@@ -1,9 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import type { PlayerRole } from "@codenames/shared/types";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
+/** Types */
 
 export interface ClaimedPhase {
   role: PlayerRole;
@@ -27,15 +25,11 @@ export interface PlayerSessionContextValue {
   setIsAiClaimed: (v: boolean) => void;
 }
 
-// ---------------------------------------------------------------------------
-// Context
-// ---------------------------------------------------------------------------
+/** Context */
 
 const PlayerSessionContext = createContext<PlayerSessionContextValue | undefined>(undefined);
 
-// ---------------------------------------------------------------------------
-// Provider
-// ---------------------------------------------------------------------------
+/** Provider */
 
 export const ActiveGameSessionProvider: React.FC<{ children: ReactNode }> = ({
   children,
@@ -58,9 +52,7 @@ export const ActiveGameSessionProvider: React.FC<{ children: ReactNode }> = ({
   );
 };
 
-// ---------------------------------------------------------------------------
-// Hook
-// ---------------------------------------------------------------------------
+/** Hook */
 
 export const usePlayerSession = (): PlayerSessionContextValue => {
   const ctx = useContext(PlayerSessionContext);

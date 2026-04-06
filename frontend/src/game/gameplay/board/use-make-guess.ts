@@ -139,7 +139,7 @@ export const useMakeGuessMutation = (
       };
     },
     onSuccess: async () => {
-      // Invalidation handled by GameActionsProvider.invalidateGameData()
+      /** Invalidation handled by GameActionsProvider.invalidateGameData() */
     },
   });
 };

@@ -35,7 +35,7 @@ export const useTriggerAiMove = (gameId: string): UseMutationResult<void, Error,
     },
     onSuccess: async () => {
       console.debug("[AI] Invalidating queries after AI move trigger");
-      // Invalidate game data and AI status
+      /** Invalidate game data and AI status */
       await queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
       await queryClient.invalidateQueries({ queryKey: ["game", gameId, "ai", "status"] });
     },
