@@ -18,11 +18,8 @@
 **/.env.test.local
 **/.env.production.local
 
-# IDE and Editor files (project settings to keep)
-!**/.vscode/extensions.json
-!**/.vscode/settings.json
-!**/.vscode/tasks.json
-!**/.vscode/launch.json
+# Testing
+test-results/
 
 # TypeScript
 **/*.tsbuildinfo
@@ -81,4 +78,3 @@ frontend/src/gameplay/game-board/boards/refactor.md
 compact_dashboard.excalidraw
 .gitignore
 display_views.excalidraw
-.claude/settings.local.json
