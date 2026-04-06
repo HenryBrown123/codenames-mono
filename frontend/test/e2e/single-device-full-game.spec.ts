@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { openDashboardIfMobile, clickDashboardButton } from "../fixtures/dashboard-helpers";
+import { openDashboardIfMobile, clickDashboardButton } from "./fixtures/dashboard-helpers";
 
 /** Click the first visible instance of a button with a duplicated ID */
 async function clickVisibleButton(page: Page, selector: string, timeout = 5000): Promise<void> {

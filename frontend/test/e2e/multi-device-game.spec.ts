@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { setupGameViaApi, giveClue, makeGuess, getGameState } from "../fixtures/game-helpers";
-import { setAuthCookie } from "../fixtures/dashboard-helpers";
+import { setupGameViaApi, giveClue, makeGuess, getGameState } from "./fixtures/game-helpers";
+import { setAuthCookie } from "./fixtures/dashboard-helpers";
 
 /**
  * Two browser contexts see the same board.

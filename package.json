@@ -13,7 +13,7 @@
     "clean:all": "rimraf **/dist",
     "test:all": "npm run test --workspaces",
     "dev:all": "npm run dev -w backend & npm run dev -w frontend",
-    "test:e2e": "npx playwright test --config=e2e/playwright.config.ts"
+    "test:e2e": "npx playwright test --config=frontend/test/e2e/playwright.config.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",

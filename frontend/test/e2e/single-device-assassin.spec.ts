@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { setupGameViaApi, getGameState, giveClue, makeGuess } from "../fixtures/game-helpers";
-import { setAuthCookie } from "../fixtures/dashboard-helpers";
+import { setupGameViaApi, getGameState, giveClue, makeGuess } from "./fixtures/game-helpers";
+import { setAuthCookie } from "./fixtures/dashboard-helpers";
 
 /**
  * Assassin card ends the round immediately.

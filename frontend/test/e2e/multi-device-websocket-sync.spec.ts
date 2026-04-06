@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { setupGameViaApi, giveClue, makeGuess, getGameState } from "../fixtures/game-helpers";
+import { setupGameViaApi, giveClue, makeGuess, getGameState } from "./fixtures/game-helpers";
 
 /**
  * API-level integration: clue + guess cycle works end-to-end.

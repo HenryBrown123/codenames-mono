@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
-import { clickDashboardButton, authInBrowser, setAuthCookie } from "../fixtures/dashboard-helpers";
-import { setupGameViaApi } from "../fixtures/game-helpers";
+import { clickDashboardButton, authInBrowser, setAuthCookie } from "./fixtures/dashboard-helpers";
+import { setupGameViaApi } from "./fixtures/game-helpers";
 
 /** Helper to click the visible instance of a duplicated-ID button */
 async function clickVisibleButton(page: Page, selector: string, timeout = 5000): Promise<void> {

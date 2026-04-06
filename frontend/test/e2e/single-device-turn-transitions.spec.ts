@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { setupGameViaApi, getGameState, giveClue } from "../fixtures/game-helpers";
-import { setAuthCookie } from "../fixtures/dashboard-helpers";
+import { setupGameViaApi, getGameState, giveClue } from "./fixtures/game-helpers";
+import { setAuthCookie } from "./fixtures/dashboard-helpers";
 
 /**
  * Turn transitions: wrong guess ends turn and switches to other team.
