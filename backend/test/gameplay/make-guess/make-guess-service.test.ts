@@ -1,7 +1,7 @@
 import { jest, describe, it, expect } from "@jest/globals";
-import { makeGuessService } from "@backend/gameplay/make-guess/make-guess.service";
+import { makeGuessService } from "@backend/game/gameplay/turns/guess/make-guess.service";
 import { buildGameAggregate, buildTurn } from "../../__test-utils__/fixtures";
-import { GameplayValidationError } from "@backend/gameplay/errors/gameplay.errors";
+import { GameplayValidationError } from "@backend/game/gameplay/errors/gameplay.errors";
 
 jest.mock("@backend/common/websocket", () => ({
   GameEventsEmitter: {

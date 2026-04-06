@@ -1,5 +1,5 @@
 import { jest, describe, it, expect } from "@jest/globals";
-import { createStartTurnService } from "@backend/gameplay/start-turn/start-turn.service";
+import { createStartTurnService } from "@backend/game/gameplay/turns/start-turn.service";
 import { buildGameAggregate, buildTurn } from "../../__test-utils__/fixtures";
 
 jest.mock("@backend/common/websocket", () => ({

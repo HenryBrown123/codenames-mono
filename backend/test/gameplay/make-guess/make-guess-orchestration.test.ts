@@ -7,7 +7,7 @@
  * while the orchestration logic lives in the service.
  */
 import { jest, describe, it, expect, beforeEach } from "@jest/globals";
-import { makeGuessService } from "@backend/gameplay/make-guess/make-guess.service";
+import { makeGuessService } from "@backend/game/gameplay/turns/guess/make-guess.service";
 import {
   buildGameAggregate,
   buildCard,
@@ -16,7 +16,7 @@ import {
   buildPlayer,
   resetIds,
 } from "../../__test-utils__/fixtures";
-import type { GameAggregate } from "@backend/common/state/gameplay-state.types";
+import type { GameAggregate } from "@backend/game/gameplay/state/gameplay-state.types";
 
 jest.mock("@backend/common/websocket", () => ({
   GameEventsEmitter: {

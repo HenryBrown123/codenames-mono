@@ -2,6 +2,7 @@ import { Express } from "express";
 import { Kysely } from "kysely";
 import { DB } from "@backend/common/db/db.types";
 import { Router } from "express";
+import { expressjwt } from "express-jwt";
 import { JwtConfig } from "src/common/config/jwt.config";
 
 import { authErrorHandler } from "./errors/auth-errors.middleware";
@@ -12,35 +13,27 @@ import {
 } from "@backend/common/data-access/repositories/users.repository";
 import { storeSession } from "@backend/common/data-access/repositories/sessions.repository";
 
-import { createGuestUserService } from "./create-guest-session/create-guest-user.service";
-import { guestLoginService } from "./create-guest-session/guest-login.service";
-import { createGuestUserController } from "./create-guest-session/create-guest-session.controller";
+import { createGuestUserService } from "./guest-session/create-guest-user.service";
+import { guestLoginService } from "./guest-session/guest-login.service";
+import { createGuestUserController } from "./guest-session/create-guest-session.controller";
+import { getUserController } from "./get-user.controller";
 
 /**
  * Initializes the authentication feature module
  *
- * This function sets up all authentication-related components:
- * - Repositories for data access
- * - Services for business logic
- * - Controllers for HTTP handling
- * - Routes for API endpoints
- * - Error handlers for auth-specific errors
- *
- * @param app - Express application instance
- * @param db - Database connection
- * @param jwtConfig - JWT configuration options
+ * Handles guest auth (POST /api/auth/guests) and
+ * user profile retrieval (GET /api/users/:username)
  */
 export const initialize = (
   app: Express,
   db: Kysely<DB>,
   jwtConfig: JwtConfig,
 ) => {
-  // Initialize repositories
+  /** Guest auth */
   const findUser = findByUsername(db);
   const newUser = createUser(db);
   const newSession = storeSession(db);
 
-  // Initialize services
   const guestUser = createGuestUserService({
     findUser,
     createUser: newUser,
@@ -53,15 +46,38 @@ export const initialize = (
     jwtOptions: jwtConfig.options,
   });
 
-  // Initialize controller
   const createGuestHandler = createGuestUserController({
     createGuestUser: guestUser,
     login,
   });
 
-  const router = Router();
-  router.post("/guests", createGuestHandler);
+  /** User profile */
+  const getUserHandler = getUserController({ db });
 
-  app.use("/api/auth", router);
+  /** Auth routes */
+  const authRouter = Router();
+  authRouter.post("/guests", createGuestHandler);
+
+  /** User routes (JWT protected) */
+  const userRouter = Router();
+  userRouter.use(
+    expressjwt({
+      secret: jwtConfig.secret,
+      algorithms: ["HS256"],
+      getToken: (req) => {
+        if (req.cookies?.authToken) {
+          return req.cookies.authToken;
+        }
+        if (req.headers.authorization?.startsWith("Bearer ")) {
+          return req.headers.authorization.substring(7);
+        }
+        return null;
+      },
+    }),
+  );
+  userRouter.get("/:username", getUserHandler);
+
+  app.use("/api/auth", authRouter);
   app.use("/api/auth", authErrorHandler);
+  app.use("/api/users", userRouter);
 };

@@ -1,6 +1,6 @@
 import type { GameMessageData, CreateMessageInput } from "@backend/common/data-access/repositories/game-messages.repository";
 import { MESSAGE_TYPE } from "@backend/common/data-access/repositories/game-messages.repository";
-import type { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
+import type { GameplayStateProvider } from "@backend/game/gameplay/state/gameplay-state.provider";
 import { GameEventsEmitter } from "@backend/common/websocket";
 
 /**

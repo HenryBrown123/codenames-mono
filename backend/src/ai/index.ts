@@ -13,11 +13,11 @@ import { createLocalLLMService } from "./llm/local-llm.service";
 import { createAIPlayerService } from "./ai-player/ai-player.service";
 import type { LocalLLMService } from "./llm/local-llm.service";
 import type { AIPlayerService } from "./ai-player/ai-player.service";
-import type { GiveClueService } from "@backend/gameplay/give-clue/give-clue.service";
-import type { MakeGuessService } from "@backend/gameplay/make-guess/make-guess.service";
-import type { EndTurnService } from "@backend/gameplay/end-turn/end-turn.service";
-import type { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
-import type { GameDataLoader } from "@backend/common/state/game-data-loader";
+import type { GiveClueService } from "@backend/game/gameplay/turns/clue/give-clue.service";
+import type { MakeGuessService } from "@backend/game/gameplay/turns/guess/make-guess.service";
+import type { EndTurnService } from "@backend/game/gameplay/turns/end-turn.service";
+import type { GameplayStateProvider } from "@backend/game/gameplay/state/gameplay-state.provider";
+import type { GameDataLoader } from "@backend/game/gameplay/state/game-data-loader";
 import {
   createRun,
   findRunningByGameId,

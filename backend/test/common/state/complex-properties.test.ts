@@ -4,7 +4,7 @@
  * All pure functions on GameAggregate — no mocks needed.
  */
 import { describe, it, expect, beforeEach } from "@jest/globals";
-import { complexProperties } from "@backend/common/state/gameplay-state.helpers";
+import { complexProperties } from "@backend/game/gameplay/state/gameplay-state.helpers";
 import { buildGameAggregate, buildTurn, buildRound, resetIds } from "../../__test-utils__/fixtures";
 
 describe("complexProperties", () => {

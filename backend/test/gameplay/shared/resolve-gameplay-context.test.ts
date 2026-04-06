@@ -1,7 +1,7 @@
 import { jest, describe, it, expect } from "@jest/globals";
-import { createResolveGameplayContext } from "@backend/gameplay/shared/resolve-gameplay-context";
+import { createResolveGameplayContext } from "@backend/game/gameplay/shared/resolve-gameplay-context";
 import { buildGameAggregate, buildTurn, buildPlayer } from "../../__test-utils__/fixtures";
-import type { GameAggregate } from "@backend/common/state/gameplay-state.types";
+import type { GameAggregate } from "@backend/game/gameplay/state/gameplay-state.types";
 
 describe("resolveGameplayContext.fromRole", () => {
   const makeResolver = (gameState: GameAggregate | null = null) => {

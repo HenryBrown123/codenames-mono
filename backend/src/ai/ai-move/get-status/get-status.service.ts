@@ -1,5 +1,5 @@
 import type { RunFinderByGame } from "@backend/common/data-access/repositories/ai-pipeline-runs.repository";
-import type { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
+import type { GameplayStateProvider } from "@backend/game/gameplay/state/gameplay-state.provider";
 import type { GameFinder } from "@backend/common/data-access/repositories/games.repository";
 
 /**

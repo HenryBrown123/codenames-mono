@@ -1,5 +1,5 @@
 import type { AIPlayerService } from "@backend/ai/ai-player/ai-player.service";
-import type { GameplayStateProvider } from "@backend/common/state/gameplay-state.provider";
+import type { GameplayStateProvider } from "@backend/game/gameplay/state/gameplay-state.provider";
 import type { DbContext } from "@backend/common/data-access/transaction-handler";
 import type { AppLogger } from "@backend/common/logging";
 

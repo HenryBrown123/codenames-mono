@@ -1,8 +1,8 @@
 import { jest, describe, it, expect } from "@jest/globals";
-import { giveClueService } from "@backend/gameplay/give-clue/give-clue.service";
+import { giveClueService } from "@backend/game/gameplay/turns/clue/give-clue.service";
 import { buildGameAggregate, buildTurn } from "../../__test-utils__/fixtures";
-import type { GameAggregate } from "@backend/common/state/gameplay-state.types";
-import { GameplayValidationError } from "@backend/gameplay/errors/gameplay.errors";
+import type { GameAggregate } from "@backend/game/gameplay/state/gameplay-state.types";
+import { GameplayValidationError } from "@backend/game/gameplay/errors/gameplay.errors";
 
 // Mock WebSocket events (fire-and-forget, don't need real implementation)
 jest.mock("@backend/common/websocket", () => ({

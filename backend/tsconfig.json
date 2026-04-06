@@ -8,11 +8,8 @@
     "module": "preserve",
     "moduleResolution": "bundler",
     "paths": {
-      "@backend/test/*": ["test/*"],
-      "@backend/common/*": ["src/common/*"],
-      "@backend/gameplay/*": ["src/gameplay/*"],
-      "@backend/ai/*": ["src/ai/*"],
-      "@backend/lobby/*": ["src/lobby/*"]
+      "@backend/*": ["src/*"],
+      "@backend/test/*": ["test/*"]
     }
   },
   "include": ["test/**/*", "src/**/*", "src/**/*.json"],
