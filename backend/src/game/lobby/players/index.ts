@@ -1,5 +1,5 @@
 import type { LobbyStateProvider } from "../state/lobby-state.provider";
-import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
+import type { TransactionalHandler } from "@backend/shared/data-access/transaction-handler";
 import type { LobbyOperations } from "../lobby-actions";
 
 import { addPlayersService } from "./add-players.service";

@@ -1,17 +1,17 @@
 import { Express } from "express";
 import { Kysely } from "kysely";
-import { DB } from "@backend/common/db/db.types";
+import { DB } from "@backend/shared/db/db.types";
 import { Router } from "express";
 import { expressjwt } from "express-jwt";
-import { JwtConfig } from "src/common/config/jwt.config";
+import { JwtConfig } from "@backend/shared/config/jwt.config";
 
 import { authErrorHandler } from "./errors/auth-errors.middleware";
 
 import {
   findByUsername,
   createUser,
-} from "@backend/common/data-access/repositories/users.repository";
-import { storeSession } from "@backend/common/data-access/repositories/sessions.repository";
+} from "@backend/shared/data-access/repositories/users.repository";
+import { storeSession } from "@backend/shared/data-access/repositories/sessions.repository";
 
 import { createGuestUserService } from "./guest-session/create-guest-user.service";
 import { guestLoginService } from "./guest-session/guest-login.service";

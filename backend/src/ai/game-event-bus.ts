@@ -4,10 +4,10 @@
  */
 
 import { EventEmitter } from "events";
-import { WebSocketEvent } from "@backend/common/websocket/websocket-events.types";
+import { WebSocketEvent } from "@backend/shared/websocket/websocket-events.types";
 import type {
   GameplayEventPayload,
-} from "@backend/common/websocket/websocket-events.types";
+} from "@backend/shared/websocket/websocket-events.types";
 
 /**
  * Type-safe event listener signatures

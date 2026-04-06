@@ -1,7 +1,7 @@
 import {
   ClueCreator,
   TurnGuessUpdater,
-} from "@backend/common/data-access/repositories/turns.repository";
+} from "@backend/shared/data-access/repositories/turns.repository";
 import type { GiveClueValidGameState, validate, validateClueWord } from "./give-clue.rules";
 import type { GameAggregate } from "@backend/game/gameplay/state/gameplay-state.types";
 import { complexProperties } from "@backend/game/gameplay/state/gameplay-state.helpers";

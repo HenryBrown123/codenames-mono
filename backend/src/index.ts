@@ -2,11 +2,11 @@ import express from "express";
 import cors from "cors";
 import { createServer } from "http";
 import cookieParser from "cookie-parser";
-import { errorHandler, notFoundHandler } from "./common/http-middleware/error-handler.middleware";
-import * as postgresDb from "./common/db";
+import { errorHandler, notFoundHandler } from "./shared/http-middleware/error-handler.middleware";
+import * as postgresDb from "./shared/db";
 import { createOpenApiSpec } from "@codenames/shared/api";
-import { loadEnvFromPackageDir } from "./common/config";
-import { createAppLogger } from "./common/logging";
+import { loadEnvFromPackageDir } from "./shared/config";
+import { createAppLogger } from "./shared/logging";
 import swaggerUi from "swagger-ui-express";
 
 import { initialize as initializeAuth } from "./auth";
@@ -15,10 +15,10 @@ import { initialize as initializeGameplay } from "./game/gameplay";
 import { initialize as initializeAI } from "./ai";
 import { initialize as initializeChat } from "./chat";
 
-import { authMiddleware } from "@backend/common/http-middleware/auth.middleware";
-import { httpLoggerMiddleware } from "@backend/common/http-middleware/http-logger.middleware";
-import { refreshSystemData } from "./common/data/system-data-loader";
-import { initializeWebSocketServer } from "./common/websocket";
+import { authMiddleware } from "@backend/shared/http-middleware/auth.middleware";
+import { httpLoggerMiddleware } from "@backend/shared/http-middleware/http-logger.middleware";
+import { refreshSystemData } from "./shared/data/system-data-loader";
+import { initializeWebSocketServer } from "./shared/websocket";
 
 /**
  * Runtime validation of env. variables

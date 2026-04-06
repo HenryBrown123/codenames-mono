@@ -3,13 +3,13 @@
  * Listens to game events and makes intelligent decisions for AI players
  */
 
-import type { LocalLLMService } from "../llm/local-llm.service";
+import type { LocalLLMService } from "./pipeline/local-llm.service";
 import type { GiveClueService } from "@backend/game/gameplay/turns/clue/give-clue.service";
 import type { MakeGuessService } from "@backend/game/gameplay/turns/guess/make-guess.service";
 import type { EndTurnService } from "@backend/game/gameplay/turns/end-turn.service";
 import type { GameDataLoader } from "@backend/game/gameplay/state/game-data-loader";
-import { createCodenamesPipeline } from "../llm/codenames-pipeline";
-import type { PreFilterOutput } from "../llm/guesser-prefilter";
+import { createCodenamesPipeline } from "./pipeline/codenames-pipeline";
+import type { PreFilterOutput } from "./pipeline/guesser-prefilter";
 import type {
   RunCreator,
   RunFinderByGame,
@@ -18,16 +18,16 @@ import type {
   PrefilterResponse,
   RankerResponse,
   PromptAppender,
-} from "@backend/common/data-access/repositories/ai-pipeline-runs.repository";
+} from "@backend/shared/data-access/repositories/ai-pipeline-runs.repository";
 import {
   PIPELINE_TYPE,
   PIPELINE_STATUS,
-} from "@backend/common/data-access/repositories/ai-pipeline-runs.repository";
-import type { MessageCreator } from "@backend/common/data-access/repositories/game-messages.repository";
-import { MESSAGE_TYPE } from "@backend/common/data-access/repositories/game-messages.repository";
-import { GameEventsEmitter } from "@backend/common/websocket";
-import type { GameFinder } from "@backend/common/data-access/repositories/games.repository";
-import type { AppLogger } from "@backend/common/logging";
+} from "@backend/shared/data-access/repositories/ai-pipeline-runs.repository";
+import type { MessageCreator } from "@backend/shared/data-access/repositories/game-messages.repository";
+import { MESSAGE_TYPE } from "@backend/shared/data-access/repositories/game-messages.repository";
+import { GameEventsEmitter } from "@backend/shared/websocket";
+import type { GameFinder } from "@backend/shared/data-access/repositories/games.repository";
+import type { AppLogger } from "@backend/shared/logging";
 
 export type AIPlayerDependencies = {
   llm: LocalLLMService;

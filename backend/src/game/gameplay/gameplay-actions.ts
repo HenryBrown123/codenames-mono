@@ -1,12 +1,12 @@
 import { Kysely } from "kysely";
-import { DB } from "@backend/common/db/db.types";
-import { TransactionContext } from "@backend/common/data-access/transaction-handler";
+import { DB } from "@backend/shared/db/db.types";
+import { TransactionContext } from "@backend/shared/data-access/transaction-handler";
 
-import * as cardsRepository from "@backend/common/data-access/repositories/cards.repository";
-import * as turnRepository from "@backend/common/data-access/repositories/turns.repository";
-import * as roundsRepository from "@backend/common/data-access/repositories/rounds.repository";
-import * as gameRepository from "@backend/common/data-access/repositories/games.repository";
-import * as gameEventsRepository from "@backend/common/data-access/repositories/game-events.repository";
+import * as cardsRepository from "@backend/shared/data-access/repositories/cards.repository";
+import * as turnRepository from "@backend/shared/data-access/repositories/turns.repository";
+import * as roundsRepository from "@backend/shared/data-access/repositories/rounds.repository";
+import * as gameRepository from "@backend/shared/data-access/repositories/games.repository";
+import * as gameEventsRepository from "@backend/shared/data-access/repositories/game-events.repository";
 import * as giveClueActions from "./turns/clue/give-clue.actions";
 import * as makeGuessActions from "./turns/guess/make-guess.actions";
 import * as makeGuessRules from "./turns/guess/make-guess.rules";

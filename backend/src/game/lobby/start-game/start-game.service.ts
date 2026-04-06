@@ -2,10 +2,10 @@ import type { LobbyOperations } from "../lobby-actions";
 import type { LobbyStateProvider } from "../state/lobby-state.provider";
 import { lobbyHelpers } from "../state/lobby-state.helpers";
 import { GAME_STATE } from "@codenames/shared/types";
-import { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
-import { GameEventsEmitter } from "@backend/common/websocket";
+import { TransactionalHandler } from "@backend/shared/data-access/transaction-handler";
+import { GameEventsEmitter } from "@backend/shared/websocket";
 import { createAIBotsForTeams } from "./start-game-ai-helper";
-import type { UserCreator } from "@backend/common/data-access/repositories/users.repository";
+import type { UserCreator } from "@backend/shared/data-access/repositories/users.repository";
 
 export type GameStartSuccess = {
   _id: number;

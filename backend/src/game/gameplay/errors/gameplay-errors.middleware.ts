@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { UnauthorizedError } from "express-jwt";
 import { UnexpectedGameplayError } from "./gameplay.errors";
 import { NoResultError } from "kysely";
-import { generateAdditionalErrorInfo } from "@backend/common/http-middleware/add-error-details.helper";
+import { generateAdditionalErrorInfo } from "@backend/shared/http-middleware/add-error-details.helper";
 import { JsonObject } from "swagger-ui-express";
 
 /**

@@ -3,7 +3,7 @@ import { makeGuessService } from "@backend/game/gameplay/turns/guess/make-guess.
 import { buildGameAggregate, buildTurn } from "../../__test-utils__/fixtures";
 import { GameplayValidationError } from "@backend/game/gameplay/errors/gameplay.errors";
 
-jest.mock("@backend/common/websocket", () => ({
+jest.mock("@backend/shared/websocket", () => ({
   GameEventsEmitter: {
     guessMade: jest.fn(),
     turnEnded: jest.fn(),

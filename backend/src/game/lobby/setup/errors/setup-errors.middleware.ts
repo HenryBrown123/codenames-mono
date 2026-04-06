@@ -3,7 +3,7 @@ import { UnexpectedSetupError } from "./setup.errors";
 import { UnauthorizedError } from "express-jwt";
 import { NoResultError } from "kysely";
 import { JsonObject } from "swagger-ui-express";
-import { generateAdditionalErrorInfo } from "@backend/common/http-middleware/add-error-details.helper";
+import { generateAdditionalErrorInfo } from "@backend/shared/http-middleware/add-error-details.helper";
 
 /**
  * Type definition for setup error API responses

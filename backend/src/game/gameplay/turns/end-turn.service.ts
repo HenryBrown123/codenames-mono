@@ -4,11 +4,11 @@
  */
 
 import type { GameplayHandler } from "../gameplay-actions";
-import type { AppLogger } from "@backend/common/logging";
+import type { AppLogger } from "@backend/shared/logging";
 import { PLAYER_ROLE } from "@codenames/shared/types";
 import { complexProperties } from "@backend/game/gameplay/state/gameplay-state.helpers";
 import { GameplayValidationError } from "../errors/gameplay.errors";
-import { GameEventsEmitter } from "@backend/common/websocket";
+import { GameEventsEmitter } from "@backend/shared/websocket";
 import type { GameAggregate } from "@backend/game/gameplay/state/gameplay-state.types";
 
 export type EndTurnInput = {

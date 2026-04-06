@@ -1,7 +1,7 @@
 import type {
   GameMessageData,
   MessageQueryParams,
-} from "@backend/common/data-access/repositories/game-messages.repository";
+} from "@backend/shared/data-access/repositories/game-messages.repository";
 import type { GameplayStateProvider } from "@backend/game/gameplay/state/gameplay-state.provider";
 
 /**

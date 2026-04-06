@@ -1,7 +1,7 @@
 import {
   TurnFinder,
   PublicId,
-} from "@backend/common/data-access/repositories/turns.repository";
+} from "@backend/shared/data-access/repositories/turns.repository";
 
 /**
  * Turn guess data with card word included

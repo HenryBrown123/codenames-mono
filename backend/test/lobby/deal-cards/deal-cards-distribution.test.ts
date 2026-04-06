@@ -5,7 +5,7 @@
  */
 import { describe, it, expect } from "@jest/globals";
 import { allocateInitialCardTypes } from "@backend/game/lobby/rounds/deal-cards.actions";
-import { CARD_TYPE } from "@backend/common/data-access/repositories/cards.repository";
+import { CARD_TYPE } from "@backend/shared/data-access/repositories/cards.repository";
 
 describe("allocateInitialCardTypes", () => {
   const startingTeam = 1;

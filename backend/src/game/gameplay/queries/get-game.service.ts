@@ -3,7 +3,7 @@ import { PLAYER_ROLE, PlayerRole, ROUND_STATE } from "@codenames/shared/types";
 import { GameplayStateProvider } from "@backend/game/gameplay/state/gameplay-state.provider";
 import { GameDataLoader } from "@backend/game/gameplay/state/game-data-loader";
 import { computeTurnPhase } from "@backend/game/gameplay/state/gameplay-state.helpers";
-import type { AppLogger } from "@backend/common/logging";
+import type { AppLogger } from "@backend/shared/logging";
 
 /**
  * Service input parameters

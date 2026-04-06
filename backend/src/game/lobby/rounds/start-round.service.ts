@@ -1,6 +1,6 @@
 import type { LobbyStateProvider } from "../state/lobby-state.provider";
 import type { LobbyValidationError } from "../state/lobby-state.validation";
-import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
+import type { TransactionalHandler } from "@backend/shared/data-access/transaction-handler";
 import type { LobbyOperations } from "../lobby-actions";
 
 import { validate as checkRoundStartRules } from "./start-round.rules";

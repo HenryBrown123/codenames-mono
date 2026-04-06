@@ -2,8 +2,8 @@ import { Server as HttpServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import { createWebSocketAuthMiddleware, AuthenticatedSocket } from "./websocket-auth.middleware";
 import { WebSocketEvent } from "./websocket-events.types";
-import { emitServerGameEvent } from "@backend/ai/events/game-event-bus";
-import type { AppLogger } from "@backend/common/logging";
+import { emitServerGameEvent } from "@backend/ai/game-event-bus";
+import type { AppLogger } from "@backend/shared/logging";
 
 /**
  * WebSocket server configuration

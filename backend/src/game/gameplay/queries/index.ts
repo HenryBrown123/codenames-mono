@@ -1,12 +1,12 @@
 import type { GameplayStateProvider } from "@backend/game/gameplay/state/gameplay-state.provider";
 import type { GameDataLoader } from "@backend/game/gameplay/state/game-data-loader";
 import type { TurnStateProvider } from "@backend/game/gameplay/state/turn-state.provider";
-import type { TurnsFinder, RoundId } from "@backend/common/data-access/repositories/turns.repository";
-import type { PlayerFinderAll, RoundId as PlayerRoundId } from "@backend/common/data-access/repositories/players.repository";
-import type { DbContext } from "@backend/common/data-access/transaction-handler";
-import type { AppLogger } from "@backend/common/logging";
+import type { TurnsFinder, RoundId } from "@backend/shared/data-access/repositories/turns.repository";
+import type { PlayerFinderAll, RoundId as PlayerRoundId } from "@backend/shared/data-access/repositories/players.repository";
+import type { DbContext } from "@backend/shared/data-access/transaction-handler";
+import type { AppLogger } from "@backend/shared/logging";
 
-import * as gameEventsRepository from "@backend/common/data-access/repositories/game-events.repository";
+import * as gameEventsRepository from "@backend/shared/data-access/repositories/game-events.repository";
 
 import { getGameStateService } from "./get-game.service";
 import { getGameStateController } from "./get-game.controller";

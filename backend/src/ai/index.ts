@@ -5,14 +5,14 @@
 import type { Express } from "express";
 import { Router } from "express";
 import type { Kysely } from "kysely";
-import type { DB } from "@backend/common/db/db.types";
-import type { AuthMiddleware } from "@backend/common/http-middleware/auth.middleware";
-import type { HttpLoggerHandler } from "@backend/common/http-middleware/http-logger.middleware";
-import type { AppLogger } from "@backend/common/logging";
-import { createLocalLLMService } from "./llm/local-llm.service";
-import { createAIPlayerService } from "./ai-player/ai-player.service";
-import type { LocalLLMService } from "./llm/local-llm.service";
-import type { AIPlayerService } from "./ai-player/ai-player.service";
+import type { DB } from "@backend/shared/db/db.types";
+import type { AuthMiddleware } from "@backend/shared/http-middleware/auth.middleware";
+import type { HttpLoggerHandler } from "@backend/shared/http-middleware/http-logger.middleware";
+import type { AppLogger } from "@backend/shared/logging";
+import { createLocalLLMService } from "./pipeline/local-llm.service";
+import { createAIPlayerService } from "./ai-player.service";
+import type { LocalLLMService } from "./pipeline/local-llm.service";
+import type { AIPlayerService } from "./ai-player.service";
 import type { GiveClueService } from "@backend/game/gameplay/turns/clue/give-clue.service";
 import type { MakeGuessService } from "@backend/game/gameplay/turns/guess/make-guess.service";
 import type { EndTurnService } from "@backend/game/gameplay/turns/end-turn.service";
@@ -26,13 +26,13 @@ import {
   updatePrefilterResponse,
   updateRankerResponse,
   appendPrompt,
-} from "@backend/common/data-access/repositories/ai-pipeline-runs.repository";
-import { createMessage } from "@backend/common/data-access/repositories/game-messages.repository";
-import { findGameByPublicId } from "@backend/common/data-access/repositories/games.repository";
-import aiMove from "./ai-move";
+} from "@backend/shared/data-access/repositories/ai-pipeline-runs.repository";
+import { createMessage } from "@backend/shared/data-access/repositories/game-messages.repository";
+import { findGameByPublicId } from "@backend/shared/data-access/repositories/games.repository";
+import aiMove from "./move";
 
-export { createCodenamesPipeline } from "./llm/codenames-pipeline";
-export type { CodenamesPipeline } from "./llm/codenames-pipeline";
+export { createCodenamesPipeline } from "./pipeline/codenames-pipeline";
+export type { CodenamesPipeline } from "./pipeline/codenames-pipeline";
 export type { LocalLLMService, AIPlayerService };
 
 export type AIModuleDependencies = {

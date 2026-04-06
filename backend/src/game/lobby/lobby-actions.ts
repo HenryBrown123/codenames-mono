@@ -1,11 +1,11 @@
-import type { TransactionContext } from "@backend/common/data-access/transaction-handler";
-import * as playersRepository from "@backend/common/data-access/repositories/players.repository";
-import * as playerRolesRepository from "@backend/common/data-access/repositories/player-roles.repository";
-import * as gamesRepository from "@backend/common/data-access/repositories/games.repository";
-import * as roundsRepository from "@backend/common/data-access/repositories/rounds.repository";
-import * as cardsRepository from "@backend/common/data-access/repositories/cards.repository";
-import * as turnRepository from "@backend/common/data-access/repositories/turns.repository";
-import * as gameEventsRepository from "@backend/common/data-access/repositories/game-events.repository";
+import type { TransactionContext } from "@backend/shared/data-access/transaction-handler";
+import * as playersRepository from "@backend/shared/data-access/repositories/players.repository";
+import * as playerRolesRepository from "@backend/shared/data-access/repositories/player-roles.repository";
+import * as gamesRepository from "@backend/shared/data-access/repositories/games.repository";
+import * as roundsRepository from "@backend/shared/data-access/repositories/rounds.repository";
+import * as cardsRepository from "@backend/shared/data-access/repositories/cards.repository";
+import * as turnRepository from "@backend/shared/data-access/repositories/turns.repository";
+import * as gameEventsRepository from "@backend/shared/data-access/repositories/game-events.repository";
 
 import * as newRoundActions from "./rounds/new-round.actions";
 import * as dealCardsActions from "./rounds/deal-cards.actions";

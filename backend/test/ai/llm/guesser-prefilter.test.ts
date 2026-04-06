@@ -8,7 +8,7 @@ import {
   buildBatchPreFilterPrompt,
   buildPreFilterPrompt,
   isValidPreFilterResult,
-} from "@backend/ai/llm/guesser-prefilter";
+} from "@backend/ai/pipeline/guesser-prefilter";
 
 describe("buildBatchPreFilterPrompt", () => {
   it("includes all words in numbered list", () => {

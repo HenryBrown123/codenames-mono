@@ -1,6 +1,6 @@
 import type { Response } from "express";
 import type { Request } from "express-jwt";
-import type { AppLogger } from "@backend/common/logging";
+import type { AppLogger } from "@backend/shared/logging";
 import { GetPlayersService } from "./get-players.service";
 import { z } from "zod";
 

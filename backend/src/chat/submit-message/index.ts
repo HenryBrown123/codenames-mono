@@ -1,7 +1,7 @@
 import type { GameplayStateProvider } from "@backend/game/gameplay/state/gameplay-state.provider";
-import type { DbContext } from "@backend/common/data-access/transaction-handler";
+import type { DbContext } from "@backend/shared/data-access/transaction-handler";
 
-import * as gameMessagesRepository from "@backend/common/data-access/repositories/game-messages.repository";
+import * as gameMessagesRepository from "@backend/shared/data-access/repositories/game-messages.repository";
 import { submitMessageService } from "./submit-message.service";
 import { submitMessageController } from "./submit-message.controller";
 

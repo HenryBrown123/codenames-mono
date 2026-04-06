@@ -6,7 +6,7 @@
 import type { Response, NextFunction } from "express";
 import type { Request } from "express-jwt";
 import type { EndTurnService } from "./end-turn.service";
-import type { AppLogger } from "@backend/common/logging";
+import type { AppLogger } from "@backend/shared/logging";
 import type { ResolveGameplayContext } from "../shared/resolve-gameplay-context";
 import { contextErrorToHttp } from "../shared/resolve-gameplay-context";
 import type { GameDataLoader } from "@backend/game/gameplay/state/game-data-loader";

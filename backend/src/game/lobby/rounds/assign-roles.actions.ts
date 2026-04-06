@@ -1,4 +1,4 @@
-import { RoleAssignmentCreator } from "@backend/common/data-access/repositories/players.repository";
+import { RoleAssignmentCreator } from "@backend/shared/data-access/repositories/players.repository";
 import type { AssignRolesValidLobbyState } from "./assign-roles.rules";
 
 /**

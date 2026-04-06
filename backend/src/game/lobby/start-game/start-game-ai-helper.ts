@@ -5,9 +5,9 @@
 
 import type { LobbyAggregate } from "../state/lobby-state.types";
 import { lobbyHelpers } from "../state/lobby-state.helpers";
-import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
+import type { TransactionalHandler } from "@backend/shared/data-access/transaction-handler";
 import type { LobbyOperations } from "../lobby-actions";
-import type { UserCreator } from "@backend/common/data-access/repositories/users.repository";
+import type { UserCreator } from "@backend/shared/data-access/repositories/users.repository";
 
 export type CreateAIBotsInput = {
   lobby: LobbyAggregate;

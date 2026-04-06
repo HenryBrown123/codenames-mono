@@ -2,7 +2,7 @@ import type { GameplayStateProvider } from "@backend/game/gameplay/state/gamepla
 import type { GameplayHandler } from "../gameplay-actions";
 import type { GameDataLoader } from "@backend/game/gameplay/state/game-data-loader";
 import type { TurnStateProvider } from "@backend/game/gameplay/state/turn-state.provider";
-import type { AppLogger } from "@backend/common/logging";
+import type { AppLogger } from "@backend/shared/logging";
 import { createResolveGameplayContext } from "../shared/resolve-gameplay-context";
 
 import { giveClueService } from "./clue/give-clue.service";

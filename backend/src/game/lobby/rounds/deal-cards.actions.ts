@@ -4,9 +4,9 @@ import {
   CardInput,
   CARD_TYPE,
   CardType,
-} from "@backend/common/data-access/repositories/cards.repository";
-import type { TeamId } from "@backend/common/data-access/repositories/teams.repository";
-import type { CreateEventInput } from "@backend/common/data-access/repositories/game-events.repository";
+} from "@backend/shared/data-access/repositories/cards.repository";
+import type { TeamId } from "@backend/shared/data-access/repositories/teams.repository";
+import type { CreateEventInput } from "@backend/shared/data-access/repositories/game-events.repository";
 import { GAME_EVENT_TYPE } from "@codenames/shared/types";
 
 import type { DealCardsValidLobbyState } from "./deal-cards.rules";

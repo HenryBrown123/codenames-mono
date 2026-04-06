@@ -1,8 +1,8 @@
 import type { Express } from "express";
 import { Router } from "express";
 import type { GameplayStateProvider } from "@backend/game/gameplay/state/gameplay-state.provider";
-import type { DbContext } from "@backend/common/data-access/transaction-handler";
-import type { AuthMiddleware } from "@backend/common/http-middleware/auth.middleware";
+import type { DbContext } from "@backend/shared/data-access/transaction-handler";
+import type { AuthMiddleware } from "@backend/shared/http-middleware/auth.middleware";
 
 import getMessages from "./get-messages";
 import submitMessage from "./submit-message";

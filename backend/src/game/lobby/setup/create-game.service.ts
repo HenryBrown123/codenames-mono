@@ -1,7 +1,7 @@
 import shortid from "shortid";
 import { UnexpectedSetupError } from "./errors/setup.errors";
 import { GameType, GameFormat, GAME_TYPE } from "@codenames/shared/types";
-import type { TransactionalHandler } from "@backend/common/data-access/transaction-handler";
+import type { TransactionalHandler } from "@backend/shared/data-access/transaction-handler";
 import type { SetupOperations } from "./setup-actions";
 
 /** Result of game creation */

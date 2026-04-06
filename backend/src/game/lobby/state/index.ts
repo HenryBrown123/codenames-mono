@@ -1,12 +1,12 @@
 import { Kysely } from "kysely";
-import { DB } from "@backend/common/db/db.types";
+import { DB } from "@backend/shared/db/db.types";
 
-import * as gameRepository from "@backend/common/data-access/repositories/games.repository";
-import * as roundsRepository from "@backend/common/data-access/repositories/rounds.repository";
-import * as playerRepository from "@backend/common/data-access/repositories/players.repository";
-import * as teamsRepository from "@backend/common/data-access/repositories/teams.repository";
-import * as cardsRepository from "@backend/common/data-access/repositories/cards.repository";
-import * as turnsRepository from "@backend/common/data-access/repositories/turns.repository";
+import * as gameRepository from "@backend/shared/data-access/repositories/games.repository";
+import * as roundsRepository from "@backend/shared/data-access/repositories/rounds.repository";
+import * as playerRepository from "@backend/shared/data-access/repositories/players.repository";
+import * as teamsRepository from "@backend/shared/data-access/repositories/teams.repository";
+import * as cardsRepository from "@backend/shared/data-access/repositories/cards.repository";
+import * as turnsRepository from "@backend/shared/data-access/repositories/turns.repository";
 
 import { lobbyStateProvider } from "./lobby-state.provider";
 

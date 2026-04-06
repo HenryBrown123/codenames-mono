@@ -12,20 +12,20 @@ import type {
   validateStartTurn,
   validateEndRound,
 } from "./make-guess.rules";
-import { CardUpdater } from "@backend/common/data-access/repositories/cards.repository";
+import { CardUpdater } from "@backend/shared/data-access/repositories/cards.repository";
 import {
   GuessCreator,
   TurnGuessUpdater,
   TurnStatusUpdater,
   TurnCreator,
-} from "@backend/common/data-access/repositories/turns.repository";
+} from "@backend/shared/data-access/repositories/turns.repository";
 import {
   RoundStatusUpdater,
   RoundWinnerUpdater,
-} from "@backend/common/data-access/repositories/rounds.repository";
+} from "@backend/shared/data-access/repositories/rounds.repository";
 
-import { GameStatusUpdater } from "@backend/common/data-access/repositories/games.repository";
-import type { CreateEventInput } from "@backend/common/data-access/repositories/game-events.repository";
+import { GameStatusUpdater } from "@backend/shared/data-access/repositories/games.repository";
+import type { CreateEventInput } from "@backend/shared/data-access/repositories/game-events.repository";
 
 import { complexProperties } from "@backend/game/gameplay/state/gameplay-state.helpers";
 

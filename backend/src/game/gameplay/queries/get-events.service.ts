@@ -1,6 +1,6 @@
-import type { GameEventRow } from "@backend/common/data-access/repositories/game-events.repository";
+import type { GameEventRow } from "@backend/shared/data-access/repositories/game-events.repository";
 import type { GameplayStateProvider } from "@backend/game/gameplay/state/gameplay-state.provider";
-import type { AppLogger } from "@backend/common/logging";
+import type { AppLogger } from "@backend/shared/logging";
 
 /**
  * Transformed event for API response

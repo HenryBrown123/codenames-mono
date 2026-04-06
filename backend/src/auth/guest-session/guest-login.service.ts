@@ -3,9 +3,9 @@ import { UnexpectedAuthError } from "../errors/auth.errors";
 import type {
   UserFinder,
   Username,
-} from "@backend/common/data-access/repositories/users.repository";
-import type { SessionCreator } from "@backend/common/data-access/repositories/sessions.repository";
-import type { SessionResult } from "@backend/common/data-access/repositories/sessions.repository";
+} from "@backend/shared/data-access/repositories/users.repository";
+import type { SessionCreator } from "@backend/shared/data-access/repositories/sessions.repository";
+import type { SessionResult } from "@backend/shared/data-access/repositories/sessions.repository";
 
 type ServiceDependencies = {
   findUser: UserFinder<Username>;

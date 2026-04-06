@@ -1,6 +1,6 @@
-import type { RunFinderByGame } from "@backend/common/data-access/repositories/ai-pipeline-runs.repository";
+import type { RunFinderByGame } from "@backend/shared/data-access/repositories/ai-pipeline-runs.repository";
 import type { GameplayStateProvider } from "@backend/game/gameplay/state/gameplay-state.provider";
-import type { GameFinder } from "@backend/common/data-access/repositories/games.repository";
+import type { GameFinder } from "@backend/shared/data-access/repositories/games.repository";
 
 /**
  * AI status response

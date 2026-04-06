@@ -1,8 +1,8 @@
 // backend/src/setup/setup-actions.ts
-import type { TransactionContext } from "@backend/common/data-access/transaction-handler";
-import * as gamesRepository from "@backend/common/data-access/repositories/games.repository";
-import * as teamsRepository from "@backend/common/data-access/repositories/teams.repository";
-import * as playersRepository from "@backend/common/data-access/repositories/players.repository";
+import type { TransactionContext } from "@backend/shared/data-access/transaction-handler";
+import * as gamesRepository from "@backend/shared/data-access/repositories/games.repository";
+import * as teamsRepository from "@backend/shared/data-access/repositories/teams.repository";
+import * as playersRepository from "@backend/shared/data-access/repositories/players.repository";
 
 /**
  * Creates setup operations for use within a transaction context

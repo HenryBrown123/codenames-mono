@@ -5,7 +5,7 @@ import type { GameAggregate } from "@backend/game/gameplay/state/gameplay-state.
 import { GameplayValidationError } from "@backend/game/gameplay/errors/gameplay.errors";
 
 // Mock WebSocket events (fire-and-forget, don't need real implementation)
-jest.mock("@backend/common/websocket", () => ({
+jest.mock("@backend/shared/websocket", () => ({
   GameEventsEmitter: {
     clueGiven: jest.fn(),
   },

@@ -1,7 +1,7 @@
 import type { Response, NextFunction } from "express";
 import type { Request } from "express-jwt";
 import { Kysely } from "kysely";
-import type { DB } from "@backend/common/db/db.types";
+import type { DB } from "@backend/shared/db/db.types";
 
 /**
  * Dependencies for the get user controller

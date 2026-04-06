@@ -1,6 +1,6 @@
-import type { AIPlayerService } from "@backend/ai/ai-player/ai-player.service";
+import type { AIPlayerService } from "@backend/ai/ai-player.service";
 import type { GameplayStateProvider } from "@backend/game/gameplay/state/gameplay-state.provider";
-import type { AppLogger } from "@backend/common/logging";
+import type { AppLogger } from "@backend/shared/logging";
 
 /**
  * Pipeline run info

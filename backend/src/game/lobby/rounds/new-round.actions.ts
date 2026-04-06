@@ -1,4 +1,4 @@
-import { RoundCreator } from "@backend/common/data-access/repositories/rounds.repository";
+import { RoundCreator } from "@backend/shared/data-access/repositories/rounds.repository";
 import { NewRoundValidLobbyState } from "./new-round.rules";
 
 /**

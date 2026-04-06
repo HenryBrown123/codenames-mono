@@ -2,25 +2,25 @@ import {
   PublicId,
   InternalId,
   GameFinder,
-} from "@backend/common/data-access/repositories/games.repository";
+} from "@backend/shared/data-access/repositories/games.repository";
 
 import {
   TeamsFinder,
   TeamResult,
-} from "@backend/common/data-access/repositories/teams.repository";
+} from "@backend/shared/data-access/repositories/teams.repository";
 
 import {
   PlayerFinderAll,
   PlayerResult,
-} from "@backend/common/data-access/repositories/players.repository";
+} from "@backend/shared/data-access/repositories/players.repository";
 
 import {
   RoundFinderAll,
-} from "@backend/common/data-access/repositories/rounds.repository";
+} from "@backend/shared/data-access/repositories/rounds.repository";
 
 import {
   CardsFinder,
-} from "@backend/common/data-access/repositories/cards.repository";
+} from "@backend/shared/data-access/repositories/cards.repository";
 
 import { LobbyAggregate } from "./lobby-state.types";
 

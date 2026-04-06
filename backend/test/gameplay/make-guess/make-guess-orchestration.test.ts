@@ -18,7 +18,7 @@ import {
 } from "../../__test-utils__/fixtures";
 import type { GameAggregate } from "@backend/game/gameplay/state/gameplay-state.types";
 
-jest.mock("@backend/common/websocket", () => ({
+jest.mock("@backend/shared/websocket", () => ({
   GameEventsEmitter: {
     guessMade: jest.fn(),
     turnEnded: jest.fn(),

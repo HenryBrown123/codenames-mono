@@ -1,14 +1,14 @@
 import {
   DbContext,
   TransactionContext,
-} from "@backend/common/data-access/transaction-handler";
+} from "@backend/shared/data-access/transaction-handler";
 
-import * as gameRepository from "@backend/common/data-access/repositories/games.repository";
-import * as roundsRepository from "@backend/common/data-access/repositories/rounds.repository";
-import * as playerRepository from "@backend/common/data-access/repositories/players.repository";
-import * as teamsRepository from "@backend/common/data-access/repositories/teams.repository";
-import * as cardsRepository from "@backend/common/data-access/repositories/cards.repository";
-import * as turnsRepository from "@backend/common/data-access/repositories/turns.repository";
+import * as gameRepository from "@backend/shared/data-access/repositories/games.repository";
+import * as roundsRepository from "@backend/shared/data-access/repositories/rounds.repository";
+import * as playerRepository from "@backend/shared/data-access/repositories/players.repository";
+import * as teamsRepository from "@backend/shared/data-access/repositories/teams.repository";
+import * as cardsRepository from "@backend/shared/data-access/repositories/cards.repository";
+import * as turnsRepository from "@backend/shared/data-access/repositories/turns.repository";
 
 import { turnStateProvider } from "./turn-state.provider";
 import { gameplayStateProvider } from "./gameplay-state.provider";

@@ -1,10 +1,10 @@
 import { Express } from "express";
 import { Kysely } from "kysely";
-import { DB } from "@backend/common/db/db.types";
+import { DB } from "@backend/shared/db/db.types";
 import { Router } from "express";
-import { AuthMiddleware } from "@backend/common/http-middleware/auth.middleware";
-import { createTransactionalHandler } from "@backend/common/data-access/transaction-handler";
-import { createUser } from "@backend/common/data-access/repositories/users.repository";
+import { AuthMiddleware } from "@backend/shared/http-middleware/auth.middleware";
+import { createTransactionalHandler } from "@backend/shared/data-access/transaction-handler";
+import { createUser } from "@backend/shared/data-access/repositories/users.repository";
 
 import { lobbyState } from "./state";
 import { lobbyOperations } from "./lobby-actions";

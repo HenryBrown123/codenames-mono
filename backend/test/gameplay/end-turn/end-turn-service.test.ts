@@ -2,7 +2,7 @@ import { jest, describe, it, expect } from "@jest/globals";
 import { createEndTurnService } from "@backend/game/gameplay/turns/end-turn.service";
 import { buildGameAggregate, buildTurn } from "../../__test-utils__/fixtures";
 
-jest.mock("@backend/common/websocket", () => ({
+jest.mock("@backend/shared/websocket", () => ({
   GameEventsEmitter: {
     turnEnded: jest.fn(),
     turnStarted: jest.fn(),

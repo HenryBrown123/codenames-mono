@@ -1,7 +1,7 @@
 import { Socket } from "socket.io";
 import jwt from "jsonwebtoken";
 import { parse as parseCookie } from "cookie";
-import type { AppLogger } from "@backend/common/logging";
+import type { AppLogger } from "@backend/shared/logging";
 
 /**
  * Extended socket interface with auth information

@@ -4,8 +4,8 @@
 
 import { Kysely, PostgresDialect } from "kysely";
 import pg from "pg";
-import type { DB } from "../../src/common/db/db.types";
-import { loadEnvFromPackageDir } from "../../src/common/config";
+import type { DB } from "../../src/shared/db/db.types";
+import { loadEnvFromPackageDir } from "../../src/shared/config";
 
 const { Pool } = pg;
 

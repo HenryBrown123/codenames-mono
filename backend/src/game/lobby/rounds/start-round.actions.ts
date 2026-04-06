@@ -1,5 +1,5 @@
-import { RoundStatusUpdater } from "@backend/common/data-access/repositories/rounds.repository";
-import { TurnCreator } from "@backend/common/data-access/repositories/turns.repository";
+import { RoundStatusUpdater } from "@backend/shared/data-access/repositories/rounds.repository";
+import { TurnCreator } from "@backend/shared/data-access/repositories/turns.repository";
 import { StartRoundValidLobbyState } from "./start-round.rules";
 import { ROUND_STATE } from "@codenames/shared/types";
 
