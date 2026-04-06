@@ -615,8 +615,12 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   ├── create-new-game
 │       │   └── errors
 │       └── users
+├── e2e
+│   ├── fixtures
+│   └── tests
 ├── frontend
 │   ├── public
+│   │   └── icons
 │   └── src
 │       ├── ai
 │       │   ├── api
@@ -685,14 +689,13 @@ Frontend and backend extend these base types with their specific requirements.
 │       ├── types
 │       ├── utils
 │       └── websocket
-├── icons
 └── shared
     └── src
         ├── api
         │   └── modules
         └── types
 
-131 directories
+134 directories
 ```
 
 ## Getting Started
