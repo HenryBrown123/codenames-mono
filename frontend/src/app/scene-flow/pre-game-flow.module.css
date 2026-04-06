@@ -1,5 +1,5 @@
-@import '../../style/variables.css';
-@import '../../style/animations.css';
+@import '../../shared/style/variables.css';
+@import '../../shared/style/animations.css';
 
 .container {
   position: fixed;

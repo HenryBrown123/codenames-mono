@@ -9,20 +9,7 @@
     "module": "preserve",
     "moduleResolution": "bundler",
     "paths": {
-      "@frontend/*": ["src/*"],
-      "@frontend/api": ["src/api/api.ts"],
-      "@frontend/auth/*": ["src/auth/*"],
-      "@frontend/websocket": ["src/websocket/index.ts"],
-      "@frontend/websocket/*": ["src/websocket/*"],
-      "@frontend/utils/*": ["src/utils/*"],
-      "@frontend/game/*": ["src/gameplay/*"],
-      "@frontend/game-access/*": ["src/game-access/*"],
-      "@frontend/gameplay/*": ["src/gameplay/*"],
-      "@frontend/lobby/*": ["src/lobby/*"],
-      "@frontend/pages/*": ["src/pages/*"],
-      "@frontend/style/*": ["src/style/*"],
-      "@frontend/ai/*": ["src/ai/*"],
-      "@frontend/chat/*": ["src/chat/*"]
+      "@frontend/*": ["src/*"]
     },
     "outDir": "./dist"
   },

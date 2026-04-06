@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { pageContainerStyles } from "@frontend/gameplay/shared/components";
+import { pageContainerStyles } from "@frontend/game/gameplay/shared/components";
 
 const EASE = [0.4, 0, 0.2, 1] as const;
 

@@ -12,12 +12,7 @@ export default defineConfig({
   json: { namedExports: true, stringify: false },
   resolve: {
     alias: {
-      src: "/src",
-      test: "/test",
-      "@": "/src",
-      "@game": "/src/features/gameplay",
-      "@pages": "/src/pages", // Alias for pages
-      "@style": "/src/style", // Alias for style
+      "@frontend": "/src",
       "@test": "/test",
     },
   },
@@ -27,15 +22,7 @@ export default defineConfig({
     environment: "jsdom",
     include: ["test/**/*.test.ts", "test/**/*.test.tsx"],
     alias: {
-      src: "/src",
-      test: "/test",
-      "@": "/src",
-      "@frontend/": "/src/",
-      "@game": "/src/gameplay",
-      "@game-access": "/src/game-access",
-      "@pages": "/src/pages",
-      "@style": "/src/style",
-      "@codenames/shared/src-types": "/src/shared-types",
+      "@frontend": "/src",
       "@test": "/test",
     },
     reporters: ["dot"],

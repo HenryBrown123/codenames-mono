@@ -1,5 +1,5 @@
 /* Game Chat Log Styles */
-@import "../../style/variables.css";
+@import "../../shared/style/variables.css";
 
 .chatLog {
   padding: 0.5rem 0;

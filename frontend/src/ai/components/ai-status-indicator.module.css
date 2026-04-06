@@ -1,5 +1,5 @@
 /* AI Status Indicator Styles */
-@import "../../style/variables.css";
+@import "../../shared/style/variables.css";
 
 .aiStatusContainer {
   padding: 0.75rem 0;

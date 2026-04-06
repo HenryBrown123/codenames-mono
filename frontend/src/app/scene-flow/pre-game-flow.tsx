@@ -1,9 +1,9 @@
 import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { AuthScene } from "@frontend/game-access/pages/auth-scene";
-import { SetupScene } from "@frontend/game-access/pages/setup-scene";
-import { LobbyScene } from "@frontend/lobby/lobby-scene";
+import { AuthScene } from "@frontend/game/lobby/setup/auth-scene";
+import { SetupScene } from "@frontend/game/lobby/setup/setup-scene";
+import { LobbyScene } from "@frontend/game/lobby/layout/lobby-scene";
 import { SceneCard } from "./scene-card";
 import styles from "./pre-game-flow.module.css";
 

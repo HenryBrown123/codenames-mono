@@ -1,0 +1,67 @@
+@import '../../../../shared/style/variables.css';
+
+/* Full-width player identity banner */
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.6) 0%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
+  border-bottom: var(--border-dim);
+}
+
+.teamSymbol {
+  font-size: var(--dashboard-text-player-header);
+  line-height: 1;
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+  color: var(--symbol-color);
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.playerName {
+  font-family: var(--font-mono);
+  font-size: var(--dashboard-text-banner);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.roleBadge {
+  font-family: var(--font-mono);
+  font-size: var(--dashboard-text-badge);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  border: 1px solid var(--symbol-color);
+  border-radius: 3px;
+  flex-shrink: 0;
+  color: var(--symbol-color);
+}
+
+@media (max-height: 720px) {
+  .banner { padding: 8px 16px; gap: 10px; }
+  .roleBadge { padding: 2px 6px; }
+}
+
+@media (max-height: 660px) {
+  .banner { padding: 6px 14px; gap: 4px 8px; flex-wrap: wrap; }
+  .identity { order: -1; flex-basis: 100%; gap: 8px; }
+  .roleBadge { padding: 2px 5px; }
+}

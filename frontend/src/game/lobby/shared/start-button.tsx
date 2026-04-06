@@ -1,0 +1,29 @@
+import React from "react";
+import { ActionButton } from "@frontend/game/gameplay/shared/components";
+import styles from "../layout/lobby.module.css";
+
+/**
+ * Start game button - disabled until minimum player requirements are met
+ */
+
+export interface StartButtonViewProps {
+  canStart: boolean;
+  isLoading: boolean;
+  onClick: () => void;
+}
+
+export const StartButtonView: React.FC<StartButtonViewProps> = ({
+  canStart,
+  isLoading,
+  onClick,
+}) => (
+  <div className={styles.startButtonWrapper}>
+    <ActionButton
+      id="start-game-btn"
+      size="sm"
+      text="START"
+      onClick={onClick}
+      enabled={canStart && !isLoading}
+    />
+  </div>
+);

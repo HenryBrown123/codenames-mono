@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { validateClueWord } from "@frontend/gameplay/game-controls/compact-dashboard/clue-validation";
-import type { Card } from "@frontend/shared-types";
+import { validateClueWord } from "@frontend/game/gameplay/dashboard/compact-dashboard/clue-validation";
+import type { Card } from "@frontend/shared/types";
 
 const card = (word: string): Card => ({
   word,

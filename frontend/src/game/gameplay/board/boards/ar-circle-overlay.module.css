@@ -1,0 +1,65 @@
+@import '../../../../shared/style/variables.css';
+@import '../../../../shared/style/animations.css';
+
+/*
+  Overlay — stationary element, only the clip-path `at` position animates.
+  Extends --ar-bleed beyond the board on every side so the circle isn't
+  trimmed at the board edges.
+
+  pointer-events toggled via inline style: none (closed) / auto (open).
+*/
+.overlay {
+  --ar-bleed: 500px;
+  --ar-vignette-rgb: 0, 140, 120;
+
+  position: absolute;
+  inset: calc(-1 * var(--ar-bleed));
+  z-index: var(--z-spymaster-ar-hud);
+  will-change: clip-path;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at center,
+    transparent                          0%,
+    transparent                          20%,
+    rgba(var(--ar-vignette-rgb), 0.10)   40%,
+    rgba(var(--ar-vignette-rgb), 0.30)   72%,
+    rgba(var(--ar-vignette-rgb), 0.50)   85%,
+    rgba(var(--ar-vignette-rgb), 0.70)   100%
+  );
+}
+
+/* Maps children back to the exact board bounds (pointer-events: none via inline style) */
+.cardContainer {
+  position: absolute;
+  inset: var(--ar-bleed, 500px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    transparent                      0%,
+    rgba(var(--primary-rgb), 0.03)  45%,
+    rgba(var(--primary-rgb), 0.055) 50%,
+    transparent                     55%
+  );
+  animation: glareAnimation 8s ease-in-out infinite;
+}
+
+/*
+  Touch layer — covers the entire board, always interactive.
+  No clip-path so pointer events always register even when
+  the circle radius is 0. Sits above the overlay.
+*/
+.touchLayer {
+  position: absolute;
+  inset: 0;
+  z-index: calc(var(--z-spymaster-ar-hud) + 1);
+  touch-action: none;
+  cursor: crosshair;
+}

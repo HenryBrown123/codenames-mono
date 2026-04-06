@@ -15,8 +15,8 @@ import {
   isAiActive,
   canStartNextTurn,
   canUseArToggle,
-} from "@frontend/gameplay/game-controls/dashboards/config/rules";
-import type { VisibilityContext } from "@frontend/gameplay/game-controls/dashboards/config/context";
+} from "@frontend/game/gameplay/dashboard/config/rules";
+import type { VisibilityContext } from "@frontend/game/gameplay/dashboard/config/context";
 
 // ---------------------------------------------------------------------------
 // Factory

@@ -1,0 +1,101 @@
+@import '../../../../shared/style/variables.css';
+
+/*
+  Mini dashboard-style panel — dark background with subtle border,
+  centered glowing dot. The expand-lens circle radiates from the
+  center of this button.
+*/
+.fab {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.12s ease;
+}
+
+.fab:active {
+  transform: scale(0.88);
+}
+
+/* Off — dashboard-style panel background */
+.off {
+  background: var(--bg-panel, rgba(10, 22, 18, 0.92));
+  border: 1px solid var(--border-color-subtle, rgba(0, 255, 136, 0.12));
+}
+
+.off:hover {
+  border-color: var(--border-color-normal, rgba(0, 255, 136, 0.25));
+}
+
+/* On — same border as off, glow comes from the dot */
+.on {
+  background: var(--bg-panel, rgba(10, 22, 18, 0.92));
+  border: 1px solid var(--border-color-subtle, rgba(0, 255, 136, 0.12));
+}
+
+.on:hover {
+  border-color: var(--border-color-normal, rgba(0, 255, 136, 0.25));
+}
+
+/* Centered dot — glowing when on, dim when off */
+.dot {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  transition:
+    background 0.25s,
+    box-shadow 0.25s;
+}
+
+/* Off + not animating — blink to attract attention */
+.off .dot {
+  background: var(--color-primary);
+  box-shadow: 0 0 10px 2px rgba(0, 255, 136, 0.5);
+  animation: dotBlink 1.5s ease-in-out infinite;
+}
+
+/* Off but still animating (circle collapsing) — stay bright, no blink */
+.off[data-ar-animating="true"] .dot {
+  animation: none;
+  background: var(--color-primary);
+  box-shadow: 0 0 10px 2px rgba(0, 255, 136, 0.5);
+}
+
+.off:hover .dot {
+  animation: none;
+  background: var(--color-primary);
+  box-shadow: 0 0 14px 3px rgba(0, 255, 136, 0.7);
+}
+
+/* On — steady bright glow */
+.on .dot {
+  background: var(--color-primary);
+  box-shadow: 0 0 10px 2px rgba(0, 255, 136, 0.5);
+  animation: dotGlow 1.25s infinite alternate;
+}
+
+@keyframes dotGlow {
+  0% { box-shadow: 0 0 10px 2px rgba(0, 255, 136, 0.5); }
+  100% { box-shadow: 0 0 14px 3px rgba(0, 255, 136, 0.7); }
+}
+
+@keyframes dotBlink {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 10px 2px rgba(0, 255, 136, 0.5);
+  }
+  50% {
+    opacity: 0.3;
+    box-shadow: 0 0 4px 1px rgba(0, 255, 136, 0.2);
+  }
+}

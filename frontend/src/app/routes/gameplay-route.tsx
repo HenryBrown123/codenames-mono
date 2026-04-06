@@ -1,7 +1,7 @@
 import React from "react";
 import { useParams } from "react-router-dom";
 import PageLayout from "./page-layout/page-layout";
-import { GameplayPageContent } from "@frontend/gameplay";
+import { GameplayPageContent } from "@frontend/game/gameplay";
 
 export const GameplayRoute: React.FC = () => {
   const { gameId } = useParams<{ gameId: string }>();

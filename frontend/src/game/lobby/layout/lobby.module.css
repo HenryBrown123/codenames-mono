@@ -1,0 +1,629 @@
+@import "../../../shared/style/variables.css";
+@import "../../../shared/style/animations.css";
+
+/* Lobby card overrides on top of shared PageCard */
+.lobbyCard {
+  display: flex;
+  flex-direction: column;
+  min-height: 30vh;
+}
+
+.loadingDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-primary, #00ff88);
+  box-shadow: 0 0 20px var(--color-primary, #00ff88);
+  animation: dotBlink 1s ease-in-out infinite;
+}
+
+
+.header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: var(--border-dim);
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 2.2rem;
+  font-weight: bold;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 6px;
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+}
+
+.gameInfo {
+  color: var(--color-text-muted);
+  font-size: 1.2rem;
+  opacity: 0.7;
+  letter-spacing: 2px;
+  font-family: var(--font-mono);
+}
+
+.teamSwitcher {
+  display: none;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .teamSwitcher {
+    display: flex;
+  }
+}
+
+.teamSwitchButton {
+  flex: 1;
+  padding: 12px;
+  background: var(--bg-section);
+  border: var(--border-dim);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.teamSwitchButton[data-active="true"] {
+  background: var(--color-primary);
+  color: var(--color-background);
+  border-color: var(--color-primary);
+}
+
+.teamSwitchButton:hover:not([data-active="true"]) {
+  background: var(--bg-highlight);
+  border-color: var(--color-primary);
+}
+
+.teamsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 480px) {
+  .teamsGrid {
+    display: none;
+  }
+}
+
+.teamsGridMobile {
+  display: none;
+  margin: 20px 0 50px 0;
+}
+
+.teamsGridMobile > * + * {
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 480px) {
+  .teamsGridMobile {
+    display: block;
+  }
+}
+
+.teamTile {
+  border: 1px solid var(--team-color);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  background: var(--bg-section);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  min-height: 20vh;
+}
+
+.teamTile[data-drag-over="true"] {
+  border-color: var(--team-color);
+  background: var(--bg-panel);
+  transform: scale(1.02);
+}
+
+.teamHeader {
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: var(--border-dim);
+  flex-shrink: 0;
+}
+
+.teamContentRow {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.teamName {
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  opacity: 0.9;
+  color: var(--symbol-color, var(--team-color));
+  font-family: var(--font-mono);
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.playerCount {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: normal;
+  opacity: 0.7;
+  letter-spacing: 1px;
+}
+
+.playersContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) transparent;
+}
+
+.playersContainer::-webkit-scrollbar {
+  width: 3px;
+}
+
+.playersContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.playersContainer::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  opacity: 0.5;
+}
+
+.playerTile {
+  background: var(--bg-highlight);
+  border: var(--border-dim);
+  border-radius: 2px;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all 0.2s ease;
+  cursor: grab;
+  user-select: none;
+  position: relative;
+}
+
+.playerTile:hover {
+  background: rgba(var(--primary-rgb), 0.1);
+  border-color: rgba(var(--primary-rgb), 0.3);
+  transform: translateX(4px);
+}
+
+.playerTile[data-dragging="true"] {
+  opacity: 0.2;
+  background: var(--bg-highlight);
+  border-color: rgba(255, 255, 255, 0.1);
+  cursor: grabbing;
+}
+
+.dragHandle {
+  color: rgba(var(--primary-rgb), 0.4);
+  opacity: 0.6;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.playerTile:hover .dragHandle {
+  opacity: 1;
+  color: var(--color-primary);
+}
+
+.playerName {
+  color: white;
+  font-weight: 500;
+  font-size: 1rem;
+  flex: 1;
+  letter-spacing: 0.5px;
+}
+
+.editableInput {
+  background: transparent;
+  border: 1px solid var(--color-primary, #00ff88);
+  color: white;
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 2px;
+  flex: 1;
+  font-family: var(--font-mono);
+}
+
+.editableInput:focus {
+  outline: none;
+  border-color: var(--color-text);
+}
+
+.playerActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.playerTile:hover .playerActions {
+  opacity: 1;
+}
+
+.editButton {
+  background: transparent;
+  border: var(--border-subtle);
+  color: var(--color-primary);
+  padding: 4px 6px;
+  border-radius: 2px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editButton:hover:not(:disabled) {
+  opacity: 1;
+  background: var(--bg-highlight);
+  border-color: var(--color-primary);
+}
+
+.editButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.removeButton {
+  background: transparent;
+  border: 1px solid rgba(255, 64, 64, 0.3);
+  color: rgba(255, 64, 64, 0.7);
+  padding: 2px 8px;
+  font-size: 1.4rem;
+  line-height: 1;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-mono);
+}
+
+.removeButton:hover:not(:disabled) {
+  color: #ff0040;
+  background: rgba(255, 0, 64, 0.15);
+  border-color: #ff0040;
+}
+
+.removeButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.addPlayerArea {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: var(--border-dim);
+  flex-shrink: 0;
+}
+
+/* .addInput removed — now uses shared TerminalInput component */
+
+.addButton {
+  background-color: var(--team-color);
+  color: var(--color-background);
+  border: none;
+  padding: 0.5rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  transition: all 0.3s ease;
+  opacity: 0.92;
+}
+
+.addButton:hover:not(:disabled) {
+  background-color: var(--color-text);
+  color: var(--color-background);
+  opacity: 1;
+}
+
+.addButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.startButtonWrapper {
+  margin: 1.5rem auto 0;
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.errorMessage {
+  color: var(--color-error);
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  text-align: center;
+  padding: 1rem;
+  background: rgba(255, 68, 68, 0.1);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  font-family: var(--font-mono);
+}
+/* Multi-Device Lobby Styles */
+
+.joinArea {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 0;
+  margin-bottom: 1.5rem;
+  flex-shrink: 0;
+}
+
+.joinContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.joinInputWrapper {
+  width: 100%;
+  max-width: 360px;
+}
+
+.teamButtonsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.joinTeamButton {
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: transparent;
+  color: var(--team-color);
+  border: 2px solid var(--team-color);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: var(--font-mono);
+}
+
+.joinTeamButton:hover:not(:disabled) {
+  background: var(--team-color);
+  color: var(--color-background);
+}
+
+.joinTeamButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.waitingArea {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2rem;
+  background: var(--bg-highlight);
+  border: var(--border-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: 2rem;
+}
+
+.youJoinedMessage {
+  font-size: 1.3rem;
+  color: var(--color-primary);
+  text-align: center;
+  padding: 1rem;
+  background: var(--bg-highlight);
+  border-radius: var(--radius-sm);
+}
+
+.shareArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.copyLinkButton {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  background: rgba(0, 212, 255, 0.1);
+  color: var(--color-team-blue);
+  border: 1px solid var(--color-team-blue);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: var(--font-mono);
+}
+
+.copyLinkButton:hover {
+  background: rgba(0, 212, 255, 0.2);
+}
+
+.shareMessage {
+  font-size: 0.9rem;
+  color: var(--color-primary, #00ff88);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.waitingMessage {
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.youBadge {
+  margin-left: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-primary);
+  background: var(--bg-highlight);
+  border-radius: var(--radius-sm);
+  border: var(--border-subtle);
+}
+
+.emptyTeamMessage {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 1rem;
+  opacity: 0.4;
+}
+
+
+.readyMessage {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+/* Compact header for joined users */
+.compactHeader {
+  margin-bottom: 1.5rem;
+}
+
+.teamIndicator {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--bg-section);
+  border: 2px solid var(--team-color);
+  border-radius: var(--radius-sm);
+}
+
+.teamSymbol {
+  font-size: 2rem;
+  color: var(--team-color);
+}
+
+.teamInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.teamLabel {
+  font-size: 0.75rem;
+  color: var(--team-color);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.playerLabel {
+  font-size: 1rem;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+/* Change team button */
+.myTeamBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  background: var(--bg-section);
+  border: 2px solid;
+  border-color: var(--team-color, rgba(255, 255, 255, 0.15));
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.bigTeamSymbol {
+  font-size: 2.5rem;
+  color: var(--team-color);
+  line-height: 1;
+  opacity: 0.9;
+  text-align: center;
+}
+
+.teamInfoSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-start;
+}
+
+.statusSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: center;
+  flex: 1;
+}
+
+.switchButtonContainer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.switchSymbol {
+  font-size: 2.5rem;
+  line-height: 1;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.switchButtonContainer:hover .switchSymbol {
+  opacity: 1;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .teamButtonsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .joinTeamButton {
+    padding: 1.25rem 1.5rem;
+    font-size: 1rem;
+  }
+}

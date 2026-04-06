@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { needsHandoff } from "@frontend/gameplay/device-mode/device-mode.logic";
-import type { TurnPhase } from "@frontend/shared-types";
-import type { ClaimedPhase } from "@frontend/gameplay/game-data/providers/active-game-session-provider";
+import { needsHandoff } from "@frontend/game/gameplay/single-device/device-mode.logic";
+import type { TurnPhase } from "@frontend/shared/types";
+import type { ClaimedPhase } from "@frontend/game/gameplay/providers/active-game-session-provider";
 
 // ---------------------------------------------------------------------------
 // Helpers

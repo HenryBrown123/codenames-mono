@@ -1,7 +1,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAiStatus, useTriggerAiMove } from "@frontend/ai/api";
-import { StatusDot } from "@frontend/gameplay/shared/components";
+import { StatusDot } from "@frontend/game/gameplay/shared/components";
 import styles from "./ai-status-indicator.module.css";
 
 /**

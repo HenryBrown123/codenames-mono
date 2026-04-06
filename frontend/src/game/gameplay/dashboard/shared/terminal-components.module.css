@@ -1,0 +1,139 @@
+@import "../../../../shared/style/variables.css";
+@import "../../../../shared/style/animations.css";
+
+@keyframes spyDotBlink {
+  0%,
+  100% {
+    filter: brightness(1.03);
+  }
+  50% {
+    filter: brightness(1.45);
+  }
+}
+
+.terminalSection {
+  border: var(--border-normal);
+  border-radius: var(--radius-panel);
+  padding: 15px;
+  background: var(--bg-panel);
+  transition: background 0.7s;
+
+  /* Make it a flex container */
+  display: flex;
+  flex-direction: column;
+
+  /* CONSTRAINT FIX - Prevent content from pushing out */
+  width: 100%;
+  max-width: 100%;
+  min-width: 0; /* Allow shrinking */
+  overflow: visible;
+  box-sizing: border-box;
+}
+
+.terminalSection[data-borderless="true"] {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 0;
+}
+
+.terminalCommand {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: var(--panel-header-gap);
+  color: var(--color-primary);
+  font-size: var(--dashboard-text-h1);
+  text-shadow: var(--glow-score);
+  border-bottom: var(--border-dim);
+  padding-bottom: var(--panel-header-gap);
+}
+
+
+.middleSection {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;           /* take all remaining space after header panel */
+  min-height: 50%;   /* ensure panels spread across at least half the dashboard */
+  min-width: 0;
+  width: 100%;
+  gap: 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.middleSection .terminalSection {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.spyGogglesContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.spyGogglesSwitchRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: flex-start;
+}
+
+.spyGogglesDot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  margin-right: 8px;
+  transition:
+    background 0.28s,
+    box-shadow 0.28s;
+  vertical-align: middle;
+}
+
+.spyGogglesDot[data-active="true"] {
+  background: var(--color-primary);
+  box-shadow: var(--glow-box-sm);
+  animation: spyDotBlink 1.25s infinite alternate;
+}
+
+.spyGogglesDot[data-active="false"] {
+  background: rgba(var(--primary-rgb), 0.20);
+  box-shadow: none;
+}
+
+/* Ensure all content respects container width */
+.terminalCommand,
+.spyGogglesContainer {
+  width: 100%;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  box-sizing: border-box;
+}
+
+/* Ensure the bottom section (ACTION) doesn't cut off */
+.terminalSection:last-child {
+  overflow: visible;
+}
+
+/* PlayerInfoLayout - Special layout for team header with symbol */
+.playerInfoLayout {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Terminal section containing player info should not stretch */
+.terminalSection:has(.playerInfoLayout) {
+  height: auto;
+  flex-shrink: 0;
+}

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { deriveVisibilityContext, type VisibilityInputs } from "@frontend/gameplay/game-controls/dashboards/config/derive-visibility";
-import type { GameData, TurnData } from "@frontend/shared-types";
+import { deriveVisibilityContext, type VisibilityInputs } from "@frontend/game/gameplay/dashboard/config/derive-visibility";
+import type { GameData, TurnData } from "@frontend/shared/types";
 
 /** Minimal GameData factory */
 const buildGameData = (overrides: Partial<GameData> = {}): GameData => ({
