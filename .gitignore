@@ -62,19 +62,8 @@ backend/test/manual/play-moves-quiet.ts
 backend/test/manual/play-moves.ts
 
 # Misc
-PLAY_CODENAMES.md
-MULTI_DEVICE_NEXT_STEPS.md
-PLAN.md
-PLAYER_CONNECTION_STATUS_CONTEXT.md
-adhoc_test.sh
-test_messages.sh
-commit.sh
-SUMMARY.md
-intel_panel_sketch.excalidraw
-FRONTEND_REFACTOR.md
-frontend/src/gameplay/game-board/boards/refactor.md
 .DS_Store
-.clinerules
-compact_dashboard.excalidraw
+
+
 .gitignore
-display_views.excalidraw
+

@@ -562,6 +562,8 @@ Frontend and backend extend these base types with their specific requirements.
 ```
 .
 ├── backend
+│   ├── codegen
+│   ├── deploy
 │   └── src
 │       ├── ai
 │       │   ├── ai-move
@@ -615,9 +617,6 @@ Frontend and backend extend these base types with their specific requirements.
 │       │   ├── create-new-game
 │       │   └── errors
 │       └── users
-├── e2e
-│   ├── fixtures
-│   └── tests
 ├── frontend
 │   ├── public
 │   │   └── icons
@@ -695,7 +694,7 @@ Frontend and backend extend these base types with their specific requirements.
         │   └── modules
         └── types
 
-134 directories
+133 directories
 ```
 
 ## Getting Started
