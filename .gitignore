@@ -3,6 +3,7 @@
 **/build
 **/out
 **/public/build
+**/.vite
 
 # Dependencies
 **/node_modules
