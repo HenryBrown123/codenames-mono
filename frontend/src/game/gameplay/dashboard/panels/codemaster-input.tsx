@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { ActionButton, BUTTON_VALIDATION, type ButtonValidation, CircleButton } from "../../shared/components";
 import { useGameDataRequired } from "../../providers";
 import { Card } from "@frontend/shared/types";
+import { MinusIcon, PlusIcon } from "@frontend/shared/components/icons";
 import styles from "./codemaster-input.module.css";
 
 /**
@@ -103,9 +104,9 @@ export function CodeWordInput({
           className={styles.codeWordInputField}
         />
         <div className={styles.numberInput}>
-          <CircleButton onClick={decrement} disabled={!isEditable || isLoading || inputNumberOfCards <= 1} aria-label="Decrease clue count">-</CircleButton>
+          <CircleButton onClick={decrement} disabled={!isEditable || isLoading || inputNumberOfCards <= 1} aria-label="Decrease clue count"><MinusIcon /></CircleButton>
           <div id="clue-number" className={styles.numberDisplay}>{inputNumberOfCards}</div>
-          <CircleButton onClick={increment} disabled={!isEditable || isLoading || inputNumberOfCards >= 9} aria-label="Increase clue count">+</CircleButton>
+          <CircleButton onClick={increment} disabled={!isEditable || isLoading || inputNumberOfCards >= 9} aria-label="Increase clue count"><PlusIcon /></CircleButton>
         </div>
       </div>
 

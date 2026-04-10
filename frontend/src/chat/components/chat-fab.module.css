@@ -1,0 +1,43 @@
+.fab {
+  width: var(--chat-fab-size);
+  height: var(--chat-fab-size);
+  border-radius: 50%;
+  background: var(--bg-panel);
+  border: 1px solid rgba(82, 214, 138, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.18s ease;
+  padding: 0;
+  color: var(--color-primary);
+  font-size: 24px;
+}
+
+.fab:hover {
+  border-color: rgba(82, 214, 138, 0.25);
+}
+
+.fab:active {
+  transform: scale(0.88);
+}
+
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: var(--chat-badge-size);
+  height: var(--chat-badge-size);
+  padding: 0 4px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  background: var(--color-team-red);
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

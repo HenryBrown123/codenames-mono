@@ -1,5 +1,6 @@
 import React from "react";
-import { GripVertical, Edit2 } from "lucide-react";
+import { Edit2 } from "lucide-react";
+import { WideBarIcon, ExitIcon } from "@frontend/shared/components/icons";
 import styles from "../layout/lobby.module.css";
 
 /**
@@ -57,7 +58,7 @@ export const PlayerTileView: React.FC<PlayerTileViewProps> = (props) => {
   if (!props.interactive) {
     return (
       <div className={styles.playerTile} {...dragProps}>
-        {isDraggable && <GripVertical className={styles.dragHandle} size={16} />}
+        {isDraggable && <WideBarIcon className={styles.dragHandle} />}
         <span className={styles.playerName}>{playerName}</span>
         {isCurrentUser && <span className={styles.youBadge}>(You)</span>}
       </div>
@@ -82,7 +83,7 @@ export const PlayerTileView: React.FC<PlayerTileViewProps> = (props) => {
 
   return (
     <div className={styles.playerTile} {...dragProps}>
-      {isDraggable && <GripVertical className={styles.dragHandle} size={16} />}
+      {isDraggable && <WideBarIcon className={styles.dragHandle} />}
 
       {isEditing ? (
         <input
@@ -111,8 +112,9 @@ export const PlayerTileView: React.FC<PlayerTileViewProps> = (props) => {
           onClick={onRemove}
           disabled={disabled}
           title="Remove player"
+          aria-label="Remove player"
         >
-          ×
+          <ExitIcon />
         </button>
       </div>
     </div>

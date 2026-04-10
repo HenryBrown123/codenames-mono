@@ -1,0 +1,13 @@
+.icon {
+  height: 1em;
+  width: 1em;
+  display: inline-block;
+  vertical-align: -0.125em;
+  fill: currentColor;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.wide {
+  width: 3em;
+}

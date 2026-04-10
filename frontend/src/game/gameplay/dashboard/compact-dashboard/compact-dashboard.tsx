@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDashboardState } from "../use-dashboard-state";
 import { useIntelState } from "../panels/use-intel-state";
 import { useGameDataRequired } from "../../providers";
 import { useAiStatus, useTriggerAiMove } from "@frontend/ai/api";
+import { ChatFab, ChatPanel } from "@frontend/chat/components";
+import { useUnreadCount } from "@frontend/chat/api";
 import { getTeamStyle } from "../panels/intel-panel";
 import { TeamSymbolIcon } from "@frontend/shared/components/team-symbol-icon";
 import { StatusDot, CircleButton } from "../../shared/components";
@@ -41,6 +43,9 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
 
   const isAiThinking = (aiStatus?.thinking || triggerAi.isPending) ?? false;
   const canTriggerAi = (aiStatus?.available && !isAiThinking) ?? false;
+
+  const [chatOpen, setChatOpen] = useState(false);
+  const unreadCount = useUnreadCount(gameData.publicId, chatOpen);
 
   const clue = useClueInput(gameData.currentRound?.cards ?? []);
 
@@ -106,6 +111,24 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
     onGoForward: intel.onGoForward,
   });
 
+  const chatPanelEl = (
+    <ChatPanel
+      gameId={gameData.publicId}
+      viewerPlayerId={gameData.playerContext?.publicId ?? null}
+      open={chatOpen}
+      onClose={() => setChatOpen(false)}
+    />
+  );
+
+  const lobbyChatOverlay = (
+    <>
+      <div className={styles.chatFabSlot}>
+        <ChatFab onClick={() => setChatOpen(true)} unreadCount={unreadCount} />
+      </div>
+      {chatPanelEl}
+    </>
+  );
+
   if (s.isInLobby) {
     return (
       <div className={styles.panel}>
@@ -131,6 +154,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
           </div>
           <div className={styles.contentSpacer} />
         </div>
+        {lobbyChatOverlay}
       </div>
     );
   }
@@ -245,6 +269,7 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
           )}
 
           <div className={styles.footer}>
+            <div className={styles.footerSpacer} aria-hidden="true" />
             {primaryButton ? (
               <div className={styles.fixedWidthWrapper}>{primaryButton}</div>
             ) : s.isAiActive ? (
@@ -271,10 +296,14 @@ export const CompactDashboard: React.FC<CompactDashboardProps> = ({ onOpenClueIn
                 )}
               </div>
             ) : null}
+            <div className={styles.footerFab}>
+              <ChatFab onClick={() => setChatOpen(true)} unreadCount={unreadCount} />
+            </div>
           </div>
         </div>
 
       </div>
+      {chatPanelEl}
     </div>
   );
 };

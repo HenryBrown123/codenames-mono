@@ -4,5 +4,5 @@
 }
 
 .rotated {
-  transform: rotate(45deg);
+  /* Diamond icon is already a diamond shape in the SVG — no transform needed */
 }

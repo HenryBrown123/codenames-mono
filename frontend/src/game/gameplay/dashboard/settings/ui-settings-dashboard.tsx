@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ExitIcon } from "@frontend/shared/components/icons";
 import styles from "./ui-settings-dashboard.module.css";
 
 /**
@@ -123,8 +124,9 @@ export const UISettingsDashboard: React.FC<UISettingsDashboardProps> = ({
           <button
             className={styles.closeButton}
             onClick={() => setIsExpanded(false)}
+            aria-label="Close"
           >
-            ×
+            <ExitIcon />
           </button>
         </div>
 

@@ -11,6 +11,7 @@ import { TeamHeaderPanel } from "../../dashboard/panels";
 import { GameOverOverlay } from "../../game-over";
 import { CodeWordInput } from "../../dashboard";
 import { useGameEventCallback } from "@frontend/shared/websocket/use-game-event-callback";
+import { ExitIcon, ArrowLeftIcon, ArrowRightIcon } from "@frontend/shared/components/icons";
 import styles from "./mobile-scene.module.css";
 
 interface MobileSceneProps {
@@ -92,8 +93,8 @@ export const MobileScene: React.FC<MobileSceneProps> = () => {
             <div className={styles.drawerIdentity}>
               <TeamHeaderPanel variant="compact" />
             </div>
-            <button className={styles.drawerClose} onClick={() => setPortraitOpen(false)}>
-              ×
+            <button className={styles.drawerClose} onClick={() => setPortraitOpen(false)} aria-label="Close">
+              <ExitIcon />
             </button>
           </div>
           <div className={styles.drawerContent}>
@@ -109,7 +110,7 @@ export const MobileScene: React.FC<MobileSceneProps> = () => {
           data-open={landscapeOpen}
           aria-label="Toggle dashboard"
         >
-          {landscapeOpen ? "◀" : "▶"}
+          {landscapeOpen ? <ArrowLeftIcon /> : <ArrowRightIcon />}
         </button>
 
         <div className={styles.landscapeOverlay} data-open={landscapeOpen}>
@@ -124,8 +125,8 @@ export const MobileScene: React.FC<MobileSceneProps> = () => {
         {/* Clue input overlay — portrait only */}
         <div className={styles.clueOverlay} data-visible={showCluePanel}>
           <div className={styles.panelHeader}>
-            <button className={styles.closeButton} onClick={() => setShowCluePanel(false)}>
-              ×
+            <button className={styles.closeButton} onClick={() => setShowCluePanel(false)} aria-label="Close">
+              <ExitIcon />
             </button>
             <h1 className={styles.hackerTitle}>TRANSMIT CLUE</h1>
           </div>

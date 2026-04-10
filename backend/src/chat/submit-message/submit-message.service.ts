@@ -9,8 +9,10 @@ import { GameEventsEmitter } from "@backend/shared/websocket";
 export interface GameMessage {
   id: string;
   gameId: string;
+  /** Player public ID (UUID). Null for SYSTEM/AI messages. */
   playerId: string | null;
-  teamId: number | null;
+  playerName: string | null;
+  teamName: string | null;
   teamOnly: boolean;
   messageType: "CHAT" | "AI_THINKING" | "SYSTEM";
   content: string;
@@ -97,12 +99,13 @@ export const submitMessageService = (deps: SubmitMessageServiceDeps) =>
       input.teamOnly ? userPlayer._teamId : undefined,
     );
 
-    // Transform to API format
+    // Transform to API format (enriched with player info from game state)
     const message: GameMessage = {
       id: messageData.id,
       gameId,
-      playerId: String(messageData.player_id),
-      teamId: messageData.team_id,
+      playerId: userPlayer.publicId,
+      playerName: userPlayer.publicName,
+      teamName: userPlayer.teamName,
       teamOnly: messageData.team_only,
       messageType: messageData.message_type,
       content: messageData.content,

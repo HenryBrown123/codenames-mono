@@ -64,6 +64,13 @@
 .bottomSlot {
 }
 
+.chatFabSlot {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  z-index: 5;
+}
+
 /* Refetch pulse dot */
 .refetchIndicator {
   position: absolute;

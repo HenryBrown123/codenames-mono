@@ -8,6 +8,7 @@ import { CompactDashboard } from "../../dashboard/compact-dashboard";
 import { TeamHeaderPanel } from "../../dashboard/panels";
 import { GameOverOverlay } from "../../game-over";
 import { CodeWordInput } from "../../dashboard";
+import { ExitIcon } from "@frontend/shared/components/icons";
 import styles from "./windowed-scene.module.css";
 
 interface WindowedSceneProps {
@@ -71,8 +72,8 @@ export const WindowedScene: React.FC<WindowedSceneProps> = ({ isFetching }) => {
 
         <div className={styles.clueOverlay} data-visible={showCluePanel}>
           <div className={styles.panelHeader}>
-            <button className={styles.closeButton} onClick={() => setShowCluePanel(false)}>
-              ×
+            <button className={styles.closeButton} onClick={() => setShowCluePanel(false)} aria-label="Close">
+              <ExitIcon />
             </button>
             <h1 className={styles.hackerTitle}>TRANSMIT CLUE</h1>
           </div>

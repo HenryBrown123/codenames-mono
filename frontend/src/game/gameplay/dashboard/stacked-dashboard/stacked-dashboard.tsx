@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { useVisibilityContext, GAME_PANELS } from "../config";
 import { PanelRenderer } from "../panel-renderer";
 import { MiddleSection } from "../shared";
+import { useGameDataRequired } from "../../providers";
+import { ChatFab, ChatPanel } from "@frontend/chat/components";
+import { useUnreadCount } from "@frontend/chat/api";
 import type { PanelSlots } from "../config";
 import styles from "./stacked-dashboard.module.css";
 
@@ -25,6 +28,9 @@ export const StackedDashboard: React.FC<StackedDashboardProps> = ({
   instanceId = "stacked",
 }) => {
   const context = useVisibilityContext();
+  const { gameData } = useGameDataRequired();
+  const [chatOpen, setChatOpen] = useState(false);
+  const unreadCount = useUnreadCount(gameData.publicId, chatOpen);
 
   return (
     <aside className={styles.sidebar}>
@@ -51,6 +57,15 @@ export const StackedDashboard: React.FC<StackedDashboardProps> = ({
           </div>
         </MiddleSection>
       </div>
+      <div className={styles.chatFabSlot}>
+        <ChatFab onClick={() => setChatOpen(true)} unreadCount={unreadCount} />
+      </div>
+      <ChatPanel
+        gameId={gameData.publicId}
+        viewerPlayerId={gameData.playerContext?.publicId ?? null}
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+      />
     </aside>
   );
 };

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>icons</title>
+<link rel="stylesheet" href="../src/shared/style/variables.css">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Doto:wght@400;500;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-mono);
+    font-variation-settings: var(--font-variation);
+    background: var(--color-background);
+    color: var(--color-text);
+    min-height: 100vh;
+    padding: 40px 24px;
+  }
+
+  .wrap { max-width: 1040px; margin: 0 auto; }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: var(--border-dim);
+  }
+
+  h1 {
+    font-size: 28px;
+    font-variation-settings: var(--font-variation-heavy);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+  }
+
+  header a {
+    font-size: 12px;
+    font-variation-settings: var(--font-variation-heavy);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    padding: 6px 14px;
+    border: var(--border-subtle);
+    border-radius: var(--radius-sm);
+    transition: all 0.15s;
+  }
+
+  header a:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+    box-shadow: var(--glow-clue);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+  }
+
+  .card {
+    background: var(--bg-panel);
+    border: var(--border-dim);
+    border-radius: var(--radius-panel);
+    padding: 24px 12px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  /* Inline SVG — currentColor picks up --color-text from the parent. */
+  .card .icon {
+    width: 72px;
+    height: 72px;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card .icon svg,
+  .card .icon img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
+
+  body.bordered .card .icon {
+    border: var(--border-normal);
+    border-radius: 50%;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+
+  .card .name {
+    font-size: 11px;
+    font-variation-settings: var(--font-variation-heavy);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    word-break: break-all;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>icons</h1>
+    <div style="display:flex;gap:8px">
+      <button onclick="document.body.classList.toggle('bordered')" style="font-family:var(--font-mono);font-variation-settings:var(--font-variation-heavy);font-size:12px;text-transform:uppercase;letter-spacing:0.08em;color:var(--color-text-muted);background:none;padding:6px 14px;border:var(--border-subtle);border-radius:var(--radius-sm);cursor:pointer">border</button>
+      <a href="./dottify/index.html" target="_blank" rel="noopener">&rarr; dottify</a>
+    </div>
+  </header>
+  <div class="grid">
+    <div class="card"><div class="icon"><img src="chat.svg" alt=""></div><div class="name">chat.svg</div></div>
+    <div class="card"><div class="icon"><img src="exit-dotted.svg" alt=""></div><div class="name">exit-dotted.svg</div></div>
+    <div class="card"><div class="icon"><img src="arrow-left-dotted.svg" alt=""></div><div class="name">arrow-left-dotted.svg</div></div>
+    <div class="card"><div class="icon"><img src="arrow-right-dotted.svg" alt=""></div><div class="name">arrow-right-dotted.svg</div></div>
+    <div class="card"><div class="icon"><img src="arrow-up-dotted.svg" alt=""></div><div class="name">arrow-up-dotted.svg</div></div>
+    <div class="card"><div class="icon"><img src="arrow-down-dotted.svg" alt=""></div><div class="name">arrow-down-dotted.svg</div></div>
+    <div class="card"><div class="icon"><img src="drawer-handle-dotted.svg" alt=""></div><div class="name">drawer-handle-dotted.svg</div></div>
+    <div class="card"><div class="icon"><img src="diamond-dotted.svg" alt=""></div><div class="name">diamond-dotted.svg</div></div>
+    <div class="card"><div class="icon"><img src="square-dotted.svg" alt=""></div><div class="name">square-dotted.svg</div></div>
+    <div class="card"><div class="icon"><img src="circle-dotted.svg" alt=""></div><div class="name">circle-dotted.svg</div></div>
+    <div class="card"><div class="icon"><img src="skull-dotted.svg" alt=""></div><div class="name">skull-dotted.svg</div></div>
+    <div class="card"><div class="icon"><img src="gear-dotted.svg" alt=""></div><div class="name">gear-dotted.svg</div></div>
+    <div class="card"><div class="icon"><img src="plus-dotted.svg" alt=""></div><div class="name">plus-dotted.svg</div></div>
+    <div class="card"><div class="icon"><img src="minus-dotted.svg" alt=""></div><div class="name">minus-dotted.svg</div></div>
+    <div class="card"><div class="icon"><img src="cursor-dotted.svg" alt=""></div><div class="name">cursor-dotted.svg</div></div>
+    <div class="card"><div class="icon"><img src="info-dotted.svg" alt=""></div><div class="name">info-dotted.svg</div></div>
+    <div class="card"><div class="icon"><img src="warning-dotted.svg" alt=""></div><div class="name">warning-dotted.svg</div></div>
+  </div>
+</div>
+</body>
+</html>

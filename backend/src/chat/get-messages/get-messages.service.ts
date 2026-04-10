@@ -10,8 +10,10 @@ import type { GameplayStateProvider } from "@backend/game/gameplay/state/gamepla
 export interface GameMessage {
   id: string;
   gameId: string;
+  /** Player public ID (UUID). Null for SYSTEM/AI messages. */
   playerId: string | null;
-  teamId: number | null;
+  playerName: string | null;
+  teamName: string | null;
   teamOnly: boolean;
   messageType: "CHAT" | "AI_THINKING" | "SYSTEM";
   content: string;
@@ -77,17 +79,24 @@ export const getMessagesService =
       requestingTeamId: userTeamId,
     });
 
-    // Transform to API format
-    const messages: GameMessage[] = messageRows.map((row) => ({
-      id: row.id,
-      gameId,
-      playerId: row.player_id ? String(row.player_id) : null,
-      teamId: row.team_id,
-      teamOnly: row.team_only,
-      messageType: row.message_type,
-      content: row.content,
-      createdAt: row.created_at.toISOString(),
-    }));
+    // Build lookup map: DB player id -> player info
+    const playerById = new Map(allPlayers.map((p) => [p._id, p]));
+
+    // Transform to API format, enriching with player/team names from game state
+    const messages: GameMessage[] = messageRows.map((row) => {
+      const player = row.player_id != null ? playerById.get(row.player_id) : undefined;
+      return {
+        id: row.id,
+        gameId,
+        playerId: player?.publicId ?? null,
+        playerName: player?.publicName ?? null,
+        teamName: player?.teamName ?? null,
+        teamOnly: row.team_only,
+        messageType: row.message_type,
+        content: row.content,
+        createdAt: row.created_at.toISOString(),
+      };
+    });
 
     return { status: "success", messages };
   };

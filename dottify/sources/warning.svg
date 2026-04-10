@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+  <!-- triangle -->
+  <path d="M100 25 L180 170 L20 170 Z"/>
+  <!-- exclamation stem -->
+  <path d="M100 80 L100 130"/>
+  <!-- exclamation dot -->
+  <circle cx="100" cy="152" r="7" fill="currentColor"/>
+</svg>

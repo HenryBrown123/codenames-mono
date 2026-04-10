@@ -4,6 +4,7 @@ import { DB } from "@backend/shared/db/db.types";
 import { Router } from "express";
 import { AuthMiddleware } from "@backend/shared/http-middleware/auth.middleware";
 import type { HttpLoggerHandler } from "@backend/shared/http-middleware/http-logger.middleware";
+import { blockingGameAction } from "@backend/shared/http-middleware/blocking-game-action.middleware";
 import type { AppLogger } from "@backend/shared/logging";
 
 import { gameplayState, turnState } from "./state";
@@ -56,10 +57,10 @@ export const initialize = (
   router.get("/games/:gameId", auth, queries.controllers.getGame);
   router.get("/games/:gameId/players", auth, queries.controllers.getPlayers);
   router.get("/games/:gameId/events", auth, queries.controllers.getEvents);
-  router.post("/games/:gameId/rounds/:roundNumber/clues", auth, turns.controllers.giveClue);
-  router.post("/games/:gameId/rounds/:roundNumber/guesses", auth, turns.controllers.makeGuess);
-  router.post("/games/:gameId/rounds/:roundNumber/end-turn", auth, turns.controllers.endTurn);
-  router.post("/games/:gameId/rounds/:roundNumber/turns", auth, turns.controllers.startTurn);
+  router.post("/games/:gameId/rounds/:roundNumber/clues", auth, blockingGameAction("give-clue"), turns.controllers.giveClue);
+  router.post("/games/:gameId/rounds/:roundNumber/guesses", auth, blockingGameAction("make-guess"), turns.controllers.makeGuess);
+  router.post("/games/:gameId/rounds/:roundNumber/end-turn", auth, blockingGameAction("end-turn"), turns.controllers.endTurn);
+  router.post("/games/:gameId/rounds/:roundNumber/turns", auth, blockingGameAction("start-turn"), turns.controllers.startTurn);
   router.get("/turns/:turnId", auth, queries.controllers.getTurn);
 
   app.use("/api", router);

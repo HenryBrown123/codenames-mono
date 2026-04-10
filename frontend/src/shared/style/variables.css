@@ -86,6 +86,13 @@
   --radius-panel: 6px;
   --radius-md: 8px;
 
+  /* ── Chat tokens ── */
+  --chat-fab-size: 40px;
+  --chat-badge-size: 16px;
+  --chat-msg-font-size: 0.75rem;
+  --chat-input-font-size: 0.8rem;
+  --chat-header-font-size: var(--dashboard-text-condensed);
+
   /* Z-index scale */
   --z-base: 0;
   --z-card-base: 1;

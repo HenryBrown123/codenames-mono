@@ -4,6 +4,7 @@ import { TerminalSection, carouselVariants, CAROUSEL_TRANSITION, useCarouselSwip
 import { useIntelState } from "./use-intel-state";
 import { TeamSymbolIcon } from "@frontend/shared/components/team-symbol-icon";
 import { CircleButton } from "@frontend/game/gameplay/shared/components";
+import { ArrowLeftIcon, ArrowRightIcon } from "@frontend/shared/components/icons";
 import styles from "./intel-panel.module.css";
 
 /** Animation constants matching lobby team symbol */
@@ -170,8 +171,8 @@ export const IntelPanelView: React.FC<IntelPanelViewProps> = (props) => {
       </motion.div>
 
       <div className={styles.navGroup}>
-        <CircleButton onClick={handleGoBack} disabled={!canGoBack} aria-label="Previous turn">{"<"}</CircleButton>
-        <CircleButton onClick={handleGoForward} disabled={!canGoForward} aria-label="Next turn">{">"}</CircleButton>
+        <CircleButton onClick={handleGoBack} disabled={!canGoBack} aria-label="Previous turn"><ArrowLeftIcon /></CircleButton>
+        <CircleButton onClick={handleGoForward} disabled={!canGoForward} aria-label="Next turn"><ArrowRightIcon /></CircleButton>
       </div>
     </TerminalSection>
   );

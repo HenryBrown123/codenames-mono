@@ -4,4 +4,13 @@
   background: transparent;
   border: none;
   cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.resetButton:hover {
+  transform: scale(1.1);
+}
+
+.resetButton:active {
+  transform: scale(0.9);
 }

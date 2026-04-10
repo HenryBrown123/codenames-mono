@@ -1,0 +1,49 @@
+.form {
+  display: flex;
+  gap: 6px;
+  padding: 10px 14px 18px;
+  border-top: 1px solid rgba(82, 214, 138, 0.15);
+  flex-shrink: 0;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-panel);
+  border: 1px solid rgba(82, 214, 138, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--color-primary);
+  font-family: var(--font-mono);
+  font-size: var(--chat-input-font-size);
+  padding: 6px 8px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+}
+
+.sendBtn {
+  font-family: var(--font-mono);
+  font-size: var(--chat-input-font-size);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0 12px;
+  border: 1px solid rgba(82, 214, 138, 0.4);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.sendBtn:hover:not(:disabled) {
+  background: rgba(82, 214, 138, 0.1);
+  border-color: var(--color-primary);
+}
+
+.sendBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

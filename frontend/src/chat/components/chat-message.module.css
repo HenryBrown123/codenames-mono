@@ -1,0 +1,74 @@
+.row {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-mono);
+  font-size: var(--chat-msg-font-size);
+  line-height: 1.35;
+  padding: 3px 0;
+  max-width: 85%;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.rowOwn {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.rowOther {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.author {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 0 6px 2px;
+  opacity: 0.85;
+}
+
+.authorRed {
+  color: var(--color-team-red);
+}
+
+.authorBlue {
+  color: var(--color-team-blue);
+}
+
+.authorAi {
+  color: var(--color-primary);
+}
+
+.bubble {
+  padding: 5px 9px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.rowOwn .bubble {
+  background: rgba(82, 214, 138, 0.14);
+  border-color: rgba(82, 214, 138, 0.3);
+  color: var(--color-primary);
+  border-bottom-right-radius: 2px;
+}
+
+.rowOther .bubble {
+  border-bottom-left-radius: 2px;
+}
+
+/* System row: full width, centered, no bubble */
+.rowSystem {
+  align-self: center;
+  max-width: 100%;
+  padding: 4px 0;
+  align-items: center;
+}
+
+.systemText {
+  color: var(--color-text-muted);
+  text-align: center;
+}

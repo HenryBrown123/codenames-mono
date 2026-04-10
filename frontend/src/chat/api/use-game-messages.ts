@@ -4,10 +4,10 @@ import api from "@frontend/shared/api/api";
 
 export interface GameMessage {
   id: string;
-  gameId: number;
-  playerId: number | null;
+  gameId: string;
+  /** Player public ID (UUID). Null for SYSTEM/AI_THINKING messages. */
+  playerId: string | null;
   playerName: string | null;
-  teamId: number | null;
   teamName: string | null;
   teamOnly: boolean;
   messageType: "CHAT" | "AI_THINKING" | "SYSTEM";
@@ -45,6 +45,5 @@ export const useGameMessages = (gameId: string): UseQueryResult<GameMessage[], E
         return []; // Return empty array instead of undefined
       }
     },
-    refetchInterval: 5000, // Poll every 5 seconds for new messages
   });
 };

@@ -6,6 +6,14 @@
   height: 100%;
   padding: 12px 20px 20px;
   box-sizing: border-box;
+  position: relative;
+}
+
+.chatFabSlot {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  z-index: 5;
 }
 
 @media (max-height: 720px) {
@@ -192,7 +200,43 @@
 
 .footer {
   flex-shrink: 0;
-  padding: 2px 0 var(--mobile-footer-bottom-pad, 0px);
+  /* Bottom spacing lives on margin so it doesn't offset flex vertical centering. */
+  padding-top: 2px;
+  margin-bottom: var(--mobile-footer-bottom-pad, 0px);
   display: flex;
+  align-items: center;
   justify-content: center;
+  gap: 10px;
+}
+
+/* Invisible mirror of .footerFab — keeps the centered button truly centered
+   within the panel despite the fab sitting in the row. */
+.footerSpacer {
+  width: var(--chat-fab-size, 42px);
+  height: var(--chat-fab-size, 42px);
+  flex-shrink: 0;
+  visibility: hidden;
+}
+
+.footerFab {
+  width: var(--chat-fab-size, 42px);
+  height: var(--chat-fab-size, 42px);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Match ActionButton size="sm" heights so the FAB aligns with the button. */
+  --chat-fab-size: 42px;
+}
+
+.footerSpacer { --chat-fab-size: 42px; }
+
+@media (max-width: 768px) {
+  .footerFab,
+  .footerSpacer { --chat-fab-size: 44px; }
+}
+
+@media (max-width: 768px) and (orientation: landscape) {
+  .footerFab,
+  .footerSpacer { --chat-fab-size: 36px; }
 }

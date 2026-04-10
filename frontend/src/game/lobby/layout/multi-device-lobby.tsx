@@ -11,6 +11,8 @@ import { TeamsGridView, TeamsGridMobileView } from "../teams/teams-grid";
 import { TeamTileView } from "../teams/team-tile";
 import { PlayerTileView } from "../teams/player-tile";
 import { JoinAreaView } from "../teams/join-area";
+import { MyTeamBoxView } from "../teams/my-team-box";
+import { getOppositeTeam, type TeamName } from "@frontend/shared/types";
 
 interface MultiDeviceLobbyProps {
   gameId: string;
@@ -100,8 +102,8 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId, onSt
         playerCount={totalPlayers}
       />
 
-      {!hasJoined && (
-        <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait">
+        {!hasJoined ? (
           <motion.div
             key="join-content"
             className={styles.joinArea}
@@ -117,8 +119,29 @@ export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId, onSt
               disabled={isLoading}
             />
           </motion.div>
-        </AnimatePresence>
-      )}
+        ) : (
+          <MyTeamBoxView
+            key="my-team-box"
+            teamName={lobbyData.playerContext!.teamName as TeamName}
+            playerName={lobbyData.playerContext!.playerName}
+            playersNeeded={(() => {
+              const myTeam = lobbyData.teams?.find(t => t.name === lobbyData.playerContext!.teamName);
+              return Math.max(0, 2 - (myTeam?.players?.length ?? 0));
+            })()}
+            disabled={isLoading}
+            aiMode={lobbyData.aiMode}
+            onSwitchTeam={() => {
+              const opposite = getOppositeTeam(lobbyData.playerContext!.teamName as TeamName);
+              if (opposite) {
+                ops.movePlayerToTeam.mutate({
+                  playerId: lobbyData.playerContext!.publicId,
+                  newTeamName: opposite,
+                });
+              }
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       <TeamsGridView>{teamTiles}</TeamsGridView>
       <TeamsGridMobileView>{teamTiles}</TeamsGridMobileView>

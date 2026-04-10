@@ -222,6 +222,7 @@
   opacity: 0.6;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  font-size: 16px;
 }
 
 .playerTile:hover .dragHandle {
@@ -295,11 +296,14 @@
   background: transparent;
   border: 1px solid rgba(255, 64, 64, 0.3);
   color: rgba(255, 64, 64, 0.7);
-  padding: 2px 8px;
-  font-size: 1.4rem;
+  padding: 4px 6px;
+  font-size: 14px;
   line-height: 1;
   border-radius: 2px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s ease;
   font-family: var(--font-mono);
 }
@@ -556,7 +560,7 @@
 }
 
 .playerLabel {
-  font-size: 1rem;
+  font-size: var(--dashboard-text-h1);
   color: var(--color-text);
   font-weight: 500;
 }
@@ -577,7 +581,7 @@
 }
 
 .bigTeamSymbol {
-  font-size: 2.5rem;
+  font-size: 2rem;
   color: var(--team-color);
   line-height: 1;
   opacity: 0.9;
@@ -594,6 +598,8 @@
 .statusSection {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 0.25rem;
   text-align: center;
   flex: 1;
@@ -606,7 +612,7 @@
 }
 
 .switchSymbol {
-  font-size: 2.5rem;
+  font-size: 2rem;
   line-height: 1;
   opacity: 0.8;
   transition: opacity 0.2s ease;

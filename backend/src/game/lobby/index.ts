@@ -3,6 +3,7 @@ import { Kysely } from "kysely";
 import { DB } from "@backend/shared/db/db.types";
 import { Router } from "express";
 import { AuthMiddleware } from "@backend/shared/http-middleware/auth.middleware";
+import { blockingGameAction } from "@backend/shared/http-middleware/blocking-game-action.middleware";
 import { createTransactionalHandler } from "@backend/shared/data-access/transaction-handler";
 import { createUser } from "@backend/shared/data-access/repositories/users.repository";
 
@@ -65,18 +66,18 @@ export const initialize = (
   router.post("/games", auth, setupGameController);
 
   /** Player routes */
-  router.post("/games/:gameId/players", auth, players.controllers.add);
-  router.patch("/games/:gameId/players", auth, players.controllers.modify.batch);
-  router.patch("/games/:gameId/players/:playerId", auth, players.controllers.modify.single);
-  router.delete("/games/:gameId/players/:playerId", auth, players.controllers.remove);
+  router.post("/games/:gameId/players", auth, blockingGameAction("add-players"), players.controllers.add);
+  router.patch("/games/:gameId/players", auth, blockingGameAction("modify-players"), players.controllers.modify.batch);
+  router.patch("/games/:gameId/players/:playerId", auth, blockingGameAction("modify-player"), players.controllers.modify.single);
+  router.delete("/games/:gameId/players/:playerId", auth, blockingGameAction("remove-player"), players.controllers.remove);
 
   /** Game start */
-  router.post("/games/:gameId/start", auth, lobbyStartGameController);
+  router.post("/games/:gameId/start", auth, blockingGameAction("start-game"), lobbyStartGameController);
 
   /** Round routes */
-  router.post("/games/:gameId/rounds", auth, rounds.controllers.newRound);
-  router.post("/games/:gameId/rounds/:id/deal", auth, rounds.controllers.dealCards);
-  router.post("/games/:gameId/rounds/:roundNumber/start", auth, rounds.controllers.startRound);
+  router.post("/games/:gameId/rounds", auth, blockingGameAction("new-round"), rounds.controllers.newRound);
+  router.post("/games/:gameId/rounds/:id/deal", auth, blockingGameAction("deal-cards"), rounds.controllers.dealCards);
+  router.post("/games/:gameId/rounds/:roundNumber/start", auth, blockingGameAction("start-round"), rounds.controllers.startRound);
 
   app.use("/api", router);
   app.use("/api", lobbyErrorHandler);

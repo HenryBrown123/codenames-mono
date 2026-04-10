@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+  <!-- crossbones behind -->
+  <path d="M25 150 L175 190 M25 190 L175 150"/>
+  <circle cx="25" cy="150" r="11"/>
+  <circle cx="175" cy="190" r="11"/>
+  <circle cx="25" cy="190" r="11"/>
+  <circle cx="175" cy="150" r="11"/>
+
+  <!-- skull cranium + jaw -->
+  <path d="M50 80 Q50 25 100 25 Q150 25 150 80 L150 108 Q150 120 138 122 L133 148 L115 155 L85 155 L67 148 L62 122 Q50 120 50 108 Z"/>
+
+  <!-- eye sockets (filled) -->
+  <circle cx="78" cy="88" r="13" fill="currentColor"/>
+  <circle cx="122" cy="88" r="13" fill="currentColor"/>
+
+  <!-- nose (filled triangle) -->
+  <path d="M93 112 L100 125 L107 112 Z" fill="currentColor"/>
+
+  <!-- teeth -->
+  <path d="M83 137 L117 137"/>
+  <path d="M92 132 L92 148"/>
+  <path d="M100 132 L100 148"/>
+  <path d="M108 132 L108 148"/>
+</svg>

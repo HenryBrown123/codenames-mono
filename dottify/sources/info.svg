@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+  <!-- outer ring -->
+  <circle cx="100" cy="100" r="80"/>
+  <!-- dot -->
+  <circle cx="100" cy="60" r="7" fill="currentColor"/>
+  <!-- stem -->
+  <path d="M100 90 L100 145"/>
+</svg>
