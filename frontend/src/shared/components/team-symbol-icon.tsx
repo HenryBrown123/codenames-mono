@@ -1,5 +1,8 @@
 import React from "react";
-import { TeamSquareIcon, TeamDiamondIcon, CircleIcon, BlackSkullIcon } from "./icons";
+import {
+  TeamSquareIcon, TeamDiamondIcon, CircleIcon, BlackSkullIcon,
+  TeamSquareIconFilled, TeamDiamondIconFilled,
+} from "./icons";
 import styles from "./team-symbol-icon.module.css";
 
 interface TeamSymbolIconProps {
@@ -7,23 +10,28 @@ interface TeamSymbolIconProps {
   rotate: boolean;
   color?: string;
   className?: string;
+  filled?: boolean;
 }
 
 /**
  * Renders a team symbol as a dotted SVG icon.
  * Red team gets the diamond (rotated square), blue team gets the square.
  * Maps legacy text glyphs ("■" / "□" / "○" / "☠") to dotted svgs.
+ * Pass filled=true for pattern-filled variants (used on cover cards).
  */
 export const TeamSymbolIcon: React.FC<TeamSymbolIconProps> = ({
   symbol,
   rotate,
   color,
   className,
+  filled = false,
 }) => {
   const Icon =
     symbol === "○" ? CircleIcon :
     symbol === "☠" ? BlackSkullIcon :
-    rotate ? TeamDiamondIcon : TeamSquareIcon;
+    rotate
+      ? (filled ? TeamDiamondIconFilled : TeamDiamondIcon)
+      : (filled ? TeamSquareIconFilled : TeamSquareIcon);
 
   return (
     <span

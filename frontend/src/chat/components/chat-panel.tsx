@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { ArrowDownIcon } from "@frontend/shared/components/icons";
+import { ArrowDownIcon, ChatIcon } from "@frontend/shared/components/icons";
 import { useGameMessages } from "../api/use-game-messages";
 import { usePostMessage } from "../api/use-post-message";
 import { ChatMessage } from "./chat-message";
@@ -57,7 +57,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       aria-hidden={!open}
     >
       <div className={styles.header}>
-        <span className={styles.title}>COMMS</span>
+        <span className={styles.title}><ChatIcon /></span>
         <button
           type="button"
           className={styles.closeBtn}

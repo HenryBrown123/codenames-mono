@@ -91,19 +91,19 @@ const CoverCard = memo<{ teamType: string; variant: CardVisibilityState; cardInd
             <>
               {/** Embossed depression - dark shadow */}
               <div className={styles.symbolShadow}>
-                <TeamSymbolIcon symbol={config.char} rotate={config.rotate} />
+                <TeamSymbolIcon symbol={config.char} rotate={config.rotate} filled />
               </div>
               {/** Crisp LED symbol */}
               <div className={styles.symbolLED}>
-                <TeamSymbolIcon symbol={config.char} rotate={config.rotate} />
+                <TeamSymbolIcon symbol={config.char} rotate={config.rotate} filled />
               </div>
               {/** Subtle inner glow */}
               <div className={styles.symbolGlow}>
-                <TeamSymbolIcon symbol={config.char} rotate={config.rotate} />
+                <TeamSymbolIcon symbol={config.char} rotate={config.rotate} filled />
               </div>
               {/** Highlight edge */}
               <div className={styles.symbolHighlight}>
-                <TeamSymbolIcon symbol={config.char} rotate={config.rotate} />
+                <TeamSymbolIcon symbol={config.char} rotate={config.rotate} filled />
               </div>
             </>
           );

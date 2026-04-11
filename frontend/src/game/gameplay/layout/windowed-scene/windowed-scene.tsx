@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useVisibilityContext } from "../../dashboard/config/context";
 import { isCodebreakerGuessing, isRoundComplete } from "../../dashboard/config/rules";
 import { useGameActions } from "../../dashboard";

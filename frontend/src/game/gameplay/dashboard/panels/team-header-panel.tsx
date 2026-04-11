@@ -57,6 +57,20 @@ interface TeamHeaderPanelProps {
 export const TeamHeaderPanel: React.FC<TeamHeaderPanelProps> = ({ variant }) => {
   const { gameData } = useGameDataRequired();
   const ctx = useVisibilityContext();
+
+  // Always prefer the real player context (multi-device with AI teammate)
+  if (gameData.playerContext) {
+    return (
+      <TeamHeaderPanelView
+        teamName={gameData.playerContext.teamName || ""}
+        role={gameData.playerContext.role || "SPECTATOR"}
+        playerName={gameData.playerContext.playerName}
+        variant={variant}
+      />
+    );
+  }
+
+  // Solo AI session — no player context at all
   if (ctx.isAiSession) {
     return (
       <TeamHeaderPanelView
@@ -70,9 +84,8 @@ export const TeamHeaderPanel: React.FC<TeamHeaderPanelProps> = ({ variant }) => 
 
   return (
     <TeamHeaderPanelView
-      teamName={gameData.playerContext?.teamName || ""}
-      role={gameData.playerContext?.role || "SPECTATOR"}
-      playerName={gameData.playerContext?.playerName}
+      teamName=""
+      role="SPECTATOR"
       variant={variant}
     />
   );

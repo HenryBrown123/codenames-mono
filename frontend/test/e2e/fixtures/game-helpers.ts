@@ -166,6 +166,22 @@ export async function makeGuess(
   return body.data;
 }
 
+/** Post a chat message to a game */
+export async function postMessage(
+  request: APIRequestContext,
+  cookie: string,
+  gameId: string,
+  data: { content: string; teamOnly?: boolean },
+) {
+  const res = await request.post(`${API}/games/${gameId}/messages`, {
+    headers: { cookie },
+    data: { content: data.content, teamOnly: data.teamOnly ?? false },
+  });
+  const body = await res.json();
+  if (!body.success) throw new Error(`Failed to post message: ${JSON.stringify(body)}`);
+  return body.data;
+}
+
 /**
  * Add a single player via a fresh guest session (needed for multi-device).
  */

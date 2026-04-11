@@ -29,6 +29,7 @@ interface GameMessagesApiResponse {
 export const useGameMessages = (gameId: string): UseQueryResult<GameMessage[], Error> => {
   return useQuery({
     queryKey: ["game", gameId, "messages"],
+    refetchInterval: 5000,
     queryFn: async () => {
       try {
         const response: AxiosResponse<GameMessagesApiResponse> = await api.get(

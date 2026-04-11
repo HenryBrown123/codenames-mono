@@ -5,7 +5,7 @@ import type { IconProps } from "@frontend/shared/components/icons";
 const SIZES = ["1rem", "1.5rem", "2rem", "3rem"] as const;
 
 const entries = Object.entries(Icons).filter(
-  ([name]) => name.endsWith("Icon"),
+  ([name]) => name.endsWith("Icon") || name.endsWith("IconFilled"),
 ) as [string, React.FC<IconProps>][];
 
 const circleBtn: React.CSSProperties = {

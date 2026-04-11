@@ -18,10 +18,12 @@ const NAME_MAP = {
   "Black_Skull_icon": "BlackSkullIcon",
   "Black_Skull_icon-filled": "BlackSkullIconFilled",
   "square": "TeamSquareIcon",
+  "square-filled": "TeamSquareIconFilled",
   "circle": "CircleIcon",
   "drawer-handle": "WideBarIcon",
   "warning": "WarningIcon",
   "diamond": "TeamDiamondIcon",
+  "diamond-filled": "TeamDiamondIconFilled",
   "gear": "GearIcon",
   "chat": "ChatIcon",
 };
@@ -59,24 +61,30 @@ for (const file of files) {
   let inner = innerMatch[1];
 
   // Convert SVG attrs to JSX and strip HTML comments (invalid in JSX)
+  // Give each filled icon a unique pattern ID to avoid clashes on the same page
+  const patternId = `dot-grid-${stem}`;
   inner = inner
     .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/dot-grid/g, patternId)
     .replace(/fill-rule=/g, "fillRule=")
     .replace(/clip-rule=/g, "clipRule=")
     .replace(/stroke-width=/g, "strokeWidth=")
     .replace(/stroke-linecap=/g, "strokeLinecap=")
     .replace(/stroke-linejoin=/g, "strokeLinejoin=")
-    .replace(/ fill="currentColor"/g, "");
+;
 
   // Icons with default colors and style prop
   const COLOR_MAP = {
     "TeamDiamondIcon": "var(--color-team-red, #e85454)",
+    "TeamDiamondIconFilled": "var(--color-team-red, #e85454)",
     "TeamSquareIcon": "var(--color-team-blue, #5480e8)",
+    "TeamSquareIconFilled": "var(--color-team-blue, #5480e8)",
     "WarningIcon": "var(--color-warning, #e8c454)",
     "BlackSkullIcon": "var(--color-warning, #e8c454)",
     "BlackSkullIconFilled": "var(--color-warning, #e8c454)",
     "ChatIcon": "var(--color-icon-muted, #8a8983)",
     "ExitIcon": "var(--color-icon-muted, #8a8983)",
+    "CircleIcon": "var(--color-neutral, #8a8983)",
   };
   const hasColor = name in COLOR_MAP;
   const propsDecl = hasColor

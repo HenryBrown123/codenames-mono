@@ -1,29 +1,42 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useCallback, useState } from "react";
+import { useWebSocket } from "@frontend/shared/websocket";
+import { WebSocketEvent } from "@frontend/shared/websocket/websocket-events.types";
 import { useGameMessages } from "./use-game-messages";
 
 /**
- * Tracks unseen chat messages for badge display.
- * Resets when `chatOpen` transitions to true.
+ * Tracks unread chat messages.
+ * - On mount: treats ALL existing messages as unread (so refresh shows notification)
+ * - Live: listens for GAME_MESSAGE_CREATED WebSocket events
+ * - Resets to 0 when chat opens
  */
 export const useUnreadCount = (gameId: string, chatOpen: boolean): number => {
+  const { socket, isConnected } = useWebSocket();
   const { data: messages } = useGameMessages(gameId);
-  const lastSeenRef = useRef<number>(Date.now());
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState<number | null>(null);
 
+  // On first load, set count to total messages (treat all as unread)
   useEffect(() => {
-    if (chatOpen) {
-      lastSeenRef.current = Date.now();
-      setCount(0);
+    if (count === null && messages && messages.length > 0) {
+      setCount(messages.length);
     }
+  }, [messages, count]);
+
+  // Reset when chat opens
+  useEffect(() => {
+    if (chatOpen) setCount(0);
+  }, [chatOpen]);
+
+  // Listen for new messages while chat is closed
+  const handleMessage = useCallback(() => {
+    if (!chatOpen) setCount((c) => (c ?? 0) + 1);
   }, [chatOpen]);
 
   useEffect(() => {
-    if (chatOpen || !messages) return;
-    const unread = messages.filter(
-      (m) => m.messageType === "CHAT" && new Date(m.createdAt).getTime() > lastSeenRef.current,
-    ).length;
-    setCount(unread);
-  }, [messages, chatOpen]);
+    if (!socket || !isConnected || !gameId) return;
 
-  return count;
+    socket.on(WebSocketEvent.GAME_MESSAGE_CREATED, handleMessage);
+    return () => { socket.off(WebSocketEvent.GAME_MESSAGE_CREATED, handleMessage); };
+  }, [socket, isConnected, gameId, handleMessage]);
+
+  return count ?? 0;
 };

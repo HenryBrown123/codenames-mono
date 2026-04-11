@@ -11,7 +11,7 @@ import { TeamHeaderPanel } from "../../dashboard/panels";
 import { GameOverOverlay } from "../../game-over";
 import { CodeWordInput } from "../../dashboard";
 import { useGameEventCallback } from "@frontend/shared/websocket/use-game-event-callback";
-import { ExitIcon, ArrowLeftIcon, ArrowRightIcon } from "@frontend/shared/components/icons";
+import { ExitIcon, ArrowLeftIcon, ArrowRightIcon, WideBarIcon } from "@frontend/shared/components/icons";
 import styles from "./mobile-scene.module.css";
 
 interface MobileSceneProps {
@@ -85,7 +85,7 @@ export const MobileScene: React.FC<MobileSceneProps> = () => {
           onClick={() => setPortraitOpen(true)}
           aria-label="Open dashboard"
         >
-          <span className={styles.handlePip} />
+          <WideBarIcon />
         </button>
 
         <div className={styles.portraitDrawer} data-open={portraitOpen}>

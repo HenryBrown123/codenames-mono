@@ -2,8 +2,8 @@
   width: var(--chat-fab-size);
   height: var(--chat-fab-size);
   border-radius: 50%;
-  background: var(--bg-panel);
-  border: 1px solid rgba(82, 214, 138, 0.12);
+  background: transparent;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -16,7 +16,7 @@
 }
 
 .fab:hover {
-  border-color: rgba(82, 214, 138, 0.25);
+  opacity: 0.8;
 }
 
 .fab:active {

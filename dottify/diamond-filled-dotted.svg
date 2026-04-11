@@ -4,5 +4,5 @@
       <circle cx="0.84" cy="0.84" r="0.72" fill="currentColor"/>
     </pattern>
   </defs>
-  <circle cx="12" cy="12" r="9" fill="url(#dot-grid)" />
+  <path d="M12 3 L21 12 L12 21 L3 12 Z" fill="url(#dot-grid)" />
 </svg>
