@@ -49,22 +49,16 @@ describe("validateClueWord", () => {
     });
   });
 
-  it("rejects clue containing a board word as substring", () => {
+  it("accepts clue that contains a board word as substring", () => {
     const game = gameWithCards("APPLE", "BANANA");
-    // "pineapple" contains "apple"
-    expect(validateClueWord(game, "pineapple")).toEqual({
-      valid: false,
-      error: expect.stringContaining("too similar"),
-    });
+    // "pineapple" contains "apple" — allowed (only exact matches rejected)
+    expect(validateClueWord(game, "pineapple")).toEqual({ valid: true });
   });
 
-  it("rejects clue that is a substring of a board word", () => {
-    const game = gameWithCards("CARPET", "DOOR");
-    // "car" is contained within "carpet"
-    expect(validateClueWord(game, "car")).toEqual({
-      valid: false,
-      error: expect.stringContaining("too similar"),
-    });
+  it("accepts clue that is a substring of a board word", () => {
+    const game = gameWithCards("TWIG", "DOOR");
+    // "wig" is contained within "twig" — allowed
+    expect(validateClueWord(game, "wig")).toEqual({ valid: true });
   });
 
   it("accepts a valid unrelated clue word", () => {

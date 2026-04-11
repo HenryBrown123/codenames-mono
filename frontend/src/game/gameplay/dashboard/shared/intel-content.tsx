@@ -53,7 +53,7 @@ export const IntelContent: React.FC<IntelContentProps> = ({
                 <span className={styles.guessWord}>{guess.word}</span>
                 <span className={styles.guessDots} />
                 <span className={styles.guessSymbol}>
-                  <TeamSymbolIcon symbol={symbol} rotate={rotate} color={color} />
+                  <TeamSymbolIcon symbol={symbol} rotate={rotate} color={color} filled />
                 </span>
               </div>
             );

@@ -6,7 +6,8 @@ import { MinusIcon, PlusIcon } from "@frontend/shared/components/icons";
 import styles from "./codemaster-input.module.css";
 
 /**
- * Form input for codemaster to submit clue and number
+ * Unified clue input — used in all layouts (stacked panel, compact carousel, overlay).
+ * Auto-focuses when it becomes visible (handles carousel transitions and overlay opens).
  */
 
 type CodeWordInputProps = {
@@ -30,12 +31,17 @@ export function CodeWordInput({
   const [errorMessage, setErrorMessage] = useState("");
   const textInputRef = useRef<HTMLInputElement>(null);
 
+  /** Auto-focus when the input becomes visible (handles carousel, overlays, etc.) */
   useEffect(() => {
-    const isMobile = window.matchMedia("(max-width:768px)").matches;
-    if (isEditable && textInputRef.current && !isMobile) {
-      textInputRef.current.focus();
-    }
-  }, [isEditable]);
+    if (!textInputRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) textInputRef.current?.focus(); },
+      { threshold: 0.5 },
+    );
+    observer.observe(textInputRef.current);
+    return () => observer.disconnect();
+  }, []);
+
 
   useEffect(() => {
     setInputCodeWord(codeWord);

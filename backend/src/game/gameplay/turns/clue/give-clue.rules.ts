@@ -100,18 +100,6 @@ export const validateClueWord = (
     }
   }
 
-  const hasCardWordAsSubstring = cardWords.some(
-    (cardWord) =>
-      normalizedClue.includes(cardWord) || cardWord.includes(normalizedClue),
-  );
-
-  if (hasCardWordAsSubstring) {
-    return {
-      valid: false,
-      error: `Clue word "${clueWord}" is too similar to a card word`,
-    };
-  }
-
   return { valid: true };
 };
 

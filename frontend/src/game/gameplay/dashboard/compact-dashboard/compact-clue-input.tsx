@@ -28,12 +28,15 @@ export const CompactClueInput: React.FC<CompactClueInputProps> = ({
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
+  /** Re-focus whenever the input becomes visible (carousel may remount it) */
   useEffect(() => {
-    /** Auto-focus on mount (desktop only) */
-    const isMobile = window.matchMedia("(max-width: 768px)").matches;
-    if (!isMobile && inputRef.current) {
-      inputRef.current.focus();
-    }
+    if (!inputRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) inputRef.current?.focus(); },
+      { threshold: 0.5 },
+    );
+    observer.observe(inputRef.current);
+    return () => observer.disconnect();
   }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
