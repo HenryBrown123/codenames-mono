@@ -102,4 +102,5 @@ const EnvSchema = z.object({
     .string()
     .transform((val) => val === "true")
     .default("true"),
+  CORS_ORIGINS: z.string().optional(),
 });

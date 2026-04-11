@@ -1,0 +1,14 @@
+# Ignore everything
+*
+
+# Allow only what the build needs
+!package.json
+!package-lock.json
+!tsconfig.base.json
+!tsconfig.json
+!shared/
+!backend/
+!nginx/
+!frontend/dist/
+!frontend/package.json
+!dottify/package.json

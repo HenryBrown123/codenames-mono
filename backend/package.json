@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx --watch src/index.ts",
-    "build": "tsc --build",
+    "build": "tsc --build && tsc-alias -p tsconfig.json -f",
     "start": "node dist/index.js",
     "dev:dbTypes": "npx kysely-codegen --out-file ./src/common/db/db.types.ts",
     "db:setup": "psql -h localhost -U codenames -d codenames -f src/common/db/init.sql",
@@ -76,6 +76,7 @@
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.6",
     "rimraf": "^5.0.0",
+    "tsc-alias": "^1.8.16",
     "tsx": "^4.19.2"
   }
 }

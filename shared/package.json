@@ -17,7 +17,10 @@
     }
   },
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b && tsc-alias -p tsconfig.json -f",
     "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "tsc-alias": "^1.8.16"
   }
 }

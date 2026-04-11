@@ -62,6 +62,9 @@ test-results/
 backend/test/manual/play-moves-quiet.ts
 backend/test/manual/play-moves.ts
 
+# Production env
+.env.production
+
 # Misc
 .DS_Store
 .gitignore

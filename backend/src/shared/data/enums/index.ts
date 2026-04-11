@@ -1,6 +1,6 @@
-import playerStatuses from "./player-statuses.json";
-import gameStatuses from "./game-statuses.json";
-import playerRoles from "./player-roles.json";
+import playerStatuses from "./player-statuses.json" with { type: "json" };
+import gameStatuses from "./game-statuses.json" with { type: "json" };
+import playerRoles from "./player-roles.json" with { type: "json" };
 import { Transaction, sql } from "kysely";
 import { DB } from "../../db/db.types";
 import type { AppLogger } from "../../logging";

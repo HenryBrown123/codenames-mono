@@ -1,5 +1,5 @@
-import enBaseDeck from "./en_base_deck.json";
-import esBaseDeck from "./es_base_deck.json";
+import enBaseDeck from "./en_base_deck.json" with { type: "json" };
+import esBaseDeck from "./es_base_deck.json" with { type: "json" };
 import { Transaction } from "kysely";
 import { DB } from "../../db/db.types";
 import type { AppLogger } from "../../logging";

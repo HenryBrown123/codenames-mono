@@ -64,15 +64,21 @@ try {
 }
 
 // CORS configuration that allows credentials
+const devOrigins = [
+  "http://localhost:8000",
+  "http://127.0.0.1:8000",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://192.168.1.156:8000",
+];
+
+const corsOrigins = env.CORS_ORIGINS
+  ? env.CORS_ORIGINS.split(",").map((s: string) => s.trim())
+  : devOrigins;
+
 const corsOptions = {
-  origin: [
-    "http://localhost:8000", // Your frontend dev server
-    "http://127.0.0.1:8000",
-    "http://localhost:3000", // In case you run frontend on 3000
-    "http://127.0.0.1:3000",
-    "http://192.168.1.156:8000",
-  ],
-  credentials: true, // Essential for cookies
+  origin: corsOrigins,
+  credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: [
     "Origin",
