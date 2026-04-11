@@ -27,7 +27,7 @@ const LOCK_TIMEOUT_MS = 30_000;
  */
 export const blockingGameAction = (actionName: string) => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    const gameId = req.params.gameId;
+    const gameId = req.params.gameId as string | undefined;
 
     if (!gameId) {
       next();
