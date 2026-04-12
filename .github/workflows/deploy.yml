@@ -81,6 +81,9 @@ jobs:
       - name: Build frontend
         run: npx --workspace=frontend vite build
 
+      - name: Build backend
+        run: npm run build --workspace=backend
+
       # ── E2E tests ──
       # Sets up the database schema, starts the backend, serves the frontend,
       # then runs Playwright against the running app
