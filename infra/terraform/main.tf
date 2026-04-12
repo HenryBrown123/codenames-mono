@@ -66,19 +66,34 @@ resource "hcloud_server" "app" {
     #!/bin/bash
     set -e
 
+    # System updates
     apt-get update && apt-get upgrade -y
 
+    # Install Docker
     curl -fsSL https://get.docker.com | sh
 
+    # Install Node.js 22
     curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
     apt-get install -y nodejs
 
+    # Firewall
     ufw default deny incoming
     ufw allow 22/tcp
     ufw allow 80/tcp
     ufw allow 443/tcp
     yes | ufw enable
 
+    # Fail2ban — auto-bans IPs after 5 failed SSH login attempts
+    # Bans last 10 minutes by default, configurable in /etc/fail2ban/jail.local
+    apt-get install -y fail2ban
+    systemctl enable fail2ban
+    systemctl start fail2ban
+
+    # Unattended upgrades — auto-installs security patches nightly
+    apt-get install -y unattended-upgrades
+    dpkg-reconfigure -f noninteractive unattended-upgrades
+
+    # Create app directory
     mkdir -p /opt/codenames-mono
   EOF2
 
