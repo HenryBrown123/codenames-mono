@@ -10,7 +10,6 @@ COPY package.json package-lock.json tsconfig.base.json tsconfig.json ./
 COPY shared/package.json shared/tsconfig.json ./shared/
 COPY backend/package.json backend/tsconfig.json ./backend/
 COPY frontend/package.json ./frontend/
-COPY dottify/package.json ./dottify/
 
 # Install all dependencies (including root devDeps for tsc)
 RUN npm ci
@@ -32,7 +31,6 @@ COPY package.json package-lock.json ./
 COPY shared/package.json ./shared/
 COPY backend/package.json ./backend/
 COPY frontend/package.json ./frontend/
-COPY dottify/package.json ./dottify/
 
 # Install production dependencies only (from root to include shared root deps)
 RUN npm ci --omit=dev

@@ -46,9 +46,10 @@ jobs:
             --exclude='.git' \
             --exclude='node_modules' \
             --exclude='.env.production' \
-            --exclude='certbot' \
+            --exclude='infra/certbot' \
             --exclude='dottify' \
             --exclude='.DS_Store' \
+            --exclude='infra/terraform' \
             -e "ssh -i ~/.ssh/deploy_key" \
             ./ ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/opt/codenames-mono/
 

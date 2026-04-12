@@ -11,4 +11,3 @@
 !nginx/
 !frontend/dist/
 !frontend/package.json
-!dottify/package.json

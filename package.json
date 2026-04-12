@@ -5,8 +5,7 @@
   "workspaces": [
     "shared",
     "backend",
-    "frontend",
-    "dottify"
+    "frontend"
   ],
   "scripts": {
     "install:all": "npm install",
