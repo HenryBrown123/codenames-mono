@@ -1,6 +1,6 @@
 name: Deploy to Hetzner
 
-# Trigger on push to main branch
+# Trigger on push to master branch
 on:
   push:
     branches: [master]
@@ -52,6 +52,39 @@ jobs:
             --exclude='infra/terraform' \
             -e "ssh -i ~/.ssh/deploy_key" \
             ./ ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/opt/codenames-mono/
+
+      # Generate SSL certs if they don't exist (first deploy on a fresh server)
+      # Certbot needs port 80 free, so stop nginx first if it's running
+      # After first run, certs persist on the server and this step is skipped
+      - name: Ensure SSL certs exist
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+            CERT_DIR="/opt/codenames-mono/infra/certbot/conf/live/codenames.hbprojects.app"
+            if [ ! -d "$CERT_DIR" ]; then
+              echo "No SSL certs found — generating with Certbot..."
+
+              # Stop nginx if running so certbot can use port 80
+              cd /opt/codenames-mono/infra
+              docker compose -f docker-compose.prod.yml stop nginx 2>/dev/null || true
+
+              # Create certbot directory if it doesn't exist
+              mkdir -p /opt/codenames-mono/infra/certbot/conf
+
+              # Run certbot standalone to get certs
+              docker run --rm -p 80:80 \
+                -v /opt/codenames-mono/infra/certbot/conf:/etc/letsencrypt \
+                certbot/certbot certonly \
+                --standalone \
+                --non-interactive \
+                -d codenames.hbprojects.app \
+                --agree-tos \
+                -m henry.e.brown@icloud.com
+
+              echo "SSL certs generated successfully"
+            else
+              echo "SSL certs already exist — skipping"
+            fi
+          EOF
 
       # Rebuild and restart containers on the server
       - name: Restart services
