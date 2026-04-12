@@ -99,9 +99,20 @@ jobs:
       - name: Start backend for e2e
         run: |
           cd backend
+          touch .env
           node dist/src/index.js &
           echo $! > /tmp/backend.pid
-          sleep 3
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:3000/api/health > /dev/null 2>&1; then
+              echo "Backend is ready"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Backend failed to start within 15 seconds"
+              exit 1
+            fi
+            sleep 0.5
+          done
         env:
           DATABASE_URL: postgresql://codenames:test_password@localhost:5432/codenames_test
           JWT_SECRET: test-jwt-secret-for-ci-only-not-real
