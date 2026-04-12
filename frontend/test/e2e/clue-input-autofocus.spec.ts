@@ -29,7 +29,7 @@ test("windowed — clue input auto-focuses on codemaster turn", async ({
   await page.locator("body").click();
   await page.waitForTimeout(500);
 
-  await expect(page.locator("#clue-word-input")).toHaveFocus({ timeout: 5000 });
+  await expect(page.locator("#clue-word-input")).toBeFocused({ timeout: 5000 });
 
   await ctx.close();
 });
@@ -53,7 +53,7 @@ test("desktop — clue input auto-focuses on codemaster turn", async ({
   await page.locator("body").click();
   await page.waitForTimeout(500);
 
-  await expect(page.locator("#clue-word-input")).toHaveFocus({ timeout: 5000 });
+  await expect(page.locator("#clue-word-input")).toBeFocused({ timeout: 5000 });
 
   await ctx.close();
 });

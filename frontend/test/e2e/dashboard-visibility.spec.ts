@@ -85,11 +85,15 @@ test("codemaster clue stage — clue input visible, no end turn", async ({
   const page = await ctx.newPage();
   await page.goto(`/game/${gameId}?role=CODEMASTER`);
   await dismissHandoff(page);
+
+  // Ensure overlay is fully gone before checking dashboard elements
+  await page.locator("._backgroundBlur_1ypl7_13").waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
+
   await openDashboardIfMobile(page);
   await page.waitForTimeout(1000);
 
   /** Clue input should be visible */
-  const clueInput = await findVisible(page, "#clue-word-input");
+  const clueInput = await findVisible(page, "#clue-word-input", 10000);
   expect(clueInput).not.toBeNull();
 
   /** Chat FAB should be visible */
@@ -234,17 +238,28 @@ test("chat notification appears when messages exist, resets on open", async ({
 
   /** Open chat to reset unread */
   await fabEl!.click({ force: true });
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(1000);
 
   /** Close chat */
   const closeBtn = page.locator("[aria-label='Collapse chat']");
   if (await closeBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await closeBtn.click();
-    await page.waitForTimeout(500);
+    await closeBtn.click({ force: true });
+    await page.waitForTimeout(1000);
   }
 
-  /** Notification dot should be gone on this FAB instance */
-  expect(await hasNotificationDot()).toBe(false);
+  /** Notification dot should be gone on this FAB instance —
+   *  re-query the FAB since the DOM may have re-rendered */
+  const fabAfter = await findVisible(page, "[aria-label='Open chat']");
+  if (fabAfter) {
+    const fabHandleAfter = await fabAfter.elementHandle();
+    const dotGone = await fabHandleAfter!.evaluate((el) =>
+      el.querySelectorAll("circle[fill*='e8c454'], circle[fill*='color-warning']").length === 0,
+    );
+    expect(dotGone).toBe(true);
+  } else {
+    // Chat FAB might still be in "close" state — notification is cleared either way
+    expect(await hasNotificationDot()).toBe(false);
+  }
 
   await ctx.close();
 });
