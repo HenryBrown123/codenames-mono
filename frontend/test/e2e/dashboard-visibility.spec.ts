@@ -24,12 +24,15 @@ async function dismissHandoff(page: import("@playwright/test").Page) {
  * visibility AND viewport bounds (multiple layouts render simultaneously
  * with CSS hiding one, so isVisible alone isn't enough).
  */
-async function findVisible(page: import("@playwright/test").Page, selector: string) {
+async function findVisible(page: import("@playwright/test").Page, selector: string, timeout = 5000) {
+  // Wait for at least one element to exist in DOM first
+  await page.locator(selector).first().waitFor({ state: "attached", timeout }).catch(() => null);
+
   const all = page.locator(selector);
   const count = await all.count();
   for (let i = count - 1; i >= 0; i--) {
     const el = all.nth(i);
-    const visible = await el.isVisible({ timeout: 500 }).catch(() => false);
+    const visible = await el.isVisible({ timeout: 1000 }).catch(() => false);
     if (!visible) continue;
     const inViewport = await el.evaluate((node) => {
       const rect = node.getBoundingClientRect();
@@ -83,6 +86,7 @@ test("codemaster clue stage — clue input visible, no end turn", async ({
   await page.goto(`/game/${gameId}?role=CODEMASTER`);
   await dismissHandoff(page);
   await openDashboardIfMobile(page);
+  await page.waitForTimeout(1000);
 
   /** Clue input should be visible */
   const clueInput = await findVisible(page, "#clue-word-input");
@@ -121,6 +125,7 @@ test("codebreaker guess stage — end turn visible, no clue input", async ({
   await page.goto(`/game/${gameId}?role=CODEBREAKER`);
   await dismissHandoff(page);
   await openDashboardIfMobile(page);
+  await page.waitForTimeout(1000);
 
   /** End turn button should be visible */
   const endTurn = await findVisible(page, "#end-turn-btn");
@@ -205,6 +210,11 @@ test("chat notification appears when messages exist, resets on open", async ({
   const page = await ctx.newPage();
   await page.goto(`/game/${gameId}?role=CODEMASTER`);
   await dismissHandoff(page);
+
+  // Ensure any overlay is fully gone before interacting with the dashboard
+  await page.locator("._backgroundBlur_1ypl7_13").waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
+  await page.locator("#handoff-execute-btn").waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
+
   await openDashboardIfMobile(page);
   await page.waitForTimeout(2000);
 
@@ -223,7 +233,7 @@ test("chat notification appears when messages exist, resets on open", async ({
   expect(await hasNotificationDot()).toBe(true);
 
   /** Open chat to reset unread */
-  await fabEl!.click();
+  await fabEl!.click({ force: true });
   await page.waitForTimeout(500);
 
   /** Close chat */

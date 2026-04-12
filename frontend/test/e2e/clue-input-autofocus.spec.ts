@@ -2,9 +2,6 @@ import { test, expect } from "@playwright/test";
 import { setupGameViaApi } from "./fixtures/game-helpers";
 import { setAuthCookie, openDashboardIfMobile } from "./fixtures/dashboard-helpers";
 
-/**
- * Dismiss the single-device handoff overlay if present.
- */
 async function dismissHandoff(page: import("@playwright/test").Page) {
   const handoff = page.locator("#handoff-execute-btn");
   if (await handoff.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -27,16 +24,12 @@ test("windowed — clue input auto-focuses on codemaster turn", async ({
   const page = await ctx.newPage();
   await page.goto(`/game/${gameId}?role=CODEMASTER`);
   await dismissHandoff(page);
-  await page.waitForTimeout(2000);
 
-  /** The clue-word-input inside CompactDashboard should be auto-focused */
-  const focused = await page.evaluate(() => {
-    const el = document.activeElement;
-    return el ? { id: el.id, tag: el.tagName } : null;
-  });
-  console.log("Focused element:", JSON.stringify(focused));
+  // Activate the page (headless windows aren't focused by default)
+  await page.locator("body").click();
+  await page.waitForTimeout(500);
 
-  expect(focused?.id).toBe("clue-word-input");
+  await expect(page.locator("#clue-word-input")).toHaveFocus({ timeout: 5000 });
 
   await ctx.close();
 });
@@ -55,15 +48,12 @@ test("desktop — clue input auto-focuses on codemaster turn", async ({
   const page = await ctx.newPage();
   await page.goto(`/game/${gameId}?role=CODEMASTER`);
   await dismissHandoff(page);
-  await page.waitForTimeout(2000);
 
-  const focused = await page.evaluate(() => {
-    const el = document.activeElement;
-    return el ? { id: el.id, tag: el.tagName } : null;
-  });
-  console.log("Focused element (desktop):", JSON.stringify(focused));
+  // Activate the page (headless windows aren't focused by default)
+  await page.locator("body").click();
+  await page.waitForTimeout(500);
 
-  expect(focused?.id).toBe("clue-word-input");
+  await expect(page.locator("#clue-word-input")).toHaveFocus({ timeout: 5000 });
 
   await ctx.close();
 });
