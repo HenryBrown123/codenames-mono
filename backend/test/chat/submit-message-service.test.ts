@@ -1,23 +1,21 @@
-import { jest, describe, it, expect, beforeEach } from "@jest/globals";
 import { buildGameAggregate } from "../__test-utils__/fixtures";
-
-// Mock WebSocket emitter BEFORE importing service
-jest.mock("@backend/shared/websocket", () => ({
-  GameEventsEmitter: {
-    gameMessageCreated: jest.fn(),
-  },
-}));
-
-import { submitMessageService } from "@backend/chat/submit-message/submit-message.service";
-import { GameEventsEmitter } from "@backend/shared/websocket";
 import type {
   GameMessageData,
   CreateMessageInput,
 } from "@backend/shared/data-access/repositories/game-messages.repository";
 
+vi.mock("@backend/shared/websocket", () => ({
+  GameEventsEmitter: {
+    gameMessageCreated: vi.fn(),
+  },
+}));
+
+import { GameEventsEmitter } from "@backend/shared/websocket";
+import { submitMessageService } from "@backend/chat/submit-message/submit-message.service";
+
 describe("submitMessageService", () => {
-  const createGameMessage = jest.fn<(input: CreateMessageInput) => Promise<GameMessageData>>();
-  const getGameState = jest.fn<any>();
+  const createGameMessage = vi.fn<(input: CreateMessageInput) => Promise<GameMessageData>>();
+  const getGameState = vi.fn<any>();
 
   const makeRow = (overrides: Partial<GameMessageData> = {}): GameMessageData => ({
     id: "msg-new",
@@ -37,7 +35,7 @@ describe("submitMessageService", () => {
   beforeEach(() => {
     createGameMessage.mockReset();
     getGameState.mockReset();
-    (GameEventsEmitter.gameMessageCreated as jest.Mock).mockReset();
+    vi.mocked(GameEventsEmitter.gameMessageCreated).mockReset();
   });
 
   it("returns success with message data on valid input", async () => {

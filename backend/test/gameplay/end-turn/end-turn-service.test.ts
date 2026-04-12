@@ -1,27 +1,26 @@
-import { jest, describe, it, expect } from "@jest/globals";
 import { createEndTurnService } from "@backend/game/gameplay/turns/end-turn.service";
 import { buildGameAggregate, buildTurn } from "../../__test-utils__/fixtures";
 
-jest.mock("@backend/shared/websocket", () => ({
+vi.mock("@backend/shared/websocket", () => ({
   GameEventsEmitter: {
-    turnEnded: jest.fn(),
-    turnStarted: jest.fn(),
+    turnEnded: vi.fn(),
+    turnStarted: vi.fn(),
   },
 }));
 
 describe("endTurnService", () => {
   const mockLogger = {
-    for: () => ({ withMeta: () => ({ create: () => ({ info: jest.fn(), warn: jest.fn(), error: jest.fn() }) }) }),
-    error: jest.fn(),
+    for: () => ({ withMeta: () => ({ create: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() }) }) }),
+    error: vi.fn(),
   } as any;
 
   const createService = () => {
-    const gameplayHandler = jest.fn<(...args: any[]) => any>().mockImplementation(
+    const gameplayHandler = vi.fn<(...args: any[]) => any>().mockImplementation(
       async (_state: any, fn: any) => {
         const gameState = buildGameAggregate();
         return fn({
-          endTurn: jest.fn<any>().mockResolvedValue(gameState),
-          startTurn: jest.fn<any>().mockResolvedValue({ newTurn: { publicId: "new-turn-uuid" }, state: gameState }),
+          endTurn: vi.fn<any>().mockResolvedValue(gameState),
+          startTurn: vi.fn<any>().mockResolvedValue({ newTurn: { publicId: "new-turn-uuid" }, state: gameState }),
         });
       },
     );

@@ -10,29 +10,7 @@
     "start": "node dist/index.js",
     "dev:dbTypes": "npx kysely-codegen --out-file ./src/common/db/db.types.ts",
     "db:setup": "psql -h localhost -U codenames -d codenames -f src/common/db/init.sql",
-    "test": "node --experimental-vm-modules ../node_modules/.bin/jest"
-  },
-  "jest": {
-    "preset": "ts-jest/presets/default-esm",
-    "testEnvironment": "node",
-    "roots": [
-      "<rootDir>/test"
-    ],
-    "extensionsToTreatAsEsm": [
-      ".ts"
-    ],
-    "transform": {
-      "^.+\\.(ts|tsx)?$": [
-        "ts-jest",
-        {
-          "useESM": true
-        }
-      ]
-    },
-    "moduleNameMapper": {
-      "^@backend/(.*)$": "<rootDir>/src/$1",
-      "^@codenames/shared/(.*)$": "<rootDir>/../shared/src/$1"
-    }
+    "test": "vitest run"
   },
   "author": "Henry Brown",
   "license": "ISC",
@@ -68,7 +46,7 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/express-session": "^1.18.0",
-    "@types/jest": "^29.5.14",
+    "vitest": "^4.1.4",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/mongoose": "^5.11.96",
     "@types/pg": "^8.11.11",

@@ -4,7 +4,6 @@
  * validateClueWord is a pure function on GameAggregate — no mocks needed.
  * It enforces official Codenames rules about forbidden clue words.
  */
-import { describe, it, expect, beforeEach } from "@jest/globals";
 import { validateClueWord } from "@backend/game/gameplay/turns/clue/give-clue.rules";
 import { buildGameAggregate, buildCard, buildTurn, buildRound, resetIds } from "../../__test-utils__/fixtures";
 

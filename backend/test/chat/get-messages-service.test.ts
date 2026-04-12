@@ -1,4 +1,3 @@
-import { jest, describe, it, expect, beforeEach } from "@jest/globals";
 import { getMessagesService } from "@backend/chat/get-messages/get-messages.service";
 import type {
   GameMessageData,
@@ -7,8 +6,8 @@ import type {
 import { buildGameAggregate } from "../__test-utils__/fixtures";
 
 describe("getMessagesService", () => {
-  const findMessagesByGame = jest.fn<(params: MessageQueryParams) => Promise<GameMessageData[]>>();
-  const getGameState = jest.fn<any>();
+  const findMessagesByGame = vi.fn<(params: MessageQueryParams) => Promise<GameMessageData[]>>();
+  const getGameState = vi.fn<any>();
 
   const makeRow = (overrides: Partial<GameMessageData> = {}): GameMessageData => ({
     id: "msg-1",

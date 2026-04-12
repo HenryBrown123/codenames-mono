@@ -3,7 +3,6 @@
  *
  * validateTurnForGuessing is a pure function — no mocks needed.
  */
-import { describe, it, expect } from "@jest/globals";
 import { validateTurnForGuessing } from "@backend/game/gameplay/turns/guess/make-guess.rules";
 import { buildTurn } from "../../__test-utils__/fixtures";
 

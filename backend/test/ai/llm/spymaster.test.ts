@@ -4,7 +4,6 @@
  * buildSpymasterPrompt is a pure prompt builder.
  * isWordFormOf is a linguistic rule for detecting word forms.
  */
-import { describe, it, expect } from "@jest/globals";
 import { buildSpymasterPrompt, isWordFormOf } from "@backend/ai/pipeline/spymaster";
 
 describe("buildSpymasterPrompt", () => {

@@ -1,24 +1,23 @@
-import { jest, describe, it, expect } from "@jest/globals";
 import { createStartTurnService } from "@backend/game/gameplay/turns/start-turn.service";
 import { buildGameAggregate, buildTurn } from "../../__test-utils__/fixtures";
 
-jest.mock("@backend/shared/websocket", () => ({
+vi.mock("@backend/shared/websocket", () => ({
   GameEventsEmitter: {
-    turnStarted: jest.fn(),
+    turnStarted: vi.fn(),
   },
 }));
 
 describe("startTurnService", () => {
   const mockLogger = {
-    for: () => ({ withMeta: () => ({ create: () => ({ info: jest.fn(), warn: jest.fn(), error: jest.fn() }) }) }),
-    error: jest.fn(),
+    for: () => ({ withMeta: () => ({ create: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() }) }) }),
+    error: vi.fn(),
   } as any;
 
   const createService = () => {
-    const gameplayHandler = jest.fn<(...args: any[]) => any>().mockImplementation(
+    const gameplayHandler = vi.fn<(...args: any[]) => any>().mockImplementation(
       async (_state: any, fn: any) => {
         return fn({
-          startTurn: jest.fn<any>().mockResolvedValue({ newTurn: { publicId: "new-turn-uuid" }, state: buildGameAggregate() }),
+          startTurn: vi.fn<any>().mockResolvedValue({ newTurn: { publicId: "new-turn-uuid" }, state: buildGameAggregate() }),
         });
       },
     );

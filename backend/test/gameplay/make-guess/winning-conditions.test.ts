@@ -1,4 +1,3 @@
-import { describe, it, expect } from "@jest/globals";
 import { winningConditions } from "@backend/game/gameplay/turns/guess/make-guess.rules";
 import { buildCard } from "../../__test-utils__/fixtures";
 

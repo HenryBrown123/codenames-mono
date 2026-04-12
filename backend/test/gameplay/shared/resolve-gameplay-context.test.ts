@@ -1,12 +1,11 @@
-import { jest, describe, it, expect } from "@jest/globals";
 import { createResolveGameplayContext } from "@backend/game/gameplay/shared/resolve-gameplay-context";
 import { buildGameAggregate, buildTurn, buildPlayer } from "../../__test-utils__/fixtures";
 import type { GameAggregate } from "@backend/game/gameplay/state/gameplay-state.types";
 
 describe("resolveGameplayContext.fromRole", () => {
   const makeResolver = (gameState: GameAggregate | null = null) => {
-    const loadGameData = jest.fn<any>().mockResolvedValue(gameState);
-    const getGameState = jest.fn<any>();
+    const loadGameData = vi.fn<any>().mockResolvedValue(gameState);
+    const getGameState = vi.fn<any>();
     const resolver = createResolveGameplayContext({ getGameState, loadGameData });
     return { resolver, loadGameData, getGameState };
   };

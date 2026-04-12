@@ -3,7 +3,6 @@
  *
  * allocateInitialCardTypes is a pure function encoding the 9-8-1-7=25 card invariant.
  */
-import { describe, it, expect } from "@jest/globals";
 import { allocateInitialCardTypes } from "@backend/game/lobby/rounds/deal-cards.actions";
 import { CARD_TYPE } from "@backend/shared/data-access/repositories/cards.repository";
 

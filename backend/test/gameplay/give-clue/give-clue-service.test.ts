@@ -1,30 +1,29 @@
-import { jest, describe, it, expect } from "@jest/globals";
 import { giveClueService } from "@backend/game/gameplay/turns/clue/give-clue.service";
 import { buildGameAggregate, buildTurn } from "../../__test-utils__/fixtures";
 import type { GameAggregate } from "@backend/game/gameplay/state/gameplay-state.types";
 import { GameplayValidationError } from "@backend/game/gameplay/errors/gameplay.errors";
 
 // Mock WebSocket events (fire-and-forget, don't need real implementation)
-jest.mock("@backend/shared/websocket", () => ({
+vi.mock("@backend/shared/websocket", () => ({
   GameEventsEmitter: {
-    clueGiven: jest.fn(),
+    clueGiven: vi.fn(),
   },
 }));
 
 describe("giveClueService", () => {
   const mockLogger = {
-    for: () => ({ withMeta: () => ({ create: () => ({ info: jest.fn(), warn: jest.fn(), error: jest.fn() }) }) }),
-    error: jest.fn(),
+    for: () => ({ withMeta: () => ({ create: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() }) }) }),
+    error: vi.fn(),
   } as any;
 
-  const mockTurnState = jest.fn<(...args: any[]) => any>();
+  const mockTurnState = vi.fn<(...args: any[]) => any>();
 
   const createService = (handlerResult: any = null, handlerThrows: Error | null = null) => {
-    const gameplayHandler = jest.fn<(...args: any[]) => any>().mockImplementation(
+    const gameplayHandler = vi.fn<(...args: any[]) => any>().mockImplementation(
       async (_state: any, fn: any) => {
         if (handlerThrows) throw handlerThrows;
         return fn({
-          giveClue: jest.fn<any>().mockResolvedValue(handlerResult ?? {
+          giveClue: vi.fn<any>().mockResolvedValue(handlerResult ?? {
             clue: { word: "FRUIT", number: 2, createdAt: new Date() },
             turn: { _id: 1 },
             state: buildGameAggregate(),

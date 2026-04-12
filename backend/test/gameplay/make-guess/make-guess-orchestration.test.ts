@@ -6,7 +6,6 @@
  * The ops interface is the natural mock boundary — they handle DB transactions
  * while the orchestration logic lives in the service.
  */
-import { jest, describe, it, expect, beforeEach } from "@jest/globals";
 import { makeGuessService } from "@backend/game/gameplay/turns/guess/make-guess.service";
 import {
   buildGameAggregate,
@@ -18,11 +17,11 @@ import {
 } from "../../__test-utils__/fixtures";
 import type { GameAggregate } from "@backend/game/gameplay/state/gameplay-state.types";
 
-jest.mock("@backend/shared/websocket", () => ({
+vi.mock("@backend/shared/websocket", () => ({
   GameEventsEmitter: {
-    guessMade: jest.fn(),
-    turnEnded: jest.fn(),
-    turnStarted: jest.fn(),
+    guessMade: vi.fn(),
+    turnEnded: vi.fn(),
+    turnStarted: vi.fn(),
   },
 }));
 
@@ -30,12 +29,12 @@ describe("make-guess orchestration", () => {
   const mockLogger = {
     for: () => ({
       withMeta: () => ({
-        create: () => ({ info: jest.fn(), warn: jest.fn(), error: jest.fn() }),
+        create: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
       }),
     }),
   } as any;
 
-  const mockTurnState = jest.fn<(...args: any[]) => any>();
+  const mockTurnState = vi.fn<(...args: any[]) => any>();
 
   beforeEach(() => {
     resetIds();
@@ -149,11 +148,11 @@ describe("make-guess orchestration", () => {
     postGuessState?: Partial<GameAggregate>,
   ) => {
     const ops = {
-      makeGuess: jest.fn<any>(),
-      endTurn: jest.fn<any>(),
-      startTurn: jest.fn<any>(),
-      endRound: jest.fn<any>(),
-      endGame: jest.fn<any>(),
+      makeGuess: vi.fn<any>(),
+      endTurn: vi.fn<any>(),
+      startTurn: vi.fn<any>(),
+      endRound: vi.fn<any>(),
+      endGame: vi.fn<any>(),
     };
 
     const stateAfterGuess = { ...gameState, ...postGuessState } as GameAggregate;
@@ -192,7 +191,7 @@ describe("make-guess orchestration", () => {
     });
     ops.endGame.mockResolvedValue(stateAfterGuess);
 
-    const gameplayHandler = jest.fn<any>().mockImplementation(
+    const gameplayHandler = vi.fn<any>().mockImplementation(
       async (_state: any, fn: any) => fn(ops),
     );
 
