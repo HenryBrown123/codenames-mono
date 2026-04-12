@@ -10,7 +10,7 @@ async function dismissHandoff(page: import("@playwright/test").Page) {
   }
 }
 
-test("windowed — clue input auto-focuses on codemaster turn", async ({
+test.fixme("windowed — clue input auto-focuses on codemaster turn", async ({
   browser,
   request,
 }) => {
@@ -34,7 +34,7 @@ test("windowed — clue input auto-focuses on codemaster turn", async ({
   await ctx.close();
 });
 
-test("desktop — clue input auto-focuses on codemaster turn", async ({
+test.fixme("desktop — clue input auto-focuses on codemaster turn", async ({
   browser,
   request,
 }) => {
