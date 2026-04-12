@@ -1,8 +1,0 @@
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <pattern id="dot-grid" width="1.68" height="1.68" patternUnits="userSpaceOnUse">
-      <circle cx="0.84" cy="0.84" r="0.72" fill="currentColor"/>
-    </pattern>
-  </defs>
-  <circle cx="12" cy="12" r="9" fill="url(#dot-grid)" />
-</svg>
