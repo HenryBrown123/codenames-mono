@@ -5,6 +5,15 @@ CREATE TABLE users (
     created_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
+-- Sessions Table
+CREATE TABLE sessions (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    token TEXT NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
 -- Lookup Table: Game Status
 CREATE TABLE game_status (
     id INTEGER PRIMARY KEY,
@@ -16,9 +25,10 @@ CREATE TABLE games (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     public_id TEXT NOT NULL UNIQUE,
     status_id INTEGER NOT NULL,
-    host_user_id INTEGER NOT NULL REFERENCES users(id),
+    host_user_id INTEGER REFERENCES users(id),
     game_type TEXT NOT NULL,
     game_format TEXT NOT NULL,
+    ai_mode BOOLEAN DEFAULT false,
     created_at TIMESTAMP NOT NULL DEFAULT now(),
     updated_at TIMESTAMP DEFAULT now(),
     CONSTRAINT games_status_id_fkey
@@ -45,8 +55,10 @@ CREATE TABLE players (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id),
     game_id INTEGER NOT NULL REFERENCES games(id),
+    public_id TEXT NOT NULL DEFAULT gen_random_uuid()::text,
     public_name TEXT NOT NULL,
     team_id INTEGER NOT NULL REFERENCES teams(id),
+    is_ai BOOLEAN NOT NULL DEFAULT false,
     status_id INTEGER NOT NULL,
     status_last_changed TIMESTAMP NOT NULL DEFAULT now(),
     updated_at TIMESTAMP DEFAULT now(),
@@ -68,6 +80,7 @@ CREATE TABLE rounds (
     game_id INTEGER NOT NULL REFERENCES games(id),
     round_number INTEGER NOT NULL,
     status_id INTEGER NOT NULL,
+    winning_team_id INTEGER REFERENCES teams(id),
     created_at TIMESTAMP NOT NULL DEFAULT now(),
     updated_at TIMESTAMP DEFAULT now(),
     UNIQUE (game_id, round_number),
@@ -99,8 +112,12 @@ CREATE TABLE turns (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     round_id INTEGER NOT NULL REFERENCES rounds(id),
     team_id INTEGER NOT NULL REFERENCES teams(id),
+    public_id TEXT NOT NULL DEFAULT gen_random_uuid()::text,
+    status TEXT NOT NULL DEFAULT 'ACTIVE',
+    guesses_remaining INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT now(),
-    UNIQUE (round_id, team_id)
+    updated_at TIMESTAMP DEFAULT now(),
+    completed_at TIMESTAMP
 );
 
 -- Cards Table
@@ -122,9 +139,8 @@ CREATE TABLE cards (
 CREATE TABLE clues (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     turn_id INTEGER NOT NULL REFERENCES turns(id),
-    player_id INTEGER NOT NULL REFERENCES players(id),
-    clue TEXT NOT NULL,
-    clue_number INTEGER NOT NULL CHECK (clue_number > 0),
+    word TEXT NOT NULL,
+    number INTEGER NOT NULL CHECK (number > 0),
     created_at TIMESTAMP NOT NULL DEFAULT now(),
     UNIQUE (turn_id)
 );
@@ -135,8 +151,8 @@ CREATE TABLE guesses (
     turn_id INTEGER NOT NULL REFERENCES turns(id),
     player_id INTEGER NOT NULL REFERENCES players(id),
     card_id INTEGER NOT NULL REFERENCES cards(id),
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    CONSTRAINT fk_guess_turn FOREIGN KEY (turn_id) REFERENCES clues(turn_id)
+    outcome TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
 -- Decks Table
@@ -157,6 +173,7 @@ CREATE TABLE ai_pipeline_runs (
     pipeline_type TEXT NOT NULL CHECK (pipeline_type IN ('SPYMASTER', 'GUESSER')),
     status TEXT NOT NULL CHECK (status IN ('RUNNING', 'COMPLETE', 'FAILED')),
     error TEXT,
+    prompt TEXT,
     spymaster_response JSONB,
     prefilter_response JSONB,
     ranker_response JSONB,
@@ -178,13 +195,30 @@ CREATE TABLE game_messages (
         CHECK (team_only = false OR team_id IS NOT NULL)
 );
 
+-- Game Events Table
+CREATE TABLE game_events (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    game_id INTEGER NOT NULL REFERENCES games(id),
+    round_id INTEGER REFERENCES rounds(id),
+    player_id INTEGER REFERENCES players(id),
+    card_id INTEGER REFERENCES cards(id),
+    public_id TEXT NOT NULL,
+    event_type TEXT NOT NULL,
+    metadata JSONB,
+    created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
 -- Comments
 COMMENT ON TABLE users IS 'Users registered in the system';
 COMMENT ON TABLE games IS 'Game sessions tracking';
+COMMENT ON COLUMN games.id IS 'Internal ID';
+COMMENT ON COLUMN games.public_id IS 'Public-facing ID used in URLs and APIs';
 COMMENT ON TABLE players IS 'Players participating in games';
+COMMENT ON COLUMN players.public_id IS 'Public UUID identifier for API responses';
 COMMENT ON COLUMN players.public_name IS 'Public-facing name shown to other players';
 COMMENT ON TABLE round_status IS 'Lookup table for round status values';
 COMMENT ON COLUMN rounds.status_id IS 'Current status of the round (setup, in progress, completed)';
+COMMENT ON COLUMN turns.public_id IS 'Public UUID identifier for API responses';
 COMMENT ON TABLE ai_pipeline_runs IS 'Tracks AI pipeline execution for status queries';
 COMMENT ON COLUMN ai_pipeline_runs.spymaster_response IS 'Structured output from spymaster stage (audit/recovery)';
 COMMENT ON COLUMN ai_pipeline_runs.prefilter_response IS 'Structured output from prefilter stage (audit/recovery)';
@@ -192,6 +226,9 @@ COMMENT ON COLUMN ai_pipeline_runs.ranker_response IS 'Structured output from ra
 COMMENT ON TABLE game_messages IS 'Chat log for games - player chat, AI narration, system messages';
 COMMENT ON COLUMN game_messages.team_id IS 'Team of the message author';
 COMMENT ON COLUMN game_messages.team_only IS 'If true, only visible to members of team_id';
+COMMENT ON COLUMN game_events.card_id IS 'Optional reference to specific card if event is card-specific';
+COMMENT ON COLUMN game_events.event_type IS 'Type of event: deal, select, reveal_colors, hide_colors, etc.';
+COMMENT ON COLUMN game_events.metadata IS 'Additional event-specific data (team name, player name, etc.)';
 
 -- Indexes
 CREATE INDEX idx_games_public_id ON games(public_id);
@@ -217,6 +254,10 @@ CREATE INDEX idx_ai_pipeline_runs_status ON ai_pipeline_runs(status);
 CREATE INDEX idx_game_messages_game_id ON game_messages(game_id);
 CREATE INDEX idx_game_messages_game_created ON game_messages(game_id, created_at);
 CREATE INDEX idx_game_messages_team_id ON game_messages(team_id);
+CREATE INDEX idx_game_events_game_id ON game_events(game_id);
+CREATE INDEX idx_game_events_round_id ON game_events(round_id);
+CREATE INDEX idx_sessions_user_id ON sessions(user_id);
+CREATE INDEX idx_sessions_token ON sessions(token);
 
 -- Seed data
 INSERT INTO game_status (id, status_name) VALUES
