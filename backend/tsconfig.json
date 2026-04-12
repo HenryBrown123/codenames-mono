@@ -12,7 +12,7 @@
       "@backend/test/*": ["test/*"]
     }
   },
-  "include": ["test/**/*", "src/**/*", "src/**/*.json"],
+  "include": ["src/**/*", "src/**/*.json"],
   "exclude": ["node_modules", "dist", "src/zzz-legacy/**"],
   "references": [{ "path": "../shared" }]
 }
