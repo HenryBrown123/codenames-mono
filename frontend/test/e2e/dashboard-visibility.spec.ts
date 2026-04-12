@@ -73,7 +73,7 @@ test("multi-device — header shows real player name, never [AI]", async ({
 
 // ─── Codemaster clue stage ─────────────────────────────────────────────────
 
-test.fixme("codemaster clue stage — clue input visible, no end turn", async ({
+test.skip("codemaster clue stage — clue input visible, no end turn", async ({
   browser,
   request,
 }) => {
@@ -199,7 +199,7 @@ test("game over — chat FAB visible, controls hidden", async ({
 
 // ─── Chat notification ─────────────────────────────────────────────────────
 
-test.fixme("chat notification appears when messages exist, resets on open", async ({
+test.skip("chat notification appears when messages exist, resets on open", async ({
   browser,
   request,
 }) => {
