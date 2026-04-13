@@ -20,9 +20,8 @@ provider "cloudflare" {
   api_token = var.cloudflare_api_token
 }
 
-resource "hcloud_ssh_key" "default" {
-  name       = "${var.server_name}-key"
-  public_key = file(var.ssh_public_key_path)
+data "hcloud_ssh_key" "default" {
+  name = "hb-deploy-key"
 }
 
 resource "hcloud_firewall" "web" {
@@ -58,7 +57,7 @@ resource "hcloud_server" "app" {
   image       = "ubuntu-24.04"
   server_type = var.server_type
   location    = var.server_location
-  ssh_keys    = [hcloud_ssh_key.default.id]
+  ssh_keys    = [data.hcloud_ssh_key.default.id]
 
   firewall_ids = [hcloud_firewall.web.id]
 
