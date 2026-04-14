@@ -190,9 +190,9 @@ jobs:
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          echo "${{ secrets.CODENAMES_DEPLOY_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.CODENAMES_DEPLOY_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to server
         run: |
@@ -205,11 +205,11 @@ jobs:
             --exclude='.DS_Store' \
             --exclude='infra/terraform' \
             -e "ssh -i ~/.ssh/deploy_key" \
-            ./ ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/opt/codenames-mono/
+            ./ ${{ secrets.DEPLOY_USER }}@${{ secrets.CODENAMES_DEPLOY_HOST }}:/opt/codenames-mono/
 
       - name: Ensure SSL certs exist
         run: |
-          ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+          ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.CODENAMES_DEPLOY_HOST }} << 'EOF'
             CERT_DIR="/opt/codenames-mono/infra/certbot/conf/live/codenames.hbprojects.app"
             if [ ! -d "$CERT_DIR" ]; then
               echo "No SSL certs found — generating with Certbot..."
@@ -232,7 +232,7 @@ jobs:
 
       - name: Restart services
         run: |
-          ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+          ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.CODENAMES_DEPLOY_HOST }} << 'EOF'
             cd /opt/codenames-mono/infra
             docker compose -f docker-compose.prod.yml --env-file ../.env.production up --build -d
           EOF
