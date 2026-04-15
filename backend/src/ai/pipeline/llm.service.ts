@@ -63,9 +63,6 @@ export const createLLMService = (config: LLMConfig) => {
       messages: [{ role: "user", content: options.prompt }],
       temperature: effectiveTemp,
       max_tokens: effectiveMaxTokens,
-      ...(options.format === "json" && {
-        response_format: { type: "json_object" },
-      }),
     });
 
     const elapsed = Date.now() - startTime;
