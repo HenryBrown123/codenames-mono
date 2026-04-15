@@ -2,6 +2,7 @@ import { Kysely } from "kysely";
 import { DB } from "../db/db.types";
 import { refreshBaseDecks } from "./decks/";
 import { refreshEnums } from "./enums";
+import { runSchemaMigrations } from "./schema-migrations";
 import type { AppLogger } from "../logging";
 
 /**
@@ -17,6 +18,9 @@ export const refreshSystemData = (logger: AppLogger) => async (db: Kysely<DB>): 
   log.info("Starting data refresh");
 
   try {
+    // Run idempotent schema migrations before data refresh
+    await runSchemaMigrations(logger)(db);
+
     await db.transaction().execute(async (trx) => {
       await refreshBaseDecks(log)(trx);
       await refreshEnums(log)(trx);

@@ -6,7 +6,7 @@
  * returned words are actually on the board (prevents hallucination).
  */
 
-import type { LocalLLMService } from "./local-llm.service";
+import type { LLMService } from "./llm.service";
 import type { PreFilterOutput } from "./guesser-prefilter";
 
 export type RankingInput = {
@@ -61,7 +61,7 @@ Answer:`;
  * Run ranking on all remaining words
  */
 export const runRanking = async (
-  llm: LocalLLMService,
+  llm: LLMService,
   input: RankingInput,
   onPromptGenerated?: (prompt: string) => void | Promise<void>,
 ): Promise<RankedWord[]> => {
@@ -90,7 +90,6 @@ export const runRanking = async (
     try {
       const result = await llm.generateJSON<RankingOutput>(prompt, {
         temperature: 0.45,
-        top_k: 40,
       });
 
       if (!result.ranked || !Array.isArray(result.ranked) || result.ranked.length === 0) {

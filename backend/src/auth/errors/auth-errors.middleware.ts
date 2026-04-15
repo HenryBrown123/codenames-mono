@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { UnauthorizedError } from "express-jwt";
 import { UnexpectedAuthError } from "./auth.errors";
 import { NoResultError } from "kysely";
+import type { AppLogger } from "@backend/shared/logging";
 
 /**
  * Error response structure returned to clients
@@ -33,7 +34,7 @@ type AuthErrorApiResponse = {
  * @param res - Express response object
  * @param next - Express next function
  */
-export const authErrorHandler = (
+export const authErrorHandler = (logger: AppLogger) => (
   err: Error,
   req: Request,
   res: Response,
@@ -55,10 +56,16 @@ export const authErrorHandler = (
     errorResponse.details = errorDetails;
   }
 
+  logger.error(`${req.method} ${req.path}: ${err.message}`, errorResponse);
+
+  if (err instanceof UnauthorizedError) {
+    res.status(401).json(errorResponse);
+    return;
+  }
+
   if (
     err instanceof UnexpectedAuthError ||
-    err instanceof NoResultError ||
-    UnauthorizedError
+    err instanceof NoResultError
   ) {
     res.status(500).json(errorResponse);
     return;

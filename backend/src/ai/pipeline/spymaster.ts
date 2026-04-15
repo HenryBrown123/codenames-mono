@@ -7,7 +7,7 @@
  * (board word check, word-form check) is handled in code.
  */
 
-import type { LocalLLMService } from "./local-llm.service";
+import type { LLMService } from "./llm.service";
 
 export type SpymasterInput = {
   currentTeam: string;
@@ -86,7 +86,7 @@ export const isWordFormOf = (clue: string, boardWords: string[]): boolean => {
  * Run the spymaster pipeline
  */
 export const runSpymasterPipeline = async (
-  llm: LocalLLMService,
+  llm: LLMService,
   input: SpymasterInput,
 ): Promise<SpymasterOutput> => {
   const prompt = buildSpymasterPrompt(input);
@@ -111,7 +111,6 @@ export const runSpymasterPipeline = async (
     try {
       const result = await llm.generateJSON<SpymasterOutput>(prompt, {
         temperature: 0.7,
-        top_k: 50,
       });
 
       if (!result.clue || typeof result.clue !== "string") {

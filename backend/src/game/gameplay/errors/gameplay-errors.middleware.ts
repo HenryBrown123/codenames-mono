@@ -4,6 +4,7 @@ import { UnexpectedGameplayError } from "./gameplay.errors";
 import { NoResultError } from "kysely";
 import { generateAdditionalErrorInfo } from "@backend/shared/http-middleware/add-error-details.helper";
 import { JsonObject } from "swagger-ui-express";
+import type { AppLogger } from "@backend/shared/logging";
 
 /**
  * Error response structure returned to clients
@@ -35,7 +36,7 @@ type GameplayErrorApiResponse = {
  * @param res - Express response object
  * @param next - Express next function
  */
-export const gameplayErrorHandler = (
+export const gameplayErrorHandler = (logger: AppLogger) => (
   err: Error,
   req: Request,
   res: Response,
@@ -51,10 +52,16 @@ export const gameplayErrorHandler = (
     errorResponse.details = errorDetails;
   }
 
+  logger.error(`${req.method} ${req.path}: ${err.message}`, errorResponse);
+
+  if (err instanceof UnauthorizedError) {
+    res.status(401).json(errorResponse);
+    return;
+  }
+
   if (
     err instanceof UnexpectedGameplayError ||
-    err instanceof NoResultError ||
-    UnauthorizedError
+    err instanceof NoResultError
   ) {
     res.status(500).json(errorResponse);
     return;

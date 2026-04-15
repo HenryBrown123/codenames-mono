@@ -6,6 +6,7 @@ import { expressjwt } from "express-jwt";
 import { JwtConfig } from "@backend/shared/config/jwt.config";
 
 import { authErrorHandler } from "./errors/auth-errors.middleware";
+import type { AppLogger } from "@backend/shared/logging";
 
 import {
   findByUsername,
@@ -28,7 +29,9 @@ export const initialize = (
   app: Express,
   db: Kysely<DB>,
   jwtConfig: JwtConfig,
+  appLogger: AppLogger,
 ) => {
+  const logger = appLogger.for({ feature: "auth" }).create();
   /** Guest auth */
   const findUser = findByUsername(db);
   const newUser = createUser(db);
@@ -78,6 +81,6 @@ export const initialize = (
   userRouter.get("/:username", getUserHandler);
 
   app.use("/api/auth", authRouter);
-  app.use("/api/auth", authErrorHandler);
+  app.use("/api/auth", authErrorHandler(logger));
   app.use("/api/users", userRouter);
 };

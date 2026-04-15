@@ -6,7 +6,7 @@
  * - Guesser: Ranks all remaining words against the clue in a single LLM call
  */
 
-import type { LocalLLMService } from "./local-llm.service";
+import type { LLMService } from "./llm.service";
 import { runSpymasterPipeline, type SpymasterInput, type SpymasterOutput } from "./spymaster";
 import { runRanking, type RankingInput } from "./guesser-ranker";
 
@@ -44,7 +44,7 @@ export type GuesserDecision = {
 /**
  * Create the complete Codenames AI pipeline
  */
-export const createCodenamesPipeline = (llm: LocalLLMService) => {
+export const createCodenamesPipeline = (llm: LLMService) => {
   const runSpymaster = async (input: SpymasterInput): Promise<SpymasterOutput> => {
     return runSpymasterPipeline(llm, input);
   };

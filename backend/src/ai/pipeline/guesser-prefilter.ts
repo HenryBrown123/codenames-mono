@@ -8,7 +8,7 @@
  * cutting latency by ~5x while giving the model cross-word context.
  */
 
-import type { LocalLLMService } from "./local-llm.service";
+import type { LLMService } from "./llm.service";
 
 /**
  * Pre-filter Input/Output
@@ -107,7 +107,7 @@ export const isValidPreFilterResult = (r: unknown): r is PreFilterOutput => {
  * Run pre-filter for all remaining words using batched LLM calls
  */
 export const runPreFilter = async (
-  llm: LocalLLMService,
+  llm: LLMService,
   clueWord: string,
   remainingWords: string[],
   onComplete?: (allResults: PreFilterOutput[]) => void | Promise<void>,
@@ -151,7 +151,6 @@ export const runPreFilter = async (
       try {
         const batchResults = await llm.generateJSON<PreFilterOutput[]>(prompt, {
           temperature: 0.2,
-          top_k: 30,
         });
 
         if (!Array.isArray(batchResults) || batchResults.length === 0) {
@@ -226,7 +225,7 @@ export const runPreFilter = async (
  * Evaluate a single word (used for batches of 1 or as fallback)
  */
 const evaluateSingleWord = async (
-  llm: LocalLLMService,
+  llm: LLMService,
   clueWord: string,
   word: string,
   onPromptGenerated?: (prompt: string) => void | Promise<void>,
@@ -246,7 +245,6 @@ const evaluateSingleWord = async (
     try {
       const result = await llm.generateJSON<PreFilterOutput>(prompt, {
         temperature: 0.2,
-        top_k: 30,
       });
 
       if (isValidPreFilterResult(result)) {

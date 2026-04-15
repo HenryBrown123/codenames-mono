@@ -4,6 +4,7 @@ import { DB } from "@backend/shared/db/db.types";
 import { Router } from "express";
 import { AuthMiddleware } from "@backend/shared/http-middleware/auth.middleware";
 import { blockingGameAction } from "@backend/shared/http-middleware/blocking-game-action.middleware";
+import type { AppLogger } from "@backend/shared/logging";
 import { createTransactionalHandler } from "@backend/shared/data-access/transaction-handler";
 import { createUser } from "@backend/shared/data-access/repositories/users.repository";
 
@@ -30,7 +31,9 @@ export const initialize = (
   app: Express,
   db: Kysely<DB>,
   auth: AuthMiddleware,
+  appLogger: AppLogger,
 ) => {
+  const logger = appLogger.for({ feature: "lobby" }).create();
   /** State providers */
   const { provider: getLobbyState } = lobbyState(db);
 
@@ -80,6 +83,6 @@ export const initialize = (
   router.post("/games/:gameId/rounds/:roundNumber/start", auth, blockingGameAction("start-round"), rounds.controllers.startRound);
 
   app.use("/api", router);
-  app.use("/api", lobbyErrorHandler);
-  app.use("/api", setupErrorHandler);
+  app.use("/api", lobbyErrorHandler(logger));
+  app.use("/api", setupErrorHandler(logger));
 };

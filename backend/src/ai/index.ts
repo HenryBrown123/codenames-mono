@@ -10,9 +10,9 @@ import type { AuthMiddleware } from "@backend/shared/http-middleware/auth.middle
 import type { HttpLoggerHandler } from "@backend/shared/http-middleware/http-logger.middleware";
 import { blockingGameAction } from "@backend/shared/http-middleware/blocking-game-action.middleware";
 import type { AppLogger } from "@backend/shared/logging";
-import { createLocalLLMService } from "./pipeline/local-llm.service";
+import { createLLMService } from "./pipeline/llm.service";
 import { createAIPlayerService } from "./ai-player.service";
-import type { LocalLLMService } from "./pipeline/local-llm.service";
+import type { LLMService } from "./pipeline/llm.service";
 import type { AIPlayerService } from "./ai-player.service";
 import type { GiveClueService } from "@backend/game/gameplay/turns/clue/give-clue.service";
 import type { MakeGuessService } from "@backend/game/gameplay/turns/guess/make-guess.service";
@@ -34,7 +34,7 @@ import aiMove from "./move";
 
 export { createCodenamesPipeline } from "./pipeline/codenames-pipeline";
 export type { CodenamesPipeline } from "./pipeline/codenames-pipeline";
-export type { LocalLLMService, AIPlayerService };
+export type { LLMService, AIPlayerService };
 
 export type AIModuleDependencies = {
   app: Express;
@@ -43,10 +43,11 @@ export type AIModuleDependencies = {
   httpLogger: HttpLoggerHandler;
   appLogger: AppLogger;
   llmConfig: {
-    ollamaUrl: string;
+    baseURL: string;
+    apiKey: string;
     model: string;
     temperature: number;
-    numCtx: number;
+    maxTokens: number;
   };
   giveClue: GiveClueService;
   makeGuess: MakeGuessService;
@@ -74,7 +75,7 @@ export const initialize = (dependencies: AIModuleDependencies) => {
   } = dependencies;
 
   const logger = appLogger.for({ feature: "ai" }).withMeta({ model: llmConfig.model }).create();
-  const llm = createLocalLLMService(llmConfig);
+  const llm = createLLMService(llmConfig);
 
   const aiPlayerService = createAIPlayerService(logger)({
     llm,

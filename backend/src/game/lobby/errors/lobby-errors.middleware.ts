@@ -4,9 +4,10 @@ import { NoResultError } from "kysely";
 import { UnauthorizedError } from "express-jwt";
 import { JsonObject } from "swagger-ui-express";
 import { generateAdditionalErrorInfo } from "@backend/shared/http-middleware/add-error-details.helper";
+import type { AppLogger } from "@backend/shared/logging";
 
 /**
- * Type definition for setup error API responses
+ * Type definition for lobby error API responses
  * Includes error details in development environment
  */
 type LobbyErrorApiResponse = {
@@ -25,7 +26,7 @@ type LobbyErrorApiResponse = {
  * @param res - Express response object
  * @param next - Express next function
  */
-export const lobbyErrorHandler = (
+export const lobbyErrorHandler = (logger: AppLogger) => (
   err: Error,
   req: Request,
   res: Response,
@@ -41,6 +42,8 @@ export const lobbyErrorHandler = (
     errorResponse.details = errorDetails;
   }
 
+  logger.error(`${req.method} ${req.path}: ${err.message}`, errorResponse);
+
   if (err instanceof UnauthorizedError) {
     res.status(401).json(errorResponse);
     return;
@@ -50,6 +53,6 @@ export const lobbyErrorHandler = (
     res.status(500).json(errorResponse);
     return;
   }
-  err.cause;
+
   next(err);
 };

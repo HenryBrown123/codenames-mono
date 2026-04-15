@@ -64,7 +64,7 @@ export const initialize = (
   router.get("/turns/:turnId", auth, queries.controllers.getTurn);
 
   app.use("/api", router);
-  app.use("/api", gameplayErrorHandler);
+  app.use("/api", gameplayErrorHandler(logger));
 
   return {
     giveClueService: turns.services.giveClue,

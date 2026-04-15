@@ -3,7 +3,7 @@
  * Listens to game events and makes intelligent decisions for AI players
  */
 
-import type { LocalLLMService } from "./pipeline/local-llm.service";
+import type { LLMService } from "./pipeline/llm.service";
 import type { GiveClueService } from "@backend/game/gameplay/turns/clue/give-clue.service";
 import type { MakeGuessService } from "@backend/game/gameplay/turns/guess/make-guess.service";
 import type { EndTurnService } from "@backend/game/gameplay/turns/end-turn.service";
@@ -30,7 +30,7 @@ import type { GameFinder } from "@backend/shared/data-access/repositories/games.
 import type { AppLogger } from "@backend/shared/logging";
 
 export type AIPlayerDependencies = {
-  llm: LocalLLMService;
+  llm: LLMService;
   giveClue: GiveClueService;
   makeGuess: MakeGuessService;
   endTurn: EndTurnService;

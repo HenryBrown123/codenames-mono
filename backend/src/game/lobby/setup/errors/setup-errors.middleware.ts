@@ -4,6 +4,7 @@ import { UnauthorizedError } from "express-jwt";
 import { NoResultError } from "kysely";
 import { JsonObject } from "swagger-ui-express";
 import { generateAdditionalErrorInfo } from "@backend/shared/http-middleware/add-error-details.helper";
+import type { AppLogger } from "@backend/shared/logging";
 
 /**
  * Type definition for setup error API responses
@@ -25,7 +26,7 @@ type SetupErrorApiResponse = {
  * @param res - Express response object
  * @param next - Express next function
  */
-export const setupErrorHandler = (
+export const setupErrorHandler = (logger: AppLogger) => (
   err: Error,
   req: Request,
   res: Response,
@@ -41,6 +42,8 @@ export const setupErrorHandler = (
     errorResponse.details = errorDetails;
   }
 
+  logger.error(`${req.method} ${req.path}: ${err.message}`, errorResponse);
+
   if (err instanceof UnauthorizedError) {
     res.status(401).json(errorResponse);
     return;
@@ -50,6 +53,6 @@ export const setupErrorHandler = (
     res.status(500).json(errorResponse);
     return;
   }
-  err.cause;
+
   next(err);
 };

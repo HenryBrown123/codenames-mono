@@ -119,10 +119,10 @@ const auth = initializeAuth(app, dbInstance, {
     algorithm: "HS256",
     issuer: "codenames-app",
   },
-});
+}, appLogger);
 
 // Initialize features
-const lobby = initializeLobby(app, dbInstance, authHandlers);
+const lobby = initializeLobby(app, dbInstance, authHandlers, appLogger);
 const { giveClueService, makeGuessService, endTurnService, getGameState, loadGameData } = initializeGameplay(
   app,
   dbInstance,
@@ -138,10 +138,11 @@ const ai = initializeAI({
   httpLogger: httpLoggerHandler,
   appLogger,
   llmConfig: {
-    ollamaUrl: env.LLM_URL,
+    baseURL: env.LLM_URL,
+    apiKey: env.LLM_API_KEY,
     model: env.LLM_MODEL,
     temperature: env.LLM_TEMPERATURE,
-    numCtx: env.LLM_NUM_CTX,
+    maxTokens: env.LLM_NUM_CTX,
   },
   giveClue: giveClueService,
   makeGuess: makeGuessService,
@@ -163,7 +164,7 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use(notFoundHandler);
-app.use(errorHandler);
+app.use(errorHandler(appLogger));
 
 // Start the server
 const httpServer = createServer(app);
