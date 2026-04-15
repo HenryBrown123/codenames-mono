@@ -1,5 +1,5 @@
 import { useQuery, UseQueryResult, keepPreviousData } from "@tanstack/react-query";
-import { AxiosResponse } from "axios";
+import { AxiosResponse, isAxiosError } from "axios";
 import api from "@frontend/shared/api/api";
 import type { GameData, Round, PlayerContext, TurnPhase } from "@frontend/shared/types";
 import {
@@ -181,6 +181,10 @@ export const useGameDataQuery = (gameId: string | null): UseQueryResult<GameData
       return fetchGame(gameId, perspective);
     },
     enabled: !!gameId,
+    retry: (count, err) => {
+      if (isAxiosError(err) && err.response?.status === 404) return false;
+      return count < 3;
+    },
     refetchOnWindowFocus: true,
     staleTime: 0,
     placeholderData: keepPreviousData,

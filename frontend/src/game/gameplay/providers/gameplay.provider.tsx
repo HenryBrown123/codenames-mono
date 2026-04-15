@@ -8,6 +8,8 @@ import { ActionButton } from "../shared/components/action-button";
 import { GameData } from "@frontend/shared/types";
 import { ViewModeProvider } from "../board/view-mode";
 import { TrackedAnimationProvider } from "../board/tracked-animation-context";
+import { NotFoundScene } from "@frontend/app/scene-flow/not-found-scene";
+import { isAxiosError } from "axios";
 import styles from "./gameplay.module.css";
 
 interface GameplayProviderProps {
@@ -38,6 +40,20 @@ export const GameplayProvider = ({ gameId, children }: GameplayProviderProps) =>
 const ActiveGameProviders = ({ gameId, children }: GameplayProviderProps) => {
   const { gameData, isPending, isError, error, refetch } = useGameData();
 
+  if (isError) {
+    const is404 = isAxiosError(error) && error.response?.status === 404;
+    if (is404) {
+      return <NotFoundScene />;
+    }
+    return (
+      <div className={styles.errorContainer}>
+        <h2>Failed to load game</h2>
+        <p>{error?.message || "Unknown error"}</p>
+        <ActionButton onClick={refetch} text="Retry" enabled={true} />
+      </div>
+    );
+  }
+
   if (!gameData) {
     return (
       <div className={styles.loadingContainer}>
@@ -50,16 +66,6 @@ const ActiveGameProviders = ({ gameId, children }: GameplayProviderProps) => {
             />
           ))}
         </div>
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className={styles.errorContainer}>
-        <h2>Failed to load game</h2>
-        <p>{error?.message || "Unknown error"}</p>
-        <ActionButton onClick={refetch} text="Retry" enabled={true} />
       </div>
     );
   }
