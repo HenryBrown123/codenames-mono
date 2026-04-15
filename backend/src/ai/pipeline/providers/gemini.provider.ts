@@ -30,7 +30,11 @@ export const createGeminiProvider = (config: ProviderConfig): LLMProviderClient 
       }
 
       const data = await response.json();
-      const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+      const parts: Array<{ text?: string; thought?: boolean }> =
+        data.candidates?.[0]?.content?.parts ?? [];
+      // Gemini 2.5 thinking models return thought parts separately — skip them
+      const contentParts = parts.filter((p) => !p.thought);
+      const content = contentParts.map((p) => p.text ?? "").join("");
 
       return { content };
     },
