@@ -1,16 +1,18 @@
 /**
- * Universal LLM Service using OpenAI SDK
+ * Universal LLM Service using native provider APIs
  *
- * Works with any OpenAI-compatible API:
- * - Gemini:   baseURL = https://generativelanguage.googleapis.com/v1beta/openai
- * - Ollama:   baseURL = http://localhost:11434/v1
- * - OpenAI:   baseURL = https://api.openai.com/v1
- * - DeepSeek: baseURL = https://api.deepseek.com/v1
+ * Supports multiple providers via native fetch:
+ * - Gemini:    Google Generative Language API
+ * - OpenAI:    Chat Completions API
+ * - Anthropic: Messages API
+ * - Ollama:    Chat API
  */
 
-import OpenAI from "openai";
+import { createProvider } from "./providers";
+import type { LLMProvider } from "./providers";
 
 export type LLMConfig = {
+  provider: LLMProvider;
   baseURL: string;
   apiKey: string;
   model: string;
@@ -30,6 +32,7 @@ export type LLMGenerateOptions = {
  */
 export const createLLMService = (config: LLMConfig) => {
   const {
+    provider,
     baseURL,
     apiKey,
     model,
@@ -37,10 +40,7 @@ export const createLLMService = (config: LLMConfig) => {
     maxTokens = 4096,
   } = config;
 
-  const client = new OpenAI({
-    baseURL,
-    apiKey,
-  });
+  const client = createProvider(provider, { apiKey, model, baseURL });
 
   let requestCount = 0;
 
@@ -58,15 +58,14 @@ export const createLLMService = (config: LLMConfig) => {
       `[LLM #${requestId}] REQUEST: model=${model} temp=${effectiveTemp} prompt_chars=${promptLength}`,
     );
 
-    const response = await client.chat.completions.create({
-      model,
-      messages: [{ role: "user", content: options.prompt }],
+    const response = await client.generate({
+      prompt: options.prompt,
       temperature: effectiveTemp,
-      max_tokens: effectiveMaxTokens,
+      maxTokens: effectiveMaxTokens,
     });
 
     const elapsed = Date.now() - startTime;
-    const content = response.choices[0]?.message?.content || "";
+    const content = response.content;
 
     console.log(
       `[LLM #${requestId}] SUCCESS: ${content.length} chars in ${elapsed}ms`,

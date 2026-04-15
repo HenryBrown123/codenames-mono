@@ -13,6 +13,7 @@ import type { AppLogger } from "@backend/shared/logging";
 import { createLLMService } from "./pipeline/llm.service";
 import { createAIPlayerService } from "./ai-player.service";
 import type { LLMService } from "./pipeline/llm.service";
+import type { LLMProvider } from "./pipeline/providers/types";
 import type { AIPlayerService } from "./ai-player.service";
 import type { GiveClueService } from "@backend/game/gameplay/turns/clue/give-clue.service";
 import type { MakeGuessService } from "@backend/game/gameplay/turns/guess/make-guess.service";
@@ -43,6 +44,7 @@ export type AIModuleDependencies = {
   httpLogger: HttpLoggerHandler;
   appLogger: AppLogger;
   llmConfig: {
+    provider: LLMProvider;
     baseURL: string;
     apiKey: string;
     model: string;
