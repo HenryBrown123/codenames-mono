@@ -210,7 +210,7 @@ const App: React.FC = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <WebSocketProvider url={`${window.location.protocol}//${window.location.hostname}:3000`} autoConnect={true}>
+      <WebSocketProvider url={import.meta.env.VITE_WS_URL || window.location.origin} autoConnect={true}>
         <div className={styles.appContainer} id="app-container">
           <div className={styles.sectionsContainer} id="sections-container">
             <div className={styles.pageSection} id="page-container">
