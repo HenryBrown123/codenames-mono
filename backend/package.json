@@ -29,7 +29,6 @@
     "lucide-react": "^0.515.0",
     "mongoose": "^8.7.2",
     "nodemon": "^3.1.7",
-    "openai": "^6.34.0",
     "pg": "^8.13.3",
     "pino": "^9.6.0",
     "pino-http": "^10.4.0",

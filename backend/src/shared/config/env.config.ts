@@ -68,7 +68,7 @@ export const loadEnvFromPackageDir = () => {
     envLoadLogger.info(`    - Environment: ${parsedEnv.NODE_ENV}`);
     envLoadLogger.info(`    - Port: ${parsedEnv.PORT}`);
     envLoadLogger.info(`    - Database: ${parsedEnv.DATABASE_URL}`);
-    envLoadLogger.info(`    - LLM: ${parsedEnv.LLM_MODEL} @ ${parsedEnv.LLM_URL}`);
+    envLoadLogger.info(`    - LLM: ${parsedEnv.LLM_PROVIDER}/${parsedEnv.LLM_MODEL} @ ${parsedEnv.LLM_URL}`);
     envLoadLogger.info(`    - Log Console Level: ${parsedEnv.LOG_CONSOLE_LEVEL}`);
   }
 
@@ -82,8 +82,9 @@ const EnvSchema = z.object({
   DATABASE_URL: z.string().url("Invalid DATABASE_URL"),
   JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 characters"),
   NODE_ENV: z.enum(["development", "production", "test"]),
+  LLM_PROVIDER: z.enum(["gemini", "openai", "anthropic", "ollama"]).default("gemini"),
   LLM_API_KEY: z.string().default("ollama"),
-  LLM_URL: z.string().url("Invalid LLM_URL").default("https://generativelanguage.googleapis.com/v1beta/openai"),
+  LLM_URL: z.string().url("Invalid LLM_URL").default("https://generativelanguage.googleapis.com"),
   LLM_MODEL: z.string().min(1, "LLM_MODEL must not be empty").default("gemini-2.5-flash"),
   LLM_TEMPERATURE: z.string().transform(Number).default("0.7"),
   LLM_NUM_CTX: z.string().transform(Number).default("4096"),
