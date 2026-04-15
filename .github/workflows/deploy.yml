@@ -234,7 +234,7 @@ jobs:
             cat > /opt/codenames-mono/.env.production << 'ENVFILE'
           POSTGRES_DB=codenames
           POSTGRES_USER=codenames
-          POSTGRES_PASSWORD=${{ secrets.CODENAMES_DB_PASSWORD }}
+          POSTGRES_PASSWORD=${{ secrets.CODENAMES_POSTGRES_PASSWORD }}
           JWT_SECRET=${{ secrets.CODENAMES_JWT_SECRET }}
           LLM_API_KEY=${{ secrets.CODENAMES_LLM_API_KEY }}
           LLM_URL=https://generativelanguage.googleapis.com/v1beta/openai
