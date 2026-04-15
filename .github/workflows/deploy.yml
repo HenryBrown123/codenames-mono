@@ -230,6 +230,31 @@ jobs:
             fi
           EOF
 
+      - name: Write env file
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.CODENAMES_DEPLOY_HOST }} << EOF
+            cat > /opt/codenames-mono/.env.production << 'ENVFILE'
+          POSTGRES_DB=codenames
+          POSTGRES_USER=codenames
+          POSTGRES_PASSWORD=${{ secrets.CODENAMES_DB_PASSWORD }}
+          JWT_SECRET=${{ secrets.CODENAMES_JWT_SECRET }}
+          LLM_API_KEY=${{ secrets.CODENAMES_LLM_API_KEY }}
+          LLM_URL=https://generativelanguage.googleapis.com/v1beta/openai
+          LLM_MODEL=gemini-2.5-flash
+          LLM_TEMPERATURE=0.5
+          LLM_NUM_CTX=4096
+          CORS_ORIGINS=https://codenames.hbprojects.app
+          NODE_ENV=production
+          LOG_FILE_LEVEL=info
+          LOG_CONSOLE_LEVEL=info
+          LOG_HTTP_REQUESTS=true
+          LOG_HTTP_VERBOSE=false
+          LOG_HTTP_TO_CONSOLE=false
+          LOG_FILE_PATH=./logs
+          PORT=3000
+          ENVFILE
+          EOF
+
       - name: Restart services
         run: |
           ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.CODENAMES_DEPLOY_HOST }} << 'EOF'
