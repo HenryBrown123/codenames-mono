@@ -6,12 +6,6 @@ import { ActionButton, pageContainerStyles } from "@frontend/game/gameplay/share
 import { TeamSymbolIcon } from "@frontend/shared/components/team-symbol-icon";
 import styles from "./device-handoff-overlay.module.css";
 
-/**
- * Shown when it's an AI turn (same team, no handoff needed).
- * Prompts the user to pass the device so the team can trigger their AI
- * from the dashboard — no auto-trigger here.
- */
-
 const EASE = [0.4, 0, 0.2, 1] as const;
 
 interface AiTurnOverlayProps {
@@ -19,6 +13,12 @@ interface AiTurnOverlayProps {
   onPass: () => void;
 }
 
+/**
+ * Single-device "pass to AI" gate. Shown when the active turn
+ * belongs to an AI agent on a different team — the dashboard owns
+ * the actual trigger, this overlay just holds the device until the
+ * user confirms the pass.
+ */
 export const AiTurnOverlay: React.FC<AiTurnOverlayProps> = ({ active, onPass }) => {
   const [visible, setVisible] = useState(true);
 

@@ -5,9 +5,10 @@ import { VictoryFlash } from "./victory-flash";
 import { GAME_OVER_TIMING } from "./game-over-timing";
 
 /**
- * Full-screen overlay announcing game winner
+ * End-of-round flash overlay. Renders {@link VictoryFlash} for the
+ * winning team, then unmounts itself after the configured flash
+ * duration so the board reveal can take over.
  */
-
 export const GameOverOverlay = () => {
   const { gameData } = useGameDataRequired();
   const [showFlash, setShowFlash] = useState(true);

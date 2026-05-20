@@ -9,6 +9,10 @@ interface ToggleSwitchProps {
   id?: string;
 }
 
+/**
+ * Terminal-styled two-state toggle. Off / on labels flank the track;
+ * the active side glows. Stateless — parent owns the `active` flag.
+ */
 export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   active,
   onChange,

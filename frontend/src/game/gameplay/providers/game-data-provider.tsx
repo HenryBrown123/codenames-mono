@@ -3,6 +3,7 @@ import { useGameDataQuery } from "../api/queries/use-game-query";
 import { GameData } from "@frontend/shared/types";
 import { useGameRoom, useWebSocketInvalidation } from "@frontend/shared/websocket";
 
+/** Shape provided by {@link GameDataContext}. */
 export interface GameDataContextValue {
   gameData: GameData | undefined;
   gameId: string;
@@ -13,6 +14,7 @@ export interface GameDataContextValue {
   isFetching: boolean;
 }
 
+/** Context for the per-game data query. Use {@link useGameData}. */
 export const GameDataContext = createContext<GameDataContextValue | null>(null);
 
 interface GameDataProviderProps {
@@ -20,6 +22,10 @@ interface GameDataProviderProps {
   gameId: string;
 }
 
+/**
+ * Provides the per-game data query (plus loading/error/refetch
+ * helpers) and joins the websocket room for live invalidations.
+ */
 export const GameDataProvider = ({ children, gameId }: GameDataProviderProps) => {
   const gameDataQuery = useGameDataQuery(gameId);
 
@@ -45,8 +51,8 @@ export const GameDataProvider = ({ children, gameId }: GameDataProviderProps) =>
 };
 
 /**
- * Hook to access game data from context
- * Returns loading/error states along with data
+ * Subscribes to game data and query lifecycle flags. Throws if used
+ * outside a `GameDataProvider`.
  */
 export const useGameData = () => {
   const context = useContext(GameDataContext);
@@ -57,8 +63,11 @@ export const useGameData = () => {
 };
 
 /**
- * Hook that guarantees game data exists
- * Use in components that should only render when data is available
+ * Like {@link useGameData} but narrows `gameData` to non-undefined.
+ *
+ * Throws if data isn't yet loaded — callers must gate the subtree
+ * behind `isPending` / `isError` first so the runtime check never
+ * fires in practice.
  */
 export const useGameDataRequired = () => {
   const context = useGameData();

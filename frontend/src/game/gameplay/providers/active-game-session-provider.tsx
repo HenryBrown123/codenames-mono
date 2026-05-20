@@ -3,6 +3,7 @@ import type { PlayerRole } from "@codenames/shared/types";
 
 /** Types */
 
+/** Role + team currently claimed via the device-handoff overlay. */
 export interface ClaimedPhase {
   role: PlayerRole;
   teamName: string;
@@ -31,6 +32,14 @@ const PlayerSessionContext = createContext<PlayerSessionContextValue | undefined
 
 /** Provider */
 
+/**
+ * Single-device session state.
+ *
+ * Stores the role+team most recently claimed via the handoff overlay
+ * and whether the device was passed to an AI rather than a human.
+ * Consumers should use {@link usePlayerSession} rather than reading
+ * the context directly.
+ */
 export const ActiveGameSessionProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
@@ -54,6 +63,7 @@ export const ActiveGameSessionProvider: React.FC<{ children: ReactNode }> = ({
 
 /** Hook */
 
+/** Subscribes to the active-game session context. Throws outside the provider. */
 export const usePlayerSession = (): PlayerSessionContextValue => {
   const ctx = useContext(PlayerSessionContext);
   if (!ctx) {

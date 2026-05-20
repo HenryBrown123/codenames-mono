@@ -1,5 +1,7 @@
+/** Layout bucket the gameplay UI picks based on viewport dimensions. */
 export type DisplayType = "mobile" | "windowed" | "desktop";
 
+/** Pixel breakpoints used by {@link getDisplayType}. */
 export const DISPLAY_BREAKPOINTS = {
   /** Both conditions must be true for desktop layout */
   DESKTOP_MIN_WIDTH: 1000,
@@ -9,6 +11,14 @@ export const DISPLAY_BREAKPOINTS = {
   MOBILE_MAX_SHORT_EDGE: 500,
 } as const;
 
+/**
+ * Picks the current display bucket from `window` dimensions.
+ *
+ * Desktop only matches landscape viewports with both width and
+ * height above the desktop breakpoint — portrait at the same
+ * resolution falls back to `windowed`. Anything below
+ * `WINDOW_MIN_HEIGHT` collapses to `mobile`.
+ */
 export const getDisplayType = (): DisplayType => {
   const w = window.innerWidth;
   const h = window.innerHeight;

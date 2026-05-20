@@ -1,6 +1,11 @@
 import { GAME_OVER_TIMING as TIMING } from "./game-over-timing";
 import type { Variants } from "framer-motion";
 
+/**
+ * Entry/exit variants for the victory-flash overlay. Pops in with an
+ * ease-out scale, then fades out after a delay so the card-reveal
+ * stagger can begin underneath.
+ */
 export const victoryFlashVariants = {
   hidden: {
     opacity: 0,

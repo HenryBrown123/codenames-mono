@@ -12,8 +12,17 @@ import type { ClaimedPhase } from "../providers/active-game-session-provider";
  * (which is what the post-turn window looks like), this returns 'none'
  * — that's why post-turn and handoff cannot collide.
  */
+/** Outcome of the single-device handoff decision. */
 export type HandoffView = "none" | "handoff" | "ai-turn";
 
+/**
+ * Pure rule: should the single-device flow block on an overlay, and
+ * which one?
+ *
+ * Only meaningful when there IS an active turn. When `active` is
+ * null (the post-turn window), this returns `"none"` — that's why
+ * post-turn and handoff cannot collide.
+ */
 export function deriveHandoffView(
   active: TurnPhase | null,
   claimedPhase: ClaimedPhase | null,

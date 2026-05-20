@@ -2,9 +2,7 @@ import { createContext, useContext, useState, ReactNode } from "react";
 import { useTurnDataQuery, TurnData } from "../api/queries/use-turn-query";
 import { useGameDataRequired as useGameData } from "./game-data-provider";
 
-/**
- * Turn context type definition
- */
+/** Shape provided by {@link TurnContext}. */
 export interface TurnContextType {
   activeTurn: TurnData | null;
   isLoading: boolean;
@@ -15,21 +13,20 @@ export interface TurnContextType {
   historicTurns: TurnData[];
 }
 
-/**
- * Turn context - shared state for all gameplay components
- */
+/** Context for the active turn + history. Use {@link useTurn}. */
 export const TurnContext = createContext<TurnContextType | undefined>(undefined);
 
-/**
- * Turn provider props
- */
 interface TurnDataProviderProps {
   children: ReactNode;
 }
 
 /**
- * Turn provider component
- * Automatically populates with current active turn from game data
+ * Provides the active turn and its history via the turn-data query.
+ *
+ * Tracks a `lastActionTurnId` so the UI can keep showing the outcome
+ * of a just-finished turn even after the server has advanced to the
+ * next one. Auto-clears that override once the tracked turn flips to
+ * `COMPLETED`, then falls back to the natural active-turn lookup.
  */
 export const TurnDataProvider = ({ children }: TurnDataProviderProps) => {
   const { gameData } = useGameData();
@@ -81,10 +78,7 @@ export const TurnDataProvider = ({ children }: TurnDataProviderProps) => {
   return <TurnContext.Provider value={contextValue}>{children}</TurnContext.Provider>;
 };
 
-/**
- * Hook to access turn context
- * Must be used within a TurnDataProvider
- */
+/** Subscribes to {@link TurnContext}. Throws if no provider is mounted. */
 export const useTurn = (): TurnContextType => {
   const context = useContext(TurnContext);
 

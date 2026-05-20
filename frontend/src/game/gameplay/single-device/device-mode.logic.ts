@@ -8,6 +8,13 @@ import { deriveHandoffView } from "./handoff.rules";
 import type { ClaimedPhase } from "../providers/active-game-session-provider";
 import type { TurnPhase } from "@frontend/shared/types";
 
+/**
+ * Whether the single-device flow should currently block on a handoff
+ * overlay. Returns false for multi-device games and for AI turns
+ * (those have their own overlay).
+ *
+ * @deprecated New code should consume {@link deriveHandoffView}.
+ */
 export function needsHandoff(
   active: TurnPhase | null,
   claimedPhase: ClaimedPhase | null,

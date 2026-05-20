@@ -2,15 +2,16 @@ import { motion } from "framer-motion";
 import { victoryFlashVariants } from "./victory-flash-variants";
 import styles from "./victory-flash.module.css";
 
-/**
- * Victory celebration flash animation
- */
-
 interface VictoryFlashProps {
   winnerName: string;
   teamColor: string;
 }
 
+/**
+ * Full-screen "MISSION COMPLETE / {WINNER} / VICTORIOUS" flash card.
+ * Tinted with the winning team's colour via `--flash-color`; the
+ * variants own the enter/exit animation.
+ */
 export const VictoryFlash = ({ winnerName, teamColor }: VictoryFlashProps) => (
   <motion.div
     className={styles.victoryFlash}

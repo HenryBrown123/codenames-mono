@@ -10,6 +10,10 @@ interface CircleButtonProps {
   "aria-label"?: string;
 }
 
+/**
+ * Round terminal-styled button used for icon controls (arrows, ± steppers).
+ * `sm` is the compact carousel size; `md` is the default.
+ */
 export const CircleButton: React.FC<CircleButtonProps> = ({
   children,
   onClick,

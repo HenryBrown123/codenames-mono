@@ -1,6 +1,7 @@
 import React, { forwardRef } from "react";
 import styles from "./terminal-input.module.css";
 
+/** Props for {@link TerminalInput} — standard input attrs plus terminal-specific flags. */
 export interface TerminalInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "className"> {
   /** Show error styling (orange border). */
