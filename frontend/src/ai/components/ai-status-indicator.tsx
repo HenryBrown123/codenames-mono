@@ -4,17 +4,22 @@ import { useAiStatus, useTriggerAiMove } from "@frontend/ai/api";
 import { StatusDot } from "@frontend/game/gameplay/shared/components";
 import styles from "./ai-status-indicator.module.css";
 
-/**
- * AI thinking indicator with expandable chat log panel
- */
-
+/** Props for {@link AiStatusIndicatorView}. */
 export interface AiStatusIndicatorViewProps {
   isActive: boolean;
   isThinking: boolean;
   showTriggerButton: boolean;
+  /** Invoked when the user clicks the manual "Trigger AI" button. */
   onTrigger?: () => void;
 }
 
+/**
+ * Presentational AI-status pill — a status dot plus either a "Trigger
+ * AI" button or a "Processing..." label, cross-faded with framer.
+ *
+ * Stateless; the container component is responsible for resolving the
+ * three booleans from the live AI status.
+ */
 export const AiStatusIndicatorView: React.FC<AiStatusIndicatorViewProps> = ({
   isActive,
   isThinking,
@@ -60,6 +65,13 @@ interface AiStatusIndicatorProps {
   gameId: string;
 }
 
+/**
+ * Live AI-status pill bound to the per-game status query.
+ *
+ * Subscribes to `useAiStatus`, derives the indicator's three view
+ * booleans, and wires the trigger button to `useTriggerAiMove`.
+ * Renders nothing until the first status payload arrives.
+ */
 export const AiStatusIndicator: React.FC<AiStatusIndicatorProps> = ({ gameId }) => {
   const { data: aiStatus, isLoading, error } = useAiStatus(gameId);
   const triggerMove = useTriggerAiMove(gameId);

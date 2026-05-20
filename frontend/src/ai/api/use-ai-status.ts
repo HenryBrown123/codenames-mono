@@ -2,8 +2,10 @@ import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/shared/api/api";
 
+/** Where the AI model currently sits in the inference stack. */
 export type HealthPlacement = "gpu" | "partial" | "cpu" | "not-loaded" | "unknown";
 
+/** Server-reported health of the AI worker, surfaced in the status indicator. */
 export interface AiHealth {
   placement: HealthPlacement;
   gpuPercent: number;
@@ -19,6 +21,7 @@ interface AiStatusApiResponse {
   };
 }
 
+/** Per-game AI snapshot — whether the AI can act now and whether it's mid-think. */
 export interface AiStatus {
   available: boolean;
   thinking: boolean;
@@ -27,8 +30,12 @@ export interface AiStatus {
 }
 
 /**
- * Fetches the current AI status for a game.
- * Returns whether AI can be triggered and if it's currently thinking.
+ * Polls the per-game AI status endpoint.
+ *
+ * Idle by default; auto-polls every 2 seconds whenever the most recent
+ * response had `thinking: true`, so the UI can reflect pipeline
+ * progress without manual refetch. Throws on a non-success response so
+ * the query enters the error state instead of caching a bad payload.
  */
 export const useAiStatus = (gameId: string): UseQueryResult<AiStatus, Error> => {
   return useQuery({
@@ -48,7 +55,7 @@ export const useAiStatus = (gameId: string): UseQueryResult<AiStatus, Error> => 
       return response.data.data;
     },
     refetchInterval: (query) => {
-      /** Poll every 2 seconds if AI is thinking */
+      // Poll while the pipeline is running so progress shows promptly.
       const interval = query.state.data?.thinking ? 2000 : false;
       if (interval) {
         console.debug("[AI] Polling AI status (thinking=true)");

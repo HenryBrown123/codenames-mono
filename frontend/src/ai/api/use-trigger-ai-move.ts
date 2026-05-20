@@ -13,8 +13,11 @@ interface TriggerAiMoveApiResponse {
 }
 
 /**
- * Triggers the AI to check game state and make a move if needed.
- * Useful for testing or manually triggering AI action.
+ * Mutation that nudges the server to run the AI pipeline for this game.
+ *
+ * On success, invalidates both `gameData` and the AI status query so
+ * the next poll picks up the new pipeline run. Primarily a manual /
+ * test hook — normal play has the AI react to its own turn server-side.
  */
 export const useTriggerAiMove = (gameId: string): UseMutationResult<void, Error, void> => {
   const queryClient = useQueryClient();
@@ -35,7 +38,6 @@ export const useTriggerAiMove = (gameId: string): UseMutationResult<void, Error,
     },
     onSuccess: async () => {
       console.debug("[AI] Invalidating queries after AI move trigger");
-      /** Invalidate game data and AI status */
       await queryClient.invalidateQueries({ queryKey: ["gameData", gameId] });
       await queryClient.invalidateQueries({ queryKey: ["game", gameId, "ai", "status"] });
     },
