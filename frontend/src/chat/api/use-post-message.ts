@@ -16,7 +16,10 @@ interface PostMessageApiResponse {
 }
 
 /**
- * Posts a new chat message to the game.
+ * Mutation that posts a chat message to the game log.
+ *
+ * On success, invalidates the message-list query so the new entry
+ * appears without waiting for the 5s poll interval.
  */
 export const usePostMessage = (
   gameId: string,
@@ -40,7 +43,6 @@ export const usePostMessage = (
       return response.data.data.message;
     },
     onSuccess: async () => {
-      /** Invalidate messages query to refetch */
       await queryClient.invalidateQueries({ queryKey: ["game", gameId, "messages"] });
     },
   });

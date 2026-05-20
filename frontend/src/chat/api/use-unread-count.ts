@@ -4,10 +4,13 @@ import { WebSocketEvent } from "@frontend/shared/websocket/websocket-events.type
 import { useGameMessages } from "./use-game-messages";
 
 /**
- * Tracks unread chat messages.
- * - On mount: treats ALL existing messages as unread (so refresh shows notification)
- * - Live: listens for GAME_MESSAGE_CREATED WebSocket events
- * - Resets to 0 when chat opens
+ * Tracks unread chat-message count for the badge on the chat FAB.
+ *
+ * On first mount with `chatOpen=false`, seeds the count to the total
+ * message list length — so a page refresh still surfaces the
+ * notification dot. Increments on each live `GAME_MESSAGE_CREATED`
+ * websocket event while chat is closed, and resets to 0 whenever
+ * `chatOpen` becomes true.
  */
 export const useUnreadCount = (gameId: string, chatOpen: boolean): number => {
   const { socket, isConnected } = useWebSocket();

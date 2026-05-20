@@ -16,6 +16,12 @@ const teamClass = (teamName: string | null): string => {
   return "";
 };
 
+/**
+ * Single chat row. Branches on `messageType`: SYSTEM renders as
+ * centred grey text, AI_THINKING gets an `[AI]` byline, and CHAT
+ * renders as a bubble — right-aligned when `isOwn`, otherwise prefixed
+ * with the author name colour-coded by team.
+ */
 export const ChatMessage: React.FC<ChatMessageProps> = ({
   playerName,
   teamName,

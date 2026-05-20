@@ -6,6 +6,11 @@ interface ChatInputProps {
   isLoading: boolean;
 }
 
+/**
+ * Single-line chat composer. Trims whitespace, blocks empty sends,
+ * disables itself while `isLoading` is true, and always sends as
+ * non-team-only (team toggle lives on the panel, not here).
+ */
 export const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading }) => {
   const [value, setValue] = useState("");
 

@@ -2,11 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useGameMessages } from "@frontend/chat/api";
 import styles from "./game-chat-log.module.css";
 
-/**
- * Scrollable chat log with performant typewriter effect for AI messages.
- * Uses requestAnimationFrame instead of per-character DOM nodes.
- */
-
+/** Props for {@link GameChatLogView}. */
 export interface GameChatLogViewProps {
   messageId: string;
   content: string;
@@ -14,6 +10,14 @@ export interface GameChatLogViewProps {
   teamName?: string;
 }
 
+/**
+ * Single-message typewriter overlay used to surface AI / system
+ * narration on top of the board.
+ *
+ * Drives the reveal via `requestAnimationFrame` (20ms per character)
+ * rather than per-character DOM nodes, keeping it cheap during long
+ * AI explanations. Resets cleanly when `messageId` changes.
+ */
 export const GameChatLogView: React.FC<GameChatLogViewProps> = ({
   messageId,
   content,
@@ -23,7 +27,7 @@ export const GameChatLogView: React.FC<GameChatLogViewProps> = ({
   const [displayedChars, setDisplayedChars] = useState(0);
   const prevMessageIdRef = useRef(messageId);
 
-  /** Reset animation when message changes */
+  // Restart the reveal whenever the upstream message id changes.
   useEffect(() => {
     if (messageId !== prevMessageIdRef.current) {
       setDisplayedChars(0);
@@ -31,7 +35,6 @@ export const GameChatLogView: React.FC<GameChatLogViewProps> = ({
     }
   }, [messageId]);
 
-  /** Typewriter effect using requestAnimationFrame for smooth performance */
   useEffect(() => {
     if (displayedChars >= content.length) return;
 
@@ -79,6 +82,11 @@ interface GameChatLogProps {
   gameId: string;
 }
 
+/**
+ * Container component that picks the most recent AI/system message
+ * from the chat log and feeds it to {@link GameChatLogView}. Renders
+ * nothing while loading or when no AI/system entries exist.
+ */
 export const GameChatLog: React.FC<GameChatLogProps> = ({ gameId }) => {
   const { data: messages, isLoading } = useGameMessages(gameId);
 
