@@ -5,23 +5,23 @@ import { useMakeGuessMutation } from "../board/use-make-guess";
 import { useGameDataRequired } from "../providers";
 import { useTurn } from "../providers";
 
-/** Turn action names */
+/** Names of every turn-level dashboard action. */
 export type TurnActionName = "giveClue" | "makeGuess" | "endTurn";
 
-/** State for a turn action */
+/** Lifecycle state of the most recent turn action. */
 export interface TurnActionState {
   name: TurnActionName | null;
   status: "idle" | "loading" | "success" | "error";
   error?: Error | null;
 }
 
-/** Turn actions context data */
+/** Read-side state exposed by the turn-actions context. */
 export interface TurnActionsData {
   actionState: TurnActionState;
   isPending: boolean;
 }
 
-/** Turn actions context handlers */
+/** Write-side handlers exposed by the turn-actions context. */
 export interface TurnActionsHandlers {
   giveClue: (word: string, count: number) => void;
   makeGuess: (word: string) => void;
@@ -29,9 +29,10 @@ export interface TurnActionsHandlers {
   resetActionState: () => void;
 }
 
-/** Combined turn actions context value */
+/** Shape provided by {@link TurnActionsContext}. */
 export type TurnActionsContextValue = TurnActionsData & TurnActionsHandlers;
 
+/** Context for turn-level dashboard actions. Use {@link useTurnActions}. */
 export const TurnActionsContext = createContext<TurnActionsContextValue | undefined>(undefined);
 
 const initialState: TurnActionState = {
@@ -44,6 +45,17 @@ interface TurnActionsProviderProps {
   children: ReactNode;
 }
 
+/**
+ * Provides turn-level mutation handlers (`giveClue`, `makeGuess`,
+ * `endTurn`) and their idle/loading/error state. Successful mutations
+ * stamp the resulting turn id onto the turn provider so the dashboard
+ * can detect "did my last action just complete?" and invalidate the
+ * game-data / turn / AI-status queries.
+ *
+ * Does NOT automatically start the next turn after `endTurn` — that
+ * transition is owned by the between-turns countdown so single-device
+ * and multi-device games share the same UX.
+ */
 export const TurnActionsProvider = ({ children }: TurnActionsProviderProps) => {
   const [actionState, setActionState] = useState<TurnActionState>(initialState);
 
@@ -154,6 +166,7 @@ export const TurnActionsProvider = ({ children }: TurnActionsProviderProps) => {
   return <TurnActionsContext.Provider value={value}>{children}</TurnActionsContext.Provider>;
 };
 
+/** Subscribes to {@link TurnActionsContext}. Throws if no provider is mounted. */
 export const useTurnActions = (): TurnActionsContextValue => {
   const context = useContext(TurnActionsContext);
   if (context === undefined) {

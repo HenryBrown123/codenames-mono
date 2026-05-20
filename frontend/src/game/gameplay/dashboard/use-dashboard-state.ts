@@ -15,9 +15,13 @@ import { useViewMode } from "../board/view-mode/view-mode-context";
 import { useStartTurnMutation } from "../api/mutations/use-start-turn";
 
 /**
- * Single source of derived dashboard state.
- * Both CompactDashboard and StackedDashboard read from here.
- * No raw game data or action hooks should appear in dashboard components directly.
+ * Single source of every derived value the dashboard renders.
+ *
+ * Both the compact and stacked dashboards read from here so they
+ * agree on team colour, lobby-action labels, game-over summary and
+ * the encapsulated `startNextTurn` handler. No raw game-data or
+ * action hooks should be consumed in dashboard components directly —
+ * keep them flowing through this façade.
  */
 export const useDashboardState = () => {
   const ctx = useVisibilityContext();
@@ -118,4 +122,5 @@ export const useDashboardState = () => {
   };
 };
 
+/** Return shape of {@link useDashboardState}. */
 export type DashboardState = ReturnType<typeof useDashboardState>;

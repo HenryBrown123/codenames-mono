@@ -3,15 +3,13 @@ import { useGameActions } from "..";
 import { ActionButton } from "../../shared/components";
 import { TerminalSection } from "../shared";
 
-/**
- * Action buttons for codebreaker: confirm guess, end turn
- */
-
+/** Props for {@link CodebreakerActionsPanelView}. */
 export interface CodebreakerActionsPanelViewProps {
   isLoading: boolean;
   onEndTurn: () => void;
 }
 
+/** Presentational codebreaker action row — currently the end-turn button. */
 export const CodebreakerActionsPanelView: React.FC<CodebreakerActionsPanelViewProps> = ({
   isLoading,
   onEndTurn,
@@ -26,6 +24,7 @@ export const CodebreakerActionsPanelView: React.FC<CodebreakerActionsPanelViewPr
   </TerminalSection>
 );
 
+/** Connected codebreaker action row — bound to the game-actions provider. */
 export const CodebreakerActionsPanel: React.FC = () => {
   const { endTurn, actionState } = useGameActions();
 

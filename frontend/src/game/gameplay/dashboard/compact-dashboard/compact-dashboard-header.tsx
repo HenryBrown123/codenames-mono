@@ -8,6 +8,7 @@ import styles from "./compact-dashboard-header.module.css";
 const TEAM_SWITCH_DURATION = 0.3;
 const EASING = [0.4, 0, 0.2, 1] as const;
 
+/** Props for {@link CompactDashboardHeader}. */
 export interface CompactDashboardHeaderProps {
   teamName: string;
   canGoBack: boolean;

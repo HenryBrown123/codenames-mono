@@ -3,7 +3,12 @@ import { useTurn, useGameDataRequired } from "../../providers";
 import { useGameActions } from "..";
 import type { GuessDisplay } from "./intel-panel";
 
-/** Full intel state — used by CompactDashboard which needs codemaster fields too. */
+/**
+ * Snapshot of every value the intel panels — both stacked and
+ * compact — need to render. Codemaster-input fields are present
+ * because the compact dashboard reuses this hook for its inline
+ * clue composer.
+ */
 export interface IntelState {
   teamName: string;
   guesses: GuessDisplay[];
@@ -24,8 +29,14 @@ export interface IntelState {
 }
 
 /**
- * Shared intel navigation state.
- * Used by IntelPanel (stacked) and CompactDashboard.
+ * Builds the {@link IntelState} consumed by the intel panels.
+ *
+ * Defaults to viewing the latest turn, but lets the user pin an
+ * earlier index via the nav arrows; the override clears whenever a
+ * new latest turn arrives so the panel snaps forward at turn
+ * boundaries. Tracks `selectedIndex` from `historicTurns` on every
+ * render to avoid the post-refresh flash that a `useState` mirror
+ * would cause.
  */
 export const useIntelState = (): IntelState => {
   const { historicTurns } = useTurn();

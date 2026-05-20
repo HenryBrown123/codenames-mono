@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import type { Card } from "@frontend/shared/types";
 import { validateClueWord } from "./clue-validation";
 
+/** Return shape of {@link useClueInput}. */
 export interface ClueInputState {
   word: string;
   count: number;

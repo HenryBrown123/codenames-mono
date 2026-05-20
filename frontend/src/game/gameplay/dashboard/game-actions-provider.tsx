@@ -15,17 +15,17 @@ import {
   type RoundActionState,
 } from "./round-actions";
 
-/** All action names (union of turn and round) */
+/** Union of every named turn/round action a dashboard panel can run. */
 export type ActionName = TurnActionName | RoundActionName;
 
-/** Combined action state */
+/** Combined idle/loading/success/error state for a single named action. */
 export interface ActionState {
   name: ActionName | null;
   status: "idle" | "loading" | "success" | "error";
   error?: Error | null;
 }
 
-/** Legacy combined context value for backwards compatibility */
+/** Façade context value combining the turn and round action APIs. */
 export interface GameActionsContextValue {
   actionState: ActionState;
   resetActionState: () => void;
@@ -42,8 +42,11 @@ interface GameActionsProviderProps {
 }
 
 /**
- * Composes TurnActionsProvider and RoundActionsProvider.
- * Also renders error UI when either provider has an error.
+ * Composition root for gameplay mutations.
+ *
+ * Wraps the subtree with the round- and turn-action providers, then
+ * mounts an inline error overlay that surfaces a "reload game"
+ * dialog whenever either provider's most recent action failed.
  */
 export const GameActionsProvider = ({ children }: GameActionsProviderProps) => {
   return (
@@ -88,8 +91,11 @@ const GameActionsErrorBoundary = ({ children }: { children: ReactNode }) => {
 };
 
 /**
- * Facade hook that combines turn and round actions.
- * Use useTurnActions or useRoundActions for more specific access.
+ * Combined accessor for both turn and round actions.
+ *
+ * Surfaces whichever provider currently has a non-idle action so the
+ * dashboard can render a single global loading/error state. Prefer
+ * `useTurnActions` or `useRoundActions` when only one is needed.
  */
 export const useGameActions = (): GameActionsContextValue => {
   const turnActions = useTurnActions();

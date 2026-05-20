@@ -3,15 +3,13 @@ import { useGameActions } from "..";
 import { CodeWordInput } from "./codemaster-input";
 import { TerminalSection, TerminalCommand } from "../shared";
 
-/**
- * Action panel for codemaster: shows current clue or waiting state
- */
-
+/** Props for {@link CodemasterActionsPanelView}. */
 export interface CodemasterActionsPanelViewProps {
   isLoading: boolean;
   onSubmit: (word: string, count: number) => void;
 }
 
+/** Presentational codemaster action panel — wraps the clue input. */
 export const CodemasterActionsPanelView: React.FC<CodemasterActionsPanelViewProps> = ({
   isLoading,
   onSubmit,
@@ -28,6 +26,7 @@ export const CodemasterActionsPanelView: React.FC<CodemasterActionsPanelViewProp
   </TerminalSection>
 );
 
+/** Connected codemaster action panel — bound to the game-actions provider. */
 export const CodemasterActionsPanel: React.FC = () => {
   const { giveClue, actionState } = useGameActions();
 

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import styles from "./turn-outcome-panel.module.css";
 
+/** Length of the between-turns countdown, in seconds. */
 export const COUNTDOWN_SECONDS = 8;
 /** 1 dot = 1 second so the dots stay perfectly in sync. */
 export const DOT_COUNT = COUNTDOWN_SECONDS;
 
+/** Props for {@link DotCountdown}. */
 export interface DotCountdownProps {
   /**
    * Changing this value resets the countdown. Use the current completed-turn

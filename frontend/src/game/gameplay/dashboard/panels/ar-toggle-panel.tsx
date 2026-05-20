@@ -9,15 +9,13 @@ import {
   SpyGogglesDot,
 } from "../shared";
 
-/**
- * Toggle switch for enhanced spymaster vision mode
- */
-
+/** Props for {@link ARTogglePanelView}. */
 export interface ARTogglePanelViewProps {
   isARMode: boolean;
   onToggle: () => void;
 }
 
+/** Presentational AR-vision toggle row. */
 export const ARTogglePanelView: React.FC<ARTogglePanelViewProps> = ({ isARMode, onToggle }) => (
   <TerminalSection>
     <TerminalCommand>ENHANCED VISION</TerminalCommand>
@@ -30,6 +28,7 @@ export const ARTogglePanelView: React.FC<ARTogglePanelViewProps> = ({ isARMode, 
   </TerminalSection>
 );
 
+/** Connected AR-vision toggle — bound to the view-mode context. */
 export const ARTogglePanel: React.FC = () => {
   const { viewMode, toggleSpymasterViewMode } = useViewMode();
   const isARMode = viewMode === "spymaster";

@@ -2,22 +2,31 @@ import React from "react";
 import { motion } from "framer-motion";
 import styles from "./terminal-components.module.css";
 
-/** Shared swipe/carousel constants */
-export const SWIPE_THRESHOLD = 50; // px drag distance
-export const VELOCITY_THRESHOLD = 500; // px/s
+/** Minimum drag distance (px) before a swipe counts as a page change. */
+export const SWIPE_THRESHOLD = 50;
+/** Minimum drag velocity (px/s) that triggers a snap even below the distance threshold. */
+export const VELOCITY_THRESHOLD = 500;
 
-/** Shared carousel slide variants for AnimatePresence */
+/**
+ * Slide-in/out variants for any AnimatePresence carousel — `dir` is
+ * the swipe direction (-1 = back, +1 = forward).
+ */
 export const carouselVariants = {
   enter: (dir: number) => ({ x: dir < 0 ? 100 : -100, opacity: 0 }),
   center: { x: 0, opacity: 1 },
   exit: (dir: number) => ({ x: dir < 0 ? -100 : 100, opacity: 0 }),
 };
 
+/** Shared transition timing for the carousel slide animation. */
 export const CAROUSEL_TRANSITION = { duration: 0.15, ease: [0.4, 0, 0.2, 1] as const };
 
 /**
- * Terminal section card - provides visual container for content
- * Supports layoutId for morphing animations between states
+ * Card container that wraps each terminal-style panel.
+ *
+ * Pops in with a spring on mount; opts into framer layout
+ * animations by default so neighbouring panels morph rather than
+ * jump when this one mounts or unmounts. Pass `layoutId` to share
+ * the animation across siblings.
  */
 export const TerminalSection: React.FC<{
   children?: React.ReactNode;
@@ -50,13 +59,12 @@ export const TerminalSection: React.FC<{
   </motion.div>
 );
 
+/** Small caps "command name" label shown above terminal-section content. */
 export const TerminalCommand: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
   <div className={styles.terminalCommand}>{children}</div>
 );
 
-/**
- * PlayerInfoLayout - Special layout for player/team info header with symbol
- */
+/** Flex row layout for player/team header content. */
 export const PlayerInfoLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
   <div className={styles.playerInfoLayout}>{children}</div>
 );
@@ -64,20 +72,17 @@ export const PlayerInfoLayout: React.FC<{ children?: React.ReactNode }> = ({ chi
 /** Re-export from shared components for backward compatibility */
 export { AttentionTextBox } from "@frontend/game/gameplay/shared/components";
 
-/**
- * Wrapper for middle grid section - ensures it fills available space
- */
+/** Flex wrapper that fills the dashboard's middle grid section. */
 export const MiddleSection: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className={styles.middleSection}>{children}</div>
 );
 
-/**
- * Spy goggles container with minimum height for better spacing
- */
+/** Min-height container that hosts the AR-toggle row. */
 export const SpyGogglesContainer: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className={styles.spyGogglesContainer}>{children}</div>
 );
 
+/** Flex row inside {@link SpyGogglesContainer} pairing the dot and the toggle. */
 export const SpyGogglesSwitchRow: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className={styles.spyGogglesSwitchRow}>{children}</div>
 );
@@ -86,6 +91,7 @@ interface SpyGogglesDotProps {
   active: boolean;
 }
 
+/** Status dot shown next to the AR toggle. */
 export const SpyGogglesDot: React.FC<SpyGogglesDotProps> = ({ active }) => (
   <span className={styles.spyGogglesDot} data-active={active} />
 );

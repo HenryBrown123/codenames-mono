@@ -54,10 +54,11 @@ const StackedTurnOutcomeSlot: React.FC = () => {
 };
 
 /**
- * Panel configuration - reads like requirements.
- * "AR toggle shows when isCodemaster"
- * "Intel shows when round is in progress (always visible during gameplay)"
- * "Clue input shows as its own panel when codemaster needs to give a clue"
+ * Panel composition for the stacked dashboard.
+ *
+ * Reads like requirements: each entry pairs a panel component with a
+ * visibility predicate, so the dashboard renderer can stay generic
+ * and the rules live alongside the panels they gate.
  */
 export const GAME_PANELS: PanelSlots = {
   header: [{ id: "team-header", component: TeamHeaderPanel, shouldRender: hasRole }],
@@ -86,8 +87,11 @@ export const GAME_PANELS: PanelSlots = {
 };
 
 /**
- * Panel config for mobile portrait drawer.
- * No header slot — TeamHeaderPanel is rendered by the drawer chrome instead.
+ * Panel composition for the mobile-portrait drawer.
+ *
+ * Shares the middle and bottom slots with {@link GAME_PANELS}; the
+ * header slot is empty because the drawer chrome already renders the
+ * team header.
  */
 export const MOBILE_DRAWER_PANELS: PanelSlots = {
   header: [],   // suppressed — drawer chrome owns the header

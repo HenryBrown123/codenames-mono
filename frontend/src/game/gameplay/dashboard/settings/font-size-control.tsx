@@ -1,10 +1,6 @@
 import React from "react";
 import styles from "./font-size-control.module.css";
 
-/**
- * Slider control for adjusting card font size
- */
-
 interface FontSizeControlProps {
   normalSize: number;
   longSize: number;
@@ -14,6 +10,11 @@ interface FontSizeControlProps {
   onThresholdChange: (threshold: number) => void;
 }
 
+/**
+ * Settings panel with three sliders that tune card font sizing:
+ * normal-word size, long-word size, and the character-count
+ * threshold that switches between the two.
+ */
 export const FontSizeControl: React.FC<FontSizeControlProps> = ({
   normalSize,
   longSize,

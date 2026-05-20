@@ -1,15 +1,15 @@
 import React from "react";
 import styles from "./tilt-control.module.css";
 
-/**
- * Slider control for adjusting card 3D tilt amount
- */
-
 interface TiltControlProps {
   value: number;
   onChange: (degrees: number) => void;
 }
 
+/**
+ * Desktop-only 0–90° slider for the board's 3D tilt angle. Hidden on
+ * touch devices via the `desktop-only` class on the wrapper.
+ */
 export const TiltControl: React.FC<TiltControlProps> = ({ value, onChange }) => (
   <div className={`${styles.controlContainer} desktop-only`}>
     <label className={styles.label} htmlFor="board-tilt">

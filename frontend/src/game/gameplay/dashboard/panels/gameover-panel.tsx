@@ -5,10 +5,6 @@ import { ActionButton } from "../../shared/components";
 import { TerminalSection, TerminalCommand, ScoreComparison } from "../shared";
 import styles from "./gameover-panel.module.css";
 
-/**
- * End-of-game panel with winner announcement and play again option
- */
-
 interface TeamCardStats {
   name: string;
   selected: number;
@@ -16,6 +12,7 @@ interface TeamCardStats {
   isWinner: boolean;
 }
 
+/** Props for {@link GameoverPanelView}. */
 export interface GameoverPanelViewProps {
   winnerStats: TeamCardStats;
   loserStats: TeamCardStats;
@@ -24,6 +21,10 @@ export interface GameoverPanelViewProps {
   onNewGame: () => void;
 }
 
+/**
+ * Presentational end-of-round panel — score breakdown, optional
+ * assassin alert and a "new mission" button. Stateless.
+ */
 export const GameoverPanelView: React.FC<GameoverPanelViewProps> = ({
   winnerStats,
   loserStats,
@@ -52,6 +53,11 @@ export const GameoverPanelView: React.FC<GameoverPanelViewProps> = ({
   </TerminalSection>
 );
 
+/**
+ * Connected end-of-round panel. Computes winner/loser card counts
+ * and the assassin-selected flag from `gameData`, then forwards to
+ * {@link GameoverPanelView}.
+ */
 export const GameoverPanel: React.FC = () => {
   const { gameData } = useGameDataRequired();
   const { createRound, actionState } = useGameActions();

@@ -2,10 +2,6 @@ import React, { useState } from "react";
 import { ExitIcon } from "@frontend/shared/components/icons";
 import styles from "./ui-settings-dashboard.module.css";
 
-/**
- * Settings panel for UI customization options
- */
-
 /** Preset terminal colours — softer pastel palette */
 const TERMINAL_COLOURS = [
   { hex: "#7fffd4", name: "Aquamarine" },
@@ -24,6 +20,7 @@ const TERMINAL_COLOURS = [
   { hex: "#93c5fd", name: "Soft sky" },
 ];
 
+/** Default theme accent hex used when no user preference is stored. */
 export const DEFAULT_TERMINAL_COLOUR = "#52d68a";
 
 /** Convert hex to RGB object */
@@ -38,7 +35,12 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
     : { r: 82, g: 214, b: 138 }; // fallback to default
 }
 
-/** Apply terminal colour to :root and generate derived tokens */
+/**
+ * Applies a theme accent hex by writing `--color-primary` and every
+ * derived CSS variable (borders, glows, scrollbar tint, etc.) onto
+ * `:root`. Background tokens are intentionally left untouched —
+ * they're meant to stay near-black regardless of accent.
+ */
 export function applyTerminalColour(hex: string): void {
   const { r, g, b } = hexToRgb(hex);
   const root = document.documentElement;
@@ -88,6 +90,11 @@ interface UISettingsDashboardProps {
   onTerminalColourChange: (colour: string) => void;
 }
 
+/**
+ * Floating UI-settings dashboard. A small cog button toggles a panel
+ * containing font-size sliders, board-tilt, and a theme-colour
+ * swatch grid; the parent owns the actual settings state.
+ */
 export const UISettingsDashboard: React.FC<UISettingsDashboardProps> = ({
   fontNormalSize,
   fontLongSize,

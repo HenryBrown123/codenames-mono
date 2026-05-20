@@ -10,6 +10,11 @@ interface ScoreComparisonProps {
   className?: string;
 }
 
+/**
+ * Side-by-side team score block. The winner side is rendered with
+ * extra emphasis (gold) and the loser side stays muted; team names
+ * pick up the team-config CSS variable for colour.
+ */
 export const ScoreComparison: React.FC<ScoreComparisonProps> = ({
   winnerName,
   winnerScore,

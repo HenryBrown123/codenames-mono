@@ -11,12 +11,7 @@ import styles from "./intel-panel.module.css";
 const TEAM_SWITCH_DURATION = 0.3;
 const EASING = [0.4, 0, 0.2, 1] as const;
 
-/**
- * Intelligence panel showing current clue, guesses, and remaining attempts.
- * Supports navigation through turn history with left/right arrows.
- * When no clue exists, shows the codemaster input form (if codemaster) or awaiting message.
- */
-
+/** A guess summary shown in the intel panel's guess slots. */
 export interface GuessDisplay {
   word: string;
   outcome: "CORRECT_TEAM_CARD" | "OTHER_TEAM_CARD" | "BYSTANDER_CARD" | "ASSASSIN_CARD";
@@ -49,13 +44,18 @@ interface IntelPanelAwaitingProps extends IntelPanelBaseProps {
   hasClue: false;
 }
 
+/**
+ * Props for {@link IntelPanelView}. Discriminated on `hasClue`: when
+ * a clue is in play, the word and number are also present.
+ */
 export type IntelPanelViewProps =
   | IntelPanelWithClueProps
   | IntelPanelAwaitingProps;
 
 /**
- * Get team symbol and color based on team name.
- * Shared by header and guess outcome display.
+ * Resolves the glyph, colour and rotation flag used to render the
+ * team's symbol in the intel header and on per-guess pips. Falls back
+ * to a neutral grey circle for unrecognised team names.
  */
 export const getTeamStyle = (
   teamName: string,
@@ -68,6 +68,10 @@ export const getTeamStyle = (
   return { symbol: "○", color: "#888888", rotate: false };
 };
 
+/**
+ * Picks the per-guess pip styling from the outcome enum, using the
+ * current team as context for what counts as "own" vs "other".
+ */
 export const getOutcomeSymbol = (
   outcome: GuessDisplay["outcome"],
   currentTeam: string,
@@ -93,6 +97,11 @@ export const getOutcomeSymbol = (
   }
 };
 
+/**
+ * Presentational intel panel — current clue + per-guess pips +
+ * left/right navigation through turn history. Swipeable on touch via
+ * the carousel hook; arrow keys / arrow buttons paginate explicitly.
+ */
 export const IntelPanelView: React.FC<IntelPanelViewProps> = (props) => {
   const {
     teamName,
@@ -178,6 +187,11 @@ export const IntelPanelView: React.FC<IntelPanelViewProps> = (props) => {
   );
 };
 
+/**
+ * Connected intel panel. Resolves clue/guess/history state via
+ * {@link useIntelState}, narrows it to the discriminated view-prop
+ * shape, and renders {@link IntelPanelView}.
+ */
 export const IntelPanel: React.FC = () => {
   const intel = useIntelState();
 

@@ -17,6 +17,11 @@ interface IntelContentProps {
   showAwaitingGuesses?: boolean;
 }
 
+/**
+ * Pure intel layout — clue word + number on top, per-guess rows
+ * below. Empty state renders an "AWAITING INPUT" attention box;
+ * ghost rows pad out unused slots up to `maxSlots`.
+ */
 export const IntelContent: React.FC<IntelContentProps> = ({
   hasClue,
   clueWord,

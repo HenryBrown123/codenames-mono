@@ -4,16 +4,13 @@ import { useStartTurnMutation } from "../../api/mutations/use-start-turn";
 import { ActionButton } from "../../shared/components";
 import { TerminalSection } from "../shared";
 
-/**
- * Simple action panel for starting the next turn.
- * Shows when no active turn exists in the current round.
- */
-
+/** Props for {@link StartTurnPanelView}. */
 export interface StartTurnPanelViewProps {
   isLoading: boolean;
   onStartTurn: () => void;
 }
 
+/** Presentational "Next turn" button. Stateless. */
 export const StartTurnPanelView: React.FC<StartTurnPanelViewProps> = ({
   isLoading,
   onStartTurn,
@@ -28,6 +25,11 @@ export const StartTurnPanelView: React.FC<StartTurnPanelViewProps> = ({
   </TerminalSection>
 );
 
+/**
+ * Connected start-turn panel. Calls the start-turn mutation for the
+ * current round when clicked; mounted in scenes that need a manual
+ * trigger between turns.
+ */
 export const StartTurnPanel: React.FC = () => {
   const { gameData } = useGameDataRequired();
 

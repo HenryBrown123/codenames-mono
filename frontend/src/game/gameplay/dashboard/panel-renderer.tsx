@@ -3,10 +3,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { PanelConfig } from "./config/types";
 import { VisibilityContext } from "./config/context";
 
-/**
- * Renders panel components from configuration
- */
-
 interface PanelRendererProps {
   panels: PanelConfig[];
   context: VisibilityContext;
@@ -25,6 +21,12 @@ const panelTransition = {
   damping: 30,
 };
 
+/**
+ * Renders a configured panel list, filtering on each panel's
+ * `shouldRender` rule. Mount/unmount transitions are animated through
+ * `AnimatePresence` with shared `layoutId`s so panels slide rather
+ * than pop when neighbours change.
+ */
 export const PanelRenderer: React.FC<PanelRendererProps> = ({ panels, context, slotId }) => {
   const visiblePanels = panels.filter((panel) => panel.shouldRender(context));
 

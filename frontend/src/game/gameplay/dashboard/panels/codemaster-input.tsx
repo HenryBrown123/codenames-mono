@@ -5,11 +5,6 @@ import { Card } from "@frontend/shared/types";
 import { MinusIcon, PlusIcon } from "@frontend/shared/components/icons";
 import styles from "./codemaster-input.module.css";
 
-/**
- * Unified clue input — used in all layouts (stacked panel, compact carousel, overlay).
- * Auto-focuses when it becomes visible (handles carousel transitions and overlay opens).
- */
-
 type CodeWordInputProps = {
   codeWord?: string;
   numberOfCards: number | null;
@@ -18,6 +13,15 @@ type CodeWordInputProps = {
   onSubmit?: (codeWord: string, numberOfCards: number) => void;
 };
 
+/**
+ * Unified clue composer — word input + ±-stepper for card count +
+ * submit button.
+ *
+ * Auto-focuses whenever the input scrolls into view (handles carousel
+ * transitions and overlay opens). Validates before submitting:
+ * rejects empty input, board-word collisions, and counts outside
+ * 1–9, surfacing the error inline on the submit button.
+ */
 export function CodeWordInput({
   codeWord = "",
   numberOfCards,

@@ -21,6 +21,7 @@ const popTransition = {
   mass: 0.8,
 };
 
+/** Props for {@link CompactDashboardFooter}. */
 export interface CompactDashboardFooterProps {
   /** Whether the TRANSMIT button should be enabled. */
   canTransmit: boolean;

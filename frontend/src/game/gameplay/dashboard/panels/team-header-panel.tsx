@@ -5,18 +5,20 @@ import { getTeamStyle } from "./intel-panel";
 import { TeamSymbolIcon } from "@frontend/shared/components/team-symbol-icon";
 import styles from "./team-header-panel.module.css";
 
-/**
- * Ghost header — minimal identity row.
- * Shows a neutral placeholder during AI turns (no team/player context).
- */
-
+/** Props for {@link TeamHeaderPanelView}. */
 export interface TeamHeaderPanelViewProps {
   teamName: string;
   role: string;
   playerName?: string;
+  /** `compact` packs name + role + symbol into a single row; default stacks them. */
   variant?: "default" | "compact";
 }
 
+/**
+ * Identity strip showing the viewer's player name, role and team
+ * symbol. Falls back to `AGENT` when the player name is unknown
+ * (anonymous / AI-only sessions).
+ */
 export const TeamHeaderPanelView: React.FC<TeamHeaderPanelViewProps> = ({
   teamName,
   role,
@@ -54,6 +56,11 @@ interface TeamHeaderPanelProps {
   variant?: "default" | "compact";
 }
 
+/**
+ * Connected team header. Prefers the viewer's player context; falls
+ * back to the active AI player during solo AI sessions, or a generic
+ * spectator label otherwise.
+ */
 export const TeamHeaderPanel: React.FC<TeamHeaderPanelProps> = ({ variant }) => {
   const { gameData } = useGameDataRequired();
   const ctx = useVisibilityContext();

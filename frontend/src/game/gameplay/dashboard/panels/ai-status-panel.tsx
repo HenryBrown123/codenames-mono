@@ -6,11 +6,7 @@ import { StatusDot } from "../../shared/components";
 import { TerminalSection } from "../shared";
 import styles from "./ai-status-panel.module.css";
 
-/**
- * Panel showing AI thinking status and chat history.
- * Status dot is in the header, body contains chat log and optional trigger button.
- */
-
+/** Props for {@link AIStatusPanelView}. */
 export interface AIStatusPanelViewProps {
   isActive: boolean;
   isThinking?: boolean;
@@ -19,6 +15,11 @@ export interface AIStatusPanelViewProps {
   children?: React.ReactNode;
 }
 
+/**
+ * Presentational AI-assistant panel. Status dot in the header, chat
+ * log / trigger button in the body. Stateless — the container
+ * resolves all three booleans from the live AI status.
+ */
 export const AIStatusPanelView: React.FC<AIStatusPanelViewProps> = ({
   isActive,
   isThinking = false,
@@ -42,6 +43,12 @@ export const AIStatusPanelView: React.FC<AIStatusPanelViewProps> = ({
   </TerminalSection>
 );
 
+/**
+ * Live AI status panel. Subscribes to `useAiStatus` for the active
+ * game, wires the manual trigger button to `useTriggerAiMove`, and
+ * embeds the chat-log typewriter so AI narration appears alongside
+ * the status.
+ */
 export const AIStatusPanel: React.FC = () => {
   const { gameData } = useGameDataRequired();
   const { data: aiStatus, isLoading, error } = useAiStatus(gameData.publicId);

@@ -4,6 +4,7 @@ import { TerminalSection } from "../shared";
 import { AttentionTextBox } from "@frontend/game/gameplay/shared/components";
 import type { TurnData } from "@frontend/shared/types";
 
+/** Props for {@link TurnOutcomePanel}. */
 export interface TurnOutcomePanelProps {
   /** The completed turn to display. Only `id` is used to key the animation. */
   completedTurn: TurnData;

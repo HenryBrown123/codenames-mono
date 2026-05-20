@@ -2,8 +2,10 @@ import type { GameData, TurnData, TurnPhase } from "@frontend/shared/types";
 import type { VisibilityContext } from "./context";
 
 /**
- * Inputs needed to derive visibility context.
- * Decoupled from React hooks for testability.
+ * Plain-data inputs required to derive a {@link VisibilityContext}.
+ *
+ * Decoupled from React hooks so the derivation can be exercised in
+ * isolation by unit tests.
  */
 export interface VisibilityInputs {
   gameData: GameData;
@@ -15,8 +17,12 @@ export interface VisibilityInputs {
 }
 
 /**
- * Pure function that derives visibility context from game state inputs.
- * Single source of truth for all visibility decisions.
+ * Derives the dashboard's visibility context from raw game state.
+ *
+ * Pure — no hooks, no side effects — so it can be unit-tested in
+ * isolation and reused across the compact and stacked dashboards.
+ * The dashboard reads the result rather than re-deriving the same
+ * booleans inside each panel.
  */
 export function deriveVisibilityContext(inputs: VisibilityInputs): VisibilityContext {
   const { gameData, activeTurn, historicTurns, actionStatus, aiStatus, isAiClaimed } = inputs;

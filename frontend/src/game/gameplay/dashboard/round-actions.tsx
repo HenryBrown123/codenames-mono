@@ -7,23 +7,23 @@ import {
 } from "../api/mutations";
 import { useGameDataRequired } from "../providers";
 
-/** Round action names */
+/** Names of every round-level dashboard action. */
 export type RoundActionName = "createRound" | "startRound" | "dealCards";
 
-/** State for a round action */
+/** Lifecycle state of the most recent round action. */
 export interface RoundActionState {
   name: RoundActionName | null;
   status: "idle" | "loading" | "success" | "error";
   error?: Error | null;
 }
 
-/** Round actions context data */
+/** Read-side state exposed by the round-actions context. */
 export interface RoundActionsData {
   actionState: RoundActionState;
   isPending: boolean;
 }
 
-/** Round actions context handlers */
+/** Write-side handlers exposed by the round-actions context. */
 export interface RoundActionsHandlers {
   createRound: () => void;
   startRound: () => void;
@@ -31,9 +31,10 @@ export interface RoundActionsHandlers {
   resetActionState: () => void;
 }
 
-/** Combined round actions context value */
+/** Shape provided by {@link RoundActionsContext}. */
 export type RoundActionsContextValue = RoundActionsData & RoundActionsHandlers;
 
+/** Context for round-level dashboard actions. Use {@link useRoundActions}. */
 export const RoundActionsContext = createContext<RoundActionsContextValue | undefined>(undefined);
 
 const initialState: RoundActionState = {
@@ -46,6 +47,12 @@ interface RoundActionsProviderProps {
   children: ReactNode;
 }
 
+/**
+ * Provides round-level mutation handlers (`createRound`, `startRound`,
+ * `dealCards`) along with their idle/loading/error state. Each
+ * handler invalidates the game-data, turn and AI-status queries on
+ * success so the dashboard reflects the change immediately.
+ */
 export const RoundActionsProvider = ({ children }: RoundActionsProviderProps) => {
   const [actionState, setActionState] = useState<RoundActionState>(initialState);
 
@@ -134,6 +141,7 @@ export const RoundActionsProvider = ({ children }: RoundActionsProviderProps) =>
   return <RoundActionsContext.Provider value={value}>{children}</RoundActionsContext.Provider>;
 };
 
+/** Subscribes to {@link RoundActionsContext}. Throws if no provider is mounted. */
 export const useRoundActions = (): RoundActionsContextValue => {
   const context = useContext(RoundActionsContext);
   if (context === undefined) {

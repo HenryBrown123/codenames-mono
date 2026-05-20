@@ -9,10 +9,7 @@ import { ActionButton } from "../../shared/components";
 import { TerminalSection } from "../shared";
 import styles from "./lobby-actions-panel.module.css";
 
-/**
- * Pre-game actions: role selection and ready status
- */
-
+/** Props for {@link LobbyActionsPanelView}. */
 export interface LobbyActionsPanelViewProps {
   buttonText: string;
   canRedeal: boolean;
@@ -21,6 +18,11 @@ export interface LobbyActionsPanelViewProps {
   onRedeal: () => void;
 }
 
+/**
+ * Presentational lobby actions — a primary "deal / start" button and
+ * an optional "redeal" button. Stateless; the parent owns the
+ * loading flag and decides which actions are available.
+ */
 export const LobbyActionsPanelView: React.FC<LobbyActionsPanelViewProps> = ({
   buttonText,
   canRedeal,
@@ -36,6 +38,12 @@ export const LobbyActionsPanelView: React.FC<LobbyActionsPanelViewProps> = ({
   </TerminalSection>
 );
 
+/**
+ * Connected lobby actions. Derives the primary button label and
+ * action from round / cards state, and exposes a redeal button when
+ * the visibility rules permit. Triggers the deal animation before
+ * mutating server state so the UI doesn't flash-empty between calls.
+ */
 export const LobbyActionsPanel: React.FC = () => {
   const { gameData } = useGameDataRequired();
   const { createRound, startRound, dealCards, actionState } = useGameActions();

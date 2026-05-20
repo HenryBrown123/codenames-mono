@@ -9,6 +9,14 @@ interface CarouselNavigation {
   onGoForward: () => void;
 }
 
+/**
+ * Wires drag gestures and arrow callbacks to a carousel.
+ *
+ * Recognises a swipe when either the drag distance crosses
+ * `SWIPE_THRESHOLD` or the release velocity crosses
+ * `VELOCITY_THRESHOLD`; tracks the most recent direction so the
+ * AnimatePresence transition can use it as a custom prop.
+ */
 export function useCarouselSwipe(nav: CarouselNavigation) {
   const [swipeDirection, setSwipeDirection] = useState(0);
 

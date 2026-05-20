@@ -3,6 +3,7 @@ import { useGameDataRequired } from "../../providers";
 import { useStartTurnMutation } from "../../api/mutations/use-start-turn";
 import { COUNTDOWN_SECONDS } from "./dot-countdown";
 
+/** Props for {@link NextTurnTrigger}. */
 export interface NextTurnTriggerProps {
   /**
    * Changing this value restarts the timer. Typically the id of the completed

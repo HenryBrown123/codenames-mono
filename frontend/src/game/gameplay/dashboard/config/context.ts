@@ -6,6 +6,15 @@ import { usePlayerSession } from "../../providers/active-game-session-provider";
 import type { TurnData, TurnPhase } from "@frontend/shared/types";
 import { deriveVisibilityContext } from "./derive-visibility";
 
+/**
+ * Snapshot of every piece of state the dashboard visibility rules
+ * need to decide which panels render and how they behave.
+ *
+ * Derived from raw `gameData`/`turn`/AI state by
+ * {@link deriveVisibilityContext}; consumed by the rules in
+ * `./rules.ts`. Centralising it here keeps every panel reading from
+ * the same projection.
+ */
 export interface VisibilityContext {
   /** Player info */
   role: "CODEMASTER" | "CODEBREAKER" | "SPECTATOR" | "NONE";
@@ -41,8 +50,11 @@ export interface VisibilityContext {
 }
 
 /**
- * Derives visibility context from game state.
- * Single source of truth for all visibility decisions.
+ * React-flavoured wrapper around {@link deriveVisibilityContext}.
+ *
+ * Subscribes to the gameplay providers and AI status query, then
+ * memoises the derived context so dependent panels re-render only
+ * when one of the underlying inputs actually changes.
  */
 export const useVisibilityContext = (): VisibilityContext => {
   const { gameData } = useGameDataRequired();
