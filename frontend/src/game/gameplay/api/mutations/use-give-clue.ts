@@ -62,6 +62,7 @@ interface GiveClueInput {
   roundNumber: number;
 }
 
+/** Domain-shaped success payload returned by {@link useGiveClueMutation}. */
 export interface ClueGivenResult {
   clue: {
     word: string;
@@ -117,7 +118,12 @@ function transformApiResponseToClueGivenResult(apiResponse: GiveClueApiResponse)
 }
 
 /**
- * Submits a clue for the current turn.
+ * Mutation that submits a clue for the active turn.
+ *
+ * Sends role-based identity in single-device mode and `playerId` in
+ * multi-device mode. Date strings on the response are coerced to
+ * `Date` before resolving. On success, resets the board to normal
+ * view so the codebreaker isn't left looking at the spymaster overlay.
  */
 export const useGiveClueMutation = (
   gameId: string,

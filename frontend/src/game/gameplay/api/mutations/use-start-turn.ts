@@ -26,8 +26,11 @@ interface StartTurnInput {
 }
 
 /**
- * Creates a new turn for the next team.
- * Used when the previous turn has completed and a new turn needs to be started manually.
+ * Mutation that creates the next turn for a round.
+ *
+ * Sends `role` in single-device mode and `playerId` in multi-device
+ * mode for permission resolution. Invalidates game-data and `turn`
+ * queries on success so the new turn surfaces immediately.
  */
 export const useStartTurnMutation = (
   gameId: string,

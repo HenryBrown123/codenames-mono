@@ -1,8 +1,4 @@
-/**
- * Event type definitions matching the server API response
- */
-
-/** Base event structure shared by all events */
+/** Common envelope on every game event coming back from the server. */
 export interface BaseEvent {
   id: string;              // Unique event ID (e.g., evt_001)
   gameId: string;          // Game this event belongs to
@@ -10,7 +6,7 @@ export interface BaseEvent {
   type: string;            // Event type discriminator
 }
 
-/** Global events (affect all cards) */
+/** A round being dealt — names every card id placed on the board. */
 export interface DealEvent extends BaseEvent {
   type: 'deal';
   cardIds: number[];       // All card IDs that were dealt
@@ -19,17 +15,19 @@ export interface DealEvent extends BaseEvent {
   otherTeam?: number;
 }
 
+/** Spymaster view was switched on — all card colours revealed. */
 export interface RevealColorsEvent extends BaseEvent {
   type: 'reveal_colors';
   playerId?: string;       // Who triggered spymaster view
 }
 
+/** Spymaster view was switched off — colours hidden again. */
 export interface HideColorsEvent extends BaseEvent {
   type: 'hide_colors';
   playerId?: string;       // Who toggled back to normal view
 }
 
-/** Card-specific events (cardId property indicates target) */
+/** A single card was selected during play. */
 export interface SelectEvent extends BaseEvent {
   type: 'select';
   cardId?: string;         // Which card was selected
@@ -39,22 +37,25 @@ export interface SelectEvent extends BaseEvent {
   outcome?: string;        // Outcome of the selection
 }
 
-/** Union type of all possible events */
+/** Discriminated union of every game event the frontend handles. */
 export type GameEvent = DealEvent | RevealColorsEvent | HideColorsEvent | SelectEvent;
 
-/** Type guard helpers */
+/** Narrows {@link GameEvent} to a {@link DealEvent}. */
 export function isDealEvent(event: GameEvent): event is DealEvent {
   return event.type === 'deal';
 }
 
+/** Narrows {@link GameEvent} to a {@link SelectEvent}. */
 export function isSelectEvent(event: GameEvent): event is SelectEvent {
   return event.type === 'select';
 }
 
+/** Narrows {@link GameEvent} to a {@link RevealColorsEvent}. */
 export function isRevealColorsEvent(event: GameEvent): event is RevealColorsEvent {
   return event.type === 'reveal_colors';
 }
 
+/** Narrows {@link GameEvent} to a {@link HideColorsEvent}. */
 export function isHideColorsEvent(event: GameEvent): event is HideColorsEvent {
   return event.type === 'hide_colors';
 }

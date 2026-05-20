@@ -21,7 +21,11 @@ interface DealCardsInput {
 }
 
 /**
- * Deals cards for a round.
+ * Mutation that deals (or redeals) the cards for a round.
+ *
+ * Sends the viewer's `publicId` for permission checks. On success
+ * invalidates both the game-data and game-events queries so the new
+ * card layout and `deal` event surface without waiting for a poll.
  */
 export const useDealCardsMutation = (
   gameId: string,
@@ -50,7 +54,6 @@ export const useDealCardsMutation = (
         queryKey: ["gameData", gameId],
       });
 
-      /** Invalidate events query to fetch new deal event */
       queryClient.invalidateQueries({ queryKey: ["game-events", gameId] });
 
       console.log("[Mutation Hook] Invalidation complete");

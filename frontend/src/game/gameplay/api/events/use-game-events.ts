@@ -8,9 +8,6 @@ interface GameEventsApiResponse {
   data: GameEvent[];
 }
 
-/**
- * Fetches all events for a game from the server
- */
 const fetchGameEvents = async (gameId: string): Promise<GameEvent[]> => {
   const response: AxiosResponse<GameEventsApiResponse> = await api.get(`/games/${gameId}/events`);
 
@@ -22,11 +19,12 @@ const fetchGameEvents = async (gameId: string): Promise<GameEvent[]> => {
 };
 
 /**
- * Hook to fetch and cache all events for a game.
- * Events are returned in chronological order (oldest first).
+ * Loads every recorded event for a game in chronological order.
  *
- * @param gameId - The game ID to fetch events for
- * @returns Query result containing array of GameEvent objects
+ * Events are append-only on the server, so this is cached aggressively
+ * (30s stale time, no refetch on window focus). Disabled when no
+ * `gameId` is supplied so the component tree can mount before the
+ * route param resolves.
  */
 export const useGameEvents = (gameId: string | null): UseQueryResult<GameEvent[], Error> => {
   return useQuery<GameEvent[]>({

@@ -18,7 +18,11 @@ interface CreateRoundApiResponse {
 }
 
 /**
- * Creates a new round for the game.
+ * Mutation that creates the next round in the game.
+ *
+ * Sends the viewer's `playerContext.publicId` so the server can run
+ * permission checks. Invalidates the game-data query on success so the
+ * new round appears without waiting for the next refetch.
  */
 export const useCreateRoundMutation = (
   gameId: string,

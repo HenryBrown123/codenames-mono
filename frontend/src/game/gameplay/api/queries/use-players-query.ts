@@ -2,6 +2,7 @@ import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/shared/api/api";
 
+/** A single player entry as returned by the players-list endpoint. */
 export interface Player {
   publicId: string;
   name: string;
@@ -31,7 +32,11 @@ const fetchPlayers = async (gameId: string): Promise<Player[]> => {
 };
 
 /**
- * Fetches and caches players data with their current status.
+ * Loads the player roster with live status.
+ *
+ * Refetches on window focus and has `staleTime: 0`, so the player
+ * pills always reflect the latest server state when a tab regains
+ * focus. Disabled until a `gameId` is supplied.
  */
 export const usePlayersQuery = (
   gameId: string | null,

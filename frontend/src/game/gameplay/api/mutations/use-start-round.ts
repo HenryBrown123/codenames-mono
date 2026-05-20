@@ -22,7 +22,11 @@ interface StartRoundInput {
 }
 
 /**
- * Starts an existing round.
+ * Mutation that transitions an existing round from `SETUP` to `IN_PROGRESS`.
+ *
+ * Sends the viewer's `playerContext.publicId` for permission checks.
+ * Invalidates the game-data query on success so the new round status
+ * and first turn surface immediately.
  */
 export const useStartRoundMutation = (
   gameId: string,

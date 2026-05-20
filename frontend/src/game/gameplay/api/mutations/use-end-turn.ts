@@ -26,7 +26,12 @@ interface EndTurnInput {
 }
 
 /**
- * Ends the current turn.
+ * Mutation that ends the active turn.
+ *
+ * Sends the viewer's `role` in single-device mode (so the server can
+ * resolve which seated player is acting) and their `playerId` in
+ * multi-device mode. Invalidates the game-data and `turn` queries on
+ * success so the next turn surfaces immediately.
  */
 export const useEndTurnMutation = (
   gameId: string,

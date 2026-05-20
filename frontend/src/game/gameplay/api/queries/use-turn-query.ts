@@ -4,6 +4,7 @@ import api from "@frontend/shared/api/api";
 import type { TurnData, TurnPhase } from "@frontend/shared/types";
 import { assertPlayerRole } from "@frontend/shared/types";
 
+/** Re-exported shared turn types so callers can import them from this module. */
 export type { TurnData, TurnPhase };
 
 interface ApiTurn {
@@ -47,9 +48,7 @@ interface TurnApiResponse {
   };
 }
 
-/**
- * Response from turn query including historic turns
- */
+/** Active turn plus every previously-completed turn in the same round. */
 export interface TurnQueryResult {
   turn: TurnData;
   historicTurns: TurnData[];
@@ -112,7 +111,12 @@ const fetchTurn = async (turnId: string): Promise<TurnQueryResult> => {
 };
 
 /**
- * Fetches detailed turn data including full guess history and all historic turns.
+ * Loads the active turn and its history for a single round.
+ *
+ * Date strings are coerced to `Date` at the boundary; the response
+ * shape is narrowed to the domain `TurnData` discriminated union.
+ * Keeps the previous result visible during a refetch so the UI
+ * doesn't flicker between turns.
  */
 export const useTurnDataQuery = (
   turnId: string | null,
