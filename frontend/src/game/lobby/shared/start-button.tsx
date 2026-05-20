@@ -2,16 +2,14 @@ import React from "react";
 import { ActionButton } from "@frontend/game/gameplay/shared/components";
 import styles from "../layout/lobby.module.css";
 
-/**
- * Start game button - disabled until minimum player requirements are met
- */
-
+/** Props for {@link StartButtonView}. */
 export interface StartButtonViewProps {
   canStart: boolean;
   isLoading: boolean;
   onClick: () => void;
 }
 
+/** Lobby start button — disabled until minimum-roster requirements are met. */
 export const StartButtonView: React.FC<StartButtonViewProps> = ({
   canStart,
   isLoading,

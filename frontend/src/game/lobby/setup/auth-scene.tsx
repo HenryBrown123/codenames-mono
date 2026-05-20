@@ -7,6 +7,11 @@ interface AuthSceneProps {
   onComplete: () => void;
 }
 
+/**
+ * Pre-game "SYSTEM ACCESS" scene. Single CONNECT button that
+ * provisions a guest session and calls `onComplete` on success;
+ * surfaces a generic retry message on failure.
+ */
 export const AuthScene: React.FC<AuthSceneProps> = ({ onComplete }) => {
   const [error, setError] = useState<string | null>(null);
   const { mutate: createGuestSession, isPending } = useCreateGuestSession();

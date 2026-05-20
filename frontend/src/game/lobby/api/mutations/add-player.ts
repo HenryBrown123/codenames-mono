@@ -25,6 +25,10 @@ const addPlayerApi = async (
   return response.data;
 };
 
+/**
+ * Mutation that adds a player to the lobby on the given team.
+ * Invalidates the per-game lobby query on success.
+ */
 export const useAddPlayerMutation = (gameId: string) => {
   const queryClient = useQueryClient();
 

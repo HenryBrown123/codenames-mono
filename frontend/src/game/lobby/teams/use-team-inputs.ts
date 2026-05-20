@@ -17,8 +17,11 @@ export interface UseTeamInputsReturn {
 }
 
 /**
- * Manages input state for quick-add player inputs per team.
- * Returns state and handlers for team input operations.
+ * Stateful helper for the per-team quick-add inputs.
+ *
+ * `getInputValue` returns the trimmed value (use this when
+ * submitting); `getValue` returns the raw input for the controlled
+ * component. Lookup is keyed by team name ("Team Red" / "Team Blue").
  */
 export function useTeamInputs(): UseTeamInputsReturn {
   const [teamRedInput, setTeamRedInput] = useState("");

@@ -20,8 +20,11 @@ export interface UseEditingStateReturn {
 }
 
 /**
- * Manages editing state for player names.
- * Returns state and handlers for inline editing operations.
+ * Stateful helper for inline player-name edits.
+ *
+ * `getEditPayload()` returns the trimmed `{ playerId, newName }`
+ * pair the rename mutation expects, or `null` when nothing's being
+ * edited or the value would be whitespace-only.
  */
 export function useEditingState(): UseEditingStateReturn {
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);

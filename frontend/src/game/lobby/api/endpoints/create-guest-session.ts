@@ -14,6 +14,7 @@ interface CreateGuestSessionApiResponse {
   };
 }
 
+/** Successful guest-session creation payload — user + JWT. */
 export interface SessionCreatedResult {
   user: {
     username: string;
@@ -24,6 +25,10 @@ export interface SessionCreatedResult {
   };
 }
 
+/**
+ * Creates an anonymous guest session on the server. Throws if the
+ * response payload doesn't carry `success: true`.
+ */
 export const createGuestSession = async (): Promise<SessionCreatedResult> => {
   const response: AxiosResponse<CreateGuestSessionApiResponse> = await api.post("/auth/guests");
   

@@ -9,6 +9,12 @@ interface LobbySceneProps {
   onLoading: (loading: boolean) => void;
 }
 
+/**
+ * Lobby scene dispatcher. Loads the lobby state and routes to the
+ * single- or multi-device lobby; reports loading status up to
+ * {@link PreGameFlow} via `onLoading` so the pre-game shell can
+ * show its loading dot without flashing empty content here.
+ */
 export const LobbyScene: React.FC<LobbySceneProps> = ({
   gameId,
   onStart,

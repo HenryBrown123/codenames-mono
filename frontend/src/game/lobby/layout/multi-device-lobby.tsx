@@ -19,6 +19,12 @@ interface MultiDeviceLobbyProps {
   onStart: () => void;
 }
 
+/**
+ * Multi-device lobby. Shows a join form until the current user
+ * picks a team, then a my-team box plus the full teams grid with
+ * drag-to-move. Start button is gated on a minimum roster or
+ * AI-mode being enabled.
+ */
 export const MultiDeviceLobby: React.FC<MultiDeviceLobbyProps> = ({ gameId, onStart }) => {
   const [inputPlayerName, setInputPlayerName] = useState("");
 

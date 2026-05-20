@@ -20,6 +20,12 @@ const removePlayerApi = async (gameId: string, playerId: string): Promise<Remove
   return response.data;
 };
 
+/**
+ * Mutation that removes a player from the lobby.
+ *
+ * Optimistic: drops the player from every team's roster on
+ * `onMutate`, rolls back on error, and refetches on settled.
+ */
 export const useRemovePlayerMutation = (gameId: string) => {
   const queryClient = useQueryClient();
   const queryKey = ["lobby", gameId];

@@ -9,7 +9,9 @@ interface CreateGameInput {
 }
 
 /**
- * Creates a new game with the specified type and format.
+ * Mutation that creates a new game and resolves to its public id +
+ * domain-shaped metadata. Pure wrapper around {@link createNewGame}
+ * — no cache invalidation, since the caller routes to the new game.
  */
 export const useCreateNewGame = (): UseMutationResult<
   GameCreatedResult,

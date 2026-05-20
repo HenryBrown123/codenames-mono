@@ -18,6 +18,11 @@ interface SingleDeviceLobbyProps {
   onStart: () => void;
 }
 
+/**
+ * Single-device lobby. Lets one operator inline-add, rename, drag
+ * and remove players on either team via the teams grid; mobile
+ * collapses to a single-team view with a switcher.
+ */
 export const SingleDeviceLobby: React.FC<SingleDeviceLobbyProps> = ({
   gameId,
   lobbyData,

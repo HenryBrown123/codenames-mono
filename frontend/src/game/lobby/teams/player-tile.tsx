@@ -3,14 +3,6 @@ import { Edit2 } from "lucide-react";
 import { WideBarIcon, ExitIcon } from "@frontend/shared/components/icons";
 import styles from "../layout/lobby.module.css";
 
-/**
- * Individual player row.
- *
- * Drag is available on any tile via base props (isDraggable).
- * Use `interactive: true` for full edit/remove controls (single-device mode).
- * In multi-device mode, pass isDraggable for just the current user's tile.
- */
-
 interface PlayerTileBaseProps {
   playerName: string;
   isCurrentUser?: boolean;
@@ -36,8 +28,21 @@ interface PlayerTileInteractiveProps extends PlayerTileBaseProps {
   disabled?: boolean;
 }
 
+/**
+ * Props for {@link PlayerTileView}. Discriminated on `interactive`:
+ * the interactive variant exposes edit/remove handlers, the
+ * read-only variant just shows the name (with optional drag).
+ */
 export type PlayerTileViewProps = PlayerTileReadOnlyProps | PlayerTileInteractiveProps;
 
+/**
+ * Single player row in the lobby roster.
+ *
+ * Drag is always opt-in via `isDraggable`. In interactive mode
+ * (single-device), shows inline rename + remove controls; in
+ * read-only mode (multi-device), shows only the name and a "(You)"
+ * badge for the current user's tile.
+ */
 export const PlayerTileView: React.FC<PlayerTileViewProps> = (props) => {
   const {
     playerName,

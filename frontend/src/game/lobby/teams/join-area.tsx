@@ -4,26 +4,27 @@ import { getTeamConfig } from "@frontend/shared/types";
 import { TerminalInput } from "@frontend/game/gameplay/shared/components";
 import styles from "../layout/lobby.module.css";
 
-/**
- * Form for new players to enter their name and choose a team to join (multi-device mode)
- */
-
-/** Display state for the join area form */
+/** Read-side state for {@link JoinAreaView}. */
 export interface JoinAreaData {
   playerName: string;
   disabled: boolean;
 }
 
-/** Callbacks for name input and team selection */
+/** Write-side handlers for {@link JoinAreaView}. */
 export interface JoinAreaHandlers {
   onPlayerNameChange: (value: string) => void;
   onJoinRed: () => void;
   onJoinBlue: () => void;
 }
 
-/** Full props for the join area view */
+/** Props for {@link JoinAreaView}. */
 export type JoinAreaViewProps = JoinAreaData & JoinAreaHandlers;
 
+/**
+ * Multi-device join form — operative-name input plus two team
+ * buttons. Both buttons stay disabled until the name field has
+ * non-empty content.
+ */
 export const JoinAreaView: React.FC<JoinAreaViewProps> = ({
   playerName,
   onPlayerNameChange,

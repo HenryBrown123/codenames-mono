@@ -3,11 +3,7 @@ import { getTeamConfig } from "@frontend/shared/types";
 import { TeamSymbolIcon } from "@frontend/shared/components/team-symbol-icon";
 import styles from "../layout/lobby.module.css";
 
-/**
- * Team card displaying player list with optional drag-drop support and footer slot
- */
-
-/** Display state for the team tile */
+/** Read-side state for {@link TeamTileView}. */
 export interface TeamTileData {
   teamName: string;
   playerCount: number;
@@ -16,22 +12,28 @@ export interface TeamTileData {
   isDragOver?: boolean;
 }
 
-/** Drag-drop handlers for team tile (single-device mode only) */
+/** Drag-drop handlers consumed by {@link TeamTileView}. */
 export interface TeamTileHandlers {
   onDragOver?: (e: React.DragEvent) => void;
   onDragLeave?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
 }
 
-/** Composition slots for team tile content */
+/** Slot content rendered inside {@link TeamTileView}. */
 export interface TeamTileSlots {
   children: React.ReactNode;
   footer?: React.ReactNode;
 }
 
-/** Full props for the team tile */
+/** Props for {@link TeamTileView}. */
 export type TeamTileViewProps = TeamTileData & TeamTileHandlers & TeamTileSlots;
 
+/**
+ * Team card with header (symbol + name + player count), player
+ * children, optional empty-state message and a footer slot used for
+ * the add-player input. Owns no state; drag-drop styling is driven
+ * by `isDragOver`.
+ */
 export const TeamTileView: React.FC<TeamTileViewProps> = ({
   teamName,
   playerCount,

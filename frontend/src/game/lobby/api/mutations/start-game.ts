@@ -12,6 +12,7 @@ interface StartGameApiResponse {
   };
 }
 
+/** Result returned by {@link useStartGameMutation}. */
 export interface GameStartedResult {
   publicId: string;
   status: string;
@@ -27,6 +28,11 @@ const startGameApi = async (gameId: string): Promise<GameStartedResult> => {
   return response.data.data.game;
 };
 
+/**
+ * Mutation that flips a lobby into an active game. Invalidates both
+ * the lobby and game-data queries on success so the page can
+ * navigate to gameplay with the new state already populated.
+ */
 export const useStartGameMutation = (gameId: string) => {
   const queryClient = useQueryClient();
 

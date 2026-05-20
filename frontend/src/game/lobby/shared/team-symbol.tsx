@@ -14,6 +14,11 @@ interface TeamSymbolProps {
 const TEAM_SWITCH_DURATION = 0.3;
 const EASING = [0.4, 0, 0.2, 1] as const;
 
+/**
+ * Lobby team-symbol icon with a 180° spin-swap when `teamName`
+ * changes. When `onClick` is supplied, renders the symbol inside a
+ * reset-style button so the team itself can be toggled.
+ */
 export const TeamSymbol: React.FC<TeamSymbolProps> = ({
   teamName,
   teamColor,

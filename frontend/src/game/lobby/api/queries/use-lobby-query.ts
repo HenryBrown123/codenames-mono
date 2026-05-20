@@ -2,6 +2,7 @@ import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import api from "@frontend/shared/api/api";
 
+/** A single player as returned by the lobby query. */
 export interface LobbyPlayer {
   publicId: string;
   name: string;
@@ -10,11 +11,13 @@ export interface LobbyPlayer {
   username?: string;  // Username of the player's owner
 }
 
+/** A team and its current roster in the lobby. */
 export interface LobbyTeam {
   name: string;
   players: LobbyPlayer[];
 }
 
+/** Per-game lobby snapshot — teams, format flags and viewer context. */
 export interface LobbyData {
   publicId: string;
   status: string;
@@ -46,7 +49,11 @@ const fetchLobbyState = async (gameId: string): Promise<LobbyData> => {
 };
 
 /**
- * Fetches and caches lobby state data.
+ * Loads the per-game lobby state.
+ *
+ * Refetches on window focus with `staleTime: 0` so the roster
+ * always reflects the latest server state when a tab regains focus.
+ * Disabled until a `gameId` is supplied.
  */
 export const useLobbyQuery = (gameId: string | null): UseQueryResult<LobbyData, Error> => {
   return useQuery<LobbyData>({

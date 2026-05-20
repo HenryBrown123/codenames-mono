@@ -2,6 +2,7 @@ import React from "react";
 import { TerminalInput } from "@frontend/game/gameplay/shared/components";
 import styles from "../layout/lobby.module.css";
 
+/** Props for {@link AddPlayerInputView}. */
 export interface AddPlayerInputViewProps {
   value: string;
   onChange: (value: string) => void;
@@ -13,6 +14,11 @@ export interface AddPlayerInputViewProps {
   idPrefix?: string;
 }
 
+/**
+ * Inline player-name input + ADD button. Submits on Enter; disables
+ * the button while the input is empty or `disabled` is true. The
+ * team colour drives the button's accent.
+ */
 export const AddPlayerInputView: React.FC<AddPlayerInputViewProps> = ({
   value,
   onChange,

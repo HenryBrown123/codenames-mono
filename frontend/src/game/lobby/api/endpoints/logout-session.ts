@@ -5,6 +5,11 @@ interface LogoutSessionResponse extends Response {
   success: boolean;
 }
 
+/**
+ * Posts to the server logout endpoint. Never throws on failure —
+ * just logs and returns the raw response so callers can still tear
+ * down local state.
+ */
 export const logoutSession = async (): Promise<LogoutSessionResponse> => {
   const response: AxiosResponse<LogoutSessionResponse> =
     await api.post("/auth/logout");

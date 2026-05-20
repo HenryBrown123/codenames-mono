@@ -25,6 +25,12 @@ const renamePlayerApi = async (
   return response.data;
 };
 
+/**
+ * Mutation that renames a player in the lobby.
+ *
+ * Optimistic: patches the player's name in cache immediately, rolls
+ * back on error, and refetches on settled to reconcile.
+ */
 export const useRenamePlayerMutation = (gameId: string) => {
   const queryClient = useQueryClient();
   const queryKey = ["lobby", gameId];

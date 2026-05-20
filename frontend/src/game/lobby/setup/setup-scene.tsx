@@ -8,6 +8,11 @@ interface SetupSceneProps {
   onComplete: (gameId: string) => void;
 }
 
+/**
+ * "NEW GAME" setup scene. Lets the user pick game type
+ * (single/multi device) and toggle AI mode, then provisions a fresh
+ * game and forwards its public id to `onComplete`.
+ */
 export const SetupScene: React.FC<SetupSceneProps> = ({ onComplete }) => {
   const [gameType, setGameType] = useState<GameType>(GAME_TYPE.SINGLE_DEVICE);
   const [gameFormat, setGameFormat] = useState<GameFormat>(GAME_FORMAT.QUICK);

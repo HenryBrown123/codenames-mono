@@ -21,8 +21,13 @@ export interface UseDragStateReturn {
 }
 
 /**
- * Manages drag-and-drop state for player tiles between teams.
- * Returns state and handlers for drag operations.
+ * Stateful drag-and-drop helper for player tiles.
+ *
+ * Tracks the currently-dragged player and the team being hovered,
+ * exposes idempotent dragOver/leave/drop handlers, and returns the
+ * `{ player, toTeam }` payload from `onDrop` so the caller can fire
+ * the move mutation. No-ops when the drop target matches the source
+ * team.
  */
 export function useDragState(): UseDragStateReturn {
   const [draggedPlayer, setDraggedPlayer] = useState<DragState["draggedPlayer"]>(null);

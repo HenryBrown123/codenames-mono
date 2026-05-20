@@ -2,7 +2,11 @@ import { useMutation, UseMutationResult } from "@tanstack/react-query";
 import { createGuestSession, SessionCreatedResult } from "../endpoints/create-guest-session";
 
 /**
- * Creates a guest session for anonymous gameplay.
+ * Mutation that creates a guest session for anonymous gameplay.
+ *
+ * Side effect: stashes the resulting username in `localStorage`
+ * under `"username"` so the multi-device handoff can recognise the
+ * same guest across page refreshes.
  */
 export const useCreateGuestSession = (): UseMutationResult<SessionCreatedResult, Error, void> => {
   return useMutation({

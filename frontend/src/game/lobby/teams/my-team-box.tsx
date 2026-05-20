@@ -8,6 +8,7 @@ import styles from "../layout/lobby.module.css";
 const BOX_ENTER_DURATION = 0.3;
 const EASING = [0.4, 0, 0.2, 1] as const;
 
+/** Props for {@link MyTeamBoxView}. */
 export interface MyTeamBoxViewProps {
   teamName: TeamName;
   playerName: string;
@@ -17,6 +18,12 @@ export interface MyTeamBoxViewProps {
   onSwitchTeam: () => void;
 }
 
+/**
+ * Multi-device "your team" card. Shows the viewer's team symbol +
+ * name, a waiting/ready status (suppressed when AI mode fills the
+ * slots), and a small clickable opposite-team symbol that switches
+ * the viewer to the other side.
+ */
 export const MyTeamBoxView: React.FC<MyTeamBoxViewProps> = ({
   teamName,
   playerName,

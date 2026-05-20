@@ -4,6 +4,12 @@ import { useRenamePlayerMutation } from "./rename-player";
 import { useMovePlayerMutation } from "./move-player";
 import { useStartGameMutation } from "./start-game";
 
+/**
+ * Bundles every per-game lobby mutation (add / remove / rename /
+ * move player, start game) plus a combined `isPending` flag and
+ * first-error string so the lobby UI can show a single loading
+ * indicator and surface any failure inline.
+ */
 export const useLobbyMutations = (gameId: string) => {
   const addPlayer = useAddPlayerMutation(gameId);
   const removePlayer = useRemovePlayerMutation(gameId);

@@ -25,6 +25,13 @@ const movePlayerApi = async (
   return response.data;
 };
 
+/**
+ * Mutation that moves a player to a different team.
+ *
+ * Optimistic: updates the lobby cache locally on `onMutate` so the
+ * drag-drop UI responds instantly, restores the snapshot on error,
+ * and always refetches on settled to reconcile with the server.
+ */
 export const useMovePlayerMutation = (gameId: string) => {
   const queryClient = useQueryClient();
   const queryKey = ["lobby", gameId];

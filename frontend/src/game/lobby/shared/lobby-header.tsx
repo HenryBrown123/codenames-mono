@@ -1,16 +1,14 @@
 import React from "react";
 import styles from "../layout/lobby.module.css";
 
-/**
- * Lobby title bar showing game ID and player count
- */
-
+/** Props for {@link LobbyHeaderView}. */
 export interface LobbyHeaderViewProps {
   title: string;
   gameId: string;
   playerCount: number;
 }
 
+/** Lobby title bar — title plus a "ID: x | N Players" meta line. */
 export const LobbyHeaderView: React.FC<LobbyHeaderViewProps> = ({
   title,
   gameId,
