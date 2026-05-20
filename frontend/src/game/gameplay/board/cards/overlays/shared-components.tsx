@@ -110,10 +110,12 @@ const teamColorFilterVariants: OverlayVariants = {
   },
 };
 
+/** Coloured tint layer used by spymaster and game-over overlays. */
 export const TeamColorFilter = () => (
   <motion.div className={styles.teamColorFilter} variants={teamColorFilterVariants} />
 );
 
+/** Overlay-mode word label — animates in via the shared content-fade variants. */
 export const OverlayWord = memo<{ word: string }>(({ word }) => (
   <motion.div className={styles.cardLabelContainer} variants={contentFadeVariants}>
     <span className={styles.cardWord}>{word}</span>
@@ -121,6 +123,7 @@ export const OverlayWord = memo<{ word: string }>(({ word }) => (
 ));
 OverlayWord.displayName = "OverlayWord";
 
+/** Uppercase team label shown along the bottom of a card. */
 export const TeamBadge = memo<{ teamType: string }>(({ teamType }) => (
   <motion.div
     variants={sharedOverlayVariants}
@@ -131,6 +134,7 @@ export const TeamBadge = memo<{ teamType: string }>(({ teamType }) => (
 ));
 TeamBadge.displayName = "TeamBadge";
 
+/** Decorative team-symbol motif shown in the spymaster overlay. */
 export const TeamSymbol = memo(() => (
   <motion.div
     variants={sharedOverlayVariants}
@@ -139,6 +143,7 @@ export const TeamSymbol = memo(() => (
 ));
 TeamSymbol.displayName = "TeamSymbol";
 
+/** Four AR-style targeting brackets in each corner of the card. */
 export const ARCorners = memo(() => (
   <motion.div variants={cornersVariants} className={styles.cardARCorners}>
     <div className={styles.cardARCorner} data-position="tl" />
@@ -149,6 +154,7 @@ export const ARCorners = memo(() => (
 ));
 ARCorners.displayName = "ARCorners";
 
+/** Pulsing outline used to highlight a selected card after game-over. */
 export const OutlinePulse = memo(() => (
   <motion.div className={styles.outlinePulse} variants={pulseVariants} />
 ));

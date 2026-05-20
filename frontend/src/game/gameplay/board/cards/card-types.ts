@@ -2,17 +2,16 @@ import { Variant } from "framer-motion";
 import { Card } from "@frontend/shared/types";
 
 /**
- * Display options passed from board to card
- * Discriminated union ensures type safety for each mode
+ * Discriminated union of board → card display contracts. The mode
+ * picks the visual treatment; the second field carries the data each
+ * mode needs.
  */
 export type CardDisplayOptions =
   | { mode: "gameplay"; clickable: boolean }
   | { mode: "spymaster"; isCurrentTeam: boolean }
   | { mode: "game-over"; isCurrentTeam: boolean };
 
-/**
- * Card visibility states - target states, not actions
- */
+/** Target visibility states for a single card's overlay animations. */
 export type CardVisibilityState =
   | "normal"
   | "flipped"
@@ -20,32 +19,29 @@ export type CardVisibilityState =
   | "gameOver"
   | "gameOverSelected";
 
-/**
- * Aggregate card state passed to overlays
- */
+/** Aggregate state passed to each card overlay component. */
 export interface CardState {
   display: CardDisplayOptions;
   variant: CardVisibilityState;
 }
 
-/**
- * All overlay variant objects must implement these keys
- */
+/** Variant keys every card overlay must implement (visibility + hidden). */
 export type OverlayVariantKey = CardVisibilityState | "hidden";
 
 /**
- * Enforces that every state is implemented in variant objects
+ * Mapped type used to enforce that an overlay variants object
+ * implements every key in {@link OverlayVariantKey}.
  */
 export type OverlayVariants = Record<OverlayVariantKey, Variant>;
 
 /**
- * Derives animation variant from display options and card data
+ * Pure mapping from `CardDisplayOptions` + selection state to the
+ * animation variant the card should show.
  */
 export const deriveCardVariant = (
   displayOptions: CardDisplayOptions,
   isSelected: boolean,
 ): CardVisibilityState => {
-  /** console.log("displayOptions", displayOptions); */
   if (isSelected) {
     return "flipped";
   }
@@ -60,7 +56,9 @@ export const deriveCardVariant = (
 };
 
 /**
- * Derives display options from board state
+ * Pure mapping from board state (view mode, current-team flag,
+ * interactability) to the {@link CardDisplayOptions} the board
+ * should pass each card.
  */
 export const deriveDisplayOptions = (params: {
   viewMode: string;

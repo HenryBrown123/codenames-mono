@@ -12,10 +12,6 @@ import { TeamSymbolIcon } from "@frontend/shared/components/team-symbol-icon";
 import { useTrackedAnimation } from "../tracked-animation-context";
 import styles from "./game-card.module.css";
 
-/**
- * Individual game card with selection and reveal states
- */
-
 const CardFace = memo(() => {
   return <div className={styles.normalCard} />;
 });
@@ -121,6 +117,12 @@ interface GameCardProps {
   displayOptions: CardDisplayOptions;
 }
 
+/**
+ * Single card on the board. Stacks four layers: the base face, the
+ * floating word label, a cover that flies in when flipped, and (in
+ * spymaster / game-over states) a decorative overlay. AR corners
+ * appear on hover when the card is clickable.
+ */
 export const GameCard = memo<GameCardProps>(({ card, cardIndex, onClick, displayOptions }) => {
   const teamType = getTeamType(card);
   const cardColor = getCardColor(card);

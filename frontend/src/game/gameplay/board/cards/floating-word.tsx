@@ -3,15 +3,16 @@ import { motion } from "framer-motion";
 import { CardVisibilityState } from "./card-types";
 import styles from "./game-card.module.css";
 
-/**
- * Animated floating word with 3D tilt effect
- */
-
 interface FloatingWordProps {
   word: string;
   variant: CardVisibilityState;
 }
 
+/**
+ * Word label that floats on top of a card. Visible in the `normal`
+ * variant; fades out whenever the card flips, reveals or enters the
+ * game-over state.
+ */
 export const FloatingWord = memo<FloatingWordProps>(({ word, variant }) => {
   return (
     <motion.div

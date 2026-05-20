@@ -60,6 +60,7 @@ interface MakeGuessInput {
   roundNumber: number;
 }
 
+/** Domain-shaped success payload returned by {@link useMakeGuessMutation}. */
 export interface GuessResult {
   guess: {
     cardWord: string;
@@ -76,7 +77,13 @@ function transformActiveTurnPhase(raw: ApiTurnActive | null): TurnPhase | null {
 }
 
 /**
- * Submits a guess for a card.
+ * Mutation that submits a guess (card selection) for the active turn.
+ *
+ * Sends `role` in single-device mode and `playerId` in multi-device
+ * mode for permission resolution. Date strings on the response are
+ * coerced to `Date`. Query invalidation is intentionally left to the
+ * game-actions provider so multiple mutations can share a single
+ * coordinated refetch.
  */
 export const useMakeGuessMutation = (
   gameId: string,

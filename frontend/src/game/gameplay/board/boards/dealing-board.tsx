@@ -3,10 +3,6 @@ import { motion } from "framer-motion";
 import type { DealInitialState } from "../deal-animation-context";
 import type { SceneState } from "../cards/card-animation-variants";
 
-/**
- * Wrapper component that handles deal animation orchestration
- */
-
 const dealBoardVariants = {
   hidden: {},
   visible: {
@@ -17,6 +13,11 @@ const dealBoardVariants = {
   },
 };
 
+/**
+ * Per-card variants for the deal-in animation — cards fly in from
+ * the top-left, spring-settle into place, and apply with a 50ms
+ * stagger across the grid.
+ */
 export const dealCardVariants = {
   hidden: {
     opacity: 0,
@@ -48,8 +49,15 @@ interface DealingBoardProps {
   wordsKey: string;
 }
 
-/** @todo refactor component.... DealingBoard should be a board that deals given a certain "initial" property */
-
+/**
+ * Animated wrapper that staggers its card children in from the deal
+ * variants. `wordsKey` is used as the React `key` so a new word list
+ * remounts the children (and replays the deal); `animateState`
+ * forwards the parent scene's animation mode.
+ *
+ * @todo Refactor — `DealingBoard` should accept a board content
+ *       slot and the initial property as orthogonal concerns.
+ */
 export const DealingBoard = memo<DealingBoardProps>(
   ({ children, initialState, animateState, className, wordsKey }) => {
     return (

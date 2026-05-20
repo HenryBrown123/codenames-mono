@@ -5,10 +5,6 @@ import { OverlayVariants } from "../card-types";
 import { TeamColorFilter, OverlayWord, TeamSymbol, ARCorners } from "./shared-components";
 import styles from "../game-card.module.css";
 
-/**
- * Card overlay showing secret colors for spymaster
- */
-
 const containerVariants: OverlayVariants = {
   hidden: {
     transition: {
@@ -37,6 +33,11 @@ interface SpymasterOverlayProps {
   isCurrentTeam: boolean;
 }
 
+/**
+ * Card overlay rendered inside the AR lens that reveals the card's
+ * team colour, word and symbol to spymasters. Targeting brackets are
+ * added when the card belongs to the viewer's team.
+ */
 export const SpymasterOverlay = memo<SpymasterOverlayProps>(({
   card,
   isCurrentTeam

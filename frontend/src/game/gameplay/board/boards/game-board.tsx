@@ -15,8 +15,8 @@ import type { Card } from "@frontend/shared/types";
 import styles from "./board-layout.module.css";
 
 /**
- * View props — everything the board needs to render.
- * No hooks, no context access. Pure presentation.
+ * Props for {@link GameBoardView} — everything the pure board needs
+ * to render. No hooks, no context access.
  */
 export interface GameBoardViewProps {
   cards: Card[];
@@ -90,6 +90,11 @@ const CardGrid = memo<Omit<GameBoardViewProps, "showARHUD" | "isSpymaster" | "on
 
 CardGrid.displayName = "CardGrid";
 
+/**
+ * Pure board view. Renders the normal card grid as a base layer, and
+ * (for spymasters mid-round) layers a clipped spymaster grid inside
+ * the AR circle overlay so it can be dragged into view.
+ */
 export const GameBoardView = memo<GameBoardViewProps>(({
   cards,
   wordsKey,
@@ -140,9 +145,7 @@ export const GameBoardView = memo<GameBoardViewProps>(({
 
 GameBoardView.displayName = "GameBoardView";
 
-/**
- * Connected board — wires up context and derives all props.
- */
+/** Props for {@link GameBoard}. */
 export interface GameBoardProps {
   onCardClick?: (word: string) => void;
   canInteract?: (card: Card) => boolean;
@@ -151,6 +154,15 @@ export interface GameBoardProps {
 const noop = () => {};
 const noInteract = () => false;
 
+/**
+ * Connected game board. Pulls the active round, view mode, deal-
+ * animation phase and visibility context, derives all view props
+ * (including whether to mount the AR layer), then renders
+ * {@link GameBoardView}.
+ *
+ * Resets the view mode to normal when a round completes so the AR
+ * overlay doesn't carry over to the next round.
+ */
 export const GameBoard = memo<GameBoardProps>(({
   onCardClick = noop,
   canInteract = noInteract,

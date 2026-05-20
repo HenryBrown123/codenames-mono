@@ -1,20 +1,12 @@
-/**
- * Card Animation Variants
- *
- * Centralized animation configuration using Framer Motion variants.
- * Type-safe state machines for card animations.
- */
-
 import { GAME_OVER_TIMING } from "../../game-over/game-over-timing";
 
-/**
- * Scene-level states - for board orchestration
- */
+/** Top-level orchestration state passed down to the board children. */
 export type SceneState = "hidden" | "visible" | "gameOverReveal";
 
 /**
- * Board variants - orchestrates game-over card reveal staggering
- * Deal animation is handled separately by DealingBoard component
+ * Board-level variants for the end-of-round reveal — staggers each
+ * card child so they flip over in a wave rather than simultaneously.
+ * Deal-in animation is owned by `DealingBoard` and lives separately.
  */
 export const boardVariants = {
   visible: {},
@@ -26,19 +18,10 @@ export const boardVariants = {
   },
 };
 
-/**
- * Card visibility states - visual presentation layer
- * Independent of React component state
- */
+/** Visual-only presentation states for a single card. */
 export type CardVisibilityState =
   | "normal"
   | "flipped"
   | "revealed"
   | "gameOver"
   | "gameOverSelected";
-
-/**
- * Removed: cardStateVariants no longer needed.
- * Card no longer uses 3D flip - CoverCard slides instead.
- * Word opacity is handled by FloatingWord component.
- */

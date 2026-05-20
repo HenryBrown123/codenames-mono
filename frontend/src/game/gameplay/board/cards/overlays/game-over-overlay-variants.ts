@@ -2,9 +2,12 @@ import { GAME_OVER_TIMING as TIMING } from '../../../game-over/game-over-timing'
 import type { Variants } from 'framer-motion';
 
 /**
- * Container variant that coordinates timing for children based on card index
- * TeamColorFilter animates with delay based on card index
- * OverlayWord appears instantly (no delay)
+ * Variants for the per-card game-over overlay container.
+ *
+ * `gameOver` is a dynamic variant — call with `cardIndex` to stagger
+ * each card's reveal by `CARD_STAGGER * index` so the board flips
+ * over in a wave. The colour filter inherits the delay; the word
+ * label inside appears immediately.
  */
 export const gameOverContainerVariants = {
   hidden: {

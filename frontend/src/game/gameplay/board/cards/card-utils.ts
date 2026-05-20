@@ -1,6 +1,6 @@
 import { Card } from "@frontend/shared/types";
 
-/** Card colors - BRIGHTER for better visibility */
+/** Palette used by every card-rendering helper in this module. */
 export const CARD_COLORS = {
   neutral: "#6b6b6b",      // Lighter neutral
   assassin: "#0a0a0a",     // Keep black
@@ -11,7 +11,9 @@ export const CARD_COLORS = {
 } as const;
 
 /**
- * Gets the appropriate color for a card based on its type and team
+ * Resolves the fill colour for a card. Card type wins (assassin /
+ * bystander), then team name is matched substring-wise so locale
+ * variants like "Red Team" still pick up the red colour.
  */
 export const getCardColor = (card: Card): string => {
   if (card.cardType === "ASSASSIN") return CARD_COLORS.assassin;
@@ -25,9 +27,7 @@ export const getCardColor = (card: Card): string => {
   return CARD_COLORS.neutral;
 };
 
-/**
- * Gets icon for card based on color
- */
+/** Returns the glyph paired with a card colour, or null if unmapped. */
 export const getCardIcon = (cardColor: string) => {
   if (cardColor === CARD_COLORS.red) return "★";
   if (cardColor === CARD_COLORS.blue) return "♦";
@@ -38,7 +38,9 @@ export const getCardIcon = (cardColor: string) => {
 };
 
 /**
- * Gets symbol string for team symbol overlay
+ * Returns the team-symbol overlay character for a card colour. Same
+ * mapping as {@link getCardIcon} but returns `""` rather than `null`
+ * so it drops directly into a template string.
  */
 export const getSymbol = (cardColor: string): string => {
   if (cardColor === CARD_COLORS.red) return "★";
@@ -50,7 +52,9 @@ export const getSymbol = (cardColor: string): string => {
 };
 
 /**
- * Helper function to determine team type for AR elements
+ * Returns the AR-overlay team class name for a card — `"red"`,
+ * `"blue"`, `"green"`, `"assassin"`, or `"neutral"`. Matches by team
+ * name substring (same logic as {@link getCardColor}).
  */
 export const getTeamType = (card: Card): string => {
   if (card.cardType === "ASSASSIN") return "assassin";
@@ -65,11 +69,13 @@ export const getTeamType = (card: Card): string => {
 };
 
 /**
- * Helper function to determine if this is your team (for targeting brackets)
- * TODO: This should be derived from actual player/team context
+ * Whether this card belongs to the viewer's team — used to drive
+ * AR-overlay targeting brackets.
+ *
+ * @todo Derive from the actual player/team context rather than
+ *       hard-coding "red" as the viewer's team.
  */
 export const isYourTeam = (card: Card): boolean => {
   const team = card.teamName?.toLowerCase();
-  /** For now, assume red team is "your team" - this should be dynamic */
   return team?.includes("red") || false;
 };
