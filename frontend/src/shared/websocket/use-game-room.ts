@@ -3,10 +3,11 @@ import { useWebSocket } from "./websocket-context";
 import { WebSocketEvent } from "./websocket-events.types";
 
 /**
- * Hook to automatically join and leave game rooms
+ * Joins the per-game websocket room and tears it down on unmount.
  *
- * @param gameId - The game ID to join (null to not join any room)
- * @returns Object with current room status
+ * Idempotent — re-running with the same `gameId` is a no-op; a new
+ * `gameId` leaves the previous room before joining the new one.
+ * Passing `null` skips joining entirely.
  */
 export const useGameRoom = (gameId: string | null) => {
   const { socket, isConnected } = useWebSocket();

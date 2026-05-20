@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "@frontend/shared/api/api";
 
+/** Server-shaped profile for the authenticated viewer. */
 export interface CurrentUser {
   userId: number;
   username: string;
@@ -30,7 +31,12 @@ const fetchCurrentUser = async (): Promise<CurrentUser> => {
 };
 
 /**
- * Hook to get the current authenticated user's information
+ * Loads the authenticated user's profile.
+ *
+ * Looks up the username from `localStorage` (stamped on by the
+ * guest-session mutation) and fetches the matching record. Cached
+ * for the lifetime of the session — `staleTime: Infinity`, no retry
+ * (a 401 is handled globally by the api interceptor).
  */
 export const useCurrentUser = () => {
   return useQuery<CurrentUser, Error>({

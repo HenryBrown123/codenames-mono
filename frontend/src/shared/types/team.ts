@@ -10,6 +10,7 @@ export interface TeamVisualConfig {
   symbolRotate: boolean;
 }
 
+/** Per-team visual config — display names, colour vars and symbol metadata. */
 export const TEAM_CONFIG = {
   "Team Red": {
     displayName: "RED OPERATIVES",
@@ -55,7 +56,10 @@ export function getTeamConfig(teamName: string): TeamVisualConfig {
   };
 }
 
-/** Get the opposite team (works for 2-team games) */
+/**
+ * Returns the only other team for a 2-team game, or `undefined` if
+ * the game has more than two teams (no single "opposite").
+ */
 export function getOppositeTeam(teamName: TeamName): TeamName | undefined {
   const others = TEAM_NAMES.filter((t) => t !== teamName);
   return others.length === 1 ? others[0] : undefined;
@@ -68,4 +72,5 @@ export interface Team {
   players: TeamPlayer[];
 }
 
+/** Re-exported {@link TeamPlayer} so consumers can import it from this module. */
 export type { TeamPlayer } from "./player";

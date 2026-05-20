@@ -2,9 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { io, Socket } from "socket.io-client";
 import { WebSocketEvent } from "./websocket-events.types";
 
-/**
- * WebSocket connection status
- */
+/** Lifecycle state of the shared websocket connection. */
 export type ConnectionStatus = "disconnected" | "connecting" | "connected" | "reconnecting";
 
 /**
@@ -30,8 +28,12 @@ interface WebSocketProviderProps {
 }
 
 /**
- * WebSocket provider component
- * Manages the Socket.io connection with authentication and reconnection handling
+ * Provides the shared Socket.io connection.
+ *
+ * Auto-connects on mount when `autoConnect` is true. Uses cookie
+ * credentials for auth, infinite reconnect attempts with 1–5s
+ * back-off, and tracks the live status so consumers can render
+ * connection state. Disconnects on unmount.
  */
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   children,
@@ -145,9 +147,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   return <WebSocketContext.Provider value={value}>{children}</WebSocketContext.Provider>;
 };
 
-/**
- * Hook to access WebSocket context
- */
+/** Subscribes to the websocket context. Throws outside a `WebSocketProvider`. */
 export const useWebSocket = (): WebSocketContextValue => {
   const context = useContext(WebSocketContext);
   if (!context) {

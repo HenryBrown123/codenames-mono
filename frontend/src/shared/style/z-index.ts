@@ -36,4 +36,5 @@ export const Z_INDEX = {
   CRITICAL: 9999,
 } as const;
 
+/** Name of a single z-index slot in {@link Z_INDEX}. */
 export type ZIndexKey = keyof typeof Z_INDEX;

@@ -13,6 +13,7 @@ import type { Round } from "./round";
 import type { PlayerContext } from "./player";
 import { assertEnum } from "./assert-enum";
 
+/** Re-exported shared game enums so consumers can import them from this module. */
 export type { GameState, GameFormat, GameType };
 
 /** Core game aggregate containing all game state and metadata */
@@ -32,14 +33,17 @@ const gameStates = new Set<string>(Object.values(GAME_STATE));
 const gameFormats = new Set<string>(Object.values(GAME_FORMAT));
 const gameTypes = new Set<string>(Object.values(GAME_TYPE));
 
+/** Asserts a string narrows to a valid {@link GameState}. Throws otherwise. */
 export function assertGameState(value: string): asserts value is GameState {
   assertEnum<GameState>(value, gameStates, "GameState");
 }
 
+/** Asserts a string narrows to a valid {@link GameFormat}. Throws otherwise. */
 export function assertGameFormat(value: string): asserts value is GameFormat {
   assertEnum<GameFormat>(value, gameFormats, "GameFormat");
 }
 
+/** Asserts a string narrows to a valid {@link GameType}. Throws otherwise. */
 export function assertGameType(value: string): asserts value is GameType {
   assertEnum<GameType>(value, gameTypes, "GameType");
 }

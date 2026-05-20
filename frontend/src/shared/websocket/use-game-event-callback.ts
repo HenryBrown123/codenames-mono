@@ -12,11 +12,11 @@ const DRAWER_TRIGGER_EVENTS = [
 ] as const;
 
 /**
- * Hook to trigger a callback when game events occur.
- * Used by mobile scene to auto-open the dashboard drawer.
+ * Fires `onGameEvent` when a clue-related socket event arrives.
  *
- * @param gameId - The game ID to listen for events on
- * @param onGameEvent - Callback to trigger when a game event occurs
+ * Listens for `CLUE_GIVEN` and `AI_PIPELINE_COMPLETE` — the events
+ * worth interrupting the player for — and ignores everything else.
+ * No-ops until the socket is connected and a `gameId` is supplied.
  */
 export const useGameEventCallback = (
   gameId: string | null,

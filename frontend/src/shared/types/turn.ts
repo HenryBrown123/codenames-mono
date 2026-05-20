@@ -2,6 +2,7 @@ import { TURN_STATUS, PLAYER_ROLE, CODEBREAKER_OUTCOME } from "@codenames/shared
 import type { TurnStatus, PlayerRole } from "@codenames/shared/types";
 import { assertEnum } from "./assert-enum";
 
+/** Re-exported shared `TurnStatus` so consumers can import it from this module. */
 export type { TurnStatus };
 
 /** A codemaster's clue: a word and a target card count */
@@ -63,6 +64,7 @@ export interface TurnData {
 /** Asserts a string is a valid TurnStatus. Throws if the API contract is broken. */
 const validTurnStatuses = new Set<string>(Object.values(TURN_STATUS));
 
+/** Asserts a string narrows to a valid {@link TurnStatus}. Throws otherwise. */
 export function assertTurnStatus(value: string): asserts value is TurnStatus {
   assertEnum<TurnStatus>(value, validTurnStatuses, "TurnStatus");
 }
@@ -70,6 +72,7 @@ export function assertTurnStatus(value: string): asserts value is TurnStatus {
 /** Asserts a string is a valid GuessOutcome. Throws if the API contract is broken. */
 const validOutcomes = new Set<string>(Object.values(CODEBREAKER_OUTCOME));
 
+/** Asserts a string narrows to a valid {@link GuessOutcome}. Throws otherwise. */
 export function assertGuessOutcome(value: string): asserts value is GuessOutcome {
   assertEnum<GuessOutcome>(value, validOutcomes, "GuessOutcome");
 }

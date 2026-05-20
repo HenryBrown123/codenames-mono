@@ -1,6 +1,7 @@
 /**
- * WebSocket event types for real-time game updates
- * These match the backend WebSocketEvent enum
+ * Canonical names for every event the backend may push over the
+ * websocket. Mirror of the server-side `WebSocketEvent` enum — keep
+ * the two in sync.
  */
 export enum WebSocketEvent {
   /** Connection events */

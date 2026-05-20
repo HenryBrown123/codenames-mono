@@ -2,6 +2,7 @@
 import type { SVGProps } from "react";
 import iconStyles from "./icon.module.css";
 
+/** Standard SVG element props accepted by every generated icon. */
 export type IconProps = SVGProps<SVGSVGElement>;
 
 export const BlackSkullIcon = ({ className, style, ...rest }: IconProps) => (

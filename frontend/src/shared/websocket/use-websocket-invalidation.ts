@@ -41,13 +41,16 @@ const CHAT_EVENTS = [
 const COALESCE_WINDOW_MS = 80;
 
 /**
- * Hook to handle WebSocket events and invalidate React Query cache.
+ * Bridges websocket events into React Query cache invalidations.
  *
- * Game events are coalesced — multiple events within an 80ms window
- * collapse into a single invalidation call.
- * AI and chat events use targeted invalidation (specific query keys only).
+ * Game-state events are coalesced through an 80ms window — multiple
+ * events collapse into a single `invalidateQueries()` call, which
+ * prevents thrash when several events arrive in the same tick. AI
+ * and chat events fall through to targeted invalidation of just
+ * their own query keys. After a flush, signals turn-boundary
+ * subscribers (see {@link emitTurnBoundary}) when relevant.
  *
- * @param gameId - The game ID to listen for events on (null to not listen)
+ * No-ops when no `gameId` is supplied or the socket isn't ready.
  */
 export const useWebSocketInvalidation = (gameId: string | null): void => {
   const { socket, isConnected } = useWebSocket();

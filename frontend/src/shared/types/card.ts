@@ -15,6 +15,7 @@ export interface Card {
 /** Asserts a string is a valid card type. Throws if the API contract is broken. */
 const cardTypes = new Set<string>(Object.values(CARD_TYPE));
 
+/** Asserts a string narrows to a valid {@link CardType}. Throws otherwise. */
 export function assertCardType(value: string): asserts value is CardType {
   assertEnum<CardType>(value, cardTypes, "CardType");
 }

@@ -1,6 +1,7 @@
 import React from "react";
 import styles from "./hud-frame.module.css";
 
+/** Props for {@link HudFrame}. */
 export interface HudFrameProps {
   /** Pinned to the bottom of the frame. */
   footer?: React.ReactNode;

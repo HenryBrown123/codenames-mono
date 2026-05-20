@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { DotIcon } from "./dot-icon";
 
+/** Props for {@link DotIconEditor}. */
 export interface DotIconEditorProps {
   initialRows?: number;
   initialCols?: number;

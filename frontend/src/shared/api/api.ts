@@ -1,5 +1,13 @@
 import axios from "axios";
 
+/**
+ * Shared axios instance for every backend call.
+ *
+ * Configured with the API base URL, cookie credentials enabled, and
+ * a global 401 interceptor that redirects to `/auth/guest` so any
+ * unauthenticated request automatically re-enters the guest auth
+ * flow.
+ */
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "/api",
   withCredentials: true, // Ensures cookies are sent with requests

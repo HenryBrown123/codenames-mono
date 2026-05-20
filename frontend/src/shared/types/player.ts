@@ -2,6 +2,7 @@ import { PLAYER_ROLE } from "@codenames/shared/types";
 import type { PlayerRole } from "@codenames/shared/types";
 import { assertEnum } from "./assert-enum";
 
+/** Re-exported shared `PlayerRole` so consumers can import it from this module. */
 export type { PlayerRole };
 
 /** Player within a team roster */
@@ -22,6 +23,7 @@ export interface PlayerContext {
 /** Asserts a string is a valid PlayerRole. Throws if the API contract is broken. */
 const playerRoles = new Set<string>(Object.values(PLAYER_ROLE));
 
+/** Asserts a string narrows to a valid {@link PlayerRole}. Throws otherwise. */
 export function assertPlayerRole(value: string): asserts value is PlayerRole {
   assertEnum<PlayerRole>(value, playerRoles, "PlayerRole");
 }
