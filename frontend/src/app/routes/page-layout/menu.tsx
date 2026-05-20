@@ -2,12 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { PlayerRole, PLAYER_ROLE } from "@codenames/shared/types";
 import styles from "./menu.module.css";
 
-/**
- * Navigation menu with game controls and settings
- */
-
+/** Props for {@link MenuView}. */
 export interface MenuViewProps {
   isOpen: boolean;
+  /** When false, the role-switch list is replaced with a "not in a game" notice. */
   hasGameContext: boolean;
   menuRef: React.RefObject<HTMLDivElement | null>;
   sidebarRef: React.RefObject<HTMLDivElement | null>;
@@ -15,6 +13,10 @@ export interface MenuViewProps {
   onChangeStage: (stage: PlayerRole) => void;
 }
 
+/**
+ * Burger-menu sidebar dev panel. Stateless — exposes refs so the
+ * container can detect outside-clicks and close it.
+ */
 export const MenuView: React.FC<MenuViewProps> = ({
   isOpen,
   hasGameContext,
@@ -59,6 +61,10 @@ export const MenuView: React.FC<MenuViewProps> = ({
   </>
 );
 
+/**
+ * Stateful burger menu. Tracks open/closed state, wires up the
+ * outside-click handler that closes it, and renders {@link MenuView}.
+ */
 export const Menu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -83,7 +89,7 @@ export const Menu: React.FC = () => {
   }, []);
 
   const handleChangeStage = (_newStage: PlayerRole) => {
-    /** Dev tool - stage changing not implemented */
+    // Dev tool — stage changing not implemented.
   };
 
   return (

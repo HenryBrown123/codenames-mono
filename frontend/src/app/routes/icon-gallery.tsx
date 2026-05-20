@@ -22,6 +22,13 @@ const circleBtn: React.CSSProperties = {
   fontSize: "1rem",
 };
 
+/**
+ * Development-only catalogue of every icon export.
+ *
+ * Renders each `*Icon` / `*IconFilled` component at four font sizes,
+ * inline with text and inside a pill button, so visual regressions
+ * and missing glyphs are obvious at a glance.
+ */
 export const IconGallery: React.FC = () => (
   <div style={{ padding: 32, background: "#0a0a0a", height: "100vh", color: "#52d68a", fontFamily: "monospace", overflow: "auto" }}>
     <h1 style={{ fontSize: "1.4rem", marginBottom: 24, fontWeight: 600, position: "sticky", top: 0, background: "#0a0a0a", padding: "8px 0", zIndex: 1 }}>

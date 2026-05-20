@@ -7,15 +7,6 @@ import { LobbyScene } from "@frontend/game/lobby/layout/lobby-scene";
 import { SceneCard } from "./scene-card";
 import styles from "./pre-game-flow.module.css";
 
-/**
- * Manages the pre-game journey: auth → setup → lobby → gameplay.
- *
- * Pure plumbing — each scene owns its own API calls and side effects.
- * This component only handles step sequencing, transitions, and navigation.
- * 
- * Motion.div allows animations between each scene.
- */
-
 type Step = "auth" | "setup" | "lobby";
 
 const STEPS: Step[] = ["auth", "setup", "lobby"];
@@ -25,6 +16,14 @@ interface SceneConfig {
   render: () => React.ReactNode;
 }
 
+/**
+ * Pre-game scene sequencer: auth → setup → lobby → gameplay.
+ *
+ * Pure plumbing — each scene owns its own API calls and side effects.
+ * This component only sequences steps, drives the exit/enter
+ * cross-fade through `AnimatePresence`, and navigates to gameplay
+ * after the lobby scene completes.
+ */
 export const PreGameFlow: React.FC = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>("auth");

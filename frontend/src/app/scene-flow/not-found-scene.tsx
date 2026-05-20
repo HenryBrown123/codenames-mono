@@ -8,6 +8,10 @@ interface NotFoundSceneProps {
   title?: string;
 }
 
+/**
+ * 404-style scene card with a "New game" button that returns to the
+ * landing route. Title is configurable for non-game miss cases.
+ */
 export const NotFoundScene: React.FC<NotFoundSceneProps> = ({
   title = "GAME NOT FOUND",
 }) => {

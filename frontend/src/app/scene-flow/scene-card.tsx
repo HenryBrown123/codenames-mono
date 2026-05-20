@@ -9,6 +9,11 @@ interface SceneCardProps {
   maxWidth?: number;
 }
 
+/**
+ * Animated card frame for pre-game scenes. Pops in (0.4s) and
+ * collapses out (0.6s) via Framer; `maxWidth` overrides the card's
+ * default width when supplied.
+ */
 export const SceneCard: React.FC<SceneCardProps> = ({ children, maxWidth }) => (
   <motion.div
     className={pageContainerStyles.card}

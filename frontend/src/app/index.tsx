@@ -205,6 +205,10 @@ const useMobileViewportHeight = () => {
 
 const queryClient = new QueryClient();
 
+/**
+ * Root component. Mounts the React Query and websocket providers,
+ * renders the app shell, and dispatches to {@link AppRoutes}.
+ */
 const App: React.FC = () => {
   const { innerHeight, visualHeight, screenHeight } = useMobileViewportHeight();
 
