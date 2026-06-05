@@ -1,8 +1,7 @@
 /**
  * Guesser prompt — HOSTED model variant
  *
- * Larger models can use a calibrated rubric without examples for every
- * score band; we describe the scale clearly and trust them to apply it.
+ * Larger models can understand and apply game rules with much more accuracy.
  */
 
 import type { RankingInput } from "../guesser";

@@ -24,6 +24,8 @@ import type { GameFinder } from "@backend/shared/data-access/repositories/games.
 import type { AppLogger } from "@backend/shared/logging";
 import { UnexpectedGameplayError } from "@backend/game/gameplay/errors/gameplay.errors";
 
+// todo: split up.... too big
+
 /** Wiring dependencies for the AI player decision loop. */
 export type AIPlayerDependencies = {
   pipeline: CodenamesPipeline;
@@ -345,7 +347,11 @@ export const createAIPlayerService =
         });
 
         if (clueResult.success) {
-          await emitNarration(context, `Giving clue: "${pipelineResult.clue}" for ${pipelineResult.number} card(s). ${pipelineResult.explanation}`);
+          // Never broadcast the spymaster's explanation: emitNarration is teamOnly:false,
+          // and the reasoning names each card's team/assassin identity — publishing it hands
+          // operatives the key. The clue word + count are the only public part of a clue.
+          // The full reasoning is persisted via updateSpymasterResponse for post-game review.
+          await emitNarration(context, `Giving clue: "${pipelineResult.clue}" for ${pipelineResult.number} card(s).`);
         }
 
         if (!clueResult.success) throw new UnexpectedGameplayError(`Failed to give clue: ${clueResult.message}`);

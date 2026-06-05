@@ -3,12 +3,14 @@ import { createGeminiProvider } from "./gemini.provider";
 import { createOpenAIProvider } from "./openai.provider";
 import { createAnthropicProvider } from "./anthropic.provider";
 import { createOllamaProvider } from "./ollama.provider";
+import { createDeepSeekProvider } from "./deepseek.provider";
 
 const factories: Record<LLMProvider, (config: ProviderConfig) => LLMProviderClient> = {
   gemini: createGeminiProvider,
   openai: createOpenAIProvider,
   anthropic: createAnthropicProvider,
   ollama: createOllamaProvider,
+  deepseek: createDeepSeekProvider,
 };
 
 /**

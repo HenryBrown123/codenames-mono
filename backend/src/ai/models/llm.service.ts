@@ -6,6 +6,7 @@
  * - OpenAI:    Chat Completions API
  * - Anthropic: Messages API
  * - Ollama:    Chat API
+ * - DeepSeek:  OpenAI-compatible Chat Completions API
  */
 
 import { createProvider } from "./providers";

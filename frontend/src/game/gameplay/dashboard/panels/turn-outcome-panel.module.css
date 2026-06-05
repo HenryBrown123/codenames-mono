@@ -75,6 +75,8 @@
   align-items: center;
   /* Gap applies between the label and the dots row. */
   gap: 10px;
+  /* Separate the countdown from the TURN COMPLETE tag above it. */
+  margin-top: 14px;
 }
 
 .dotsRow {

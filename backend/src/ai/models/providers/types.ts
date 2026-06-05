@@ -1,7 +1,7 @@
 import type { HttpClient } from "@backend/shared/http-client";
 
 /** Supported LLM providers; one of these tags the configured client. */
-export type LLMProvider = "gemini" | "openai" | "anthropic" | "ollama";
+export type LLMProvider = "gemini" | "openai" | "anthropic" | "ollama" | "deepseek";
 
 /** Per-provider wiring inputs — credentials, target model, transport. */
 export type ProviderConfig = {
